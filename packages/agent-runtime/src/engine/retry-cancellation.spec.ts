@@ -46,7 +46,11 @@ describe('provider retry policy', () => {
         retry: {
           maxRetries: 1,
           backoff: { initialDelayMs: 50, jitterRatio: 0 },
-          retryAfter: { precedence: 'retry_after', maxWaitMs: 3_000 },
+          retryAfter: {
+            precedence: 'retry_after',
+            maxWaitMs: 3_000,
+            jitterMs: 0,
+          },
         },
       }),
     );
@@ -86,7 +90,11 @@ describe('provider retry policy', () => {
         retry: {
           maxRetries: 1,
           backoff: { initialDelayMs: 50, jitterRatio: 0 },
-          retryAfter: { precedence: 'retry_after', maxWaitMs: 3_000 },
+          retryAfter: {
+            precedence: 'retry_after',
+            maxWaitMs: 3_000,
+            jitterMs: 0,
+          },
         },
       }),
     );
@@ -125,6 +133,7 @@ describe('provider retry policy', () => {
 
     const events = await collectEvents(
       baseInput(model, {
+        retry: { retryAfter: { jitterMs: 0 } },
         hooks: [
           {
             name: 'outcome-observer',

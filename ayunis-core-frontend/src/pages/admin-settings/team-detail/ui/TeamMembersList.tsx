@@ -17,13 +17,11 @@ import { PermissionGate } from '@/features/permissions';
 interface TeamMembersListProps {
   teamId: string;
   members: TeamMember[];
-  canManage?: boolean;
 }
 
 export function TeamMembersList({
   teamId,
   members,
-  canManage = true,
 }: Readonly<TeamMembersListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { removeTeamMember, removingUserIds } = useRemoveTeamMember(teamId);
@@ -57,7 +55,7 @@ export function TeamMembersList({
                   size="icon"
                   className="text-destructive hover:text-destructive"
                   onClick={() => removeTeamMember(member.userId)}
-                  disabled={!canManage || removingUserIds.has(member.userId)}
+                  disabled={removingUserIds.has(member.userId)}
                   data-testid={`team-member-remove-${member.userId}`}
                 >
                   <Trash2 />

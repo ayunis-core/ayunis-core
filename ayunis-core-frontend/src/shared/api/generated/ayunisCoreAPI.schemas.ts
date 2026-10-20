@@ -579,7 +579,33 @@ export interface SuperAdminOrgResponseDto {
   createdAt: string;
 }
 
-export interface SuperAdminOrgListItemResponseDto {
+export type OrgLifecycleFilter = typeof OrgLifecycleFilter[keyof typeof OrgLifecycleFilter];
+
+
+export const OrgLifecycleFilter = {
+  all: 'all',
+  archived: 'archived',
+  paying: 'paying',
+  expired: 'expired',
+  trial: 'trial',
+  'no-plan': 'no-plan',
+} as const;
+
+/**
+ * Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
+ */
+export type OrgLifecycleStatus = typeof OrgLifecycleStatus[keyof typeof OrgLifecycleStatus];
+
+
+export const OrgLifecycleStatus = {
+  archived: 'archived',
+  paying: 'paying',
+  expired: 'expired',
+  trial: 'trial',
+  'no-plan': 'no-plan',
+} as const;
+
+export interface SuperAdminOrgOverviewResponseDto {
   /** Organization unique identifier */
   id: string;
   /** Organization display name */
@@ -590,15 +616,27 @@ export interface SuperAdminOrgListItemResponseDto {
   hideIndividualUsage: boolean;
   /** Date when the organization was created */
   createdAt: string;
-  /** Whether the organization currently has an active subscription */
-  paying: boolean;
+  /** Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan */
+  lifecycleStatus: OrgLifecycleStatus;
+}
+
+export interface OrgLifecycleCountsDto {
+  /** All organizations matching the search, archived included */
+  total: number;
+  archived: number;
+  paying: number;
+  expired: number;
+  trial: number;
+  'no-plan': number;
 }
 
 export interface SuperAdminOrgListResponseDto {
   /** Array of organizations for the current page */
-  data: SuperAdminOrgListItemResponseDto[];
+  data: SuperAdminOrgOverviewResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
+  /** Organizations per lifecycle status for the search, ignoring the lifecycle filter */
+  lifecycleCounts: OrgLifecycleCountsDto;
 }
 
 export interface UpdateOrgRequestDto {
@@ -1170,7 +1208,7 @@ export interface ModelWithConfigResponseDto {
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
   /**
-     * Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.
+     * Maximum context window size in tokens. Undefined for non-language models.
      * @minimum 1
      * @maximum 2147483647
      */
@@ -1318,9 +1356,8 @@ export interface PermittedLanguageModelResponseDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** Whether this is the default model */
@@ -1553,7 +1590,7 @@ export interface LanguageModelResponseDto {
      * @minimum 1
      * @maximum 2147483647
      */
-  contextWindowSize?: number;
+  contextWindowSize: number;
   /** Whether the upstream provider currently has a known fault for this model */
   hasProviderFault: boolean;
   /** The date the model was created */
@@ -1734,9 +1771,8 @@ export interface CreateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -1813,9 +1849,8 @@ export interface UpdateLanguageModelRequestDto {
      * Maximum context window size in tokens
      * @minimum 1
      * @maximum 2147483647
-     * @nullable
      */
-  contextWindowSize?: number | null;
+  contextWindowSize: number;
   /** Whether the model is archived */
   isArchived: boolean;
   /**
@@ -2011,11 +2046,6 @@ export interface UpdateImageGenerationModelRequestDto {
      * @minimum 0
      */
   outputTokenCost?: number;
-}
-
-export interface TeamManagementAccessDto {
-  /** Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately */
-  canManage: boolean;
 }
 
 export interface CreateTeamDto {
@@ -3159,11 +3189,24 @@ export const ImproveSkillTextDtoField = {
   instructions: 'instructions',
 } as const;
 
+/**
+ * Current UI language, used when the draft language is unidentifiable; defaults to English
+ */
+export type ImproveSkillTextDtoLanguage = typeof ImproveSkillTextDtoLanguage[keyof typeof ImproveSkillTextDtoLanguage];
+
+
+export const ImproveSkillTextDtoLanguage = {
+  en: 'en',
+  de: 'de',
+} as const;
+
 export interface ImproveSkillTextDto {
   /** Which of the two texts should come back rewritten */
   field: ImproveSkillTextDtoField;
   /** The skill name, when it already exists */
   name?: string;
+  /** Current UI language, used when the draft language is unidentifiable; defaults to English */
+  language?: ImproveSkillTextDtoLanguage;
   /** The trigger as it currently stands in the form */
   trigger: string;
   /** The instructions as they currently stand in the form */
@@ -4078,6 +4121,14 @@ export interface SetAppAlertRequestDto {
   message: string;
 }
 
+export interface AcademyMinimumModuleSecondsDto {
+  /**
+     * Seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement.
+     * @minimum 0
+     */
+  seconds: number;
+}
+
 export interface AppAlertResponseDto {
   /** Whether the app-wide alert banner is currently shown */
   enabled: boolean;
@@ -4309,6 +4360,33 @@ export interface ProviderUsageResponseDto {
   providers: ProviderUsageDto[];
 }
 
+export type CreditLimitScope = typeof CreditLimitScope[keyof typeof CreditLimitScope];
+
+
+export const CreditLimitScope = {
+  USER: 'USER',
+  TEAM: 'TEAM',
+  API_KEY: 'API_KEY',
+  USER_DEFAULT: 'USER_DEFAULT',
+} as const;
+
+export interface DefaultUserCreditLimitResponseDto {
+  scope: CreditLimitScope;
+  /**
+     * Personal limit for every user without an individual limit; null when no default is set.
+     * @nullable
+     */
+  monthlyCredits: number | null;
+}
+
+export interface SetCreditLimitDto {
+  /**
+     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+     * @minimum 0
+     */
+  monthlyCredits: number;
+}
+
 export interface UserCreditLimitItemDto {
   userId: string;
   name: string;
@@ -4319,13 +4397,19 @@ export interface UserCreditLimitItemDto {
   creditsUsed?: number;
 }
 
+export interface UserCreditUsageItemDto {
+  userId: string;
+  /** Credits consumed in the current calendar month; omitted when individual usage is hidden */
+  creditsUsed?: number;
+}
+
 export interface TeamCreditLimitItemDto {
   teamId: string;
   name: string;
   /** Configured monthly credit limit */
   monthlyCredits: number;
-  /** Credits consumed by all current team members in the current month; omitted when individual usage is hidden */
-  creditsUsed?: number;
+  /** Credits consumed by all current team members in the current month */
+  creditsUsed: number;
 }
 
 export interface ApiKeyCreditLimitItemDto {
@@ -4337,27 +4421,22 @@ export interface ApiKeyCreditLimitItemDto {
   creditsUsed: number;
 }
 
-export interface SetCreditLimitDto {
-  /**
-     * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
-     * @minimum 0
-     */
-  monthlyCredits: number;
-}
-
 export interface UserCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   userId: string;
 }
 
 export interface TeamCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   teamId: string;
 }
 
 export interface ApiKeyCreditLimitResponseDto {
+  scope: CreditLimitScope;
   id: string;
   monthlyCredits: number;
   apiKeyId: string;
@@ -5206,6 +5285,14 @@ export interface ChapterProgressResponseDto {
   confirmationValid: boolean;
   /** When the learner most recently confirmed the chapter */
   confirmedAt: string;
+  /** Whether confirming again now returns this confirmation unchanged instead of re-checking page time, so a lost response can be retried */
+  replayable: boolean;
+}
+
+export interface CourseModuleProgressResponseDto {
+  courseModuleId: string;
+  /** Seconds the video page was open and visible since the last certificate. This is page time, not watch time. */
+  visibleSeconds: number;
 }
 
 export interface AcademyProgressResponseDto {
@@ -5221,6 +5308,15 @@ export interface AcademyProgressResponseDto {
      * @nullable
      */
   academyCompletionExpiresAt: string | null;
+  /** Recorded page time per course module; modules never opened are omitted */
+  courseModules: CourseModuleProgressResponseDto[];
+  /** Seconds every video page of a chapter must reach before the chapter can be confirmed */
+  minimumModuleSeconds: number;
+}
+
+export interface RecordModuleHeartbeatRequestDto {
+  /** True when the page just became visible; only starts the clock without crediting time since the previous heartbeat. */
+  sessionStart: boolean;
 }
 
 export interface CreateChapterRequestDto {
@@ -5730,11 +5826,10 @@ offset?: number;
 };
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
-status?: SuperAdminOrgsControllerGetAllOrgsStatus;
 /**
- * Filter by whether the organization currently has an active subscription
+ * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
  */
-subscription?: SuperAdminOrgsControllerGetAllOrgsSubscription;
+lifecycle?: OrgLifecycleFilter;
 /**
  * Search organizations by name, or by exact organization ID.
  */
@@ -5748,24 +5843,6 @@ limit?: number;
  */
 offset?: number;
 };
-
-export type SuperAdminOrgsControllerGetAllOrgsStatus = typeof SuperAdminOrgsControllerGetAllOrgsStatus[keyof typeof SuperAdminOrgsControllerGetAllOrgsStatus];
-
-
-export const SuperAdminOrgsControllerGetAllOrgsStatus = {
-  active: 'active',
-  archived: 'archived',
-  all: 'all',
-} as const;
-
-export type SuperAdminOrgsControllerGetAllOrgsSubscription = typeof SuperAdminOrgsControllerGetAllOrgsSubscription[keyof typeof SuperAdminOrgsControllerGetAllOrgsSubscription];
-
-
-export const SuperAdminOrgsControllerGetAllOrgsSubscription = {
-  all: 'all',
-  paying: 'paying',
-  'non-paying': 'non-paying',
-} as const;
 
 export type TeamsControllerListTeamMembersParams = {
 /**
@@ -6055,6 +6132,13 @@ startDate?: string;
  * Exclusive end of the range in ISO format
  */
 endDate?: string;
+};
+
+export type CreditLimitsControllerGetUserUsageParams = {
+/**
+ * Users whose current monthly credit consumption to return
+ */
+userIds: string[];
 };
 
 export type ArtifactsControllerFindByWorkspaceParams = {

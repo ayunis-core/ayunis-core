@@ -637,6 +637,7 @@
       },
       "validation": {
         "contextWindowSize": {
+          "required": "Context window size is required",
           "isInt": "Context window size must be a whole number",
           "min": "Context window size must be at least 1",
           "invalid": "Enter a valid context window size"
@@ -652,8 +653,6 @@
     "archive": "Archive organisation",
     "restore": "Restore organisation",
     "delete": "Delete organisation",
-    "active": "Active",
-    "archived": "Archived",
     "archiveTitle": "Archive organisation?",
     "restoreTitle": "Restore organisation?",
     "archiveDescription": "All data stays. Members will be signed out and cannot sign in until the organisation is restored.",
@@ -680,6 +679,6 @@
     "success": "Usage visibility updated",
     "error": "Could not update usage visibility",
     "notFound": "Organisation not found",
-    "description": "When enabled, only super admins can change team memberships or team limits, or delete teams and users."
+    "description": "When enabled, the user usage table is hidden for this organisation's admins and usage of individual users is no longer available to them."
   }
 }

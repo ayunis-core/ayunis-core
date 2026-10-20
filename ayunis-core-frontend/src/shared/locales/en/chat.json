@@ -62,6 +62,8 @@
     "errorExecutionError": "Error fetching response",
     "errorImageTooLarge": "The image is too large for the selected model. Please reduce its size (e.g. lower the resolution) and try again.",
     "errorInferenceTimeout": "The model stopped responding and the connection was closed. Please try again.",
+    "errorMalformedToolCallTokenLimit": "The model's response was cut off because it was too long. Please make a smaller request or split the task.",
+    "errorMalformedToolCall": "The model produced an invalid tool call. Please try again.",
     "errorUnexpected": "An unexpected error occurred",
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
@@ -121,7 +123,8 @@
         "knowledge_query": "Searched knowledge base",
         "code_execution": "Calculated",
         "http": "Made HTTP request",
-        "use_tool": "Used {{tool}}"
+        "use_tool": "Used {{tool}}",
+        "create_file": "Created file"
       }
     },
     "map": {
@@ -270,6 +273,11 @@
         "altFallback": "Generated image",
         "openPreview": "Open image preview",
         "download": "Download image"
+      },
+      "create_file": {
+        "preparing": "Preparing file…",
+        "description": "XML, JSON or text file",
+        "download": "Download"
       }
     },
     "charts": {

@@ -14,6 +14,7 @@ describe('LanguageModel', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: false,
+      contextWindowSize: 128_000,
       isArchived: false,
       inputTokenCost: costs.inputTokenCost,
       outputTokenCost: costs.outputTokenCost,
@@ -33,6 +34,7 @@ describe('LanguageModel', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: true,
+        contextWindowSize: 128_000,
         isArchived: false,
         hasProviderFault: true,
       });
@@ -56,10 +58,6 @@ describe('LanguageModel', () => {
       });
 
       expect(model).toHaveProperty('contextWindowSize', 128_000);
-    });
-
-    it('is undefined when omitted', () => {
-      expect(makeModel({})).toHaveProperty('contextWindowSize', undefined);
     });
 
     it.each([0, -1, 1.5, 2_147_483_648])(

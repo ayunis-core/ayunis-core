@@ -1,4 +1,3 @@
-import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsList, TabsTrigger } from '@ayunis/ui/components/tabs';
@@ -20,6 +19,7 @@ import {
 } from '@/features/credit-limits/model/credit-limit-settings';
 import { useCreditLimitDirectory } from '@/pages/admin-settings/credit-limits-settings/api/useCreditLimitDirectory';
 import { CreditLimitsTable } from './CreditLimitsTable';
+import { DefaultUserLimitCard } from './DefaultUserLimitCard';
 
 export default function CreditLimitsSettingsPage({
   filters,
@@ -49,7 +49,6 @@ function CreditLimitDirectory({
   const { t } = useTranslation('admin-settings-credit-limits');
   const navigate = useNavigate();
   const directory = useCreditLimitDirectory(filters, true);
-  const { canManageTeams } = useTeamManagementAccess();
   const update = (next: Partial<CreditLimitSearch>, replace = false) =>
     void navigate({
       to: '/admin-settings/credit-limits',
@@ -77,6 +76,11 @@ function CreditLimitDirectory({
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      {filters.tab === 'users' &&
+        !directory.isPending &&
+        !directory.isError && (
+          <DefaultUserLimitCard defaultLimit={directory.defaultLimit} />
+        )}
       <Card>
         <CardHeader>
           <CardTitle>{t(`table.${filters.tab}Title`)}</CardTitle>
@@ -93,9 +97,9 @@ function CreditLimitDirectory({
             className="max-w-sm"
           />
           <CreditLimitsTable
-            canManageTeams={canManageTeams}
             rows={directory.rows}
             filters={filters}
+            defaultLimit={directory.defaultLimit}
             isPending={directory.isPending}
             isError={directory.isError}
             onRetry={directory.retry}

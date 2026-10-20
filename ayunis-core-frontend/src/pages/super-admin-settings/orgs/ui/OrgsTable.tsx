@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import { Badge } from '@ayunis/ui/components/badge';
 import {
   Table,
   TableBody,
@@ -15,13 +14,14 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgListItemResponseDto } from '@/shared/api';
+import type { SuperAdminOrgOverviewResponseDto } from '@/shared/api';
+import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
 import type { ReactNode } from 'react';
 
 interface OrgsTableProps {
-  orgs: SuperAdminOrgListItemResponseDto[];
+  orgs: SuperAdminOrgOverviewResponseDto[];
   searchSlot?: ReactNode;
 }
 
@@ -71,20 +71,7 @@ export default function OrgsTable({
                 >
                   <TableCell className="font-medium">{org.name}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      <Badge variant={org.archived ? 'secondary' : 'outline'}>
-                        {t(
-                          org.archived
-                            ? 'statuses.archived'
-                            : 'statuses.active',
-                        )}
-                      </Badge>
-                      {org.paying && (
-                        <Badge data-testid="org-paying-badge">
-                          {t('statuses.paying')}
-                        </Badge>
-                      )}
-                    </div>
+                    <OrgLifecycleBadge status={org.lifecycleStatus} />
                   </TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>

@@ -71,6 +71,7 @@ describe('LocalModelsRepository', () => {
     record.canUseTools = true;
     record.isReasoning = false;
     record.canVision = true;
+    record.contextWindowSize = 128_000;
     record.isArchived = false;
     record.createdAt = new Date('2025-01-01T00:00:00Z');
     record.updatedAt = new Date('2025-01-02T00:00:00Z');
@@ -113,6 +114,7 @@ describe('LocalModelsRepository', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: true,
+        contextWindowSize: 128_000,
         isArchived: false,
       });
       const driverError = Object.assign(new Error('duplicate key'), {
@@ -142,6 +144,7 @@ describe('LocalModelsRepository', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: true,
+        contextWindowSize: 128_000,
         isArchived: false,
       });
       const driverError = Object.assign(new Error('duplicate primary key'), {

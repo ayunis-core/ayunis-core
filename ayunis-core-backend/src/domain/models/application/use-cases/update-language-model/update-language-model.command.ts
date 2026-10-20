@@ -13,7 +13,7 @@ export class UpdateLanguageModelCommand {
   canUseTools: boolean;
   isReasoning: boolean;
   canVision: boolean;
-  contextWindowSize?: number;
+  contextWindowSize: number;
   inputTokenCost?: number;
   outputTokenCost?: number;
   tier?: ModelTier;
@@ -30,7 +30,7 @@ export class UpdateLanguageModelCommand {
     canUseTools: boolean;
     isReasoning: boolean;
     canVision: boolean;
-    contextWindowSize?: number;
+    contextWindowSize: number;
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;

@@ -23,6 +23,7 @@ export interface LanguageModelFixture {
   isArchived: boolean;
   canUseTools: boolean;
   canVision: boolean;
+  contextWindowSize: number;
   inputTokenCost: number;
   outputTokenCost: number;
 }

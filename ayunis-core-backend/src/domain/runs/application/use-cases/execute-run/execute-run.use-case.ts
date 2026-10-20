@@ -14,6 +14,7 @@ import { SkillActivationService } from 'src/domain/skills/application/services/s
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -256,6 +257,18 @@ export class ExecuteRunUseCase {
     prepared: PreparedRun,
     input: RunInput,
   ): Promise<SeededInput | null> {
+    try {
+      return await this.persistInput(prepared, input);
+    } catch (error) {
+      if (error instanceof ThreadPiiMaskThreadMissingError) return null;
+      throw error;
+    }
+  }
+
+  private async persistInput(
+    prepared: PreparedRun,
+    input: RunInput,
+  ): Promise<SeededInput | null> {
     if (input instanceof RunUserInput) {
       return this.persistUserMessage(prepared, input);
     }
@@ -319,7 +332,8 @@ export class ExecuteRunUseCase {
     } catch (error) {
       if (
         error instanceof AnonymizationInputTooLongError ||
-        error instanceof ProviderUnavailableError
+        error instanceof ProviderUnavailableError ||
+        error instanceof ThreadPiiMaskThreadMissingError
       ) {
         throw error;
       }

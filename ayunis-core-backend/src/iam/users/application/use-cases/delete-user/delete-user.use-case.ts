@@ -1,6 +1,5 @@
 import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -30,7 +29,6 @@ export class DeleteUserUseCase {
   private readonly logger = new Logger(DeleteUserUseCase.name);
 
   constructor(
-    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -51,7 +49,6 @@ export class DeleteUserUseCase {
       throw new UserNotFoundError(command.userId);
     }
     this.assertAllowedToDelete(command, userToDelete);
-    await this.teamManagementAccess.execute({ orgId: userToDelete.orgId });
 
     // Two-phase cleanup: listeners resolve dependent data that database
     // cascades cannot reach (MinIO assets, in-flight source processing) while

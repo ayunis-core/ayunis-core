@@ -24,16 +24,26 @@ function shouldPreserveRejectedTranscript(
   error: unknown,
   input: RunInput,
 ): boolean {
-  if (!(error instanceof ApplicationError)) return false;
-  if (!isTranscriptPreservingRejection(error)) return false;
+  const rejection = findTranscriptPreservingRejection(error);
+  if (!rejection) return false;
   if (input instanceof RunToolResultInput) return true;
-  const modelTurn = error.metadata?.modelTurn;
+  const modelTurn = rejection.metadata?.modelTurn;
   return typeof modelTurn === 'number' && modelTurn > 1;
 }
 
-function isTranscriptPreservingRejection(error: ApplicationError): boolean {
-  return (
+function findTranscriptPreservingRejection(
+  error: unknown,
+): ApplicationError | undefined {
+  if (!(error instanceof ApplicationError)) return undefined;
+  if (
     isCreditPolicyErrorCode(error.code) ||
     error instanceof RunUsageAccountingFailedError
-  );
+  ) {
+    return error;
+  }
+  // A provider classification surfaced in place of a usage accounting
+  // failure carries that failure as its cause.
+  return error.cause instanceof RunUsageAccountingFailedError
+    ? error.cause
+    : undefined;
 }

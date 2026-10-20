@@ -134,7 +134,9 @@ describe('Nest logger adapter', () => {
   });
 
   it('preserves the object-first error contract used by provider failures', () => {
-    probe().emitProviderFailure(new Error('provider request failed'));
+    probe().emitProviderFailure(
+      new Error('Could not parse date resident@example.org'),
+    );
 
     expect(entries[0]).toMatchObject({
       level: 50,
@@ -142,9 +144,9 @@ describe('Nest logger adapter', () => {
       model: 'gpt-5',
       provider: 'openai',
       'nestjs.context': 'ProbeService',
-      // `err` is a redacted key, so the serialized error never leaves the process
-      err: '[Redacted]',
+      err: { type: 'Error', message: '[Redacted]' },
     });
+    expect(JSON.stringify(entries)).not.toContain('resident@example.org');
   });
 
   it('serializes a bare Error argument under the err key', () => {
@@ -152,9 +154,33 @@ describe('Nest logger adapter', () => {
 
     expect(entries[0]).toMatchObject({
       level: 50,
-      err: '[Redacted]',
+      err: { type: 'Error', message: '[Redacted]' },
       'nestjs.context': 'ProbeService',
     });
+  });
+
+  it('does not copy a bare error message into the log message', () => {
+    probe().emitError(new Error('Invalid email resident@example.org'));
+
+    expect(entries[0]).toMatchObject({
+      msg: '[Redacted]',
+      err: { type: 'Error', message: '[Redacted]' },
+    });
+    expect(JSON.stringify(entries)).not.toContain('resident@example.org');
+  });
+
+  it('uses a fixed diagnostic summary for bare errors with a recognized code', () => {
+    probe().emitError(
+      Object.assign(new Error('private request text'), {
+        code: '57014',
+      }),
+    );
+
+    expect(entries[0]).toMatchObject({
+      msg: 'Database query canceled',
+      err: { type: 'Error', code: '57014', message: 'Database query canceled' },
+    });
+    expect(JSON.stringify(entries)).not.toContain('private request text');
   });
 
   it('logs string-only messages without an empty metadata object', () => {

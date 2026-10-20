@@ -23,11 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { InviteFormData } from '@/pages/admin-settings/users-settings/model/types';
 import { InviteTeamSelect } from './InviteTeamSelect';
-import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useInviteCreate } from '@/pages/admin-settings/users-settings/api/useInviteCreate';
 import { useTranslation } from 'react-i18next';
 import { Copy, Check } from 'lucide-react';
@@ -45,7 +44,6 @@ export default function SingleInviteDialog({
   onOpenChange,
 }: Readonly<SingleInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
-  const { canManageTeams } = useTeamManagementAccess();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
 
@@ -56,10 +54,6 @@ export default function SingleInviteDialog({
       teamIds: [],
     },
   });
-
-  useEffect(() => {
-    if (!canManageTeams) form.setValue('teamIds', []);
-  }, [canManageTeams, form]);
 
   function handleClose() {
     onOpenChange(false);
@@ -81,7 +75,7 @@ export default function SingleInviteDialog({
   );
 
   function onSubmit(data: InviteFormData) {
-    createInvite({ ...data, teamIds: canManageTeams ? data.teamIds : [] });
+    createInvite(data);
   }
 
   function handleCancel() {
@@ -187,16 +181,10 @@ export default function SingleInviteDialog({
             <FormItem>
               <FormLabel>{t('inviteDialog.teamsLabel')}</FormLabel>
               <InviteTeamSelect
-                key={canManageTeams ? 'available' : 'restricted'}
                 onChange={field.onChange}
-                enabled={open && canManageTeams}
-                disabled={!canManageTeams || isCreatingInvite}
+                enabled={open}
+                disabled={isCreatingInvite}
               />
-              {!canManageTeams && (
-                <p className="text-sm text-muted-foreground">
-                  {t('inviteDialog.teamsRestricted')}
-                </p>
-              )}
               <FormMessage />
             </FormItem>
           )}

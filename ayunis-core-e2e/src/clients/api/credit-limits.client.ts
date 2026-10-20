@@ -1,6 +1,6 @@
-import type { APIRequestContext } from '@playwright/test';
-import { login } from './auth.client';
-import { generatedApi } from './generated-api';
+import type { APIRequestContext } from "@playwright/test";
+import { login } from "./auth.client";
+import { generatedApi } from "./generated-api";
 
 export async function ensureUsageSubscription(
   adminApi: APIRequestContext,
@@ -11,17 +11,17 @@ export async function ensureUsageSubscription(
   const principal = await generatedApi.authenticationControllerMe({
     api: adminApi,
   });
-  await login(superAdminApi, 'admin@demo.local', 'admin');
+  await login(superAdminApi, "admin@demo.local", "admin");
   await generatedApi.superAdminSubscriptionsControllerCreateSubscription(
     principal.orgId,
     {
-      companyName: 'E2E Credit Limits',
-      street: 'Test Street',
-      houseNumber: '1',
-      postalCode: '10115',
-      city: 'Berlin',
-      country: 'Germany',
-      type: 'USAGE_BASED',
+      companyName: "E2E Credit Limits",
+      street: "Test Street",
+      houseNumber: "1",
+      postalCode: "10115",
+      city: "Berlin",
+      country: "Germany",
+      type: "USAGE_BASED",
       monthlyCredits: 10000,
     },
     { api: superAdminApi },
@@ -54,6 +54,30 @@ export async function getUserCreditLimit(
   return (
     limits.find((limit) => limit.userId === userId)?.monthlyCredits ?? null
   );
+}
+
+export function getUserCreditUsage(api: APIRequestContext, userIds: string[]) {
+  return generatedApi.creditLimitsControllerGetUserUsage({ userIds }, { api });
+}
+
+export async function getDefaultUserCreditLimit(api: APIRequestContext) {
+  const { monthlyCredits } =
+    await generatedApi.creditLimitsControllerGetDefaultUserLimit({ api });
+  return monthlyCredits;
+}
+
+export function setDefaultUserCreditLimit(
+  api: APIRequestContext,
+  monthlyCredits: number,
+) {
+  return generatedApi.creditLimitsControllerSetDefaultUserLimit(
+    { monthlyCredits },
+    { api },
+  );
+}
+
+export function removeDefaultUserCreditLimit(api: APIRequestContext) {
+  return generatedApi.creditLimitsControllerRemoveDefaultUserLimit({ api });
 }
 
 export function getAuthenticatedCreditPrincipal(api: APIRequestContext) {

@@ -1,4 +1,8 @@
-import type { ProviderFailureFacts, RunEvent } from '@ayunis/agent-runtime';
+import type {
+  ProviderFailureFacts,
+  RunEvent,
+  TerminalModelCallInfo,
+} from '@ayunis/agent-runtime';
 import type {
   ApplicationError,
   ErrorMetadata,
@@ -27,37 +31,117 @@ import type { RuntimeModelRegistry } from './runtime-model.registry';
 
 type RunErrorEvent = Extract<RunEvent, { type: 'error' }>;
 
+interface ProviderFailureSource {
+  readonly message: string;
+  readonly modelCall: TerminalModelCallInfo;
+  readonly providerFailure: ProviderFailureFacts;
+}
+
 export function mapPortableProviderError(
   event: RunErrorEvent,
   models: RuntimeModelRegistry | undefined,
 ): ApplicationError | undefined {
-  if (
-    event.code !== 'PROVIDER_FAILED' ||
-    !event.providerFailure ||
-    !event.modelCall ||
-    !models
-  ) {
+  if (event.code !== 'PROVIDER_FAILED' || !event.modelCall) {
     return undefined;
   }
-  const providerFailure = event.providerFailure;
-  const modelCall = event.modelCall;
-  let model: LanguageModel;
-  try {
-    model = models.resolveByProviderName(modelCall.provider);
-  } catch {
-    return undefined;
+  if (!event.providerFailure) {
+    return mapEmptyModelResponse(event.message, event.modelCall, models);
   }
-  return mapResolvedProviderError(
-    event,
+  return mapClassifiedProviderFailure(
+    {
+      message: event.message,
+      modelCall: event.modelCall,
+      providerFailure: event.providerFailure,
+    },
     models,
-    model,
-    providerFailure,
-    modelCall.modelCallId,
   );
 }
 
-function mapResolvedProviderError(
+/**
+ * A critical hook that fails on top of a provider failure must not hide the
+ * provider classification the run would otherwise have reported.
+ */
+export function mapProviderFailureBehindHook(
   event: RunErrorEvent,
+  models: RuntimeModelRegistry | undefined,
+): ApplicationError | undefined {
+  if (
+    event.code !== 'HOOK_FAILED' ||
+    !event.modelCall ||
+    !event.providerFailure
+  ) {
+    return undefined;
+  }
+  return mapClassifiedProviderFailure(
+    {
+      message: underlyingErrorMessage(event) ?? event.message,
+      modelCall: event.modelCall,
+      providerFailure: event.providerFailure,
+    },
+    models,
+  );
+}
+
+function underlyingErrorMessage(event: RunErrorEvent): string | undefined {
+  const underlying = event.details?.underlyingError;
+  if (typeof underlying !== 'object' || underlying === null) return undefined;
+  const message = (underlying as { message?: unknown }).message;
+  return typeof message === 'string' ? message : undefined;
+}
+
+function mapClassifiedProviderFailure(
+  source: ProviderFailureSource,
+  models: RuntimeModelRegistry | undefined,
+): ApplicationError | undefined {
+  if (!models) return undefined;
+  const model = resolveModel(models, source.modelCall.provider);
+  if (!model) return undefined;
+  return mapResolvedProviderError(
+    source.message,
+    models,
+    model,
+    source.providerFailure,
+    source.modelCall.modelCallId,
+  );
+}
+
+function resolveModel(
+  models: RuntimeModelRegistry,
+  runtimeProviderName: string,
+): LanguageModel | undefined {
+  try {
+    return models.resolveByProviderName(runtimeProviderName);
+  } catch {
+    return undefined;
+  }
+}
+
+const EMPTY_RESPONSE_REASONS: Readonly<Record<string, string>> = {
+  'Model provider returned an empty response':
+    'model returned an empty response',
+  'Model provider returned no answer': 'model returned no answer',
+};
+
+function mapEmptyModelResponse(
+  message: string,
+  modelCall: TerminalModelCallInfo,
+  models: RuntimeModelRegistry | undefined,
+): ApplicationError | undefined {
+  const reason = EMPTY_RESPONSE_REASONS[message];
+  if (!reason) return undefined;
+  const model = models && resolveModel(models, modelCall.provider);
+  return new InferenceFailedError(reason, {
+    ...(model
+      ? { provider: model.provider, modelId: model.name }
+      : { runtimeProvider: modelCall.provider }),
+    modelCallId: modelCall.modelCallId,
+    trigger: modelCall.trigger,
+    callSequence: modelCall.callSequence,
+  });
+}
+
+function mapResolvedProviderError(
+  message: string,
   models: RuntimeModelRegistry,
   model: LanguageModel,
   providerFailure: ProviderFailureFacts,
@@ -77,9 +161,9 @@ function mapResolvedProviderError(
     failure,
     diagnostics,
   );
-  if (isRuntimeIdleStall(event, failure)) {
+  if (isRuntimeIdleStall(message, failure)) {
     return new InferenceStreamStalledError(
-      readIdleMs(event.message),
+      readIdleMs(message),
       providerFailureMetadata(failure, context),
     );
   }
@@ -253,14 +337,14 @@ const RUNTIME_IDLE_PREFIX = 'Model provider stream was idle for ';
 const MILLISECONDS_SUFFIX = 'ms';
 
 function isRuntimeIdleStall(
-  event: RunErrorEvent,
+  message: string,
   failure: ProviderFailureFacts,
 ): boolean {
-  const idleMs = readIdleMs(event.message);
+  const idleMs = readIdleMs(message);
   return (
     failure.kind === 'timeout' &&
-    event.message.startsWith(RUNTIME_IDLE_PREFIX) &&
-    event.message.endsWith(MILLISECONDS_SUFFIX) &&
+    message.startsWith(RUNTIME_IDLE_PREFIX) &&
+    message.endsWith(MILLISECONDS_SUFFIX) &&
     Number.isFinite(idleMs) &&
     idleMs > 0
   );

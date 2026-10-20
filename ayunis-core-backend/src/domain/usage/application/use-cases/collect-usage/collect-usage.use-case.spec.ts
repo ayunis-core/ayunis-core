@@ -47,6 +47,7 @@ describe('CollectUsageUseCase', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: false,
+      contextWindowSize: 128_000,
       isArchived: false,
       ...overrides,
     });

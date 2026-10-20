@@ -1,4 +1,3 @@
-import { useTeamManagementAccess } from '@/features/permissions/api/useTeamManagementAccess';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
@@ -65,9 +64,7 @@ export function TeamDetailPage({
   membersResponse,
 }: Readonly<TeamDetailPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
-  const { canManageTeams } = useTeamManagementAccess();
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  if (!canManageTeams && addMemberDialogOpen) setAddMemberDialogOpen(false);
   const { hasRole } = useAuthorization();
   const isAdmin = hasRole(MeResponseDtoRole.admin);
   const hasCreditBudget = useHasCreditBudget(isAdmin);
@@ -76,7 +73,6 @@ export function TeamDetailPage({
       <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
         <Button
           size="sm"
-          disabled={!canManageTeams}
           data-testid="team-members-add"
           onClick={() => setAddMemberDialogOpen(true)}
         >
@@ -110,25 +106,17 @@ export function TeamDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <TeamMembersList
-              teamId={team.id}
-              members={membersResponse.data}
-              canManage={canManageTeams}
-            />
+            <TeamMembersList teamId={team.id} members={membersResponse.data} />
           </CardContent>
         </Card>
         {isAdmin && <TeamModelSummary team={team} />}
         {isAdmin && hasCreditBudget && (
-          <TeamCreditLimitCard
-            teamId={team.id}
-            teamName={team.name}
-            canManage={canManageTeams}
-          />
+          <TeamCreditLimitCard teamId={team.id} teamName={team.name} />
         )}
       </div>
       <AddTeamMemberDialog
         teamId={team.id}
-        open={addMemberDialogOpen && canManageTeams}
+        open={addMemberDialogOpen}
         onOpenChange={setAddMemberDialogOpen}
       />
     </SettingsLayout>

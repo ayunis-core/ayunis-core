@@ -28,7 +28,15 @@
     "configure": "Konfigurieren",
     "search": "Teams oder Nutzer suchen",
     "empty": "Keine passenden Teams oder Nutzer.",
-    "blocked": "Kostenpflichtige Modelle gesperrt"
+    "blocked": "Kostenpflichtige Modelle gesperrt",
+    "defaultLimitHidden": "Standard ({{credits}})",
+    "defaultLimit": "{{used}} / {{credits}} (Standard)"
+  },
+  "defaultLimit": {
+    "title": "Standardlimit pro Nutzer",
+    "description": "Gilt für alle Nutzer ohne individuelles Limit. Team-Limits gelten zusätzlich.",
+    "value": "{{credits}} Credits pro Monat",
+    "notSet": "Nicht festgelegt – Nutzer ohne individuelles Limit haben kein persönliches Limit"
   },
   "form": {
     "noLimit": "Kein zusätzliches Limit",
@@ -49,8 +57,7 @@
   "creditLimits": {
     "teamCard": {
       "title": "Guthaben-Limit",
-      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht",
-      "limitOnly": "Monatliches Guthaben-Limit: {{limit}}"
+      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht"
     },
     "set": {
       "success": "Guthaben-Limit gespeichert",

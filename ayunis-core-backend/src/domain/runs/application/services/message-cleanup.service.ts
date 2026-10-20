@@ -7,6 +7,7 @@ import { DeleteMessageUseCase } from 'src/domain/messages/application/use-cases/
 import { DeleteMessageCommand } from 'src/domain/messages/application/use-cases/delete-message/delete-message.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 
 /**
  * Cleans up threads after a failed or interrupted run.
@@ -48,6 +49,11 @@ export class MessageCleanupService {
         ownedMessageIds,
       );
     } catch (error) {
+      // A run aborted by a thread deletion has nothing left to roll back.
+      if (error instanceof ThreadNotFoundError) {
+        this.logger.debug({ threadId }, 'Thread deleted; skipping cleanup');
+        return;
+      }
       this.logger.error(
         {
           threadId,

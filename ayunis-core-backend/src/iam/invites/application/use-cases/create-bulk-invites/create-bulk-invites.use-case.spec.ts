@@ -1,4 +1,3 @@
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () =>
@@ -105,10 +104,6 @@ describe('CreateBulkInvitesUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        {
-          provide: AssertTeamManagementAllowedUseCase,
-          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
-        },
         CreateBulkInvitesUseCase,
         BulkInviteDeliveryService,
         BulkInviteValidatorService,

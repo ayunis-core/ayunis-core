@@ -58,10 +58,22 @@ export class TeamCreditLimitItemDto {
   })
   monthlyCredits: number;
 
+  @ApiProperty({
+    description:
+      'Credits consumed by all current team members in the current month',
+    example: 8300,
+  })
+  creditsUsed: number;
+}
+
+export class UserCreditUsageItemDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440001' })
+  userId: UUID;
+
   @ApiPropertyOptional({
     description:
-      'Credits consumed by all current team members in the current month; omitted when individual usage is hidden',
-    example: 8300,
+      'Credits consumed in the current calendar month; omitted when individual usage is hidden',
+    example: 1240,
   })
   creditsUsed?: number;
 }

@@ -30,9 +30,12 @@ import {
   reconstructRuntimeAnonymizationError,
   reconstructRuntimeModelError,
 } from './runtime-model-error';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
-import { mapPortableProviderError } from './provider-failure.mapper';
+import {
+  mapPortableProviderError,
+  mapProviderFailureBehindHook,
+} from './provider-failure.mapper';
+import { mapMalformedToolCallError } from './malformed-tool-call-error.helper';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { mapRuntimeHookError } from './runtime-hook-error';
 import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
@@ -273,14 +276,6 @@ const RUN_ERROR_MAPPERS = new Map<
     },
   ],
   [
-    'MALFORMED_TOOL_CALL',
-    (event) =>
-      new InferenceFailedError(
-        'model emitted a tool call whose arguments did not arrive intact',
-        event.details,
-      ),
-  ],
-  [
     'TOOL_REPEATEDLY_FAILING',
     (event) => {
       const toolName = event.details?.toolName;
@@ -305,9 +300,17 @@ function mapRunError(
       reconstructRuntimeAnonymizationError(event.details),
     );
   }
-  const policyError =
-    mapCreditPolicyError(event) ?? mapUsageAccountingError(event, logger);
+  const policyError = mapCreditPolicyError(event);
   if (policyError) return policyError;
+  const accountingError = mapUsageAccountingError(event, logger);
+  if (accountingError) {
+    const providerError = mapProviderFailureBehindHook(event, models);
+    if (!providerError) return accountingError;
+    // The accounting failure is what made the call terminal; the transcript
+    // policy reads it from here.
+    providerError.cause = accountingError;
+    return providerError;
+  }
   const hookFailure = mapRuntimeHookError(event, logger);
   if (hookFailure) return hookFailure;
   const runtimeModelError = reconstructRuntimeModelError(event.details);
@@ -318,6 +321,8 @@ function mapRunError(
   if (portableProviderError) {
     return portableProviderError;
   }
+  const malformedToolCall = mapMalformedToolCallError(event, models);
+  if (malformedToolCall) return malformedToolCall;
   const mapper = RUN_ERROR_MAPPERS.get(event.code);
   if (mapper) {
     return mapper(event);

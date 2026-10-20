@@ -58,10 +58,18 @@ export const providerRetryDelay = (
     retryAfter !== undefined &&
     config.retryAfter.precedence === 'retry_after'
   ) {
-    return retryAfter;
+    return spreadRetryAfter(config, retryAfter);
   }
   return jitteredBackoff(config, retryNumber);
 };
+
+// Firing before the provider's Retry-After only hits the exhausted quota
+// again, so the spread is additive.
+const spreadRetryAfter = (
+  config: ResolvedRetryConfig,
+  retryAfter: number,
+): number =>
+  retryAfter + Math.round(randomFraction() * config.retryAfter.jitterMs);
 
 // A rejection is deterministic: it is retried without delay and only because the
 // host is expected to change the request before the next call.
@@ -112,6 +120,10 @@ const validateRetryConfig = (config: ResolvedRetryConfig): void => {
   validateNonNegativeNumber(
     config.retryAfter.maxWaitMs,
     'retry.retryAfter.maxWaitMs',
+  );
+  validateNonNegativeNumber(
+    config.retryAfter.jitterMs,
+    'retry.retryAfter.jitterMs',
   );
   if (!['retry_after', 'backoff'].includes(config.retryAfter.precedence)) {
     throw new InvalidRunInputError(

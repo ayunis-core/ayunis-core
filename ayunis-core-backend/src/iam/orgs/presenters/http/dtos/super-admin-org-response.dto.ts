@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import {
+  ORG_LIFECYCLE_STATUSES,
+  type OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 
 export class SuperAdminOrgResponseDto {
   @ApiProperty({
@@ -33,24 +37,46 @@ export class SuperAdminOrgResponseDto {
   createdAt: Date;
 }
 
-export class SuperAdminOrgListItemResponseDto extends SuperAdminOrgResponseDto {
+export class SuperAdminOrgOverviewResponseDto extends SuperAdminOrgResponseDto {
   @ApiProperty({
+    enum: ORG_LIFECYCLE_STATUSES,
+    enumName: 'OrgLifecycleStatus',
     description:
-      'Whether the organization currently has an active subscription',
+      'Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan',
   })
-  paying: boolean;
+  lifecycleStatus: OrgLifecycleStatus;
+}
+
+export class OrgLifecycleCountsDto {
+  @ApiProperty({
+    description: 'All organizations matching the search, archived included',
+  })
+  total: number;
+
+  @ApiProperty() archived: number;
+  @ApiProperty() paying: number;
+  @ApiProperty() expired: number;
+  @ApiProperty() trial: number;
+  @ApiProperty({ name: 'no-plan' }) 'no-plan': number;
 }
 
 export class SuperAdminOrgListResponseDto {
   @ApiProperty({
     description: 'Array of organizations for the current page',
-    type: [SuperAdminOrgListItemResponseDto],
+    type: [SuperAdminOrgOverviewResponseDto],
   })
-  data: SuperAdminOrgListItemResponseDto[];
+  data: SuperAdminOrgOverviewResponseDto[];
 
   @ApiProperty({
     description: 'Pagination metadata',
     type: PaginationDto,
   })
   pagination: PaginationDto;
+
+  @ApiProperty({
+    description:
+      'Organizations per lifecycle status for the search, ignoring the lifecycle filter',
+    type: OrgLifecycleCountsDto,
+  })
+  lifecycleCounts: OrgLifecycleCountsDto;
 }

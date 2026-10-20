@@ -1,3 +1,4 @@
+import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -52,6 +53,16 @@ describe('RetrieveUrlUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveUrlUseCase,
+        {
+          provide: PdfExtractionCachePort,
+          useValue: {
+            getOrLoad: (
+              _org: unknown,
+              _raw: unknown,
+              load: () => Promise<unknown>,
+            ) => load(),
+          },
+        },
         { provide: UrlRetrieverHandler, useValue: mockHandler },
         {
           provide: AssertCrawlDomainAccessUseCase,

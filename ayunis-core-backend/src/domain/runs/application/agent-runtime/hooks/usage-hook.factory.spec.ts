@@ -7,6 +7,7 @@ import {
   type ProviderChunk,
   type RunEvent,
 } from '@ayunis/agent-runtime';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { UsageHookFactory } from './usage-hook.factory';
@@ -39,7 +40,8 @@ const messages = [
 ];
 
 const catalogModel = {
-  name: 'Municipal Assistant',
+  name: 'mistral-large-4',
+  provider: 'mistral',
   consumesCredits: true,
 } as LanguageModel;
 const freeCatalogModel = {
@@ -224,7 +226,8 @@ describe('UsageHookFactory', () => {
     expect(collectCritical).not.toHaveBeenCalled();
   });
 
-  it('fails closed when a paid call consumed provider data before cancellation', async () => {
+  it('warns instead of failing when the run is cancelled after a paid call consumed provider data', async () => {
+    const logger = createLoggerMock();
     const controller = new AbortController();
     const collectCritical = jest.fn();
     const factory = new UsageHookFactory({
@@ -253,9 +256,113 @@ describe('UsageHookFactory', () => {
     expect(stream).toHaveBeenCalledTimes(1);
     expect(completedEvents.at(-1)).toMatchObject({
       type: 'run_end',
-      status: 'error',
+      status: 'aborted',
     });
+    expect(completedEvents).not.toContainEqual(
+      expect.objectContaining({ type: 'error' }),
+    );
     expect(collectCritical).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        execution_path: 'agent_runtime',
+        modelCallId: expect.any(String),
+        provider: 'mistral',
+        model: 'mistral-large-4',
+        trigger: 'initial',
+        callSequence: 1,
+        outcome: 'aborted',
+        providerConsumptionStarted: true,
+        producedOutput: false,
+      },
+      'Usage unknown for a model call the consumer ended',
+    );
+  });
+
+  it('warns instead of failing when the consumer leaves a paid stream before its usage chunk', async () => {
+    const logger = createLoggerMock();
+    const collectCritical = jest.fn();
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const outcomes: string[] = [];
+    const stream = jest.fn(async function* () {
+      yield { textDelta: 'The office opens' };
+      yield { textDelta: ' at 8.' };
+      await new Promise(() => undefined);
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      stream,
+    };
+    const leaveAfterFirstDelta = async (): Promise<void> => {
+      for await (const event of run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [
+          {
+            name: 'capture-outcomes',
+            afterModelCall: (ctx) => {
+              outcomes.push(ctx.outcome.type);
+            },
+          },
+          factory.create({ resolveModel: () => catalogModel }),
+        ],
+      })) {
+        if (event.type === 'text_delta') break;
+      }
+    };
+
+    await expect(leaveAfterFirstDelta()).resolves.toBeUndefined();
+
+    expect(outcomes).toEqual(['consumer_abandoned']);
+    expect(collectCritical).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        execution_path: 'agent_runtime',
+        modelCallId: expect.any(String),
+        provider: 'mistral',
+        model: 'mistral-large-4',
+        trigger: 'initial',
+        callSequence: 1,
+        outcome: 'consumer_abandoned',
+        providerConsumptionStarted: true,
+        producedOutput: true,
+      },
+      'Usage unknown for a model call the consumer ended',
+    );
+  });
+
+  it('still records usage reported before the consumer left the stream', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      async *stream() {
+        yield { usage: { inputTokens: 12 } };
+        yield { textDelta: 'The office opens' };
+        await new Promise(() => undefined);
+      },
+    };
+
+    for await (const event of run({
+      instructions: 'Answer municipal service questions.',
+      model: provider,
+      messages,
+      hooks: [factory.create({ resolveModel: () => catalogModel })],
+    })) {
+      if (event.type === 'text_delta') break;
+    }
+
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      12,
+      0,
+      expect.any(String),
+      'agent_runtime',
+    );
   });
 
   it('blocks retries after hidden paid output arrives without usage', async () => {

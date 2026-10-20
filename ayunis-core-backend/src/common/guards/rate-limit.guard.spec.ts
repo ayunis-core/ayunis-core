@@ -12,7 +12,11 @@ describe('RateLimitGuard', () => {
   const clientIp = '203.0.113.7';
 
   function createContext(handlerName = 'create'): ExecutionContext {
-    const request = { headers: { 'x-forwarded-for': clientIp } };
+    const request = {
+      ip: clientIp,
+      socket: { remoteAddress: clientIp },
+      headers: {},
+    };
     return {
       switchToHttp: () => ({ getRequest: () => request }),
       getHandler: () => ({ name: handlerName }),

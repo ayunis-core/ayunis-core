@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { axiosInstance, shouldRetryQuery } from './client';
+import {
+  axiosInstance,
+  isRetryingThroughDeployGap,
+  shouldRetryQuery,
+} from './client';
 
 function respondWith(statuses: number[]) {
   const calls: InternalAxiosRequestConfig[] = [];
@@ -80,6 +84,30 @@ describe('deploy-gap retry', () => {
       expect(calls).toHaveLength(1);
     },
   );
+
+  it('reports a deploy-gap retry only while one is in flight', async () => {
+    respondWith([502, 200]);
+    expect(isRetryingThroughDeployGap()).toBe(false);
+
+    const request = axiosInstance.get('/threads');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(isRetryingThroughDeployGap()).toBe(true);
+    await vi.runAllTimersAsync();
+
+    await expect(request).resolves.toMatchObject({ data: 'ok' });
+    expect(isRetryingThroughDeployGap()).toBe(false);
+  });
+
+  it('clears the deploy-gap retry once retries are exhausted', async () => {
+    respondWith([502]);
+
+    const request = axiosInstance.get('/threads');
+    const settled = expect(request).rejects.toMatchObject({ status: 502 });
+    await vi.runAllTimersAsync();
+
+    await settled;
+    expect(isRetryingThroughDeployGap()).toBe(false);
+  });
 
   it('stops retrying once the request is aborted', async () => {
     const calls = respondWith([502, 200]);

@@ -108,10 +108,15 @@ interface Harness {
   readonly run: () => Promise<ModelCallOutcome>;
 }
 
+// Exact-wait assertions below need the Retry-After spread switched off.
+const DETERMINISTIC_RETRY = resolveRetryConfig({
+  retryAfter: { jitterMs: 0 },
+});
+
 const harness = (
   script: readonly Scripted[],
   maxRetries = DEFAULT_RETRY_CONFIG.maxRetries,
-  retry: ResolvedRetryConfig = DEFAULT_RETRY_CONFIG,
+  retry: ResolvedRetryConfig = DETERMINISTIC_RETRY,
 ): Harness => {
   const calls: ModelCallTrigger[] = [];
   const waits: number[] = [];
@@ -331,6 +336,112 @@ describe('callModelWithRecovery for mid-stream rate limits', () => {
     expect(harnessed.calls).toEqual(['initial']);
     expect(error.call).toMatchObject({ trigger: 'initial' });
   });
+});
+
+describe('Retry-After wait cap and jitter', () => {
+  const rateLimit: ProviderFailureFacts = {
+    kind: 'rate_limit',
+    stage: 'stream_establishment',
+    upstreamStatus: 429,
+    retryAfterMs: 10_000,
+  };
+
+  it('accepts Retry-After values up to 30 s by default', () => {
+    expect(DEFAULT_RETRY_CONFIG.retryAfter).toMatchObject({
+      precedence: 'retry_after',
+      maxWaitMs: 30_000,
+      jitterMs: 2_000,
+    });
+  });
+
+  it('retries a non-visible rate limit with a 25 s Retry-After after at least that wait', async () => {
+    const harnessed = harness(
+      [
+        (trigger, sequence) =>
+          midStreamRateLimit(trigger, sequence, { retryAfterMs: 25_000 }),
+        accepted,
+      ],
+      DEFAULT_RETRY_CONFIG.maxRetries,
+      DEFAULT_RETRY_CONFIG,
+    );
+
+    const outcome = await harnessed.run();
+
+    expect(harnessed.calls).toEqual(['initial', 'provider_retry']);
+    expect(harnessed.waits).toHaveLength(1);
+    expect(harnessed.waits[0]).toBeGreaterThanOrEqual(25_000);
+    expect(harnessed.waits[0]).toBeLessThanOrEqual(
+      25_000 + DEFAULT_RETRY_CONFIG.retryAfter.jitterMs,
+    );
+    expect(outcome).toMatchObject({ type: 'accepted', callSequence: 2 });
+  });
+
+  it('stays terminal when the Retry-After exceeds 30 s', async () => {
+    const harnessed = harness(
+      [
+        (trigger, sequence) =>
+          midStreamRateLimit(trigger, sequence, { retryAfterMs: 30_001 }),
+        accepted,
+      ],
+      DEFAULT_RETRY_CONFIG.maxRetries,
+      DEFAULT_RETRY_CONFIG,
+    );
+
+    await terminalFailure(harnessed);
+
+    expect(harnessed.calls).toEqual(['initial']);
+    expect(harnessed.waits).toEqual([]);
+  });
+
+  it('spreads honoured Retry-After waits without ever firing early', () => {
+    const config = resolveRetryConfig({ retryAfter: { jitterMs: 2_000 } });
+
+    const delays = Array.from({ length: 200 }, () =>
+      providerRetryDelay(config, rateLimit, 1),
+    );
+
+    for (const delay of delays) {
+      expect(delay).toBeGreaterThanOrEqual(10_000);
+      expect(delay).toBeLessThanOrEqual(12_000);
+      expect(Number.isInteger(delay)).toBe(true);
+    }
+    expect(new Set(delays).size).toBeGreaterThan(1);
+  });
+
+  it('keeps the exact Retry-After when the spread is disabled', () => {
+    const config = resolveRetryConfig({ retryAfter: { jitterMs: 0 } });
+
+    expect(providerRetryDelay(config, rateLimit, 1)).toBe(10_000);
+  });
+
+  it('leaves the backoff path untouched by the Retry-After spread', () => {
+    const config = resolveRetryConfig({
+      backoff: { initialDelayMs: 500, jitterRatio: 0 },
+      retryAfter: { precedence: 'backoff', jitterMs: 2_000 },
+    });
+
+    expect(providerRetryDelay(config, rateLimit, 1)).toBe(500);
+  });
+
+  it('caps the provider value, not the spread', () => {
+    const config = resolveRetryConfig({
+      retryAfter: { maxWaitMs: 10_000, jitterMs: 2_000 },
+    });
+
+    const delay = providerRetryDelay(config, rateLimit, 1);
+
+    expect(delay).toBeGreaterThanOrEqual(10_000);
+    expect(delay).toBeLessThanOrEqual(12_000);
+  });
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects an invalid Retry-After jitter: %s',
+    (jitterMs) => {
+      expect(() => resolveRetryConfig({ retryAfter: { jitterMs } })).toThrow(
+        'retry.retryAfter.jitterMs must be a non-negative number',
+      );
+    },
+  );
 });
 
 it.each(['context_lenght_exceeded', ' ', 'unknown_reason'])(

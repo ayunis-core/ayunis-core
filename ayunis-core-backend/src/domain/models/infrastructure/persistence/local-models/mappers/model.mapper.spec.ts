@@ -38,6 +38,7 @@ describe('ModelMapper', () => {
     record.canUseTools = true;
     record.isReasoning = false;
     record.canVision = false;
+    record.contextWindowSize = 200_000;
     record.isArchived = false;
     record.hasProviderFault = hasProviderFault;
     record.createdAt = new Date('2025-01-01T00:00:00Z');
@@ -50,7 +51,7 @@ describe('ModelMapper', () => {
     tier?: ModelTier,
     description?: string,
     hasProviderFault = false,
-    contextWindowSize?: number,
+    contextWindowSize = 200_000,
   ): LanguageModel => {
     return new LanguageModel({
       id: mockId,
@@ -202,23 +203,6 @@ describe('ModelMapper', () => {
 
       const roundTripped = mapper.toDomain(record) as LanguageModel;
       expect(roundTripped).toHaveProperty('contextWindowSize', 128_000);
-    });
-
-    it('maps an unset context window size to null on the record', () => {
-      const record = mapper.toRecord(
-        buildLanguageDomain(),
-      ) as LanguageModelRecord;
-
-      expect(record).toHaveProperty('contextWindowSize', null);
-    });
-
-    it('maps a null record context window size to undefined on the domain', () => {
-      const record = buildLanguageRecord(null);
-      record.contextWindowSize = null;
-
-      const domain = mapper.toDomain(record) as LanguageModel;
-
-      expect(domain).toHaveProperty('contextWindowSize', undefined);
     });
 
     it('preserves a set description through toRecord -> toDomain', () => {

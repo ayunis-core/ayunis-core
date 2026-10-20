@@ -21,6 +21,7 @@ describe(EffectiveRunModelResolverService.name, () => {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
   let service: EffectiveRunModelResolverService;
   let getEffectiveModels: jest.Mocked<GetEffectiveLanguageModelsUseCase>;

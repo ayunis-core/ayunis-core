@@ -39,6 +39,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       }),
       orgId,
       scope: teamId ? PermittedModelScope.TEAM : PermittedModelScope.ORG,

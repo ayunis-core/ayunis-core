@@ -1,23 +1,18 @@
-import type {
-  SuperAdminOrgsControllerGetAllOrgsStatus,
-  SuperAdminOrgsControllerGetAllOrgsSubscription,
-} from '@/shared/api';
+import type { OrgLifecycleFilter } from '@/shared/api';
 import { SearchPagination } from '@/widgets/pagination';
 
 interface OrgsPaginationProps {
   currentPage: number;
   totalPages: number;
   search?: string;
-  status: SuperAdminOrgsControllerGetAllOrgsStatus;
-  subscription: SuperAdminOrgsControllerGetAllOrgsSubscription;
+  lifecycle: OrgLifecycleFilter;
 }
 
 export default function OrgsPagination({
   currentPage,
   totalPages,
   search,
-  status,
-  subscription,
+  lifecycle,
 }: Readonly<OrgsPaginationProps>) {
   return (
     <SearchPagination
@@ -25,7 +20,7 @@ export default function OrgsPagination({
       totalPages={totalPages}
       to="/super-admin-settings/orgs"
       search={search}
-      extraSearchParams={{ orgStatus: status, orgSubscription: subscription }}
+      extraSearchParams={{ orgLifecycle: lifecycle }}
     />
   );
 }

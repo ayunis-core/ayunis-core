@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import {
   SuperAdminOrgListResponseDto,
+  SuperAdminOrgOverviewResponseDto,
   SuperAdminOrgResponseDto,
 } from 'src/iam/orgs/presenters/http/dtos/super-admin-org-response.dto';
-import { Paginated } from 'src/common/pagination/paginated.entity';
-import type { SuperAdminOrgListItem } from 'src/iam/orgs/application/models/super-admin-org-list-item';
+import type { SuperAdminOrgList } from 'src/iam/orgs/application/models/super-admin-org-list';
+import type { SuperAdminOrgOverview } from 'src/iam/orgs/application/models/super-admin-org-overview';
 
 @Injectable()
 export class SuperAdminOrgResponseDtoMapper {
@@ -19,19 +20,25 @@ export class SuperAdminOrgResponseDtoMapper {
     };
   }
 
-  toPaginatedDto(
-    paginated: Paginated<SuperAdminOrgListItem>,
-  ): SuperAdminOrgListResponseDto {
+  toOverviewDto({
+    org,
+    lifecycleStatus,
+  }: SuperAdminOrgOverview): SuperAdminOrgOverviewResponseDto {
+    return { ...this.toDto(org), lifecycleStatus };
+  }
+
+  toListDto({
+    page,
+    lifecycleCounts,
+  }: SuperAdminOrgList): SuperAdminOrgListResponseDto {
     return {
-      data: paginated.data.map(({ org, paying }) => ({
-        ...this.toDto(org),
-        paying,
-      })),
+      data: page.data.map((overview) => this.toOverviewDto(overview)),
       pagination: {
-        limit: paginated.limit,
-        offset: paginated.offset,
-        total: paginated.total,
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
       },
+      lifecycleCounts,
     };
   }
 }

@@ -182,6 +182,9 @@ export default function ModelTypeCard({
   } = actions;
 
   const config = MODEL_TYPE_CONFIG[type];
+  // Only language models enforce anonymous mode (on their threads); the flag
+  // has no effect on embedding or image-generation models.
+  const canSetAnonymousOnly = type === 'language' && !!updatePermittedModel;
   const title = t(config.titleKey);
   const emptyMessage = t(config.emptyKey);
 
@@ -273,7 +276,7 @@ export default function ModelTypeCard({
                     )}
                   </ItemContent>
                   <ItemActions>
-                    {model.isPermitted && updatePermittedModel && (
+                    {model.isPermitted && canSetAnonymousOnly && (
                       <div className="flex items-center gap-2">
                         <Label
                           htmlFor={`${modelKey}-anonymous`}

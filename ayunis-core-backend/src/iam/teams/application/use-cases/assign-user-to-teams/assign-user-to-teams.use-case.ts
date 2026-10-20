@@ -1,4 +1,3 @@
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -19,7 +18,6 @@ export class AssignUserToTeamsUseCase {
   private readonly logger = new Logger(AssignUserToTeamsUseCase.name);
 
   constructor(
-    private readonly teamManagementAccess: AssertTeamManagementAllowedUseCase,
     private readonly teams: TeamsRepository,
     private readonly members: TeamMembersRepository,
     private readonly findUser: FindUserByIdUseCase,
@@ -37,10 +35,6 @@ export class AssignUserToTeamsUseCase {
       'Assigning user to teams',
     );
     if (teamIds.length === 0) return;
-    await this.teamManagementAccess.execute({
-      orgId: command.orgId,
-      inviterId: command.inviterId,
-    });
 
     await this.assertTeamsBelongToOrg(teamIds, command.orgId);
     await this.assertUserBelongsToOrg(command);

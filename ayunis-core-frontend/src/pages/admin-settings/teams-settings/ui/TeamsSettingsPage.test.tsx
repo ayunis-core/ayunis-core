@@ -127,7 +127,3 @@ describe('TeamsSettingsPage', () => {
     expect(screen.queryByText('City Services')).toBeNull();
   });
 });
-
-vi.mock('@/features/permissions/api/useTeamManagementAccess', () => ({
-  useTeamManagementAccess: () => ({ canManageTeams: true, isLoading: false }),
-}));

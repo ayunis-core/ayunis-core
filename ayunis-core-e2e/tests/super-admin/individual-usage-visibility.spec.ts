@@ -26,7 +26,7 @@ import {
   removeTeamLimit,
   removeTeamMember,
 } from "../../src/clients/api/usage-visibility.client";
-import { createTeam, addTeamMember } from "../../src/clients/api/teams.client";
+import { createTeam, addTeamMember, bulkAddTeamMembers } from "../../src/clients/api/teams.client";
 import { startThread } from "../../src/flows/chat.flow";
 
 test("super admin hides individual usage from a separate organisation admin and restores access", async ({
@@ -132,10 +132,8 @@ test("super admin hides individual usage from a separate organisation admin and 
         teamId: team.id,
         name: team.name,
         monthlyCredits: 7000,
+        creditsUsed: expect.any(Number),
       });
-      expect(
-        teamLimits.every((limit) => !Object.hasOwn(limit, "creditsUsed")),
-      ).toBe(true);
     }
     expect(await readUsageStats(api)).toEqual(before);
     expect(
@@ -155,14 +153,14 @@ test("super admin hides individual usage from a separate organisation admin and 
     await page.goto("/admin-settings/credit-limits?tab=teams");
     await expect(
       page.getByTestId(`credit-limits-row-${team.id}`),
-    ).not.toContainText("/");
+    ).toContainText("/");
     await page.goto(`/admin-settings/teams/${team.id}`);
     await expect(
       page.getByTestId(`credit-limits-team-${team.id}`),
-    ).toBeDisabled();
+    ).toBeEnabled();
     await expect(
       page.getByTestId(`credit-limits-team-card-${team.id}`),
-    ).not.toContainText("/");
+    ).toContainText("/");
     const requests: string[] = [];
     page.on("request", (request) =>
       requests.push(new URL(request.url()).pathname),
@@ -293,6 +291,7 @@ test("hidden individual usage errors omit numeric consumption while keeping enfo
     await import("../../src/factories/credit-limits.factory");
   const { createEmptyThread, sendThreadMessage } =
     await import("../../src/clients/api/threads.client");
+  await login(publicApi, "admin@demo.local", "admin");
   const fixture = await createCreditLimitsFixture(
     api,
     publicApi,
@@ -377,7 +376,11 @@ test("open credit-limit views observe privacy changes from a separate super admi
           })
         ).status(),
       ).toBe(200);
-      await expect(row).not.toContainText("/", { timeout: 10_000 });
+      if (view.path.endsWith("tab=users")) {
+        await expect(row).not.toContainText("/", { timeout: 10_000 });
+      } else {
+        await expect(row).toContainText("/");
+      }
       expect(
         (
           await requestUsageVisibilityChange(publicApi, org.orgId, {
@@ -394,7 +397,7 @@ test("open credit-limit views observe privacy changes from a separate super admi
   }
 });
 
-test("hidden individual usage reserves team management for super admins while keeping enforcement", async ({
+test("org admins retain team management with hidden individual usage", async ({
   api,
   publicApi,
   mail,
@@ -403,151 +406,103 @@ test("hidden individual usage reserves team management for super admins while ke
 }) => {
   const { createCreditLimitsFixture } =
     await import("../../src/factories/credit-limits.factory");
-  const { createEmptyThread, sendThreadMessage } =
-    await import("../../src/clients/api/threads.client");
+  const { listTeamMembers, deleteTeam } =
+    await import("../../src/clients/api/teams.client");
+  const { deleteCreditLimitMember } =
+    await import("../../src/clients/api/credit-limits.client");
+  await login(publicApi, "admin@demo.local", "admin");
   const fixture = await createCreditLimitsFixture(
     api,
     publicApi,
     mail,
-    `private-team-${Date.now()}`,
+    `team-privacy-${Date.now()}`,
   );
-  const adminId = await getAuthenticatedPrincipalId(api);
+  let cleaned = false;
   try {
-    await addTeamMember(api, fixture.team.id, adminId);
-    await setTeamLimit(api, fixture.team.id, 0);
-    await page.goto(`/admin-settings/teams/${fixture.team.id}`);
-    await expect(
-      page.getByTestId(`credit-limits-team-${fixture.team.id}`),
-    ).toBeEnabled();
-    await page.getByTestId(`credit-limits-team-${fixture.team.id}`).click();
-    await expect(page.getByTestId("credit-limit-dialog")).toBeVisible();
-    await requestUsageVisibilityChange(publicApi, org.orgId, {
-      hideIndividualUsage: true,
-    });
-    await expect(
-      page.getByTestId(`credit-limits-team-${fixture.team.id}`),
-    ).toBeDisabled({ timeout: 10_000 });
-    await expect(page.getByTestId("credit-limit-dialog")).toHaveCount(0);
-    await expect(page.getByTestId("team-members-add")).toBeDisabled();
-    await expect(
-      page.getByTestId(`team-member-remove-${fixture.member.id}`),
-    ).toBeDisabled();
-    const ownPolicy = await fixture.member.api.get(
-      `${config.apiURL}/api/teams/management-access`,
-    );
-    expect(ownPolicy.status()).toBe(200);
-    expect(await ownPolicy.json()).toEqual({ canManage: false });
-    const endpoint = `${config.apiURL}/api`;
-    const deniedRequests = [
-      () =>
-        api.put(`${endpoint}/credit-limits/teams/${fixture.team.id}`, {
-          data: { monthlyCredits: 50 },
-        }),
-      () => api.delete(`${endpoint}/credit-limits/teams/${fixture.team.id}`),
-      () =>
-        api.post(`${endpoint}/teams/${fixture.team.id}/members`, {
-          data: { userId: fixture.member.id },
-        }),
-      () =>
-        api.post(`${endpoint}/teams/${fixture.team.id}/members/bulk`, {
-          data: { userIds: [fixture.member.id] },
-        }),
-      () =>
-        api.delete(
-          `${endpoint}/teams/${fixture.team.id}/members/${fixture.member.id}`,
-        ),
-      () => api.delete(`${endpoint}/teams/${fixture.team.id}`),
-      () => api.delete(`${endpoint}/users/${fixture.member.id}`),
-      () =>
-        api.put(
-          `${endpoint}/super-admin/orgs/${org.orgId}/credit-limits/teams/${fixture.team.id}`,
-          { data: { monthlyCredits: 50 } },
-        ),
-    ];
-    for (const request of deniedRequests)
-      expect((await request()).status()).toBe(403);
-    const privilegedLimits = await publicApi.get(
-      `${endpoint}/super-admin/orgs/${org.orgId}/credit-limits/teams`,
-    );
-    expect(privilegedLimits.status()).toBe(200);
-    expect(await privilegedLimits.json()).toContainEqual(
-      expect.objectContaining({
-        teamId: fixture.team.id,
-        monthlyCredits: 0,
-        creditsUsed: 0,
-      }),
-    );
+    // A separate ordinary member cannot manage the team's credit limit.
     expect(
       (
-        await api.get(
-          `${endpoint}/super-admin/orgs/${org.orgId}/credit-limits/teams`,
+        await fixture.member.api.put(
+          `${config.apiURL}/api/credit-limits/teams/${fixture.team.id}`,
+          {
+            data: { monthlyCredits: 5000 },
+          },
         )
       ).status(),
     ).toBe(403);
-    const thread = await createEmptyThread(api, fixture.model.id);
-    expect(
-      await (
-        await sendThreadMessage(
-          api,
-          thread.id,
-          "Explain municipal budget planning.",
-        )
-      ).text(),
-    ).toContain("TEAM_CREDIT_LIMIT_EXCEEDED");
-    await removeSuperAdminTeamMember(
-      publicApi,
-      org.orgId,
-      fixture.team.id,
-      fixture.member.id,
-    );
-    await addSuperAdminTeamMember(
-      publicApi,
-      org.orgId,
-      fixture.team.id,
-      fixture.member.id,
-    );
-    const wrongOrg = await publicApi.post(
-      `${endpoint}/super-admin/orgs/${crypto.randomUUID()}/teams/${fixture.team.id}/members`,
-      { data: { userId: adminId } },
-    );
-    expect(wrongOrg.status()).toBe(404);
-    await removeSuperAdminTeamLimit(publicApi, org.orgId, fixture.team.id);
-    await setSuperAdminTeamLimit(publicApi, org.orgId, fixture.team.id, 1000);
-    expect(
-      await (
-        await sendThreadMessage(
-          api,
-          thread.id,
-          "Explain municipal budget planning.",
-        )
-      ).text(),
-    ).not.toContain("TEAM_CREDIT_LIMIT_EXCEEDED");
     await requestUsageVisibilityChange(publicApi, org.orgId, {
-      hideIndividualUsage: false,
+      hideIndividualUsage: true,
     });
+    await page.goto(`/admin-settings/teams/${fixture.team.id}`);
+    await expect(page.getByTestId("team-members-add")).toBeEnabled();
     await expect(
-      page.getByTestId(`credit-limits-team-${fixture.team.id}`),
-    ).toBeEnabled({ timeout: 10_000 });
-    await expect(page.getByTestId("credit-limit-dialog")).toHaveCount(0);
+      page.getByTestId(`team-member-remove-${fixture.member.id}`),
+    ).toBeEnabled();
+    await page.getByTestId(`credit-limits-team-${fixture.team.id}`).click();
+    await expect(page.getByTestId("credit-limit-dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await setTeamLimit(api, fixture.team.id, 5000);
+    expect(await readTeamLimits(api)).toContainEqual(
+      expect.objectContaining({
+        teamId: fixture.team.id,
+        monthlyCredits: 5000,
+        creditsUsed: expect.any(Number),
+      }),
+    );
     await removeTeamLimit(api, fixture.team.id);
+    await removeTeamLimit(api, fixture.team.id);
+    expect(await readTeamLimits(api)).not.toContainEqual(
+      expect.objectContaining({ teamId: fixture.team.id }),
+    );
+    await setTeamLimit(api, fixture.team.id, 7000);
+    expect(await readTeamLimits(api)).toContainEqual(
+      expect.objectContaining({
+        teamId: fixture.team.id,
+        monthlyCredits: 7000,
+      }),
+    );
+    await removeTeamMember(api, fixture.team.id, fixture.member.id);
+    expect((await listTeamMembers(api, fixture.team.id)).data).toHaveLength(0);
+    await bulkAddTeamMembers(api, fixture.team.id, [fixture.member.id, fixture.member.id]);
+    expect((await listTeamMembers(api, fixture.team.id)).data).toHaveLength(1);
     await removeTeamMember(api, fixture.team.id, fixture.member.id);
     await addTeamMember(api, fixture.team.id, fixture.member.id);
+    expect((await listTeamMembers(api, fixture.team.id)).data).toContainEqual(
+      expect.objectContaining({ userId: fixture.member.id }),
+    );
+    expect((await requestIndividualUsage(api)).status()).toBe(403);
+    // The privacy toggle never grants ordinary members administrative access.
+    expect(
+      (
+        await fixture.member.api.put(
+          `${config.apiURL}/api/credit-limits/teams/${fixture.team.id}`,
+          {
+            data: { monthlyCredits: 5000 },
+          },
+        )
+      ).status(),
+    ).toBe(403);
+    await deleteCreditLimitMember(api, fixture.member.id);
+    expect((await listTeamMembers(api, fixture.team.id)).data).toHaveLength(0);
+    await deleteTeam(api, fixture.team.id);
+    cleaned = true;
   } finally {
     await requestUsageVisibilityChange(publicApi, org.orgId, {
       hideIndividualUsage: false,
     });
-    await fixture.cleanup();
+    if (cleaned) await fixture.member.api.dispose();
+    else await fixture.cleanup();
   }
 });
 
-test("hidden individual usage rejects public admin-authorized team grants with rollback and accepts super-admin grants", async ({
+test("hidden individual usage accepts admin team invitations created before and after hiding usage", async ({
   api,
   publicApi,
   mail,
   org,
 }) => {
   const { request } = await import("@playwright/test");
-  const { bulkInviteUser, bulkInviteUserAsSuperAdmin } =
+  const { bulkInviteUser } =
     await import("../../src/clients/api/invites.client");
   const { findUserByEmail } =
     await import("../../src/clients/api/users.client");
@@ -578,26 +533,12 @@ test("hidden individual usage rejects public admin-authorized team grants with r
           hasAcceptedMarketing: false,
         },
       });
-    const denied = await submit(adminToken);
-    expect(denied.status()).toBe(403);
-    expect((await denied.json()).code).toBe("TEAM_MANAGEMENT_RESTRICTED");
-    expect(await findUserByEmail(api, adminEmail)).toBeUndefined();
-    expect((await listTeamMembers(api, team.id)).data).toHaveLength(0);
-    const newAdminGrant = await api.post(`${config.apiURL}/api/invites/bulk`, {
-      data: {
-        invites: [
-          {
-            email: `blocked-grant-${Date.now()}@e2e.local`,
-            role: "user",
-            teamNames: [team.name],
-          },
-        ],
-      },
-    });
-    expect(newAdminGrant.status()).toBe(403);
-    await bulkInviteUserAsSuperAdmin(publicApi, org.orgId, superEmail, [
-      team.name,
-    ]);
+    expect((await submit(adminToken)).ok()).toBe(true);
+    const adminUser = await findUserByEmail(api, adminEmail);
+    expect((await listTeamMembers(api, team.id)).data).toContainEqual(
+      expect.objectContaining({ userId: adminUser?.id }),
+    );
+    await bulkInviteUser(api, superEmail, [team.name]);
     const superToken = await mail.extractLinkToken(
       superEmail,
       "/accept-invite",
@@ -610,7 +551,6 @@ test("hidden individual usage rejects public admin-authorized team grants with r
     await requestUsageVisibilityChange(publicApi, org.orgId, {
       hideIndividualUsage: false,
     });
-    expect((await submit(adminToken)).ok()).toBe(true);
     expect((await listTeamMembers(api, team.id)).data).toHaveLength(2);
   } finally {
     await requestUsageVisibilityChange(publicApi, org.orgId, {

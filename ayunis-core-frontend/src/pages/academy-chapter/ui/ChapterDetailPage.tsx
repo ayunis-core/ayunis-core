@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { toLoomEmbedUrl } from '@/pages/academy-chapter/lib/toLoomEmbedUrl';
+import { ModuleVideo } from './ModuleVideo';
 
 interface ChapterDetailPageProps {
   chapter: AcademyChapterResponseDto;
@@ -135,16 +135,7 @@ export default function ChapterDetailPage({
     <div className="mx-auto flex max-w-[1200px] flex-col gap-6 lg:flex-row lg:items-start">
       {/* Main column: video capped so the page stays scannable, plus text/nav */}
       <div className="min-w-0 flex-1 space-y-4">
-        <div className="aspect-video overflow-hidden rounded-lg border bg-muted">
-          <iframe
-            key={currentModule.id}
-            src={toLoomEmbedUrl(currentModule.loomUrl)}
-            title={currentModule.title}
-            className="h-full w-full"
-            allowFullScreen
-            allow="autoplay; fullscreen; picture-in-picture"
-          />
-        </div>
+        <ModuleVideo courseModule={currentModule} />
 
         <div>
           <h2 className="text-lg font-semibold">{currentModule.title}</h2>
@@ -172,7 +163,10 @@ export default function ChapterDetailPage({
               <Check className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => goToModule(currentIndex + 1)}>
+            <Button
+              onClick={() => goToModule(currentIndex + 1)}
+              data-testid="academy-module-next"
+            >
               {t('detail.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>

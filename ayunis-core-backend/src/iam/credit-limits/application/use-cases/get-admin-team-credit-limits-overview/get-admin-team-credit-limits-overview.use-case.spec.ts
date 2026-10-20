@@ -12,32 +12,18 @@ const stored = [
 ];
 describe('GetAdminTeamCreditLimitsOverviewUseCase', () => {
   const overview = { execute: jest.fn().mockResolvedValue(stored) };
-  const findOrg = { execute: jest.fn() };
   const context = { get: jest.fn() };
   const useCase = new GetAdminTeamCreditLimitsOverviewUseCase(
     overview as never,
-    findOrg as never,
     context as never,
   );
   beforeEach(() => {
     context.get.mockImplementation(getFromUserContext());
   });
-  it('omits consumed credits while keeping limits readable for hidden organisations', async () => {
-    findOrg.execute.mockResolvedValue({ hideIndividualUsage: true });
-    expect(await useCase.execute()).toEqual([
-      {
-        teamId: stored[0].teamId,
-        name: 'Finance',
-        monthlyCredits: 5000,
-      },
-    ]);
-  });
-  it('keeps consumption available for visible organisations', async () => {
-    findOrg.execute.mockResolvedValue({ hideIndividualUsage: false });
+  it('returns team consumption alongside configured limits for org admins', async () => {
     expect(await useCase.execute()).toEqual(stored);
   });
   it('keeps super-admin consumption available', async () => {
-    findOrg.execute.mockResolvedValue({ hideIndividualUsage: true });
     context.get.mockImplementation(
       getFromUserContext({ systemRole: SystemRole.SUPER_ADMIN }),
     );

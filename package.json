@@ -8,20 +8,26 @@
     "husky": "^9.1.7",
     "knip": "^6.24.0",
     "madge": "^8.0.0",
-    "markdownlint-cli2": "^0.23.0"
+    "markdownlint-cli2": "^0.23.0",
+    "postcss": "^8.5.29"
+  },
+  "devDependenciesNotes": {
+    "postcss": "Not imported anywhere. terser-webpack-plugin (under the frontend's and packages/ui's optional webpack) declares an optional `postcss` peer, which pnpm links only if postcss has already been resolved elsewhere in the graph — so `pnpm dedupe --check` occasionally drops it on an unchanged lockfile. A root dependency makes the peer resolve deterministically (resolve-peers-from-workspace-root). Remove only together with the webpack/terser-webpack-plugin chain, then re-run `pnpm dedupe --check` ~20 times."
   },
   "pnpm": {
     "overrides": {
       "basic-ftp": ">=5.2.0 <6",
       "protobufjs": ">=7.5.5 <8",
       "puppeteer-core": "24.37.5",
-      "@golevelup/nestjs-discovery": "7.1.0"
+      "@golevelup/nestjs-discovery": "7.1.0",
+      "tsup>esbuild": "^0.28.0"
     }
   },
   "overridesNotes": {
     "basic-ftp": "Patches GHSA-5rq4-664w-9x2c (path traversal). Transitive via puppeteer-core → @puppeteer/browsers → proxy-agent → pac-proxy-agent → get-uri. Not reachable in our code (html-document-export.service.ts uses system Chromium via executablePath, never downloads browsers, no proxy config), but blocks the CI security audit. Remove when @puppeteer/browsers bumps get-uri past the vulnerable range — verify with `pnpm why basic-ftp` after any puppeteer-core upgrade.",
     "protobufjs": "Patches GHSA-xq3m-2v4x-88gg (arbitrary code execution, fixed in 7.5.5). Transitive via @google/genai. @google/genai declares `^7.5.4`, so this floor stays within its range. Remove when @google/genai's declared range moves past 7.5.5 — verify with `pnpm why protobufjs` after any @google/genai upgrade.",
     "puppeteer-core": "Pinned to 24.37.5 (the version the npm lockfile resolved pre-pnpm-migration) to keep the workspace migration behavior-neutral. puppeteer-core 24.4x narrowed Page.setContent's waitUntil to exclude 'networkidle0'/'networkidle2'; absorbing that upgrade + adjusting PDF wait behavior belongs in its own reviewed PR. Remove this pin when intentionally upgrading puppeteer-core (see html-document-export.service.ts).",
-    "@golevelup/nestjs-discovery": "nest-commander 3.21.0 pins discovery 7.0.3, whose peer range excludes Nest 12 even though nest-commander itself declares Nest 12 support. Pin 7.1.0 until nest-commander updates its dependency; remove after pnpm why @golevelup/nestjs-discovery shows a compatible transitive version."
+    "@golevelup/nestjs-discovery": "nest-commander 3.21.0 pins discovery 7.0.3, whose peer range excludes Nest 12 even though nest-commander itself declares Nest 12 support. Pin 7.1.0 until nest-commander updates its dependency; remove after pnpm why @golevelup/nestjs-discovery shows a compatible transitive version.",
+    "tsup>esbuild": "tsup 8.5.1 declares esbuild ^0.27.0 while vite 8 accepts ^0.27.0 || ^0.28.0. With both versions in the lockfile, vite's esbuild peer resolves ambiguously and `pnpm dedupe --check` flips between them (~1 in 8 runs fail on an unchanged lockfile). Aligning tsup onto the 0.28 line leaves one esbuild. Remove when tsup's own range includes 0.28 — verify with `pnpm why esbuild` (expect a single version)."
   }
 }

@@ -22,6 +22,7 @@ const createLanguageModel = (params?: {
     isArchived: params?.isArchived ?? false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
 
 describe('ModelConfigurationService', () => {

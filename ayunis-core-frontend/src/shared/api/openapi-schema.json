@@ -1525,24 +1525,12 @@
         "operationId": "SuperAdminOrgsController_getAllOrgs",
         "parameters": [
           {
-            "name": "status",
+            "name": "lifecycle",
             "required": false,
             "in": "query",
+            "description": "Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan",
             "schema": {
-              "default": "active",
-              "type": "string",
-              "enum": ["active", "archived", "all"]
-            }
-          },
-          {
-            "name": "subscription",
-            "required": false,
-            "in": "query",
-            "description": "Filter by whether the organization currently has an active subscription",
-            "schema": {
-              "default": "all",
-              "type": "string",
-              "enum": ["all", "paying", "non-paying"]
+              "$ref": "#/components/schemas/OrgLifecycleFilter"
             }
           },
           {
@@ -1618,7 +1606,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                  "$ref": "#/components/schemas/SuperAdminOrgOverviewResponseDto"
                 }
               }
             }
@@ -4005,25 +3993,6 @@
         },
         "summary": "Update an image-generation model in the catalog",
         "tags": ["Super Admin Models"]
-      }
-    },
-    "/teams/management-access": {
-      "get": {
-        "operationId": "TeamManagementController_getTeamManagementAccess",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TeamManagementAccessDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["teams"]
       }
     },
     "/teams": {
@@ -8107,6 +8076,64 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
+    "/super-admin/platform-config/academy-minimum-module-seconds": {
+      "get": {
+        "description": "Seconds each academy video page must be open and visible before its chapter can be confirmed. Defaults to 60 when unset. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getAcademyMinimumModuleSeconds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the academy minimum time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyMinimumModuleSecondsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the academy minimum time per video page",
+        "tags": ["Super Admin Platform Config"]
+      },
+      "put": {
+        "description": "Update the seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setAcademyMinimumModuleSeconds",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademyMinimumModuleSecondsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the academy minimum time"
+          },
+          "400": {
+            "description": "Invalid value provided (must be a non-negative integer)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the academy minimum time per video page",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
     "/app-alert": {
       "get": {
         "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
@@ -8902,6 +8929,65 @@
         "tags": ["Super Admin Usage"]
       }
     },
+    "/credit-limits/default-user": {
+      "get": {
+        "operationId": "CreditLimitsController_getDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the org-wide default personal credit limit",
+        "tags": ["credit-limits"]
+      },
+      "put": {
+        "operationId": "CreditLimitsController_setDefaultUserLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultUserCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the default personal credit limit for users without an individual limit",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeDefaultUserLimit",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove the default personal credit limit",
+        "tags": ["credit-limits"]
+      }
+    },
     "/credit-limits/users": {
       "get": {
         "operationId": "CreditLimitsController_getUserLimits",
@@ -8922,6 +9008,44 @@
           }
         },
         "summary": "List configured user credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/users/usage": {
+      "get": {
+        "operationId": "CreditLimitsController_getUserUsage",
+        "parameters": [
+          {
+            "name": "userIds",
+            "required": true,
+            "in": "query",
+            "description": "Users whose current monthly credit consumption to return",
+            "schema": {
+              "example": ["550e8400-e29b-41d4-a716-446655440001"],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserCreditUsageItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Current monthly credit consumption of the given users, whether or not they have an individual limit",
         "tags": ["credit-limits"]
       }
     },
@@ -10835,6 +10959,46 @@
           }
         },
         "summary": "Get academy progress",
+        "tags": ["Academy"]
+      }
+    },
+    "/academy/course-modules/{courseModuleId}/heartbeat": {
+      "post": {
+        "description": "Sent periodically while the video page is visible. The server credits the time since the previous heartbeat, capped at one heartbeat interval.",
+        "operationId": "AcademyProgressController_recordModuleHeartbeat",
+        "parameters": [
+          {
+            "name": "courseModuleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordModuleHeartbeatRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Heartbeat recorded"
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "404": {
+            "description": "Course module not found"
+          }
+        },
+        "summary": "Record time on a course module page",
         "tags": ["Academy"]
       }
     },
@@ -13486,7 +13650,16 @@
           "createdAt"
         ]
       },
-      "SuperAdminOrgListItemResponseDto": {
+      "OrgLifecycleFilter": {
+        "type": "string",
+        "enum": ["all", "archived", "paying", "expired", "trial", "no-plan"]
+      },
+      "OrgLifecycleStatus": {
+        "type": "string",
+        "enum": ["archived", "paying", "expired", "trial", "no-plan"],
+        "description": "Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan"
+      },
+      "SuperAdminOrgOverviewResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -13515,9 +13688,13 @@
             "description": "Date when the organization was created",
             "example": "2024-01-15T10:30:00Z"
           },
-          "paying": {
-            "type": "boolean",
-            "description": "Whether the organization currently has an active subscription"
+          "lifecycleStatus": {
+            "description": "Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgLifecycleStatus"
+              }
+            ]
           }
         },
         "required": [
@@ -13526,7 +13703,39 @@
           "archived",
           "hideIndividualUsage",
           "createdAt",
-          "paying"
+          "lifecycleStatus"
+        ]
+      },
+      "OrgLifecycleCountsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "All organizations matching the search, archived included"
+          },
+          "archived": {
+            "type": "number"
+          },
+          "paying": {
+            "type": "number"
+          },
+          "expired": {
+            "type": "number"
+          },
+          "trial": {
+            "type": "number"
+          },
+          "no-plan": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "archived",
+          "paying",
+          "expired",
+          "trial",
+          "no-plan"
         ]
       },
       "SuperAdminOrgListResponseDto": {
@@ -13536,7 +13745,7 @@
             "description": "Array of organizations for the current page",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SuperAdminOrgListItemResponseDto"
+              "$ref": "#/components/schemas/SuperAdminOrgOverviewResponseDto"
             }
           },
           "pagination": {
@@ -13546,9 +13755,17 @@
                 "$ref": "#/components/schemas/PaginationDto"
               }
             ]
+          },
+          "lifecycleCounts": {
+            "description": "Organizations per lifecycle status for the search, ignoring the lifecycle filter",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgLifecycleCountsDto"
+              }
+            ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": ["data", "pagination", "lifecycleCounts"]
       },
       "UpdateOrgRequestDto": {
         "type": "object",
@@ -14413,7 +14630,7 @@
           },
           "contextWindowSize": {
             "type": "integer",
-            "description": "Maximum context window size in tokens. Undefined for non-language models and language models without a configured size.",
+            "description": "Maximum context window size in tokens. Undefined for non-language models.",
             "minimum": 1,
             "maximum": 2147483647
           },
@@ -14585,7 +14802,6 @@
           },
           "contextWindowSize": {
             "type": "integer",
-            "nullable": true,
             "minimum": 1,
             "maximum": 2147483647,
             "description": "Maximum context window size in tokens"
@@ -14626,6 +14842,7 @@
           "canStream",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "hasProviderFault",
           "isDefault",
           "anonymousOnly"
@@ -14971,6 +15188,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "hasProviderFault",
           "createdAt",
           "updatedAt"
@@ -15187,8 +15405,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -15234,6 +15451,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },
@@ -15294,8 +15512,7 @@
             "description": "Maximum context window size in tokens",
             "example": 128000,
             "minimum": 1,
-            "maximum": 2147483647,
-            "nullable": true
+            "maximum": 2147483647
           },
           "isArchived": {
             "type": "boolean",
@@ -15340,6 +15557,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "contextWindowSize",
           "isArchived"
         ]
       },
@@ -15548,16 +15766,6 @@
           }
         },
         "required": ["name", "provider", "displayName", "isArchived"]
-      },
-      "TeamManagementAccessDto": {
-        "type": "object",
-        "properties": {
-          "canManage": {
-            "type": "boolean",
-            "description": "Whether the current human principal satisfies the organisation usage-privacy restriction; mutation permissions are checked separately"
-          }
-        },
-        "required": ["canManage"]
       },
       "CreateTeamDto": {
         "type": "object",
@@ -17254,6 +17462,11 @@
             "type": "string",
             "description": "The skill name, when it already exists"
           },
+          "language": {
+            "type": "string",
+            "enum": ["en", "de"],
+            "description": "Current UI language, used when the draft language is unidentifiable; defaults to English"
+          },
           "trigger": {
             "type": "string",
             "description": "The trigger as it currently stands in the form"
@@ -18891,6 +19104,18 @@
         },
         "required": ["enabled", "message"]
       },
+      "AcademyMinimumModuleSecondsDto": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "description": "Seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement.",
+            "example": 60,
+            "minimum": 0
+          }
+        },
+        "required": ["seconds"]
+      },
       "AppAlertResponseDto": {
         "type": "object",
         "properties": {
@@ -19348,6 +19573,41 @@
         },
         "required": ["providers"]
       },
+      "CreditLimitScope": {
+        "type": "string",
+        "enum": ["USER", "TEAM", "API_KEY", "USER_DEFAULT"]
+      },
+      "DefaultUserCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Personal limit for every user without an individual limit; null when no default is set.",
+            "example": 100,
+            "nullable": true
+          }
+        },
+        "required": ["scope", "monthlyCredits"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
       "UserCreditLimitItemDto": {
         "type": "object",
         "properties": {
@@ -19376,6 +19636,21 @@
         },
         "required": ["userId", "name", "email", "monthlyCredits"]
       },
+      "UserCreditUsageItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month; omitted when individual usage is hidden",
+            "example": 1240
+          }
+        },
+        "required": ["userId"]
+      },
       "TeamCreditLimitItemDto": {
         "type": "object",
         "properties": {
@@ -19394,11 +19669,11 @@
           },
           "creditsUsed": {
             "type": "number",
-            "description": "Credits consumed by all current team members in the current month; omitted when individual usage is hidden",
+            "description": "Credits consumed by all current team members in the current month",
             "example": 8300
           }
         },
-        "required": ["teamId", "name", "monthlyCredits"]
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
       },
       "ApiKeyCreditLimitItemDto": {
         "type": "object",
@@ -19424,21 +19699,16 @@
         },
         "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
       },
-      "SetCreditLimitDto": {
-        "type": "object",
-        "properties": {
-          "monthlyCredits": {
-            "type": "number",
-            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
-            "example": 5000,
-            "minimum": 0
-          }
-        },
-        "required": ["monthlyCredits"]
-      },
       "UserCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19452,11 +19722,18 @@
             "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         },
-        "required": ["id", "monthlyCredits", "userId"]
+        "required": ["scope", "id", "monthlyCredits", "userId"]
       },
       "TeamCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19470,11 +19747,18 @@
             "example": "550e8400-e29b-41d4-a716-446655440002"
           }
         },
-        "required": ["id", "monthlyCredits", "teamId"]
+        "required": ["scope", "id", "monthlyCredits", "teamId"]
       },
       "ApiKeyCreditLimitResponseDto": {
         "type": "object",
         "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditLimitScope"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -19488,7 +19772,7 @@
             "example": "550e8400-e29b-41d4-a716-446655440003"
           }
         },
-        "required": ["id", "monthlyCredits", "apiKeyId"]
+        "required": ["scope", "id", "monthlyCredits", "apiKeyId"]
       },
       "CreateApiKeyDto": {
         "type": "object",
@@ -20964,14 +21248,33 @@
             "type": "string",
             "format": "date-time",
             "description": "When the learner most recently confirmed the chapter"
+          },
+          "replayable": {
+            "type": "boolean",
+            "description": "Whether confirming again now returns this confirmation unchanged instead of re-checking page time, so a lost response can be retried"
           }
         },
         "required": [
           "chapterId",
           "confirmed",
           "confirmationValid",
-          "confirmedAt"
+          "confirmedAt",
+          "replayable"
         ]
+      },
+      "CourseModuleProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "courseModuleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visibleSeconds": {
+            "type": "number",
+            "description": "Seconds the video page was open and visible since the last certificate. This is page time, not watch time."
+          }
+        },
+        "required": ["courseModuleId", "visibleSeconds"]
       },
       "AcademyProgressResponseDto": {
         "type": "object",
@@ -20994,13 +21297,36 @@
             "format": "date-time",
             "nullable": true,
             "description": "When the completion stops being valid, or null if never completed"
+          },
+          "courseModules": {
+            "description": "Recorded page time per course module; modules never opened are omitted",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseModuleProgressResponseDto"
+            }
+          },
+          "minimumModuleSeconds": {
+            "type": "integer",
+            "description": "Seconds every video page of a chapter must reach before the chapter can be confirmed"
           }
         },
         "required": [
           "chapters",
           "academyCompletedAt",
-          "academyCompletionExpiresAt"
+          "academyCompletionExpiresAt",
+          "courseModules",
+          "minimumModuleSeconds"
         ]
+      },
+      "RecordModuleHeartbeatRequestDto": {
+        "type": "object",
+        "properties": {
+          "sessionStart": {
+            "type": "boolean",
+            "description": "True when the page just became visible; only starts the clock without crediting time since the previous heartbeat."
+          }
+        },
+        "required": ["sessionStart"]
       },
       "CreateChapterRequestDto": {
         "type": "object",

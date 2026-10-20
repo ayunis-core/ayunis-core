@@ -30,7 +30,11 @@ describe('ChapterConfirmationForm', () => {
   it('requires the learner confirmation before enabling completion', () => {
     const onConfirm = vi.fn();
     render(
-      <ChapterConfirmationForm isSubmitting={false} onConfirm={onConfirm} />,
+      <ChapterConfirmationForm
+        isSubmitting={false}
+        isBlocked={false}
+        onConfirm={onConfirm}
+      />,
     );
 
     const checkbox = screen.getByRole('checkbox', {
@@ -50,7 +54,13 @@ describe('ChapterConfirmationForm', () => {
   });
 
   it('disables both controls while submitting', () => {
-    render(<ChapterConfirmationForm isSubmitting onConfirm={vi.fn()} />);
+    render(
+      <ChapterConfirmationForm
+        isSubmitting
+        isBlocked={false}
+        onConfirm={vi.fn()}
+      />,
+    );
 
     expect(screen.getByRole('checkbox').hasAttribute('disabled')).toBe(true);
     expect(screen.getByRole('button').hasAttribute('disabled')).toBe(true);
@@ -58,17 +68,48 @@ describe('ChapterConfirmationForm', () => {
 
   it('keeps the checkbox selected when a failed request becomes retryable', () => {
     const { rerender } = render(
-      <ChapterConfirmationForm isSubmitting={false} onConfirm={vi.fn()} />,
+      <ChapterConfirmationForm
+        isSubmitting={false}
+        isBlocked={false}
+        onConfirm={vi.fn()}
+      />,
     );
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
 
-    rerender(<ChapterConfirmationForm isSubmitting onConfirm={vi.fn()} />);
     rerender(
-      <ChapterConfirmationForm isSubmitting={false} onConfirm={vi.fn()} />,
+      <ChapterConfirmationForm
+        isSubmitting
+        isBlocked={false}
+        onConfirm={vi.fn()}
+      />,
+    );
+    rerender(
+      <ChapterConfirmationForm
+        isSubmitting={false}
+        isBlocked={false}
+        onConfirm={vi.fn()}
+      />,
     );
 
     expect((checkbox as HTMLInputElement).checked).toBe(true);
     expect(screen.getByRole('button').hasAttribute('disabled')).toBe(false);
+  });
+
+  it('keeps completion disabled while video pages are still short', () => {
+    const onConfirm = vi.fn();
+    render(
+      <ChapterConfirmationForm
+        isSubmitting={false}
+        isBlocked
+        onConfirm={onConfirm}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    const button = screen.getByRole('button');
+    expect(button.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(button);
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 });

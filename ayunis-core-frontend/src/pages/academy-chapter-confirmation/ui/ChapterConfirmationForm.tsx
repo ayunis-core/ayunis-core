@@ -6,11 +6,13 @@ import { Label } from '@ayunis/ui/components/label';
 
 interface ChapterConfirmationFormProps {
   isSubmitting: boolean;
+  isBlocked: boolean;
   onConfirm: () => void;
 }
 
 export function ChapterConfirmationForm({
   isSubmitting,
+  isBlocked,
   onConfirm,
 }: Readonly<ChapterConfirmationFormProps>) {
   const { t } = useTranslation('academy');
@@ -20,7 +22,7 @@ export function ChapterConfirmationForm({
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        if (hasWatchedVideos && !isSubmitting) {
+        if (hasWatchedVideos && !isSubmitting && !isBlocked) {
           onConfirm();
         }
       }}
@@ -41,7 +43,7 @@ export function ChapterConfirmationForm({
       <Button
         type="submit"
         data-testid="academy-confirmation-submit"
-        disabled={!hasWatchedVideos || isSubmitting}
+        disabled={!hasWatchedVideos || isSubmitting || isBlocked}
       >
         {t('confirmation.completeChapter')}
       </Button>

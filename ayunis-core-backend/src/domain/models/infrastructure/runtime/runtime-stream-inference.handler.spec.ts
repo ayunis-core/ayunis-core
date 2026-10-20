@@ -1,3 +1,4 @@
+import { DEFAULT_RETRY_CONFIG } from '@ayunis/agent-runtime';
 import { ModelProviderError, type ModelProvider } from '@ayunis/inference';
 import { Logger } from '@nestjs/common';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
@@ -9,10 +10,7 @@ import type { Model } from 'src/domain/models/domain/model.entity';
 import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
-import {
-  RATE_LIMIT_MAX_WAIT_MS,
-  SETUP_RETRY_BACKOFF_MS,
-} from 'src/common/errors/provider-transport-error.classifier';
+import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {
@@ -448,7 +446,11 @@ describe('RuntimeStreamInferenceHandler', () => {
     let calls = 0;
     const rejection = Object.assign(new Error('rate limit exceeded'), {
       status: 429,
-      headers: { 'retry-after': String(RATE_LIMIT_MAX_WAIT_MS / 1000 + 1) },
+      headers: {
+        'retry-after': String(
+          DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs / 1000 + 1,
+        ),
+      },
     });
     const provider: ModelProvider = {
       name: 'test:rate-limit-too-long',

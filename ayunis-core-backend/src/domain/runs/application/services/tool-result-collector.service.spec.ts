@@ -21,6 +21,7 @@ import { ToolResultCollectorService } from './tool-result-collector.service';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 
 const orgId = randomUUID();
 const userId = randomUUID();
@@ -277,6 +278,18 @@ describe('ToolResultCollectorService', () => {
 
     expect(result.contents[0].result).toBe('{{pii:PERSON_1}}');
     expect(result.piiMasks).toHaveLength(1);
+  });
+
+  it('propagates a thread deleted during PII masking so the run can abort', async () => {
+    const backendTool = new BackendTestTool('resident_lookup', true);
+    executeTool.mockResolvedValue('Jane Doe');
+    const threadMissing = new ThreadPiiMaskThreadMissingError(randomUUID());
+    anonymize.mockRejectedValue(threadMissing);
+    const thread = threadWith(toolUse('lookup-1', backendTool.name));
+
+    await expect(
+      collect(service, thread, [backendTool], undefined, true),
+    ).rejects.toBe(threadMissing);
   });
 
   it('limits PII tool output before anonymization', async () => {

@@ -97,20 +97,40 @@ test("organisation lifecycle: archive, restore and delete with independent princ
     ).toBeVisible();
     await expect(memberPage).toHaveURL(/\/login/);
     expect(
-      (await listOrgs(publicApi, org.orgName)).data.map((row) => row.id),
+      (await listOrgs(publicApi, org.orgName, "trial")).data.map((row) => row.id),
     ).not.toContain(customer.orgId);
+    expect(
+      (await listOrgs(publicApi, org.orgName, "archived")).data.find(
+        (row) => row.id === customer.orgId,
+      ),
+    ).toMatchObject({ lifecycleStatus: "archived" });
     await page.goto(
       `/super-admin-settings/orgs?search=${encodeURIComponent(org.orgName)}`,
     );
-    await expect(page.getByTestId(`org-row-${customer.orgId}`)).toHaveCount(0);
-    await page.getByTestId("org-status-filter").click();
-    await page.getByTestId("org-filter-archived").click();
-    await page.getByTestId(`org-row-${customer.orgId}`).click();
+    const archivedRow = page.getByTestId(`org-row-${customer.orgId}`);
+    await expect(archivedRow.getByTestId("org-lifecycle-badge")).toHaveAttribute(
+      "data-status",
+      "archived",
+    );
+    await page.getByTestId("org-lifecycle-filter").click();
+    await page.getByTestId("org-lifecycle-filter-trial").click();
+    await expect(archivedRow).toHaveCount(0);
+    await page.getByTestId("org-lifecycle-filter").click();
+    await page.getByTestId("org-lifecycle-filter-archived").click();
+    await archivedRow.click();
+    await expect(page.getByTestId("org-status")).toHaveAttribute(
+      "data-status",
+      "archived",
+    );
     await page.getByTestId("org-archive-toggle").click();
     await page.getByTestId("confirmation-confirm").click();
     await expect
       .poll(() => getSuperAdminOrg(publicApi, customer.orgId))
-      .toMatchObject({ archived: false });
+      .toMatchObject({ archived: false, lifecycleStatus: "trial" });
+    await expect(page.getByTestId("org-status")).toHaveAttribute(
+      "data-status",
+      "trial",
+    );
     await oldContext.clearCookies();
     await oldContext.addCookies(oldState.cookies);
     expect((await requestCurrentUser(oldContext.request)).status()).toBe(401);

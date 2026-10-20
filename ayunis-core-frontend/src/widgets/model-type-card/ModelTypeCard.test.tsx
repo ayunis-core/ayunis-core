@@ -79,6 +79,30 @@ describe(ModelTypeCard.name, () => {
     expect(screen.queryByTestId('model-type-card-hint-trigger')).toBeNull();
   });
 
+  it('offers the anonymous-only toggle for language models only', () => {
+    const modelActions = { ...actions(), updatePermittedModel: vi.fn() };
+    const { rerender } = render(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={modelActions}
+      />,
+    );
+
+    expect(screen.getByText('models.anonymousOnly')).toBeTruthy();
+
+    for (const type of ['embedding', 'image-generation'] as const) {
+      rerender(
+        <ModelTypeCard
+          type={type}
+          models={[model('selected', true)]}
+          actions={modelActions}
+        />,
+      );
+      expect(screen.queryByText('models.anonymousOnly')).toBeNull();
+    }
+  });
+
   it('lets callers disable alternatives while keeping the selected model removable', () => {
     const modelActions = actions();
     render(

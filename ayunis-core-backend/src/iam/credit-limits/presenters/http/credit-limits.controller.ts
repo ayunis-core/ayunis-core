@@ -9,15 +9,22 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { RequireUsageBasedSubscription } from 'src/iam/authorization/application/decorators/usage-based-subscription.decorator';
+import { GetDefaultUserCreditLimitUseCase } from 'src/iam/credit-limits/application/use-cases/get-default-user-credit-limit/get-default-user-credit-limit.use-case';
+import { RemoveDefaultUserCreditLimitUseCase } from 'src/iam/credit-limits/application/use-cases/remove-default-user-credit-limit/remove-default-user-credit-limit.use-case';
+import { SetDefaultUserCreditLimitCommand } from 'src/iam/credit-limits/application/use-cases/set-default-user-credit-limit/set-default-user-credit-limit.command';
+import { SetDefaultUserCreditLimitUseCase } from 'src/iam/credit-limits/application/use-cases/set-default-user-credit-limit/set-default-user-credit-limit.use-case';
 import { GetApiKeyCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/get-api-key-credit-limits-overview.use-case';
 import { GetAdminTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-team-credit-limits-overview/get-admin-team-credit-limits-overview.use-case';
 import { GetAdminUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-admin-user-credit-limits-overview/get-admin-user-credit-limits-overview.use-case';
+import { GetUserCreditUsageQuery } from 'src/iam/credit-limits/application/use-cases/get-user-credit-usage/get-user-credit-usage.query';
+import { GetUserCreditUsageUseCase } from 'src/iam/credit-limits/application/use-cases/get-user-credit-usage/get-user-credit-usage.use-case';
 import { RemoveApiKeyCreditLimitCommand } from 'src/iam/credit-limits/application/use-cases/remove-api-key-credit-limit/remove-api-key-credit-limit.command';
 import { RemoveApiKeyCreditLimitUseCase } from 'src/iam/credit-limits/application/use-cases/remove-api-key-credit-limit/remove-api-key-credit-limit.use-case';
 import { RemoveTeamCreditLimitCommand } from 'src/iam/credit-limits/application/use-cases/remove-team-credit-limit/remove-team-credit-limit.command';
@@ -34,13 +41,16 @@ import {
   ApiKeyCreditLimitItemDto,
   TeamCreditLimitItemDto,
   UserCreditLimitItemDto,
+  UserCreditUsageItemDto,
 } from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-item.dto';
 import {
   ApiKeyCreditLimitResponseDto,
+  DefaultUserCreditLimitResponseDto,
   TeamCreditLimitResponseDto,
   UserCreditLimitResponseDto,
 } from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-response.dto';
 import { SetCreditLimitDto } from './dtos/set-credit-limit.dto';
+import { UserCreditUsageQueryDto } from './dtos/user-credit-usage-query.dto';
 import { CreditLimitDtoMapper } from './mappers/credit-limit-dto.mapper';
 
 @ApiTags('credit-limits')
@@ -51,6 +61,7 @@ export class CreditLimitsController {
 
   constructor(
     private readonly getUserCreditLimitsOverviewUseCase: GetAdminUserCreditLimitsOverviewUseCase,
+    private readonly getUserCreditUsageUseCase: GetUserCreditUsageUseCase,
     private readonly getTeamCreditLimitsOverviewUseCase: GetAdminTeamCreditLimitsOverviewUseCase,
     private readonly getApiKeyCreditLimitsOverviewUseCase: GetApiKeyCreditLimitsOverviewUseCase,
     private readonly setUserCreditLimitUseCase: SetUserCreditLimitUseCase,
@@ -59,8 +70,52 @@ export class CreditLimitsController {
     private readonly removeUserCreditLimitUseCase: RemoveUserCreditLimitUseCase,
     private readonly removeTeamCreditLimitUseCase: RemoveTeamCreditLimitUseCase,
     private readonly removeApiKeyCreditLimitUseCase: RemoveApiKeyCreditLimitUseCase,
+    private readonly getDefaultUserCreditLimitUseCase: GetDefaultUserCreditLimitUseCase,
+    private readonly setDefaultUserCreditLimitUseCase: SetDefaultUserCreditLimitUseCase,
+    private readonly removeDefaultUserCreditLimitUseCase: RemoveDefaultUserCreditLimitUseCase,
     private readonly mapper: CreditLimitDtoMapper,
   ) {}
+
+  @Roles(UserRole.ADMIN)
+  @Get('default-user')
+  @ApiOperation({
+    summary: 'Get the org-wide default personal credit limit',
+  })
+  @ApiResponse({ status: 200, type: DefaultUserCreditLimitResponseDto })
+  async getDefaultUserLimit(): Promise<DefaultUserCreditLimitResponseDto> {
+    this.logger.log('Getting default user credit limit');
+    const limit = await this.getDefaultUserCreditLimitUseCase.execute();
+    return this.mapper.toDefaultUserDto(limit);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Put('default-user')
+  @ApiOperation({
+    summary:
+      'Set the default personal credit limit for users without an individual limit',
+  })
+  @ApiResponse({ status: 200, type: DefaultUserCreditLimitResponseDto })
+  async setDefaultUserLimit(
+    @Body() dto: SetCreditLimitDto,
+  ): Promise<DefaultUserCreditLimitResponseDto> {
+    this.logger.log('Setting default user credit limit');
+    const limit = await this.setDefaultUserCreditLimitUseCase.execute(
+      new SetDefaultUserCreditLimitCommand(dto.monthlyCredits),
+    );
+    return this.mapper.toDefaultUserDto(limit);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Delete('default-user')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Remove the default personal credit limit',
+  })
+  @ApiResponse({ status: 204 })
+  async removeDefaultUserLimit(): Promise<void> {
+    this.logger.log('Removing default user credit limit');
+    await this.removeDefaultUserCreditLimitUseCase.execute();
+  }
 
   @Roles(UserRole.ADMIN)
   @Get('users')
@@ -72,6 +127,26 @@ export class CreditLimitsController {
     this.logger.log('Getting user credit limits');
     const items = await this.getUserCreditLimitsOverviewUseCase.execute();
     return this.mapper.toUserItems(items);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get('users/usage')
+  @ApiOperation({
+    summary:
+      'Current monthly credit consumption of the given users, whether or not they have an individual limit',
+  })
+  @ApiResponse({ status: 200, type: [UserCreditUsageItemDto] })
+  async getUserUsage(
+    @Query() query: UserCreditUsageQueryDto,
+  ): Promise<UserCreditUsageItemDto[]> {
+    this.logger.log(
+      { userCount: query.userIds.length },
+      'Getting user credit usage',
+    );
+    const items = await this.getUserCreditUsageUseCase.execute(
+      new GetUserCreditUsageQuery(query.userIds),
+    );
+    return this.mapper.toUserUsageItems(items);
   }
 
   @Roles(UserRole.ADMIN)

@@ -1,3 +1,4 @@
+import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useState } from 'react';
 import { CreditLimitDialog } from '@/widgets/credit-limit-editor/ui/CreditLimitDialog';
 import { useTranslation } from 'react-i18next';
@@ -14,30 +15,22 @@ import { useTeamCreditLimits } from '@/pages/admin-settings/team-detail/api/useT
 interface TeamCreditLimitCardProps {
   teamId: string;
   teamName: string;
-  canManage?: boolean;
 }
 
 export function TeamCreditLimitCard({
   teamId,
   teamName,
-  canManage = true,
 }: Readonly<TeamCreditLimitCardProps>) {
   const { t, i18n } = useTranslation('admin-settings-credit-limits');
   const { teamLimits, isLoading, isError } = useTeamCreditLimits();
   const limit = teamLimits.get(teamId);
   const [isOpen, setIsOpen] = useState(false);
-  if (!canManage && isOpen) setIsOpen(false);
   let description = t('form.noLimit');
   if (limit)
-    description = t(
-      limit.creditsUsed === undefined
-        ? 'creditLimits.teamCard.limitOnly'
-        : 'creditLimits.teamCard.current',
-      {
-        used: limit.creditsUsed?.toLocaleString(i18n.language),
-        limit: limit.monthlyCredits.toLocaleString(i18n.language),
-      },
-    );
+    description = t('creditLimits.teamCard.current', {
+      used: limit.creditsUsed.toLocaleString(i18n.language),
+      limit: limit.monthlyCredits.toLocaleString(i18n.language),
+    });
   if (isLoading) description = t('states.loading');
   if (isError) description = t('states.error');
   return (
@@ -49,7 +42,7 @@ export function TeamCreditLimitCard({
           <Button
             size="sm"
             variant="outline"
-            disabled={!canManage || isLoading || isError}
+            disabled={isLoading || isError}
             onClick={() => setIsOpen(true)}
             data-testid={`credit-limits-team-${teamId}`}
           >
@@ -57,11 +50,11 @@ export function TeamCreditLimitCard({
           </Button>
         </CardAction>
       </CardHeader>
-      {isOpen && canManage && (
+      {isOpen && (
         <CreditLimitDialog
           id={teamId}
           name={teamName}
-          target="teams"
+          target={CreditLimitScope.TEAM}
           initialLimit={limit?.monthlyCredits ?? null}
           onClose={() => setIsOpen(false)}
         />

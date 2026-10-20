@@ -69,7 +69,7 @@ describe('LocalOrgsRepository.findAllForSuperAdmin search', () => {
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
     await new LocalOrgsRepository(txHost).findAllForSuperAdmin(
       { limit: 10, offset: 0 },
-      { search, status: 'all' },
+      { search },
     );
     return conditions;
   };

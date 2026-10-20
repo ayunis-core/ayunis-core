@@ -50,6 +50,7 @@ describe('SkillTextModelResolver with real model selection', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       }),
     });
   }

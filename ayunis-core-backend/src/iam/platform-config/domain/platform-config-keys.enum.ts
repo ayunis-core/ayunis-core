@@ -20,4 +20,5 @@ export enum PlatformConfigKey {
   // stored as the string 'true' | 'false'; MESSAGE holds the banner text.
   APP_ALERT_ENABLED = 'APP_ALERT_ENABLED',
   APP_ALERT_MESSAGE = 'APP_ALERT_MESSAGE',
+  ACADEMY_MINIMUM_MODULE_SECONDS = 'ACADEMY_MINIMUM_MODULE_SECONDS',
 }

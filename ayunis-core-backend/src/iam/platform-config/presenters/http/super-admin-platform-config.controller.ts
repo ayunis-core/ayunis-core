@@ -26,6 +26,10 @@ import { SetImageFairUseLimitUseCase } from 'src/iam/platform-config/application
 import { SetImageFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
 import { SetAppAlertUseCase } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.use-case';
 import { SetAppAlertCommand } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.command';
+import { GetAcademyMinimumModuleSecondsUseCase } from 'src/iam/platform-config/application/use-cases/get-academy-minimum-module-seconds/get-academy-minimum-module-seconds.use-case';
+import { SetAcademyMinimumModuleSecondsUseCase } from 'src/iam/platform-config/application/use-cases/set-academy-minimum-module-seconds/set-academy-minimum-module-seconds.use-case';
+import { SetAcademyMinimumModuleSecondsCommand } from 'src/iam/platform-config/application/use-cases/set-academy-minimum-module-seconds/set-academy-minimum-module-seconds.command';
+import { AcademyMinimumModuleSecondsDto } from './dto/academy-minimum-module-seconds.dto';
 import { CreditsPerEuroResponseDto } from './dto/credits-per-euro-response.dto';
 import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.dto';
 import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
@@ -46,6 +50,8 @@ export class SuperAdminPlatformConfigController {
     private readonly setFairUseLimitUseCase: SetFairUseLimitUseCase,
     private readonly setImageFairUseLimitUseCase: SetImageFairUseLimitUseCase,
     private readonly setAppAlertUseCase: SetAppAlertUseCase,
+    private readonly getAcademyMinimumModuleSecondsUseCase: GetAcademyMinimumModuleSecondsUseCase,
+    private readonly setAcademyMinimumModuleSecondsUseCase: SetAcademyMinimumModuleSecondsUseCase,
   ) {}
 
   @Get('credits-per-euro')
@@ -236,5 +242,62 @@ export class SuperAdminPlatformConfigController {
     });
     await this.setAppAlertUseCase.execute(command);
     this.logger.log('Successfully updated app alert banner');
+  }
+
+  @Get('academy-minimum-module-seconds')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get the academy minimum time per video page',
+    description:
+      'Seconds each academy video page must be open and visible before its chapter can be confirmed. Defaults to 60 when unset. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully retrieved the academy minimum time',
+    type: AcademyMinimumModuleSecondsDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async getAcademyMinimumModuleSeconds(): Promise<AcademyMinimumModuleSecondsDto> {
+    this.logger.log('Getting academy minimum module seconds');
+    const seconds = await this.getAcademyMinimumModuleSecondsUseCase.execute();
+    return { seconds };
+  }
+
+  @Put('academy-minimum-module-seconds')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set the academy minimum time per video page',
+    description:
+      'Update the seconds each academy video page must be open and visible before its chapter can be confirmed. 0 disables the requirement. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated the academy minimum time',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid value provided (must be a non-negative integer)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async setAcademyMinimumModuleSeconds(
+    @Body() dto: AcademyMinimumModuleSecondsDto,
+  ): Promise<void> {
+    this.logger.log(
+      { seconds: dto.seconds },
+      'Setting academy minimum module seconds',
+    );
+    await this.setAcademyMinimumModuleSecondsUseCase.execute(
+      new SetAcademyMinimumModuleSecondsCommand({ seconds: dto.seconds }),
+    );
   }
 }

@@ -37,6 +37,7 @@ describe('GetPermittedLanguageModelUseCase', () => {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
 
   const permittedModelForOrg = (orgId: UUID) =>

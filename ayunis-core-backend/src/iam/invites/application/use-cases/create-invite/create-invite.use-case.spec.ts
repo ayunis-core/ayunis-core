@@ -1,5 +1,4 @@
 import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
-import { AssertTeamManagementAllowedUseCase } from 'src/iam/teams/application/use-cases/assert-team-management-allowed/assert-team-management-allowed.use-case';
 import type { UUID } from 'crypto';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -83,10 +82,6 @@ describe('CreateInviteUseCase', () => {
         {
           provide: FindTeamsByIdsAndOrgIdUseCase,
           useValue: { execute: jest.fn().mockResolvedValue([]) },
-        },
-        {
-          provide: AssertTeamManagementAllowedUseCase,
-          useValue: { execute: jest.fn() },
         },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: ConfigService, useValue: mockConfigService },

@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -6,6 +7,7 @@ export enum AcademyErrorCode {
   COURSE_MODULE_NOT_FOUND = 'COURSE_MODULE_NOT_FOUND',
   INVALID_REORDER = 'INVALID_REORDER',
   COMPLETION_NOT_FOUND = 'COMPLETION_NOT_FOUND',
+  MODULES_BELOW_MINIMUM_TIME = 'MODULES_BELOW_MINIMUM_TIME',
   UNEXPECTED_ACADEMY_ERROR = 'UNEXPECTED_ACADEMY_ERROR',
 }
 
@@ -60,6 +62,17 @@ export class AcademyCompletionNotFoundError extends AcademyError {
       AcademyErrorCode.COMPLETION_NOT_FOUND,
       404,
       metadata,
+    );
+  }
+}
+
+export class ChapterModulesBelowMinimumTimeError extends AcademyError {
+  constructor(courseModuleIds: UUID[], minimumSeconds: number) {
+    super(
+      `${courseModuleIds.length} video page(s) have not been open for ${minimumSeconds} seconds yet`,
+      AcademyErrorCode.MODULES_BELOW_MINIMUM_TIME,
+      409,
+      { courseModuleIds, minimumSeconds },
     );
   }
 }

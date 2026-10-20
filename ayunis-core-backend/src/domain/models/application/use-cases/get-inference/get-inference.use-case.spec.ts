@@ -1,3 +1,4 @@
+import { DEFAULT_RETRY_CONFIG } from '@ayunis/agent-runtime';
 import { ModelProviderError, normalizeProviderError } from '@ayunis/inference';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
@@ -516,7 +517,7 @@ describe('GetInferenceUseCase rate-limit retry', () => {
   });
 
   it.each([
-    ['above the wait cap', 15_001],
+    ['above the wait cap', DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs + 1],
     ['missing', undefined],
   ])(
     'does not retry when the advertised delay is %s',

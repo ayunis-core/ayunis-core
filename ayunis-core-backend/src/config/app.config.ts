@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { parseTrustProxy } from './trust-proxy';
 
 function frontendConfig() {
   return {
@@ -31,6 +32,7 @@ export const appConfig = registerAs('app', () => {
 
   return {
     port: process.env.PORT || 3000,
+    trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
     disableRegistration: process.env.DISABLE_REGISTRATION === 'true',
     isSelfHosted: process.env.APP_ENVIRONMENT === 'self-hosted',
     isCloudHosted: process.env.APP_ENVIRONMENT === 'cloud',

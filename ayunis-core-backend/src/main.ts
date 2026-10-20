@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { TrustProxy } from 'src/config/trust-proxy';
 
 import { AppModule } from './app/app.module';
 import { METRICS_PATH } from './integrations/metrics/metrics.constants';
@@ -92,6 +93,10 @@ class Bootstrap {
   }
 
   private static configureApp(app: NestExpressApplication) {
+    app.set(
+      'trust proxy',
+      app.get(ConfigService).getOrThrow<TrustProxy>('app.trustProxy'),
+    );
     this.configureBodyParsers(app);
     this.configureCors(app);
     this.setupSwagger(app);

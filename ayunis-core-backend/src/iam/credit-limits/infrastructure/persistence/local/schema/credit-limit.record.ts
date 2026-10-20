@@ -83,3 +83,12 @@ export class ApiKeyCreditLimitRecord extends CreditLimitRecord {
   @ManyToOne(() => ApiKeyRecord, { nullable: true, onDelete: 'CASCADE' })
   apiKey: ApiKeyRecord | null;
 }
+
+// No target column: the org itself is the target. The partial unique index
+// guarantees at most one default per organization.
+@ChildEntity(CreditLimitScope.USER_DEFAULT)
+@Index(['orgId'], {
+  unique: true,
+  where: `"scope" = '${CreditLimitScope.USER_DEFAULT}'`,
+})
+export class DefaultUserCreditLimitRecord extends CreditLimitRecord {}

@@ -1,3 +1,4 @@
+import { DEFAULT_RETRY_CONFIG } from '@ayunis/agent-runtime';
 import { ModelProviderError } from '@ayunis/inference';
 import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
@@ -149,15 +150,6 @@ export function isRetryableProviderServerFailure(error: unknown): boolean {
   );
 }
 
-/**
- * Longest single pause worth spending on a rate limit while a user holds an
- * open stream. Azure quotas reset per minute, so short retry-after values
- * recover; a longer one will not reopen in time and retrying just bills
- * another rejection.
- * ponytail: fixed ceiling, make it per-provider config if a provider's
- * typical retry-after turns out to sit above it.
- */
-export const RATE_LIMIT_MAX_WAIT_MS = 15_000;
 const RATE_LIMIT_BACKOFF_MS = 1_000;
 
 /** Upstream 429 responses: recoverable before any output has been streamed. */
@@ -168,9 +160,11 @@ export function isRetryableProviderRateLimitFailure(error: unknown): boolean {
 
 /**
  * Pause before resending a rate-limited request, honoring the provider's
- * retry-after when it fits the wait budget. Returns undefined when the
- * provider asks for longer than the budget — the caller should surface the
- * rejection instead of retrying into a closed quota window.
+ * retry-after when it fits the wait budget. The budget is the runtime's
+ * shared Retry-After cap, whose rationale is documented on
+ * DEFAULT_RETRY_CONFIG. Returns undefined when the provider asks for longer —
+ * the caller should surface the rejection instead of retrying into a closed
+ * quota window.
  */
 export function rateLimitRetryDelayMs(
   error: unknown,
@@ -179,7 +173,9 @@ export function rateLimitRetryDelayMs(
   const delayMs =
     extractProviderErrorDiagnostics(error).upstreamRetryAfterMs ??
     RATE_LIMIT_BACKOFF_MS * attempt;
-  return delayMs <= RATE_LIMIT_MAX_WAIT_MS ? delayMs : undefined;
+  return delayMs <= DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs
+    ? delayMs
+    : undefined;
 }
 
 function classifyByCode(

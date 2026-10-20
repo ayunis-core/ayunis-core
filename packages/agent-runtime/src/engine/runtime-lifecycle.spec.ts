@@ -480,6 +480,13 @@ describe('retry input', () => {
         }),
       ),
     ).toThrow(/jitterRatio/);
+    expect(() =>
+      run(
+        baseInput(new MockProvider([]), {
+          retry: { retryAfter: { jitterMs: -1 } },
+        }),
+      ),
+    ).toThrow(/retryAfter.jitterMs/);
   });
 });
 

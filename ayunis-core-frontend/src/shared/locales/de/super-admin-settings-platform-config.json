@@ -51,5 +51,18 @@
       "limit": "Bilder müssen eine positive Ganzzahl sein.",
       "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
     }
+  },
+  "academyMinimumModuleSeconds": {
+    "title": "Academy: Mindestzeit pro Videoseite",
+    "description": "Wie viele Sekunden jede Videoseite geöffnet und sichtbar sein muss, bevor ein Kapitel abgeschlossen werden kann. Gemessen wird die Zeit auf der Seite, nicht die Wiedergabe des Videos.",
+    "label": "Sekunden pro Videoseite",
+    "loading": "Wird geladen…",
+    "loadError": "Die Mindestzeit konnte nicht geladen werden.",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Mindestzeit erfolgreich aktualisiert.",
+    "updateError": "Die Mindestzeit konnte nicht aktualisiert werden.",
+    "validationError": "Bitte geben Sie eine ganze Zahl ab 0 ein.",
+    "hint": "0 deaktiviert die Mindestzeit. Bereits abgeschlossene Kapitel bleiben gültig."
   }
 }

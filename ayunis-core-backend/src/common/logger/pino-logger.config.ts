@@ -13,8 +13,6 @@ const REDACTED_KEYS = [
   'request',
   'response',
   'completionOptions',
-  'error',
-  'err',
   'email',
   'userEmail',
   'name',
@@ -40,11 +38,76 @@ const REDACTED_KEYS = [
   'resetToken',
 ] as const;
 
-const REDACT_PATHS = REDACTED_KEYS.flatMap((key) => [
-  key,
-  `*.${key}`,
-  `*.*.${key}`,
+// Top-level `err` / `error` go through `serializeError`, which only lets a
+// fixed set of fields out; pino serializers do not reach nested objects, so
+// those positions stay censored.
+const ERROR_KEYS = ['err', 'error'] as const;
+
+const REDACT_PATHS = [
+  ...REDACTED_KEYS.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]),
+  ...ERROR_KEYS.flatMap((key) => [`*.${key}`, `*.*.${key}`]),
+];
+
+const CENSOR = '[Redacted]';
+const MAX_CAUSE_DEPTH = 5;
+// Error text and even copied stack frames can contain request data. Derive
+// summaries from recognized codes instead of attempting to sanitize that text.
+const ERROR_SUMMARIES = new Map<string, string>([
+  ['57014', 'Database query canceled'],
+  ['42P01', 'Database table does not exist'],
+  ['42703', 'Database column does not exist'],
+  ['23502', 'Database not-null constraint violated'],
+  ['23503', 'Database foreign-key constraint violated'],
+  ['23505', 'Database unique constraint violated'],
+  ['40001', 'Database serialization failure'],
+  ['40P01', 'Database deadlock detected'],
+  ['53300', 'Database connection limit reached'],
+  ['57P01', 'Database shutting down'],
+  ['ECONNREFUSED', 'Connection refused'],
+  ['ECONNRESET', 'Connection reset'],
+  ['ETIMEDOUT', 'Connection timed out'],
+  ['ENOTFOUND', 'DNS lookup failed'],
+  ['EAI_AGAIN', 'DNS lookup temporarily unavailable'],
 ]);
+
+interface SerializedError {
+  type: string;
+  message: string;
+  code?: string;
+  cause?: SerializedError;
+}
+
+// pino-http wraps the `err` serializer so pino's standard one runs first; its
+// output keeps the original error under `raw`, which is all we need from it.
+function unwrapError(value: unknown): Error | undefined {
+  if (value instanceof Error) {
+    return value;
+  }
+  const raw = (value as { raw?: unknown } | null)?.raw;
+  return raw instanceof Error ? raw : undefined;
+}
+
+// Whitelist, not a copy: provider and HTTP client errors hang request and
+// response payloads off their own properties, and those must never be logged.
+// Raw messages, stacks, and schema identifiers are untrusted text too.
+function serializeError(value: unknown): SerializedError | string {
+  const error = unwrapError(value);
+  return error ? toSerializedError(error, 0) : CENSOR;
+}
+
+function toSerializedError(error: Error, depth: number): SerializedError {
+  const { code, cause } = error as Error & { code?: unknown; cause?: unknown };
+  const summary =
+    typeof code === 'string' ? ERROR_SUMMARIES.get(code) : undefined;
+  return {
+    type: error.constructor.name,
+    message: summary ?? CENSOR,
+    ...(typeof code === 'string' && summary ? { code } : {}),
+    ...(cause instanceof Error && depth < MAX_CAUSE_DEPTH
+      ? { cause: toSerializedError(cause, depth + 1) }
+      : {}),
+  };
+}
 
 export function createPinoLoggerConfig(
   environment: NodeJS.ProcessEnv = process.env,
@@ -60,7 +123,25 @@ export function createPinoLoggerConfig(
       quietResLogger: true,
       redact: {
         paths: REDACT_PATHS,
-        censor: '[Redacted]',
+        censor: CENSOR,
+      },
+      serializers: {
+        err: serializeError,
+        error: serializeError,
+      },
+      hooks: {
+        logMethod(args, method) {
+          const first = args[0] as { err?: unknown; msg?: unknown } | undefined;
+          const value = unwrapError(first) ?? first?.err;
+          // Pino copies err.message to msg before running serializers, even
+          // for plain err objects. Preserve explicit application messages.
+          if (value && args[1] === undefined && first?.msg === undefined) {
+            const serialized = serializeError(value);
+            args[1] =
+              typeof serialized === 'string' ? serialized : serialized.message;
+          }
+          method.apply(this, args);
+        },
       },
       mixin: buildLogContext,
       transport: buildTransport(isDevelopment, environment),

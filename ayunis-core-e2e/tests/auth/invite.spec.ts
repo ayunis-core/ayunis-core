@@ -1,3 +1,4 @@
+import { requestUsageVisibilityChange } from "../../src/clients/api/usage-visibility.client";
 import {
   createTeam,
   deleteTeam,
@@ -45,7 +46,7 @@ test("invited member joins the org and signs in", async ({
   await expect(page).not.toHaveURL(/\/login/);
 });
 
-test("single invite with teams shows assignments and grants membership on acceptance", async ({
+test("single invite with hidden individual usage shows teams and grants membership", async ({
   page,
   api,
   org,
@@ -64,6 +65,14 @@ test("single invite with teams shows assignments and grants membership on accept
   const adminPage = await adminContext.newPage();
   adminPage.setDefaultTimeout(10_000);
   try {
+    await login(publicApi, "admin@demo.local", "admin");
+    expect(
+      (
+        await requestUsageVisibilityChange(publicApi, org.orgId, {
+          hideIndividualUsage: true,
+        })
+      ).status(),
+    ).toBe(200);
     await adminPage.goto("/admin-settings/users");
     await adminPage.getByTestId("invite-menu-trigger").click();
     await adminPage.getByTestId("single-invite-menu-item").click();
@@ -124,6 +133,10 @@ test("single invite with teams shows assignments and grants membership on accept
       team.name,
     );
   } finally {
+    await login(publicApi, "admin@demo.local", "admin");
+    await requestUsageVisibilityChange(publicApi, org.orgId, {
+      hideIndividualUsage: false,
+    });
     await adminContext.close();
   }
 });

@@ -7,5 +7,3 @@ export {
   allowedSettingsSections,
   MANAGER_SETTINGS_SECTIONS,
 } from './lib/settings-access';
-
-export { useTeamManagementAccess } from './api/useTeamManagementAccess';

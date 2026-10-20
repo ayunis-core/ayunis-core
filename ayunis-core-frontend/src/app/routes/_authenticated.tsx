@@ -8,6 +8,10 @@ import { meQueryOptions } from '@/shared/api/me-query-options';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
 import { setAppsignalTags, clearAppsignalTags } from '@/shared/lib/appsignal';
+import {
+  clearPromptHistory,
+  setPromptHistoryOwner,
+} from '@/shared/lib/prompt-history';
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
@@ -15,6 +19,7 @@ export const Route = createFileRoute('/_authenticated')({
     try {
       const user = await queryClient.query(meQueryOptions());
       setAppsignalTags({ userId: user.id, orgId: user.orgId });
+      setPromptHistoryOwner(user.id);
       await queryClient.query({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
@@ -22,6 +27,7 @@ export const Route = createFileRoute('/_authenticated')({
       return { user };
     } catch (error) {
       clearAppsignalTags();
+      clearPromptHistory();
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {

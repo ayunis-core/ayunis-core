@@ -43,7 +43,10 @@ import type { CreateUserMessageUseCase } from 'src/domain/messages/application/u
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { ThreadPiiMaskAnonymizationError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import {
   AnonymizationFailedError,
   AnonymizationInputTooLongError,
@@ -856,6 +859,49 @@ describe('ExecuteRunUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it('preserves completed tool phases when a later paid stream fails without usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    let calls = 0;
+    const { useCase, save, createToolResult, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      providerStream: async function* () {
+        calls += 1;
+        if (calls === 1) {
+          yield* toolCallTurn({
+            id: 'permit-1',
+            name: lookupTool.name,
+            input: {},
+          });
+          return;
+        }
+        yield {};
+        throw new ModelProviderError({
+          kind: 'timeout',
+          stage: 'stream_consumption',
+          timeoutSource: 'whole_stream',
+          cause: new Error('stream deadline exceeded'),
+        });
+      },
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC' });
+
+    expect(calls).toBe(2);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
   it('does not execute tools after paid output arrives without usage', async () => {
     const execute = jest.fn().mockResolvedValue('permit found');
     const lookupTool = {
@@ -1070,8 +1116,8 @@ describe('ExecuteRunUseCase', () => {
     await expect(
       drain(await useCase.execute(userCommand())),
     ).rejects.toMatchObject({
-      code: 'RUN_EXECUTION_FAILED',
-      message: 'Run execution failed: Agent runtime failed',
+      code: 'INFERENCE_FAILED',
+      message: 'Inference failed: model returned an empty response',
     });
     expect(save).not.toHaveBeenCalled();
     expect(collectUsage).toHaveBeenCalledTimes(1);
@@ -2097,6 +2143,49 @@ describe('ExecuteRunUseCase', () => {
     });
     expect(createUser).not.toHaveBeenCalled();
     expect(provider.requests).toHaveLength(0);
+  });
+
+  it('aborts without an error when the thread disappears while persisting user-message masks', async () => {
+    const { useCase, anonymize, createUser, provider, cleanup } = buildHarness({
+      anonymous: true,
+    });
+    anonymize.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+
+    const stream = await useCase.execute(userCommand());
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('aborts without an error when the thread disappears while persisting tool-result masks', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collectToolResults = jest
+      .fn()
+      .mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+    const { useCase, createSeedToolResult, provider, cleanup } = buildHarness({
+      anonymous: true,
+      lastMessage,
+      toolResultCollector: { collectToolResults } as never,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart for Jane'),
+    });
+
+    const stream = await useCase.execute(command);
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createSeedToolResult).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
   });
 
   it('activates a requested skill before the run and folds in its instructions', async () => {

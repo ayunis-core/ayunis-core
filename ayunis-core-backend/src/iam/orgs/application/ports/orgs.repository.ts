@@ -1,6 +1,10 @@
 import type { Org } from 'src/iam/orgs/domain/org.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type {
+  OrgLifecycleCounts,
+  OrgLifecycleStatus,
+} from 'src/iam/orgs/application/models/org-lifecycle-status';
 
 export interface OrgsPagination {
   limit: number;
@@ -9,11 +13,8 @@ export interface OrgsPagination {
 
 export interface OrgsFilters {
   search?: string;
-  status?: 'active' | 'archived' | 'all';
-  subscription?: OrgSubscriptionFilter;
+  lifecycle?: OrgLifecycleStatus | 'all';
 }
-
-export type OrgSubscriptionFilter = 'all' | 'paying' | 'non-paying';
 
 export abstract class OrgsRepository {
   abstract findById(id: UUID, lockForLifecycle?: boolean): Promise<Org>;
@@ -23,7 +24,10 @@ export abstract class OrgsRepository {
     pagination: OrgsPagination,
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>>;
-  abstract findPayingOrgIds(orgIds: UUID[]): Promise<UUID[]>;
+  abstract countByLifecycleStatus(search?: string): Promise<OrgLifecycleCounts>;
+  abstract findLifecycleStatuses(
+    orgIds: UUID[],
+  ): Promise<Map<UUID, OrgLifecycleStatus>>;
   abstract create(org: Org): Promise<Org>;
   abstract updateName(id: UUID, name: string): Promise<Org>;
   abstract updateUsageVisibility(

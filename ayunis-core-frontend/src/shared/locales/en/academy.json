@@ -27,9 +27,11 @@
     "description": "Confirm that you have watched all videos in this chapter.",
     "watchedVideos": "I've watched the videos",
     "completeChapter": "Complete chapter",
+    "minimumTime": "Every video page in this chapter must be open for at least {{seconds}} seconds. Not reached yet:",
     "errors": {
       "chapterNotFound": "The chapter could not be found.",
-      "submitFailed": "The chapter could not be completed. Please try again."
+      "submitFailed": "The chapter could not be completed. Please try again.",
+      "modulesBelowMinimumTime": "Not every video page in this chapter has been open long enough."
     }
   },
   "progress": {

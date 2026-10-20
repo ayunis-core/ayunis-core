@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { SkillTextField } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.command';
 
 const MAX_FIELD_LENGTH = 10000;
@@ -19,6 +19,15 @@ export class ImproveSkillTextDto {
   @IsString()
   @MaxLength(255)
   name?: string;
+
+  @ApiPropertyOptional({
+    enum: ['en', 'de'],
+    description:
+      'Current UI language, used when the draft language is unidentifiable; defaults to English',
+  })
+  @IsOptional()
+  @IsIn(['en', 'de'])
+  language?: 'en' | 'de';
 
   @ApiProperty({
     description: 'The trigger as it currently stands in the form',
