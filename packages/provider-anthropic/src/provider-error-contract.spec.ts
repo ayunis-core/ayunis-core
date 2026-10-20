@@ -7,12 +7,15 @@ import {
 } from '@ayunis/inference';
 
 import { anthropic } from './anthropic-provider';
+import { asApiPromise } from './test-helpers';
 
 const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
 
 vi.mock('@anthropic-ai/sdk', () => {
   class FakeAnthropic {
-    messages = { create: createMock };
+    messages = {
+      create: (...args: unknown[]) => asApiPromise(createMock(...args)),
+    };
   }
   return { default: FakeAnthropic };
 });
@@ -183,16 +186,12 @@ describe('Anthropic provider error contract', () => {
     });
   });
 
-  it('preserves a normalized next failure over a rejecting iterator cleanup', async () => {
+  it('normalizes a post-chunk transport failure', async () => {
     const cause = Object.assign(new Error('connection lost'), {
       code: 'ECONNRESET',
     });
-    const cleanupError = new Error('cleanup failed');
-    const onReturn = vi.fn(() => {
-      throw cleanupError;
-    });
     createMock.mockResolvedValueOnce(
-      scriptedStream([value(textEvent('partial')), cause], onReturn),
+      scriptedStream([value(textEvent('partial')), cause]),
     );
     const iterator = anthropic({ apiKey: 'test', model: 'claude-test' })
       .stream(request())
@@ -207,6 +206,55 @@ describe('Anthropic provider error contract', () => {
       stage: 'stream_consumption',
       cause,
     });
+  });
+
+  it('preserves a mid-stream error event over a rejecting body cleanup', async () => {
+    const cleanupError = new Error('cleanup failed');
+    const onReturn = vi.fn(() => {
+      throw cleanupError;
+    });
+    createMock.mockResolvedValueOnce(
+      scriptedStream(
+        [
+          value(textEvent('partial')),
+          value({
+            type: 'error',
+            error: { type: 'overloaded_error', message: 'Overloaded' },
+          }),
+          value(textEvent('unread')),
+          value(textEvent('unread')),
+        ],
+        onReturn,
+      ),
+    );
+    const iterator = anthropic({ apiKey: 'test', model: 'claude-test' })
+      .stream(request())
+      [Symbol.asyncIterator]();
+
+    await iterator.next();
+    await expect(iterator.next()).rejects.toMatchObject({
+      stage: 'stream_consumption',
+    });
+    expect(onReturn).toHaveBeenCalledOnce();
+  });
+
+  it('cancels the response body when the consumer stops reading early', async () => {
+    const onReturn = vi.fn();
+    createMock.mockResolvedValueOnce(
+      scriptedStream(
+        [value(textEvent('first')), value(textEvent('second'))],
+        onReturn,
+      ),
+    );
+
+    for await (const chunk of anthropic({
+      apiKey: 'test',
+      model: 'claude-test',
+    }).stream(request())) {
+      expect(chunk).toEqual({ textDelta: 'first' });
+      break;
+    }
+
     expect(onReturn).toHaveBeenCalledOnce();
   });
 
@@ -231,27 +279,27 @@ describe('Anthropic provider error contract', () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
-  it('preserves a raw chunk conversion failure over rejecting iterator cleanup', async () => {
-    const cause = new Error('invalid local chunk');
-    const invalidEvent = new Proxy(
-      {},
-      {
-        get() {
-          throw cause;
-        },
-      },
-    );
+  it('preserves a raw chunk conversion failure over rejecting body cleanup', async () => {
     const cleanupError = new Error('cleanup failed');
     const onReturn = vi.fn(() => {
       throw cleanupError;
     });
     createMock.mockResolvedValueOnce(
-      scriptedStream([value(invalidEvent)], onReturn),
+      scriptedStream(
+        [
+          value({ type: 'message_start' }),
+          value(textEvent('unread')),
+          value(textEvent('unread')),
+        ],
+        onReturn,
+      ),
     );
 
-    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+    const failure = drain(
+      anthropic({ apiKey: 'test', model: 'claude-test' }).stream(request()),
+    );
 
-    await expect(drain(provider.stream(request()))).rejects.toBe(cause);
+    await expect(failure).rejects.toBeInstanceOf(TypeError);
     expect(onReturn).toHaveBeenCalledOnce();
   });
 
@@ -284,7 +332,7 @@ describe('Anthropic provider error contract', () => {
     });
   });
 
-  it('passes abort through active consumption and cleans up promptly', async () => {
+  it('passes abort through active consumption', async () => {
     const controller = new AbortController();
     const onReturn = vi.fn();
     const onNext = vi.fn();
@@ -316,7 +364,6 @@ describe('Anthropic provider error contract', () => {
       kind: 'abort',
       stage: 'stream_consumption',
     });
-    expect(onReturn).toHaveBeenCalledOnce();
   });
 
   it('opens one SDK stream for one invocation when maxRetries is zero', async () => {

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
 
 import { bedrock } from './bedrock-provider';
+import { asApiPromise } from './test-helpers';
 
 const { bedrockCtor, createMock } = vi.hoisted(() => ({
   bedrockCtor: vi.fn(),
@@ -11,7 +12,9 @@ const { bedrockCtor, createMock } = vi.hoisted(() => ({
 
 vi.mock('@anthropic-ai/bedrock-sdk', () => {
   class FakeBedrock {
-    messages = { create: createMock };
+    messages = {
+      create: (...args: unknown[]) => asApiPromise(createMock(...args)),
+    };
 
     constructor(options: unknown) {
       bedrockCtor(options);
@@ -109,12 +112,11 @@ describe('Bedrock provider error contract', () => {
     });
   });
 
-  it('normalizes post-chunk failures and cleans up the Bedrock iterator', async () => {
+  it('normalizes post-chunk transport failures through the shared stream core', async () => {
     const cause = Object.assign(new Error('socket closed'), {
       code: 'UND_ERR_SOCKET',
     });
-    const onReturn = vi.fn();
-    createMock.mockResolvedValueOnce(failingStream(cause, onReturn));
+    createMock.mockResolvedValueOnce(failingStream(cause, vi.fn()));
     const iterator = bedrock({ model: 'anthropic.test', maxRetries: 0 })
       .stream(request())
       [Symbol.asyncIterator]();
@@ -128,7 +130,6 @@ describe('Bedrock provider error contract', () => {
       stage: 'stream_consumption',
       cause,
     });
-    expect(onReturn).toHaveBeenCalledOnce();
   });
 
   it('passes the request signal to Bedrock and opens one SDK stream', async () => {

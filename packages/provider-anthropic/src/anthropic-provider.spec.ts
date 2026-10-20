@@ -1,9 +1,12 @@
-import type Anthropic from '@anthropic-ai/sdk';
+import Anthropic from '@anthropic-ai/sdk';
 import type { MessageCreateParamsStreaming } from '@anthropic-ai/sdk/resources/messages';
 import { describe, expect, it } from 'vitest';
 
+import { ModelProviderError } from '@ayunis/inference';
+
 import type { AnthropicCompatibleClient } from './anthropic-provider';
 import { createMessagesProvider } from './anthropic-provider';
+import { asApiPromise, events } from './test-helpers';
 
 /** Captures the params of each messages.create call and streams nothing. */
 const captureClient = (
@@ -12,9 +15,7 @@ const captureClient = (
   messages: {
     create: ((params: MessageCreateParamsStreaming) => {
       captured.push(params);
-      return Promise.resolve(
-        (async function* () {})() as unknown as Anthropic.Messages.MessageStreamEvent,
-      );
+      return asApiPromise(events());
     }) as unknown as Anthropic['messages']['create'],
   },
 });
@@ -91,5 +92,98 @@ describe('createMessagesProvider prompt caching', () => {
         ],
       },
     ]);
+  });
+});
+
+const scriptedClient = (
+  stream: AsyncIterable<unknown>,
+): AnthropicCompatibleClient => ({
+  messages: {
+    create: (() =>
+      asApiPromise(stream)) as unknown as Anthropic['messages']['create'],
+  },
+});
+
+const emptyRequest = {
+  instructions: '',
+  messages: [],
+  tools: [],
+};
+
+describe('createMessagesProvider stream events', () => {
+  it('yields an empty heartbeat chunk for each ping so silent thinking stays visible to idle watchdogs', async () => {
+    const provider = createMessagesProvider(
+      scriptedClient(
+        events(
+          { type: 'ping' },
+          { type: 'ping' },
+          {
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'text_delta', text: 'answer' },
+          },
+        ),
+      ),
+      'test:model-x',
+      'model-x',
+      1024,
+    );
+
+    await expect(drain(provider.stream(emptyRequest))).resolves.toEqual([
+      {},
+      {},
+      { textDelta: 'answer' },
+    ]);
+  });
+
+  it('surfaces an SSE error event as a stream-consumption provider error', async () => {
+    const provider = createMessagesProvider(
+      scriptedClient(
+        events({
+          type: 'error',
+          error: { type: 'overloaded_error', message: 'Overloaded' },
+        }),
+      ),
+      'test:model-x',
+      'model-x',
+      1024,
+    );
+
+    const failure = drain(provider.stream(emptyRequest));
+
+    await expect(failure).rejects.toBeInstanceOf(ModelProviderError);
+    await expect(failure).rejects.toMatchObject({
+      stage: 'stream_consumption',
+    });
+  });
+});
+
+describe('createMessagesProvider over the real SDK client', () => {
+  it('rejects an HTTP error response at stream establishment instead of reading it as SSE', async () => {
+    const client = new Anthropic({
+      apiKey: 'test',
+      maxRetries: 0,
+      fetch: () =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              type: 'error',
+              error: { type: 'overloaded_error', message: 'Overloaded' },
+            }),
+            { status: 529, headers: { 'content-type': 'application/json' } },
+          ),
+        ),
+    });
+    const provider = createMessagesProvider(
+      client,
+      'test:model-x',
+      'model-x',
+      1024,
+    );
+
+    await expect(drain(provider.stream(emptyRequest))).rejects.toMatchObject({
+      stage: 'stream_establishment',
+      upstreamStatus: 529,
+    });
   });
 });

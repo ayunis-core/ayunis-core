@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { MessageCreateParamsStreaming } from '@anthropic-ai/sdk/resources/messages';
+import { Stream } from '@anthropic-ai/sdk/streaming';
 
 import type {
   ModelProvider,
@@ -13,7 +14,7 @@ import {
 } from '@ayunis/inference';
 
 import { classifyAnthropicRejection } from './classify-rejection';
-import { convertChunk } from './convert-chunk';
+import { convertChunk, type AnthropicStreamEvent } from './convert-chunk';
 import {
   convertMessages,
   convertSystem,
@@ -99,8 +100,8 @@ async function* streamMessages(
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(model, maxTokens, request, codec);
-  const stream = await createMessageStream(client, params, request.signal);
-  const normalizedStream = normalizeProviderStreamErrors(stream, {
+  const response = await openMessageStream(client, params, request.signal);
+  const normalizedStream = normalizeProviderStreamErrors(readEvents(response), {
     stage: 'stream_consumption',
     signal: request.signal,
     classifyRejection: classifyAnthropicRejection,
@@ -111,16 +112,15 @@ async function* streamMessages(
   }
 }
 
-const createMessageStream = async (
+const openMessageStream = async (
   client: AnthropicCompatibleClient,
   params: MessageCreateParamsStreaming,
   signal?: AbortSignal,
-) => {
+): Promise<Response> => {
   try {
-    return await client.messages.create(
-      params,
-      signal ? { signal } : undefined,
-    );
+    return await client.messages
+      .create(params, signal ? { signal } : undefined)
+      .asResponse();
   } catch (error) {
     throw normalizeProviderError(error, {
       stage: 'stream_establishment',
@@ -130,6 +130,41 @@ const createMessageStream = async (
     });
   }
 };
+
+const FORWARDED_EVENTS = new Set([
+  'message_start',
+  'message_delta',
+  'message_stop',
+  'content_block_start',
+  'content_block_delta',
+  'content_block_stop',
+  'ping',
+]);
+
+// The SDK's own Stream drops `ping`, but during a thinking phase with
+// `display` omitted (the default on current models) pings are the only
+// traffic, so the raw events are read here to keep `ping` visible.
+async function* readEvents(
+  response: Response,
+): AsyncIterable<AnthropicStreamEvent> {
+  for await (const sse of Stream.rawEvents(response)) {
+    if (sse.event === 'error') {
+      const body = JSON.parse(sse.data) as StreamErrorBody;
+      throw new Anthropic.APIError(
+        undefined,
+        body,
+        undefined,
+        response.headers,
+        body.error?.type,
+      );
+    }
+    if (sse.event && FORWARDED_EVENTS.has(sse.event)) {
+      yield JSON.parse(sse.data) as AnthropicStreamEvent;
+    }
+  }
+}
+
+type StreamErrorBody = { error?: { type?: Anthropic.ErrorType } };
 
 const buildParams = (
   model: string,
