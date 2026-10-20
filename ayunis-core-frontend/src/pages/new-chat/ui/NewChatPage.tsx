@@ -83,6 +83,12 @@ export default function NewChatPage({
   useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const [modelId, setModelId] = useState(selectedModelId);
+  const [previousDefaultModelId, setPreviousDefaultModelId] =
+    useState(selectedModelId);
+  if (selectedModelId !== previousDefaultModelId) {
+    setPreviousDefaultModelId(selectedModelId);
+    setModelId(selectedModelId);
+  }
   const { isAnonymousByDefault } = useAnonymousModeDefault();
   const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
   const [workspaceId, setWorkspaceId] = useState<string | null>(

@@ -91,3 +91,15 @@ export async function deleteTeam(
 ): Promise<void> {
   await generatedApi.teamsControllerDeleteTeam(teamId, { api });
 }
+
+export async function setTeamDefaultModel(
+  api: APIRequestContext,
+  teamId: string,
+  permittedModelId: string,
+): Promise<void> {
+  await generatedApi.teamPermittedModelsControllerSetTeamDefaultModel(
+    teamId,
+    { permittedModelId },
+    { api },
+  );
+}
