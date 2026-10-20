@@ -1,6 +1,5 @@
 import { useRef, type KeyboardEvent } from 'react';
 import { flushSync } from 'react-dom';
-import { getSentPrompts } from '@/shared/lib/prompt-history';
 
 const STEP_BY_KEY: Partial<Record<string, number>> = {
   ArrowUp: -1,
@@ -18,6 +17,7 @@ function isCaretAtEdge(textarea: HTMLTextAreaElement, step: number) {
 export function usePromptHistory(
   message: string,
   setMessage: (message: string) => void,
+  prompts: readonly string[],
 ) {
   const recalledIndex = useRef<number | null>(null);
 
@@ -29,7 +29,6 @@ export function usePromptHistory(
       event.shiftKey || event.ctrlKey || event.altKey || event.metaKey;
     if (!step || hasModifier || event.nativeEvent.isComposing) return;
     const textarea = event.currentTarget;
-    const prompts = getSentPrompts();
     const index = recalledIndex.current;
     const isRecalling = index !== null && prompts[index] === message;
     if (!isRecalling && message !== '') return;

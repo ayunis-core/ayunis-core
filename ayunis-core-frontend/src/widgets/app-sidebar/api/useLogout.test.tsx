@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLogout } from '@/widgets/app-sidebar/api/useLogout';
-import { getSentPrompts, recordSentPrompt } from '@/shared/lib/prompt-history';
 
 const {
   clearAppsignalTags,
@@ -45,14 +44,12 @@ describe(useLogout.name, () => {
   }
 
   it('finishes a local logout on the login page', () => {
-    recordSentPrompt('Who approved the building permit?');
     const { result, queryClient } = setup();
     act(() => result.current.logout());
     mutate.mock.calls[0]?.[1].onSuccess({ brokerLogoutUrl: null });
 
     expect(queryClient.getQueryData(['private'])).toBeUndefined();
     expect(clearAppsignalTags).toHaveBeenCalledOnce();
-    expect(getSentPrompts()).toEqual([]);
     expect(navigate).toHaveBeenCalledWith({ to: '/login' });
   });
 

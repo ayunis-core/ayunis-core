@@ -1,10 +1,9 @@
-import { act, createRef, type ReactNode, type RefObject } from 'react';
+import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { showError } from '@/shared/lib/toast';
 import { MAX_IMAGE_SIZE_BYTES } from '@/widgets/chat-input/model/image-upload-policy';
-import { clearPromptHistory } from '@/shared/lib/prompt-history';
-import ChatInput, { type ChatInputRef } from './ChatInput';
+import ChatInput from './ChatInput';
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 vi.mock('react-i18next', () => ({
@@ -94,15 +93,12 @@ describe('ChatInput image rejection', () => {
 });
 
 describe('ChatInput prompt recall', () => {
-  beforeEach(() => clearPromptHistory());
-
-  function renderWithRef() {
-    const ref = createRef<ChatInputRef>();
+  function renderWithPrompts(sentPrompts?: string[]) {
     render(
       <ChatInput
-        ref={ref}
         modelId="municipal-model"
         sources={[]}
+        sentPrompts={sentPrompts}
         isEmbeddingModelEnabled={false}
         isAnonymous={false}
         onModelChange={vi.fn()}
@@ -114,27 +110,18 @@ describe('ChatInput prompt recall', () => {
     );
     const input = screen.getByTestId<HTMLTextAreaElement>('input');
     fireEvent.focus(input);
-    return { ref, input };
-  }
-
-  function sendPrompt(
-    ref: RefObject<ChatInputRef | null>,
-    input: HTMLTextAreaElement,
-    prompt: string,
-  ) {
-    fireEvent.change(input, { target: { value: prompt } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    act(() => ref.current?.setMessage(''));
+    return input;
   }
 
   function moveCaret(input: HTMLTextAreaElement, position: number) {
     input.setSelectionRange(position, position);
   }
 
-  it('walks back and forth through sent prompts with the arrow keys', () => {
-    const { ref, input } = renderWithRef();
-    sendPrompt(ref, input, 'Opening hours of the town hall?');
-    sendPrompt(ref, input, 'Draft a parking permit notice');
+  it('walks back and forth through the thread’s prompts', () => {
+    const input = renderWithPrompts([
+      'Opening hours of the town hall?',
+      'Draft a parking permit notice',
+    ]);
 
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(input.value).toBe('Draft a parking permit notice');
@@ -150,9 +137,15 @@ describe('ChatInput prompt recall', () => {
     expect(input.value).toBe('');
   });
 
+  it('recalls nothing without prompts, as on a new chat', () => {
+    const input = renderWithPrompts();
+
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(input.value).toBe('');
+  });
+
   it('leaves a typed draft untouched', () => {
-    const { ref, input } = renderWithRef();
-    sendPrompt(ref, input, 'Summarise the council minutes');
+    const input = renderWithPrompts(['Summarise the council minutes']);
     fireEvent.change(input, { target: { value: 'half-typed question' } });
     moveCaret(input, 0);
 
@@ -163,8 +156,7 @@ describe('ChatInput prompt recall', () => {
   it.each(['shiftKey', 'ctrlKey', 'altKey', 'metaKey'])(
     'keeps native %s arrow shortcuts',
     (modifier) => {
-      const { ref, input } = renderWithRef();
-      sendPrompt(ref, input, 'List open building applications');
+      const input = renderWithPrompts(['List open building applications']);
       fireEvent.keyDown(input, { key: 'ArrowUp' });
       moveCaret(input, input.value.length);
 
@@ -177,9 +169,10 @@ describe('ChatInput prompt recall', () => {
   // only the browser knows where the rows break, so recall waits for the
   // caret to reach the start or end of the whole text.
   it('lets the caret move through a recalled prompt before recalling again', () => {
-    const { ref, input } = renderWithRef();
-    sendPrompt(ref, input, 'Older prompt');
-    sendPrompt(ref, input, 'A long paragraph that wraps\nacross several rows');
+    const input = renderWithPrompts([
+      'Older prompt',
+      'A long paragraph that wraps\nacross several rows',
+    ]);
     fireEvent.keyDown(input, { key: 'ArrowUp' });
 
     moveCaret(input, 10);

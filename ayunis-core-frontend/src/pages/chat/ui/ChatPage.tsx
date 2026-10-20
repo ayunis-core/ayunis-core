@@ -45,6 +45,7 @@ import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAtt
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
@@ -215,6 +216,10 @@ export default function ChatPage({
     restoreFailedSubmission,
     onRestoreBlocked: handleRestoreBlocked,
   });
+  const threadPrompts = useMemo(
+    () => sentPrompts(messages, piiMasks, pendingSubmission),
+    [messages, piiMasks, pendingSubmission],
+  );
 
   const handleThread = useCallback(
     (thread: RunThreadResponseDto) => {
@@ -399,6 +404,7 @@ export default function ChatPage({
         key={thread.id}
         ref={chatInputRef}
         draftChatId={thread.id}
+        sentPrompts={threadPrompts}
         modelId={thread.permittedModelId}
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
