@@ -57,6 +57,7 @@ artifacts/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
 │       ├── paragraph-style-parser.ts
+│       ├── run-color-parser.ts
 │       ├── docx-document-config.ts
 │       ├── docx-table-styles.ts
 │       ├── letter-layout-tables.ts

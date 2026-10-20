@@ -10,6 +10,7 @@ import {
   WidthType,
   TableLayoutType,
   UnderlineType,
+  ShadingType,
   convertMillimetersToTwip,
   Packer,
   type IParagraphOptions,
@@ -21,6 +22,7 @@ import { parse, NodeType } from 'node-html-parser';
 import { buildDocument } from './docx-document-config';
 import { cellFrame, cellSpans } from './docx-table-styles';
 import { parseAlignment, parseSpacing } from './paragraph-style-parser';
+import { parseRunColors } from './run-color-parser';
 
 /** Inline formatting context accumulated while walking the tree. */
 interface InlineContext {
@@ -29,6 +31,9 @@ interface InlineContext {
   underline?: boolean;
   strike?: boolean;
   code?: boolean;
+  highlight?: boolean;
+  color?: string;
+  shading?: string;
   link?: string;
 }
 
@@ -58,6 +63,7 @@ const INLINE_FORMAT_BY_TAG: Record<string, Partial<InlineContext>> = {
   del: { strike: true },
   strike: { strike: true },
   code: { code: true },
+  mark: { highlight: true },
 };
 
 // A4 portrait usable width = 210mm page − 2×25mm margins (see docx-document-config.ts).
@@ -68,7 +74,8 @@ const TABLE_USABLE_WIDTH_TWIPS = convertMillimetersToTwip(210 - 2 * 25);
  *
  * Supported elements (matching the TipTap editor config):
  * - Headings: h1–h6, paragraphs with text-align
- * - Inline: strong/b, em/i, u, s/del/strike, code, a[href]
+ * - Inline: strong/b, em/i, u, s/del/strike, code, mark, a[href], and
+ *   inline color / background-color styles
  * - Lists: ul, ol (including nested)
  * - Blockquotes, code blocks (pre > code), tables, hr
  */
@@ -453,7 +460,7 @@ function buildInlineContext(
     return { ...ctx, link: node.getAttribute('href') ?? undefined };
   }
 
-  return { ...ctx, ...INLINE_FORMAT_BY_TAG[tag] };
+  return { ...ctx, ...INLINE_FORMAT_BY_TAG[tag], ...parseRunColors(node) };
 }
 
 function formatFromContext(ctx: InlineContext): Partial<IRunOptions> {
@@ -463,5 +470,10 @@ function formatFromContext(ctx: InlineContext): Partial<IRunOptions> {
     ...(ctx.underline && { underline: { type: UnderlineType.SINGLE } }),
     ...(ctx.strike && { strike: true }),
     ...(ctx.code && { font: 'Courier New', size: 20 }),
+    ...(ctx.highlight && { highlight: 'yellow' }),
+    ...(ctx.color && { color: ctx.color }),
+    ...(ctx.shading && {
+      shading: { type: ShadingType.CLEAR, fill: ctx.shading },
+    }),
   };
 }
