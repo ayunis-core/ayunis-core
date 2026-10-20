@@ -3,7 +3,7 @@ import { test, expect } from "../../src/fixtures/test";
 import { generatedApi } from "../../src/clients/api/generated-api";
 import { CreateSkillDtoOwnerType } from "../../src/clients/generated/ayunisCoreAPI.schemas";
 import { createOcrRejectedPdf } from "../../src/factories/pdf.factory";
-import { sendMessage } from "../../src/flows/chat.flow";
+import { sendMessage, startThread } from "../../src/flows/chat.flow";
 
 const INVOICE = "Invoice 2026-1059: total EUR 119.00";
 const INSTRUCTIONS =
@@ -144,3 +144,59 @@ async function uploadPdf(
   );
   await expect(page.getByRole("menu")).toBeHidden();
 }
+
+test("keeps send disabled while an ongoing chat refreshes after a PDF upload", async ({
+  api,
+  page,
+}) => {
+  await permitEmbeddingModel(api);
+  test.setTimeout(60_000);
+  const threadId = await startThread(page, "Prepare to review a salary table.");
+  await page.getByTestId("input").fill("E2E cite first source");
+  await expect(page.getByTestId("send")).toBeEnabled();
+
+  let releaseRefresh!: () => void;
+  const refreshReleased = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  let notifyRefresh!: () => void;
+  const refreshStarted = new Promise<void>((resolve) => {
+    notifyRefresh = resolve;
+  });
+  await page.route(`**/api/threads/${threadId}`, async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const response = await route.fetch();
+    notifyRefresh();
+    await refreshReleased;
+    await route.fulfill({ response });
+  });
+
+  try {
+    await uploadPdf(page, "salary-table.pdf", INVOICE);
+    await refreshStarted;
+    // Flush the upload completion render before checking the held refresh.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+    await expect(page.getByTestId("send")).toBeDisabled();
+  } finally {
+    releaseRefresh();
+    await page.unrouteAll({ behavior: "wait" });
+  }
+  await expect(page.getByTestId("chat-source")).toHaveAttribute(
+    "data-source-status",
+    "ready",
+    { timeout: 30_000 },
+  );
+  await expect(page.getByTestId("send")).toBeEnabled();
+  await page.getByTestId("send").click();
+  const citation = page.getByTestId("source-citation").last();
+  await expect(citation).toBeVisible();
+  await citation.click();
+  await expect(page.getByTestId("source-citation-excerpt")).toContainText(
+    INVOICE,
+  );
+});
