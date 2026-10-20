@@ -148,3 +148,27 @@ export async function permitFirstLanguageModelAsDefault(
 
   return { name: model.name, provider: model.provider };
 }
+
+export async function setOrgDefaultModel(
+  api: APIRequestContext,
+  permittedModelId: string,
+): Promise<void> {
+  await generatedApi.modelsDefaultsControllerManageOrgDefaultModel(
+    { permittedModelId },
+    { api },
+  );
+}
+
+export async function setUserDefaultModel(
+  api: APIRequestContext,
+  permittedModelId: string,
+): Promise<void> {
+  await generatedApi.modelsDefaultsControllerManageUserDefaultModel(
+    { permittedModelId },
+    { api },
+  );
+}
+
+export async function removeUserDefaultModel(api: APIRequestContext): Promise<void> {
+  await generatedApi.modelsDefaultsControllerDeleteUserDefaultModel({ api });
+}
