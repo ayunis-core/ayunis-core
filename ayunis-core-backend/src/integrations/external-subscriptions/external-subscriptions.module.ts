@@ -21,6 +21,7 @@ import { ExternalSubscriptionRevisionRecord } from './infrastructure/persistence
 import { ExternalSubscriptionOutboxRecord } from './infrastructure/persistence/schema/external-subscription-outbox.record';
 import { ExternalSubscriptionLeaseRecord } from './infrastructure/persistence/schema/external-subscription-lease.record';
 import { ExternalSubscriptionEventsService } from './application/services/external-subscription-events.service';
+import { ExternalSubscriptionOutboxTask } from './infrastructure/tasks/external-subscription-outbox.task';
 import { ApplyExternalSubscriptionUseCase } from './application/use-cases/apply-external-subscription/apply-external-subscription.use-case';
 import { PrepareExternalSubscriptionUseCase } from './application/use-cases/prepare-external-subscription/prepare-external-subscription.use-case';
 import { ExternalSubscriptionCoordinationUseCase } from './application/use-cases/external-subscription-coordination/external-subscription-coordination.use-case';
@@ -61,6 +62,7 @@ import { ExternalSubscriptionsController } from './presenters/http/external-subs
       useClass: PostgresExternalSubscriptionLease,
     },
     ExternalSubscriptionEventsService,
+    ExternalSubscriptionOutboxTask,
     ApplyExternalSubscriptionUseCase,
     PrepareExternalSubscriptionUseCase,
     ExternalSubscriptionCoordinationUseCase,

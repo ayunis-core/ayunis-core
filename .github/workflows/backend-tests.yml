@@ -3,18 +3,18 @@ name: Backend Tests
 on:
   pull_request:
     paths:
-      - 'ayunis-core-backend/**'
-      - '.github/workflows/backend-tests.yml'
-      - '.github/actions/setup-node-pnpm/action.yml'
-      - '.github/actions/start-minio/action.yml'
-      - 'docker-compose.yml'
+      - "ayunis-core-backend/**"
+      - ".github/workflows/backend-tests.yml"
+      - ".github/actions/setup-node-pnpm/action.yml"
+      - ".github/actions/start-minio/action.yml"
+      - "docker-compose.yml"
   push:
     branches: [main]
     paths:
-      - 'ayunis-core-backend/**'
+      - "ayunis-core-backend/**"
       # Seeds the shared ESLint cache below: pull requests can only restore
       # caches saved on main, and the cache key includes the lockfile hash.
-      - 'pnpm-lock.yaml'
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
@@ -160,6 +160,11 @@ jobs:
         env:
           NODE_ENV: test
 
+      - name: Test external subscription lifecycle with production record metadata
+        if: matrix.shard == 1
+        run: pnpm run test:external-subscriptions-lifecycle
+        env:
+          NODE_ENV: test
 
       - name: Run unit tests (shard ${{ matrix.shard }}/3)
         run: pnpm exec jest --shard=${{ matrix.shard }}/3
