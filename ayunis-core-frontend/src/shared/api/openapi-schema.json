@@ -17426,6 +17426,11 @@
             "type": "string",
             "description": "The skill name, when it already exists"
           },
+          "language": {
+            "type": "string",
+            "enum": ["en", "de"],
+            "description": "Current UI language, used when the draft language is unidentifiable; defaults to English"
+          },
           "trigger": {
             "type": "string",
             "description": "The trigger as it currently stands in the form"

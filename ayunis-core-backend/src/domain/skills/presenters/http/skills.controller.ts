@@ -132,6 +132,7 @@ export class SkillsController {
       new ImproveSkillTextCommand({
         field: dto.field,
         name: dto.name,
+        language: dto.language,
         trigger: dto.trigger,
         instructions: dto.instructions,
         consumeTrialMessage: Boolean(

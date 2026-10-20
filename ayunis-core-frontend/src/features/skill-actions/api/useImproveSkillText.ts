@@ -13,11 +13,14 @@ interface ImproveSkillTextParams {
 }
 
 export function useImproveSkillText() {
-  const { t } = useTranslation('skills');
+  const { t, i18n } = useTranslation('skills');
 
   return useMutation({
     mutationFn: async (params: ImproveSkillTextParams) => {
-      const { text } = await skillsControllerImproveText(params);
+      const { text } = await skillsControllerImproveText({
+        ...params,
+        language: i18n.resolvedLanguage === 'de' ? 'de' : 'en',
+      });
       return text;
     },
     onError: (error) => {

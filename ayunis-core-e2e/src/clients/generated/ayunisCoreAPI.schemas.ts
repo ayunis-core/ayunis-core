@@ -3153,11 +3153,24 @@ export const ImproveSkillTextDtoField = {
   instructions: 'instructions',
 } as const;
 
+/**
+ * Current UI language, used when the draft language is unidentifiable; defaults to English
+ */
+export type ImproveSkillTextDtoLanguage = typeof ImproveSkillTextDtoLanguage[keyof typeof ImproveSkillTextDtoLanguage];
+
+
+export const ImproveSkillTextDtoLanguage = {
+  en: 'en',
+  de: 'de',
+} as const;
+
 export interface ImproveSkillTextDto {
   /** Which of the two texts should come back rewritten */
   field: ImproveSkillTextDtoField;
   /** The skill name, when it already exists */
   name?: string;
+  /** Current UI language, used when the draft language is unidentifiable; defaults to English */
+  language?: ImproveSkillTextDtoLanguage;
   /** The trigger as it currently stands in the form */
   trigger: string;
   /** The instructions as they currently stand in the form */
