@@ -8,3 +8,5 @@ The common module is the shared kernel of the backend, imported globally or by i
 Client IP resolution uses Express `request.ip` with socket fallback; no raw forwarding headers are read. `TRUST_PROXY` defaults to no trust and must match each deployment’s actual proxy boundary.
 
 `RequireManualSubscriptionEditing` applies the cloud Fynn-management policy at manual HTTP entry points, allowing reads and optionally restricting only a named add-on type. It does not restrict internal sync use cases.
+
+`PendingDomainEvent` carries a domain event name and payload between internal mutations and their coordinating transaction, allowing external effects to begin only after commit.
