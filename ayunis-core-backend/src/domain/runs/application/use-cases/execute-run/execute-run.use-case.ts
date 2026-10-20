@@ -211,7 +211,10 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
     const ownedMessageIds = new Set<UUID>();
-    if (signal?.aborted) return 'aborted';
+    if (signal?.aborted) {
+      if (input instanceof RunUserInput) input.releaseImages();
+      return 'aborted';
+    }
     try {
       const seeded = await this.seedInput(prepared, input);
       if (seeded === null) {
@@ -262,6 +265,8 @@ export class ExecuteRunUseCase {
     } catch (error) {
       if (error instanceof ThreadPiiMaskThreadMissingError) return null;
       throw error;
+    } finally {
+      if (input instanceof RunUserInput) input.releaseImages();
     }
   }
 

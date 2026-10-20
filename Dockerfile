@@ -93,6 +93,10 @@ ENV APP_REVISION=$APP_REVISION
 # credentials unencrypted in the container layer — the same disclosure
 # appsignal.cjs refuses for chat content. Snapshot on staging instead.
 ENV NODE_OPTIONS="--max-old-space-size=6144"
+# Sharp holds one libuv thread per image for the whole resize. With the default
+# pool of 4 and four admitted uploads, bcrypt logins and DNS lookups for new
+# outbound connections would queue behind them.
+ENV UV_THREADPOOL_SIZE=8
 # PORT is set via environment variable at runtime, defaults to 3000 in app code
 # Port exposure is handled by docker-compose port mapping
 

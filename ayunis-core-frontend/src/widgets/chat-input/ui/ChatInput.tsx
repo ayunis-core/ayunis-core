@@ -1,6 +1,7 @@
 import {
   MAX_IMAGES,
   MAX_IMAGE_SIZE_MIB,
+  MAX_TOTAL_IMAGE_SIZE_MIB,
 } from '@/widgets/chat-input/model/image-upload-policy';
 import {
   useState,
@@ -204,6 +205,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       }
       if (result.limitExceeded) {
         showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
+      }
+      if (result.totalExceeded) {
+        showError(
+          t('chatInput.imageTotalTooLarge', {
+            maxMiB: MAX_TOTAL_IMAGE_SIZE_MIB,
+          }),
+        );
       }
     };
 

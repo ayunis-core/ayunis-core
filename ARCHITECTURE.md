@@ -73,7 +73,7 @@ none of these packages implements the Agent Plugins standard.
 | ------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
 | [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md)                    | Conversations  | Chat session management with organization sharing                                                              |
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                  | Chat History   | Message storage and retrieval                                                                                  |
-| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking and streaming                                                                             |
+| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking, streaming, and chat image upload validation                                              |
 | [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                      | LLM Config     | Multi-provider model management                                                                                |
 | [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema                                                                        |
 | [prompts](ayunis-core-backend/src/domain/prompts/SUMMARY.md)                    | Templates      | Reusable prompt library                                                                                        |

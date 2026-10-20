@@ -1,6 +1,10 @@
 import { randomUUID } from 'crypto';
 import { MessageContentInvalidError } from 'src/domain/messages/application/messages.errors';
-import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import {
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_TOTAL_UPLOAD_IMAGE_SIZE_BYTES,
+  MAX_UPLOAD_IMAGE_SIZE_BYTES,
+} from 'src/domain/messages/application/utils/image-upload.policy';
 import { CreateUserMessageCommand } from './create-user-message.command';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -12,21 +16,45 @@ const png = (size: number) => {
 };
 
 describe('CreateUserMessageCommand', () => {
-  it('accepts an image at the strictest provider limit', () => {
-    expect(
-      () =>
-        new CreateUserMessageCommand(randomUUID(), undefined, [
-          png(MAX_IMAGE_SIZE_BYTES),
-        ]),
-    ).not.toThrow();
-  });
-
-  it('rejects an image the strictest provider would refuse on a later turn', () => {
+  it('accepts an upload above the stored-image ceiling, which is downscaled later', () => {
     expect(
       () =>
         new CreateUserMessageCommand(randomUUID(), undefined, [
           png(MAX_IMAGE_SIZE_BYTES + 1),
         ]),
+    ).not.toThrow();
+  });
+
+  it('accepts an image at the upload limit', () => {
+    expect(
+      () =>
+        new CreateUserMessageCommand(randomUUID(), undefined, [
+          png(MAX_UPLOAD_IMAGE_SIZE_BYTES),
+        ]),
+    ).not.toThrow();
+  });
+
+  it('rejects an image above the upload limit', () => {
+    expect(
+      () =>
+        new CreateUserMessageCommand(randomUUID(), undefined, [
+          png(MAX_UPLOAD_IMAGE_SIZE_BYTES + 1),
+        ]),
+    ).toThrow(MessageContentInvalidError);
+  });
+
+  it('rejects images whose total exceeds the total upload limit', () => {
+    const count =
+      Math.floor(
+        MAX_TOTAL_UPLOAD_IMAGE_SIZE_BYTES / MAX_UPLOAD_IMAGE_SIZE_BYTES,
+      ) + 1;
+    expect(
+      () =>
+        new CreateUserMessageCommand(
+          randomUUID(),
+          undefined,
+          Array.from({ length: count }, () => png(MAX_UPLOAD_IMAGE_SIZE_BYTES)),
+        ),
     ).toThrow(MessageContentInvalidError);
   });
 });

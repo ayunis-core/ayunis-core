@@ -27,7 +27,7 @@ export const SEND_MESSAGE_API_BODY = {
         type: 'array',
         items: { type: 'string', format: 'binary' },
         description:
-          'Image files to attach (max 10, max 10MB each, 50MB total)',
+          'Image files to attach (max 10, max 20 MiB each, 80 MiB total)',
       },
       imageAltTexts: {
         type: 'string',

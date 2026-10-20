@@ -19,7 +19,9 @@ describe('openThreadRun', () => {
       const controller = new AbortController();
       const command = new ExecuteRunCommand({
         threadId: randomUUID(),
-        input: new RunUserInput('Cancelled question'),
+        input: new RunUserInput('Cancelled question', [
+          { buffer: Buffer.from('photo'), contentType: 'image/jpeg' },
+        ]),
         signal: controller.signal,
       });
       const first = await lock.holdWhile(command.threadId, async () =>
@@ -36,6 +38,7 @@ describe('openThreadRun', () => {
       const cancelled = await waiting;
       expect(await cancelled.next()).toEqual({ done: true, value: 'aborted' });
       expect(open).not.toHaveBeenCalled();
+      expect((command.input as RunUserInput).pendingImages).toEqual([]);
       expect(emitAsync).toHaveBeenCalledWith(
         RunTerminalEvent.EVENT_NAME,
         expect.objectContaining({ outcome: 'aborted' }),
