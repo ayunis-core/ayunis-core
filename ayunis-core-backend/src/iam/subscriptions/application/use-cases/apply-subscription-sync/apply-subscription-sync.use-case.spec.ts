@@ -33,6 +33,7 @@ describe('Applying a complete external subscription state', () => {
   };
   const started = new Date('2026-09-01T00:00:00Z');
   let stored: Subscription[];
+  let usersCount: number;
   let useCase: ApplySubscriptionSyncUseCase;
   let repository: SubscriptionRepository;
   let state: SubscriptionSyncState;
@@ -40,6 +41,7 @@ describe('Applying a complete external subscription state', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date('2026-10-20T12:00:00Z'));
     stored = [];
+    usersCount = 3;
     repository = {
       findByOrgId: async () => stored.map(cloneSubscriptionWithType),
       create: async (subscription: Subscription) => {
@@ -71,7 +73,9 @@ describe('Applying a complete external subscription state', () => {
       {
         execute: async () => 2,
       } as unknown as CountPendingInvitesByOrgIdUseCase,
-      { execute: async () => 3 } as unknown as CountUsersByOrgIdUseCase,
+      {
+        execute: async () => usersCount,
+      } as unknown as CountUsersByOrgIdUseCase,
     );
     useCase = new ApplySubscriptionSyncUseCase(repository, factory, {
       execute: async () => undefined,
@@ -209,6 +213,76 @@ describe('Applying a complete external subscription state', () => {
     expect(active[0].type).toBe(SubscriptionType.SEAT_BASED);
   });
 
+  it.each(['replay', 'billing', 'cancellation'])(
+    'syncs an unchanged seat allocation when usage exceeds purchased seats (%s)',
+    async (change) => {
+      state.subscription = {
+        ...state.subscription!,
+        type: SubscriptionType.SEAT_BASED,
+        monthlyCredits: undefined,
+        noOfSeats: 25,
+      };
+      await useCase.execute(state);
+      usersCount = 30;
+      if (change === 'billing')
+        state.subscription.billingInfo = { ...billing, city: 'Bonn' };
+      if (change === 'cancellation') {
+        state.subscription.cancelledAt = new Date();
+        state.subscription.accessEndsAt = new Date('2027-09-01T00:00:00Z');
+      }
+      const result = await useCase.execute(state);
+      expect(result.changed).toBe(change !== 'replay');
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({
+        noOfSeats: 25,
+        cancelledAt: state.subscription.cancelledAt,
+        billingInfo: state.subscription.billingInfo,
+      });
+    },
+  );
+  it('still rejects a seat reduction below usage without mutating the current plan', async () => {
+    state.subscription = {
+      ...state.subscription!,
+      type: SubscriptionType.SEAT_BASED,
+      monthlyCredits: undefined,
+      noOfSeats: 25,
+    };
+    await useCase.execute(state);
+    usersCount = 30;
+    const before = structuredClone(stored);
+    state.subscription.noOfSeats = 24;
+    await expect(useCase.execute(state)).rejects.toThrow(/seats/i);
+    expect(stored).toEqual(before);
+  });
+  it('still validates capacity for a new access period even with the same seat quantity', async () => {
+    state.subscription = {
+      ...state.subscription!,
+      type: SubscriptionType.SEAT_BASED,
+      monthlyCredits: undefined,
+      noOfSeats: 25,
+    };
+    await useCase.execute(state);
+    usersCount = 30;
+    const before = structuredClone(stored);
+    state.subscription.startsAt = new Date('2027-01-01T00:00:00Z');
+    await expect(useCase.execute(state)).rejects.toThrow(/seats/i);
+    expect(stored).toEqual(before);
+  });
+  it('still validates capacity when restoring previously ended access', async () => {
+    state.subscription = {
+      ...state.subscription!,
+      type: SubscriptionType.SEAT_BASED,
+      monthlyCredits: undefined,
+      noOfSeats: 25,
+    };
+    await useCase.execute(state);
+    usersCount = 30;
+    stored[0].accessEndsAt = new Date('2026-10-19T00:00:00Z');
+    stored[0].cancelledAt = new Date('2026-10-18T00:00:00Z');
+    const before = structuredClone(stored);
+    await expect(useCase.execute(state)).rejects.toThrow(/seats/i);
+    expect(stored).toEqual(before);
+  });
   it('rejects insufficient purchased seats without changing the serving subscription', async () => {
     stored.push(existing());
     const before = structuredClone(stored);
@@ -239,5 +313,81 @@ describe('Applying a complete external subscription state', () => {
     expect(stored).toHaveLength(2);
     expect(isActive(stored[0])).toBe(false);
     expect(stored.filter(isActive)).toHaveLength(1);
+  });
+  function servingAndScheduled() {
+    const serving = existing();
+    serving.createdAt = new Date('2026-09-01T00:00:00Z');
+    serving.cancelledAt = new Date('2026-10-01T00:00:00Z');
+    serving.accessEndsAt = new Date('2027-01-01T00:00:00Z');
+    const scheduled = existing();
+    scheduled.startsAt = new Date('2027-01-01T00:00:00Z');
+    scheduled.monthlyCredits = 45_000_000;
+    stored.push(serving, scheduled);
+    return { serving, scheduled };
+  }
+
+  it('updates the serving subscription and retires a superseded scheduled successor', async () => {
+    const { serving, scheduled } = servingAndScheduled();
+    await useCase.execute(state);
+    expect(stored.filter(isActive)).toEqual([
+      expect.objectContaining({
+        id: serving.id,
+        monthlyCredits: 20_750_000,
+        startsAt: started,
+      }),
+    ]);
+    expect(
+      stored.find((entry) => entry.id === scheduled.id)?.cancelledAt,
+    ).not.toBeNull();
+    expect((await useCase.execute(state)).changed).toBe(false);
+    jest.setSystemTime(new Date('2027-01-02T00:00:00Z'));
+    expect(stored.filter(isActive)).toEqual([
+      expect.objectContaining({ id: serving.id, monthlyCredits: 20_750_000 }),
+    ]);
+  });
+
+  it('ends serving and scheduled Core access when Fynn ends the organization subscription', async () => {
+    servingAndScheduled();
+    state.subscription = null;
+    await useCase.execute(state);
+    expect(stored.filter(isActive)).toEqual([]);
+    expect((await useCase.execute(state)).changed).toBe(false);
+    jest.setSystemTime(new Date('2027-01-02T00:00:00Z'));
+    expect(stored.filter(isActive)).toEqual([]);
+    expect(stored).toHaveLength(2);
+  });
+
+  it('does not grant the old future window after Fynn postpones an unstarted contract', async () => {
+    state.subscription!.startsAt = new Date('2027-01-01T00:00:00Z');
+    await useCase.execute(state);
+    const originalId = stored[0].id;
+    state.subscription!.startsAt = new Date('2027-02-01T00:00:00Z');
+    await useCase.execute(state);
+    expect(stored).toHaveLength(2);
+    expect((await useCase.execute(state)).changed).toBe(false);
+    jest.setSystemTime(new Date('2027-01-15T00:00:00Z'));
+    expect(stored.filter(isActive)).toEqual([]);
+    jest.setSystemTime(new Date('2027-02-01T00:00:00Z'));
+    expect(stored.filter(isActive)).toEqual([
+      expect.objectContaining({ startsAt: state.subscription!.startsAt }),
+    ]);
+    expect(stored.filter(isActive)[0].id).not.toBe(originalId);
+  });
+
+  it('keeps current paid access until a future Fynn contract starts and replays without replacing it again', async () => {
+    const current = existing();
+    stored.push(current);
+    state.subscription!.startsAt = new Date('2027-01-01T00:00:00Z');
+    await useCase.execute(state);
+    expect(stored.filter(isActive)).toEqual([
+      expect.objectContaining({ id: current.id, monthlyCredits: 10_375_000 }),
+    ]);
+    expect(stored).toHaveLength(2);
+    expect((await useCase.execute(state)).changed).toBe(false);
+    expect(stored).toHaveLength(2);
+    jest.setSystemTime(new Date('2027-01-02T00:00:00Z'));
+    expect(stored.filter(isActive)).toEqual([
+      expect.objectContaining({ monthlyCredits: 20_750_000 }),
+    ]);
   });
 });

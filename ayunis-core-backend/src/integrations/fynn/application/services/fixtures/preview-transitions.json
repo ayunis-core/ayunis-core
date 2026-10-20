@@ -1,0 +1,396 @@
+[
+  {
+    "case": "17",
+    "subscription": {
+      "id": "01a1597b-1499-7570-a52a-3d0d36819a72",
+      "status": "active",
+      "activatedAt": "2026-10-20T13:23:22+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-08-17T22:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a1597b-105e-721b-b79a-de016b76bdd7",
+        "customerNumber": "D26-00100029",
+        "timeZone": "Europe/Berlin",
+        "firstName": null,
+        "lastName": null,
+        "currencyCode": "EUR",
+        "companyName": "TEST Core 17 \u2013 Upsell via offer: Basis (Small) since Aug 18 \u2192 Basis",
+        "datevId": "000031",
+        "status": "STATUS_ACTIVE"
+      },
+      "items": [
+        {
+          "id": "01a15985-4d7c-7942-ab15-3a510a6fe074",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-20T13:34:30+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a1597b-14a3-7730-9c94-927cdfcb1570",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2026-08-18T00:00:00+00:00",
+            "contractEnd": "2026-10-20T13:34:30+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a1597b-105e-721b-b79a-de016b76bdd7",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000017"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a15985-4d7c-7942-ab15-3a510a6fe074"
+        },
+        "value": "20750000",
+        "status": "active",
+        "validFrom": "2026-10-20T13:34:30+00:00",
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a15985-4d7c-7942-ab15-3a510a6fe074"
+        },
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-20T13:34:30+00:00",
+        "validUntil": null
+      }
+    ]
+  },
+  {
+    "case": "18",
+    "subscription": {
+      "id": "01a159a6-5b84-7ef4-8711-e00fe8d8dc8a",
+      "status": "active",
+      "activatedAt": "2026-10-20T14:10:40+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-14T22:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a159a6-566e-704e-ad18-a4d7a37d45a2",
+        "customerNumber": "D26-00100030",
+        "timeZone": "Europe/Berlin",
+        "firstName": null,
+        "lastName": null,
+        "currencyCode": "EUR",
+        "companyName": "TEST Core 18 \u2013 Downsell at renewal: Standard \u2192 Basis from Oct 15, 2027",
+        "datevId": "000032",
+        "status": "STATUS_ACTIVE"
+      },
+      "items": [
+        {
+          "id": "01a159a6-639f-71a8-b028-aa775987eb4e",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2027-10-14T22:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a159a6-5f1f-7889-a3c9-601aa00d4433",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-14T22:00:00+00:00",
+            "contractEnd": "2027-10-13T22:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a159a6-566e-704e-ad18-a4d7a37d45a2",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000018"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-639f-71a8-b028-aa775987eb4e"
+        },
+        "value": "20750000",
+        "status": "pending",
+        "validFrom": "2027-10-14T22:00:00+00:00",
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-639f-71a8-b028-aa775987eb4e"
+        },
+        "value": "usage",
+        "status": "pending",
+        "validFrom": "2027-10-14T22:00:00+00:00",
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-5f1f-7889-a3c9-601aa00d4433"
+        },
+        "value": "45000000",
+        "status": "active",
+        "validFrom": "2026-10-14T22:00:00+00:00",
+        "validUntil": "2027-10-13T22:00:00+00:00"
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-5f1f-7889-a3c9-601aa00d4433"
+        },
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-14T22:00:00+00:00",
+        "validUntil": "2027-10-13T22:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "case": "19",
+    "subscription": {
+      "id": "01a159a6-723c-7112-aa67-447d831861e6",
+      "status": "active",
+      "activatedAt": "2026-10-20T14:10:47+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-14T22:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a159a6-6e0d-743e-9c95-9725d7a328c3",
+        "customerNumber": "D26-00100031",
+        "timeZone": "Europe/Berlin",
+        "firstName": null,
+        "lastName": null,
+        "currencyCode": "EUR",
+        "companyName": "TEST Core 19 \u2013 Seats (legacy, 10) \u2192 Basis from Jan 1, 2027",
+        "datevId": "000033",
+        "status": "STATUS_ACTIVE"
+      },
+      "items": [
+        {
+          "id": "01a159a6-7e81-7be3-b583-55c1640e21b1",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2026-12-31T22:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a159a6-784c-7938-a5a7-22162bc9360c",
+          "currentMeasurementValue": {
+            "quantity": 10
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-14T22:00:00+00:00",
+            "contractEnd": "2026-12-30T22:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a159a6-6e0d-743e-9c95-9725d7a328c3",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000019"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-7e81-7be3-b583-55c1640e21b1"
+        },
+        "value": "20750000",
+        "status": "pending",
+        "validFrom": "2026-12-31T22:00:00+00:00",
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-7e81-7be3-b583-55c1640e21b1"
+        },
+        "value": "usage",
+        "status": "pending",
+        "validFrom": "2026-12-31T22:00:00+00:00",
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-784c-7938-a5a7-22162bc9360c"
+        },
+        "value": "seat",
+        "status": "active",
+        "validFrom": "2026-10-14T22:00:00+00:00",
+        "validUntil": "2026-12-30T22:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "case": "20",
+    "subscription": {
+      "id": "01a159a6-8c3c-77ca-be08-60ebbc0ad59b",
+      "status": "active",
+      "activatedAt": "2026-10-20T14:10:51+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-14T22:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a159a6-893c-7322-ac67-d5ccc33b55ff",
+        "customerNumber": "D26-00100032",
+        "timeZone": "Europe/Berlin",
+        "firstName": null,
+        "lastName": null,
+        "currencyCode": "EUR",
+        "companyName": "TEST Core 20 \u2013 Paid trial without follow-up, cancelled to Jan 14, 2027",
+        "datevId": "000034",
+        "status": "STATUS_ACTIVE"
+      },
+      "items": [
+        {
+          "id": "01a159a6-9037-7d83-b5a7-728556f31474",
+          "currentMeasurementValue": {
+            "quantity": 1
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-14T22:00:00+00:00",
+            "contractEnd": "2027-01-13T22:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a159a6-893c-7322-ac67-d5ccc33b55ff",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000020"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-9037-7d83-b5a7-728556f31474"
+        },
+        "value": "10375000",
+        "status": "disabled",
+        "validFrom": null,
+        "validUntil": null
+      },
+      {
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-9037-7d83-b5a7-728556f31474"
+        },
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-14T22:00:00+00:00",
+        "validUntil": "2027-01-13T22:00:00+00:00"
+      },
+      {
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a159a6-9037-7d83-b5a7-728556f31474"
+        },
+        "value": "10375000",
+        "status": "active",
+        "validFrom": "2026-10-14T22:00:00+00:00",
+        "validUntil": "2027-01-13T22:00:00+00:00"
+      }
+    ]
+  }
+]

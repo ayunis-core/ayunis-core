@@ -29,7 +29,7 @@ export function getFynnOrgId(customer: FynnCustomer): UUID {
 }
 
 export function fynnSubscriptionServesAccess(
-  subscription: FynnSubscription,
+  subscription: Pick<FynnSubscription, 'status' | 'cancellationDate'>,
   now: Date,
 ): boolean {
   if (subscription.status === 'active') return true;
@@ -53,10 +53,9 @@ export function mapFynnSubscription(
   if (!fynnSubscriptionServesAccess(snapshot.subscription, now)) {
     return { orgId, subscription: null, academyActive: false };
   }
-  const active = snapshot.entitlements.filter(
-    (entitlement) => entitlement.status === 'active',
-  );
-  if (active.length === 0) throw new FynnEntitlementsPendingError();
+  const active = activeEntitlements(snapshot, now);
+  if (active.length === 0)
+    return { orgId, subscription: null, academyActive: false };
   const typeValues = valuesForFeature(active, 'core-subscription-type');
   const types = new Set(typeValues.map((entitlement) => entitlement.value));
   if (
@@ -76,6 +75,51 @@ export function mapFynnSubscription(
     (entitlement) => entitlement.value === true || entitlement.value === 'true',
   );
   return { orgId, subscription, academyActive };
+}
+
+export function activeEntitlements(
+  snapshot: Pick<FynnSnapshot, 'subscription' | 'entitlements'>,
+  now: Date,
+): FynnEntitlement[] {
+  const active = snapshot.entitlements.filter(
+    (entry) =>
+      entry.status === 'active' &&
+      entry.feature.id !== 'core-additional-credits',
+  );
+  if (fynnEntitlementsGrantAccess(active)) return active;
+  const items = snapshot.subscription.items;
+  const outsideItemPeriods =
+    items.length > 0 &&
+    items.every(({ contractDetails }) => {
+      const { contractStart, contractEnd } = contractDetails;
+      return (
+        (contractEnd !== null && date(contractEnd, 'item end') <= now) ||
+        (contractStart !== null && date(contractStart, 'item start') > now)
+      );
+    });
+  const hasEndedItem = items.some(
+    ({ contractDetails }) =>
+      contractDetails.contractEnd !== null &&
+      date(contractDetails.contractEnd, 'item end') <= now,
+  );
+  if (outsideItemPeriods && hasEndedItem) return [];
+  const provisioning =
+    snapshot.entitlements.length === 0 ||
+    snapshot.entitlements.some((entry) => entry.status === 'pending');
+  if (provisioning) throw new FynnEntitlementsPendingError();
+  return [];
+}
+
+export function fynnEntitlementsGrantAccess(
+  entitlements: FynnEntitlement[],
+): boolean {
+  return entitlements.some(
+    (entry) =>
+      entry.status === 'active' &&
+      (entry.feature.id === 'core-monthly-credits' ||
+        (entry.feature.id === 'core-subscription-type' &&
+          entry.value === 'seat')),
+  );
 }
 
 function subscriptionData(snapshot: FynnSnapshot): SubscriptionSyncData {
@@ -126,9 +170,7 @@ function valuesForFeature(
 }
 
 function credits(entitlements: FynnEntitlement[]): number {
-  const values = ['core-monthly-credits', 'core-additional-credits'].flatMap(
-    (id) => valuesForFeature(entitlements, id),
-  );
+  const values = valuesForFeature(entitlements, 'core-monthly-credits');
   if (values.length === 0) throw new FynnEntitlementsPendingError();
   const total = values.reduce(
     (sum, entitlement) => sum + integer(entitlement.value, 'credit'),

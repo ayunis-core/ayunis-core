@@ -15,3 +15,30 @@ export class FynnEntitlementsPendingError extends ApplicationError {
     );
   }
 }
+
+export class FynnApiError extends ApplicationError {
+  constructor() {
+    super('Unable to read valid Fynn API state', 'FYNN_API_ERROR', 502);
+  }
+}
+
+export class FynnConfigurationError extends ApplicationError {
+  constructor() {
+    super(
+      'Fynn integration is not configured for this deployment',
+      'FYNN_CONFIGURATION_ERROR',
+      503,
+    );
+  }
+}
+
+export class UnexpectedFynnSyncError extends ApplicationError {
+  constructor(error: Error) {
+    super(
+      'Unexpected Fynn synchronization failure',
+      'UNEXPECTED_FYNN_SYNC_ERROR',
+      500,
+      { error },
+    );
+  }
+}

@@ -19,6 +19,10 @@
           "id": "01a13f66-0a0b-7f27-8683-834ecaa2cd80",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -86,12 +90,20 @@
           "id": "01a13f66-de84-7503-87bd-6c3bbfb4651b",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13f66-de90-7c65-bd54-850068168222",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -171,12 +183,20 @@
           "id": "01a13f66-f1f1-7b8f-bfa2-a23c483acd33",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13f66-f1e5-7c97-bd51-1bd33483188f",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -256,6 +276,10 @@
           "id": "01a13f66-ff3d-7cb6-b6d4-68f200fbd4c4",
           "currentMeasurementValue": {
             "quantity": 25.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -311,6 +335,10 @@
           "id": "01a13f67-0c81-777a-9a8e-01addaf067d4",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -378,6 +406,10 @@
           "id": "01a13f67-199e-74ba-a074-5f4663279283",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -420,18 +452,30 @@
           "id": "01a13f67-2634-77d4-8b79-495a4de9a1d5",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13f67-262a-7f40-82f6-3486c41237e4",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13f67-2621-71b4-9e1f-3e176ee31868",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -523,6 +567,10 @@
           "id": "01a13f67-3512-794e-a870-a638244e641e",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -600,6 +648,10 @@
           "id": "01a13f67-42f4-7612-a597-f88778d798e1",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-10-15T00:00:00+00:00"
           }
         }
       ]
@@ -667,6 +719,10 @@
           "id": "01a13f67-5074-7878-90a6-459a0a3c4a45",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -732,6 +788,10 @@
           "id": "01a13f67-5de3-76c6-bb6e-0881c777a080",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         }
       ]
@@ -799,12 +859,20 @@
           "id": "01a13f67-6aaa-7b68-b109-ac3400e925c7",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13fb4-4320-7e08-b336-1822ec9f0fb6",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-01-14T00:00:00+00:00"
           }
         }
       ]
@@ -847,12 +915,20 @@
           "id": "01a13fb1-7633-7c1e-84f7-1ff06be525dc",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2027-01-15T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13fb1-9ed9-7cdc-b0ff-31e5b4dad6ee",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-01-14T00:00:00+00:00"
           }
         }
       ]
@@ -944,12 +1020,20 @@
           "id": "01a13fb2-4b29-7a26-8c70-d9d71de41e4f",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2027-01-01T00:00:00+00:00",
+            "contractEnd": null
           }
         },
         {
           "id": "01a13fb2-450f-70bc-89da-4d933dbd6d16",
           "currentMeasurementValue": {
             "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2026-12-31T00:00:00+00:00"
           }
         }
       ]

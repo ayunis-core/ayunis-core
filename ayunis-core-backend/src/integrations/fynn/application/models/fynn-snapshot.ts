@@ -8,6 +8,10 @@ export interface FynnSubscription {
   contractDetails: { contractStart: string | null; contractEnd: string | null };
   items: Array<{
     id: string;
+    contractDetails: {
+      contractStart: string | null;
+      contractEnd: string | null;
+    };
     currentMeasurementValue: { quantity: number } | null;
   }>;
 }
@@ -43,3 +47,5 @@ export interface FynnSnapshot {
   customer: FynnCustomer;
   entitlements: FynnEntitlement[];
 }
+
+export type FynnSubscriptionSummary = Omit<FynnSubscription, 'items'>;

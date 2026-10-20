@@ -12,6 +12,9 @@ import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/
 import {
   subscriptionSyncSignature,
   cloneSubscriptionWithType,
+  hasUnendedAccessPeriod,
+  selectSyncSubscription,
+  endSynchronizedAccess,
 } from 'src/iam/subscriptions/application/services/subscription-sync-data';
 import {
   subscriptionSyncEvents,
@@ -23,7 +26,6 @@ import {
   MultipleActiveSubscriptionsError,
   UnexpectedSubscriptionError,
 } from 'src/iam/subscriptions/application/subscription.errors';
-import { selectCurrentSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { accessPeriodsOverlap } from 'src/iam/subscriptions/application/util/access-periods-overlap';
@@ -60,9 +62,37 @@ export class ApplySubscriptionSyncUseCase {
     const all = await this.subscriptions.findByOrgId(state.orgId);
     if (all.filter(isActive).length > 1)
       throw new MultipleActiveSubscriptionsError(state.orgId);
-    const current = selectCurrentSubscription(all);
-    if (!state.subscription) return this.endAccess(current, all);
-    return this.applyActive(state.orgId, state.subscription, current, all);
+    if (!state.subscription) {
+      const open = all.filter(hasUnendedAccessPeriod);
+      const events = await this.endSubscriptions(open);
+      return { changed: open.length > 0, subscription: null, events };
+    }
+    return this.applyState(state.orgId, state.subscription, all);
+  }
+
+  private async applyState(
+    orgId: UUID,
+    data: SubscriptionSyncData,
+    all: Subscription[],
+  ): Promise<ApplySubscriptionSyncResult> {
+    const current = selectSyncSubscription(all, data);
+    const superseded = all.filter(
+      (entry) =>
+        entry.id !== current?.id &&
+        entry.startsAt > new Date() &&
+        hasUnendedAccessPeriod(entry),
+    );
+    const retired = new Map(
+      superseded.map((entry) => [entry.id, endSynchronizedAccess(entry)]),
+    );
+    const projected = all.map((entry) => retired.get(entry.id) ?? entry);
+    const applied = await this.applyActive(orgId, data, current, projected);
+    const events = await this.endSubscriptions(superseded);
+    return {
+      ...applied,
+      changed: applied.changed || superseded.length > 0,
+      events: [...events, ...applied.events],
+    };
   }
 
   private async applyActive(
@@ -73,17 +103,13 @@ export class ApplySubscriptionSyncUseCase {
   ): Promise<ApplySubscriptionSyncResult> {
     const replace = current !== null && this.needsReplacement(current, data);
     const startsAt = this.startBoundary(data.startsAt, current, all, replace);
-    const candidate = await this.factory.build({
-      ...data.billingInfo,
+    const candidate = await this.buildCandidate(
       orgId,
-      type: data.type,
-      noOfSeats: data.noOfSeats,
-      monthlyCredits: data.monthlyCredits,
+      data,
+      current,
       startsAt,
-    });
-    candidate.cancelledAt = data.cancelledAt;
-    candidate.accessEndsAt = data.accessEndsAt;
-    if (isSeatBased(candidate)) candidate.renewalCycleAnchor = data.startsAt;
+      replace,
+    );
     if (current && !replace) this.keepIdentity(current, candidate);
     this.assertNoOverlap(candidate, current, all);
     if (
@@ -106,6 +132,32 @@ export class ApplySubscriptionSyncUseCase {
     return this.update(current, candidate);
   }
 
+  private async buildCandidate(
+    orgId: UUID,
+    data: SubscriptionSyncData,
+    current: Subscription | null,
+    startsAt: Date,
+    replace: boolean,
+  ): Promise<Subscription> {
+    const candidate = await this.factory.build(
+      {
+        ...data.billingInfo,
+        orgId,
+        type: data.type,
+        noOfSeats: data.noOfSeats,
+        monthlyCredits: data.monthlyCredits,
+        startsAt,
+      },
+      current && !replace && hasUnendedAccessPeriod(current)
+        ? current
+        : undefined,
+    );
+    candidate.cancelledAt = data.cancelledAt;
+    candidate.accessEndsAt = data.accessEndsAt;
+    if (isSeatBased(candidate)) candidate.renewalCycleAnchor = data.startsAt;
+    return candidate;
+  }
+
   private async update(
     current: Subscription,
     candidate: Subscription,
@@ -125,6 +177,7 @@ export class ApplySubscriptionSyncUseCase {
     const end = getEffectiveAccessEnd(current);
     return (
       current.type !== data.type ||
+      (data.startsAt > new Date() && current.startsAt < data.startsAt) ||
       (end !== null && end <= new Date() && data.startsAt >= end)
     );
   }
@@ -137,6 +190,10 @@ export class ApplySubscriptionSyncUseCase {
   ): Date {
     const boundaries = all
       .filter((entry) => entry.id !== current?.id)
+      .filter((entry) => {
+        const end = getEffectiveAccessEnd(entry);
+        return end !== null && end > entry.startsAt;
+      })
       .map(getEffectiveAccessEnd)
       .filter((end): end is Date => end !== null && end <= new Date());
     if (replace && current)
@@ -190,10 +247,12 @@ export class ApplySubscriptionSyncUseCase {
     candidate: Subscription,
   ): Promise<ApplySubscriptionSyncResult> {
     const existingEnd = getEffectiveAccessEnd(current);
+    const replacementBoundary =
+      current.startsAt > new Date() ? new Date() : candidate.startsAt;
     const oldAccessEndsAt =
-      existingEnd && existingEnd < candidate.startsAt
+      existingEnd && existingEnd < replacementBoundary
         ? existingEnd
-        : candidate.startsAt;
+        : replacementBoundary;
     const saved = await this.subscriptions.replace({
       oldSubscriptionId: current.id,
       disposition: OldSubscriptionDisposition.CANCEL,
@@ -211,31 +270,17 @@ export class ApplySubscriptionSyncUseCase {
     return { changed: true, subscription: saved, events };
   }
 
-  private async endAccess(
-    current: Subscription | null,
-    all: Subscription[],
-  ): Promise<ApplySubscriptionSyncResult> {
-    if (!current) return { changed: false, subscription: null, events: [] };
-    const open = all.filter((entry) => {
-      const end = getEffectiveAccessEnd(entry);
-      return end === null || end > new Date();
-    });
-    if (open.length > 1)
-      throw new SubscriptionAccessOverlapError(current.orgId);
-    if (open.length === 0)
-      return { changed: false, subscription: null, events: [] };
-    const previous = cloneSubscriptionWithType(current);
-    current.cancelledAt ??= new Date();
-    current.accessEndsAt = new Date(
-      Math.max(Date.now(), current.startsAt.getTime()),
-    );
-    current.updatedAt = new Date();
-    const saved = await this.subscriptions.update(current);
-    return {
-      changed: true,
-      subscription: null,
-      events: subscriptionSyncEvents(previous, saved, false),
-    };
+  private async endSubscriptions(
+    subscriptions: Subscription[],
+  ): Promise<PendingDomainEvent[]> {
+    const events: PendingDomainEvent[] = [];
+    for (const previous of subscriptions) {
+      const saved = await this.subscriptions.update(
+        endSynchronizedAccess(previous),
+      );
+      events.push(...subscriptionSyncEvents(previous, saved, false));
+    }
+    return events;
   }
 
   private billingChanged(previous: Subscription, next: Subscription): boolean {
