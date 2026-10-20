@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import type { PendingDomainEvent } from 'src/common/events/pending-domain-event';
+import type { PendingAddonEvent } from 'src/iam/addons/application/events/pending-addon-event';
 import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
 import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
@@ -19,7 +19,7 @@ export class SyncAcademyAddonUseCase {
   async execute(command: {
     orgId: UUID;
     active: boolean;
-  }): Promise<PendingDomainEvent[]> {
+  }): Promise<PendingAddonEvent[]> {
     this.logger.log(
       { orgId: command.orgId, active: command.active },
       'Synchronizing Academy entitlement',

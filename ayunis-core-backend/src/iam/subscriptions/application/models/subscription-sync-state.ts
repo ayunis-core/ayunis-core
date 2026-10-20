@@ -1,13 +1,10 @@
 import type { UUID } from 'crypto';
 import type { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
-export interface SubscriptionSyncData {
-  type: SubscriptionType;
+interface SubscriptionSyncBase {
   startsAt: Date;
   cancelledAt: Date | null;
-  accessEndsAt: Date | null;
-  monthlyCredits?: number;
-  noOfSeats?: number;
+  endsAt: Date | null;
   billingInfo: {
     companyName: string;
     street: string;
@@ -19,8 +16,21 @@ export interface SubscriptionSyncData {
   };
 }
 
+export type SubscriptionSyncData = SubscriptionSyncBase &
+  (
+    | {
+        type: SubscriptionType.SEAT_BASED;
+        noOfSeats: number;
+        monthlyCredits?: never;
+      }
+    | {
+        type: SubscriptionType.USAGE_BASED;
+        monthlyCredits: number;
+        noOfSeats?: never;
+      }
+  );
+
 export interface SubscriptionSyncState {
   orgId: UUID;
   subscription: SubscriptionSyncData | null;
-  academyActive: boolean;
 }

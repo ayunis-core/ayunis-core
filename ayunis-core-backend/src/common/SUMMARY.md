@@ -15,4 +15,4 @@ Anonymization also supports the optional AYC-1434 reuse study: bounded, expiring
 
 `RequireManualSubscriptionEditing` applies the cloud external-management policy at manual HTTP entry points, allowing reads and optionally restricting only a named add-on type. It does not restrict internal sync use cases.
 
-`PendingDomainEvent` carries a domain event name and payload between internal mutations and their coordinating transaction, allowing external effects to begin only after commit.
+The `IsFiniteDate` class-validator decorator lives in `validators/`; billing event catalogs, their runtime shape readers and the webhook delivery context belong to their owning IAM and webhook application modules.

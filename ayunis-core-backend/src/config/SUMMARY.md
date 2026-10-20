@@ -20,3 +20,5 @@ The configuration module provides strongly-typed, namespaced configuration for e
 `anonymization-measurement.config.ts` is loaded only by `AnonymizationModule` with `forFeature`; its dedicated key, detector revision, and expiry settings enable the temporary AYC-1434 study. Missing or invalid settings disable measurement without changing detection or startup.
 
 `FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED` defaults to false and resolves to true only with `APP_ENVIRONMENT=cloud`. It is exposed as `externalSubscriptionsEnabled` by the feature-toggle endpoint. Enable at external billing cutover; disabling and restarting restores manual management.
+
+`POSTGRES_CONNECTION_TIMEOUT_MS` limits database connection establishment and pool acquisition for every feature and deployment mode, independently of subscription management. It defaults to 10,000 ms; `0` disables the timeout. Startup accepts only nonnegative decimal integers up to 2,147,483,647 ms (the Node timer limit). It does not limit query execution (`POSTGRES_STATEMENT_TIMEOUT_MS`) or idle transactions (`POSTGRES_IDLE_TX_TIMEOUT_MS`). A timeout reports unavailable database capacity; it does not fix pool exhaustion.
