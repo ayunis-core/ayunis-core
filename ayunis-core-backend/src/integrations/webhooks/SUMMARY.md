@@ -18,3 +18,5 @@ The webhooks module dispatches domain lifecycle and product events (user, org, s
 Use cases emit domain events → `WebhookDispatchListener` handles them → constructs `WebhookEvent` subclasses → calls `SendWebhookUseCase` → `HttpWebhookHandler` delivers via HTTP POST (with HMAC-SHA256 signature when a signing secret is available). This decouples business logic from webhook infrastructure. Domain and IAM modules have no dependency on webhook code.
 
 **Error handling:** Ordinary lifecycle and activity listeners log delivery failures without re-throwing, so webhook issues cannot disrupt user-facing operations. Expiry delivery propagates failures to the subscription sweep, which retries uncommitted expiries on a later run; `SubscriptionExpiredWebhookEvent` uses the subscription ID as its stable event ID so receivers can deduplicate retries. The scheduled monthly credit snapshot also propagates delivery failures to the reconciliation task so its AppSignal check-in fails and a later run can retry from the durable ledger.
+
+Add-on payloads allow `actorUserId: null` for service-originated Fynn synchronization; manual changes still identify their super admin.

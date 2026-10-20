@@ -1,15 +1,15 @@
 import { BaseRecord } from 'src/common/db/base-record';
 import { Entity, Column, JoinColumn, OneToOne } from 'typeorm';
 import { SubscriptionRecord } from './subscription.record';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 @Entity({ name: 'subscription_billing_infos' })
 export class SubscriptionBillingInfoRecord extends BaseRecord {
   @Column()
   companyName: string;
 
-  @Column({ nullable: true })
-  subText?: string;
+  @Column({ type: 'varchar', nullable: true })
+  subText: string | null;
 
   @Column()
   street: string;
@@ -26,8 +26,8 @@ export class SubscriptionBillingInfoRecord extends BaseRecord {
   @Column()
   country: string;
 
-  @Column({ nullable: true })
-  vatNumber?: string;
+  @Column({ type: 'varchar', nullable: true })
+  vatNumber: string | null;
 
   @OneToOne(
     () => SubscriptionRecord,
