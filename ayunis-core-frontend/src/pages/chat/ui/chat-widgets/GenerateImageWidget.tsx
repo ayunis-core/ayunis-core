@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { useResolveGeneratedImage } from '@/pages/chat/api/useResolveGeneratedImage';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import ImageGenerationLoader from './ImageGenerationLoader';
@@ -16,14 +17,7 @@ async function downloadImage(url: string, fileName: string): Promise<void> {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(objectUrl);
+    saveBlobAs(blob, fileName);
   } catch {
     // Cross-origin fetch can be blocked; fall back to opening the full image.
     window.open(url, '_blank', 'noopener,noreferrer');

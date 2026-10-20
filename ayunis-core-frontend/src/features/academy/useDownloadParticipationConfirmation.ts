@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { academyCertificateControllerGetCertificate } from '@/shared/api';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 
 const PARTICIPATION_CONFIRMATION_FILE_NAME =
@@ -14,17 +15,7 @@ export function useDownloadParticipationConfirmation() {
     setIsDownloading(true);
     try {
       const data = await academyCertificateControllerGetCertificate();
-
-      // The response is a file blob — trigger download
-      const blob = data instanceof Blob ? data : new Blob([data]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = PARTICIPATION_CONFIRMATION_FILE_NAME;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      saveBlobAs(data, PARTICIPATION_CONFIRMATION_FILE_NAME);
     } catch {
       showError(t('participationConfirmation.downloadError'));
     } finally {
