@@ -1,5 +1,5 @@
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
-import { SubscriptionBillingInfoRecord } from '../schema/subscription-billing-info.record';
+import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import type { UUID } from 'crypto';
 
 export class SubscriptionBillingInfoMapper {
@@ -12,13 +12,13 @@ export class SubscriptionBillingInfoMapper {
     record.createdAt = billingInfo.createdAt;
     record.updatedAt = billingInfo.updatedAt;
     record.companyName = billingInfo.companyName;
-    record.subText = billingInfo.subText;
+    record.subText = billingInfo.subText ?? null;
     record.street = billingInfo.street;
     record.houseNumber = billingInfo.houseNumber;
     record.postalCode = billingInfo.postalCode;
     record.city = billingInfo.city;
     record.country = billingInfo.country;
-    record.vatNumber = billingInfo.vatNumber;
+    record.vatNumber = billingInfo.vatNumber ?? null;
     record.subscriptionId = subscriptionId;
     return record;
   }
@@ -29,13 +29,13 @@ export class SubscriptionBillingInfoMapper {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       companyName: record.companyName,
-      subText: record.subText,
+      subText: record.subText ?? undefined,
       street: record.street,
       houseNumber: record.houseNumber,
       postalCode: record.postalCode,
       city: record.city,
       country: record.country,
-      vatNumber: record.vatNumber,
+      vatNumber: record.vatNumber ?? undefined,
     });
   }
 }

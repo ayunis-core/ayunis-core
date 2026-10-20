@@ -15,3 +15,9 @@ export class UnexpectedAddonError extends ApplicationError {
     );
   }
 }
+
+export class UnexpectedAddonSyncError extends UnexpectedAddonError {
+  constructor(error: Error) {
+    super('synchronization', { error });
+  }
+}

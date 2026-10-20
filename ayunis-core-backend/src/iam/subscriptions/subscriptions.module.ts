@@ -42,6 +42,7 @@ import { SubscriptionAccessAdjustmentRecord } from 'src/iam/subscriptions/infras
 import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/presenters/http/super-admin-subscription-overlap.controller';
 import { ProcessExpiredSubscriptionsUseCase } from 'src/iam/subscriptions/application/use-cases/process-expired-subscriptions/process-expired-subscriptions.use-case';
 import { SubscriptionExpirySweepTask } from 'src/iam/subscriptions/application/tasks/subscription-expiry-sweep.task';
+import { ApplySubscriptionSyncUseCase } from 'src/iam/subscriptions/application/use-cases/apply-subscription-sync/apply-subscription-sync.use-case';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { SubscriptionExpirySweepTask } from 'src/iam/subscriptions/application/t
     ResolveSubscriptionOverlapUseCase,
     ProcessExpiredSubscriptionsUseCase,
     SubscriptionExpirySweepTask,
+    ApplySubscriptionSyncUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
@@ -106,6 +108,7 @@ import { SubscriptionExpirySweepTask } from 'src/iam/subscriptions/application/t
     IsUsageBasedSubscriptionUseCase,
     AssertSeatAvailableUseCase,
     AcquireSeatAllocationLockUseCase,
+    ApplySubscriptionSyncUseCase,
   ],
 })
 export class SubscriptionsModule {}

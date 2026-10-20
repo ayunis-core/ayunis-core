@@ -14,8 +14,8 @@ import { randomUUID } from 'crypto';
 import { CreateSubscriptionUseCase } from './create-subscription.use-case';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
-import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
-import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
+import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
@@ -24,7 +24,6 @@ import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   SubscriptionAlreadyExistsError,
   InvalidSubscriptionDataError,
@@ -40,8 +39,8 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
-  let getInvitesByOrgUseCase: jest.Mocked<GetInvitesByOrgUseCase>;
-  let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
+  let countInvites: jest.Mocked<CountPendingInvitesByOrgIdUseCase>;
+  let countUsers: jest.Mocked<CountUsersByOrgIdUseCase>;
   let configService: jest.Mocked<ConfigService>;
   let contextService: jest.Mocked<ContextService>;
   let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
@@ -75,11 +74,11 @@ describe('CreateSubscriptionUseCase', () => {
           },
         },
         {
-          provide: GetInvitesByOrgUseCase,
+          provide: CountPendingInvitesByOrgIdUseCase,
           useValue: { execute: jest.fn() },
         },
         {
-          provide: FindUsersByOrgIdUseCase,
+          provide: CountUsersByOrgIdUseCase,
           useValue: { execute: jest.fn() },
         },
         {
@@ -99,8 +98,8 @@ describe('CreateSubscriptionUseCase', () => {
 
     useCase = module.get(CreateSubscriptionUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
-    getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
-    findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
+    countInvites = module.get(CountPendingInvitesByOrgIdUseCase);
+    countUsers = module.get(CountUsersByOrgIdUseCase);
     configService = module.get(ConfigService);
     contextService = module.get(ContextService);
     eventEmitter = module.get(EventEmitter2);
@@ -125,22 +124,8 @@ describe('CreateSubscriptionUseCase', () => {
   }
 
   function mockInvitesAndUsers(openInvites: number, userCount: number): void {
-    getInvitesByOrgUseCase.execute.mockResolvedValue(
-      new Paginated({
-        data: [],
-        limit: 1000,
-        offset: 0,
-        total: openInvites,
-      }),
-    );
-    findUsersByOrgIdUseCase.execute.mockResolvedValue(
-      new Paginated({
-        data: [],
-        limit: 1000,
-        offset: 0,
-        total: userCount,
-      }),
-    );
+    countInvites.execute.mockResolvedValue(openInvites);
+    countUsers.execute.mockResolvedValue(userCount);
   }
 
   describe('optional access end', () => {
@@ -336,8 +321,8 @@ describe('CreateSubscriptionUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(getInvitesByOrgUseCase.execute).not.toHaveBeenCalled();
-      expect(findUsersByOrgIdUseCase.execute).not.toHaveBeenCalled();
+      expect(countInvites.execute).not.toHaveBeenCalled();
+      expect(countUsers.execute).not.toHaveBeenCalled();
     });
   });
 
