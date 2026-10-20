@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.58.0](https://github.com/ayunis-core/ayunis-core/compare/v2.57.0...v2.58.0) (2026-10-20)
+
+
+### Features
+
+* **academy:** let admins export the training overview and member confirmations (AYC-671) ([#2012](https://github.com/ayunis-core/ayunis-core/issues/2012)) ([5f88c59](https://github.com/ayunis-core/ayunis-core/commit/5f88c59dbfd354156007593c209b3325bed8a81b))
+* **chat:** scope prompt recall to the open thread (AYC-1376) ([#2020](https://github.com/ayunis-core/ayunis-core/issues/2020)) ([13bd823](https://github.com/ayunis-core/ayunis-core/commit/13bd8232602c5ed0e49b29aa0d6adb8a1281989b))
+
+
+### Bug Fixes
+
+* **artifacts:** keep text colors and highlights in docx export (AYC-1382) ([#2027](https://github.com/ayunis-core/ayunis-core/issues/2027)) ([d708620](https://github.com/ayunis-core/ayunis-core/commit/d70862094b0a136ca74c7f18b5a7e31b31eb68b4))
+* **artifacts:** preserve text colors and highlights in the document editor (AYC-1312) ([#2025](https://github.com/ayunis-core/ayunis-core/issues/2025)) ([5ce56cf](https://github.com/ayunis-core/ayunis-core/commit/5ce56cf75d6f40c499dc501840c2cc6582b388e4))
+* **auth:** accept api keys only in the authorization header (AYC-1354) ([#2026](https://github.com/ayunis-core/ayunis-core/issues/2026)) ([0a8b212](https://github.com/ayunis-core/ayunis-core/commit/0a8b2124e2a829dcd38718b1287c8bbbabf2f0cc))
+* **chat:** apply refreshed defaults to new chat model selection (AYC-1243) ([#2022](https://github.com/ayunis-core/ayunis-core/issues/2022)) ([9464891](https://github.com/ayunis-core/ayunis-core/commit/946489166261d39c2cf648f3942b03bfdd3c061a))
+* **chat:** wait for attachment context before sending (AYC-1273) ([#2028](https://github.com/ayunis-core/ayunis-core/issues/2028)) ([228e828](https://github.com/ayunis-core/ayunis-core/commit/228e82823dba375e1dd16a94392888a530c2a9be))
+* **images:** normalize mobile photo references before editing (AYC-1306) ([#2024](https://github.com/ayunis-core/ayunis-core/issues/2024)) ([dcdf405](https://github.com/ayunis-core/ayunis-core/commit/dcdf40526632683006ab4053d076bc6a41831257))
+* **inference:** keep the idle watchdog alive during silent thinking on anthropic and bedrock (AYC-1318) ([#2023](https://github.com/ayunis-core/ayunis-core/issues/2023)) ([cf3fd64](https://github.com/ayunis-core/ayunis-core/commit/cf3fd643d3f4a62971679db5f7b83f7ec2104873))
+* **skills:** use current ui language for ambiguous skill text (AYC-1266) ([#2019](https://github.com/ayunis-core/ayunis-core/issues/2019)) ([cc3a30f](https://github.com/ayunis-core/ayunis-core/commit/cc3a30f223fba02a861532ff6a349386c2696d12))
+
+
+### Code Refactoring
+
+* **frontend:** route file downloads through saveBlobAs (AYC-000) ([#2013](https://github.com/ayunis-core/ayunis-core/issues/2013)) ([6fc0203](https://github.com/ayunis-core/ayunis-core/commit/6fc02032598d1bd1d0a67fc32fd3cbfe80bdf701))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/cache from 5 to 6 ([#1998](https://github.com/ayunis-core/ayunis-core/issues/1998)) ([53ae2fb](https://github.com/ayunis-core/ayunis-core/commit/53ae2fb2e00820efa6bac2f90754dc2ca5306e7b))
+* **deps-actions:** bump actions/create-github-app-token ([#1996](https://github.com/ayunis-core/ayunis-core/issues/1996)) ([39b6d10](https://github.com/ayunis-core/ayunis-core/commit/39b6d10b372e9ec6e74d3aa7c2d949de8d6b77fb))
+* **deps-actions:** bump docker/build-push-action from 6.19.2 to 7.4.0 ([#2000](https://github.com/ayunis-core/ayunis-core/issues/2000)) ([2f8d1ce](https://github.com/ayunis-core/ayunis-core/commit/2f8d1ce1cffc0948c37e782430b0b9cb3cf58b5a))
+* **deps-actions:** bump pnpm/action-setup from 4.2.0 to 6.1.0 ([#1999](https://github.com/ayunis-core/ayunis-core/issues/1999)) ([fa4403e](https://github.com/ayunis-core/ayunis-core/commit/fa4403e0ed177304b4ba66c90c40ac41dc767df5))
+* **deps-anonymize:** bump fastapi in /ayunis-core-anonymize ([#1995](https://github.com/ayunis-core/ayunis-core/issues/1995)) ([d0395ae](https://github.com/ayunis-core/ayunis-core/commit/d0395aed3110fbc2bf9a739c9ad0108eb168179a))
+* **deps-anonymize:** bump pydantic in /ayunis-core-anonymize ([#2004](https://github.com/ayunis-core/ayunis-core/issues/2004)) ([48dc7f7](https://github.com/ayunis-core/ayunis-core/commit/48dc7f7204d11543b87fa1de2dfbe3348f460050))
+* **deps-anonymize:** bump torch in /ayunis-core-anonymize ([#1993](https://github.com/ayunis-core/ayunis-core/issues/1993)) ([3846175](https://github.com/ayunis-core/ayunis-core/commit/38461754b0ef53f452cc4a145b123d14f148c0c5))
+* **deps-sandbox:** bump numpy in /ayunis-core-code-execution/sandbox ([#1994](https://github.com/ayunis-core/ayunis-core/issues/1994)) ([8341de5](https://github.com/ayunis-core/ayunis-core/commit/8341de50504da89f4fb58df9b94c511925b733e9))
+* **deps:** bump the react group across 1 directory with 2 updates ([#2003](https://github.com/ayunis-core/ayunis-core/issues/2003)) ([66744eb](https://github.com/ayunis-core/ayunis-core/commit/66744eb852214c70e5002b1113193a8573e93aec))
+* **deps:** bump the tanstack group across 1 directory with 3 updates ([#2005](https://github.com/ayunis-core/ayunis-core/issues/2005)) ([ba49b03](https://github.com/ayunis-core/ayunis-core/commit/ba49b03c2f3c6ba7e6917ecc823833fe70784551))
+* **deps:** bump ts-jest from 29.4.14 to 29.4.15 in the typescript group across 1 directory ([#2002](https://github.com/ayunis-core/ayunis-core/issues/2002)) ([f040a1e](https://github.com/ayunis-core/ayunis-core/commit/f040a1e4642a80bec4d672ab5320ddbad39fb83c))
+
 ## [2.57.0](https://github.com/ayunis-core/ayunis-core/compare/v2.56.0...v2.57.0) (2026-10-19)
 
 
