@@ -68,13 +68,14 @@ async function refreshThreadQueriesAfterRun(
   queryClient: QueryClient,
   threadId: string,
 ): Promise<void> {
-  // Cancel any in-flight thread refetch (e.g. an active refetchInterval
-  // poll) so its older response can't land after ours and shorten the
-  // displayed assistant text, then await the refetch so the cache holds the
-  // post-save server state before sendMessage resolves.
+  // Replace stale polls without letting their older responses overwrite saved
+  // output. Refetch cancels and replaces in one operation, so upload callers
+  // awaiting that query continue waiting for fresh data instead of reverted data.
   const threadQueryKey = getThreadsControllerFindOneQueryKey(threadId);
-  await queryClient.cancelQueries({ queryKey: threadQueryKey, exact: true });
-  await queryClient.refetchQueries({ queryKey: threadQueryKey, exact: true });
+  await queryClient.refetchQueries(
+    { queryKey: threadQueryKey, exact: true },
+    { cancelRefetch: true },
+  );
 
   [
     getThreadsControllerFindAllQueryKey(),
