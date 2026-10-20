@@ -31,6 +31,7 @@ FILES=$(echo "$FILES" | grep -v '/generated/' \
     | grep -v '^packages/ui/src/components/' \
     | grep -v '\.gen\.' \
     | grep -v '\.spec\.ts$' \
+    | grep -v '\.e2e-spec\.ts$' \
     | grep -v '\.spec\.tsx$' \
     | grep -v '\.test\.ts$' \
     | grep -v '\.test\.tsx$' \

@@ -19,6 +19,12 @@ function fixture(number: string): FynnSnapshot {
 }
 
 describe('Fynn subscription mapping', () => {
+  it('rejects unsupported entitlement status before it can remove existing access', () => {
+    const snapshot = fixture('03');
+    for (const entitlement of snapshot.entitlements)
+      entitlement.status = 'future-provider-state';
+    expect(() => mapFynnSubscription(snapshot, now)).toThrow(/status/i);
+  });
   it.each(['core-academy', 'core-subscription-type'])(
     'does not retain paid access for an isolated %s entitlement',
     (feature) => {
@@ -46,7 +52,7 @@ describe('Fynn subscription mapping', () => {
   it('ends access in a gap after an ended item and before its pending successor', () => {
     const snapshot = fixture('19');
     for (const entry of snapshot.entitlements)
-      if (entry.status === 'active') entry.status = 'ended';
+      if (entry.status === 'active') entry.status = 'expired';
     expect(
       mapFynnSubscription(snapshot, new Date('2026-12-31T12:00:00Z'))
         .subscription,
@@ -84,7 +90,7 @@ describe('Fynn subscription mapping', () => {
     const snapshot = fixture(number);
     for (const entitlement of snapshot.entitlements) {
       entitlement.status =
-        entitlement.status === 'pending' ? 'active' : 'ended';
+        entitlement.status === 'pending' ? 'active' : 'expired';
     }
     expect(
       mapFynnSubscription(snapshot, new Date(at)).subscription,
@@ -97,7 +103,7 @@ describe('Fynn subscription mapping', () => {
   it('ends the paid trial after its entitlements end even when Fynn remains active', () => {
     const snapshot = fixture('20');
     for (const entitlement of snapshot.entitlements) {
-      if (entitlement.status === 'active') entitlement.status = 'ended';
+      if (entitlement.status === 'active') entitlement.status = 'expired';
     }
     expect(
       mapFynnSubscription(snapshot, new Date('2027-01-15T00:00:00Z')),
@@ -266,7 +272,7 @@ describe('Fynn subscription mapping', () => {
     const snapshot = fixture('14');
     for (const entitlement of snapshot.entitlements) {
       entitlement.status =
-        entitlement.status === 'pending' ? 'active' : 'ended';
+        entitlement.status === 'pending' ? 'active' : 'expired';
     }
     expect(
       mapFynnSubscription(snapshot, new Date('2027-01-01T00:00:01Z'))

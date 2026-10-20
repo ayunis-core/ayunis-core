@@ -294,6 +294,9 @@ jobs:
           PORT: 3002
           APP_ENVIRONMENT: cloud
           FEATURE_FYNN_MANAGED_SUBSCRIPTIONS_ENABLED: 'true'
+          FYNN_API_KEY: e2e-unused-fynn-key
+          FYNN_API_BASE_URL: http://127.0.0.1:9/api/v1
+          CORE_CONNECT_SERVICE_TOKEN: e2e-connect-service-token
         run: |
           nohup node dist/src/main > backend-fynn.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3002/api/health; do sleep 2; done' \

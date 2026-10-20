@@ -49,7 +49,7 @@ export const entitlementSchema = z.object({
   feature: z.object({ id: z.string().min(1) }),
   subscriptionItem: z.object({ id: z.string().min(1) }).nullable(),
   value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
-  status: z.string(),
+  status: z.enum(['active', 'pending', 'disabled', 'expired']),
   validFrom: z.string().nullable(),
   validUntil: z.string().nullable(),
 });

@@ -1,3 +1,4 @@
+import { localBillingEventContext } from 'src/common/events/durable-event-context';
 import type { UUID } from 'crypto';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
@@ -114,6 +115,14 @@ describe('WebhookDispatchListener', () => {
     );
   });
 
+  it('leaves billing HTTP delivery to the outbox while applying local effects', async () => {
+    await localBillingEventContext.run(true, () =>
+      listener.handleSubscriptionCreated(
+        new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload()),
+      ),
+    );
+    expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+  });
   describe('handleUserCreated', () => {
     it('should dispatch UserCreatedWebhookEvent enriched with orgName', async () => {
       const user = makeUser();

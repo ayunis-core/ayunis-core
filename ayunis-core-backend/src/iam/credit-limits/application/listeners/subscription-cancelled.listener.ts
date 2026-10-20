@@ -19,7 +19,7 @@ export class SubscriptionCancelledListener {
     private readonly removeOrgCreditLimitsUseCase: RemoveOrgCreditLimitsUseCase,
   ) {}
 
-  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME)
+  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {

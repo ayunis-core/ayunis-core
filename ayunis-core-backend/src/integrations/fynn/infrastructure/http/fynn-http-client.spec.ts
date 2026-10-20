@@ -1,3 +1,4 @@
+import { fynnSweepContext } from 'src/integrations/fynn/application/services/fynn-read-context';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { ConfigService } from '@nestjs/config';
@@ -78,6 +79,25 @@ describe('Fynn HTTP boundary', () => {
     expect(await client().listSubscriptions(summary.customer.id)).toEqual([
       summary,
     ]);
+  });
+  it('enumerates customers once per sweep and refreshes in the next sweep', async () => {
+    response = { data: [], meta: { pagination: { totalItems: 0 } } };
+    const instance = client();
+    await fynnSweepContext.run({}, async () => {
+      const now = Date.now();
+      const time = jest.spyOn(Date, 'now');
+      try {
+        for (let org = 0; org < 100; org++) {
+          time.mockReturnValue(now + org * 30_000);
+          await instance.listCustomerLinks();
+        }
+      } finally {
+        time.mockRestore();
+      }
+    });
+    expect(requests).toHaveLength(1);
+    await fynnSweepContext.run({}, () => instance.listCustomerLinks());
+    expect(requests).toHaveLength(2);
   });
   it('reads all customer-link pages', async () => {
     response = (url: string) => ({

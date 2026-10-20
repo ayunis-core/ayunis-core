@@ -1,9 +1,7 @@
+import { fynnCustomersForOrg } from './fynn-read-context';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import {
-  FynnClient,
-  type FynnCustomerLink,
-} from 'src/integrations/fynn/application/ports/fynn-client';
+import { FynnClient } from 'src/integrations/fynn/application/ports/fynn-client';
 import type {
   FynnSnapshot,
   FynnSubscription,
@@ -83,8 +81,9 @@ export class LoadFynnSnapshotService {
     orgId: UUID,
     trigger: FynnSubscription,
   ): Promise<FynnSubscriptionSummary[]> {
-    const customers = (await this.client.listCustomerLinks()).filter(
-      (customer) => this.matchesOrg(customer, orgId),
+    const customers = fynnCustomersForOrg(
+      await this.client.listCustomerLinks(),
+      orgId,
     );
     if (!customers.some((customer) => customer.id === trigger.customer.id))
       throw new InvalidFynnStateError(
@@ -112,13 +111,6 @@ export class LoadFynnSnapshotService {
     return [...unique.values()].filter((subscription) =>
       fynnSubscriptionServesAccess(subscription, new Date()),
     );
-  }
-
-  private matchesOrg(customer: FynnCustomerLink, orgId: UUID): boolean {
-    const fields = customer.customFields;
-    if (Array.isArray(fields)) return false;
-    const value = fields['ayunis-core-uuid'];
-    return typeof value === 'string' && value.toLowerCase() === orgId;
   }
 
   private async snapshot(

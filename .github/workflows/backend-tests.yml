@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'ayunis-core-backend/**'
+      - 'scripts/fynn-preview-readiness.mjs'
+      - 'scripts/fynn-preview-readiness.test.mjs'
       - '.github/workflows/backend-tests.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
       - '.github/actions/start-minio/action.yml'
@@ -12,6 +14,8 @@ on:
     branches: [main]
     paths:
       - 'ayunis-core-backend/**'
+      - 'scripts/fynn-preview-readiness.mjs'
+      - 'scripts/fynn-preview-readiness.test.mjs'
       # Seeds the shared ESLint cache below: pull requests can only restore
       # caches saved on main, and the cache key includes the lockfile hash.
       - 'pnpm-lock.yaml'
@@ -157,6 +161,16 @@ jobs:
 
       - name: Run migrations
         run: pnpm run migration:run:dev
+        env:
+          NODE_ENV: test
+
+      - name: Test Fynn Preview readiness probe
+        if: matrix.shard == 1
+        run: node --test ../scripts/fynn-preview-readiness.test.mjs
+
+      - name: Test Fynn lifecycle with production record metadata
+        if: matrix.shard == 1
+        run: pnpm run test:fynn-lifecycle
         env:
           NODE_ENV: test
 
