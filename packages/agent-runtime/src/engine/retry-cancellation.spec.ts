@@ -450,6 +450,41 @@ describe('per-call cancellation and idle timeout', () => {
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
   });
 
+  it('keeps a call alive past the idle budget while the provider yields only heartbeat chunks', async () => {
+    vi.useFakeTimers();
+    const heartbeatIntervalMs = 30_000;
+    let calls = 0;
+    const model: ModelProvider = {
+      name: 'silent-thinking',
+      async *stream() {
+        calls += 1;
+        for (
+          let elapsedMs = 0;
+          elapsedMs <= DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS;
+          elapsedMs += heartbeatIntervalMs
+        ) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, heartbeatIntervalMs),
+          );
+          yield {};
+        }
+        yield* chunks(textTurn('Thought it through'));
+      },
+    };
+    const pending = collectEvents(baseInput(model));
+
+    await vi.advanceTimersByTimeAsync(
+      DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS + 2 * heartbeatIntervalMs,
+    );
+    const events = await pending;
+
+    expect(calls).toBe(1);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
   it('does not block terminal lifecycle on hostile iterator cleanup', async () => {
     vi.useFakeTimers();
     let nextCalls = 0;
