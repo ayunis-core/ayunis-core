@@ -2,7 +2,6 @@ import { useLogoutControllerLogout } from '@/shared/api/generated/ayunisCoreAPI'
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearAppsignalTags } from '@/shared/lib/appsignal';
-import { clearPromptHistory } from '@/shared/lib/prompt-history';
 import { navigateToExternalUrl } from '@/features/sso';
 import { showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -17,7 +16,6 @@ export function useLogout() {
   function clearLocalState(): void {
     queryClient.clear();
     clearAppsignalTags();
-    clearPromptHistory();
   }
 
   const logout = () => {

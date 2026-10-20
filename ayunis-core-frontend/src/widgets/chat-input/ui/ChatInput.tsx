@@ -28,7 +28,6 @@ import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
 import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
 import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
-import { recordSentPrompt } from '@/shared/lib/prompt-history';
 import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
 import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
 import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
@@ -112,6 +111,8 @@ interface ChatInputProps {
   isVisionEnabled?: boolean;
   initialMessage?: string;
   draftChatId?: string;
+  /** The thread's sent prompts, oldest first, recalled with ArrowUp/ArrowDown. */
+  sentPrompts?: readonly string[];
 }
 
 export interface ChatInputRef {
@@ -119,6 +120,8 @@ export interface ChatInputRef {
   sendMessage: (message: string) => void;
   restoreFailedSubmission: (text: string, files: File[]) => boolean;
 }
+
+const NO_PROMPTS: readonly string[] = [];
 
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
@@ -150,6 +153,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onSkillRemove,
       initialMessage,
       draftChatId,
+      sentPrompts = NO_PROMPTS,
     },
     ref,
   ) => {
@@ -163,7 +167,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     useDraftCursorAtEnd(textareaRef, draftChatId);
-    const handlePromptHistoryKey = usePromptHistory(message, setMessage);
+    const handlePromptHistoryKey = usePromptHistory(
+      message,
+      setMessage,
+      sentPrompts,
+    );
 
     // TextareaAutosize corrects its height during mount; the height transition
     // must not be active yet or that correction animates as a visible shrink
@@ -244,7 +252,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         altText: img.file.name || 'Pasted image',
       }));
 
-      recordSentPrompt(message);
       onSend(
         message,
         imageFiles.length > 0 ? imageFiles : undefined,
