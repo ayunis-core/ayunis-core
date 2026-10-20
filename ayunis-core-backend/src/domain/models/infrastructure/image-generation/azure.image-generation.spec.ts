@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { AzureImageGenerationHandler } from './azure.image-generation';
@@ -24,6 +25,14 @@ jest.mock('openai', () => {
 });
 
 const mockAzureOpenAICtor = jest.mocked(AzureOpenAI);
+
+function createReferenceImage(format: 'png' | 'jpeg' = 'png') {
+  return sharp({
+    create: { width: 8, height: 6, channels: 3, background: '#ffffff' },
+  })
+    .toFormat(format)
+    .toBuffer();
+}
 
 describe('AzureImageGenerationHandler', () => {
   const logger = createLoggerMock();
@@ -260,8 +269,14 @@ describe('AzureImageGenerationHandler', () => {
         createInput({
           prompt: 'Recreate this coat of arms as a clean vector graphic',
           referenceImages: [
-            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
-            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
+            {
+              data: await createReferenceImage('jpeg'),
+              contentType: 'image/jpeg',
+            },
           ],
         }),
       );
@@ -287,7 +302,7 @@ describe('AzureImageGenerationHandler', () => {
       expect(result.imageData).toEqual(Buffer.from(fakeB64, 'base64'));
     });
 
-    it('should wrap reference buffers as files matching their content type', async () => {
+    it('should wrap normalized JPEG references with a matching filename and MIME type', async () => {
       const fakeB64 = Buffer.from('edited-image-data').toString('base64');
       mockImagesEdit.mockResolvedValue({
         data: [{ b64_json: fakeB64 }],
@@ -296,7 +311,10 @@ describe('AzureImageGenerationHandler', () => {
       await handler.generate(
         createInput({
           referenceImages: [
-            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+            {
+              data: await createReferenceImage('jpeg'),
+              contentType: 'image/jpeg',
+            },
           ],
         }),
       );
@@ -337,7 +355,10 @@ describe('AzureImageGenerationHandler', () => {
             model,
             prompt: 'a beautiful sunset',
             referenceImages: [
-              { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+              {
+                data: await createReferenceImage(),
+                contentType: 'image/png',
+              },
             ],
           }),
         );
@@ -427,7 +448,10 @@ describe('AzureImageGenerationHandler', () => {
             model,
             background: 'transparent',
             referenceImages: [
-              { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+              {
+                data: await createReferenceImage(),
+                contentType: 'image/png',
+              },
             ],
           }),
         );
@@ -469,7 +493,10 @@ describe('AzureImageGenerationHandler', () => {
         createInput({
           background: 'transparent',
           referenceImages: [
-            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
           ],
         }),
       );
@@ -537,7 +564,10 @@ describe('AzureImageGenerationHandler', () => {
       await handler.generate(
         createInput({
           referenceImages: [
-            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
           ],
         }),
       );
