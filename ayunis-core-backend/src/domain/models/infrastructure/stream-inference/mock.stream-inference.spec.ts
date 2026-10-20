@@ -1,6 +1,7 @@
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { mockImageEditResponse } from './mock-image-edit-response';
 import { MockStreamInferenceHandler } from './mock.stream-inference';
 
 const model = new LanguageModel({
@@ -41,6 +42,91 @@ async function collect(stream: AsyncIterable<ProviderChunk>) {
 }
 
 describe('MockStreamInferenceHandler runtime provider', () => {
+  it('requests an image edit with the uploaded reference for the mobile E2E journey', async () => {
+    const provider = new MockStreamInferenceHandler().resolveProvider(model);
+    const response = await collect(
+      provider.stream({
+        ...request,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'E2E edit uploaded image' },
+              { type: 'text', text: `[image ref: ${sourceId}:0]` },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(response[0].toolCallDeltas?.[0]).toMatchObject({
+      name: 'generate_image',
+      argumentsDelta: JSON.stringify({
+        prompt: 'Coloring page from mobile photo',
+        reference_uploaded_image_ids: [`${sourceId}:0`],
+      }),
+    });
+  });
+
+  it('reports usage when the image-edit tool result completes the turn', async () => {
+    const stream = mockImageEditResponse(
+      {
+        ...request,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: `[image ref: ${sourceId}:0]` }],
+          },
+          {
+            role: 'tool_result',
+            content: [
+              {
+                type: 'tool_result',
+                toolCallId: 'mock-image-edit',
+                toolName: 'generate_image',
+                result: 'done',
+              },
+            ],
+          },
+        ],
+      },
+      'E2E edit uploaded image',
+    );
+    expect(await collect(stream!)).toEqual([
+      {
+        textDelta: 'image-edited::continued',
+        finishReason: 'stop',
+        usage: { inputTokens: 0, outputTokens: 0 },
+      },
+    ]);
+  });
+
+  it('paces the image-edit mock before completing a tool call', async () => {
+    jest.useFakeTimers();
+    try {
+      const stream = mockImageEditResponse(
+        {
+          ...request,
+          messages: [
+            {
+              role: 'user',
+              content: [{ type: 'text', text: `[image ref: ${sourceId}:0]` }],
+            },
+          ],
+        },
+        'E2E edit uploaded image',
+      );
+      const settled = jest.fn();
+      const next = stream![Symbol.asyncIterator]().next();
+      void next.then(settled);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(settled).not.toHaveBeenCalled();
+      await jest.advanceTimersByTimeAsync(40);
+      expect((await next).value).toMatchObject({ finishReason: 'tool_calls' });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('recovers on the next model attempt after a malformed tool call', async () => {
     const provider = new MockStreamInferenceHandler().resolveProvider(model);
 
