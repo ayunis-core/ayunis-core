@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -58,11 +59,14 @@ export class SubscriptionFactory {
     private readonly countUsers: CountUsersByOrgIdUseCase,
   ) {}
 
-  async build(params: BuildSubscriptionParams): Promise<Subscription> {
+  async build(
+    params: BuildSubscriptionParams,
+    existing?: Subscription,
+  ): Promise<Subscription> {
     const subscription =
       params.type === SubscriptionType.USAGE_BASED
         ? this.buildUsageBased(params)
-        : await this.buildSeatBased(params);
+        : await this.buildSeatBased(params, existing);
     const end = params.endsAt;
     if (
       end &&
@@ -102,6 +106,7 @@ export class SubscriptionFactory {
 
   private async buildSeatBased(
     params: BuildSubscriptionParams,
+    existing?: Subscription,
   ): Promise<SeatBasedSubscription> {
     const noOfSeats = params.noOfSeats ?? 1;
 
@@ -119,7 +124,8 @@ export class SubscriptionFactory {
       );
     }
 
-    await this.validateSeatCount(params.orgId, noOfSeats);
+    if (!this.hasUnchangedSeatAllocation(params, existing))
+      await this.validateSeatCount(params.orgId, noOfSeats);
 
     const pricePerSeat = this.configService.get<number>(
       'subscriptions.pricePerSeatYearly',
@@ -138,6 +144,18 @@ export class SubscriptionFactory {
       startsAt,
       billingInfo: this.buildBillingInfo(params),
     });
+  }
+
+  private hasUnchangedSeatAllocation(
+    params: BuildSubscriptionParams,
+    existing?: Subscription,
+  ): boolean {
+    return (
+      existing !== undefined &&
+      isSeatBased(existing) &&
+      existing.orgId === params.orgId &&
+      existing.noOfSeats === params.noOfSeats
+    );
   }
 
   private async validateSeatCount(

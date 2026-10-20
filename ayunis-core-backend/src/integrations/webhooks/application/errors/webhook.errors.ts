@@ -3,10 +3,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import type { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 export enum WebhookErrorCode {
-  UNEXPECTED_WEBHOOK_ERROR = 'UNEXPECTED_WEBHOOK_ERROR',
   WEBHOOK_DELIVERY_FAILED = 'WEBHOOK_DELIVERY_FAILED',
   WEBHOOK_INVALID_URL = 'WEBHOOK_INVALID_URL',
   WEBHOOK_TIMEOUT = 'WEBHOOK_TIMEOUT',
+  UNEXPECTED_WEBHOOK_ERROR = 'UNEXPECTED_WEBHOOK_ERROR',
 }
 
 /**

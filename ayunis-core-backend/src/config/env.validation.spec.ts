@@ -38,7 +38,7 @@ function without(
 
 describe('validateEnv', () => {
   it.each(['yes', 'TRUE', '1'])(
-    'rejects invalid external subscription flag %s',
+    'rejects invalid external subscription management flag %s',
     (value) => {
       expect(() =>
         validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),

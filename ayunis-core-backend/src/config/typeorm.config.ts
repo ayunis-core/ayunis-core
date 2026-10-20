@@ -16,6 +16,11 @@ const baseConfig: DataSourceOptions = {
   synchronize: false,
   poolSize: parsePositiveIntWithDefault(process.env.POSTGRES_POOL_SIZE, 20),
   extra: {
+    connectionTimeoutMillis:
+      process.env.APP_ENVIRONMENT === 'cloud' &&
+      process.env.FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED === 'true'
+        ? 10_000
+        : undefined,
     statement_timeout: parseNonNegativeIntWithDefault(
       process.env.POSTGRES_STATEMENT_TIMEOUT_MS,
       60_000,

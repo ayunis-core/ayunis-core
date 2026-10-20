@@ -16,7 +16,7 @@ Configure separate tokens in Development and Production. Store the same token in
 Core and Connect in Infisical. Generate a token with `openssl rand -hex 32`.
 To rotate, update both service configurations and restart them; during a rolling
 rotation, requests with the old value fail until both services use the new value.
-The API key used to read Fynn and Fynn's webhook signing secret are separate.
+Provider API credentials and webhook signing secrets belong only in Connect.
 
 Validation: guard tests cover invalid credentials and rotation; HTTP tests exercise
 real Nest routing and JWT guard composition, distinct browser/service credentials,

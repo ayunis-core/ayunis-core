@@ -13,6 +13,6 @@ Anonymization also supports the optional AYC-1434 reuse study: bounded, expiring
 
 `util/undici-fetch.util.ts` is the only way to fetch through a dispatcher created from the `undici` dependency. Node's built-in fetch runs on its embedded undici and must not receive these dispatchers; the helper also returns a global `Response` for consumers that check `instanceof Response`.
 
-`RequireManualSubscriptionEditing` applies the cloud Fynn-management policy at manual HTTP entry points, allowing reads and optionally restricting only a named add-on type. It does not restrict internal sync use cases.
+`RequireManualSubscriptionEditing` applies the cloud external-management policy at manual HTTP entry points, allowing reads and optionally restricting only a named add-on type. It does not restrict internal sync use cases.
 
 `PendingDomainEvent` carries a domain event name and payload between internal mutations and their coordinating transaction, allowing external effects to begin only after commit.

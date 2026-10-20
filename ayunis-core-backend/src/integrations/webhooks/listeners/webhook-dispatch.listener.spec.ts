@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { localBillingEventContext } from 'src/common/events/durable-event-context';
 import type { UUID } from 'crypto';
 import { EVENT_LISTENER_METADATA } from '@nestjs/event-emitter';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
@@ -122,6 +123,14 @@ describe('WebhookDispatchListener', () => {
     );
   });
 
+  it('leaves billing HTTP delivery to the outbox while applying local effects', async () => {
+    await localBillingEventContext.run(true, () =>
+      listener.handleSubscriptionCreated(
+        new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload()),
+      ),
+    );
+    expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+  });
   describe('handleUserCreated', () => {
     it('propagates expiry delivery failure and keeps a stable event id on retry', async () => {
       const event = new SubscriptionExpiredEvent(

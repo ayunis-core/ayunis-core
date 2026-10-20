@@ -39,7 +39,7 @@ Standard hexagonal: `domain/` (entity, `AddonType` enum, `AddonStatus`),
 (Postgres record + mapper + repository), `presenters/http/` (super-admin
 controller + DTO).
 
-With cloud Fynn management enabled, the super-admin HTTP guard rejects activation/deactivation of Academy. Listing remains available; other add-on types and internal sync use cases are unaffected.
+With cloud external subscription management enabled, the super-admin HTTP guard rejects activation/deactivation of Academy. Listing remains available; other add-on types and internal sync use cases are unaffected.
 
 `SyncAcademyAddonUseCase` idempotently applies trusted Academy entitlement state and returns domain events for publication after the sync transaction commits. These service-originated events have `actorUserId: null`; manual events retain the super-admin ID.
 

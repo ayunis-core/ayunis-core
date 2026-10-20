@@ -19,4 +19,14 @@ Use cases emit domain events → `WebhookDispatchListener` handles them → cons
 
 **Error handling:** Ordinary lifecycle and activity listeners log delivery failures without re-throwing, so webhook issues cannot disrupt user-facing operations. Expiry delivery propagates failures to the subscription sweep, which retries uncommitted expiries on a later run; `SubscriptionExpiredWebhookEvent` uses the subscription ID as its stable event ID so receivers can deduplicate retries. The scheduled monthly credit snapshot also propagates delivery failures to the reconciliation task so its AppSignal check-in fails and a later run can retry from the durable ledger.
 
-Add-on payloads allow `actorUserId: null` for service-originated Fynn synchronization; manual changes still identify their super admin.
+Add-on payloads allow `actorUserId: null` for service-originated External subscription synchronization; manual changes still identify their super admin.
+
+External subscription synchronization applies local domain effects transactionally under `localBillingEventContext`;
+the listener suppresses immediate HTTP dispatch for those events. Its outbox calls
+`DeliverBillingWebhookUseCase` with a stable event ID/timestamp. That use case maps
+billing events through `application/mappers`, propagates HTTP failures to the retry
+owner, and does not replay domain listeners. Legacy event delivery remains best effort.
+
+Wire event names and JSON payload schemas are owned by `@ayunis-core/connect-sdk` in `packages/core-connect-sdk`. JSON-only event payload types are inferred from that package. The HTTP adapter validates the serialized envelope before signing and sending it. Producer fixtures instantiate every concrete webhook event and are distributed with the package for Connect compatibility checks.
+
+Webhook producers bind a literal event name to the SDK-inferred payload type. User and organization mappers build explicit JSON data (ISO dates and an empty legacy password field); domain entities are never delivered directly. Payload serialization and validation run once before network retries, while signature timestamps are refreshed for each attempt.

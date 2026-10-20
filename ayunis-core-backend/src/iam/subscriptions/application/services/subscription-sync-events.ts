@@ -75,7 +75,7 @@ function cancellationEvents(
   if (
     next.cancelledAt &&
     (previous.cancelledAt?.getTime() !== next.cancelledAt.getTime() ||
-      previous.accessEndsAt?.getTime() !== next.accessEndsAt?.getTime())
+      previous.endsAt?.getTime() !== next.endsAt?.getTime())
   ) {
     events.push({
       name: SubscriptionCancelledEvent.EVENT_NAME,

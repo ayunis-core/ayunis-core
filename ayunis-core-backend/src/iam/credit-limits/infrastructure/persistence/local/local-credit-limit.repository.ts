@@ -1,3 +1,5 @@
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -31,6 +33,7 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
     @InjectRepository(DefaultUserCreditLimitRecord)
     private readonly defaultUserRepository: Repository<DefaultUserCreditLimitRecord>,
     private readonly mapper: CreditLimitMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
@@ -125,6 +128,6 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
   }
 
   async deleteByOrg(orgId: UUID): Promise<void> {
-    await this.repository.delete({ orgId });
+    await this.txHost.tx.getRepository(CreditLimitRecord).delete({ orgId });
   }
 }
