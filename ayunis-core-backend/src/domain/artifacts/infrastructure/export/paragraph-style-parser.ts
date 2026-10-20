@@ -20,7 +20,7 @@ export function parseAlignment(
 }
 
 /** Parses inline declarations without collapsing repeated properties. */
-function parseStyleDeclarations(style: string): Array<[string, string]> {
+export function parseStyleDeclarations(style: string): Array<[string, string]> {
   const declarations: Array<[string, string]> = [];
 
   for (const declaration of style.split(';')) {
