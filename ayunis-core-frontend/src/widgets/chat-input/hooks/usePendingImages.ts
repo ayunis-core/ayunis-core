@@ -1,6 +1,7 @@
 import {
   MAX_IMAGES,
   MAX_IMAGE_SIZE_BYTES,
+  MAX_TOTAL_IMAGE_SIZE_BYTES,
 } from '@/widgets/chat-input/model/image-upload-policy';
 import { useState, useCallback } from 'react';
 
@@ -15,6 +16,16 @@ export interface AddImagesResult {
   added: number;
   limitExceeded: boolean;
   oversizedRejected: boolean;
+  totalExceeded: boolean;
+}
+
+function selectWithinTotal(files: File[], attachedBytes: number): File[] {
+  let total = attachedBytes;
+  return files.filter((file) => {
+    if (total + file.size > MAX_TOTAL_IMAGE_SIZE_BYTES) return false;
+    total += file.size;
+    return true;
+  });
 }
 
 export function usePendingImages() {
@@ -30,10 +41,19 @@ export function usePendingImages() {
       const remainingSlots = MAX_IMAGES - currentCount;
 
       if (remainingSlots <= 0) {
-        return { added: 0, limitExceeded: true, oversizedRejected };
+        return {
+          added: 0,
+          limitExceeded: true,
+          oversizedRejected,
+          totalExceeded: false,
+        };
       }
 
-      const filesToAdd = imagesWithinSizeLimit.slice(0, remainingSlots);
+      const candidates = imagesWithinSizeLimit.slice(0, remainingSlots);
+      const filesToAdd = selectWithinTotal(
+        candidates,
+        pendingImages.reduce((sum, img) => sum + img.file.size, 0),
+      );
       const newImages = filesToAdd.map((file) => {
         // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
         const id = `${Date.now()}-${Math.random()}`;
@@ -48,9 +68,10 @@ export function usePendingImages() {
         added: newImages.length,
         limitExceeded: imagesWithinSizeLimit.length > remainingSlots,
         oversizedRejected,
+        totalExceeded: filesToAdd.length < candidates.length,
       };
     },
-    [pendingImages.length],
+    [pendingImages],
   );
 
   const removeImage = useCallback((imageId: string): void => {

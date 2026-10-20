@@ -3,7 +3,7 @@ import {
   RunUserInput,
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
-import type { SendMessageDto } from '../dto/send-message.dto';
+import type { SendMessageDto } from 'src/domain/runs/presenters/http/dto/send-message.dto';
 import type { ImageUploadData } from 'src/domain/runs/domain/run-input.entity';
 import type { UUID } from 'crypto';
 
@@ -20,7 +20,16 @@ export class RunInputMapper {
     files: Express.Multer.File[] = [],
     skillId?: UUID,
   ): RunInput {
-    // Handle tool result input
+    const pendingImages: ImageUploadData[] = files.map((file, index) => {
+      const buffer = file.buffer;
+      // Multer retains its file records until the HTTP request closes.
+      file.buffer = Buffer.alloc(0);
+      return {
+        buffer,
+        contentType: file.mimetype,
+        altText: dto.imageAltTexts?.[index],
+      };
+    });
     if (dto.toolResult) {
       return new RunToolResultInput(
         dto.toolResult.toolId,
@@ -28,13 +37,6 @@ export class RunInputMapper {
         dto.toolResult.result,
       );
     }
-
-    // Handle user input (text and/or images)
-    const pendingImages: ImageUploadData[] = files.map((file, index) => ({
-      buffer: file.buffer,
-      contentType: file.mimetype,
-      altText: dto.imageAltTexts?.[index],
-    }));
 
     return new RunUserInput(dto.text ?? '', pendingImages, skillId);
   }

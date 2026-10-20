@@ -125,6 +125,7 @@ interface Harness {
 }
 
 interface HarnessOptions {
+  canVision?: boolean;
   anonymous?: boolean;
   turns?: readonly (readonly ProviderChunk[])[];
   runtimeTools?: RuntimeTool[];
@@ -150,7 +151,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     name: overrides.modelName ?? 'claude',
     provider: 'anthropic',
     contextWindowSize: overrides.contextWindowSize,
-    canVision: false,
+    canVision: overrides.canVision ?? false,
     canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
     consumesCredits: overrides.modelConsumesCredits ?? false,
   } as unknown as LanguageModel;
@@ -456,6 +457,75 @@ function userCommand(input = new RunUserInput('Hi there')): ExecuteRunCommand {
 }
 
 describe('ExecuteRunUseCase', () => {
+  const imageInput = () =>
+    new RunUserInput('Describe the town hall', [
+      {
+        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00]),
+        contentType: 'image/jpeg',
+      },
+    ]);
+
+  it('releases original image buffers before yielding the saved message or starting inference', async () => {
+    const input = imageInput();
+    const { useCase, provider, createUser } = buildHarness({ canVision: true });
+    let save!: (message: UserMessage) => void;
+    let started!: () => void;
+    const storing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const saved = new Promise<UserMessage>((resolve) => {
+      save = resolve;
+    });
+    createUser.mockImplementation(() => {
+      started();
+      return saved;
+    });
+    const stream = await useCase.execute(userCommand(input));
+    const first = stream.next();
+    const message = new UserMessage({ threadId, content: [] });
+    try {
+      await storing;
+      expect(input.pendingImages).toHaveLength(1);
+      save(message);
+      expect((await first).value).toBe(message);
+      expect(input.pendingImages).toEqual([]);
+      expect(provider.requests).toHaveLength(0);
+    } finally {
+      save(message);
+      await first;
+      await stream.return('aborted');
+    }
+  });
+
+  it('releases original image buffers when message persistence fails', async () => {
+    const input = imageInput();
+    const { useCase, createUser } = buildHarness({ canVision: true });
+    createUser.mockRejectedValue(new Error('Image storage failed'));
+    await expect(
+      drain(await useCase.execute(userCommand(input))),
+    ).rejects.toBeDefined();
+    expect(input.pendingImages).toEqual([]);
+  });
+
+  it('releases original image buffers when preparation fails', async () => {
+    const input = imageInput();
+    const { useCase, findThread } = buildHarness({ canVision: true });
+    findThread.mockRejectedValue(new Error('Thread lookup failed'));
+    await expect(useCase.execute(userCommand(input))).rejects.toBeDefined();
+    expect(input.pendingImages).toEqual([]);
+  });
+
+  it('releases original image buffers if cancelled before streaming', async () => {
+    const input = imageInput();
+    const { useCase } = buildHarness({ canVision: true });
+    const controller = new AbortController();
+    const stream = await useCase.execute(
+      new ExecuteRunCommand({ threadId, input, signal: controller.signal }),
+    );
+    controller.abort();
+    expect(await stream.next()).toEqual({ done: true, value: 'aborted' });
+    expect(input.pendingImages).toEqual([]);
+  });
   it('reads the thread for a second run only after the first run on it ended', async () => {
     let releaseFirstAnswer!: () => void;
     const firstAnswerMayFinish = new Promise<void>(

@@ -2,6 +2,7 @@ import type { ThreadRunLock } from 'src/domain/runs/application/services/thread-
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { RunStreamItem } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import type { ExecuteRunCommand } from './execute-run.command';
+import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 
 type RunStream = AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>;
 
@@ -13,6 +14,7 @@ export async function openThreadRun(
   try {
     return await lock.holdWhile(command.threadId, open, command.signal);
   } catch (error) {
+    if (command.input instanceof RunUserInput) command.input.releaseImages();
     if (!isRunCancellation(error, command.signal)) throw error;
     return abortedRun();
   }

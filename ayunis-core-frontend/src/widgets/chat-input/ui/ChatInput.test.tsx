@@ -2,7 +2,10 @@ import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { showError } from '@/shared/lib/toast';
-import { MAX_IMAGE_SIZE_BYTES } from '@/widgets/chat-input/model/image-upload-policy';
+import {
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_TOTAL_IMAGE_SIZE_BYTES,
+} from '@/widgets/chat-input/model/image-upload-policy';
 import ChatInput from './ChatInput';
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
@@ -31,6 +34,12 @@ vi.mock('./ChatInputActionBar', () => ({
 function oversizedImage(): File {
   const file = new File([''], 'permit-scan.png', { type: 'image/png' });
   Object.defineProperty(file, 'size', { value: MAX_IMAGE_SIZE_BYTES + 1 });
+  return file;
+}
+
+function imageOfSize(size: number): File {
+  const file = new File([''], 'site-photo.jpg', { type: 'image/jpeg' });
+  Object.defineProperty(file, 'size', { value: size });
   return file;
 }
 
@@ -76,6 +85,19 @@ describe('ChatInput image rejection', () => {
     });
     expect(showError).toHaveBeenCalledWith('chatInput.imageTooLarge');
     expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+  it('notifies when selected images exceed the per-message total', () => {
+    renderComposer();
+    const count = MAX_TOTAL_IMAGE_SIZE_BYTES / MAX_IMAGE_SIZE_BYTES + 1;
+    fireEvent.change(screen.getByTestId('image-picker'), {
+      target: {
+        files: Array.from({ length: count }, () =>
+          imageOfSize(MAX_IMAGE_SIZE_BYTES),
+        ),
+      },
+    });
+    expect(showError).toHaveBeenCalledWith('chatInput.imageTotalTooLarge');
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(count - 1);
   });
   it('notifies when an oversized image is pasted', () => {
     renderComposer();
