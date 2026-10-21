@@ -187,6 +187,53 @@ services:
         reservations:
           memory: 1500M
 
+  extraction:
+    build:
+      context: ./ayunis-core-extraction
+      dockerfile: Dockerfile
+    container_name: ayunis-extraction-prod
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # MinIO and Redis credentials come from the env_file (MINIO_ROOT_USER,
+    # MINIO_ROOT_PASSWORD, REDIS_PASSWORD), the same values the app uses.
+    env_file:
+      - ./ayunis-core-backend/.env
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MAX_CONCURRENT_JOBS: "4"
+    volumes:
+      - extraction-scratch:/scratch
+    networks:
+      - ayunis-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2"
+        reservations:
+          memory: 256M
+
   app:
     build:
       context: .
@@ -311,6 +358,7 @@ services:
           memory: 512M
 
 volumes:
+  extraction-scratch:
   postgres-data:
     driver: local
   minio-data:

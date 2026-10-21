@@ -26,6 +26,7 @@ ayunis-core-backend/coverage
 # Python services (not part of the JS image; built by their own Dockerfiles)
 ayunis-core-code-execution
 ayunis-core-anonymize
+ayunis-core-extraction
 
 # VCS / tooling / local dev
 .git

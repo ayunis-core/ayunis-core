@@ -1,0 +1,90 @@
+name: Extraction Service
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-extraction/**'
+      - '.github/workflows/extraction-service.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ayunis-core-extraction/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ayunis-core-extraction
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: ayunis-core-extraction/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Type check
+        run: uv run mypy
+
+      - name: Tests
+        run: uv run pytest -q
+
+      # The backend's contract test reads these files; a drift here is a contract change
+      # that must be reviewed, not silently regenerated.
+      - name: Contract files are up to date
+        run: |
+          uv run python -m scripts.export_contract
+          git diff --exit-code -- contract
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ./ayunis-core-extraction
+          file: ./ayunis-core-extraction/Dockerfile
+          push: false
+          load: true
+          tags: ayunis-core-extraction:ci
+          cache-from: type=gha,scope=extraction
+          cache-to: type=gha,scope=extraction,mode=max
+
+      - name: Image answers the health check
+        run: |
+          set -euo pipefail
+          docker run -d --name extraction -p 8000:8000 ayunis-core-extraction:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health; then
+              echo
+              docker rm -f extraction
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs extraction
+          docker rm -f extraction
+          exit 1

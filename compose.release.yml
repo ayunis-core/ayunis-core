@@ -25,3 +25,6 @@ services:
 
   anonymize:
     image: ghcr.io/ayunis-core/ayunis-core-anonymize:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}
+
+  extraction:
+    image: ghcr.io/ayunis-core/ayunis-core-extraction:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}

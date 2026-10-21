@@ -1,0 +1,49 @@
+[project]
+name = "ayunis-core-extraction"
+version = "0.1.0"
+description = "Document extraction service: PDF text layers, per-page OCR decisions and Mistral OCR by MinIO reference"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.159.0",
+    "httpx>=0.28.0",
+    "minio>=7.2.0",
+    "numpy>=2.0.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "pypdfium2>=5.0.0",
+    "redis>=5.2.0",
+    "spylls>=0.1.7",
+    "uvicorn[standard]>=0.34.0",
+]
+
+[dependency-groups]
+dev = [
+    "fakeredis[lua]>=2.26.0",
+    "mypy>=1.14.0",
+    "pillow>=11.0.0",
+    "pytest>=8.3.0",
+    "reportlab>=4.2.0",
+    "ruff>=0.9.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "C4", "N", "W", "RUF"]
+ignore = ["RUF012"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+files = ["app", "scripts", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["minio", "minio.*", "pypdfium2", "pypdfium2.*", "spylls.*", "reportlab.*", "fakeredis", "fakeredis.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

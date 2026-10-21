@@ -16,6 +16,7 @@ ayunis-core/
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
+├── ayunis-core-extraction/    # Document extraction service (PDF text layers, OCR decisions, Mistral OCR)
 ├── packages/inference/        # Provider-agnostic inference contracts
 ├── packages/agent-runtime/    # Bare agent loop and hook contracts
 ├── packages/agent-extensions/ # Composable capabilities and resource lifetime
