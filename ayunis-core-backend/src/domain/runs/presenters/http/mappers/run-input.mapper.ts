@@ -19,6 +19,7 @@ export class RunInputMapper {
     dto: SendMessageDto,
     files: Express.Multer.File[] = [],
     skillId?: UUID,
+    releaseUploads?: () => void,
   ): RunInput {
     const pendingImages: ImageUploadData[] = files.map((file, index) => {
       const buffer = file.buffer;
@@ -31,6 +32,7 @@ export class RunInputMapper {
       };
     });
     if (dto.toolResult) {
+      releaseUploads?.();
       return new RunToolResultInput(
         dto.toolResult.toolId,
         dto.toolResult.toolName,
@@ -38,6 +40,11 @@ export class RunInputMapper {
       );
     }
 
-    return new RunUserInput(dto.text ?? '', pendingImages, skillId);
+    return new RunUserInput(
+      dto.text ?? '',
+      pendingImages,
+      skillId,
+      releaseUploads,
+    );
   }
 }

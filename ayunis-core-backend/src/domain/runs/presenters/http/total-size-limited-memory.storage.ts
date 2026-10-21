@@ -1,6 +1,9 @@
 import { PayloadTooLargeException } from '@nestjs/common';
 import type { Request } from 'express';
 import type { StorageEngine } from 'multer';
+import type { ImageUploadAdmission } from './image-upload-admission';
+import { ImageUploadsBusyException } from './image-upload-admission';
+import { IMAGE_UPLOAD_RETRY_AFTER_SECONDS } from './image-upload.constants';
 
 type StorageCallback = (
   error: Error | null,
@@ -10,13 +13,25 @@ type StorageCallback = (
 export class TotalSizeLimitedMemoryStorage implements StorageEngine {
   private readonly receivedBytes = new WeakMap<Request, number>();
 
-  constructor(private readonly maxTotalBytes: number) {}
+  constructor(
+    private readonly maxTotalBytes: number,
+    private readonly admission?: ImageUploadAdmission,
+  ) {}
 
   _handleFile(
     request: Request,
     file: Pick<Express.Multer.File, 'stream'>,
     callback: StorageCallback,
   ): void {
+    if (this.admission && !this.admission.admit(request)) {
+      request.res?.setHeader(
+        'Retry-After',
+        String(IMAGE_UPLOAD_RETRY_AFTER_SECONDS),
+      );
+      callback(new ImageUploadsBusyException());
+      file.stream.resume();
+      return;
+    }
     const chunks: Buffer[] = [];
     let size = 0;
     const finish: StorageCallback = (error, info) => {

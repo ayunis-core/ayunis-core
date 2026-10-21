@@ -3,6 +3,10 @@ export const MAX_IMAGES = 10;
 // so the request may carry full-size phone photos.
 export const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB per image
 export const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100MB total
+// Each admitted request may hold the full total above plus a decoded frame
+// while its images are normalized; the cap bounds that memory per process.
+export const MAX_CONCURRENT_IMAGE_UPLOADS = 4;
+export const IMAGE_UPLOAD_RETRY_AFTER_SECONDS = 5;
 export const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',

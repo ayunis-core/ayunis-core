@@ -1,6 +1,8 @@
 import { PassThrough } from 'node:stream';
 import type { Request } from 'express';
 import { TotalSizeLimitedMemoryStorage } from './total-size-limited-memory.storage';
+import { ImageUploadAdmission } from './image-upload-admission';
+import { IMAGE_UPLOAD_RETRY_AFTER_SECONDS } from './image-upload.constants';
 
 const LIMIT = 1024;
 
@@ -55,4 +57,26 @@ it('removes completed buffers during Multer rollback', () => {
   storage._removeFile({} as Request, file, callback);
   expect(file).not.toHaveProperty('buffer');
   expect(callback).toHaveBeenCalledWith(null);
+});
+
+it('rejects the first file with 429 while the concurrent upload cap is held', async () => {
+  const admission = new ImageUploadAdmission(1);
+  const storage = new TotalSizeLimitedMemoryStorage(LIMIT, admission);
+  await receive(storage, {} as Request, Buffer.alloc(1));
+  const setHeader = jest.fn();
+  const request = {
+    res: { setHeader, once: jest.fn() },
+  } as unknown as Request;
+  const stream = new PassThrough();
+  const callback = jest.fn();
+  storage._handleFile(request, { stream }, callback);
+  expect(callback).toHaveBeenCalledWith(
+    expect.objectContaining({ status: 429 }),
+  );
+  expect(setHeader).toHaveBeenCalledWith(
+    'Retry-After',
+    String(IMAGE_UPLOAD_RETRY_AFTER_SECONDS),
+  );
+  expect(stream.readableFlowing).toBe(true);
+  expect(admission.inFlight).toBe(1);
 });
