@@ -29,6 +29,27 @@ const textEvent = {
   },
 } as CompletionEvent;
 
+// The SDK returns an EventStream: a ReadableStream of parsed events.
+const sdkStream = (
+  read: () => Promise<IteratorResult<unknown>>,
+  cancel: (reason: unknown) => Promise<void> = () => Promise.resolve(),
+) =>
+  new ReadableStream(
+    {
+      async pull(controller) {
+        const result = await read();
+        if (result.done) controller.close();
+        else controller.enqueue(result.value);
+      },
+      cancel,
+    },
+    { highWaterMark: 0 },
+  );
+
+// A read that only an explicit cancel can end, like a socket whose abort
+// signal was lost.
+const pendingForever = () => new Promise<never>(() => undefined);
+
 beforeEach(() => {
   mistralSdk.constructor.mockReset();
   mistralSdk.stream.mockReset();
@@ -38,6 +59,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -78,20 +100,13 @@ describe('mistral', () => {
     await expect(result).rejects.toBeInstanceOf(ModelProviderError);
   });
 
-  it('preserves a normalized next failure when iterator cleanup rejects', async () => {
+  it('normalizes a failure while consuming the stream', async () => {
     const cause = { statusCode: 503 };
-    const cleanup = vi.fn().mockRejectedValue(new Error('cleanup failed'));
-    const iterator = {
-      next: vi
-        .fn()
-        .mockResolvedValueOnce({ done: false, value: textEvent })
-        .mockRejectedValueOnce(cause),
-      return: cleanup,
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
-    mistralSdk.stream.mockResolvedValue(iterator);
+    const read = vi
+      .fn()
+      .mockResolvedValueOnce({ done: false, value: textEvent })
+      .mockRejectedValueOnce(cause);
+    mistralSdk.stream.mockResolvedValue(sdkStream(read));
     const provider = mistral({
       apiKey: 'sk-test',
       model: 'mistral-large-latest',
@@ -108,7 +123,6 @@ describe('mistral', () => {
       upstreamStatus: 503,
       cause,
     });
-    expect(cleanup).toHaveBeenCalledOnce();
   });
 
   it('leaves local request conversion errors raw', async () => {
@@ -169,16 +183,12 @@ describe('mistral', () => {
       },
     };
     const cleanup = vi.fn().mockRejectedValue(new Error('cleanup failed'));
-    const iterator = {
-      next: vi
-        .fn()
-        .mockResolvedValueOnce({ done: false, value: malformedEvent }),
-      return: cleanup,
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
-    mistralSdk.stream.mockResolvedValue(iterator);
+    mistralSdk.stream.mockResolvedValue(
+      sdkStream(
+        vi.fn().mockResolvedValueOnce({ done: false, value: malformedEvent }),
+        cleanup,
+      ),
+    );
     const provider = mistral({
       apiKey: 'sk-test',
       model: 'mistral-large-latest',
@@ -193,28 +203,16 @@ describe('mistral', () => {
 
   it('classifies host cancellation as an active-stream abort', async () => {
     const controller = new AbortController();
+    const cancel = vi.fn().mockResolvedValue(undefined);
     let markIterationStarted: () => void = () => undefined;
     const iterationStarted = new Promise<void>((resolve) => {
       markIterationStarted = resolve;
     });
-    mistralSdk.stream.mockImplementation(
-      (_params: unknown, options: { signal: AbortSignal }) =>
-        Promise.resolve({
-          next: () => {
-            markIterationStarted();
-            return new Promise((_, reject) => {
-              options.signal.addEventListener(
-                'abort',
-                () => reject(new DOMException('Aborted', 'AbortError')),
-                { once: true },
-              );
-            });
-          },
-          return: vi.fn().mockResolvedValue({ done: true, value: undefined }),
-          [Symbol.asyncIterator]() {
-            return this;
-          },
-        }),
+    mistralSdk.stream.mockResolvedValue(
+      sdkStream(() => {
+        markIterationStarted();
+        return pendingForever();
+      }, cancel),
     );
     const provider = mistral({
       apiKey: 'sk-test',
@@ -232,83 +230,128 @@ describe('mistral', () => {
       kind: 'abort',
       stage: 'stream_consumption',
     });
+    expect(cancel).toHaveBeenCalledOnce();
   });
 
-  it('classifies a deadline during stream establishment', async () => {
-    const deadlineController = new AbortController();
-    let markSetupStarted: () => void = () => undefined;
-    const setupStarted = new Promise<void>((resolve) => {
-      markSetupStarted = resolve;
-    });
-    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadlineController.signal);
+  it('times out a stream that does not start within the timeout', async () => {
+    vi.useFakeTimers();
     mistralSdk.stream.mockImplementation(
-      (_params: unknown, options: { signal: AbortSignal }) => {
-        markSetupStarted();
-        return new Promise((_, reject) => {
+      (_params: unknown, options: { signal: AbortSignal }) =>
+        new Promise((_, reject) => {
           options.signal.addEventListener(
             'abort',
             () => reject(new DOMException('Aborted', 'AbortError')),
             { once: true },
           );
-        });
-      },
-    );
-    const provider = mistral({
-      apiKey: 'sk-test',
-      model: 'mistral-large-latest',
-    });
-    const result = provider.stream(request)[Symbol.asyncIterator]().next();
-
-    await setupStarted;
-    deadlineController.abort();
-
-    await expect(result).rejects.toMatchObject({
-      kind: 'timeout',
-      stage: 'stream_establishment',
-      timeoutSource: 'whole_stream',
-    });
-  });
-
-  it('classifies the whole-stream deadline separately from host cancellation', async () => {
-    const deadlineController = new AbortController();
-    let markIterationStarted: () => void = () => undefined;
-    const iterationStarted = new Promise<void>((resolve) => {
-      markIterationStarted = resolve;
-    });
-    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadlineController.signal);
-    mistralSdk.stream.mockImplementation(
-      (_params: unknown, options: { signal: AbortSignal }) =>
-        Promise.resolve({
-          next: () => {
-            markIterationStarted();
-            return new Promise((_, reject) => {
-              options.signal.addEventListener(
-                'abort',
-                () => reject(new DOMException('Aborted', 'AbortError')),
-                { once: true },
-              );
-            });
-          },
-          return: vi.fn().mockResolvedValue({ done: true, value: undefined }),
-          [Symbol.asyncIterator]() {
-            return this;
-          },
         }),
     );
     const provider = mistral({
       apiKey: 'sk-test',
       model: 'mistral-large-latest',
+      timeoutMs: 1_000,
     });
     const result = provider.stream(request)[Symbol.asyncIterator]().next();
+    const assertion = expect(result).rejects.toMatchObject({
+      kind: 'timeout',
+      stage: 'stream_establishment',
+      timeoutSource: 'response_start',
+    });
 
-    await iterationStarted;
-    deadlineController.abort();
+    await vi.advanceTimersByTimeAsync(1_000);
 
-    await expect(result).rejects.toMatchObject({
+    await assertion;
+  });
+
+  it('times out a stream that sends headers but no first chunk', async () => {
+    vi.useFakeTimers();
+    const cancel = vi.fn().mockResolvedValue(undefined);
+    mistralSdk.stream.mockResolvedValue(sdkStream(pendingForever, cancel));
+    const provider = mistral({
+      apiKey: 'sk-test',
+      model: 'mistral-large-latest',
+      timeoutMs: 1_000,
+    });
+    const result = provider.stream(request)[Symbol.asyncIterator]().next();
+    const assertion = expect(result).rejects.toMatchObject({
       kind: 'timeout',
       stage: 'stream_consumption',
-      timeoutSource: 'whole_stream',
+      timeoutSource: 'response_start',
     });
+
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    await assertion;
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the deadline armed past events that yield no chunk', async () => {
+    vi.useFakeTimers();
+    const roleOnlyEvent = {
+      data: {
+        choices: [
+          {
+            index: 0,
+            delta: { role: 'assistant', content: '', toolCalls: null },
+            finishReason: null,
+          },
+        ],
+      },
+    } as CompletionEvent;
+    const read = vi
+      .fn()
+      .mockResolvedValueOnce({ done: false, value: roleOnlyEvent })
+      .mockImplementation(pendingForever);
+    mistralSdk.stream.mockResolvedValue(sdkStream(read));
+    const provider = mistral({
+      apiKey: 'sk-test',
+      model: 'mistral-large-latest',
+      timeoutMs: 1_000,
+    });
+    const result = provider.stream(request)[Symbol.asyncIterator]().next();
+    const assertion = expect(result).rejects.toMatchObject({
+      kind: 'timeout',
+      stage: 'stream_consumption',
+      timeoutSource: 'response_start',
+    });
+
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    await assertion;
+    expect(read).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets an established stream keep producing past the timeout', async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    let remaining = 5;
+    mistralSdk.stream.mockImplementation(
+      (_params: unknown, options: { signal: AbortSignal }) => {
+        signal = options.signal;
+        return Promise.resolve(
+          sdkStream(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            return remaining-- > 0
+              ? { done: false, value: textEvent }
+              : { done: true, value: undefined };
+          }),
+        );
+      },
+    );
+    const provider = mistral({
+      apiKey: 'sk-test',
+      model: 'mistral-large-latest',
+      timeoutMs: 1_000,
+    });
+    const chunks: unknown[] = [];
+    const consumed = (async () => {
+      for await (const chunk of provider.stream(request)) chunks.push(chunk);
+    })();
+
+    await vi.advanceTimersByTimeAsync(5_000);
+    await consumed;
+
+    expect(chunks).toHaveLength(5);
+    expect(signal?.aborted).toBe(false);
   });
 
   it('opens exactly one SDK stream when maxRetries is zero', async () => {

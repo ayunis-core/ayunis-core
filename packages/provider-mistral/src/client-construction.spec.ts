@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 
-import { DEFAULT_TIMEOUT_MS, mistral } from './mistral-provider';
+import { mistral } from './mistral-provider';
 
 const mistralCtor = vi.hoisted(() => vi.fn());
 
@@ -11,14 +11,20 @@ beforeEach(() => {
 });
 
 describe('mistral client construction', () => {
-  it('bounds the whole request with the default timeout', () => {
-    mistral({ apiKey: 'mistral-key', model: 'mistral-large-latest' });
+  // The SDK's timeoutMs bounds the whole request; the provider bounds only
+  // response start itself, so the SDK must not receive it.
+  it('does not hand the timeout to the SDK', () => {
+    mistral({
+      apiKey: 'mistral-key',
+      model: 'mistral-large-latest',
+      timeoutMs: 60_000,
+    });
 
     expect(mistralCtor).toHaveBeenCalledWith(
-      expect.objectContaining({
-        timeoutMs: DEFAULT_TIMEOUT_MS,
-        retryConfig: { strategy: 'none' },
-      }),
+      expect.not.objectContaining({ timeoutMs: expect.anything() }),
+    );
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ retryConfig: { strategy: 'none' } }),
     );
   });
 
@@ -42,18 +48,6 @@ describe('mistral client construction', () => {
     );
   });
 
-  it('lets the host override the timeout', () => {
-    mistral({
-      apiKey: 'mistral-key',
-      model: 'mistral-large-latest',
-      timeoutMs: 60_000,
-    });
-
-    expect(mistralCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ timeoutMs: 60_000 }),
-    );
-  });
-
   it('keeps retries configurable for direct non-streaming adapters', () => {
     mistral({
       apiKey: 'mistral-key',
@@ -73,12 +67,13 @@ describe('request deadline', () => {
   const streamOptions = async (
     request: Partial<Parameters<ReturnType<typeof mistral>['stream']>[0]>,
   ) => {
-    const stream = vi.fn().mockResolvedValue({
-      next: vi.fn().mockResolvedValue({ done: true, value: undefined }),
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    });
+    const stream = vi.fn().mockResolvedValue(
+      new ReadableStream({
+        start(controller) {
+          controller.close();
+        },
+      }),
+    );
     // A regular function, not an arrow: the SDK client is built with `new`.
     mistralCtor.mockImplementation(function () {
       return { chat: { stream } };

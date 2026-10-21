@@ -21,12 +21,11 @@ import {
   convertToolChoice,
 } from './convert-request';
 
-// Transport ceiling on the WHOLE stream, setup and consumption included. It
-// is deliberately not model-call policy: long healthy streams must fit while
-// a stalled connection is still bounded. Deadline failures are exposed with
-// `timeoutSource: 'whole_stream'`. Applied via `boundedSignal`; see there for
-// why this provider arms the deadline itself rather than letting the SDK do it.
-export const DEFAULT_TIMEOUT_MS = 300_000;
+// Bounds only how long the response may take to start (first event), like the
+// OpenAI and Anthropic providers. Consumption is unbounded here: long
+// healthy streams must not be cut off, and stalled consumption is the caller's
+// idle watchdog's job. Failures report `timeoutSource: 'response_start'`.
+export const DEFAULT_TIMEOUT_MS = 120_000;
 
 export interface MistralProviderOptions {
   apiKey: string;
@@ -38,10 +37,7 @@ export interface MistralProviderOptions {
    * direct-streaming callers must use 0. Default: 0.
    */
   maxRetries?: number;
-  /**
-   * Whole-stream transport safeguard in ms, not model-call policy. Default:
-   * 300s.
-   */
+  /** Timeout in ms until the response starts. Default: 120s. */
   timeoutMs?: number;
 }
 
@@ -56,7 +52,6 @@ export const mistral = (options: MistralProviderOptions): ModelProvider => {
   const client = new Mistral({
     apiKey: options.apiKey,
     server: 'eu',
-    timeoutMs,
     ...(options.baseUrl ? { serverURL: options.baseUrl } : {}),
     retryConfig: toRetryConfig(options.maxRetries ?? 0),
   });
@@ -87,32 +82,6 @@ const toRetryConfig = (maxRetries: number): RetryConfig => {
   };
 };
 
-/**
- * The SDK arms `AbortSignal.timeout(timeoutMs)` only when the caller supplies
- * no signal of its own (`lib/sdks.js`: `if (!fetchOptions?.signal && ...)`), so
- * a host-provided signal would silently delete the deadline. Composing the two
- * keeps `timeoutMs` meaningful whether or not the host cancels. Note this makes
- * the ceiling span the whole call rather than each retried attempt, which is
- * what "whole request" was always meant to mean.
- */
-interface BoundedSignal {
-  signal: AbortSignal;
-  deadlineSignal: AbortSignal;
-}
-
-function boundedSignal(
-  hostSignal: AbortSignal | undefined,
-  timeoutMs: number,
-): BoundedSignal {
-  const deadlineSignal = AbortSignal.timeout(timeoutMs);
-  return {
-    signal: hostSignal
-      ? AbortSignal.any([hostSignal, deadlineSignal])
-      : deadlineSignal,
-    deadlineSignal,
-  };
-}
-
 async function* streamChat(
   client: Mistral,
   model: string,
@@ -121,27 +90,109 @@ async function* streamChat(
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(model, request, codec);
-  const bounded = boundedSignal(request.signal, timeoutMs);
+  const deadline = responseStartDeadline(request.signal, timeoutMs);
   const errorOptions: NormalizeProviderErrorOptions = {
     stage: 'stream_establishment',
     signal: request.signal,
-    timeoutSource: 'whole_stream',
-    timeoutSignal: bounded.deadlineSignal,
+    timeoutSource: 'response_start',
+    timeoutSignal: deadline.timeoutSignal,
   };
-  let stream: Awaited<ReturnType<Mistral['chat']['stream']>>;
   try {
-    stream = await client.chat.stream(params, { signal: bounded.signal });
-  } catch (error) {
-    throw normalizeProviderError(error, errorOptions);
-  }
-  for await (const event of normalizeProviderStreamErrors(stream, {
-    ...errorOptions,
-    stage: 'stream_consumption',
-  })) {
-    const converted = convertChunk(event, codec);
-    if (converted) {
-      yield converted;
+    let stream: Awaited<ReturnType<Mistral['chat']['stream']>>;
+    try {
+      stream = await client.chat.stream(params, { signal: deadline.signal });
+    } catch (error) {
+      throw normalizeProviderError(error, errorOptions);
     }
+    for await (const event of normalizeProviderStreamErrors(
+      readUntilAborted(stream, deadline.signal),
+      {
+        ...errorOptions,
+        stage: 'stream_consumption',
+      },
+    )) {
+      const converted = convertChunk(event, codec);
+      if (converted) {
+        // The host's idle watchdog arms on the first yielded chunk, not on
+        // events that convert to nothing (e.g. role-only deltas).
+        deadline.clear();
+        yield converted;
+      }
+    }
+  } finally {
+    deadline.clear();
+  }
+}
+
+interface ResponseStartDeadline {
+  signal: AbortSignal;
+  timeoutSignal: AbortSignal;
+  clear: () => void;
+}
+
+/**
+ * The SDK's own `timeoutMs` would bound the whole request, consumption
+ * included, and it arms only when no signal is passed (`lib/sdks.js`). So the
+ * client gets no `timeoutMs`, and the request always carries this deadline
+ * instead. It runs until the first event, not until `chat.stream` resolves:
+ * that resolves on SSE headers, and the hosts' idle watchdogs only arm on the
+ * first chunk, so clearing earlier would leave headers-then-silence unbounded.
+ */
+function responseStartDeadline(
+  hostSignal: AbortSignal | undefined,
+  timeoutMs: number,
+): ResponseStartDeadline {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () =>
+      controller.abort(
+        new DOMException(
+          `Mistral response did not start within ${timeoutMs}ms`,
+          'TimeoutError',
+        ),
+      ),
+    timeoutMs,
+  );
+  return {
+    signal: hostSignal
+      ? AbortSignal.any([hostSignal, controller.signal])
+      : controller.signal,
+    timeoutSignal: controller.signal,
+    clear: () => clearTimeout(timer),
+  };
+}
+
+/**
+ * Once `chat.stream` resolves, aborting the request signal can no longer be
+ * trusted to reach the body read: the SDK clones the Request, and Node links a
+ * clone's signal only weakly, so after GC the abort is silently lost. Racing
+ * each read against the signal and cancelling the reader (which, unlike the
+ * async iterator's `return()`, releases a pending read and closes the socket)
+ * keeps both the deadline and host cancellation effective.
+ */
+async function* readUntilAborted<T>(
+  stream: ReadableStream<T>,
+  signal: AbortSignal,
+): AsyncIterable<T> {
+  const reader = stream.getReader();
+  let onAbort = (): void => undefined;
+  const aborted = new Promise<never>((_, reject) => {
+    // normalizeProviderError matches the signal's own reason by identity.
+    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+    onAbort = () => reject(signal.reason);
+  });
+  aborted.catch(() => undefined);
+  if (signal.aborted) onAbort();
+  signal.addEventListener('abort', onAbort, { once: true });
+  try {
+    for (;;) {
+      const result = await Promise.race([reader.read(), aborted]);
+      if (result.done) return;
+      yield result.value;
+    }
+  } finally {
+    signal.removeEventListener('abort', onAbort);
+    await reader.cancel().catch(() => undefined);
   }
 }
 
