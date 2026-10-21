@@ -90,11 +90,11 @@
     "error": "Failed to update skill. Please try again."
   },
   "delete": {
-    "success": "Skill deleted successfully!",
+    "success": "“{{name}}” was deleted.",
     "error": "Failed to delete skill. Please try again.",
     "notFound": "Skill not found. It may have been deleted.",
     "confirmTitle": "Delete Skill",
-    "confirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "confirmDescription": "Are you sure you want to delete “{{name}}”? This action cannot be undone.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },
@@ -103,5 +103,6 @@
     "description": "You can use this skill but not change it.",
     "trigger": "Trigger",
     "instructions": "Instructions"
-  }
+  },
+  "knowledgeTip": "Should the skill use a knowledge base? Name it in the instructions, for example “Use the knowledge base budget statute 2026”."
 }

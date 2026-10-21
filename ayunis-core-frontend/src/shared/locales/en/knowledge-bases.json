@@ -3,41 +3,31 @@
     "title": "Knowledge"
   },
   "tabs": {
-    "personal": "Own Knowledge Bases",
+    "own": "Own Knowledge Bases",
     "shared": "Team and organisation"
   },
   "emptyState": {
-    "title": "No knowledge bases yet",
-    "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",
     "noAccessDescription": "Ask an admin to give you permission to create your own. Knowledge bases of your teams and the organisation are under “Team and organisation”.",
     "personal": {
       "title": "No own knowledge bases yet",
-      "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
+      "description": "Upload documents to a knowledge base so Ayunis Core can use them in your chats."
     },
     "shared": {
-      "title": "No team or organisation knowledge bases yet",
-      "description": "Knowledge bases of your teams and the organisation appear here."
-    }
-  },
-  "card": {
-    "confirmDelete": {
-      "title": "Delete Knowledge Base",
-      "description": "Are you sure you want to delete \"{{title}}\"? All associated documents will also be deleted. This action cannot be undone.",
-      "confirmText": "Delete",
-      "cancelText": "Cancel"
-    }
+      "title": "Nothing from your team or the organisation yet",
+      "description": "Knowledge bases that belong to your team or the organisation appear here."
+    },
+    "search": "No knowledge base found"
   },
   "createDialog": {
-    "buttonText": "Add Knowledge Base",
-    "buttonTextFirst": "Create your first knowledge base",
+    "buttonText": "Create knowledge base",
     "title": "Create New Knowledge Base",
     "description": "Create a new knowledge base to organize documents and use them in chats.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "Enter knowledge base name...",
+      "namePlaceholder": "For example: funding guidelines 2027",
       "shortDescriptionLabel": "Description",
       "shortDescriptionPlaceholder": "Enter an optional description...",
-      "shortDescriptionHint": "A good description helps the AI understand when to use this knowledge base."
+      "shortDescriptionHint": "A good description helps Ayunis Core understand when to use this knowledge base."
     },
     "validation": {
       "nameRequired": "Name is required"
@@ -54,7 +44,7 @@
     "validationError": "Please check the knowledge base details and try again."
   },
   "delete": {
-    "success": "Knowledge base deleted successfully!",
+    "success": "“{{name}}” was deleted.",
     "error": "Failed to delete knowledge base. Please try again.",
     "notFound": "Knowledge base not found. It may have been deleted."
   },
@@ -62,9 +52,11 @@
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
     "tooltip": "Active knowledge bases are available to AI chats. Inactive knowledge bases are not used until they are activated again.",
-    "success": "Knowledge base status updated.",
     "error": "Failed to update the knowledge base status.",
-    "notFound": "Knowledge base not found. It may have been deleted."
+    "notFound": "Knowledge base not found. It may have been deleted.",
+    "switchLabel": "Knowledge base active",
+    "activeOn": "Active: Ayunis Core can use the knowledge base in chats.",
+    "activeOff": "Inactive: Ayunis Core does not use the knowledge base in chats."
   },
   "detail": {
     "properties": {
@@ -75,7 +67,7 @@
         "namePlaceholder": "Enter knowledge base name...",
         "descriptionLabel": "Description",
         "descriptionPlaceholder": "Enter an optional description...",
-        "descriptionHint": "A good description helps the AI understand when to use this knowledge base."
+        "descriptionHint": "A good description helps Ayunis Core understand when to use this knowledge base."
       },
       "buttons": {
         "save": "Save",
@@ -88,7 +80,7 @@
     "deleteLabel": "Delete",
     "confirmDelete": {
       "title": "Delete Knowledge Base",
-      "description": "Are you sure you want to delete \"{{title}}\"? All associated documents will also be deleted. This action cannot be undone.",
+      "description": "Are you sure you want to delete “{{title}}”? All documents in it are deleted too. This action cannot be undone.",
       "confirmText": "Delete",
       "cancelText": "Cancel"
     },
@@ -140,5 +132,10 @@
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A knowledge base can have at most 500 documents. Please remove one before adding another.",
     "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading documents."
-  }
+  },
+  "search": {
+    "placeholder": "Search knowledge"
+  },
+  "documentCount_one": "{{count}} document",
+  "documentCount_other": "{{count}} documents"
 }
