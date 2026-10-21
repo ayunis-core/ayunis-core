@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
@@ -193,9 +193,21 @@ def mixed(path: Path) -> None:
     pdf.save()
 
 
+def rotated(path: Path) -> None:
+    """A landscape media box with /Rotate 90: the text rectangles live in unrotated space."""
+    pdf = canvas.Canvas(str(path), pagesize=landscape(A4))
+    pdf.translate(0, WIDTH)
+    pdf.rotate(-90)
+    draw_prose(pdf, prose_lines(41, 40), heading="Gedrehte Seite")
+    pdf.setPageRotation(90)
+    pdf.showPage()
+    pdf.save()
+
+
 def small_set(directory: Path = FIXTURE_DIR) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     born_digital(directory / "born-digital.pdf", pages=3)
+    rotated(directory / "rotated.pdf")
     blank_scan(directory / "blank-scan.pdf")
     scan_no_text(directory / "scan-no-text.pdf", pages=2)
     poor_ocr_layer(directory / "poor-ocr-layer.pdf")

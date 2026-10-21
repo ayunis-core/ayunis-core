@@ -4,20 +4,24 @@ import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from app.api.models import JobProgress, ResultRef
-from app.config import RULE_VERSION
+from app.config import RULE_VERSION, Settings
 from app.errors import ServiceError
 from app.jobs.extractors import DownloadedInput, register_extractor
 from app.jobs.runtime import JobContext, JobInterruptedError
 from app.ocr.backend import OcrBackend, resolve_ocr_backend
 from app.pdf.checkpoints import Checkpoints
-from app.pdf.decision import PageDecision, decide_from_text
+from app.pdf.decision import PageDecision, apply_document_shortcut, decide_page
 from app.pdf.document import PageContent, PdfFile
+from app.pdf.signals import measure_page
+from app.pdf.wordlists import WordCache, WordLists
 from app.result import (
     DocumentInfo,
     ExtractionResult,
     PageEntry,
+    PageQuality,
     PageSize,
     Timings,
     strip_nul,
@@ -27,10 +31,27 @@ from app.storage.objects import ObjectRef
 logger = logging.getLogger(__name__)
 
 
+class _WordListRegistry:
+    """One loaded dictionary set per word-list directory, shared by every job."""
+
+    def __init__(self) -> None:
+        self._lists: dict[str | None, WordLists] = {}
+
+    def get(self, settings: Settings) -> WordLists:
+        key = settings.word_lists_dir
+        if key not in self._lists:
+            self._lists[key] = WordLists(Path(key) if key else None)
+        return self._lists[key]
+
+
+WORD_LISTS = _WordListRegistry()
+
+
 @dataclass
 class PageAnalysis:
     index: int
     decision: PageDecision
+    quality: PageQuality
     size: PageSize
 
 
@@ -42,6 +63,7 @@ class Run:
     backend: OcrBackend | None
     warnings: list[str] = field(default_factory=list)
     timings: Timings = field(default_factory=Timings)
+    word_cache: WordCache = field(default_factory=WordCache)
     started: float = field(default_factory=time.perf_counter)
 
     @property
@@ -97,6 +119,8 @@ def check_page_limit(run: Run) -> None:
 def analyse_pages(run: Run) -> dict[int, PageAnalysis]:
     """Decides every page; page text is not kept, the extraction phase reads it again."""
     analyses: dict[int, PageAnalysis] = {}
+    settings = run.context.settings
+    options = run.context.request.options
     total_chars = 0
     for index in range(run.page_count):
         if run.checkpoints.is_done(index):
@@ -104,11 +128,36 @@ def analyse_pages(run: Run) -> dict[int, PageAnalysis]:
         run.context.check()
         content = read_page(run, index)
         total_chars = check_document_chars(run, total_chars + len(content.text))
+        raster = run.pdf.render_grayscale(
+            index, settings.render_dpi, content.rects, settings.max_render_pixels
+        )
+        quality = measure_page(
+            content,
+            raster,
+            WORD_LISTS.get(settings),
+            options.language_hints,
+            settings.word_validity_min_tokens,
+            run.word_cache,
+        )
         analyses[index] = PageAnalysis(
             index=index,
-            decision=decide_from_text(content.text),
+            decision=decide_page(quality, options.ocr, settings),
+            quality=quality,
             size=PageSize(width=round(content.width, 1), height=round(content.height, 1)),
         )
+    decisions = {index: analysis.decision for index, analysis in analyses.items()}
+    # Pages a previous attempt checkpointed count towards the document's OCR share; a
+    # text_fallback page was routed to OCR by the rule too, the backend was just missing.
+    done = run.checkpoints.pages.values()
+    if apply_document_shortcut(
+        decisions,
+        settings.document_ocr_share,
+        page_count=run.page_count,
+        ocr_pages_done=sum(1 for page in done if page.method in ("ocr", "text_fallback")),
+    ):
+        run.warnings.append("ocr_document_shortcut")
+        for index, decision in decisions.items():
+            analyses[index].decision = decision
     return analyses
 
 
@@ -150,6 +199,7 @@ def extract_text_pages(run: Run, analyses: dict[int, PageAnalysis]) -> list[int]
                 method=method,
                 truncated=content is not None and content.truncated,
                 ocr_reason=analysis.decision.ocr_reason,
+                quality=analysis.quality,
                 size=analysis.size,
             )
         )
