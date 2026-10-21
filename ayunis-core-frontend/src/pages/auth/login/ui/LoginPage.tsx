@@ -30,9 +30,11 @@ import extractErrorData from '@/shared/api/extract-error-data';
 export function LoginPage({
   redirect,
   emailVerified,
+  showRegisterLink = true,
 }: Readonly<{
   redirect?: string;
   emailVerified?: boolean;
+  showRegisterLink?: boolean;
 }>) {
   const { form, onSubmit, isLoading } = useLogin({ redirect });
   const { discover, isPending: isDiscovering } = useDiscoverSso();
@@ -105,12 +107,14 @@ export function LoginPage({
           : 'login.description',
       )}
       footer={
-        <>
-          {t('login.noAccount')}{' '}
-          <Link to="/register" className="font-medium text-primary underline">
-            {t('login.createAccount')}
-          </Link>
-        </>
+        showRegisterLink && (
+          <>
+            {t('login.noAccount')}{' '}
+            <Link to="/register" className="font-medium text-primary underline">
+              {t('login.createAccount')}
+            </Link>
+          </>
+        )
       }
     >
       {showRememberedSso ? (

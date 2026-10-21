@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import LoginPage from '@/pages/auth/login';
+import { appControllerIsCloud } from '@/shared/api';
 import { meQueryOptions } from '@/shared/api/me-query-options';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import z from 'zod';
@@ -21,10 +22,21 @@ export const Route = createFileRoute('/(onboarding)/login')({
       throw redirect({ to: safeRedirectPath(search.redirect) });
     }
   },
+  loader: async () => {
+    const { isCloud, isRegistrationDisabled } = await appControllerIsCloud();
+    return { showRegisterLink: !(isCloud && isRegistrationDisabled) };
+  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { emailVerified, redirect } = Route.useSearch();
-  return <LoginPage redirect={redirect} emailVerified={emailVerified} />;
+  const { showRegisterLink } = Route.useLoaderData();
+  return (
+    <LoginPage
+      redirect={redirect}
+      emailVerified={emailVerified}
+      showRegisterLink={showRegisterLink}
+    />
+  );
 }
