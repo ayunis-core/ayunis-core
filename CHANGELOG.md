@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.58.1](https://github.com/ayunis-core/ayunis-core/compare/v2.58.0...v2.58.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **embeddings:** route mistral embeddings to the global endpoint while eu lists no embedding models (AYC-1395) ([#2034](https://github.com/ayunis-core/ayunis-core/issues/2034)) ([cb0e0a0](https://github.com/ayunis-core/ayunis-core/commit/cb0e0a0d715a3a5d5129b2723806b805b3d19dbc))
+
 ## [2.58.0](https://github.com/ayunis-core/ayunis-core/compare/v2.57.0...v2.58.0) (2026-10-20)
 
 
