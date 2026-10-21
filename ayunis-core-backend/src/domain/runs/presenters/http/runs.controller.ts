@@ -54,7 +54,10 @@ import { RequestWithSubscriptionContext } from 'src/iam/authorization/applicatio
 import { Response } from 'express';
 
 import { MAX_IMAGES } from './image-upload.constants';
-import { IMAGE_UPLOAD_OPTIONS } from './image-upload.options';
+import {
+  IMAGE_UPLOAD_ADMISSION,
+  IMAGE_UPLOAD_OPTIONS,
+} from './image-upload.options';
 import {
   SEND_MESSAGE_API_BODY,
   SEND_MESSAGE_API_OPERATION,
@@ -105,6 +108,7 @@ export class RunsController {
   @ApiResponse(SEND_MESSAGE_SSE_RESPONSE)
   @ApiResponse({ status: 400, description: 'Invalid request payload' })
   @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({ status: 429, description: 'Image uploads busy' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
@@ -142,6 +146,7 @@ export class RunsController {
             uploadedFiles,
             consumeTrialMessage,
             signal,
+            () => IMAGE_UPLOAD_ADMISSION.release(request),
           ),
         ),
     );
@@ -152,10 +157,11 @@ export class RunsController {
     files: Express.Multer.File[],
     consumeTrialMessage: boolean,
     signal: AbortSignal,
+    releaseUploads: () => void,
   ): SendMessageCommand {
     return new SendMessageCommand({
       threadId: dto.threadId,
-      input: RunInputMapper.toCommand(dto, files, dto.skillId),
+      input: RunInputMapper.toCommand(dto, files, dto.skillId, releaseUploads),
       streaming: dto.streaming ?? true,
       consumeTrialMessage,
       signal,

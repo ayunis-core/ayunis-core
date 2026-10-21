@@ -37,3 +37,31 @@ it('discards unused upload bytes on a tool-result continuation', () => {
   );
   expect(file.buffer).toHaveLength(0);
 });
+
+it('hands the upload release to the run input, which calls it with the images', () => {
+  const releaseUploads = jest.fn();
+  const file = {
+    buffer: Buffer.from('phone photo'),
+    mimetype: 'image/jpeg',
+  } as Express.Multer.File;
+  const input = RunInputMapper.toCommand(
+    { threadId: randomUUID() },
+    [file],
+    undefined,
+    releaseUploads,
+  ) as RunUserInput;
+  expect(releaseUploads).not.toHaveBeenCalled();
+  input.releaseImages();
+  expect(input.pendingImages).toEqual([]);
+  expect(releaseUploads).toHaveBeenCalledTimes(1);
+});
+
+it('releases the uploads at once on a tool-result continuation', () => {
+  const releaseUploads = jest.fn();
+  const dto = {
+    threadId: randomUUID(),
+    toolResult: { toolId: 'chart', toolName: 'bar_chart', result: '{}' },
+  } as SendMessageDto;
+  RunInputMapper.toCommand(dto, [], undefined, releaseUploads);
+  expect(releaseUploads).toHaveBeenCalledTimes(1);
+});

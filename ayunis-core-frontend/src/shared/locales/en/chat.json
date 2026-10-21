@@ -76,6 +76,7 @@
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
     "errorRestoreFailedSubmission": "Your previous message and attachments couldn't be restored because the input already contains a draft.",
     "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
+    "imageUploadsBusy": "Too many images are being uploaded right now. Please try again in a moment.",
     "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
     "errorCreditBudgetExceeded": "You have reached the credit limit for this month. Please contact your administrator.",
     "errorUserCreditLimitExceeded": "You have reached your monthly credit limit. Please contact your administrator.",
