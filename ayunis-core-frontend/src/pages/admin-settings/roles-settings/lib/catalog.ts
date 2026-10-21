@@ -29,4 +29,5 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
       'request_knowledge_transfer_org',
     ],
   },
+  { group: 'workspaces', permissions: ['create_workspaces'] },
 ];

@@ -1,45 +1,54 @@
 {
-  "title": "Roles & Permissions",
-  "description": "Choose what managers and users are allowed to do. Admins always have every permission.",
+  "overview": {
+    "title": "Roles",
+    "description": "Who each role is meant for.",
+    "scopeOrganisation": "Organisation",
+    "roles": {
+      "user": "For most employees.",
+      "manager": "For individual people who should be allowed more than users, but not everything. Applies across the whole organisation.",
+      "admin": "For the people who look after Ayunis Core in your administration. Can do everything and cannot be restricted."
+    }
+  },
+  "matrix": {
+    "title": "Permissions",
+    "description": "Choose what users and managers are allowed to do. Admins always have every permission."
+  },
   "columns": {
     "permission": "Permission",
     "user": "User",
     "manager": "Manager",
     "admin": "Admin"
   },
-  "roleHints": {
-    "user": "The default role for members. Users can do exactly what is ticked in this column, and nothing else.",
-    "manager": "A member with its own, usually wider set of permissions — grant more than users get without making someone an admin.",
-    "admin": "Full access to the organisation and to these settings. Admins always hold every permission and cannot be restricted."
-  },
   "groups": {
     "teams": "Teams",
     "skills": "Skills",
-    "knowledge_bases": "Knowledge bases"
+    "knowledge_bases": "Knowledge bases",
+    "workspaces": "Workspaces"
   },
   "permissionHints": {
     "manage_teams": "Create, rename and delete teams.",
-    "assign_users_to_teams": "Add members to a team and remove them again. Does not allow creating or deleting teams.",
-    "manage_own_skills": "Create, edit and delete your own skills, including their instructions, sources and integrations.",
-    "install_marketplace_skills": "Add skills from the Ayunis Core Marketplace to your own skills.",
+    "assign_users_to_teams": "Add members to any team and remove them again. Does not allow creating or deleting teams.",
+    "manage_own_skills": "Create, edit and delete your own skills.",
+    "install_marketplace_skills": "Install skills from the Ayunis Core Marketplace. Without this permission, Marketplace hints and the menu item are hidden.",
     "request_skill_transfer": "Make one of your own skills available to a team you belong to.",
     "request_skill_transfer_org": "Make one of your own skills available to the whole organisation.",
-    "manage_own_knowledge": "Create, edit and delete your own knowledge bases and the documents inside them.",
+    "manage_own_knowledge": "Create, edit and delete your own knowledge bases and their documents.",
     "request_knowledge_transfer": "Make one of your own knowledge bases available to a team you belong to.",
-    "request_knowledge_transfer_org": "Make one of your own knowledge bases available to the whole organisation."
+    "request_knowledge_transfer_org": "Make one of your own knowledge bases available to the whole organisation.",
+    "create_workspaces": "Create your own workspaces."
   },
   "permissions": {
     "manage_teams": "Manage teams",
-    "assign_users_to_teams": "Assign users to teams",
+    "assign_users_to_teams": "Maintain members of all teams",
     "manage_own_skills": "Manage own skills",
-    "install_marketplace_skills": "Add from the Marketplace",
+    "install_marketplace_skills": "Install from the Marketplace",
     "request_skill_transfer": "Share with own teams",
     "request_skill_transfer_org": "Share with the organisation",
     "manage_own_knowledge": "Manage own knowledge bases",
     "request_knowledge_transfer": "Share with own teams",
-    "request_knowledge_transfer_org": "Share with the organisation"
+    "request_knowledge_transfer_org": "Share with the organisation",
+    "create_workspaces": "Create workspaces"
   },
-  "adminHint": "Admins always have every permission and cannot be restricted.",
   "save": "Save changes",
   "saving": "Saving…",
   "saveSuccess": "Permissions updated",

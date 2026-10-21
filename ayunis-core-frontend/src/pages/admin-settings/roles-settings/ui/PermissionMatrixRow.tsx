@@ -26,13 +26,15 @@ export function PermissionMatrixRow({
   onToggle,
 }: Readonly<PermissionMatrixRowProps>) {
   return (
-    <TableRow>
+    <TableRow data-testid={`permission-row-${permission}`}>
       <TableCell className="font-medium">
-        <InfoHint
-          label={label}
-          hint={hint}
-          testId={`permission-hint-${permission}`}
-        />
+        <span className="inline-flex items-center gap-2">
+          <InfoHint
+            label={label}
+            hint={hint}
+            testId={`permission-hint-${permission}`}
+          />
+        </span>
       </TableCell>
       <TableCell className="text-center">
         <Checkbox

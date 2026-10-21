@@ -1,12 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import en from '@/shared/locales/en/admin-settings-roles.json';
 import de from '@/shared/locales/de/admin-settings-roles.json';
+import { ROLE_COLUMNS } from '@/pages/admin-settings/roles-settings/model/types';
 import { PERMISSION_SECTIONS } from './catalog';
 
 const LOCALES = { en, de };
 const ALL_PERMISSIONS = PERMISSION_SECTIONS.flatMap(
   (section) => section.permissions,
 );
+
+describe('permission catalog', () => {
+  it('lists the groups in matrix order', () => {
+    expect(PERMISSION_SECTIONS.map((section) => section.group)).toEqual([
+      'teams',
+      'skills',
+      'knowledge_bases',
+      'workspaces',
+    ]);
+  });
+
+  it('lists every permission once', () => {
+    expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
+  });
+});
 
 describe.each(Object.entries(LOCALES))('%s translations', (_lang, locale) => {
   it.each(ALL_PERMISSIONS)('names and explains %s', (permission) => {
@@ -17,12 +33,15 @@ describe.each(Object.entries(LOCALES))('%s translations', (_lang, locale) => {
     expect(hints[permission]).toBeTruthy();
   });
 
-  it.each(Object.keys(locale.columns).filter((c) => c !== 'permission'))(
-    'explains the %s role',
-    (role) => {
-      expect(
-        locale.roleHints[role as keyof typeof locale.roleHints],
-      ).toBeTruthy();
+  it.each(PERMISSION_SECTIONS.map((section) => section.group))(
+    'names the %s group',
+    (group) => {
+      expect(locale.groups[group]).toBeTruthy();
     },
   );
+
+  it.each(ROLE_COLUMNS)('describes the %s role', (role) => {
+    expect(locale.columns[role]).toBeTruthy();
+    expect(locale.overview.roles[role]).toBeTruthy();
+  });
 });

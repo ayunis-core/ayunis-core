@@ -8,6 +8,7 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
+import { useMyPermissions } from '@/features/permissions';
 import { PaginationWidget } from '@/widgets/pagination';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { WorkspacesContent } from './WorkspacesContent';
@@ -26,14 +27,20 @@ export default function WorkspacesPage({
 }: Readonly<WorkspacesPageProps>) {
   const { t } = useTranslation('workspaces');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+  const canCreate = can('create_workspaces');
 
-  const createButton = (
-    <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+  const createButton = canCreate && (
+    <Button
+      size="sm"
+      data-testid="workspaces-create"
+      onClick={() => setIsCreateOpen(true)}
+    >
       {t('page.addWorkspace')}
     </Button>
   );
 
-  const spotlitCreateButton = (
+  const spotlitCreateButton = createButton && (
     <OnboardingTourTarget name={TOUR_TARGET.createWorkspace}>
       {createButton}
     </OnboardingTourTarget>
@@ -61,7 +68,10 @@ export default function WorkspacesPage({
             />
           }
         >
-          <WorkspacesEmptyState action={spotlitCreateButton} />
+          <WorkspacesEmptyState
+            action={spotlitCreateButton}
+            canCreate={canCreate || isLoadingPermissions}
+          />
         </FullScreenMessageLayout>
         {createDialog}
       </AppLayout>

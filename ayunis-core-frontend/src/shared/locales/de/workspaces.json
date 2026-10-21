@@ -4,6 +4,7 @@
     "addWorkspace": "Arbeitsbereich hinzufügen",
     "emptyTitle": "Noch keine Arbeitsbereiche",
     "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
+    "emptyDescriptionNoCreate": "Sie dürfen keine Arbeitsbereiche anlegen. Wenden Sie sich an Ihre Administration.",
     "skillCount_one": "{{count}} Fähigkeit",
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeBaseCount_one": "{{count}} Wissenssammlung",

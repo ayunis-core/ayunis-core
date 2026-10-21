@@ -3,20 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateSkillMenu from './CreateSkillMenu';
 import SkillsEmptyState from './SkillsEmptyState';
 
-const mocks = vi.hoisted(() => {
-  const marketplace: { enabled: boolean; url: string | null } = {
-    enabled: true,
-    url: 'https://marketplace.ayunis.com/',
-  };
-  return { navigate: vi.fn(), marketplace, can: vi.fn(() => true) };
-});
+const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
+
+const mocks = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  marketplaceUrl: null as string | null,
+  can: vi.fn((_permission: string) => true),
+}));
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
 }));
 
 vi.mock('@/features/marketplace', () => ({
-  useMarketplaceConfig: () => mocks.marketplace,
+  useSkillMarketplaceUrl: () => mocks.marketplaceUrl,
 }));
 
 vi.mock('@/features/permissions', () => ({
@@ -51,11 +51,8 @@ function openMenu() {
 describe('CreateSkillMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.marketplace = {
-      enabled: true,
-      url: 'https://marketplace.ayunis.com/',
-    };
-    mocks.can = vi.fn(() => true);
+    mocks.marketplaceUrl = MARKETPLACE_URL;
+    mocks.can = vi.fn((_permission: string) => true);
   });
 
   afterEach(cleanup);
@@ -79,8 +76,43 @@ describe('CreateSkillMenu', () => {
     expect(screen.getByTestId('skill-editor-dialog')).toBeTruthy();
   });
 
-  it('hides the marketplace entry when no marketplace is configured', () => {
-    mocks.marketplace = { enabled: false, url: null };
+  it('offers only the marketplace to someone who may install but not create skills', () => {
+    mocks.can = vi.fn(
+      (permission: string) => permission !== 'manage_own_skills',
+    );
+    openMenu();
+
+    expect(screen.getByTestId('create-skill-marketplace')).toBeTruthy();
+    expect(screen.queryByTestId('create-skill-editor')).toBeNull();
+    expect(screen.queryByTestId('create-skill-guided')).toBeNull();
+  });
+
+  it('shows no menu without the create right and without the marketplace', () => {
+    mocks.can = vi.fn(
+      (permission: string) => permission !== 'manage_own_skills',
+    );
+    mocks.marketplaceUrl = null;
+    render(<CreateSkillMenu />);
+
+    expect(screen.queryByTestId('create-skill-menu')).toBeNull();
+  });
+
+  it('opens the marketplace from the menu when it is available', () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    openMenu();
+
+    fireEvent.click(screen.getByTestId('create-skill-marketplace'));
+
+    expect(open).toHaveBeenCalledWith(
+      MARKETPLACE_URL,
+      '_blank',
+      'noopener,noreferrer',
+    );
+    open.mockRestore();
+  });
+
+  it('hides the marketplace entry when the marketplace is unavailable to the member', () => {
+    mocks.marketplaceUrl = null;
 
     openMenu();
 
@@ -88,8 +120,9 @@ describe('CreateSkillMenu', () => {
     expect(screen.getByTestId('create-skill-guided')).toBeTruthy();
   });
 
-  it('renders nothing without the permission to manage skills', () => {
-    mocks.can = vi.fn(() => false);
+  it('renders nothing without any skill right', () => {
+    mocks.can = vi.fn((_permission: string) => false);
+    mocks.marketplaceUrl = null;
 
     render(<CreateSkillMenu />);
 
@@ -100,5 +133,16 @@ describe('CreateSkillMenu', () => {
     render(<SkillsEmptyState />);
 
     expect(screen.getByTestId('create-skill-menu')).toBeTruthy();
+  });
+
+  it('offers the marketplace on the empty page to someone who may only install skills', () => {
+    mocks.can = vi.fn(
+      (permission: string) => permission !== 'manage_own_skills',
+    );
+    render(<SkillsEmptyState />);
+
+    expect(screen.getByTestId('skills-empty-marketplace')).toBeTruthy();
+    expect(screen.queryByTestId('create-skill-menu')).toBeNull();
+    expect(screen.getByText('emptyState.noAccessDescription')).toBeTruthy();
   });
 });
