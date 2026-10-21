@@ -7,6 +7,7 @@ import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { Paginated } from 'src/common/pagination';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 
 @Injectable()
 export class ListTeamMembersUseCase {
@@ -15,12 +16,17 @@ export class ListTeamMembersUseCase {
   constructor(
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly getTeamUseCase: GetTeamUseCase,
+    private readonly teamAccess: TeamAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(query: ListTeamMembersQuery): Promise<Paginated<TeamMember>> {
     this.logger.log({ teamId: query.teamId }, 'execute');
 
+    await this.teamAccess.assertCanView({
+      teamId: query.teamId,
+      targetOrgId: query.orgId,
+    });
     await this.getTeamUseCase.execute(
       new GetTeamQuery(query.teamId, query.orgId),
     );

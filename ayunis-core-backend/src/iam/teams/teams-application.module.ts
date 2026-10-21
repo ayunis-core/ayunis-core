@@ -26,14 +26,28 @@ import { LocalTeamsRepository } from 'src/iam/teams/infrastructure/repositories/
 import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { UsersModule } from 'src/iam/users/users.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
+import { LastTeamAdminPolicy } from 'src/iam/teams/application/services/last-team-admin-policy.service';
+import { ListManageableTeamsUseCase } from 'src/iam/teams/application/use-cases/list-manageable-teams/list-manageable-teams.use-case';
+import { GetManageableTeamUseCase } from 'src/iam/teams/application/use-cases/get-manageable-team/get-manageable-team.use-case';
+import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
+import { SetTeamAdminUseCase } from 'src/iam/teams/application/use-cases/set-team-admin/set-team-admin.use-case';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TeamRecord, TeamMemberRecord]),
     forwardRef(() => UsersModule),
+    PermissionsModule,
   ],
   providers: [
     TeamMemberCreationService,
+    TeamAccessService,
+    LastTeamAdminPolicy,
+    ListManageableTeamsUseCase,
+    GetManageableTeamUseCase,
+    FindAdministeredTeamIdsUseCase,
+    SetTeamAdminUseCase,
     { provide: TeamsRepository, useClass: LocalTeamsRepository },
     { provide: TeamMembersRepository, useClass: LocalTeamMembersRepository },
     CreateTeamUseCase,
@@ -56,6 +70,10 @@ import { UsersModule } from 'src/iam/users/users.module';
     AssignUserToTeamsUseCase,
   ],
   exports: [
+    ListManageableTeamsUseCase,
+    GetManageableTeamUseCase,
+    FindAdministeredTeamIdsUseCase,
+    SetTeamAdminUseCase,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,

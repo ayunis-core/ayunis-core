@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import type { Paginated, PaginatedQueryParams } from 'src/common/pagination';
+import type { TeamAdminSummary } from 'src/iam/teams/domain/team-admin-summary';
 
 export abstract class TeamMembersRepository {
   abstract findByTeamId(
@@ -21,4 +22,14 @@ export abstract class TeamMembersRepository {
     teamIds: UUID[],
   ): Promise<Map<UUID, UUID[]>>;
   abstract countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>>;
+  abstract setTeamAdmin(
+    teamId: UUID,
+    userId: UUID,
+    isTeamAdmin: boolean,
+  ): Promise<void>;
+  abstract lockTeamAdminUserIds(teamId: UUID): Promise<UUID[]>;
+  abstract findAdminTeamIdsByUserId(userId: UUID): Promise<UUID[]>;
+  abstract findTeamAdminsByTeamIds(
+    teamIds: UUID[],
+  ): Promise<Map<UUID, TeamAdminSummary[]>>;
 }

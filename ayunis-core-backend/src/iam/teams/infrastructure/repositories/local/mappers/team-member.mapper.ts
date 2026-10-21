@@ -1,5 +1,5 @@
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
-import { TeamMemberRecord } from '../schema/team-member.record';
+import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 
 export class TeamMemberMapper {
@@ -8,6 +8,7 @@ export class TeamMemberMapper {
       id: record.id,
       teamId: record.teamId,
       userId: record.userId,
+      isTeamAdmin: record.isTeamAdmin,
       user: record.user ? UserMapper.toDomain(record.user) : undefined,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -19,6 +20,7 @@ export class TeamMemberMapper {
     record.id = domain.id;
     record.teamId = domain.teamId;
     record.userId = domain.userId;
+    record.isTeamAdmin = domain.isTeamAdmin;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

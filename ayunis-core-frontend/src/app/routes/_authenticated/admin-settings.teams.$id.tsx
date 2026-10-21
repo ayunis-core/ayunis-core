@@ -3,8 +3,8 @@ import { TeamDetailPage } from '@/pages/admin-settings/team-detail';
 import {
   teamsControllerGetTeam,
   getTeamsControllerGetTeamQueryKey,
-  teamsControllerListTeamMembers,
-  getTeamsControllerListTeamMembersQueryKey,
+  teamMembersControllerListTeamMembers,
+  getTeamMembersControllerListTeamMembersQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export const Route = createFileRoute(
@@ -18,12 +18,12 @@ export const Route = createFileRoute(
         queryFn: () => teamsControllerGetTeam(id),
       }),
       queryClient.query({
-        queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
+        queryKey: getTeamMembersControllerListTeamMembersQueryKey(id, {
           limit: 50,
           offset: 0,
         }),
         queryFn: () =>
-          teamsControllerListTeamMembers(id, { limit: 50, offset: 0 }),
+          teamMembersControllerListTeamMembers(id, { limit: 50, offset: 0 }),
       }),
     ]);
     return { team, membersResponse };

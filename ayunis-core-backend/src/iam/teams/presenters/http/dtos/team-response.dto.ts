@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 
+export class TeamAdminSummaryDto {
+  @ApiProperty({
+    description: 'The user ID of the team admin',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  userId: UUID;
+
+  @ApiProperty({
+    description: 'The name of the team admin',
+    example: 'Jonas Weber',
+  })
+  name: string;
+}
+
 export class TeamResponseDto {
   @ApiProperty({
     description: 'The unique identifier of the team',
@@ -45,4 +59,20 @@ export class TeamResponseDto {
     required: false,
   })
   memberCount?: number;
+
+  @ApiProperty({
+    description:
+      'The team admins, sorted by name. Only populated by GET /teams and GET /teams/:id.',
+    type: [TeamAdminSummaryDto],
+    required: false,
+  })
+  teamAdmins?: TeamAdminSummaryDto[];
+
+  @ApiProperty({
+    description:
+      'Whether the current user is a team admin of this team. Only populated by GET /teams/me.',
+    example: false,
+    required: false,
+  })
+  isTeamAdmin?: boolean;
 }

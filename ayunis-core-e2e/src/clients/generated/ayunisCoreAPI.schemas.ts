@@ -2060,6 +2060,13 @@ export interface UpdateTeamDto {
   modelOverrideEnabled?: boolean;
 }
 
+export interface TeamAdminSummaryDto {
+  /** The user ID of the team admin */
+  userId: string;
+  /** The name of the team admin */
+  name: string;
+}
+
 export interface TeamResponseDto {
   /** The unique identifier of the team */
   id: string;
@@ -2075,6 +2082,10 @@ export interface TeamResponseDto {
   modelOverrideEnabled: boolean;
   /** The number of members in the team. Only populated by the admin list endpoint (GET /teams). */
   memberCount?: number;
+  /** The team admins, sorted by name. Only populated by GET /teams and GET /teams/:id. */
+  teamAdmins?: TeamAdminSummaryDto[];
+  /** Whether the current user is a team admin of this team. Only populated by GET /teams/me. */
+  isTeamAdmin?: boolean;
 }
 
 /**
@@ -2100,6 +2111,8 @@ export interface TeamMemberResponseDto {
   userEmail: string;
   /** The role of the team member in the organization */
   userRole: TeamMemberResponseDtoUserRole;
+  /** Whether the member is a team admin of this team */
+  isTeamAdmin: boolean;
   /** The date when the user joined the team */
   joinedAt: string;
 }
@@ -2114,6 +2127,11 @@ export interface PaginatedTeamMembersResponseDto {
 export interface AddTeamMemberDto {
   /** The user ID to add to the team */
   userId: string;
+}
+
+export interface UpdateTeamMemberDto {
+  /** Whether the member is a team admin of this team */
+  isTeamAdmin: boolean;
 }
 
 export interface ListTeamMembersQueryDto {
@@ -5844,7 +5862,7 @@ limit?: number;
 offset?: number;
 };
 
-export type TeamsControllerListTeamMembersParams = {
+export type TeamMembersControllerListTeamMembersParams = {
 /**
  * Maximum number of items per page
  */
