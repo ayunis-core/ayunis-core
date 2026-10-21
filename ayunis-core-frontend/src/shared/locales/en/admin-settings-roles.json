@@ -2,11 +2,19 @@
   "overview": {
     "title": "Roles",
     "description": "Who each role is meant for.",
+    "names": {
+      "user": "User",
+      "manager": "Manager",
+      "admin": "Admin",
+      "teamAdmin": "Team admin"
+    },
     "scopeOrganisation": "Organisation",
+    "scopeTeam": "Team",
     "roles": {
       "user": "For most employees.",
-      "manager": "For individual people who should be allowed more than users, but not everything. Applies across the whole organisation.",
-      "admin": "For the people who look after Ayunis Core in your administration. Can do everything and cannot be restricted."
+      "manager": "For individual people who should be allowed more than users, but not everything. Applies across the whole organisation, unlike team admin.",
+      "admin": "For the people who look after Ayunis Core in your administration. Can do everything and cannot be restricted.",
+      "teamAdmin": "Appointed per team and keeps the rights of their role on top. What team admins may do in their own team is set below."
     }
   },
   "matrix": {
@@ -26,7 +34,7 @@
     "workspaces": "Workspaces"
   },
   "permissionHints": {
-    "manage_teams": "Create, rename and delete teams.",
+    "manage_teams": "Create, rename and delete teams and appoint team admins in every team.",
     "assign_users_to_teams": "Add members to any team and remove them again. Does not allow creating or deleting teams.",
     "manage_own_skills": "Create, edit and delete your own skills.",
     "install_marketplace_skills": "Install skills from the Ayunis Core Marketplace. Without this permission, Marketplace hints and the menu item are hidden.",
@@ -48,6 +56,20 @@
     "request_knowledge_transfer": "Share with own teams",
     "request_knowledge_transfer_org": "Share with the organisation",
     "create_workspaces": "Create workspaces"
+  },
+  "teamAdmins": {
+    "title": "Team admins",
+    "description": "Choose what team admins may do in their own team.",
+    "column": "Team admin",
+    "note": "Only admins can change or remove the last team admin of a team.",
+    "permissions": {
+      "team_manage_members": "Add and remove members",
+      "team_appoint_admins": "Appoint team admins"
+    },
+    "permissionHints": {
+      "team_manage_members": "Add people to their own team and remove them again.",
+      "team_appoint_admins": "Make other members of their own team team admin or take the role away again."
+    }
   },
   "save": "Save changes",
   "saving": "Saving…",

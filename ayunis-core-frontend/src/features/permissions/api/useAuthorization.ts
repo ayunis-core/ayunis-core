@@ -6,12 +6,19 @@ import { useMyTeamAdminTeamIds } from './useMyTeamAdminTeamIds';
 export function useAuthorization() {
   const { data: user, isLoading: isUserLoading } =
     useAuthenticationControllerMe();
-  const { permissions, isLoading: arePermissionsLoading } = useMyPermissions();
+  const {
+    permissions,
+    teamAdminPermissions,
+    isLoading: arePermissionsLoading,
+  } = useMyPermissions();
   const { teamAdminTeamIds, isLoading: areTeamsLoading } =
     useMyTeamAdminTeamIds();
 
   return {
-    ...createAuthorization(user?.role, permissions, teamAdminTeamIds),
+    ...createAuthorization(user?.role, permissions, {
+      teamIds: teamAdminTeamIds,
+      permissions: teamAdminPermissions,
+    }),
     isLoading: isUserLoading || arePermissionsLoading || areTeamsLoading,
   };
 }
