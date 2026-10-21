@@ -25,7 +25,6 @@ import {
   ApiBodyOptions,
   ApiParamOptions,
 } from '@nestjs/swagger';
-import * as fs from 'fs';
 import {
   cleanupTempUploadFile,
   resolveDocumentUploadMimeType,
@@ -352,11 +351,10 @@ export class KnowledgeBasesController {
     file: UploadedDocument,
     fileType: string,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
-    const fileData = await fs.promises.readFile(file.path);
     const source = await this.addDocumentUseCase.execute(
       new AddDocumentToKnowledgeBaseCommand({
         knowledgeBaseId,
-        file: { data: fileData, name: file.originalname, type: fileType },
+        file: { path: file.path, name: file.originalname, type: fileType },
       }),
     );
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);

@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { CleanupSourceProcessingUseCase } from './cleanup-source-processing.use-case';
 import { CleanupSourceProcessingCommand } from './cleanup-source-processing.command';
+import { DocumentExtractionPort } from 'src/domain/sources/application/ports/document-extraction.port';
 import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
@@ -11,6 +12,7 @@ describe('CleanupSourceProcessingUseCase', () => {
   let useCase: CleanupSourceProcessingUseCase;
   let documentProcessingPort: { cancelJob: jest.Mock };
   let urlCrawlProcessingPort: { cancelJob: jest.Mock };
+  let documentExtractionPort: { releaseOwner: jest.Mock };
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
@@ -24,6 +26,9 @@ describe('CleanupSourceProcessingUseCase', () => {
     urlCrawlProcessingPort = {
       cancelJob: jest.fn().mockResolvedValue(undefined),
     };
+    documentExtractionPort = {
+      releaseOwner: jest.fn().mockResolvedValue({ released: 0, cancelled: 0 }),
+    };
     purgeStoragePrefixesUseCase = {
       execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
     };
@@ -33,6 +38,7 @@ describe('CleanupSourceProcessingUseCase', () => {
         CleanupSourceProcessingUseCase,
         { provide: DocumentProcessingPort, useValue: documentProcessingPort },
         { provide: UrlCrawlProcessingPort, useValue: urlCrawlProcessingPort },
+        { provide: DocumentExtractionPort, useValue: documentExtractionPort },
         {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,

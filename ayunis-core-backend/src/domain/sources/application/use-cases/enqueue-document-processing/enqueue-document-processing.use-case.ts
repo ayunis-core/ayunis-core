@@ -27,6 +27,7 @@ export class EnqueueDocumentProcessingUseCase {
         orgId: command.orgId,
         userId: command.userId,
         minioPath: command.minioPath,
+        sha256: command.sha256,
         fileName: command.fileName,
         fileType: command.fileType,
       });

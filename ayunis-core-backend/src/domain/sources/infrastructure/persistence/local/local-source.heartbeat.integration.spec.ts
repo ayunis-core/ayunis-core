@@ -21,6 +21,8 @@ const sourceSchema = new EntitySchema<SourceRecord>({
     id: { type: 'uuid', primary: true },
     status: { type: 'varchar' },
     processingStartedAt: { type: 'timestamp', nullable: true },
+    processingPagesTotal: { type: 'int', nullable: true },
+    processingPagesDone: { type: 'int', nullable: true },
   },
 });
 
@@ -80,6 +82,31 @@ describe('Source processing heartbeat database guard', () => {
     expect(
       await repository.findStaleProcessingSourceIds(cutoff, 100),
     ).not.toContain(id);
+  });
+
+  it('stores page progress with the heartbeat while the source is processing', async () => {
+    const id = randomUUID();
+    await db.getRepository(SourceRecord).insert({
+      id,
+      status: SourceStatus.PROCESSING,
+      processingStartedAt: expired,
+    });
+
+    await expect(
+      repository.refreshProcessingHeartbeat(id, {
+        pagesTotal: 312,
+        pagesDone: 140,
+      }),
+    ).resolves.toBe(true);
+
+    const stored = await db.getRepository(SourceRecord).findOneByOrFail({ id });
+    expect(stored).toMatchObject({
+      processingPagesTotal: 312,
+      processingPagesDone: 140,
+    });
+    expect(stored.processingStartedAt!.getTime()).toBeGreaterThan(
+      expired.getTime(),
+    );
   });
 
   it('periodically renews stored state so real stale cleanup leaves active work alone', async () => {

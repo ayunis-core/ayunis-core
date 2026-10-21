@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { DocumentExtractionPort } from 'src/domain/sources/application/ports/document-extraction.port';
 import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
@@ -22,6 +23,7 @@ export class CleanupSourceProcessingUseCase {
   constructor(
     private readonly documentProcessingPort: DocumentProcessingPort,
     private readonly urlCrawlProcessingPort: UrlCrawlProcessingPort,
+    private readonly documentExtractionPort: DocumentExtractionPort,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
 
@@ -40,6 +42,8 @@ export class CleanupSourceProcessingUseCase {
     for (const sourceId of command.sourceIds) {
       await this.cancelJobs(sourceId);
     }
+    // Before the purge: the service deletes what it wrote and stops writing.
+    await this.releaseExtractionJobs(command);
 
     try {
       await this.purgeStoragePrefixesUseCase.execute(
@@ -53,6 +57,22 @@ export class CleanupSourceProcessingUseCase {
       this.logger.warn(
         { err: error as Error, orgId: command.orgId },
         'Failed to purge source processing storage',
+      );
+    }
+  }
+
+  private async releaseExtractionJobs(
+    command: CleanupSourceProcessingCommand,
+  ): Promise<void> {
+    try {
+      await this.documentExtractionPort.releaseOwner({
+        orgId: command.orgId,
+        sourceIds: command.sourceIds,
+      });
+    } catch (err) {
+      this.logger.warn(
+        { orgId: command.orgId, err: err as Error },
+        'Failed to release extraction jobs',
       );
     }
   }

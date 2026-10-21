@@ -5,6 +5,7 @@ export class EnqueueDocumentProcessingCommand {
   readonly orgId: UUID;
   readonly userId: UUID;
   readonly minioPath: string;
+  readonly sha256: string;
   readonly fileName: string;
   readonly fileType: string;
 
@@ -13,6 +14,7 @@ export class EnqueueDocumentProcessingCommand {
     orgId: UUID;
     userId: UUID;
     minioPath: string;
+    sha256: string;
     fileName: string;
     fileType: string;
   }) {
@@ -20,6 +22,7 @@ export class EnqueueDocumentProcessingCommand {
     this.orgId = params.orgId;
     this.userId = params.userId;
     this.minioPath = params.minioPath;
+    this.sha256 = params.sha256;
     this.fileName = params.fileName;
     this.fileType = params.fileType;
   }

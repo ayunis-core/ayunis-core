@@ -15,6 +15,9 @@ export abstract class Source {
   processingError: string | null;
   processingErrorCode: SourceProcessingErrorCode | null;
   processingStartedAt: Date | null;
+  /** Page progress reported by the extraction service; null until counted. */
+  processingPagesTotal: number | null;
+  processingPagesDone: number | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -28,6 +31,8 @@ export abstract class Source {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -40,6 +45,8 @@ export abstract class Source {
     this.processingError = params.processingError ?? null;
     this.processingErrorCode = params.processingErrorCode ?? null;
     this.processingStartedAt = params.processingStartedAt ?? null;
+    this.processingPagesTotal = params.processingPagesTotal ?? null;
+    this.processingPagesDone = params.processingPagesDone ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

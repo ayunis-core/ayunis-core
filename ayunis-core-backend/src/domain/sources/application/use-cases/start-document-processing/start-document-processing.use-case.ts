@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -23,11 +24,17 @@ import { UnexpectedSourceError } from 'src/domain/sources/application/sources.er
 import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
 import { detectFileType } from 'src/common/util/file-type';
 import { StageStopwatch } from 'src/domain/sources/application/util/stage-stopwatch';
+import { createSha256ReadStream } from 'src/common/util/sha256-read-stream';
 import {
   recordDocumentProcessingStages,
   type DocumentProcessingStage,
 } from 'src/domain/sources/application/util/document-processing-metrics.helper';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
+
+interface StagedUpload {
+  sha256: string;
+  sizeBytes: number;
+}
 
 @Injectable()
 export class StartDocumentProcessingUseCase {
@@ -87,15 +94,7 @@ export class StartDocumentProcessingUseCase {
 
     // OCR would reject an oversized PDF only after the upload round trip —
     // check the page cap here so it fails before any processing starts.
-    await timings.measure('preflight', () =>
-      this.preflightCheckUseCase.execute(
-        new PreflightCheckCommand({
-          fileData: command.fileData,
-          fileName: command.fileName,
-          fileType: command.fileType,
-        }),
-      ),
-    );
+    await timings.measure('preflight', () => this.preflight(command));
 
     const savedSource = await this.createProcessingSourceUseCase.execute(
       new CreateProcessingSourceCommand({
@@ -111,26 +110,53 @@ export class StartDocumentProcessingUseCase {
       savedSource.id,
       command.fileName,
     );
-    await timings.measure('upload', () =>
+    const upload = await timings.measure('upload', () =>
       this.uploadFileOrFail(savedSource, minioPath, command, orgId),
     );
-    await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
-    this.reportAccepted(command, savedSource, timings);
+    await this.enqueueOrFail(
+      savedSource,
+      minioPath,
+      new EnqueueDocumentProcessingCommand({
+        sourceId: savedSource.id,
+        orgId,
+        userId,
+        minioPath,
+        sha256: upload.sha256,
+        fileName: command.fileName,
+        fileType: command.fileType,
+      }),
+    );
+    this.reportAccepted(command, savedSource, timings, upload);
 
     return savedSource;
+  }
+
+  /** Only a PDF is parsed for its page count, so only a PDF is read into memory here. */
+  private async preflight(
+    command: StartDocumentProcessingCommand,
+  ): Promise<void> {
+    if (detectFileType(command.fileType, command.fileName) !== 'pdf') return;
+    await this.preflightCheckUseCase.execute(
+      new PreflightCheckCommand({
+        fileData: await fs.promises.readFile(command.filePath),
+        fileName: command.fileName,
+        fileType: command.fileType,
+      }),
+    );
   }
 
   private reportAccepted(
     command: StartDocumentProcessingCommand,
     source: FileSource,
     timings: StageStopwatch<DocumentProcessingStage>,
+    upload: StagedUpload,
   ): void {
     const fileType = detectFileType(command.fileType, command.fileName);
     this.logger.log(
       {
         sourceId: source.id,
         fileType,
-        fileSizeBytes: command.fileData.length,
+        fileSizeBytes: upload.sizeBytes,
         ...timings.report(),
       },
       'Document accepted for processing',
@@ -138,17 +164,31 @@ export class StartDocumentProcessingUseCase {
     recordDocumentProcessingStages(timings.values(), fileType);
   }
 
+  /** Streams the file into MinIO and hashes it on the way (contract §5). */
   private async uploadFileOrFail(
     source: FileSource,
     minioPath: string,
     command: StartDocumentProcessingCommand,
     orgId: UUID,
-  ): Promise<void> {
+  ): Promise<StagedUpload> {
+    const { size } = await fs.promises.stat(command.filePath);
+    const hashed = createSha256ReadStream(command.filePath);
     try {
       await this.uploadOrgObjectUseCase.execute(
-        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
+        new UploadOrgObjectCommand(
+          orgId,
+          minioPath,
+          hashed.stream,
+          undefined,
+          undefined,
+          size,
+        ),
       );
+      return { sha256: hashed.digest(), sizeBytes: size };
     } catch (error) {
+      // An upload rejected before storage read anything leaves the file
+      // open otherwise.
+      hashed.stream.destroy();
       await this.tryMarkSourceFailed(
         source,
         'Failed to upload file to storage',
@@ -161,21 +201,10 @@ export class StartDocumentProcessingUseCase {
   private async enqueueOrFail(
     source: FileSource,
     minioPath: string,
-    orgId: UUID,
-    userId: UUID,
-    command: StartDocumentProcessingCommand,
+    job: EnqueueDocumentProcessingCommand,
   ): Promise<void> {
     try {
-      await this.enqueueDocumentProcessingUseCase.execute(
-        new EnqueueDocumentProcessingCommand({
-          sourceId: source.id,
-          orgId,
-          userId,
-          minioPath,
-          fileName: command.fileName,
-          fileType: command.fileType,
-        }),
-      );
+      await this.enqueueDocumentProcessingUseCase.execute(job);
     } catch (error) {
       this.logger.error(
         {

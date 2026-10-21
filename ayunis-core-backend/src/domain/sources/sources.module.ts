@@ -14,6 +14,7 @@ import { DocumentProcessingModule } from './infrastructure/queue/document-proces
 import { DataSourceProcessingModule } from './infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from './infrastructure/queue/url-crawl.module';
 import { SpreadsheetParsingModule } from './infrastructure/parsing/spreadsheet-parsing.module';
+import { DocumentExtractionModule } from 'src/domain/sources/infrastructure/extraction/document-extraction.module';
 
 // Import all use cases
 import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
@@ -58,6 +59,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     DataSourceProcessingModule,
     UrlCrawlModule,
     SpreadsheetParsingModule,
+    DocumentExtractionModule,
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   providers: [

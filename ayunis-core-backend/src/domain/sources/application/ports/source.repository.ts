@@ -6,6 +6,11 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
+export interface SourceProcessingProgress {
+  pagesTotal: number | null;
+  pagesDone: number;
+}
+
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract findByIds(ids: UUID[]): Promise<Source[]>;
@@ -30,9 +35,13 @@ export abstract class SourceRepository {
    * Refreshes processingStartedAt so the stale-processing cron leaves a
    * long-running job alone. UPDATE-only and guarded on PROCESSING — unlike
    * save(), it can never re-insert a concurrently deleted row. Returns false
-   * when the source is gone or no longer processing.
+   * when the source is gone or no longer processing. Page progress rides on
+   * the same UPDATE when the caller has it.
    */
-  abstract refreshProcessingHeartbeat(sourceId: UUID): Promise<boolean>;
+  abstract refreshProcessingHeartbeat(
+    sourceId: UUID,
+    progress?: SourceProcessingProgress,
+  ): Promise<boolean>;
   /**
    * Writes a CSV source's parsed data. UPDATE-only — returns false instead of
    * resurrecting the row when the source was deleted mid-processing.

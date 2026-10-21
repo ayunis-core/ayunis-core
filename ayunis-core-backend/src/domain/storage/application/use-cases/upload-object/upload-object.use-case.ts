@@ -39,6 +39,7 @@ export class UploadObjectUseCase {
           command.data,
           command.options,
           bucketName,
+          command.size,
         ),
       );
 

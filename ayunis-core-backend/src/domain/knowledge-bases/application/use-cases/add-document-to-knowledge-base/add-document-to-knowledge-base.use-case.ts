@@ -54,7 +54,7 @@ export class AddDocumentToKnowledgeBaseUseCase {
     });
     const source = await this.processing.execute(
       new StartDocumentProcessingCommand({
-        fileData: file.data,
+        filePath: file.path,
         fileName: file.name,
         fileType: file.type,
       }),

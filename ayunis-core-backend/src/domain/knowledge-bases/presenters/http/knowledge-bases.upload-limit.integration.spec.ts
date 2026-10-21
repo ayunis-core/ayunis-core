@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import type { AddDocumentToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
 import { AddDocumentToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
 import {
   createUploadSurfaceHarness,
@@ -16,7 +18,17 @@ const UPLOAD_PATH = `/knowledge-bases/${KNOWLEDGE_BASE_ID}/documents`;
 jest.setTimeout(60_000);
 
 describe('knowledge base document upload limit (HTTP boundary)', () => {
-  const addDocument = { execute: jest.fn().mockResolvedValue({}) };
+  // The temp file is unlinked once the request ends, so its size is read
+  // while the use case still has it.
+  let receivedBytes: number | undefined;
+  const addDocument = {
+    execute: jest
+      .fn()
+      .mockImplementation((command: AddDocumentToKnowledgeBaseCommand) => {
+        receivedBytes = fs.statSync(command.file.path).size;
+        return Promise.resolve({});
+      }),
+  };
   const providers = [
     { provide: AddDocumentToKnowledgeBaseUseCase, useValue: addDocument },
   ];
@@ -40,7 +52,10 @@ describe('knowledge base document upload limit (HTTP boundary)', () => {
     await raisedDeployment.close();
   });
 
-  beforeEach(() => addDocument.execute.mockClear());
+  beforeEach(() => {
+    addDocument.execute.mockClear();
+    receivedBytes = undefined;
+  });
 
   it('rejects a 26 MiB document on the default limit', async () => {
     const response = await defaultDeployment.upload(
@@ -65,9 +80,10 @@ describe('knowledge base document upload limit (HTTP boundary)', () => {
         file: expect.objectContaining({
           name: 'Bebauungsplan.pdf',
           type: 'application/pdf',
-          data: expect.objectContaining({ length: OVER_DEFAULT_LIMIT_BYTES }),
+          path: expect.stringContaining('uploads'),
         }),
       }),
     );
+    expect(receivedBytes).toBe(OVER_DEFAULT_LIMIT_BYTES);
   });
 });

@@ -21,6 +21,8 @@ export abstract class DataSource extends Source {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdBy?: SourceCreator;
   }) {
     super({ ...params, type: SourceType.DATA });
@@ -43,6 +45,8 @@ export class CSVDataSource extends DataSource {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;

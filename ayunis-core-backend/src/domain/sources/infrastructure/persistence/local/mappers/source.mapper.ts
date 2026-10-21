@@ -62,6 +62,8 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          processingPagesTotal: record.processingPagesTotal,
+          processingPagesDone: record.processingPagesDone,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -78,6 +80,8 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          processingPagesTotal: record.processingPagesTotal,
+          processingPagesDone: record.processingPagesDone,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -98,6 +102,8 @@ export class SourceMapper {
       status: record.status,
       processingError: record.processingError,
       processingStartedAt: record.processingStartedAt,
+      processingPagesTotal: record.processingPagesTotal,
+      processingPagesDone: record.processingPagesDone,
       createdBy: record.createdBy,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -160,6 +166,8 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    record.processingPagesTotal = source.processingPagesTotal;
+    record.processingPagesDone = source.processingPagesDone;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.processingErrorCode = source.processingErrorCode;
     record.textType = source.textType;
@@ -240,6 +248,8 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    record.processingPagesTotal = source.processingPagesTotal;
+    record.processingPagesDone = source.processingPagesDone;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.processingErrorCode = source.processingErrorCode;
     record.dataType = source.dataType;
