@@ -57,6 +57,7 @@ describe('applyDevPortOffset', () => {
       DEV_PORT_OFFSET: '20',
       CODE_EXECUTION_SERVICE_URL: 'http://localhost:8080',
       ANONYMIZE_SERVICE_URL: 'http://localhost:8002',
+      EXTRACTION_SERVICE_URL: 'http://localhost:8003',
       GOTENBERG_URL: 'http://localhost:3100',
       FRONTEND_BASEURL: 'http://localhost:3001',
       SSO_OIDC_CALLBACK_URL: 'http://localhost:3000/api/auth/sso/oidc/callback',
@@ -66,6 +67,7 @@ describe('applyDevPortOffset', () => {
 
     expect(env.CODE_EXECUTION_SERVICE_URL).toBe('http://localhost:8100');
     expect(env.ANONYMIZE_SERVICE_URL).toBe('http://localhost:8022');
+    expect(env.EXTRACTION_SERVICE_URL).toBe('http://localhost:8023');
     expect(env.GOTENBERG_URL).toBe('http://localhost:3120');
     expect(env.FRONTEND_BASEURL).toBe('http://localhost:3021');
     expect(env.SSO_OIDC_CALLBACK_URL).toBe(

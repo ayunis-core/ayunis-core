@@ -17,6 +17,7 @@ import { frontendConfig } from './frontend.config';
 import { metricsConfig } from './metrics.config';
 import { redisConfig } from './redis.config';
 import { gotenbergConfig } from './gotenberg.config';
+import { extractionConfig } from './extraction.config';
 import { retentionConfig } from './retention.config';
 import { urlConfig } from './url.config';
 import { uploadConfig } from './upload.config';
@@ -52,6 +53,7 @@ export const rootConfigs = [
   metricsConfig,
   redisConfig,
   gotenbergConfig,
+  extractionConfig,
   retentionConfig,
   urlConfig,
   uploadConfig,

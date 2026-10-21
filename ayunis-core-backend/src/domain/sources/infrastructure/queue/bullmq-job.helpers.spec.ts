@@ -11,6 +11,10 @@ import {
   ProviderRequestRejectedError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
+import {
+  DocumentExtractionFailedError,
+  DocumentExtractionResultInvalidError,
+} from 'src/domain/sources/application/sources.errors';
 
 const mockIncrementCounter = jest.fn();
 
@@ -171,6 +175,51 @@ describe('classifyJobFailure', () => {
 
       expect(final).toBe(true);
       expect(rethrow).toBeNull();
+    });
+  });
+
+  describe('deterministic extraction failures', () => {
+    // The service keeps the failed job under its idempotency key and does
+    // not re-queue a non-retryable one, so another attempt only reads the
+    // same failed status again; settle now and open the incident once.
+    it('settles a non-retryable service failure before the last attempt', () => {
+      const failure = new DocumentExtractionFailedError(
+        'RESTART_LIMIT',
+        'lease expired twice',
+        false,
+      );
+
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), failure);
+
+      expect(final).toBe(true);
+      expect((rethrow as Error).name).toBe('UnrecoverableError');
+      expect((rethrow as Error & { code?: string }).code).toBe(
+        'EXTRACTION_FAILED',
+      );
+    });
+
+    it('settles an unreadable result object the same way', () => {
+      const failure = new DocumentExtractionResultInvalidError(
+        'unsupported schemaVersion 2',
+      );
+
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), failure);
+
+      expect(final).toBe(true);
+      expect((rethrow as Error).name).toBe('UnrecoverableError');
+    });
+
+    it('still retries a failure the service marked retryable', () => {
+      const failure = new DocumentExtractionFailedError(
+        'SERVICE_UNAVAILABLE',
+        'redis down',
+        true,
+      );
+
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), failure);
+
+      expect(final).toBe(false);
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
     });
   });
 

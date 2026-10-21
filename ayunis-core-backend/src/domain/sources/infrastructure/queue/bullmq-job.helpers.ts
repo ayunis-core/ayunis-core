@@ -4,6 +4,10 @@ import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { reportProviderUnavailableMetric } from 'src/common/errors/report-provider-unavailable-metric.helper';
+import {
+  DocumentExtractionFailedError,
+  DocumentExtractionResultInvalidError,
+} from 'src/domain/sources/application/sources.errors';
 import { isFinalAttempt, recordJobFailure } from './job-telemetry';
 
 /**
@@ -105,6 +109,19 @@ class JobUnrecoverableError extends Error {
   }
 }
 
+/**
+ * The extraction service already decided the job cannot succeed
+ * (`retryable: false`), or wrote a result this backend cannot read.
+ * Re-sending the same idempotency key only returns the same failed status,
+ * so the remaining attempts would delay the FAILED status for nothing.
+ */
+function isDeterministicExtractionFailure(error: unknown): boolean {
+  return (
+    (error instanceof DocumentExtractionFailedError && !error.retryable) ||
+    error instanceof DocumentExtractionResultInvalidError
+  );
+}
+
 export interface JobFailureOutcome {
   /** No further attempt will run, so the source must be settled as FAILED. */
   final: boolean;
@@ -159,7 +176,11 @@ function shouldScheduleRetry(
   const retryIsPointless =
     expected &&
     !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode);
-  return !retryIsPointless && !isDeterministicProviderRejection(error);
+  return (
+    !retryIsPointless &&
+    !isDeterministicProviderRejection(error) &&
+    !isDeterministicExtractionFailure(error)
+  );
 }
 
 /**

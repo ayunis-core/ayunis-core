@@ -10,6 +10,9 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
+  EXTRACTION_FAILED = 'EXTRACTION_FAILED',
+  EXTRACTION_RESULT_INVALID = 'EXTRACTION_RESULT_INVALID',
+  EXTRACTION_NOT_CONFIGURED = 'EXTRACTION_NOT_CONFIGURED',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -121,6 +124,48 @@ export class UnsupportedSourceFileTypeError extends SourceError {
       SourceErrorCode.UNSUPPORTED_SOURCE_FILE_TYPE,
       400,
       metadata,
+    );
+  }
+}
+
+/**
+ * A failure the extraction service reported that maps onto none of the
+ * document or provider errors. `retryable` decides 503 against 500, which is
+ * what classifyJobFailure and classifySourceProcessingError read.
+ */
+export class DocumentExtractionFailedError extends SourceError {
+  constructor(
+    readonly serviceCode: string,
+    message: string,
+    readonly retryable: boolean,
+    metadata?: ErrorMetadata,
+  ) {
+    super(message, SourceErrorCode.EXTRACTION_FAILED, retryable ? 503 : 500, {
+      serviceCode,
+      retryable,
+      ...metadata,
+    });
+  }
+}
+
+/** The result object does not have the shape of contract §4; a deployment mismatch, not a document fault. */
+export class DocumentExtractionResultInvalidError extends SourceError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Extraction result is invalid: ${reason}`,
+      SourceErrorCode.EXTRACTION_RESULT_INVALID,
+      500,
+      metadata,
+    );
+  }
+}
+
+export class DocumentExtractionNotConfiguredError extends SourceError {
+  constructor() {
+    super(
+      'EXTRACTION_SERVICE_URL is not configured',
+      SourceErrorCode.EXTRACTION_NOT_CONFIGURED,
+      500,
     );
   }
 }
