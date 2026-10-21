@@ -23,9 +23,11 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
 
   constructor(private readonly configService: ConfigService) {
     super();
+    // Temporarily on the global server: since 2026-10-20 the EU endpoint lists
+    // no embedding models for our workspace (`Invalid model: mistral-embed`).
+    // Restore `server: 'eu'` once Mistral re-enables them there.
     this.mistral = new Mistral({
       apiKey: this.configService.get('embeddings.mistral.apiKey'),
-      server: 'eu',
       timeoutMs: EMBEDDINGS_TIMEOUT_MS,
     });
   }

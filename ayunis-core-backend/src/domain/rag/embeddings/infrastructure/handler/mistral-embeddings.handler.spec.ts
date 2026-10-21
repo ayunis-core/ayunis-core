@@ -63,9 +63,9 @@ describe('MistralEmbeddingsHandler', () => {
     );
   });
 
-  it('targets the EU server', () => {
+  it('targets the global server', () => {
     expect(Mistral).toHaveBeenCalledWith(
-      expect.objectContaining({ server: 'eu' }),
+      expect.not.objectContaining({ server: 'eu' }),
     );
   });
 
