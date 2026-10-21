@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcademyAccessControllerExportOrgCertificatesParams,
   AcademyAccessControllerListOrgCertificatesParams,
   AcademyAccessStatusResponseDto,
   AcademyChapterResponseDto,
@@ -25897,6 +25898,197 @@ export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<Re
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAcademyAccessControllerListOrgCertificatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Every member matching the search and status filter, across all pages, with name, e-mail, status, last-passed date and renewal date.
+ * @summary Export the certificate overview as CSV
+ */
+export const academyAccessControllerExportOrgCertificates = (
+    params?: AcademyAccessControllerExportOrgCertificatesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/academy-access/org-certificates/export.csv`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerExportOrgCertificatesQueryKey = (params?: AcademyAccessControllerExportOrgCertificatesParams,) => {
+    return [
+    `/academy-access/org-certificates/export.csv`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAcademyAccessControllerExportOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerExportOrgCertificatesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>> = ({ signal }) => academyAccessControllerExportOrgCertificates(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerExportOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>>
+export type AcademyAccessControllerExportOrgCertificatesQueryError = void
+
+
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params: undefined |  AcademyAccessControllerExportOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export the certificate overview as CSV
+ */
+
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerExportOrgCertificatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The same Teilnahmebestätigung PDF the member can download themselves, for a member of the admin's own organization.
+ * @summary Download a member's participation confirmation
+ */
+export const academyAccessControllerGetOrgMemberCertificate = (
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/academy-access/org-certificates/${userId}/certificate`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerGetOrgMemberCertificateQueryKey = (userId: string,) => {
+    return [
+    `/academy-access/org-certificates/${userId}/certificate`
+    ] as const;
+    }
+
+
+export const getAcademyAccessControllerGetOrgMemberCertificateQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgMemberCertificateQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>> = ({ signal }) => academyAccessControllerGetOrgMemberCertificate(userId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerGetOrgMemberCertificateQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>>
+export type AcademyAccessControllerGetOrgMemberCertificateQueryError = void
+
+
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download a member's participation confirmation
+ */
+
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerGetOrgMemberCertificateQueryOptions(userId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -96,3 +96,33 @@ describe('convertCSVToString', () => {
     expect(data).toEqual(original.rows);
   });
 });
+
+describe('CSV export formula escaping', () => {
+  it.each(['=', '+', '-', '@', '\t', '\r'])(
+    'neutralizes a %j prefix when enabled',
+    (prefix) => {
+      const value = `${prefix}Schmidt`;
+      const csv = convertCSVToString(
+        { headers: ['Name'], rows: [[value]] },
+        { escapeFormulae: true },
+      );
+      expect(parseCSV(csv).data).toEqual([[`'${value}`]]);
+    },
+  );
+
+  it('neutralizes formula-prefixed cells containing embedded newlines', () => {
+    const value = '=SUM(1,2)\nBürgerbüro';
+    const csv = convertCSVToString(
+      { headers: ['Name'], rows: [[value]] },
+      { escapeFormulae: true },
+    );
+    expect(parseCSV(csv).data).toEqual([[`'${value}`]]);
+  });
+
+  it('preserves raw values by default', () => {
+    const rows = [['=literal'], ['Müller, "Anna"\nBüro']];
+    expect(
+      parseCSV(convertCSVToString({ headers: ['Name'], rows })).data,
+    ).toEqual(rows);
+  });
+});

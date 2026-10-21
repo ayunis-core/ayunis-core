@@ -11,11 +11,15 @@ describe('RateLimitGuard', () => {
   let configService: jest.Mocked<ConfigService>;
   const clientIp = '203.0.113.7';
 
-  function createContext(handlerName = 'create'): ExecutionContext {
+  function createContext(
+    handlerName = 'create',
+    userId?: string,
+  ): ExecutionContext {
     const request = {
       ip: clientIp,
       socket: { remoteAddress: clientIp },
       headers: {},
+      user: userId ? { id: userId, orgId: 'municipality' } : undefined,
     };
     return {
       switchToHttp: () => ({ getRequest: () => request }),
@@ -61,6 +65,21 @@ describe('RateLimitGuard', () => {
     }
 
     expect(() => guard.canActivate(createContext())).toThrow(
+      RateLimitExceededError,
+    );
+  });
+
+  it('gives authenticated administrators independent quotas behind one IP', () => {
+    configService.get.mockReturnValue(true);
+    reflector.getAllAndOverride.mockReturnValue({
+      limit: 1,
+      windowMs: 60_000,
+      keyBy: 'user',
+    });
+
+    expect(guard.canActivate(createContext('download', 'anna'))).toBe(true);
+    expect(guard.canActivate(createContext('download', 'bruno'))).toBe(true);
+    expect(() => guard.canActivate(createContext('download', 'anna'))).toThrow(
       RateLimitExceededError,
     );
   });

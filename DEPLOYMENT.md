@@ -502,6 +502,8 @@ Order a [Storage Box](https://www.hetzner.com/storage/storage-box/) and configur
 0 3 * * * BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
+Backups are always written to `BACKUP_DIR` on the host first and then synced, so they use local disk space even when `BACKUP_REMOTE` is set. `BACKUP_RETENTION` prunes only the local copies; the sync does not delete anything on the remote.
+
 **3. Verify backups are running:**
 
 ```bash
@@ -527,7 +529,7 @@ source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
 | Variable | Default | Description |
 | --- | --- | --- |
 | `BACKUP_DIR` | `/opt/ayunis/backups` | Local backup directory |
-| `BACKUP_RETENTION` | `30` | Days to keep old backups |
+| `BACKUP_RETENTION` | `5` | Days to keep local backups |
 | `BACKUP_REMOTE` | (none) | rsync target for off-site copies |
 
 ## Monitoring and Maintenance

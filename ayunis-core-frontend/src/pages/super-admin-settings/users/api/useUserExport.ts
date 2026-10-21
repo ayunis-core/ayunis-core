@@ -1,4 +1,5 @@
 import { superAdminUserExportsControllerExportUsers } from '@/shared/api';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,17 +12,7 @@ export function useUserExport() {
     setIsExporting(true);
     try {
       const data = await superAdminUserExportsControllerExportUsers();
-
-      // The response is a file blob — trigger download
-      const blob = data instanceof Blob ? data : new Blob([data]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'users-export.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      saveBlobAs(data, 'users-export.csv');
     } catch {
       showError(t('export.error'));
     } finally {

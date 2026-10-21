@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AcademyModule } from 'src/domain/academy/academy.module';
-import { AddonsModule } from '../addons/addons.module';
+import { AddonsModule } from 'src/iam/addons/addons.module';
 import { UsersModule } from 'src/iam/users/users.module';
 
 import { OrgAcademyAccessSettingsRecord } from './infrastructure/persistence/postgres/schema/org-academy-access-settings.record';
+import { AcademyCertificateMemberView } from './infrastructure/persistence/postgres/schema/academy-certificate-member-view.record';
 import { OrgAcademyAccessSettingsMapper } from './infrastructure/persistence/postgres/mappers/org-academy-access-settings.mapper';
 import { OrgAcademyAccessSettingsRepository } from './application/ports/org-academy-access-settings.repository';
 import { PostgresOrgAcademyAccessSettingsRepository } from './infrastructure/persistence/postgres/org-academy-access-settings.repository';
@@ -14,6 +15,10 @@ import { GetOrgAcademyAccessSettingsUseCase } from './application/use-cases/get-
 import { UpsertOrgAcademyAccessSettingsUseCase } from './application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.use-case';
 import { EvaluateAcademyAccessUseCase } from './application/use-cases/evaluate-academy-access/evaluate-academy-access.use-case';
 import { ListOrgCertificateStatusesUseCase } from './application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.use-case';
+import { ExportOrgCertificateStatusesUseCase } from './application/use-cases/export-org-certificate-statuses/export-org-certificate-statuses.use-case';
+import { GetOrgMemberCertificateUseCase } from './application/use-cases/get-org-member-certificate/get-org-member-certificate.use-case';
+import { OrgCertificateStatusesRepository } from './application/ports/org-certificate-statuses.repository';
+import { PostgresOrgCertificateStatusesRepository } from './infrastructure/persistence/postgres/org-certificate-statuses.repository';
 
 import { AcademyCertificateGuard } from './application/guards/academy-certificate.guard';
 import { AcademyAccessController } from './presenters/http/academy-access.controller';
@@ -25,7 +30,10 @@ import { AcademyAccessController } from './presenters/http/academy-access.contro
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrgAcademyAccessSettingsRecord]),
+    TypeOrmModule.forFeature([
+      OrgAcademyAccessSettingsRecord,
+      AcademyCertificateMemberView,
+    ]),
     AddonsModule,
     AcademyModule,
     UsersModule,
@@ -40,7 +48,13 @@ import { AcademyAccessController } from './presenters/http/academy-access.contro
     GetOrgAcademyAccessSettingsUseCase,
     UpsertOrgAcademyAccessSettingsUseCase,
     EvaluateAcademyAccessUseCase,
+    {
+      provide: OrgCertificateStatusesRepository,
+      useClass: PostgresOrgCertificateStatusesRepository,
+    },
     ListOrgCertificateStatusesUseCase,
+    ExportOrgCertificateStatusesUseCase,
+    GetOrgMemberCertificateUseCase,
     AcademyCertificateGuard,
   ],
   exports: [EvaluateAcademyAccessUseCase, AcademyCertificateGuard],

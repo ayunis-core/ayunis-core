@@ -12142,6 +12142,89 @@
         "tags": ["Academy Access"]
       }
     },
+    "/academy-access/org-certificates/export.csv": {
+      "get": {
+        "description": "Every member matching the search and status filter, across all pages, with name, e-mail, status, last-passed date and renewal date.",
+        "operationId": "AcademyAccessController_exportOrgCertificates",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search members by name or email",
+            "schema": {
+              "example": "anna",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Only return members whose certificate is in this state",
+            "schema": {
+              "$ref": "#/components/schemas/CertificateValidityStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The CSV file",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The administrator has exceeded ten CSV exports per 15 minutes"
+          }
+        },
+        "summary": "Export the certificate overview as CSV",
+        "tags": ["Academy Access"]
+      }
+    },
+    "/academy-access/org-certificates/{userId}/certificate": {
+      "get": {
+        "description": "The same Teilnahmebestätigung PDF the member can download themselves, for a member of the admin's own organization.",
+        "operationId": "AcademyAccessController_getOrgMemberCertificate",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The certificate PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The user is not a member of the organization or has not completed the academy"
+          },
+          "429": {
+            "description": "The administrator has exceeded the download quota"
+          }
+        },
+        "summary": "Download a member's participation confirmation",
+        "tags": ["Academy Access"]
+      }
+    },
     "/mfa/status": {
       "get": {
         "operationId": "MfaController_getStatus",

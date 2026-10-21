@@ -1,3 +1,4 @@
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { resolvePiiTokens } from '@/widgets/markdown';
 
 const MAX_FILENAME_LENGTH = 200;
@@ -52,14 +53,7 @@ export function downloadTextFile(file: FileDownload): void {
   const blob = new Blob([file.content], {
     type: `${MIME_TYPES[file.format]};charset=utf-8`,
   });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = file.filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  saveBlobAs(blob, file.filename);
 }
 
 export function resolveFileContent(
