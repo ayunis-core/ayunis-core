@@ -6,6 +6,7 @@ export const embeddingsConfig = registerAs('embeddings', () => ({
   },
   mistral: {
     apiKey: process.env.MISTRAL_API_KEY,
+    serverUrl: process.env.MISTRAL_EMBEDDINGS_SERVER_URL,
   },
   ayunis: {
     baseURL: process.env.AYUNIS_BASE_URL,
