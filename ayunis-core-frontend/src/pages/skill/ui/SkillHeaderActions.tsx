@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pin, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -118,12 +119,18 @@ function DeleteButton({ skill }: Readonly<{ skill: SkillResponseDto }>) {
 export function SkillHeaderActions({
   skill,
   access,
-}: Readonly<{ skill: SkillResponseDto; access: SkillAccess }>) {
+  handoverAction,
+}: Readonly<{
+  skill: SkillResponseDto;
+  access: SkillAccess;
+  handoverAction?: ReactNode;
+}>) {
   return (
     <>
       <HelpLink path="skills/" />
       {access.canUse && <ActiveSwitch skill={skill} />}
       {access.canUse && skill.isActive && <PinToggle skill={skill} />}
+      {handoverAction}
       {access.canDelete && <DeleteButton skill={skill} />}
     </>
   );

@@ -54,6 +54,8 @@ import {
   ACADEMY_LANDING_PAGE_URL,
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
+import { RequestsSidebarBadge } from './RequestsSidebarBadge';
+import { useHandoverSummary } from '@/features/resource-handover';
 import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/useMobileSidebarNavigationHandler';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -71,6 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
+  const handoverSummary = useHandoverSummary();
   useKeyboardShortcut(['j', 'Meta'], () => {
     // Mirrors the disabled "New chat" item below — otherwise the shortcut
     // bypasses the gate entirely.
@@ -99,11 +102,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.skills'),
       url: '/skills',
       icon: Sparkles,
+      openRequests: handoverSummary.skill.openRequests,
     },
     {
       title: t('sidebar.knowledge'),
       url: '/knowledge-bases',
       icon: Brain,
+      openRequests: handoverSummary.knowledge_base.openRequests,
     },
   ];
 
@@ -159,6 +164,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
+                {item.openRequests !== undefined && (
+                  <RequestsSidebarBadge
+                    count={item.openRequests}
+                    testId={`sidebar-requests-${item.url.slice(1)}`}
+                  />
+                )}
               </SidebarMenuItem>
             ))}
             {marketplaceUrl && (

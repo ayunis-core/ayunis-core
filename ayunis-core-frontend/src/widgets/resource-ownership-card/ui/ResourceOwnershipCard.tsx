@@ -13,7 +13,12 @@ import {
 export function ResourceOwnershipCard({
   kind,
   resource,
-}: Readonly<{ kind: OwnedResourceKind; resource: OwnedResource }>) {
+  reviewedFor,
+}: Readonly<{
+  kind: OwnedResourceKind;
+  resource: OwnedResource;
+  reviewedFor?: string;
+}>) {
   const copy = useOwnershipCopy(kind);
 
   return (
@@ -23,8 +28,10 @@ export function ResourceOwnershipCard({
       data-testid="ownership-card"
     >
       <ItemContent>
-        <ItemTitle>{copy.cardTitle(resource)}</ItemTitle>
-        <ItemDescription>{copy.cardSentence(resource)}</ItemDescription>
+        <ItemTitle>{copy.cardTitle(resource, reviewedFor)}</ItemTitle>
+        <ItemDescription>
+          {copy.cardSentence(resource, reviewedFor)}
+        </ItemDescription>
       </ItemContent>
     </Item>
   );

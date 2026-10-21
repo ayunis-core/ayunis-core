@@ -8,7 +8,7 @@ import {
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 const searchSchema = z.object({
-  tab: z.enum(['personal', 'shared']).optional(),
+  tab: z.enum(['personal', 'shared', 'requests']).optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/skills/')({

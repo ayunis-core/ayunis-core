@@ -38,11 +38,15 @@
     "assign_users_to_teams": "Mitglieder zu jedem Team hinzufügen und wieder entfernen. Erlaubt nicht, Teams zu erstellen oder zu löschen.",
     "manage_own_skills": "Eigene Fähigkeiten erstellen, bearbeiten und löschen.",
     "install_marketplace_skills": "Fähigkeiten aus dem Ayunis Core Marketplace installieren. Ohne dieses Recht sind Marketplace-Hinweise und der Menüpunkt ausgeblendet.",
-    "request_skill_transfer": "Eine eigene Fähigkeit für ein Team freigeben, in dem man Mitglied ist.",
-    "request_skill_transfer_org": "Eine eigene Fähigkeit für die gesamte Organisation freigeben.",
+    "request_skill_transfer": "Eine eigene Fähigkeit einem Team anbieten, in dem man Mitglied ist. Nach der Freigabe gehört sie dem Team.",
+    "request_skill_transfer_other_teams": "Eine eigene Fähigkeit auch Teams anbieten, in denen man nicht Mitglied ist. Deren Team-Admins prüfen die Anfrage.",
+    "request_skill_transfer_org": "Eine eigene Fähigkeit der ganzen Organisation anbieten. Nach der Freigabe gehört sie der Organisation.",
+    "review_all_skill_requests": "Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.",
     "manage_own_knowledge": "Eigene Wissenssammlungen und ihre Dokumente erstellen, bearbeiten und löschen.",
-    "request_knowledge_transfer": "Eine eigene Wissenssammlung für ein Team freigeben, in dem man Mitglied ist.",
-    "request_knowledge_transfer_org": "Eine eigene Wissenssammlung für die gesamte Organisation freigeben.",
+    "request_knowledge_transfer": "Eine eigene Wissenssammlung einem Team anbieten, in dem man Mitglied ist. Nach der Freigabe gehört sie dem Team.",
+    "request_knowledge_transfer_other_teams": "Eine eigene Wissenssammlung auch Teams anbieten, in denen man nicht Mitglied ist. Deren Team-Admins prüfen die Anfrage.",
+    "request_knowledge_transfer_org": "Eine eigene Wissenssammlung der ganzen Organisation anbieten. Nach der Freigabe gehört sie der Organisation.",
+    "review_all_knowledge_requests": "Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.",
     "create_workspaces": "Eigene Arbeitsbereiche anlegen.",
     "manage_org_skills": "Fähigkeiten für alle in der Organisation erstellen, bearbeiten und löschen.",
     "manage_org_knowledge": "Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen."
@@ -52,11 +56,15 @@
     "assign_users_to_teams": "Mitglieder aller Teams pflegen",
     "manage_own_skills": "Eigene Fähigkeiten verwalten",
     "install_marketplace_skills": "Aus dem Marketplace installieren",
-    "request_skill_transfer": "Mit eigenen Teams teilen",
-    "request_skill_transfer_org": "Mit der Organisation teilen",
+    "request_skill_transfer": "An eigene Teams übergeben",
+    "request_skill_transfer_other_teams": "An andere Teams übergeben",
+    "request_skill_transfer_org": "An die Organisation übergeben",
+    "review_all_skill_requests": "Alle Anfragen beantworten",
     "manage_own_knowledge": "Eigene Wissenssammlungen verwalten",
-    "request_knowledge_transfer": "Mit eigenen Teams teilen",
-    "request_knowledge_transfer_org": "Mit der Organisation teilen",
+    "request_knowledge_transfer": "An eigene Teams übergeben",
+    "request_knowledge_transfer_other_teams": "An andere Teams übergeben",
+    "request_knowledge_transfer_org": "An die Organisation übergeben",
+    "review_all_knowledge_requests": "Alle Anfragen beantworten",
     "create_workspaces": "Arbeitsbereiche erstellen",
     "manage_org_skills": "Fähigkeiten der Organisation verwalten",
     "manage_org_knowledge": "Wissenssammlungen der Organisation verwalten"
@@ -70,13 +78,15 @@
       "team_manage_members": "Mitglieder hinzufügen und entfernen",
       "team_appoint_admins": "Team-Admins ernennen",
       "team_manage_skills": "Fähigkeiten für das Team verwalten",
-      "team_manage_knowledge": "Wissenssammlungen für das Team verwalten"
+      "team_manage_knowledge": "Wissenssammlungen für das Team verwalten",
+      "team_review_requests": "Anfragen an das Team beantworten"
     },
     "permissionHints": {
       "team_manage_members": "Personen ins eigene Team aufnehmen und wieder entfernen.",
       "team_appoint_admins": "Andere Mitglieder des eigenen Teams zum Team-Admin machen oder die Rolle wieder entziehen.",
       "team_manage_skills": "Fähigkeiten des Teams erstellen, bearbeiten und löschen.",
-      "team_manage_knowledge": "Wissenssammlungen des Teams erstellen, bearbeiten und löschen."
+      "team_manage_knowledge": "Wissenssammlungen des Teams erstellen, bearbeiten und löschen.",
+      "team_review_requests": "Übergaben an das eigene Team freigeben oder ablehnen."
     }
   },
   "save": "Änderungen speichern",
