@@ -1,25 +1,13 @@
 import AppLayout from '@/layouts/app-layout';
-import type {
-  KnowledgeBaseResponseDto,
-  ShareResponseDto,
-  TeamResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import { SharesTab } from '@/widgets/shares-tab';
 import {
   ResourceOwnershipCard,
   showsOwnershipCard,
 } from '@/widgets/resource-ownership-card';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -30,7 +18,7 @@ import { Trash2 } from 'lucide-react';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
-import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
@@ -89,16 +77,6 @@ function KnowledgeBaseDeleteButton({
   );
 }
 
-function KnowledgeBaseHeaderBadge({
-  knowledgeBase,
-}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
-  const { t } = useTranslation('knowledge-bases');
-  if (knowledgeBase.isShared) {
-    return <Badge variant="secondary">{t('shared.badge')}</Badge>;
-  }
-  return knowledgeBase.viewer?.canEdit ? null : <ReadOnlyBadge />;
-}
-
 function KnowledgeBaseConfiguration({
   knowledgeBase,
 }: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
@@ -142,66 +120,11 @@ function KnowledgeBaseConfiguration({
   );
 }
 
-function OwnKnowledgeBaseTabs({
-  knowledgeBase,
-  shares,
-  userTeams,
-  initialTab,
-}: Readonly<{
-  knowledgeBase: KnowledgeBaseResponseDto;
-  shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
-  initialTab: 'config' | 'share';
-}>) {
-  const { t } = useTranslation('knowledge-bases');
-  const navigate = useNavigate();
-  const { id } = useParams({ from: '/_authenticated/knowledge-bases/$id' });
-  const handleTabChange = useCallback(
-    (value: string) => {
-      void navigate({
-        to: '/knowledge-bases/$id',
-        params: { id },
-        search: value === 'config' ? {} : { tab: value as 'share' },
-      });
-    },
-    [navigate, id],
-  );
-
-  return (
-    <Tabs value={initialTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList>
-        <TabsTrigger value="config">{t('tabs.configuration')}</TabsTrigger>
-        <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="config" className="mt-4">
-        <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
-      </TabsContent>
-      <TabsContent value="share" className="mt-4">
-        <SharesTab
-          entityType="knowledge_base"
-          entityId={knowledgeBase.id}
-          shares={shares}
-          userTeams={userTeams}
-        />
-      </TabsContent>
-    </Tabs>
-  );
-}
-
 export function KnowledgeBasePage({
   knowledgeBase,
-  shares,
-  userTeams,
-  initialTab = 'config',
-}: Readonly<{
-  knowledgeBase: KnowledgeBaseResponseDto;
-  shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
-  initialTab?: 'config' | 'share';
-}>) {
+}: Readonly<{ knowledgeBase: KnowledgeBaseResponseDto }>) {
   const { t } = useTranslation('knowledge-bases');
-  const isOwnPersonal =
-    knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
+  const canEdit = knowledgeBase.viewer?.canEdit ?? false;
   const canUse = knowledgeBase.viewer?.canUse ?? true;
   const canDelete = knowledgeBase.viewer?.canDelete ?? false;
 
@@ -214,7 +137,7 @@ export function KnowledgeBasePage({
               { label: t('page.title'), href: '/knowledge-bases' },
               { label: knowledgeBase.name },
             ]}
-            badge={<KnowledgeBaseHeaderBadge knowledgeBase={knowledgeBase} />}
+            badge={canEdit ? null : <ReadOnlyBadge />}
             action={
               <>
                 {canUse && (
@@ -232,16 +155,7 @@ export function KnowledgeBasePage({
           />
         }
         contentArea={
-          isOwnPersonal ? (
-            <OwnKnowledgeBaseTabs
-              knowledgeBase={knowledgeBase}
-              shares={shares}
-              userTeams={userTeams}
-              initialTab={initialTab}
-            />
-          ) : (
-            <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
-          )
+          <KnowledgeBaseConfiguration knowledgeBase={knowledgeBase} />
         }
       />
     </AppLayout>

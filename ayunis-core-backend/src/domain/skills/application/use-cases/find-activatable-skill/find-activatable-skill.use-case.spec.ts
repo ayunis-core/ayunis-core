@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
@@ -31,7 +30,6 @@ function fixture() {
     findOne: jest.fn().mockResolvedValue(null),
     findById: jest.fn().mockResolvedValue(null),
   };
-  const findShare = { execute: jest.fn().mockResolvedValue(null) };
   const principal = { userId, orgId };
   const context = {
     get: jest.fn((key: keyof typeof principal) => principal[key]),
@@ -41,7 +39,6 @@ function fixture() {
   };
   const useCase = new FindActivatableSkillUseCase(
     repository as unknown as SkillRepository,
-    findShare as unknown as FindShareByEntityUseCase,
     context as unknown as ContextService,
     authorization as unknown as SkillAuthorizationService,
   );
@@ -51,7 +48,6 @@ function fixture() {
     thread,
     repository,
     context,
-    findShare,
     authorization,
     userId,
   };
@@ -125,25 +121,33 @@ describe(FindActivatableSkillUseCase.name, () => {
     expect(repository.findByIds).not.toHaveBeenCalled();
   });
 
-  it.each(['owned', 'shared'] as const)(
-    'returns an accessible %s personal skill',
-    async (accessType) => {
-      const { useCase, thread, repository, findShare, userId } = fixture();
-      thread.workspaceId = null;
-      const skill = new PersonalSkill({
-        name: 'Legal research',
-        shortDescription: 'Research legal topics',
-        instructions: 'Review the applicable regulations.',
-        userId: accessType === 'owned' ? userId : randomUUID(),
-      });
-      if (accessType === 'owned') repository.findOne.mockResolvedValue(skill);
-      else {
-        findShare.execute.mockResolvedValue({ id: randomUUID() });
-        repository.findByIds.mockResolvedValue([skill]);
-      }
-      await expect(
-        useCase.execute({ skillId: skill.id, thread }),
-      ).resolves.toBe(skill);
-    },
-  );
+  it('returns an owned personal skill', async () => {
+    const { useCase, thread, repository, userId } = fixture();
+    thread.workspaceId = null;
+    const skill = new PersonalSkill({
+      name: 'Legal research',
+      shortDescription: 'Research legal topics',
+      instructions: 'Review the applicable regulations.',
+      userId,
+    });
+    repository.findOne.mockResolvedValue(skill);
+    await expect(useCase.execute({ skillId: skill.id, thread })).resolves.toBe(
+      skill,
+    );
+  });
+
+  it('does not activate another person’s personal skill', async () => {
+    const { useCase, thread, repository } = fixture();
+    thread.workspaceId = null;
+    const skill = new PersonalSkill({
+      name: 'Legal research',
+      shortDescription: 'Research legal topics',
+      instructions: 'Review the applicable regulations.',
+      userId: randomUUID(),
+    });
+    repository.findById.mockResolvedValue(skill);
+    await expect(
+      useCase.execute({ skillId: skill.id, thread }),
+    ).rejects.toBeInstanceOf(SkillNotFoundError);
+  });
 });

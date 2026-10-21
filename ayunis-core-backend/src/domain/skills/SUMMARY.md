@@ -6,10 +6,10 @@ Skills are reusable instruction and resource bundles that an AI assistant can ac
 
 ## Ownership and authorization
 
-- Personal reads allow the owner and recipients covered by a skill share; personal writes are owner-only and need `MANAGE_OWN_SKILLS`.
+- Personal skills are owner-only (reads and use); writes need `MANAGE_OWN_SKILLS`. Reviewers of a pending handover may view the skill, never use or change it.
 - Team and organisation skills follow the ownership module's rules (`OwnershipViewer`): members use team skills, everyone in the organisation uses organisation skills, team admins with the team right and admins change team skills, holders of `MANAGE_ORG_SKILLS` change organisation skills. A reader without change rights gets 403 on writes; anyone else gets 404.
 - Create, update, delete and source changes check rights in `SkillAuthorizationService.requireManage` and `CreateSkillUseCase`, not with route decorators, so team admins and organisation editors are not blocked by the own-skills right.
-- Team and organisation skills are active by default for everyone who can use them; a `skill_activations` row with `isActive = false` switches one off for one person. `GET /skills?ownerType=personal` lists them next to own and shared skills, with `viewer` and `ownerDescription`.
+- Team and organisation skills are active by default for everyone who can use them; a `skill_activations` row with `isActive = false` switches one off for one person. `GET /skills?ownerType=personal` lists them next to own skills, with `viewer` and `ownerDescription`.
 - Team and organisation skills cannot link knowledge bases or MCP integrations. Runs advertise them with the `team__` and `org__` slug prefixes; team slugs end with the first eight characters of the team ID (`skillSlugName`), so same-named skills of two teams stay apart, and `FindSkillByNameUseCase` resolves them by that qualified name. `edit_skill` is not offered for them.
 - Handover (handovers module): `TransferSkillOwnershipUseCase` moves a personal skill to a team or the organisation after approval, records `submittedByUserId`, unlinks its knowledge bases and MCP integrations and keeps the requester's active state. Reviewers of a pending request may view the skill and its sources through `requireView`, never use it.
 - Workspace reads, writes, and trusted execution delegate to the workspace module's exported access capabilities.
@@ -55,7 +55,7 @@ The former bodyless toggle routes and nested `/workspaces/:id/context/skills` li
 
 ## State semantics
 
-Activation is represented by `skill_activations`; pinning is stored on the same row. Personal/shared skill state is per authenticated user. Workspace skill state is workspace-wide. Team and organisation skills are active without a row; switching one off writes a row with `isActive = false` for that person. Pinning requires active state. Deactivating a personal or workspace skill deletes the activation row and therefore clears pinning. Activation and pin setters are idempotent.
+Activation is represented by `skill_activations`; pinning is stored on the same row. Personal skill state is per authenticated user. Workspace skill state is workspace-wide. Team and organisation skills are active without a row; switching one off writes a row with `isActive = false` for that person. Pinning requires active state. Deactivating a personal or workspace skill deletes the activation row and therefore clears pinning. Activation and pin setters are idempotent.
 
 ## Relations and sources
 

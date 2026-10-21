@@ -24,16 +24,16 @@ describe('mergeSkillKnowledgeBases', () => {
     expect(result.map((kb) => kb.id)).toEqual(['kb-2', 'kb-1']);
   });
 
-  it('deduplicates by id, preferring the available entry with its isShared flag', () => {
+  it('deduplicates by id, preferring the available entry with its activation state', () => {
     const available = [
-      makeKb({ id: 'kb-1', name: 'Helpcenter', isShared: true }),
+      makeKb({ id: 'kb-1', name: 'Helpcenter', isActive: true }),
     ];
     const assigned = [makeKb({ id: 'kb-1', name: 'Helpcenter' })];
 
     const result = mergeSkillKnowledgeBases(available, assigned);
 
     expect(result).toHaveLength(1);
-    expect(result[0].isShared).toBe(true);
+    expect(result[0].isActive).toBe(true);
   });
 
   it('sorts the merged list by name', () => {

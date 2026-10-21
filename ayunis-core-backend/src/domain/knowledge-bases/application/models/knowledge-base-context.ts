@@ -8,7 +8,6 @@ export interface KnowledgeBaseWithUserContext<
   T extends KnowledgeBase = KnowledgeBase,
 > {
   knowledgeBase: T;
-  isShared: boolean;
   isActive: boolean;
   viewer?: ResourceViewerRights;
   ownerDescription?: OwnerDescription;

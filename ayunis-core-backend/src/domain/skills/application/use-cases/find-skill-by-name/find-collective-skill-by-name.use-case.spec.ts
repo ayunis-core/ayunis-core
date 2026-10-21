@@ -1,7 +1,6 @@
 import { randomUUID, type UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
-import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
@@ -29,7 +28,6 @@ describe('FindSkillByNameUseCase for team skills', () => {
   const inHauptamt = teamSkill(hauptamt);
   const useCase = new FindSkillByNameUseCase(
     {} as SkillRepository,
-    {} as FindSharesByScopeUseCase,
     {} as ContextService,
     {
       findUsable: jest.fn().mockResolvedValue([inBauamt, inHauptamt]),

@@ -2,19 +2,9 @@ import { queryOptions } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerFindOne,
   getKnowledgeBasesControllerFindOneQueryKey,
-  sharesControllerGetShares,
-  getSharesControllerGetSharesQueryKey,
-  teamsControllerListMyTeams,
-  getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { CreateKnowledgeBaseShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { KnowledgeBasePage } from '@/pages/knowledge-base';
-import { z } from 'zod';
-
-const searchSchema = z.object({
-  tab: z.enum(['config', 'share']).optional(),
-});
 
 const knowledgeBaseQueryOptions = (id: string) =>
   queryOptions({
@@ -22,28 +12,8 @@ const knowledgeBaseQueryOptions = (id: string) =>
     queryFn: () => knowledgeBasesControllerFindOne(id),
   });
 
-const sharesQueryOptions = (knowledgeBaseId: string) =>
-  queryOptions({
-    queryKey: getSharesControllerGetSharesQueryKey({
-      entityId: knowledgeBaseId,
-      entityType: CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
-    }),
-    queryFn: () =>
-      sharesControllerGetShares({
-        entityId: knowledgeBaseId,
-        entityType: CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
-      }),
-  });
-
-const userTeamsQueryOptions = () =>
-  queryOptions({
-    queryKey: getTeamsControllerListMyTeamsQueryKey(),
-    queryFn: () => teamsControllerListMyTeams(),
-  });
-
 export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
-  validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
     const knowledgeBase = await queryClient.query(
       knowledgeBaseQueryOptions(id),
@@ -59,27 +29,11 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
         },
       });
     }
-    const isOwnPersonal =
-      knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
-    const shares = isOwnPersonal
-      ? await queryClient.query(sharesQueryOptions(id))
-      : [];
-    const userTeams = isOwnPersonal
-      ? await queryClient.query(userTeamsQueryOptions())
-      : [];
-    return { knowledgeBase, shares, userTeams };
+    return { knowledgeBase };
   },
 });
 
 function RouteComponent() {
-  const { knowledgeBase, shares, userTeams } = Route.useLoaderData();
-  const { tab } = Route.useSearch();
-  return (
-    <KnowledgeBasePage
-      knowledgeBase={knowledgeBase}
-      shares={shares}
-      userTeams={userTeams}
-      initialTab={tab}
-    />
-  );
+  const { knowledgeBase } = Route.useLoaderData();
+  return <KnowledgeBasePage knowledgeBase={knowledgeBase} />;
 }

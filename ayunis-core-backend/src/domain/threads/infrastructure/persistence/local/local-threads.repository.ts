@@ -422,28 +422,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
   }
 
-  async removeSourceAssignmentsByOriginSkill(params: {
-    originSkillId: UUID;
-    userIds: UUID[];
-  }): Promise<void> {
-    return this.assignments.removeSourceAssignmentsByOriginSkill(params);
-  }
-
-  async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
-    originSkillId: UUID;
-    userIds: UUID[];
-    knowledgeBaseId?: UUID;
-  }): Promise<void> {
-    return this.assignments.removeKnowledgeBaseAssignmentsByOriginSkill(params);
-  }
-
-  async removeDirectKnowledgeBaseAssignments(params: {
-    knowledgeBaseId: UUID;
-    userIds: UUID[];
-  }): Promise<void> {
-    return this.assignments.removeDirectKnowledgeBaseAssignments(params);
-  }
-
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
   ): ReturnType<

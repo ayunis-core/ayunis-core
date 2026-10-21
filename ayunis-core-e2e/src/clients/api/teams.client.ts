@@ -86,6 +86,16 @@ export async function removeTeamModelGrant(
   );
 }
 
+export async function removeTeamMember(
+  api: APIRequestContext,
+  teamId: string,
+  userId: string,
+): Promise<void> {
+  await generatedApi.teamMembersControllerRemoveTeamMember(teamId, userId, {
+    api,
+  });
+}
+
 export async function deleteTeam(
   api: APIRequestContext,
   teamId: string,

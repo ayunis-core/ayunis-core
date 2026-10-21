@@ -97,7 +97,8 @@ export default function OnboardingStepItem({
     { query: { enabled: isPinSkillStep && !locked } },
   );
   const hasPersonalSkill =
-    skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
+    skillsResponse?.data.some((skill) => skill.ownerType === 'personal') ??
+    false;
 
   const needsWorkspace = WORKSPACE_STEP_IDS.has(step.id);
   const {

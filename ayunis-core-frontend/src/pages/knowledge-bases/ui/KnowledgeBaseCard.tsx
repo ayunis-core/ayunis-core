@@ -1,5 +1,4 @@
 import { Button } from '@ayunis/ui/components/button';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
 import { OwnerBadge } from '@/features/resource-ownership';
@@ -37,7 +36,6 @@ export default function KnowledgeBaseCard({
     });
   }
 
-  const isShared = knowledgeBase.isShared;
   const canUse = knowledgeBase.viewer?.canUse ?? true;
   const canDelete = knowledgeBase.viewer?.canDelete ?? false;
 
@@ -51,15 +49,6 @@ export default function KnowledgeBaseCard({
             resource={knowledgeBase}
             testId={`knowledge-base-owner-${knowledgeBase.id}`}
           />
-          {isShared && (
-            <Badge
-              variant="secondary"
-              className="ml-2 text-xs"
-              data-testid={`knowledge-base-shared-badge-${knowledgeBase.id}`}
-            >
-              {t('shared.badge')}
-            </Badge>
-          )}
         </>
       }
       description={knowledgeBase.description}
