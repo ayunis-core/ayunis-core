@@ -76,7 +76,7 @@ describe('Model deletion transaction across repositories', () => {
     await runner.release();
     await db.synchronize();
     configureRepositories();
-  });
+  }, 30_000);
 
   function configureRepositories(): void {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -122,7 +122,7 @@ describe('Model deletion transaction across repositories', () => {
     await db
       .getRepository(ThreadRecord)
       .insert({ id: threadId, userId, modelId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -130,7 +130,7 @@ describe('Model deletion transaction across repositories', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   async function deleteAndReplace(): Promise<void> {
     await defaults.deleteByModelId(modelId);

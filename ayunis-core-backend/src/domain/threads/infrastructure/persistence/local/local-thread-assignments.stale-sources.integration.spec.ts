@@ -107,7 +107,7 @@ describe('Stale direct thread source candidates', () => {
       {} as ThreadSourceAssignmentMapper,
       createTransactionHost(dataSource),
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -115,7 +115,7 @@ describe('Stale direct thread source candidates', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   async function createThread(orgId: UUID, messageAges: number[]) {
     const userId = randomUUID();

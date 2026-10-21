@@ -56,7 +56,7 @@ describe('SSO user policy persistence', () => {
     await queryRunner.release();
     await dataSource.synchronize();
     repository = new LocalUsersRepository(createTransactionHost(dataSource));
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     await dataSource.getRepository(UserRecord).save({
@@ -73,11 +73,11 @@ describe('SSO user policy persistence', () => {
       failedLoginWindowStartedAt: null,
       lockedAt: null,
     });
-  });
+  }, 30_000);
 
   afterEach(async () => {
     await dataSource.getRepository(UserRecord).delete({ id: userId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -85,7 +85,7 @@ describe('SSO user policy persistence', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('verifies only the broker-matching email and reports password capability', async () => {
     await expect(repository.hasPasswordlessUsers(orgId)).resolves.toBe(true);

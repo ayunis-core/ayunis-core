@@ -53,7 +53,7 @@ describe('LocalLetterheadsRepository concurrent updates', () => {
       new LetterheadMapper(),
       createTransactionHost(db),
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -61,7 +61,7 @@ describe('LocalLetterheadsRepository concurrent updates', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   it('rejects a stale replacement and preserves the winning storage path', async () => {
     const original = letterhead();

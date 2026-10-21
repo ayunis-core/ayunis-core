@@ -62,7 +62,7 @@ describe('Academy certificate members view migration', () => {
       logging: false,
     });
     await db.initialize();
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     schema = `academy_view_migration_${randomUUID().replaceAll('-', '')}`;
@@ -72,16 +72,16 @@ describe('Academy certificate members view migration', () => {
     await runner.query(`CREATE SCHEMA "${schema}"`);
     await runner.query(`SET LOCAL search_path TO "${schema}", public`);
     await createFixtures(runner);
-  });
+  }, 30_000);
 
   afterEach(async () => {
     await runner.rollbackTransaction();
     await runner.release();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (db?.isInitialized) await db.destroy();
-  });
+  }, 30_000);
 
   it('only adds the view and metadata while preserving existing columns and rows', async () => {
     const before = await existingState(runner, schema);

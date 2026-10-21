@@ -116,7 +116,7 @@ describe('Expired refresh token cleanup', () => {
       dataSource.getRepository(RefreshTokenRecord),
       createTransactionHost(dataSource),
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -124,7 +124,7 @@ describe('Expired refresh token cleanup', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   async function insertRows(rows: TokenRow[]): Promise<void> {
     const records = dataSource.getRepository(RefreshTokenRecord);

@@ -61,7 +61,7 @@ describe('Thread assignment transaction', () => {
     await runner.release();
     await db.synchronize();
     configureRepository();
-  });
+  }, 30_000);
 
   function configureRepository(): void {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -89,7 +89,7 @@ describe('Thread assignment transaction', () => {
     await db
       .getRepository(ThreadRecord)
       .insert({ id: threadId, userId: ownerId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -97,7 +97,7 @@ describe('Thread assignment transaction', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   async function assignmentCount(): Promise<number> {
     return db

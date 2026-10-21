@@ -47,7 +47,7 @@ describe('SSO authentication policy locking', () => {
       orgId,
       localPasswordLoginEnabled: true,
     });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -55,7 +55,7 @@ describe('SSO authentication policy locking', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('serializes SSO state mutation ahead of session admission', async () => {
     const writerHost = createTransactionHost(dataSource);

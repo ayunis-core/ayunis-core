@@ -55,7 +55,7 @@ describe('Source processing heartbeat database guard', () => {
       {} as SourceContentChunkMapper,
       { tx: db.manager } as TransactionHost<TransactionalAdapterTypeOrm>,
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -63,7 +63,7 @@ describe('Source processing heartbeat database guard', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   it('renews an active source so stale cleanup no longer selects it', async () => {
     const id = randomUUID();

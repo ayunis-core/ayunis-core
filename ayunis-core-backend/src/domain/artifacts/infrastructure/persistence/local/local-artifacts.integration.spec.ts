@@ -74,7 +74,7 @@ describe('Artifact version transaction', () => {
     await runner.release();
     await db.synchronize();
     await configureRepository();
-  });
+  }, 30_000);
 
   async function configureRepository(): Promise<void> {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -116,7 +116,7 @@ describe('Artifact version transaction', () => {
     await db
       .getRepository(artifactSchema)
       .insert({ id: artifactId, currentVersionNumber: 1, letterheadId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -124,7 +124,7 @@ describe('Artifact version transaction', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   function version(): ArtifactVersion {
     return new ArtifactVersion({

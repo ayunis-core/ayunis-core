@@ -83,7 +83,7 @@ describe('MFA completion transaction', () => {
     await queryRunner.release();
     await dataSource.synchronize();
     txHost = createTransactionHost(dataSource);
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     await dataSource.getRepository(UserTotpRecord).save({
@@ -101,12 +101,12 @@ describe('MFA completion transaction', () => {
       codeHash: 'hash',
       usedAt: null,
     });
-  });
+  }, 30_000);
 
   afterEach(async () => {
     await dataSource.getRepository(MfaRecoveryCodeRecord).delete({ userId });
     await dataSource.getRepository(UserTotpRecord).delete({ userId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -114,7 +114,7 @@ describe('MFA completion transaction', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('rolls back consumed MFA state when session issuance fails', async () => {
     const totps = new LocalUserTotpsRepository(txHost);

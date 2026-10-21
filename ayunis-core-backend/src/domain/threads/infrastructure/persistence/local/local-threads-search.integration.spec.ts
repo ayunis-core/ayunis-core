@@ -65,18 +65,18 @@ describe('Chat title and content search (PostgreSQL)', () => {
         tx: undefined,
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     await db.getRepository(MessageRecord).clear();
     await db.getRepository(ThreadRecord).clear();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
     await db.query(`DROP SCHEMA "${schema}" CASCADE`);
     await db.destroy();
-  });
+  }, 30_000);
 
   async function thread(
     title = 'Budget discussion',

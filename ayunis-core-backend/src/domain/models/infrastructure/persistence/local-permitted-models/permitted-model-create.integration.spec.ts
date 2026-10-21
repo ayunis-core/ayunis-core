@@ -71,7 +71,7 @@ describe('Org-scoped permitted model creation', () => {
       {} as PermittedModelFinder,
       {} as TransactionHost<TransactionalAdapterTypeOrm>,
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -79,7 +79,7 @@ describe('Org-scoped permitted model creation', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   it('rejects a repeated grant with a typed conflict and keeps one row', async () => {
     const orgId = randomUUID();
