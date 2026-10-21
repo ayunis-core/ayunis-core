@@ -109,7 +109,9 @@ Stages: `preflight` and `upload` run in the HTTP request (page-count check,
 MinIO upload); `download`, `conversion` (Gotenberg, Office formats only),
 `extraction` (OCR or parser, excluding conversion), `chunking`, `persist`
 (source text and chunk rows), `embedding`, `indexing` (pgvector write) and
-`total` run in the worker. `file_type` is the detected type (`pdf`, `docx`,
+`total` run in the worker. On the extraction-service path (PDF with
+`EXTRACTION_SERVICE_URL` set) `extraction` is the wait for the service's job
+and `download` covers only the result object, not the input file. `file_type` is the detected type (`pdf`, `docx`,
 `xlsx`, `eml`, …), never a filename.
 
 The same numbers appear as flat attributes on two log lines per document:

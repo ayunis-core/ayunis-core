@@ -11,6 +11,10 @@ import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/applica
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { ExtractionJobRunner } from './extraction-job-runner.service';
+import { InMemoryDocumentExtractionAdapter } from 'src/domain/sources/infrastructure/extraction/in-memory-document-extraction.adapter';
+import type { ExtractionConfig } from 'src/config/extraction.config';
+import { Readable } from 'stream';
 
 jest.mock('@appsignal/nodejs', () => ({
   Appsignal: { client: { metrics: jest.fn() } },
@@ -45,6 +49,8 @@ function makeJobData(
     orgId: ORG_ID,
     userId: USER_ID,
     minioPath: MINIO_PATH,
+    sha256: 'abc',
+    fileSizeBytes: 9,
     fileName: 'doc.pdf',
     fileType: 'application/pdf',
     ...overrides,
@@ -66,14 +72,21 @@ function makeSource(status = SourceStatus.PROCESSING): FileSource {
 function makeJob(
   overrides?: Partial<Job<DocumentProcessingJobData>>,
 ): Job<DocumentProcessingJobData> {
-  return {
+  const job = {
     data: makeJobData(),
     id: 'job-1',
     attemptsMade: 0,
     opts: { attempts: 3 },
     ...overrides,
   } as unknown as Job<DocumentProcessingJobData>;
+  job.updateData = (data) => {
+    job.data = data;
+    return Promise.resolve();
+  };
+  return job;
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /* ------------------------------------------------------------------ */
 /*  Mocks                                                              */
@@ -129,21 +142,28 @@ const admitOrgProcessing = {
   execute: jest.fn().mockResolvedValue(true),
 };
 
+const purgeStoragePrefixesUseCase = {
+  execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
+};
+
+const DISABLED: ExtractionConfig = {
+  url: undefined,
+  token: undefined,
+  requestTimeoutMs: 1000,
+  pollIntervalMs: 5,
+};
+const ENABLED: ExtractionConfig = { ...DISABLED, url: 'https://extraction' };
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 
 describe('DocumentProcessingConsumer', () => {
   let consumer: DocumentProcessingConsumer;
+  let extractionAdapter: InMemoryDocumentExtractionAdapter;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
-    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
-    sourceRepository.saveTextSource.mockResolvedValue(undefined);
-    admitOrgProcessing.execute.mockResolvedValue(true);
-
-    consumer = new DocumentProcessingConsumer(
+  function buildConsumer(config: ExtractionConfig): DocumentProcessingConsumer {
+    return new DocumentProcessingConsumer(
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,
@@ -154,7 +174,41 @@ describe('DocumentProcessingConsumer', () => {
       spreadsheetParser as never,
       admitOrgProcessing as never,
       new SourceProcessingHeartbeatService(sourceRepository as never),
+      new ExtractionJobRunner(
+        extractionAdapter,
+        sourceRepository as never,
+        downloadObjectUseCase as never,
+        purgeStoragePrefixesUseCase as never,
+        config,
+        { processingMaxPdfPages: 1000 } as never,
+      ),
+      config,
     );
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
+    sourceRepository.saveTextSource.mockResolvedValue(undefined);
+    admitOrgProcessing.execute.mockResolvedValue(true);
+    extractionAdapter = new InMemoryDocumentExtractionAdapter();
+
+    consumer = buildConsumer(DISABLED);
+  });
+
+  it('never contacts the extraction service while EXTRACTION_SERVICE_URL is unset', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    expect(extractionAdapter.startCalls).toHaveLength(0);
+    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ objectName: MINIO_PATH }),
+    );
+    expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('skips work when deletion wins before processing admission', async () => {
@@ -506,5 +560,300 @@ describe('DocumentProcessingConsumer', () => {
     expect(splitTextUseCase.execute.mock.calls[0][0].text).toBe(
       'Permit: Use | Cost: 50',
     );
+  });
+
+  describe('with the extraction service configured', () => {
+    const RESULT_KEY = `${ORG_ID}/processing/${SOURCE_ID}/extraction/result.json`;
+    const KEY = `v1:${SOURCE_ID}:abc`;
+    let inputBytesRead: number;
+
+    function resultRef(pageCount: number) {
+      return {
+        bucket: 'ayunis',
+        key: RESULT_KEY,
+        bytes: 1,
+        sha256: 'r',
+        pageCount,
+      };
+    }
+
+    function resultJson(texts: string[]): string {
+      return JSON.stringify({
+        schemaVersion: 1,
+        jobId: 'j',
+        idempotencyKey: KEY,
+        document: {
+          fileName: 'doc.pdf',
+          pageCount: texts.length,
+          warnings: [],
+        },
+        pages: texts.map((text, index) => ({
+          index,
+          number: index + 1,
+          text,
+          method: 'text',
+          ocrReason: null,
+        })),
+      });
+    }
+
+    function inputStream(bytes: number): Readable {
+      const chunk = Buffer.alloc(64 * 1024);
+      let sent = 0;
+      return new Readable({
+        read() {
+          if (sent >= bytes) {
+            this.push(null);
+            return;
+          }
+          sent += chunk.length;
+          inputBytesRead += chunk.length;
+          this.push(chunk);
+        },
+      });
+    }
+
+    async function startedJob(): Promise<string> {
+      await sleep(2);
+      const job = extractionAdapter.findByKey(KEY);
+      if (!job) throw new Error('extraction job was not started');
+      return job.jobId;
+    }
+
+    beforeEach(() => {
+      inputBytesRead = 0;
+      consumer = buildConsumer(ENABLED);
+      sourceRepository.findById.mockResolvedValue(makeSource());
+      sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+      downloadObjectUseCase.execute.mockImplementation(
+        (command: { objectName: string }) =>
+          Promise.resolve(
+            command.objectName === RESULT_KEY
+              ? Readable.from([Buffer.from(resultJson(['Seite 1', 'Seite 2']))])
+              : inputStream(9),
+          ),
+      );
+    });
+
+    it('polls the job, records progress, indexes the result and purges the prefix', async () => {
+      const logger = createLoggerMock();
+      const processing = consumer.process(makeJob());
+      const jobId = await startedJob();
+      extractionAdapter.run(jobId);
+      extractionAdapter.progress(jobId, { pagesTotal: 2, pagesDone: 1 });
+      await sleep(12);
+      extractionAdapter.succeed(jobId, resultRef(2));
+      await processing;
+
+      expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+      expect(inputBytesRead).toBe(0);
+      expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
+        SOURCE_ID,
+        { pagesTotal: 2, pagesDone: 1 },
+      );
+      expect(sourceRepository.saveTextSource.mock.calls[0][1].text).toBe(
+        'Seite 1\nSeite 2',
+      );
+      expect(helper.index).toHaveBeenCalledTimes(1);
+      expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
+        SOURCE_ID,
+        SourceStatus.PROCESSING,
+        SourceStatus.READY,
+        { processingError: null },
+      );
+      expect(purgeStoragePrefixesUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prefixes: [`${ORG_ID}/processing/${SOURCE_ID}/`],
+        }),
+      );
+      expect(extractionAdapter.jobCount).toBe(0);
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fileType: 'pdf',
+          fileSizeBytes: 9,
+          pageCount: 2,
+          extractionMs: expect.any(Number),
+        }),
+        'Document processing complete',
+      );
+    });
+
+    it('reconnects a retried attempt to the running job instead of starting a second one', async () => {
+      const job = makeJob();
+      const first = consumer.process(job);
+      const jobId = await startedJob();
+      extractionAdapter.run(jobId);
+      await sleep(6);
+      extractionAdapter.fail(jobId, {
+        code: 'OCR_UNAVAILABLE',
+        message: 'mistral down',
+        retryable: true,
+      });
+      await expect(first).rejects.toMatchObject({
+        name: 'JobRetryScheduledError',
+      });
+      expect(helper.markFailed).not.toHaveBeenCalled();
+      expect(extractionAdapter.jobCount).toBe(1);
+
+      job.attemptsMade = 1;
+      const second = consumer.process(job);
+      await sleep(2);
+      expect(extractionAdapter.findByKey(KEY)).toMatchObject({
+        jobId,
+        state: 'queued',
+        attempt: 2,
+      });
+      extractionAdapter.succeed(jobId, resultRef(2));
+      await second;
+
+      expect(extractionAdapter.startCalls).toHaveLength(2);
+      expect(
+        new Set(extractionAdapter.startCalls.map((c) => c.idempotencyKey)).size,
+      ).toBe(1);
+      expect(helper.index).toHaveBeenCalledTimes(1);
+      expect(extractionAdapter.jobCount).toBe(0);
+    });
+
+    it('picks up the job a previous backend process started before it died mid-poll', async () => {
+      const earlier = await extractionAdapter.start({
+        idempotencyKey: KEY,
+        owner: { orgId: ORG_ID, sourceId: SOURCE_ID },
+        input: { key: MINIO_PATH, sha256: 'abc' },
+        fileName: 'doc.pdf',
+        declaredMimeType: 'application/pdf',
+        outputKeyPrefix: `${ORG_ID}/processing/${SOURCE_ID}/extraction/`,
+      });
+      extractionAdapter.run(earlier.jobId);
+
+      const processing = consumer.process(
+        makeJob({ attemptsMade: 1 } as never),
+      );
+      await sleep(6);
+      extractionAdapter.succeed(earlier.jobId, resultRef(2));
+      await processing;
+
+      expect(extractionAdapter.startCalls).toHaveLength(2);
+      expect(extractionAdapter.startCalls[1].idempotencyKey).toBe(KEY);
+      expect(helper.index).toHaveBeenCalledTimes(1);
+    });
+
+    it('indexes nothing and leaves the source alone when the job is cancelled', async () => {
+      const processing = consumer.process(makeJob());
+      const jobId = await startedJob();
+      extractionAdapter.run(jobId);
+      await extractionAdapter.cancel(jobId);
+      extractionAdapter.succeed(jobId, resultRef(2));
+      await processing;
+
+      expect(helper.index).not.toHaveBeenCalled();
+      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+      expect(helper.markFailed).not.toHaveBeenCalled();
+    });
+
+    it('ends the attempt without a restart when source deletion released the job', async () => {
+      const job = makeJob();
+      const processing = consumer.process(job);
+      const jobId = await startedJob();
+      extractionAdapter.run(jobId);
+      await extractionAdapter.releaseOwner({
+        orgId: ORG_ID,
+        sourceIds: [SOURCE_ID],
+      });
+      await expect(processing).resolves.toBeUndefined();
+
+      expect(extractionAdapter.startCalls).toHaveLength(1);
+      expect(extractionAdapter.jobCount).toBe(0);
+      expect(helper.index).not.toHaveBeenCalled();
+      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(helper.markFailed).not.toHaveBeenCalled();
+    });
+
+    it('exits and purges when the heartbeat reports the source gone mid-poll', async () => {
+      const processing = consumer.process(makeJob());
+      const jobId = await startedJob();
+      extractionAdapter.run(jobId);
+      sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+      await processing;
+
+      expect(helper.index).not.toHaveBeenCalled();
+      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(purgeStoragePrefixesUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prefixes: [`${ORG_ID}/processing/${SOURCE_ID}/`],
+        }),
+      );
+      expect(extractionAdapter.jobCount).toBe(0);
+    });
+
+    it('settles a document the service cannot read without retrying', async () => {
+      const processing = consumer.process(makeJob());
+      const jobId = await startedJob();
+      extractionAdapter.fail(jobId, {
+        code: 'UNPROCESSABLE_DOCUMENT',
+        message: 'encrypted',
+        retryable: false,
+      });
+
+      await expect(processing).resolves.toBeUndefined();
+      expect(helper.markFailed).toHaveBeenCalledWith(
+        SOURCE_ID,
+        expect.objectContaining({ code: 'UNPROCESSABLE_DOCUMENT' }),
+      );
+      expect(helper.index).not.toHaveBeenCalled();
+      expect(extractionAdapter.jobCount).toBe(0);
+      expect(purgeStoragePrefixesUseCase.execute).toHaveBeenCalled();
+    });
+
+    it('processes a 200 MB object without the API ever reading the file', async () => {
+      const size = 200 * 1024 * 1024;
+      downloadObjectUseCase.execute.mockImplementation(
+        (command: { objectName: string }) =>
+          Promise.resolve(
+            command.objectName === RESULT_KEY
+              ? Readable.from([Buffer.from(resultJson(['Seite 1']))])
+              : inputStream(size),
+          ),
+      );
+      const before = process.memoryUsage();
+
+      const processing = consumer.process(
+        makeJob({ data: makeJobData({ fileSizeBytes: size }) }),
+      );
+      const jobId = await startedJob();
+      extractionAdapter.succeed(jobId, resultRef(1));
+      await processing;
+
+      const after = process.memoryUsage();
+      expect(inputBytesRead).toBe(0);
+      expect(
+        after.heapUsed +
+          after.arrayBuffers -
+          before.heapUsed -
+          before.arrayBuffers,
+      ).toBeLessThan(64 * 1024 * 1024);
+      expect(helper.index).toHaveBeenCalledTimes(1);
+      expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+        'document_processing_file_size_bytes',
+        size,
+        { file_type: 'pdf' },
+      );
+    });
+
+    it('keeps non-PDF uploads on the in-process path', async () => {
+      await consumer.process(
+        makeJob({
+          data: makeJobData({
+            fileName: 'Vorlage.docx',
+            fileType:
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          }),
+        }),
+      );
+
+      expect(extractionAdapter.startCalls).toHaveLength(0);
+      expect(retrieveFileContentUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+    });
   });
 });

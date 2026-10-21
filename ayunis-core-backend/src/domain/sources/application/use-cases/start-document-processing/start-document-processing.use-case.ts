@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import * as fs from 'fs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
@@ -26,6 +26,11 @@ import { detectFileType } from 'src/common/util/file-type';
 import { StageStopwatch } from 'src/domain/sources/application/util/stage-stopwatch';
 import { createSha256ReadStream } from 'src/common/util/sha256-read-stream';
 import {
+  type ExtractionConfig,
+  extractionConfig,
+} from 'src/config/extraction.config';
+import { usesExtractionService } from 'src/domain/sources/application/util/extraction-routing.helper';
+import {
   recordDocumentProcessingStages,
   type DocumentProcessingStage,
 } from 'src/domain/sources/application/util/document-processing-metrics.helper';
@@ -49,6 +54,8 @@ export class StartDocumentProcessingUseCase {
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
     private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly contextService: ContextService,
+    @Inject(extractionConfig.KEY)
+    private readonly extraction: ExtractionConfig,
   ) {}
 
   async execute(command: StartDocumentProcessingCommand): Promise<FileSource> {
@@ -122,6 +129,7 @@ export class StartDocumentProcessingUseCase {
         userId,
         minioPath,
         sha256: upload.sha256,
+        fileSizeBytes: upload.sizeBytes,
         fileName: command.fileName,
         fileType: command.fileType,
       }),
@@ -131,11 +139,16 @@ export class StartDocumentProcessingUseCase {
     return savedSource;
   }
 
-  /** Only a PDF is parsed for its page count, so only a PDF is read into memory here. */
+  /**
+   * Only a PDF is parsed for its page count, so only a PDF is read into
+   * memory here; the extraction service counts pages itself (contract §10.2).
+   */
   private async preflight(
     command: StartDocumentProcessingCommand,
   ): Promise<void> {
-    if (detectFileType(command.fileType, command.fileName) !== 'pdf') return;
+    const fileType = detectFileType(command.fileType, command.fileName);
+    if (fileType !== 'pdf' || usesExtractionService(this.extraction, fileType))
+      return;
     await this.preflightCheckUseCase.execute(
       new PreflightCheckCommand({
         fileData: await fs.promises.readFile(command.filePath),

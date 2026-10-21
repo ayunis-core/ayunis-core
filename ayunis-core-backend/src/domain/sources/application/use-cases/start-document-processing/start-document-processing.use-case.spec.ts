@@ -20,6 +20,7 @@ import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/ap
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { ContextService } from 'src/common/context/services/context.service';
+import { extractionConfig } from 'src/config/extraction.config';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -44,6 +45,7 @@ describe('StartDocumentProcessingUseCase', () => {
   let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
   let mockPreflightCheckUseCase: jest.Mocked<PreflightCheckUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
+  const extraction = { url: undefined as string | undefined };
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -153,10 +155,12 @@ describe('StartDocumentProcessingUseCase', () => {
           useValue: mockPreflightCheckUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        { provide: extractionConfig.KEY, useValue: extraction },
       ],
     }).compile();
 
     useCase = module.get(StartDocumentProcessingUseCase);
+    extraction.url = undefined;
   });
 
   it('should create a PROCESSING source, upload to MinIO, and enqueue job', async () => {
@@ -221,6 +225,23 @@ describe('StartDocumentProcessingUseCase', () => {
 
     expect(mockPreflightCheckUseCase.execute).not.toHaveBeenCalled();
     expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('leaves page counting to the extraction service for a PDF it will process', async () => {
+    extraction.url = 'https://extraction:8000';
+
+    await useCase.execute(
+      new StartDocumentProcessingCommand({
+        filePath: pdfPath,
+        fileName: 'Protokoll.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+
+    expect(mockPreflightCheckUseCase.execute).not.toHaveBeenCalled();
+    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ fileSizeBytes: pdfContent.length }),
+    );
   });
 
   it('stages a 200 MB upload without the API process holding the file', async () => {

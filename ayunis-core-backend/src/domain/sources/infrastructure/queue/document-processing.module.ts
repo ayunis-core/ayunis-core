@@ -1,6 +1,9 @@
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { ConfigModule } from '@nestjs/config';
+import { extractionConfig } from 'src/config/extraction.config';
+import retrievalConfig from 'src/config/retrieval.config';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
 import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
@@ -16,10 +19,13 @@ import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { ExtractionJobRunner } from './extraction-job-runner.service';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 
 @Module({
   imports: [
+    ConfigModule.forFeature(extractionConfig),
+    ConfigModule.forFeature(retrievalConfig),
     OrgsModule,
     BullModule.registerQueue({
       name: DOCUMENT_PROCESSING_QUEUE,
@@ -41,6 +47,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
     },
     DocumentProcessingConsumer,
     SourceProcessingHeartbeatService,
+    ExtractionJobRunner,
     StaleProcessingCleanupTask,
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
