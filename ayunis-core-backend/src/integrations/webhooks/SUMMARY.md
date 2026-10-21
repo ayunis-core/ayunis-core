@@ -18,3 +18,5 @@ The webhooks module dispatches domain lifecycle and product events (user, org, s
 Use cases emit domain events → `WebhookDispatchListener` handles them → constructs `WebhookEvent` subclasses → calls `SendWebhookUseCase` → `HttpWebhookHandler` delivers via HTTP POST (with HMAC-SHA256 signature when a signing secret is available). This decouples business logic from webhook infrastructure. Domain and IAM modules have no dependency on webhook code.
 
 **Error handling:** Delivery failures are logged as warnings but never re-thrown, ensuring webhook issues cannot disrupt core business operations.
+
+Add-on payloads allow `actorUserId: null` for service-originated Fynn synchronization; manual changes still identify their super admin.

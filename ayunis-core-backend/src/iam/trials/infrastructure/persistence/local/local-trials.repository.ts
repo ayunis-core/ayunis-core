@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager, Repository } from 'typeorm';
+import type { EntityManager, Repository } from 'typeorm';
 import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRecord } from './schema/trial.record';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalTrialsRepository extends TrialRepository {
@@ -91,6 +91,17 @@ export class LocalTrialsRepository extends TrialRepository {
       messagesSent: record.messagesSent,
       maxMessages: record.maxMessages,
     });
+  }
+
+  async endRemainingAllowance(orgId: UUID): Promise<boolean> {
+    const result = await this.trialRecord
+      .createQueryBuilder()
+      .update(TrialRecord)
+      .set({ maxMessages: () => '"messagesSent"' })
+      .where('"orgId" = :orgId', { orgId })
+      .andWhere('"messagesSent" < "maxMessages"')
+      .execute();
+    return (result.affected ?? 0) > 0;
   }
 
   async update(trial: Trial): Promise<Trial> {

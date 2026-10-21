@@ -1,0 +1,1108 @@
+[
+  {
+    "case": "01",
+    "subscription": {
+      "id": "01a13f66-0a02-7f28-b388-7c740e982c27",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:50:35+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:50:35+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f65-ed79-72b0-80a6-5f2d22b376b3"
+      },
+      "items": [
+        {
+          "id": "01a13f66-0a0b-7f27-8683-834ecaa2cd80",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f65-ed79-72b0-80a6-5f2d22b376b3",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000001"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "20750000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-0a0b-7f27-8683-834ecaa2cd80"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-0a0b-7f27-8683-834ecaa2cd80"
+        }
+      }
+    ]
+  },
+  {
+    "case": "02",
+    "subscription": {
+      "id": "01a13f66-de79-724b-8ade-54616f142903",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:09+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:09+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f66-dad8-774d-b5eb-7b2edbec86dd"
+      },
+      "items": [
+        {
+          "id": "01a13f66-de84-7503-87bd-6c3bbfb4651b",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13f66-de90-7c65-bd54-850068168222",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f66-dad8-774d-b5eb-7b2edbec86dd",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000002"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "45000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-de84-7503-87bd-6c3bbfb4651b"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-de84-7503-87bd-6c3bbfb4651b"
+        }
+      },
+      {
+        "value": "15000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-additional-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-de90-7c65-bd54-850068168222"
+        }
+      }
+    ]
+  },
+  {
+    "case": "03",
+    "subscription": {
+      "id": "01a13f66-f1dd-78c8-8344-c2f5b4f48b2c",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:14+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T00:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f66-ee79-77b4-8fe2-57f2627902e5"
+      },
+      "items": [
+        {
+          "id": "01a13f66-f1f1-7b8f-bfa2-a23c483acd33",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13f66-f1e5-7c97-bd51-1bd33483188f",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f66-ee79-77b4-8fe2-57f2627902e5",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000003"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "true",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-academy"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-f1f1-7b8f-bfa2-a23c483acd33"
+        }
+      },
+      {
+        "value": "100000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-f1e5-7c97-bd51-1bd33483188f"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-f1e5-7c97-bd51-1bd33483188f"
+        }
+      }
+    ]
+  },
+  {
+    "case": "04",
+    "subscription": {
+      "id": "01a13f66-ff37-7ded-8b16-28fee62afe34",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:17+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:17+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f66-fc40-7690-a3d4-bb5446986ac2"
+      },
+      "items": [
+        {
+          "id": "01a13f66-ff3d-7cb6-b6d4-68f200fbd4c4",
+          "currentMeasurementValue": {
+            "quantity": 25.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f66-fc40-7690-a3d4-bb5446986ac2",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000004"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "seat",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f66-ff3d-7cb6-b6d4-68f200fbd4c4"
+        }
+      }
+    ]
+  },
+  {
+    "case": "05",
+    "subscription": {
+      "id": "01a13f67-0c77-7433-a888-a6e74eac6a51",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:21+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:21+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-0967-7b3b-8c18-d5f31d537463"
+      },
+      "items": [
+        {
+          "id": "01a13f67-0c81-777a-9a8e-01addaf067d4",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-0967-7b3b-8c18-d5f31d537463",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000005"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "10375000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-0c81-777a-9a8e-01addaf067d4"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-0c81-777a-9a8e-01addaf067d4"
+        }
+      }
+    ]
+  },
+  {
+    "case": "06",
+    "subscription": {
+      "id": "01a13f67-1996-7c15-b102-26a3e34eee9f",
+      "status": "terminated",
+      "activatedAt": "2026-10-15T11:51:24+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:24+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-1683-79cb-86dd-9b941f020252"
+      },
+      "items": [
+        {
+          "id": "01a13f67-199e-74ba-a074-5f4663279283",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-1683-79cb-86dd-9b941f020252",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000006"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": []
+  },
+  {
+    "case": "07",
+    "subscription": {
+      "id": "01a13f67-2617-7103-814b-af58855a440c",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:28+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:28+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-2327-7d86-b856-3319a5993768"
+      },
+      "items": [
+        {
+          "id": "01a13f67-2634-77d4-8b79-495a4de9a1d5",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13f67-262a-7f40-82f6-3486c41237e4",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13f67-2621-71b4-9e1f-3e176ee31868",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-2327-7d86-b856-3319a5993768",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000007"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "20000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-additional-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-262a-7f40-82f6-3486c41237e4"
+        }
+      },
+      {
+        "value": "167000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-2621-71b4-9e1f-3e176ee31868"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-2621-71b4-9e1f-3e176ee31868"
+        }
+      },
+      {
+        "value": "true",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-academy"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-2634-77d4-8b79-495a4de9a1d5"
+        }
+      }
+    ]
+  },
+  {
+    "case": "08",
+    "subscription": {
+      "id": "01a13f67-3509-7437-83c7-0d2584e0df60",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:31+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:31+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-31d9-7994-b07a-23ee6457fd02"
+      },
+      "items": [
+        {
+          "id": "01a13f67-3512-794e-a870-a638244e641e",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-31d9-7994-b07a-23ee6457fd02",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000008"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "300000000",
+        "status": "active",
+        "validFrom": null,
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": null
+      },
+      {
+        "value": "250000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-3512-794e-a870-a638244e641e"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-3512-794e-a870-a638244e641e"
+        }
+      }
+    ]
+  },
+  {
+    "case": "09",
+    "subscription": {
+      "id": "01a13f67-42ec-7c78-926f-364d79ac9a7d",
+      "status": "cancelled",
+      "activatedAt": "2026-10-15T11:51:35+00:00",
+      "cancellationDate": "2027-10-15T00:00:00+00:00",
+      "cancelledAt": "2026-10-15T11:52:15+00:00",
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:35+00:00",
+        "contractEnd": "2027-10-15T00:00:00+00:00"
+      },
+      "customer": {
+        "id": "01a13f67-3fe5-7029-bbff-d6c5bbd20a7d"
+      },
+      "items": [
+        {
+          "id": "01a13f67-42f4-7612-a597-f88778d798e1",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-10-15T00:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-3fe5-7029-bbff-d6c5bbd20a7d",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000009"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "45000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": "2027-10-15T00:00:00+00:00",
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-42f4-7612-a597-f88778d798e1"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": "2027-10-15T00:00:00+00:00",
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-42f4-7612-a597-f88778d798e1"
+        }
+      }
+    ]
+  },
+  {
+    "case": "10",
+    "subscription": {
+      "id": "01a13f67-506c-7a76-903b-efcebe17645f",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:38+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:38+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-4c5c-75c6-93a1-62bb63338189"
+      },
+      "items": [
+        {
+          "id": "01a13f67-5074-7878-90a6-459a0a3c4a45",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-4c5c-75c6-93a1-62bb63338189",
+      "customFields": [],
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "20750000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-5074-7878-90a6-459a0a3c4a45"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-5074-7878-90a6-459a0a3c4a45"
+        }
+      }
+    ]
+  },
+  {
+    "case": "11",
+    "subscription": {
+      "id": "01a13f67-5ddb-7ead-8145-9de17da2aea8",
+      "status": "active",
+      "activatedAt": "2026-10-15T11:51:42+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T11:51:42+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-5a57-7fed-8d59-0beec46b10e1"
+      },
+      "items": [
+        {
+          "id": "01a13f67-5de3-76c6-bb6e-0881c777a080",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-5a57-7fed-8d59-0beec46b10e1",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000001"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "45000000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-5de3-76c6-bb6e-0881c777a080"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13f67-5de3-76c6-bb6e-0881c777a080"
+        }
+      }
+    ]
+  },
+  {
+    "case": "12",
+    "subscription": {
+      "id": "01a13f67-6aa1-7f3e-9bcc-39d08d7915cb",
+      "status": "draft",
+      "activatedAt": null,
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T00:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13f67-6758-7850-8b0c-d20f541a59ad"
+      },
+      "items": [
+        {
+          "id": "01a13f67-6aaa-7b68-b109-ac3400e925c7",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13fb4-4320-7e08-b336-1822ec9f0fb6",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-01-14T00:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13f67-6758-7850-8b0c-d20f541a59ad",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000012"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": []
+  },
+  {
+    "case": "13",
+    "subscription": {
+      "id": "01a13fb1-547e-75fc-a431-47caba603785",
+      "status": "active",
+      "activatedAt": "2026-10-15T13:13:01+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T00:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13fb1-503a-7be5-a995-43bd286b1160"
+      },
+      "items": [
+        {
+          "id": "01a13fb1-7633-7c1e-84f7-1ff06be525dc",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2027-01-15T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13fb1-9ed9-7cdc-b0ff-31e5b4dad6ee",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2027-01-14T00:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13fb1-503a-7be5-a995-43bd286b1160",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000013"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "20750000",
+        "status": "active",
+        "validFrom": null,
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb1-9ed9-7cdc-b0ff-31e5b4dad6ee"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": null,
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb1-9ed9-7cdc-b0ff-31e5b4dad6ee"
+        }
+      },
+      {
+        "value": "20750000",
+        "status": "pending",
+        "validFrom": "2027-01-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb1-7633-7c1e-84f7-1ff06be525dc"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "pending",
+        "validFrom": "2027-01-15T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb1-7633-7c1e-84f7-1ff06be525dc"
+        }
+      }
+    ]
+  },
+  {
+    "case": "14",
+    "subscription": {
+      "id": "01a13fb2-4166-7223-a759-e202dd7b9746",
+      "status": "active",
+      "activatedAt": "2026-10-15T13:13:33+00:00",
+      "cancellationDate": null,
+      "cancelledAt": null,
+      "contractDetails": {
+        "contractStart": "2026-10-15T00:00:00+00:00",
+        "contractEnd": null
+      },
+      "customer": {
+        "id": "01a13fb2-3e61-7d09-8931-f70687846201"
+      },
+      "items": [
+        {
+          "id": "01a13fb2-4b29-7a26-8c70-d9d71de41e4f",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2027-01-01T00:00:00+00:00",
+            "contractEnd": null
+          }
+        },
+        {
+          "id": "01a13fb2-450f-70bc-89da-4d933dbd6d16",
+          "currentMeasurementValue": {
+            "quantity": 1.0
+          },
+          "contractDetails": {
+            "contractStart": "2026-10-15T00:00:00+00:00",
+            "contractEnd": "2026-12-31T00:00:00+00:00"
+          }
+        }
+      ]
+    },
+    "customer": {
+      "id": "01a13fb2-3e61-7d09-8931-f70687846201",
+      "customFields": {
+        "ayunis-core-uuid": "00000000-0000-4000-8000-000000000014"
+      },
+      "companyName": "Preview Example",
+      "defaultAddress": {
+        "companyName": "Preview Example",
+        "street": "Example Street",
+        "houseNumber": "1",
+        "city": "Berlin",
+        "zip": "10115",
+        "countryCode": "DE",
+        "vatId": null
+      }
+    },
+    "entitlements": [
+      {
+        "value": "45000000",
+        "status": "pending",
+        "validFrom": "2027-01-01T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb2-4b29-7a26-8c70-d9d71de41e4f"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "pending",
+        "validFrom": "2027-01-01T00:00:00+00:00",
+        "validUntil": null,
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb2-4b29-7a26-8c70-d9d71de41e4f"
+        }
+      },
+      {
+        "value": "20750000",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": "2026-12-31T00:00:00+00:00",
+        "feature": {
+          "id": "core-monthly-credits"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb2-450f-70bc-89da-4d933dbd6d16"
+        }
+      },
+      {
+        "value": "usage",
+        "status": "active",
+        "validFrom": "2026-10-15T00:00:00+00:00",
+        "validUntil": "2026-12-31T00:00:00+00:00",
+        "feature": {
+          "id": "core-subscription-type"
+        },
+        "subscriptionItem": {
+          "id": "01a13fb2-450f-70bc-89da-4d933dbd6d16"
+        }
+      }
+    ]
+  }
+]

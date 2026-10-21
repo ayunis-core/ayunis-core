@@ -40,6 +40,7 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 import { ResolveSubscriptionOverlapUseCase } from 'src/iam/subscriptions/application/use-cases/resolve-subscription-overlap/resolve-subscription-overlap.use-case';
 import { SubscriptionAccessAdjustmentRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-access-adjustment.record';
 import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/presenters/http/super-admin-subscription-overlap.controller';
+import { ApplySubscriptionSyncUseCase } from 'src/iam/subscriptions/application/use-cases/apply-subscription-sync/apply-subscription-sync.use-case';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/p
     UpdateSeatsWithAllocationLockUseCase,
     AcquireSeatAllocationLockUseCase,
     ResolveSubscriptionOverlapUseCase,
+    ApplySubscriptionSyncUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
@@ -102,6 +104,7 @@ import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/p
     IsUsageBasedSubscriptionUseCase,
     AssertSeatAvailableUseCase,
     AcquireSeatAllocationLockUseCase,
+    ApplySubscriptionSyncUseCase,
   ],
 })
 export class SubscriptionsModule {}

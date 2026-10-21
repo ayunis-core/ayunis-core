@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -11,11 +12,10 @@ import {
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
 } from 'src/iam/subscriptions/application/subscription.errors';
-import type { User } from 'src/iam/users/domain/user.entity';
-import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
-import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { CountPendingInvitesByOrgIdQuery } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.query';
+import { CountUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.query';
+import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
+import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
 
 /**
  * The data required to construct a brand-new subscription. Shared by the
@@ -24,7 +24,6 @@ import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/fin
  */
 export interface BuildSubscriptionParams {
   orgId: UUID;
-  requestingUserId: UUID;
   type: SubscriptionType;
   noOfSeats?: number;
   monthlyCredits?: number;
@@ -54,14 +53,17 @@ export class SubscriptionFactory {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
-    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly countInvites: CountPendingInvitesByOrgIdUseCase,
+    private readonly countUsers: CountUsersByOrgIdUseCase,
   ) {}
 
-  async build(params: BuildSubscriptionParams): Promise<Subscription> {
+  async build(
+    params: BuildSubscriptionParams,
+    existing?: Subscription,
+  ): Promise<Subscription> {
     return params.type === SubscriptionType.USAGE_BASED
       ? this.buildUsageBased(params)
-      : this.buildSeatBased(params);
+      : this.buildSeatBased(params, existing);
   }
 
   private buildUsageBased(
@@ -91,6 +93,7 @@ export class SubscriptionFactory {
 
   private async buildSeatBased(
     params: BuildSubscriptionParams,
+    existing?: Subscription,
   ): Promise<SeatBasedSubscription> {
     const noOfSeats = params.noOfSeats ?? 1;
 
@@ -108,11 +111,8 @@ export class SubscriptionFactory {
       );
     }
 
-    await this.validateSeatCount(
-      params.orgId,
-      params.requestingUserId,
-      noOfSeats,
-    );
+    if (!this.hasUnchangedSeatAllocation(params, existing))
+      await this.validateSeatCount(params.orgId, noOfSeats);
 
     const pricePerSeat = this.configService.get<number>(
       'subscriptions.pricePerSeatYearly',
@@ -133,31 +133,27 @@ export class SubscriptionFactory {
     });
   }
 
+  private hasUnchangedSeatAllocation(
+    params: BuildSubscriptionParams,
+    existing?: Subscription,
+  ): boolean {
+    return (
+      existing !== undefined &&
+      isSeatBased(existing) &&
+      existing.orgId === params.orgId &&
+      existing.noOfSeats === params.noOfSeats
+    );
+  }
+
   private async validateSeatCount(
     orgId: UUID,
-    requestingUserId: User['id'],
     noOfSeats: number,
   ): Promise<void> {
-    const [invitesResult, usersResult] = await Promise.all([
-      this.getInvitesByOrgUseCase.execute(
-        new GetInvitesByOrgQuery({
-          orgId,
-          requestingUserId,
-          onlyOpen: true,
-        }),
-      ),
-      this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery({
-          orgId,
-          pagination: { limit: 1000, offset: 0 },
-        }),
-      ),
+    const [openInvitesCount, usersCount] = await Promise.all([
+      this.countInvites.execute(new CountPendingInvitesByOrgIdQuery(orgId)),
+      this.countUsers.execute(new CountUsersByOrgIdQuery(orgId)),
     ]);
-    const openInvitesCount = invitesResult.total ?? invitesResult.data.length;
-    if (
-      openInvitesCount + (usersResult.total ?? usersResult.data.length) >
-      noOfSeats
-    ) {
+    if (openInvitesCount + usersCount > noOfSeats) {
       this.logger.warn(
         {
           orgId,

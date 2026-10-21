@@ -18,3 +18,5 @@ The configuration module provides strongly-typed, namespaced configuration for e
 `TRUST_PROXY` is validated at boot and parsed into `app.trustProxy` for Express. Empty/zero trusts no proxies; non-negative safe integer hop counts and explicit proxy IP/CIDR lists are supported. Boolean values and named subnet aliases are rejected.
 
 `FEATURE_FYNN_MANAGED_SUBSCRIPTIONS_ENABLED` defaults to false and resolves to true only with `APP_ENVIRONMENT=cloud`. It is exposed as `fynnManagedSubscriptionsEnabled` by the feature-toggle endpoint. Enable at Fynn cutover; disabling and restarting restores manual management.
+
+`fynn.config.ts` maps `FYNN_API_KEY` and `FYNN_API_BASE_URL` to the private `fynn` namespace. Both are optional at boot; a sync fails before requesting Fynn if either is missing. HTTP is permitted only for loopback test servers; remote API bases require HTTPS.

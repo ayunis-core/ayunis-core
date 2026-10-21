@@ -20,6 +20,7 @@ import { gotenbergConfig } from './gotenberg.config';
 import { retentionConfig } from './retention.config';
 import { urlConfig } from './url.config';
 import { ssoOidcConfig } from 'src/config/sso-oidc.config';
+import { fynnConfig } from './fynn.config';
 import { coreConnectConfig } from './core-connect.config';
 
 /**
@@ -56,4 +57,5 @@ export const rootConfigs = [
   urlConfig,
   ssoOidcConfig,
   coreConnectConfig,
+  fynnConfig,
 ];

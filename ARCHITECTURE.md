@@ -123,7 +123,7 @@ none of these packages implements the Agent Plugins standard.
 | Module                                                          | Summary               | Detail                                           |
 | --------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
 | [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns  |
-| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Metrics, webhooks, and Connect service auth      |
+| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Fynn sync, metrics, webhooks, Connect auth       |
 | [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management       |
 | [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                       |
 | [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                       |

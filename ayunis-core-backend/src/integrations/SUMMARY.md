@@ -6,3 +6,5 @@ Its internal authentication-check endpoint uses a dedicated bearer credential an
 does not grant browser-session, organization, or super-admin access.
 
 The integrations module groups operational infrastructure and connections to external systems. `metrics/` exposes Prometheus counters and histograms for monitoring LLM inference, message throughput, and user activity at `/metrics` with optional basic auth. `queue-inspection/` exposes a protected, read-only Bull Board dashboard for the three source-processing queues at `/api/internal/queues`; it authorizes only `SUPER_ADMIN` sessions and projects job payloads to non-sensitive operational identifiers. `webhooks/` delivers lifecycle events (org, user, and subscription changes) as outbound HTTP POST calls to a configured URL using a port/adapter pattern. Monitoring and outbound delivery must not disrupt core business operations.
+
+`FynnModule` exposes the internal service-authenticated subscription sync endpoint and reads current commercial state from Fynn. It applies Core subscription, trial, and Academy changes together and publishes existing events after commit.
