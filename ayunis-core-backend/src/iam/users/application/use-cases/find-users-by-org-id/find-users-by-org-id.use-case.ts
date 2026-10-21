@@ -17,6 +17,8 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
+import { GetTeamAdminPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
 
 @Injectable()
 export class FindUsersByOrgIdUseCase {
@@ -28,6 +30,7 @@ export class FindUsersByOrgIdUseCase {
     private readonly hasPermissionUseCase: HasPermissionUseCase,
     private readonly findTeamsByUsers: FindTeamsByUserIdsAndOrgIdUseCase,
     private readonly findAdministeredTeamIds: FindAdministeredTeamIdsUseCase,
+    private readonly getTeamAdminPermissions: GetTeamAdminPermissionsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
@@ -64,14 +67,16 @@ export class FindUsersByOrgIdUseCase {
   }
 
   // Org admins (who hold every permission), members who can assign users to
-  // teams and team admins may list org users: the add-team-member picker
-  // needs the list.
+  // teams and team admins allowed to manage members may list org users: the
+  // add-team-member picker needs the list.
   private async canPickUsers(orgId: FindUsersByOrgIdQuery['orgId']) {
     const { role } = getRequiredUserContext(this.contextService);
     const canAssign = await this.hasPermissionUseCase.execute(
       new HasPermissionQuery(orgId, role, Permission.ASSIGN_USERS_TO_TEAMS),
     );
     if (canAssign) return true;
+    const rights = await this.getTeamAdminPermissions.execute(orgId);
+    if (!rights.includes(TeamAdminPermission.TEAM_MANAGE_MEMBERS)) return false;
     return (await this.findAdministeredTeamIds.execute()).length > 0;
   }
 

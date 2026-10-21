@@ -12,6 +12,8 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { FindAdministeredTeamIdsUseCase } from 'src/iam/teams/application/use-cases/find-administered-team-ids/find-administered-team-ids.use-case';
+import { GetTeamAdminPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('FindUsersByOrgIdUseCase', () => {
@@ -19,6 +21,7 @@ describe('FindUsersByOrgIdUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockContextService: { get: jest.Mock };
   const mockFindAdministeredTeamIds = { execute: jest.fn() };
+  const mockGetTeamAdminPermissions = { execute: jest.fn() };
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -45,6 +48,10 @@ describe('FindUsersByOrgIdUseCase', () => {
         {
           provide: FindAdministeredTeamIdsUseCase,
           useValue: mockFindAdministeredTeamIds,
+        },
+        {
+          provide: GetTeamAdminPermissionsUseCase,
+          useValue: mockGetTeamAdminPermissions,
         },
       ],
     }).compile();
@@ -164,14 +171,29 @@ describe('FindUsersByOrgIdUseCase', () => {
 
     it('lets a team admin list org users', async () => {
       mockFindAdministeredTeamIds.execute.mockResolvedValue(['team-1']);
+      mockGetTeamAdminPermissions.execute.mockResolvedValue([
+        TeamAdminPermission.TEAM_MANAGE_MEMBERS,
+      ]);
 
       await expect(
         useCase.execute(new FindUsersByOrgIdQuery({ orgId })),
       ).resolves.toHaveProperty('total', 0);
     });
 
+    it('rejects a team admin while team admins may not manage members', async () => {
+      mockFindAdministeredTeamIds.execute.mockResolvedValue(['team-1']);
+      mockGetTeamAdminPermissions.execute.mockResolvedValue([]);
+
+      await expect(
+        useCase.execute(new FindUsersByOrgIdQuery({ orgId })),
+      ).rejects.toThrow(UnauthorizedAccessError);
+    });
+
     it('rejects a member who neither assigns users nor administers a team', async () => {
       mockFindAdministeredTeamIds.execute.mockResolvedValue([]);
+      mockGetTeamAdminPermissions.execute.mockResolvedValue([
+        TeamAdminPermission.TEAM_MANAGE_MEMBERS,
+      ]);
 
       await expect(
         useCase.execute(new FindUsersByOrgIdQuery({ orgId })),

@@ -8,6 +8,8 @@ import type { TeamMembersRepository } from 'src/iam/teams/application/ports/team
 import { TeamAccessDeniedError } from 'src/iam/teams/application/team-members.errors';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { GetTeamAdminPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ALL_TEAMS, TeamAccessService } from './team-access.service';
 
@@ -19,6 +21,7 @@ describe('TeamAccessService', () => {
   let role: UserRole;
   let member: TeamMember | null;
   let adminTeamIds: UUID[];
+  let teamAdminRights: TeamAdminPermission[];
   let service: TeamAccessService;
 
   beforeEach(() => {
@@ -26,6 +29,7 @@ describe('TeamAccessService', () => {
     role = UserRole.USER;
     member = null;
     adminTeamIds = [];
+    teamAdminRights = Object.values(TeamAdminPermission);
     const context = {
       get: jest.fn((key: string) => {
         const values: Record<string, unknown> = {
@@ -48,7 +52,15 @@ describe('TeamAccessService', () => {
       findByTeamIdAndUserId: jest.fn(() => Promise.resolve(member)),
       findAdminTeamIdsByUserId: jest.fn(() => Promise.resolve(adminTeamIds)),
     } as unknown as TeamMembersRepository;
-    service = new TeamAccessService(hasPermission, teamMembers, context);
+    const getTeamAdminPermissions = {
+      execute: jest.fn(() => Promise.resolve(teamAdminRights)),
+    } as unknown as GetTeamAdminPermissionsUseCase;
+    service = new TeamAccessService(
+      hasPermission,
+      teamMembers,
+      getTeamAdminPermissions,
+      context,
+    );
   });
 
   const teamAdmin = () => new TeamMember({ teamId, userId, isTeamAdmin: true });
@@ -78,6 +90,25 @@ describe('TeamAccessService', () => {
 
     it('allows a team admin of the team', async () => {
       member = teamAdmin();
+
+      await expect(
+        service.assertCanManageMembers({ teamId }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('denies a team admin while team admins may not manage members', async () => {
+      member = teamAdmin();
+      teamAdminRights = [TeamAdminPermission.TEAM_APPOINT_ADMINS];
+
+      await expect(service.assertCanManageMembers({ teamId })).rejects.toThrow(
+        TeamAccessDeniedError,
+      );
+    });
+
+    it('keeps role rights for team admins without the team right', async () => {
+      member = teamAdmin();
+      teamAdminRights = [];
+      granted = [Permission.ASSIGN_USERS_TO_TEAMS];
 
       await expect(
         service.assertCanManageMembers({ teamId }),
@@ -114,6 +145,22 @@ describe('TeamAccessService', () => {
       await expect(
         service.assertCanAppointAdmins({ teamId }),
       ).resolves.toBeUndefined();
+    });
+
+    it('denies a team admin while team admins may not appoint team admins', async () => {
+      member = teamAdmin();
+      teamAdminRights = [TeamAdminPermission.TEAM_MANAGE_MEMBERS];
+
+      await expect(service.assertCanAppointAdmins({ teamId })).rejects.toThrow(
+        TeamAccessDeniedError,
+      );
+    });
+
+    it('lets a team admin without any right still view the team', async () => {
+      member = teamAdmin();
+      teamAdminRights = [];
+
+      await expect(service.assertCanView({ teamId })).resolves.toBeUndefined();
     });
 
     it('denies holders of only assign_users_to_teams', async () => {

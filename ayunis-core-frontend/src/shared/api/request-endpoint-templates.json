@@ -215,6 +215,7 @@
   "/super-admin/users/{userId}",
   "/super-admin/users/{userId}/trigger-password-reset",
   "/super-admin/users/{userId}/unlock",
+  "/team-admin-permissions",
   "/teams",
   "/teams/me",
   "/teams/{id}",

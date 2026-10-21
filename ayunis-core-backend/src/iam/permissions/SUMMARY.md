@@ -85,10 +85,19 @@ role grants). The frontend uses this to hide controls the user cannot use.
 
 ## Layout
 
-Standard hexagonal: `domain/` (`RolePermission` entity, `Permission` enum,
-`default-role-permissions.constants`), `application/`
-(repository port, use-cases, errors), `infrastructure/`
-(local TypeORM record + mapper + repository), `presenters/http/` (admin
-`RolePermissionsController`, non-admin `MyPermissionsController`, and DTOs).
-Two use cases are exported: `HasPermissionUseCase` for the `PermissionsGuard`,
-and `SeedDefaultRolePermissionsUseCase` for org creation.
+Standard hexagonal: `domain/` (`RolePermission` entity, `Permission` and
+`TeamAdminPermission` enums, default constants for both), `application/`
+(two repository ports, `RolePermissionsRepository` and
+`TeamAdminPermissionsRepository`, use-cases, errors), `infrastructure/`
+(local TypeORM records `RolePermissionRecord` and `TeamAdminPermissionRecord`,
+a mapper for role permissions, and one repository each), `presenters/http/` (admin
+`RolePermissionsController` and `TeamAdminPermissionsController`, non-admin
+`MyPermissionsController`, and DTOs). Three use cases are exported:
+`HasPermissionUseCase` for the `PermissionsGuard`,
+`SeedDefaultRolePermissionsUseCase` for org creation, and
+`GetTeamAdminPermissionsUseCase` for the team admin checks in the teams and
+users modules.
+
+## Team admin rights
+
+`TeamAdminPermission` (`team_manage_members`, `team_appoint_admins`, `team_manage_skills`, `team_manage_knowledge`, `team_review_requests`, `team_share_workspaces`) is one org-wide setting for what team admins may do inside the teams they administer. Rows in `team_admin_permissions` (`UNIQUE(orgId, permission)`) mean granted; all six are on by default (`DEFAULT_TEAM_ADMIN_PERMISSIONS`), seeded with the role matrix in `SeedDefaultRolePermissionsUseCase` and backfilled for existing orgs by `CreateTeamAdminPermissions`. Any combination is allowed, including none. Admins manage the set at `GET`/`PUT /team-admin-permissions` (`@Roles(ADMIN)`, a separate path so it cannot collide with `PUT /role-permissions/:role`). Every member reads it as `teamAdminPermissions` on `GET /permissions/me`. The checks combine it with the team admin flag in the teams module (`TeamAccessService`) through the exported `GetTeamAdminPermissionsUseCase`; this module never imports teams. A team admin keeps every right of their org role on top.

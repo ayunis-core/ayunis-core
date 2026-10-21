@@ -42,6 +42,7 @@ describe('user-list team privacy', () => {
       { execute: jest.fn().mockResolvedValue(true) } as never,
       userTeams as never,
       { execute: jest.fn().mockResolvedValue([]) } as never,
+      { execute: jest.fn().mockResolvedValue([]) } as never,
     );
   }
   function query() {
@@ -68,6 +69,7 @@ describe('user-list team privacy', () => {
       } as never,
       { execute: jest.fn() } as never,
       userTeams as never,
+      { execute: jest.fn().mockResolvedValue([]) } as never,
       { execute: jest.fn().mockResolvedValue([]) } as never,
     );
     await expect(apiKeyCaller.execute(query())).rejects.toThrow(

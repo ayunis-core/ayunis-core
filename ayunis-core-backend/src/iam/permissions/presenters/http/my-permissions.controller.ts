@@ -4,6 +4,7 @@ import { CurrentUser } from 'src/iam/authentication/application/decorators/curre
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { GetMyPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-my-permissions/get-my-permissions.use-case';
 import { GetMyPermissionsQuery } from 'src/iam/permissions/application/use-cases/get-my-permissions/get-my-permissions.query';
+import { GetTeamAdminPermissionsUseCase } from 'src/iam/permissions/application/use-cases/get-team-admin-permissions/get-team-admin-permissions.use-case';
 import { MyPermissionsResponseDto } from './dtos/my-permissions-response.dto';
 
 @ApiTags('Permissions')
@@ -13,6 +14,7 @@ export class MyPermissionsController {
 
   constructor(
     private readonly getMyPermissionsUseCase: GetMyPermissionsUseCase,
+    private readonly getTeamAdminPermissionsUseCase: GetTeamAdminPermissionsUseCase,
   ) {}
 
   @Get('me')
@@ -25,9 +27,12 @@ export class MyPermissionsController {
   ): Promise<MyPermissionsResponseDto> {
     this.logger.log({ userId: user.id }, 'getMine');
 
-    const permissions = await this.getMyPermissionsUseCase.execute(
-      new GetMyPermissionsQuery(user.orgId, user.role),
-    );
-    return { permissions };
+    const [permissions, teamAdminPermissions] = await Promise.all([
+      this.getMyPermissionsUseCase.execute(
+        new GetMyPermissionsQuery(user.orgId, user.role),
+      ),
+      this.getTeamAdminPermissionsUseCase.execute(user.orgId),
+    ]);
+    return { permissions, teamAdminPermissions };
   }
 }

@@ -5,6 +5,8 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
 } from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
+import { TeamAdminPermissionsRepository } from 'src/iam/permissions/application/ports/team-admin-permissions.repository';
+import { DEFAULT_TEAM_ADMIN_PERMISSIONS } from 'src/iam/permissions/domain/default-team-admin-permissions.constants';
 import { UnexpectedPermissionError } from 'src/iam/permissions/application/permissions.errors';
 import { SeedDefaultRolePermissionsCommand } from './seed-default-role-permissions.command';
 
@@ -21,6 +23,7 @@ export class SeedDefaultRolePermissionsUseCase {
 
   constructor(
     private readonly rolePermissionsRepository: RolePermissionsRepository,
+    private readonly teamAdminPermissionsRepository: TeamAdminPermissionsRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedPermissionError)
@@ -38,6 +41,10 @@ export class SeedDefaultRolePermissionsUseCase {
         role,
         permissions: DEFAULT_ROLE_PERMISSIONS[role],
       })),
+    );
+    await this.teamAdminPermissionsRepository.setForOrg(
+      command.orgId,
+      DEFAULT_TEAM_ADMIN_PERMISSIONS,
     );
   }
 }
