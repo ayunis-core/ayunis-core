@@ -56,7 +56,18 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/layouts/onboarding-layout', () => ({
-  default: ({ children }: { children: ReactNode }) => <main>{children}</main>,
+  default: ({
+    children,
+    footer,
+  }: {
+    children: ReactNode;
+    footer?: ReactNode;
+  }) => (
+    <main>
+      {children}
+      {footer}
+    </main>
+  ),
 }));
 
 describe(LoginPage.name, () => {
@@ -65,6 +76,21 @@ describe(LoginPage.name, () => {
     discoveryState.isPending = false;
     getRememberedSsoOrgId.mockReturnValue(null);
     loginState.isPending = false;
+  });
+
+  it('offers account creation by default', () => {
+    render(<LoginPage />);
+
+    expect(screen.getByText('login.createAccount')).toBeDefined();
+  });
+
+  // Cloud with closed registration: the link only led to a dead end that sent
+  // customers' employees to support instead of their own administrator.
+  it('hides account creation when registration is closed', () => {
+    render(<LoginPage showRegisterLink={false} />);
+
+    expect(screen.queryByText('login.noAccount', { exact: false })).toBeNull();
+    expect(screen.queryByText('login.createAccount')).toBeNull();
   });
 
   it('offers the remembered organization before asking for an email', () => {
