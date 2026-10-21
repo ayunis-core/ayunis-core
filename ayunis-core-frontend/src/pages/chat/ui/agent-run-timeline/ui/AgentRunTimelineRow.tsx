@@ -14,8 +14,11 @@ import {
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
 import { PiiText } from '@/widgets/markdown';
-import type { TimelineStep, StepStatus } from '../model/types';
-import { getToolActionLabel } from '../lib/get-tool-action-label';
+import type {
+  TimelineStep,
+  StepStatus,
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
+import { getToolActionLabel } from '@/pages/chat/ui/agent-run-timeline/lib/get-tool-action-label';
 
 interface AgentRunTimelineRowProps {
   step: TimelineStep;
@@ -54,8 +57,19 @@ export default function AgentRunTimelineRow({
       )}
     </div>
   );
+  const hint = step.kind === 'tool' && step.status === 'error' && (
+    <p className="ml-6 mb-1 text-xs text-muted-foreground">
+      {t('chat.timeline.invalidToolCallHint')}
+    </p>
+  );
 
-  if (!hasDetails) return header;
+  if (!hasDetails)
+    return (
+      <>
+        {header}
+        {hint}
+      </>
+    );
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -67,6 +81,7 @@ export default function AgentRunTimelineRow({
           {header}
         </button>
       </CollapsibleTrigger>
+      {hint}
       <CollapsibleContent>
         <div className="ml-6 mb-1 flex flex-col gap-2">{details}</div>
       </CollapsibleContent>
