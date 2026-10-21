@@ -2,16 +2,12 @@ import type { UUID } from 'crypto';
 import type { EntityManager } from 'typeorm';
 import { SkillRecord } from './schema/skill.record';
 
-export const SKILL_RELATIONS = [
-  'sources',
-  'mcpIntegrations',
-  'knowledgeBases',
-] as const;
+export const SKILL_RELATIONS = ['sources', 'mcpIntegrations'] as const;
 
 export async function syncSkillRelation(
   manager: EntityManager,
   skillId: UUID,
-  relation: 'sources' | 'mcpIntegrations' | 'knowledgeBases',
+  relation: 'sources' | 'mcpIntegrations',
   existingIds: UUID[],
   desiredIds: UUID[],
 ): Promise<void> {

@@ -7011,132 +7011,6 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
-      "post": {
-        "operationId": "SkillKnowledgeBasesController_assignKnowledgeBase",
-        "parameters": [
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to assign",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "The knowledge base has been successfully assigned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skill or knowledge base not found"
-          },
-          "409": {
-            "description": "Knowledge base already assigned"
-          }
-        },
-        "summary": "Assign knowledge base to skill",
-        "tags": ["skills"]
-      },
-      "delete": {
-        "operationId": "SkillKnowledgeBasesController_unassignKnowledgeBase",
-        "parameters": [
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to unassign",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The knowledge base has been successfully unassigned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skill not found or knowledge base not assigned"
-          }
-        },
-        "summary": "Unassign knowledge base from skill",
-        "tags": ["skills"]
-      }
-    },
-    "/skills/{skillId}/knowledge-bases": {
-      "get": {
-        "operationId": "SkillKnowledgeBasesController_listSkillKnowledgeBases",
-        "parameters": [
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns all knowledge bases assigned to the skill",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skill not found"
-          }
-        },
-        "summary": "List knowledge bases assigned to skill",
-        "tags": ["skills"]
-      }
-    },
     "/mcp-integrations/{id}/oauth/authorize": {
       "post": {
         "operationId": "McpIntegrationsController_authorizeOAuth",
@@ -20050,12 +19924,6 @@
           "instructions": {
             "type": "string"
           },
-          "knowledgeBaseIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "workspaceId": {
             "type": "string"
           },
@@ -20071,7 +19939,6 @@
           "name",
           "shortDescription",
           "instructions",
-          "knowledgeBaseIds",
           "workspaceId",
           "isActive",
           "isPinned"

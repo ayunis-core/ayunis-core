@@ -13,9 +13,6 @@ export class WorkspaceSkillResponseDto {
   @ApiProperty()
   instructions: string;
 
-  @ApiProperty({ type: [String] })
-  knowledgeBaseIds: string[];
-
   @ApiProperty()
   workspaceId: string;
 

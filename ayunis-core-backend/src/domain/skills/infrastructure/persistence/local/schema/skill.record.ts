@@ -13,7 +13,6 @@ import { UUID } from 'crypto';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
@@ -102,8 +101,4 @@ export class SkillRecord extends BaseRecord {
   @ManyToMany(() => McpIntegrationRecord)
   @JoinTable({ name: 'skill_mcp_integrations' })
   mcpIntegrations?: McpIntegrationRecord[];
-
-  @ManyToMany(() => KnowledgeBaseRecord)
-  @JoinTable({ name: 'skill_knowledge_bases' })
-  knowledgeBases?: KnowledgeBaseRecord[];
 }

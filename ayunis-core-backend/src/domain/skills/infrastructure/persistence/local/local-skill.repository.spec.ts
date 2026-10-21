@@ -80,7 +80,7 @@ describe('LocalSkillRepository', () => {
       await repository.findByIds([skillId, skillId], workspaceId);
       expect(mockManager.find).toHaveBeenCalledWith({
         where: { id: In([skillId]), workspaceId: workspaceId ?? IsNull() },
-        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+        relations: ['sources', 'mcpIntegrations'],
       });
     },
   );
@@ -93,7 +93,6 @@ describe('LocalSkillRepository', () => {
         userId,
         sources: [{ id: sourceId }],
         mcpIntegrations: [],
-        knowledgeBases: [],
       } as unknown as SkillRecord;
       const expected = { id: skillId, sourceIds: [sourceId] };
       mockManager.findOne.mockResolvedValue(record);
@@ -109,7 +108,6 @@ describe('LocalSkillRepository', () => {
         userId,
         sources: [],
         mcpIntegrations: [],
-        knowledgeBases: [],
       } as unknown as SkillRecord;
       const expected = { id: skillId };
       mockManager.findOne.mockResolvedValue(record);
@@ -118,7 +116,7 @@ describe('LocalSkillRepository', () => {
       await expect(repository.findById(skillId)).resolves.toBe(expected);
       expect(mockManager.findOne).toHaveBeenCalledWith({
         where: { id: skillId },
-        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+        relations: ['sources', 'mcpIntegrations'],
       });
     });
 

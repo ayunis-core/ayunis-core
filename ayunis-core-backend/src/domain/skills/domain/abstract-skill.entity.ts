@@ -38,7 +38,6 @@ export interface SkillParams {
   instructions: string;
   sourceIds?: UUID[];
   mcpIntegrationIds?: UUID[];
-  knowledgeBaseIds?: UUID[];
   marketplaceIdentifier?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -51,7 +50,6 @@ export abstract class AbstractSkill {
   public readonly instructions: string;
   public readonly sourceIds: UUID[];
   public readonly mcpIntegrationIds: UUID[];
-  public readonly knowledgeBaseIds: UUID[];
   public readonly marketplaceIdentifier: string | null;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
@@ -64,7 +62,6 @@ export abstract class AbstractSkill {
     this.instructions = params.instructions;
     this.sourceIds = params.sourceIds ?? [];
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
-    this.knowledgeBaseIds = params.knowledgeBaseIds ?? [];
     this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

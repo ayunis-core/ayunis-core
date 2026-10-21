@@ -157,12 +157,6 @@ export class LocalCollectiveSkillRepository implements CollectiveSkillRepository
     await this.manager
       .createQueryBuilder()
       .delete()
-      .from('skill_knowledge_bases')
-      .where('"skillsId" = :skillId', { skillId })
-      .execute();
-    await this.manager
-      .createQueryBuilder()
-      .delete()
       .from('skill_mcp_integrations')
       .where('"skillsId" = :skillId', { skillId })
       .execute();

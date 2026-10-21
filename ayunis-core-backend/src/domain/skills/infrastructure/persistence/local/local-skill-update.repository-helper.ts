@@ -29,7 +29,6 @@ async function updateRelations(
   for (const [relation, field] of [
     ['sources', 'sourceIds'],
     ['mcpIntegrations', 'mcpIntegrationIds'],
-    ['knowledgeBases', 'knowledgeBaseIds'],
   ] as const) {
     const currentIds = current[relation]?.map(({ id }) => id) ?? [];
     const desired = mergeIds(currentIds, previous[field], skill[field]);

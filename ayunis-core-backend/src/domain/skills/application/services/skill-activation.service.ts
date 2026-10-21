@@ -6,12 +6,9 @@ import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cas
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.command';
-import { AddKnowledgeBaseToThreadUseCase } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
-import { AddKnowledgeBaseToThreadCommand } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
-import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -34,16 +31,14 @@ export class SkillActivationService {
     private readonly findActivatableSkill: FindActivatableSkillUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
-    private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
   /**
-   * Activates a skill on a thread by copying its sources, MCP integrations,
-   * and knowledge bases, then returns the skill's instructions for inclusion
-   * in the user message.
+   * Activates a skill on a thread by copying its sources and MCP integrations,
+   * then returns the skill's instructions for inclusion in the user message.
    */
   async activateOnThread(
     skillId: UUID,
@@ -61,7 +56,6 @@ export class SkillActivationService {
 
     await this.copySourcesToThread(skill, thread);
     await this.copyMcpIntegrationsToThread(skill, thread);
-    await this.copyKnowledgeBasesToThread(skill, thread);
     this.emitSkillUsed(skill, thread.userId);
 
     return { instructions: skill.instructions, skillName: skill.name };
@@ -151,36 +145,6 @@ export class SkillActivationService {
               threadId: thread.id,
             },
             'MCP integration not found, skipping (stale reference)',
-          );
-          continue;
-        }
-        throw error;
-      }
-    }
-  }
-
-  /** Copies the skill's knowledge bases to the thread (skips stale refs). */
-  private async copyKnowledgeBasesToThread(
-    skill: Skill,
-    thread: Thread,
-  ): Promise<void> {
-    for (const knowledgeBaseId of skill.knowledgeBaseIds) {
-      try {
-        await this.addKnowledgeBaseToThreadUseCase.execute(
-          new AddKnowledgeBaseToThreadCommand(
-            thread.id,
-            knowledgeBaseId,
-            skill.id,
-          ),
-        );
-      } catch (error) {
-        if (error instanceof KnowledgeBaseNotFoundError) {
-          this.logger.warn(
-            {
-              knowledgeBaseId,
-              threadId: thread.id,
-            },
-            'Knowledge base not found, skipping (stale reference)',
           );
           continue;
         }

@@ -12,11 +12,9 @@ import { SkillActivationService } from './skill-activation.service';
 import { FindActivatableSkillUseCase } from 'src/domain/skills/application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
-import { AddKnowledgeBaseToThreadUseCase } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
-import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 
 import { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -33,7 +31,6 @@ describe(SkillActivationService.name, () => {
   let findActivatableSkill: jest.Mocked<FindActivatableSkillUseCase>;
   let addSourceToThreadUseCase: jest.Mocked<AddSourceToThreadUseCase>;
   let addMcpIntegrationToThreadUseCase: jest.Mocked<AddMcpIntegrationToThreadUseCase>;
-  let addKnowledgeBaseToThreadUseCase: jest.Mocked<AddKnowledgeBaseToThreadUseCase>;
   let getSourcesByIdsUseCase: jest.Mocked<GetSourcesByIdsUseCase>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
   let logger: LoggerMock;
@@ -45,8 +42,6 @@ describe(SkillActivationService.name, () => {
   const sourceId2 = '660e8400-e29b-41d4-a716-446655440002' as UUID;
   const mcpIntegrationId1 = '770e8400-e29b-41d4-a716-446655440001' as UUID;
   const mcpIntegrationId2 = '770e8400-e29b-41d4-a716-446655440002' as UUID;
-  const knowledgeBaseId1 = '880e8400-e29b-41d4-a716-446655440001' as UUID;
-  const knowledgeBaseId2 = '880e8400-e29b-41d4-a716-446655440002' as UUID;
 
   const makeThread = () =>
     new Thread({
@@ -64,7 +59,6 @@ describe(SkillActivationService.name, () => {
       instructions: 'Analyze the legal question thoroughly.',
       sourceIds: [sourceId1, sourceId2],
       mcpIntegrationIds: [mcpIntegrationId1, mcpIntegrationId2],
-      knowledgeBaseIds: [knowledgeBaseId1, knowledgeBaseId2],
       userId,
       ...overrides,
     });
@@ -96,10 +90,6 @@ describe(SkillActivationService.name, () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: AddKnowledgeBaseToThreadUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
           provide: GetSourcesByIdsUseCase,
           useValue: { execute: jest.fn() },
         },
@@ -120,9 +110,6 @@ describe(SkillActivationService.name, () => {
     addMcpIntegrationToThreadUseCase = module.get(
       AddMcpIntegrationToThreadUseCase,
     );
-    addKnowledgeBaseToThreadUseCase = module.get(
-      AddKnowledgeBaseToThreadUseCase,
-    );
     getSourcesByIdsUseCase = module.get(GetSourcesByIdsUseCase);
     eventEmitter = module.get(EventEmitter2);
   });
@@ -130,7 +117,7 @@ describe(SkillActivationService.name, () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('activateOnThread', () => {
-    it('should add sources, MCP integrations, and knowledge bases from the skill to the thread', async () => {
+    it('should add sources and MCP integrations from the skill to the thread', async () => {
       const thread = makeThread();
       const skill = makeSkill();
       const sources = [makeSource(sourceId1), makeSource(sourceId2)];
@@ -146,7 +133,6 @@ describe(SkillActivationService.name, () => {
       });
       expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(2);
       expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
       );
@@ -180,7 +166,6 @@ describe(SkillActivationService.name, () => {
 
       expect(addSourceToThreadUseCase.execute).not.toHaveBeenCalled();
       expect(addMcpIntegrationToThreadUseCase.execute).not.toHaveBeenCalled();
-      expect(addKnowledgeBaseToThreadUseCase.execute).not.toHaveBeenCalled();
       const result = await service.activateOnThread(skillId, thread);
 
       expect(findActivatableSkill.execute).toHaveBeenCalledWith({
@@ -193,13 +178,6 @@ describe(SkillActivationService.name, () => {
       });
       expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(1);
       expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          threadId: thread.id,
-          knowledgeBaseId: knowledgeBaseId1,
-          originSkillId: skill.id,
-        }),
-      );
     });
 
     it('should emit the used skill after activation succeeds', async () => {
@@ -207,7 +185,6 @@ describe(SkillActivationService.name, () => {
       const skill = makeSkill({
         sourceIds: [],
         mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
       });
 
       findActivatableSkill.execute.mockResolvedValue(skill);
@@ -230,7 +207,6 @@ describe(SkillActivationService.name, () => {
         instructions,
         sourceIds: [],
         mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
       });
 
       findActivatableSkill.execute.mockResolvedValue(skill);
@@ -254,7 +230,6 @@ describe(SkillActivationService.name, () => {
 
       expect(addSourceToThreadUseCase.execute).not.toHaveBeenCalled();
       expect(addMcpIntegrationToThreadUseCase.execute).not.toHaveBeenCalled();
-      expect(addKnowledgeBaseToThreadUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('should skip sources that are already assigned to the thread', async () => {
@@ -310,87 +285,11 @@ describe(SkillActivationService.name, () => {
       );
     });
 
-    it('should copy knowledge bases to the thread with originSkillId', async () => {
-      const thread = makeThread();
-      const skill = makeSkill({
-        sourceIds: [],
-        mcpIntegrationIds: [],
-        knowledgeBaseIds: [knowledgeBaseId1, knowledgeBaseId2],
-      });
-
-      findActivatableSkill.execute.mockResolvedValue(skill);
-      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
-
-      await service.activateOnThread(skillId, thread);
-
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          threadId: thread.id,
-          knowledgeBaseId: knowledgeBaseId1,
-          originSkillId: skillId,
-        }),
-      );
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          threadId: thread.id,
-          knowledgeBaseId: knowledgeBaseId2,
-          originSkillId: skillId,
-        }),
-      );
-    });
-
-    it('should work with empty knowledgeBaseIds', async () => {
-      const thread = makeThread();
-      const skill = makeSkill({
-        sourceIds: [],
-        mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
-      });
-
-      findActivatableSkill.execute.mockResolvedValue(skill);
-      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
-
-      const result = await service.activateOnThread(skillId, thread);
-
-      expect(addKnowledgeBaseToThreadUseCase.execute).not.toHaveBeenCalled();
-      expect(result.instructions).toBe(
-        'Analyze the legal question thoroughly.',
-      );
-    });
-
-    it('should log a warning and continue when a knowledge base is not found (stale ID)', async () => {
-      const thread = makeThread();
-      const skill = makeSkill({
-        sourceIds: [],
-        mcpIntegrationIds: [],
-        knowledgeBaseIds: [knowledgeBaseId1, knowledgeBaseId2],
-      });
-
-      findActivatableSkill.execute.mockResolvedValue(skill);
-      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
-      addKnowledgeBaseToThreadUseCase.execute
-        .mockRejectedValueOnce(new KnowledgeBaseNotFoundError(knowledgeBaseId1))
-        .mockResolvedValueOnce(undefined);
-
-      const result = await service.activateOnThread(skillId, thread);
-
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.objectContaining({ knowledgeBaseId: knowledgeBaseId1 }),
-        'Knowledge base not found, skipping (stale reference)',
-      );
-      expect(result.instructions).toBe(
-        'Analyze the legal question thoroughly.',
-      );
-    });
-
     it('should log a warning and continue when an MCP integration is not found (stale ID)', async () => {
       const thread = makeThread();
       const skill = makeSkill({
         sourceIds: [],
         mcpIntegrationIds: [mcpIntegrationId1, mcpIntegrationId2],
-        knowledgeBaseIds: [],
       });
 
       findActivatableSkill.execute.mockResolvedValue(skill);
@@ -418,7 +317,6 @@ describe(SkillActivationService.name, () => {
       const skill = makeSkill({
         sourceIds: [],
         mcpIntegrationIds: [mcpIntegrationId1],
-        knowledgeBaseIds: [],
       });
 
       findActivatableSkill.execute.mockResolvedValue(skill);
@@ -432,49 +330,10 @@ describe(SkillActivationService.name, () => {
       );
     });
 
-    it('should rethrow unexpected errors from addKnowledgeBaseToThread', async () => {
-      const thread = makeThread();
-      const skill = makeSkill({
-        sourceIds: [],
-        mcpIntegrationIds: [],
-        knowledgeBaseIds: [knowledgeBaseId1],
-      });
-
-      findActivatableSkill.execute.mockResolvedValue(skill);
-      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
-      addKnowledgeBaseToThreadUseCase.execute.mockRejectedValue(
-        new Error('Database connection lost'),
-      );
-
-      await expect(service.activateOnThread(skillId, thread)).rejects.toThrow(
-        'Database connection lost',
-      );
-    });
-
-    it('should handle repeated activation with knowledge bases (idempotent)', async () => {
-      const thread = makeThread();
-      const skill = makeSkill({
-        sourceIds: [],
-        mcpIntegrationIds: [],
-        knowledgeBaseIds: [knowledgeBaseId1],
-      });
-
-      findActivatableSkill.execute.mockResolvedValue(skill);
-      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
-
-      // First activation
-      await service.activateOnThread(skillId, thread);
-      // Second activation (AddKnowledgeBaseToThreadUseCase is idempotent — returns early)
-      await service.activateOnThread(skillId, thread);
-
-      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-    });
-
     it('should skip sources with FAILED status and only attach READY sources', async () => {
       const thread = makeThread();
       const skill = makeSkill({
         mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
       });
       const readySource = makeSource(sourceId1, SourceStatus.READY);
       const failedSource = makeSource(sourceId2, SourceStatus.FAILED);
@@ -497,7 +356,6 @@ describe(SkillActivationService.name, () => {
       const thread = makeThread();
       const skill = makeSkill({
         mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
       });
       const processingSource = makeSource(sourceId1, SourceStatus.PROCESSING);
 
@@ -513,7 +371,6 @@ describe(SkillActivationService.name, () => {
       const thread = makeThread();
       const skill = makeSkill({
         mcpIntegrationIds: [],
-        knowledgeBaseIds: [],
       });
       const failedSource = makeSource(sourceId1, SourceStatus.FAILED);
 

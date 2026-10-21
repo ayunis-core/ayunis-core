@@ -201,7 +201,6 @@ describe('CreateSkillUseCase', () => {
       workspaceId,
       mcpIntegrationIds: [mcpIntegrationId],
       sourceIds: [],
-      knowledgeBaseIds: [],
     });
     expect(skillRepository.activateSkill).not.toHaveBeenCalled();
     expect(skillRepository.activateWorkspaceSkill).not.toHaveBeenCalled();
