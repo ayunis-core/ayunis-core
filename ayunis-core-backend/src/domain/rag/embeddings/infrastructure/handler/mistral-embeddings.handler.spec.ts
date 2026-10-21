@@ -69,6 +69,28 @@ describe('MistralEmbeddingsHandler', () => {
     );
   });
 
+  it('passes the configured server URL override to the client', async () => {
+    (Mistral as unknown as jest.Mock).mockClear();
+    await Test.createTestingModule({
+      providers: [
+        MistralEmbeddingsHandler,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string) =>
+              key === 'embeddings.mistral.serverUrl'
+                ? 'https://mistral.example'
+                : 'mistral-api-key',
+          },
+        },
+      ],
+    }).compile();
+
+    expect(Mistral).toHaveBeenCalledWith(
+      expect.objectContaining({ serverURL: 'https://mistral.example' }),
+    );
+  });
+
   it('retries client-side timeouts instead of failing the run', async () => {
     const client = (Mistral as unknown as jest.Mock).mock.results[0].value as {
       embeddings: { create: jest.Mock };

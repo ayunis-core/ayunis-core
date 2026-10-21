@@ -26,6 +26,7 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
     this.mistral = new Mistral({
       apiKey: this.configService.get('embeddings.mistral.apiKey'),
       server: 'eu',
+      serverURL: this.configService.get('embeddings.mistral.serverUrl'),
       timeoutMs: EMBEDDINGS_TIMEOUT_MS,
     });
   }
