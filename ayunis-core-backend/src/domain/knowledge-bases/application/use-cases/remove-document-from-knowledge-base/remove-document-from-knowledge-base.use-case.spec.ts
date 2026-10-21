@@ -43,7 +43,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
       .mockResolvedValue({ id: documentId }),
   };
   const writeAccess = {
-    requireWrite: jest.fn(),
+    requireManage: jest.fn(),
   } as unknown as jest.Mocked<KnowledgeBaseWriteAccessService>;
   const deleteSource = { execute: jest.fn() };
   const module = await Test.createTestingModule({
@@ -109,7 +109,7 @@ describe(RemoveDocumentFromKnowledgeBaseUseCase.name, () => {
     });
     const { useCase, repository, writeAccess, deleteSource, documentId } =
       await setup(knowledgeBase);
-    writeAccess.requireWrite.mockRejectedValue(
+    writeAccess.requireManage.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
 
@@ -149,7 +149,7 @@ describe(RemoveDocumentFromKnowledgeBaseUseCase.name, () => {
     await expect(
       useCase.execute(command(knowledgeBase.id, documentId)),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
-    expect(writeAccess.requireWrite).not.toHaveBeenCalled();
+    expect(writeAccess.requireManage).not.toHaveBeenCalled();
     expect(repository.findSourceByIdAndKnowledgeBaseId).not.toHaveBeenCalled();
     expect(deleteSource.execute).not.toHaveBeenCalled();
   });
@@ -162,7 +162,7 @@ describe(RemoveDocumentFromKnowledgeBaseUseCase.name, () => {
     });
     const { useCase, repository, writeAccess, deleteSource, documentId } =
       await setup(knowledgeBase);
-    writeAccess.requireWrite.mockRejectedValue(
+    writeAccess.requireManage.mockRejectedValue(
       new KnowledgeBaseNotFoundError(knowledgeBase.id),
     );
 

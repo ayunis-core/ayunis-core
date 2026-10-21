@@ -15,8 +15,10 @@ import {
   SkillKnowledgeBaseNotFoundError,
   SkillNotFoundError,
   UnexpectedSkillError,
+  SkillInvalidInputError,
 } from 'src/domain/skills/application/skills.errors';
 import type { Skill } from 'src/domain/skills/domain/skill';
+import { isCollectiveSkill } from 'src/domain/skills/application/models/collective-skill-owner';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 
@@ -37,6 +39,11 @@ export class AssignKnowledgeBaseToSkillUseCase {
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
     await this.authorization.requireWrite(skill);
+    if (isCollectiveSkill(skill)) {
+      throw new SkillInvalidInputError(
+        'Team and organisation skills cannot link knowledge bases',
+      );
+    }
     await this.assertKnowledgeBaseCanBeAssigned(skill, command.knowledgeBaseId);
     if (skill.knowledgeBaseIds.includes(command.knowledgeBaseId)) {
       throw new SkillKnowledgeBaseAlreadyAssignedError(command.knowledgeBaseId);

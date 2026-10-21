@@ -63,6 +63,9 @@ export class KnowledgeBaseActivationRecord {
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
 
+  @Column({ default: true })
+  isActive: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }

@@ -1,3 +1,7 @@
+import type {
+  OwnerDescription,
+  ResourceViewerRights,
+} from 'src/domain/ownership/application/models/ownership-lookup';
 import type { Skill } from 'src/domain/skills/domain/skill';
 
 export interface SkillUserContext {
@@ -11,4 +15,6 @@ export interface SkillContext<
 > extends SkillUserContext {
   skill: T;
   creatorName: string | null;
+  viewer?: ResourceViewerRights;
+  ownerDescription?: OwnerDescription;
 }

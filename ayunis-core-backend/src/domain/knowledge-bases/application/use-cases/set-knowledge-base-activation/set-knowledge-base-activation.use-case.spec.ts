@@ -1,3 +1,4 @@
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
 import { Test } from '@nestjs/testing';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -57,6 +58,7 @@ async function setup(knowledgeBase: KnowledgeBase) {
       SetKnowledgeBaseActivationUseCase,
       { provide: KnowledgeBaseRepository, useValue: repository },
       { provide: KnowledgeBaseReadAccessService, useValue: readAccess },
+      { provide: CollectiveKnowledgeBaseRepository, useValue: {} },
       { provide: KnowledgeBaseWriteAccessService, useValue: writeAccess },
       { provide: ContextService, useValue: context },
       { provide: HasPermissionUseCase, useValue: hasPermission },

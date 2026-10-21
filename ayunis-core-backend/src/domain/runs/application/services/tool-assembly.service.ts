@@ -1,4 +1,9 @@
-import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import {
+  skillSlugName,
+  skillSlugPrefix,
+} from 'src/domain/skills/domain/skill-slug-prefix';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
@@ -25,8 +30,6 @@ import {
   buildSkillSlug,
   SlugCollisionError,
   SYSTEM_PREFIX,
-  USER_PREFIX,
-  WORKSPACE_PREFIX,
   type SkillEntry,
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
@@ -220,8 +223,8 @@ export class ToolAssemblyService {
     };
     const allInputs: SkillInput[] = [
       ...activeSkills.map((s): SkillInput => ({
-        name: s.name,
-        prefix: s instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX,
+        name: skillSlugName(s),
+        prefix: skillSlugPrefix(s),
         description: s.shortDescription,
       })),
       ...alwaysOnTemplates.map((t): SkillInput => ({
@@ -259,10 +262,9 @@ export class ToolAssemblyService {
   ): Map<string, string> {
     const skillIds = new Map<string, string>();
     for (const skill of skills) {
+      if (skill instanceof TeamSkill || skill instanceof OrgSkill) continue;
       try {
-        const prefix =
-          skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
-        const slug = buildSkillSlug(prefix, skill.name);
+        const slug = buildSkillSlug(skillSlugPrefix(skill), skill.name);
         if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
           throw new SlugCollisionError(
             slug,

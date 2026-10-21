@@ -15,16 +15,26 @@ import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/loca
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 
 @Entity({ name: 'skills' })
 @Check(
   'CHK_skills_exactly_one_owner',
-  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+  '("userId" IS NOT NULL AND "workspaceId" IS NULL AND "teamId" IS NULL AND "orgId" IS NULL) OR ("workspaceId" IS NOT NULL AND "userId" IS NULL AND "teamId" IS NULL AND "orgId" IS NULL) OR ("teamId" IS NOT NULL AND "orgId" IS NOT NULL AND "userId" IS NULL AND "workspaceId" IS NULL) OR ("orgId" IS NOT NULL AND "userId" IS NULL AND "workspaceId" IS NULL AND "teamId" IS NULL)',
 )
 @Index(['name', 'userId'], { unique: true, where: '"workspaceId" IS NULL' })
 @Index(['name', 'workspaceId'], {
   unique: true,
   where: '"workspaceId" IS NOT NULL',
+})
+@Index('UQ_skills_name_team', ['name', 'teamId'], {
+  unique: true,
+  where: '"teamId" IS NOT NULL',
+})
+@Index('UQ_skills_name_org', ['name', 'orgId'], {
+  unique: true,
+  where: '"orgId" IS NOT NULL AND "teamId" IS NULL',
 })
 export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
@@ -53,6 +63,22 @@ export class SkillRecord extends BaseRecord {
   @ManyToOne(() => WorkspaceRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  teamId: UUID | null;
+
+  @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'teamId' })
+  team: TeamRecord | null;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  orgId: UUID | null;
+
+  @ManyToOne(() => OrgRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'orgId' })
+  org: OrgRecord | null;
 
   @ManyToMany(() => SourceRecord)
   @JoinTable({ name: 'skill_sources' })

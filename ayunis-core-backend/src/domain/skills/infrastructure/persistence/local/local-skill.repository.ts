@@ -1,8 +1,8 @@
 import { SKILL_RELATIONS } from './local-skill-relations.repository-helper';
 import { updateSkill } from './local-skill-update.repository-helper';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
+import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, IsNull, Repository } from 'typeorm';
@@ -104,9 +104,7 @@ export class LocalSkillRepository implements SkillRepository {
       throw new Error('Failed to load created skill');
     }
 
-    return skill instanceof PersonalSkill
-      ? this.skillMapper.toPersonal(withRelations)
-      : this.skillMapper.toWorkspace(withRelations);
+    return this.skillMapper.toDomain(withRelations);
   }
 
   update(skill: PersonalSkill, previous: PersonalSkill): Promise<PersonalSkill>;
@@ -188,7 +186,7 @@ export class LocalSkillRepository implements SkillRepository {
     workspaceId: undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
-  ): Promise<Paginated<PersonalSkill>>;
+  ): Promise<Paginated<PersonalSkill | CollectiveSkill>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
@@ -221,11 +219,7 @@ export class LocalSkillRepository implements SkillRepository {
       .getManyAndCount();
 
     return new Paginated({
-      data: records.map((record) =>
-        workspaceId === undefined
-          ? this.skillMapper.toPersonal(record)
-          : this.skillMapper.toWorkspace(record),
-      ),
+      data: records.map((record) => this.skillMapper.toDomain(record)),
       limit: options.limit,
       offset: options.offset,
       total,
@@ -236,7 +230,7 @@ export class LocalSkillRepository implements SkillRepository {
     this.logger.log({ userId }, 'findActiveByOwner');
 
     const activations = await this.skillActivationRepository.find({
-      where: { userId },
+      where: { userId, isActive: true },
       select: ['skillId'],
     });
 

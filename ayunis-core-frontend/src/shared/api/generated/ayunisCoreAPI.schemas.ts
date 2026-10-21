@@ -2968,11 +2968,14 @@ export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwner
 export const CreateKnowledgeBaseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface CreateKnowledgeBaseDto {
   ownerType: CreateKnowledgeBaseDtoOwnerType;
   workspaceId?: string;
+  teamId?: string;
   /**
      * The name of the knowledge base
      * @minLength 1
@@ -2986,12 +2989,42 @@ export interface CreateKnowledgeBaseDto {
   description?: string;
 }
 
+export interface ResourceViewerDto {
+  /** The viewer is in the audience of the item */
+  canUse: boolean;
+  /** The viewer may change the item */
+  canEdit: boolean;
+  /** The viewer may delete the item */
+  canDelete: boolean;
+}
+
+export interface OwnerEditorDto {
+  userId: string;
+  name: string;
+}
+
+export interface OwnerDescriptionDto {
+  /** @nullable */
+  teamName: string | null;
+  /**
+     * Team members or organisation users who can use the item
+     * @nullable
+     */
+  audienceCount: number | null;
+  /** Team admins who may change items of the owning team */
+  teamEditors: OwnerEditorDto[];
+  /** A non-admin role holds the organisation right for this resource */
+  orgEditorsIncludeNonAdmins: boolean;
+}
+
 export type KnowledgeBaseResponseDtoOwnerType = typeof KnowledgeBaseResponseDtoOwnerType[keyof typeof KnowledgeBaseResponseDtoOwnerType];
 
 
 export const KnowledgeBaseResponseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface KnowledgeBaseResponseDto {
@@ -3000,6 +3033,12 @@ export interface KnowledgeBaseResponseDto {
   ownerType: KnowledgeBaseResponseDtoOwnerType;
   /** The owning workspace for workspace-owned knowledge bases */
   workspaceId?: string;
+  /** The owning team for team-owned knowledge bases */
+  teamId?: string;
+  /** What the caller may do; omitted for workspace items */
+  viewer?: ResourceViewerDto;
+  /** Audience and editors of a team or organisation item */
+  ownerDescription?: OwnerDescriptionDto;
   /** The name of the knowledge base */
   name: string;
   /** The description of the knowledge base */
@@ -3014,6 +3053,29 @@ export interface KnowledgeBaseResponseDto {
   isActive: boolean;
   /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
   isShared?: boolean;
+}
+
+export type OwnerOptionType = typeof OwnerOptionType[keyof typeof OwnerOptionType];
+
+
+export const OwnerOptionType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface OwnerOptionDto {
+  type: OwnerOptionType;
+  teamId?: string;
+  teamName?: string;
+  memberCount?: number;
+  /** Team admins who may change items of this team */
+  editors?: OwnerEditorDto[];
+}
+
+export interface OwnerOptionsResponseDto {
+  options: OwnerOptionDto[];
+  orgEditorsIncludeNonAdmins: boolean;
 }
 
 export interface KnowledgeBaseListResponseDto {
@@ -3223,6 +3285,8 @@ export type SkillResponseDtoOwnerType = typeof SkillResponseDtoOwnerType[keyof t
 export const SkillResponseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface SkillResponseDto {
@@ -3230,6 +3294,11 @@ export interface SkillResponseDto {
   ownerType: SkillResponseDtoOwnerType;
   userId?: string;
   workspaceId?: string;
+  teamId?: string;
+  /** What the caller may do; omitted for workspace skills */
+  viewer?: ResourceViewerDto;
+  /** Audience and editors of a team or organisation skill */
+  ownerDescription?: OwnerDescriptionDto;
   name: string;
   shortDescription: string;
   instructions: string;
@@ -3290,6 +3359,8 @@ export type CreateSkillDtoOwnerType = typeof CreateSkillDtoOwnerType[keyof typeo
 export const CreateSkillDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface CreateSkillDto {
@@ -3305,7 +3376,8 @@ export interface CreateSkillDto {
   instructions: string;
   ownerType: CreateSkillDtoOwnerType;
   workspaceId?: string;
-  /** Whether a personal skill is active (defaults to true) */
+  teamId?: string;
+  /** Whether the skill is active for its owner, or for the creator of a team or organisation skill (defaults to true) */
   isActive?: boolean;
 }
 

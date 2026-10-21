@@ -157,6 +157,7 @@ import type {
   OrgSsoConnectionResourceDto,
   OrgSubscriptionsResponseDto,
   OrgSystemPromptResponseDto,
+  OwnerOptionsResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
   PaginatedSuperAdminUsersListResponseDto,
@@ -11198,6 +11199,7 @@ export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<ty
 
 
 /**
+ * The owner must be one the caller may create for: personal needs manage_own_knowledge, team needs team admin rights for that team, org needs manage_org_knowledge.
  * @summary Create a new knowledge base
  */
 export const knowledgeBasesControllerCreate = (
@@ -11347,6 +11349,99 @@ export function useKnowledgeBasesControllerFindAll<TData = Awaited<ReturnType<ty
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getKnowledgeBasesControllerFindAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List the owners the caller may create knowledge bases for
+ */
+export const knowledgeBasesControllerOwnerOptions = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OwnerOptionsResponseDto>(
+      {url: `/knowledge-bases/owner-options`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBasesControllerOwnerOptionsQueryKey = () => {
+    return [
+    `/knowledge-bases/owner-options`
+    ] as const;
+    }
+
+
+export const getKnowledgeBasesControllerOwnerOptionsQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBasesControllerOwnerOptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>> = ({ signal }) => knowledgeBasesControllerOwnerOptions(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBasesControllerOwnerOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>>
+export type KnowledgeBasesControllerOwnerOptionsQueryError = unknown
+
+
+export function useKnowledgeBasesControllerOwnerOptions<TData = Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBasesControllerOwnerOptions<TData = Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBasesControllerOwnerOptions<TData = Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the owners the caller may create knowledge bases for
+ */
+
+export function useKnowledgeBasesControllerOwnerOptions<TData = Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerOwnerOptions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBasesControllerOwnerOptionsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -12389,6 +12484,7 @@ export const useSkillsControllerImproveText = <TError = void,
     }
 
 /**
+ * The owner must be one the caller may create for: personal needs manage_own_skills, team needs team admin rights for that team, org needs manage_org_skills.
  * @summary Create a new skill
  */
 export const skillsControllerCreate = (
@@ -12538,6 +12634,99 @@ export function useSkillsControllerFindAll<TData = Awaited<ReturnType<typeof ski
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSkillsControllerFindAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List the owners the caller may create skills for
+ */
+export const skillsControllerOwnerOptions = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OwnerOptionsResponseDto>(
+      {url: `/skills/owner-options`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerOwnerOptionsQueryKey = () => {
+    return [
+    `/skills/owner-options`
+    ] as const;
+    }
+
+
+export const getSkillsControllerOwnerOptionsQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerOwnerOptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>> = ({ signal }) => skillsControllerOwnerOptions(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillsControllerOwnerOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>>
+export type SkillsControllerOwnerOptionsQueryError = unknown
+
+
+export function useSkillsControllerOwnerOptions<TData = Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerOwnerOptions>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerOwnerOptions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerOwnerOptions<TData = Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerOwnerOptions>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerOwnerOptions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerOwnerOptions<TData = Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the owners the caller may create skills for
+ */
+
+export function useSkillsControllerOwnerOptions<TData = Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerOwnerOptions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillsControllerOwnerOptionsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

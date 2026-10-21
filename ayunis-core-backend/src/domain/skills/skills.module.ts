@@ -7,6 +7,11 @@ import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { LocalSkillRepositoryModule } from './infrastructure/persistence/local/local-skill-repository.module';
 import { LocalSkillRepository } from './infrastructure/persistence/local/local-skill.repository';
 import { SkillRepository } from './application/ports/skill.repository';
+import { CollectiveSkillRepository } from './application/ports/collective-skill.repository';
+import { LocalCollectiveSkillRepository } from './infrastructure/persistence/local/local-collective-skill.repository';
+import { SkillNameLookupService } from './application/services/skill-name-lookup.service';
+import { SkillOwnershipContextService } from './application/services/skill-ownership-context.service';
+import { OwnershipModule } from 'src/domain/ownership/ownership.module';
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
 import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
@@ -103,6 +108,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     QuotasModule,
     UsageModule,
     TrialsModule,
+    OwnershipModule,
   ],
   providers: [
     ActivateWorkspaceSkillByNameUseCase,
@@ -111,8 +117,14 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
       provide: SkillRepository,
       useClass: LocalSkillRepository,
     },
+    {
+      provide: CollectiveSkillRepository,
+      useClass: LocalCollectiveSkillRepository,
+    },
     // Services
     SkillAuthorizationService,
+    SkillNameLookupService,
+    SkillOwnershipContextService,
     FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,

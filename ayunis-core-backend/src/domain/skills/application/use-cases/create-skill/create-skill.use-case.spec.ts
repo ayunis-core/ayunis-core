@@ -16,6 +16,18 @@ import { SkillRepository } from 'src/domain/skills/application/ports/skill.repos
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 
 import { ContextService } from 'src/common/context/services/context.service';
+import { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import { SkillNameLookupService } from 'src/domain/skills/application/services/skill-name-lookup.service';
+import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
+import {
+  OwnershipViewer,
+  type OwnershipViewerParams,
+} from 'src/domain/ownership/application/models/ownership-viewer';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { TeamAdminPermission } from 'src/iam/permissions/domain/value-objects/team-admin-permission.enum';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import type { UUID } from 'crypto';
 import {
   DuplicateSkillNameError,
@@ -25,6 +37,8 @@ import {
 describe('CreateSkillUseCase', () => {
   let useCase: CreateSkillUseCase;
   let skillRepository: jest.Mocked<SkillRepository>;
+  let collectiveRepository: jest.Mocked<CollectiveSkillRepository>;
+  let getViewer: jest.Mocked<GetOwnershipViewerUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -52,14 +66,44 @@ describe('CreateSkillUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         {
           provide: SkillAuthorizationService,
-          useValue: { requireWrite: jest.fn() },
+          useValue: { requireManage: jest.fn() },
+        },
+        SkillNameLookupService,
+        {
+          provide: CollectiveSkillRepository,
+          useValue: {
+            findByNameAndTeam: jest.fn(),
+            findByNameAndOrg: jest.fn(),
+            setActive: jest.fn(),
+          },
+        },
+        {
+          provide: GetOwnershipViewerUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
 
     useCase = module.get<CreateSkillUseCase>(CreateSkillUseCase);
     skillRepository = module.get(SkillRepository);
+    collectiveRepository = module.get(CollectiveSkillRepository);
+    getViewer = module.get(GetOwnershipViewerUseCase);
   });
+
+  function viewerWith(params: Partial<OwnershipViewerParams>) {
+    getViewer.execute.mockResolvedValue(
+      new OwnershipViewer({
+        userId: mockUserId,
+        orgId: mockOrgId,
+        isAdmin: false,
+        permissions: [],
+        memberTeamIds: [],
+        adminTeamIds: [],
+        teamAdminPermissions: [],
+        ...params,
+      }),
+    );
+  }
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -215,5 +259,121 @@ describe('CreateSkillUseCase', () => {
       expect.any(String),
       mockUserId,
     );
+  });
+
+  describe('team and organisation owners', () => {
+    const teamId = '323e4567-e89b-12d3-a456-426614174111' as UUID;
+    const draft = {
+      name: 'Bauantrag vorprüfen',
+      shortDescription: 'Prüft Bauanträge',
+      instructions: 'Prüfe die Unterlagen.',
+    };
+
+    beforeEach(() => {
+      skillRepository.create.mockImplementation((skill) =>
+        Promise.resolve(skill),
+      );
+    });
+
+    it('lets a team admin with the team right create a team skill', async () => {
+      viewerWith({
+        memberTeamIds: [teamId],
+        adminTeamIds: [teamId],
+        teamAdminPermissions: [TeamAdminPermission.TEAM_MANAGE_SKILLS],
+      });
+
+      const created = await useCase.execute(
+        new CreateSkillCommand({ ...draft, owner: { type: 'team', teamId } }),
+      );
+
+      expect(created).toBeInstanceOf(TeamSkill);
+      expect(created).toMatchObject({ teamId, orgId: mockOrgId });
+      expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+    });
+
+    it('rejects a team the caller does not administer, even as admin', async () => {
+      viewerWith({ isAdmin: true, permissions: Object.values(Permission) });
+
+      await expect(
+        useCase.execute(
+          new CreateSkillCommand({ ...draft, owner: { type: 'team', teamId } }),
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+      expect(skillRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates an organisation skill with the organisation right', async () => {
+      viewerWith({ permissions: [Permission.MANAGE_ORG_SKILLS] });
+
+      const created = await useCase.execute(
+        new CreateSkillCommand({ ...draft, owner: { type: 'org' } }),
+      );
+
+      expect(created).toBeInstanceOf(OrgSkill);
+    });
+
+    it('rejects an organisation skill without the organisation right', async () => {
+      viewerWith({ permissions: [Permission.MANAGE_OWN_SKILLS] });
+
+      await expect(
+        useCase.execute(
+          new CreateSkillCommand({ ...draft, owner: { type: 'org' } }),
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    });
+
+    it.each([[{ type: 'team' as const, teamId }], [{ type: 'org' as const }]])(
+      'rejects MCP integrations on a %o skill',
+      async (owner) => {
+        viewerWith({
+          memberTeamIds: [teamId],
+          adminTeamIds: [teamId],
+          teamAdminPermissions: [TeamAdminPermission.TEAM_MANAGE_SKILLS],
+          permissions: [Permission.MANAGE_ORG_SKILLS],
+        });
+
+        await expect(
+          useCase.execute(
+            new CreateSkillCommand({
+              ...draft,
+              mcpIntegrationIds: ['423e4567-e89b-12d3-a456-426614174222'],
+              owner,
+            }),
+          ),
+        ).rejects.toBeInstanceOf(SkillInvalidInputError);
+        expect(skillRepository.create).not.toHaveBeenCalled();
+      },
+    );
+
+    it('rejects a duplicate name within the same organisation', async () => {
+      viewerWith({ permissions: [Permission.MANAGE_ORG_SKILLS] });
+      collectiveRepository.findByNameAndOrg.mockResolvedValueOnce(
+        new OrgSkill({ ...draft, orgId: mockOrgId }),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateSkillCommand({ ...draft, owner: { type: 'org' } }),
+        ),
+      ).rejects.toBeInstanceOf(DuplicateSkillNameError);
+    });
+
+    it('stores an inactive state for the creator when requested', async () => {
+      viewerWith({ permissions: [Permission.MANAGE_ORG_SKILLS] });
+
+      const created = await useCase.execute(
+        new CreateSkillCommand({
+          ...draft,
+          owner: { type: 'org' },
+          isActive: false,
+        }),
+      );
+
+      expect(collectiveRepository.setActive).toHaveBeenCalledWith(
+        created.id,
+        mockUserId,
+        false,
+      );
+    });
   });
 });

@@ -1,4 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  OwnerDescriptionDto,
+  ResourceViewerDto,
+} from 'src/domain/ownership/presenters/http/dto/ownership.dto';
 import type { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
@@ -11,8 +15,8 @@ export class KnowledgeBaseResponseDto {
   })
   id: UUID;
 
-  @ApiProperty({ enum: ['personal', 'workspace'] })
-  ownerType: 'personal' | 'workspace';
+  @ApiProperty({ enum: ['personal', 'workspace', 'team', 'org'] })
+  ownerType: 'personal' | 'workspace' | 'team' | 'org';
 
   @ApiProperty({
     type: 'string',
@@ -21,6 +25,25 @@ export class KnowledgeBaseResponseDto {
     description: 'The owning workspace for workspace-owned knowledge bases',
   })
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'uuid',
+    description: 'The owning team for team-owned knowledge bases',
+  })
+  teamId?: UUID;
+
+  @ApiPropertyOptional({
+    type: ResourceViewerDto,
+    description: 'What the caller may do; omitted for workspace items',
+  })
+  viewer?: ResourceViewerDto;
+
+  @ApiPropertyOptional({
+    type: OwnerDescriptionDto,
+    description: 'Audience and editors of a team or organisation item',
+  })
+  ownerDescription?: OwnerDescriptionDto;
 
   @ApiProperty({
     description: 'The name of the knowledge base',

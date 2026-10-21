@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Injectable()
@@ -15,19 +17,23 @@ export class KnowledgeBaseMapper {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
-    if ((record.userId === null) === (record.workspaceId === null)) {
+    const owners = [record.userId, record.workspaceId, record.teamId];
+    if (owners.filter(Boolean).length > 1) {
       throw new Error(`Knowledge base ${record.id} has invalid ownership`);
     }
-    if (record.userId !== null) {
+    if (record.userId) {
       return new PersonalKnowledgeBase({ ...params, userId: record.userId });
     }
-    if (record.workspaceId !== null) {
+    if (record.workspaceId) {
       return new WorkspaceKnowledgeBase({
         ...params,
         workspaceId: record.workspaceId,
       });
     }
-    throw new Error(`Knowledge base ${record.id} has no owner`);
+    if (record.teamId) {
+      return new TeamKnowledgeBase({ ...params, teamId: record.teamId });
+    }
+    return new OrgKnowledgeBase(params);
   }
 
   toPersonal(record: KnowledgeBaseRecord): PersonalKnowledgeBase {
@@ -56,6 +62,7 @@ export class KnowledgeBaseMapper {
       entity instanceof PersonalKnowledgeBase ? entity.userId : null;
     record.workspaceId =
       entity instanceof WorkspaceKnowledgeBase ? entity.workspaceId : null;
+    record.teamId = entity instanceof TeamKnowledgeBase ? entity.teamId : null;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;

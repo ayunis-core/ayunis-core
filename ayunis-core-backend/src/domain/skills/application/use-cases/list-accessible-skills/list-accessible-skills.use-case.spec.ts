@@ -1,3 +1,6 @@
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
+import type { SkillOwnershipContextService } from 'src/domain/skills/application/services/skill-ownership-context.service';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
@@ -32,6 +35,9 @@ describe(ListAccessibleSkillsUseCase.name, () => {
       repository as unknown as SkillRepository,
       { execute: jest.fn() } as unknown as FindSharesByScopeUseCase,
       { resolveMany: jest.fn() } as unknown as SkillCreatorNameService,
+      {} as CollectiveSkillRepository,
+      {} as SkillOwnershipContextService,
+      {} as GetOwnershipViewerUseCase,
       { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
     );

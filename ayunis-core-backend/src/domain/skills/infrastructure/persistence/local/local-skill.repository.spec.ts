@@ -280,7 +280,7 @@ describe('LocalSkillRepository', () => {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     } as unknown as jest.Mocked<Repository<SkillRecord>>;
     const mapper = {
-      toWorkspace: jest.fn((record: SkillRecord) => record),
+      toDomain: jest.fn((record: SkillRecord) => record),
     } as unknown as SkillMapper;
     const repository = new LocalSkillRepository(
       skillRepository,

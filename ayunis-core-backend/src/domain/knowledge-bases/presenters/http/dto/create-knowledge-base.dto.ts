@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { KnowledgeBaseOwnerDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-owner.dto';
+import { CreateKnowledgeBaseOwnerDto } from 'src/domain/knowledge-bases/presenters/http/dto/create-knowledge-base-owner.dto';
 import {
   IsString,
   IsNotEmpty,
@@ -8,7 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateKnowledgeBaseDto extends KnowledgeBaseOwnerDto {
+export class CreateKnowledgeBaseDto extends CreateKnowledgeBaseOwnerDto {
   @ApiProperty({
     description: 'The name of the knowledge base',
     example: 'Stadtratsprotokolle 2025',

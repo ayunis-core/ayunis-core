@@ -1,5 +1,7 @@
 import type { UUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
+import type { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { OwnershipViewer } from 'src/domain/ownership/application/models/ownership-viewer';
+import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
@@ -20,13 +22,27 @@ function setup() {
   const repository = {
     findAccessibleByIds: jest.fn().mockResolvedValue([knowledgeBase]),
   } as unknown as jest.Mocked<AccessibleKnowledgeBasesByIdsRepository>;
-  const contextService = {
-    get: jest.fn((key: string) => (key === 'userId' ? USER_ID : ORG_ID)),
-  } as unknown as jest.Mocked<ContextService>;
+  const collectiveRepository = {
+    findUsable: jest.fn().mockResolvedValue([]),
+  } as unknown as jest.Mocked<CollectiveKnowledgeBaseRepository>;
+  const getViewer = {
+    execute: jest.fn().mockResolvedValue(
+      new OwnershipViewer({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        isAdmin: false,
+        permissions: [],
+        memberTeamIds: [],
+        adminTeamIds: [],
+        teamAdminPermissions: [],
+      }),
+    ),
+  } as unknown as jest.Mocked<GetOwnershipViewerUseCase>;
   return {
     useCase: new FindAccessibleKnowledgeBasesByIdsUseCase(
       repository,
-      contextService,
+      collectiveRepository,
+      getViewer,
     ),
     repository,
     knowledgeBase,

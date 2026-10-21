@@ -1,3 +1,12 @@
+import { KnowledgeBaseOwnershipContextService } from 'src/domain/knowledge-bases/application/services/knowledge-base-ownership-context.service';
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { BuildOwnershipLookupUseCase } from 'src/domain/ownership/application/use-cases/build-ownership-lookup/build-ownership-lookup.use-case';
+import {
+  anOwnershipLookup,
+  anOwnershipViewer,
+} from 'src/domain/ownership/application/testing/ownership.fixtures';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { Test } from '@nestjs/testing';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { randomUUID, type UUID } from 'crypto';
@@ -46,6 +55,26 @@ async function setup(knowledgeBase: KnowledgeBase) {
       { provide: KnowledgeBaseRepository, useValue: repository },
       { provide: KnowledgeBaseReadAccessService, useValue: readAccess },
       { provide: ContextService, useValue: context },
+      KnowledgeBaseOwnershipContextService,
+      {
+        provide: BuildOwnershipLookupUseCase,
+        useValue: {
+          execute: jest.fn().mockResolvedValue(
+            anOwnershipLookup(
+              'knowledge_base',
+              anOwnershipViewer({
+                userId: USER_ID,
+                orgId: ORG_ID,
+                permissions: [Permission.MANAGE_OWN_KNOWLEDGE],
+              }),
+            ),
+          ),
+        },
+      },
+      {
+        provide: CollectiveKnowledgeBaseRepository,
+        useValue: { getActiveStates: jest.fn().mockResolvedValue(new Map()) },
+      },
     ],
   }).compile();
   return {
@@ -69,6 +98,8 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       isShared: false,
       isActive: true,
       documentCount: 2,
+      viewer: { canUse: true, canEdit: true },
+      ownerDescription: undefined,
     });
     expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
   });
@@ -88,6 +119,8 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       isShared: true,
       isActive: true,
       documentCount: 2,
+      viewer: { canUse: false, canEdit: false },
+      ownerDescription: undefined,
     });
     expect(readAccess.requireRead).toHaveBeenCalledWith(sharedKnowledgeBase);
   });
@@ -109,6 +142,28 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       documentCount: 2,
     });
     expect(readAccess.requireRead).toHaveBeenCalledWith(workspaceKnowledgeBase);
+  });
+
+  it('shows an organisation knowledge base as active and read-only by default', async () => {
+    const knowledgeBase = new OrgKnowledgeBase({
+      name: 'Dienstanweisungen',
+      orgId: ORG_ID,
+    });
+    const { useCase } = await setup(knowledgeBase);
+
+    await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
+      knowledgeBase,
+      isShared: false,
+      isActive: true,
+      documentCount: 2,
+      viewer: { canUse: true, canEdit: false },
+      ownerDescription: {
+        teamName: null,
+        audienceCount: null,
+        teamEditors: [],
+        orgEditorsIncludeNonAdmins: false,
+      },
+    });
   });
 
   it('returns not found when owner-aware read authorization rejects the persisted resource', async () => {

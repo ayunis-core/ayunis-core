@@ -4,6 +4,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
+import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
@@ -62,6 +63,7 @@ function setup() {
     permission,
     useCase: new SetSkillActivationUseCase(
       repository as unknown as SkillRepository,
+      {} as CollectiveSkillRepository,
       authorization as unknown as SkillAuthorizationService,
       context as unknown as ContextService,
       permission as unknown as HasPermissionUseCase,

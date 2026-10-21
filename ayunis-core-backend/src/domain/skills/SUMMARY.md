@@ -2,11 +2,15 @@
 
 ## Purpose
 
-Skills are reusable instruction and resource bundles that an AI assistant can activate during a conversation. A skill has exactly one owner: either a user (`PersonalSkill`) or a workspace (`WorkspaceSkill`).
+Skills are reusable instruction and resource bundles that an AI assistant can activate during a conversation. A skill has exactly one owner: a user (`PersonalSkill`), a workspace (`WorkspaceSkill`), a team (`TeamSkill`) or the organisation (`OrgSkill`). `skills.teamId` and `skills.orgId` hold the team and organisation owners; team skills also carry `orgId` so organisation deletion cascades. `CHK_skills_exactly_one_owner` enforces the four shapes, and names are unique per person, workspace, team (`UQ_skills_name_team`) and organisation (`UQ_skills_name_org`).
 
 ## Ownership and authorization
 
-- Personal reads allow the owner and recipients covered by a skill share; personal writes are owner-only.
+- Personal reads allow the owner and recipients covered by a skill share; personal writes are owner-only and need `MANAGE_OWN_SKILLS`.
+- Team and organisation skills follow the ownership module's rules (`OwnershipViewer`): members use team skills, everyone in the organisation uses organisation skills, team admins with the team right and admins change team skills, holders of `MANAGE_ORG_SKILLS` change organisation skills. A reader without change rights gets 403 on writes; anyone else gets 404.
+- Create, update, delete and source changes check rights in `SkillAuthorizationService.requireManage` and `CreateSkillUseCase`, not with route decorators, so team admins and organisation editors are not blocked by the own-skills right.
+- Team and organisation skills are active by default for everyone who can use them; a `skill_activations` row with `isActive = false` switches one off for one person. `GET /skills?ownerType=personal` lists them next to own and shared skills, with `viewer` and `ownerDescription`.
+- Team and organisation skills cannot link knowledge bases or MCP integrations. Runs advertise them with the `team__` and `org__` slug prefixes; team slugs end with the first eight characters of the team ID (`skillSlugName`), so same-named skills of two teams stay apart, and `FindSkillByNameUseCase` resolves them by that qualified name. `edit_skill` is not offered for them.
 - Workspace reads, writes, and trusted execution delegate to the workspace module's exported access capabilities.
 - ID-based operations load the persisted skill first and derive its owner. Clients never supply owner IDs for detail, mutation, state, relation, or source operations.
 - Workspace authorization failures are exposed as `SkillNotFoundError`, so resource existence is not leaked.
@@ -16,8 +20,9 @@ Skills are reusable instruction and resource bundles that an AI assistant can ac
 
 Create and list are owner-discriminated while retaining one behavioral contract:
 
-- `ownerType=personal` has no owner ID and resolves the authenticated user.
+- `ownerType=personal` has no owner ID and resolves the authenticated user; listing it also returns the team and organisation skills the caller may use.
 - `ownerType=workspace` requires `workspaceId`.
+- Create also accepts `ownerType=team` with `teamId` and `ownerType=org`; `GET /skills/owner-options` lists the owners the caller may create for, with member counts and team editors.
 - Invalid combinations are rejected by DTO validation.
 - Omitted search and pagination return the complete owner scope with deterministic name ordering; either scope uses the same paginated path when search or pagination is supplied.
 - Creation honors `isActive` for either owner type and defaults it to `true` when omitted.
@@ -25,9 +30,10 @@ Create and list are owner-discriminated while retaining one behavioral contract:
 
 | Method          | Path                                                | Description                                           |
 | --------------- | --------------------------------------------------- | ----------------------------------------------------- |
-| POST            | `/skills`                                           | Create in a personal or workspace owner scope         |
+| POST            | `/skills`                                           | Create for a person, workspace, team or organisation  |
 | POST            | `/skills/improve-text`                              | Rewrite a draft's trigger or instructions             |
 | GET             | `/skills`                                           | Paginated list in a personal or workspace owner scope |
+| GET             | `/skills/owner-options`                             | Owners the caller may create a skill for              |
 | GET             | `/skills/marketplace/:identifier`                   | Caller's skill installed from a marketplace entry     |
 | GET             | `/skills/:id`                                       | Read a skill using persisted-owner authorization      |
 | PUT             | `/skills/:id`                                       | Update a skill                                        |
@@ -48,7 +54,7 @@ The former bodyless toggle routes and nested `/workspaces/:id/context/skills` li
 
 ## State semantics
 
-Activation is represented by `skill_activations`; pinning is stored on the same row. Personal/shared skill state is per authenticated user. Workspace skill state is workspace-wide. Pinning requires active state. Deactivation deletes the activation row and therefore clears pinning. Activation and pin setters are idempotent.
+Activation is represented by `skill_activations`; pinning is stored on the same row. Personal/shared skill state is per authenticated user. Workspace skill state is workspace-wide. Team and organisation skills are active without a row; switching one off writes a row with `isActive = false` for that person. Pinning requires active state. Deactivating a personal or workspace skill deletes the activation row and therefore clears pinning. Activation and pin setters are idempotent.
 
 ## Relations and sources
 
@@ -62,9 +68,10 @@ File source creation authorizes the skill before external processing starts, enf
 
 ## Main structure
 
-- `domain/`: `PersonalSkill`, `WorkspaceSkill`, shared `AbstractSkill`, and the `Skill` union.
+- `domain/`: `PersonalSkill`, `WorkspaceSkill`, `TeamSkill`, `OrgSkill`, shared `AbstractSkill`, the `Skill` union and the slug helpers (`skillSlugPrefix`, `skillSlugName`).
 - `application/models/skill-owner.ts`: discriminated owner scope.
-- `application/services/skill-authorization.service.ts`: owner-aware read/write/execution policy.
+- `application/services/skill-authorization.service.ts`: owner-aware read/write/execution policy; `skill-ownership-context.service.ts` resolves the viewer and owner descriptions for team and organisation skills.
+- `application/ports/collective-skill.repository.ts`: team and organisation skills, their per-person state and the usable set for a viewer.
 - `application/use-cases/`: unified CRUD, state, knowledge-base, and source operations plus runtime orchestration.
 - `infrastructure/persistence/local/`: TypeORM repository, state helpers, records, and mappers.
 - `presenters/http/`: canonical `/skills` controllers, owner/state DTOs, and response mapper.

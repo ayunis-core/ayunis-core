@@ -8,6 +8,8 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
+import { CollectiveKnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/collective-knowledge-base.repository';
+import { LocalCollectiveKnowledgeBaseRepository } from './local-collective-knowledge-base.repository';
 
 @Module({
   imports: [
@@ -29,7 +31,15 @@ import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-ba
       provide: AccessibleKnowledgeBasesByIdsRepository,
       useExisting: LocalKnowledgeBaseRepository,
     },
+    {
+      provide: CollectiveKnowledgeBaseRepository,
+      useClass: LocalCollectiveKnowledgeBaseRepository,
+    },
   ],
-  exports: [KnowledgeBaseRepository, AccessibleKnowledgeBasesByIdsRepository],
+  exports: [
+    KnowledgeBaseRepository,
+    AccessibleKnowledgeBasesByIdsRepository,
+    CollectiveKnowledgeBaseRepository,
+  ],
 })
 export class LocalKnowledgeBaseRepositoryModule {}

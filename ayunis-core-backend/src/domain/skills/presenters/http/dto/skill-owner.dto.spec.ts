@@ -1,6 +1,10 @@
 import { validate } from 'class-validator';
 import { randomUUID } from 'crypto';
-import { SkillOwnerDto, SkillOwnerType, toSkillOwner } from './skill-owner.dto';
+import {
+  SkillOwnerDto,
+  SkillOwnerType,
+  toSkillListScope,
+} from './skill-owner.dto';
 
 class TestSkillOwnerDto extends SkillOwnerDto {}
 
@@ -14,7 +18,7 @@ describe(SkillOwnerDto.name, () => {
       ownerType: SkillOwnerType.PERSONAL,
     });
     await expect(errors(dto)).resolves.toHaveLength(0);
-    expect(toSkillOwner(dto)).toEqual({ type: 'personal' });
+    expect(toSkillListScope(dto)).toEqual({ type: 'personal' });
   });
 
   it('maps workspace ownership with a workspace id', async () => {
@@ -24,7 +28,7 @@ describe(SkillOwnerDto.name, () => {
       workspaceId,
     });
     await expect(errors(dto)).resolves.toHaveLength(0);
-    expect(toSkillOwner(dto)).toEqual({ type: 'workspace', workspaceId });
+    expect(toSkillListScope(dto)).toEqual({ type: 'workspace', workspaceId });
   });
 
   it('rejects workspace ownership without a workspace id', async () => {

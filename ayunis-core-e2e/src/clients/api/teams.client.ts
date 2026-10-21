@@ -93,6 +93,13 @@ export async function deleteTeam(
   await generatedApi.teamsControllerDeleteTeam(teamId, { api });
 }
 
+export function requestDeleteTeam(
+  api: APIRequestContext,
+  teamId: string,
+): Promise<APIResponse> {
+  return api.delete(`${config.apiURL}/api/teams/${teamId}`);
+}
+
 export function requestListTeams(api: APIRequestContext): Promise<APIResponse> {
   return api.get(`${config.apiURL}/api/teams`);
 }
