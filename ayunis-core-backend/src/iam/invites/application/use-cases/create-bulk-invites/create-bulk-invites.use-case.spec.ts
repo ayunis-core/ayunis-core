@@ -17,7 +17,10 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  InsufficientSeatsError,
+  SubscriptionNotFoundError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -154,6 +157,7 @@ describe('CreateBulkInvitesUseCase', () => {
   });
 
   const setupDefaultConfigMocks = (overrides?: {
+    fynnManaged?: boolean;
     emailProviderBlacklist?: string[];
     isCloudHosted?: boolean;
     inviteExpiresIn?: string;
@@ -162,6 +166,7 @@ describe('CreateBulkInvitesUseCase', () => {
     inviteAcceptEndpoint?: string;
   }) => {
     const defaults = {
+      fynnManaged: false,
       emailProviderBlacklist: [],
       isCloudHosted: false,
       inviteExpiresIn: '7d',
@@ -174,6 +179,8 @@ describe('CreateBulkInvitesUseCase', () => {
     // eslint-disable-next-line sonarjs/function-return-type -- the config mock intentionally returns each key's configured type
     configService.get.mockImplementation((key: string) => {
       switch (key) {
+        case 'features.fynnManagedSubscriptionsEnabled':
+          return defaults.fynnManaged;
         case 'auth.emailProviderBlacklist':
           return defaults.emailProviderBlacklist;
         case 'app.isCloudHosted':
@@ -777,35 +784,46 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
-    it('should update seats when not enough available in cloud instance', async () => {
-      const command = new CreateBulkInvitesCommand({
-        invites: [
-          { email: 'user1@example.com', role: UserRole.USER },
-          { email: 'user2@example.com', role: UserRole.USER },
-          { email: 'user3@example.com', role: UserRole.USER },
-        ],
-        orgId: mockOrgId,
-        userId: mockUserId,
-      });
-
-      setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmails.mockResolvedValue([]);
-      usersRepository.findManyByEmails.mockResolvedValue([]);
-      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
-      getActiveSubscriptionUseCase.execute.mockResolvedValue(
-        createMockSubscription(1, 10),
-      );
-
-      await useCase.execute(command);
-
-      expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
+    it.each([false, true])(
+      'handles insufficient bulk capacity with Fynn management=%s',
+      async (managed) => {
+        const command = new CreateBulkInvitesCommand({
+          invites: [
+            { email: 'user1@example.com', role: UserRole.USER },
+            { email: 'user2@example.com', role: UserRole.USER },
+            { email: 'user3@example.com', role: UserRole.USER },
+          ],
           orgId: mockOrgId,
-          requestingUserId: mockUserId,
-          noOfSeats: 12, // 10 + (3 - 1) = 12
-        }),
-      );
-    });
+          userId: mockUserId,
+        });
+
+        setupDefaultConfigMocks({ isCloudHosted: true, fynnManaged: managed });
+        invitesRepository.findByEmails.mockResolvedValue([]);
+        usersRepository.findManyByEmails.mockResolvedValue([]);
+        inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+        getActiveSubscriptionUseCase.execute.mockResolvedValue(
+          createMockSubscription(1, 10),
+        );
+
+        if (managed) {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            InsufficientSeatsError,
+          );
+          expect(invitesRepository.createMany).not.toHaveBeenCalled();
+          expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
+          return;
+        }
+        await useCase.execute(command);
+
+        expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            orgId: mockOrgId,
+            requestingUserId: mockUserId,
+            noOfSeats: 12, // 10 + (3 - 1) = 12
+          }),
+        );
+      },
+    );
 
     it('should proceed when no subscription found in cloud instance', async () => {
       const command = new CreateBulkInvitesCommand({

@@ -19,3 +19,5 @@ Failed attachments in `chat-input/SourcesList` map the typed API `processingErro
 The `knowledge-base-documents-card/` widget provides scope-agnostic document management through an injected controller, including optional personal URL ingestion.
 
 The `usage-overview/` widget shares aggregate usage displays between organisation admins and super admins. Its `showIndividualUsage` input controls whether `UserUsageSection` mounts at all, so hidden reports render no table, placeholder or hint and make no per-user usage request.
+
+Billing seat/address sections support omitted edit-dialog renderers, and the subscription-cancellation section supports read-only mode. Both retain their data display; existing consumers remain editable by default.

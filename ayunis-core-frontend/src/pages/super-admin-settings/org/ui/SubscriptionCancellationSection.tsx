@@ -4,17 +4,18 @@ import { Button } from '@ayunis/ui/components/button';
 import { ClockIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SubscriptionCancellationSection as SharedSubscriptionCancellationSection } from '@/widgets/subscription-cancellation-section';
-import useSuperAdminSubscriptionCancel from '../api/useSuperAdminSubscriptionCancel';
-import useSuperAdminSubscriptionUncancel from '../api/useSuperAdminSubscriptionUncancel';
+import useSuperAdminSubscriptionCancel from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionCancel';
+import useSuperAdminSubscriptionUncancel from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionUncancel';
 import {
   toCalendarDateKey,
   utcDateToLocal,
-} from '../lib/subscription-start-date';
+} from '@/pages/super-admin-settings/org/lib/subscription-start-date';
 import SubscriptionStartDateUpdateDialog from './SubscriptionStartDateUpdateDialog';
 
 interface SubscriptionCancellationSectionProps {
   subscription: SubscriptionResponseDto;
   orgId: string;
+  readOnly?: boolean;
 }
 
 function formatDate(value: string): string {
@@ -24,6 +25,7 @@ function formatDate(value: string): string {
 export default function SubscriptionCancellationSection({
   subscription,
   orgId,
+  readOnly = false,
 }: Readonly<SubscriptionCancellationSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { cancelSubscription } = useSuperAdminSubscriptionCancel(orgId);
@@ -39,6 +41,7 @@ export default function SubscriptionCancellationSection({
 
   return (
     <SharedSubscriptionCancellationSection
+      readOnly={readOnly}
       subscription={subscription}
       actions={{ cancelSubscription, uncancelSubscription }}
       t={t}

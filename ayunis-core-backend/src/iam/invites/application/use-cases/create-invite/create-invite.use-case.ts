@@ -23,7 +23,10 @@ import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-case
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
-import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  InsufficientSeatsError,
+  SubscriptionNotFoundError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 
 interface CreateInviteResult {
@@ -174,6 +177,14 @@ export class CreateInviteUseCase {
       });
     }
     if (subscription.availableSeats === 0) {
+      if (
+        this.configService.get<boolean>(
+          'features.fynnManagedSubscriptionsEnabled',
+          false,
+        ) === true
+      ) {
+        throw new InsufficientSeatsError(1, subscription.availableSeats);
+      }
       await this.updateSeatsUseCase.execute(
         new UpdateSeatsCommand({
           orgId,

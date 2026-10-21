@@ -1,7 +1,6 @@
 import { useAppControllerFeatureToggles } from '@/shared/api/generated/ayunisCoreAPI';
-import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
-export function useFeatureToggles(): FeatureTogglesResponseDto {
-  const { data } = useAppControllerFeatureToggles();
-  return data ?? {};
+export function useFeatureToggles() {
+  const { data, isLoading, error, refetch } = useAppControllerFeatureToggles();
+  return { toggles: error ? undefined : data, isLoading, error, refetch };
 }

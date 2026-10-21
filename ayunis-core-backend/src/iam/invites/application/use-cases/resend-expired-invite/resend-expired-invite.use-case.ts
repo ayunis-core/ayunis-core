@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { ResendExpiredInviteCommand } from './resend-expired-invite.command';
@@ -26,6 +28,7 @@ export class ResendExpiredInviteUseCase {
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly configService: ConfigService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -36,7 +39,24 @@ export class ResendExpiredInviteUseCase {
       { inviteId: command.inviteId, orgId: command.orgId },
       'execute',
     );
-    return await this.resend(command);
+    if (
+      this.configService.get<boolean>('app.isCloudHosted', false) === true &&
+      this.configService.get<boolean>(
+        'features.fynnManagedSubscriptionsEnabled',
+        false,
+      ) === true
+    ) {
+      return this.resendWithReservation(command);
+    }
+    return this.resend(command);
+  }
+
+  @Transactional()
+  private async resendWithReservation(
+    command: ResendExpiredInviteCommand,
+  ): Promise<ResendExpiredInviteResult> {
+    await this.acquireAllocationLock.execute(command.orgId);
+    return this.resend(command);
   }
 
   private async resend(

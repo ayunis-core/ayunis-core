@@ -18,6 +18,7 @@ export interface SubscriptionCancellationActions {
 }
 
 interface SubscriptionCancellationSectionProps {
+  readonly readOnly?: boolean;
   readonly subscription: SubscriptionResponseDto;
   readonly actions: SubscriptionCancellationActions;
   readonly t: TFunction;
@@ -45,6 +46,7 @@ function DefaultStatusBadge({
 
 export default function SubscriptionCancellationSection({
   subscription,
+  readOnly = false,
   actions,
   t,
   renderStatusBadge,
@@ -90,28 +92,30 @@ export default function SubscriptionCancellationSection({
             {t('subscription.title')}
             {statusBadge}
           </CardTitle>
-          <CardAction>
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => {
-                confirmUncancel({
-                  title: t('subscription.reactivateSubscription'),
-                  description: t(
-                    'subscription.reactivateSubscriptionDescription',
-                  ),
-                  confirmText: t('subscription.confirmReactivate'),
-                  cancelText: t('subscription.cancelCancel'),
-                  variant: 'default',
-                  onConfirm: () => {
-                    uncancelSubscription();
-                  },
-                });
-              }}
-            >
-              {t('subscription.reactivate')}
-            </Button>
-          </CardAction>
+          {!readOnly && (
+            <CardAction>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => {
+                  confirmUncancel({
+                    title: t('subscription.reactivateSubscription'),
+                    description: t(
+                      'subscription.reactivateSubscriptionDescription',
+                    ),
+                    confirmText: t('subscription.confirmReactivate'),
+                    cancelText: t('subscription.cancelCancel'),
+                    variant: 'default',
+                    onConfirm: () => {
+                      uncancelSubscription();
+                    },
+                  });
+                }}
+              >
+                {t('subscription.reactivate')}
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           {cancelledContent ?? (
@@ -131,9 +135,11 @@ export default function SubscriptionCancellationSection({
           {t('subscription.title')}
           {statusBadge}
         </CardTitle>
-        <CardAction>
-          {renderActiveActions?.(cancelButton) ?? cancelButton}
-        </CardAction>
+        {!readOnly && (
+          <CardAction>
+            {renderActiveActions?.(cancelButton) ?? cancelButton}
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {activeContent ?? (

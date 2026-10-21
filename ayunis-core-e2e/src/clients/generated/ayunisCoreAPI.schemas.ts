@@ -12,7 +12,10 @@ export interface IsCloudResponseDto {
   isRegistrationDisabled: boolean;
 }
 
-export interface FeatureTogglesResponseDto { [key: string]: unknown }
+export interface FeatureTogglesResponseDto {
+  /** Cloud subscriptions are managed in Fynn */
+  fynnManagedSubscriptionsEnabled: boolean;
+}
 
 export interface UserTeamResponseDto {
   id: string;
