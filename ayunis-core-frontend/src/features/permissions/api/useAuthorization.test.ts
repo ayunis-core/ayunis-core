@@ -6,6 +6,7 @@ import { useAuthorization } from './useAuthorization';
 const mocks = vi.hoisted(() => ({
   useAuthenticationControllerMe: vi.fn(),
   useMyPermissions: vi.fn(),
+  useMyTeamAdminTeamIds: vi.fn(),
 }));
 
 vi.mock('@/shared/api', () => ({
@@ -21,6 +22,10 @@ vi.mock('./useMyPermissions', () => ({
   useMyPermissions: mocks.useMyPermissions,
 }));
 
+vi.mock('./useMyTeamAdminTeamIds', () => ({
+  useMyTeamAdminTeamIds: mocks.useMyTeamAdminTeamIds,
+}));
+
 describe('useAuthorization', () => {
   beforeEach(() => {
     mocks.useAuthenticationControllerMe.mockReturnValue({
@@ -29,6 +34,10 @@ describe('useAuthorization', () => {
     });
     mocks.useMyPermissions.mockReturnValue({
       permissions: ['manage_teams'],
+      isLoading: false,
+    });
+    mocks.useMyTeamAdminTeamIds.mockReturnValue({
+      teamAdminTeamIds: ['team-1'],
       isLoading: false,
     });
   });
@@ -49,5 +58,13 @@ describe('useAuthorization', () => {
     const { result } = renderHook(() => useAuthorization());
 
     expect(result.current.isLoading).toBe(true);
+  });
+
+  it('knows which teams the current user administers', () => {
+    const { result } = renderHook(() => useAuthorization());
+
+    expect(result.current.isTeamAdmin()).toBe(true);
+    expect(result.current.isTeamAdminOf('team-1')).toBe(true);
+    expect(result.current.isTeamAdminOf('team-2')).toBe(false);
   });
 });

@@ -12,15 +12,15 @@
     "hideGettingStarted": "Hide getting started",
     "hideGettingStartedConfirm": {
       "title": "Hide getting started?",
-      "description": "You can always access this page under Account Settings → Getting Started.",
+      "description": "You can always access this page under Account → Getting Started.",
       "confirmText": "Hide",
       "cancelText": "Cancel"
     },
-    "accountSettings": "Account Settings",
+    "accountSettings": "Account",
     "logout": {
       "error": "We could not confirm the logout with the server. Please sign in again if your session remains active."
     },
-    "adminSettings": "Admin Settings",
+    "adminSettings": "Organisation",
     "superAdminSettings": "Super Admin Settings",
     "signOut": "Sign out",
     "updates": "Updates",
