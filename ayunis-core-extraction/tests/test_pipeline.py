@@ -5,7 +5,8 @@ import pytest
 
 from app.config import Settings
 from app.errors import ServiceError
-from app.jobs.pipeline import detect_type, download_input, run_job
+from app.jobs.extractors import detect_type
+from app.jobs.pipeline import download_input, run_job
 from app.jobs.runtime import JobContext
 from app.jobs.store import JobStore
 from tests.conftest import InMemoryObjectStore, start_request
