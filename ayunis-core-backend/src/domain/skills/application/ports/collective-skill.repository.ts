@@ -27,7 +27,9 @@ export abstract class CollectiveSkillRepository {
   abstract findUsable(scope: CollectiveSkillScope): Promise<CollectiveSkill[]>;
   abstract findActiveUsable(
     scope: CollectiveSkillScope,
+    options: { includeMandatory: boolean },
   ): Promise<CollectiveSkill[]>;
+  abstract setMandatory(skillId: UUID, isMandatory: boolean): Promise<void>;
   abstract getStates(
     skillIds: UUID[],
     userId: UUID,

@@ -68,8 +68,10 @@ export class ToolAssemblyService {
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
 
-  async findActiveSkills(): Promise<Skill[]> {
-    return this.findActiveSkillsUseCase.execute(new FindActiveSkillsQuery());
+  async findActiveSkills(inWorkspace: boolean): Promise<Skill[]> {
+    return this.findActiveSkillsUseCase.execute(
+      new FindActiveSkillsQuery(!inWorkspace),
+    );
   }
 
   async buildRunContext(

@@ -4,6 +4,7 @@ import type {
   SkillUserContext,
 } from 'src/domain/skills/application/models/skill-context';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
@@ -20,6 +21,7 @@ export class SkillDtoMapper {
     context: SkillUserContext &
       Partial<Pick<SkillContext, 'viewer' | 'ownerDescription'>>,
   ): SkillResponseDto {
+    const isMandatory = skill instanceof OrgSkill && skill.isMandatory;
     return {
       id: skill.id,
       ...this.ownerFields(skill),
@@ -33,7 +35,8 @@ export class SkillDtoMapper {
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
       marketplaceIdentifier: skill.marketplaceIdentifier,
-      isActive: context.isActive,
+      isActive: isMandatory || context.isActive,
+      isMandatory,
       isPinned: context.isPinned,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
