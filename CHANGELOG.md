@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.59.0](https://github.com/ayunis-core/ayunis-core/compare/v2.58.2...v2.59.0) (2026-10-21)
+
+
+### Features
+
+* **artifacts:** auto-fit spreadsheet columns on boundary double-click (AYC-990) ([#2039](https://github.com/ayunis-core/ayunis-core/issues/2039)) ([f1b60af](https://github.com/ayunis-core/ayunis-core/commit/f1b60af222170ace49babcdf319c79bb3a14d8d2))
+* **embeddings:** use the mistral embeddings server url when available (AYC-1395) ([#2038](https://github.com/ayunis-core/ayunis-core/issues/2038)) ([1c2f377](https://github.com/ayunis-core/ayunis-core/commit/1c2f377878875841c644cf9644a5c53345870b28))
+
+
+### Bug Fixes
+
+* **chat:** explain malformed tool call errors (AYC-1033) ([#2042](https://github.com/ayunis-core/ayunis-core/issues/2042)) ([8fdbb07](https://github.com/ayunis-core/ayunis-core/commit/8fdbb07a5cb6f21b59b1ea945a363800b1f5cee4))
+* **inference:** bound mistral response start instead of whole stream (AYC-1360) ([#2029](https://github.com/ayunis-core/ayunis-core/issues/2029)) ([0cbcb32](https://github.com/ayunis-core/ayunis-core/commit/0cbcb32162973e5985a958e821973f3a10ca768d))
+
+
+### Documentation
+
+* **deployment:** correct backup retention default and note local disk use (AYC-1219) ([#2040](https://github.com/ayunis-core/ayunis-core/issues/2040)) ([7725698](https://github.com/ayunis-core/ayunis-core/commit/77256989f191b7a117d144fd0ce8913e167ed461))
+
 ## [2.58.2](https://github.com/ayunis-core/ayunis-core/compare/v2.58.1...v2.58.2) (2026-10-21)
 
 
