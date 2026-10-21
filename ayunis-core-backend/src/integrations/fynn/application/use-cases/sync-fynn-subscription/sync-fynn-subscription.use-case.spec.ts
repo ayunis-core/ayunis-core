@@ -1,3 +1,11 @@
+import { Logger } from '@nestjs/common';
+import { FynnResourceNotFoundError } from 'src/integrations/fynn/application/fynn.errors';
+import type { DeliverBillingWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/deliver-billing-webhook/deliver-billing-webhook.use-case';
+import type { FynnOutbox } from 'src/integrations/fynn/application/ports/fynn-outbox';
+import type { PendingDomainEvent } from 'src/common/events/pending-domain-event';
+import type { FynnOrgLinkRepository } from 'src/integrations/fynn/application/ports/fynn-org-link.repository';
+import { FynnSyncEventsService } from 'src/integrations/fynn/application/services/fynn-sync-events.service';
+import type { RevokeUnlinkedFynnAccessUseCase } from 'src/integrations/fynn/application/use-cases/revoke-unlinked-fynn-access/revoke-unlinked-fynn-access.use-case';
 import type { SubscriptionSyncState } from 'src/iam/subscriptions/application/models/subscription-sync-state';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -35,8 +43,9 @@ describe('Fynn synchronization orchestration', () => {
   let academyActive: boolean;
   let locked: boolean;
   let events: EventEmitter2;
+  let queued: PendingDomainEvent[];
   let useCase: SyncFynnSubscriptionUseCase;
-  function setup(cloud = true) {
+  function setup(cloud = true, enabled = true) {
     const apply = {
       execute: async (state: SubscriptionSyncState) => {
         applied.push(state);
@@ -57,7 +66,10 @@ describe('Fynn synchronization orchestration', () => {
       },
     } as unknown as ApplySubscriptionSyncUseCase;
     useCase = new SyncFynnSubscriptionUseCase(
-      new ConfigService({ app: { isCloudHosted: cloud } }),
+      new ConfigService({
+        app: { isCloudHosted: cloud },
+        features: { fynnManagedSubscriptionsEnabled: enabled },
+      }),
       client,
       new LoadFynnSnapshotService(client),
       {
@@ -81,12 +93,30 @@ describe('Fynn synchronization orchestration', () => {
           return [];
         },
       } as unknown as SyncAcademyAddonUseCase,
-      events,
+      new FynnSyncEventsService(
+        events,
+        {
+          append: async (_orgId: string, pending: PendingDomainEvent[]) => {
+            queued.push(...pending);
+          },
+        } as unknown as FynnOutbox,
+        { execute: async () => {} } as unknown as DeliverBillingWebhookUseCase,
+      ),
+      { save: async () => {} } as unknown as FynnOrgLinkRepository,
+      {
+        execute: async () => ({ failed: 0 }),
+      } as unknown as RevokeUnlinkedFynnAccessUseCase,
+      {
+        observe: async () => '00000000-0000-4000-8000-000000000001',
+        begin: async () => '00000000-0000-4000-8000-000000000001',
+        isCurrent: async () => true,
+      },
     );
   }
   beforeEach(() => {
     snapshot = structuredClone(fixtures[2]);
     applied = [];
+    queued = [];
     trialEnded = false;
     academyActive = false;
     locked = false;
@@ -100,7 +130,98 @@ describe('Fynn synchronization orchestration', () => {
     };
     setup();
   });
-  it('waits for asynchronous event listeners before completing the sync', async () => {
+  it('performs provider discovery before acquiring the seat allocation lock', async () => {
+    const original = client.getEntitlements.bind(client);
+    client.getEntitlements = async (...args) => {
+      expect(locked).toBe(false);
+      return original(...args);
+    };
+    await useCase.execute({ subscriptionId: snapshot.subscription.id });
+  });
+  it('rejects stale prepared snapshots when another synchronization supersedes them', async () => {
+    Object.assign(useCase, {
+      revisions: {
+        observe: async () => 'revision',
+        begin: async () => 'revision',
+        isCurrent: async () => false,
+      },
+    });
+    await expect(
+      useCase.execute({ subscriptionId: snapshot.subscription.id }),
+    ).rejects.toThrow();
+    expect(applied).toEqual([]);
+    expect(queued).toEqual([]);
+  });
+  it('cleans up a deleted customer using the subscription customer ID', async () => {
+    client.getCustomer = async () => {
+      throw new FynnResourceNotFoundError();
+    };
+    Object.assign(useCase, {
+      cleanup: { execute: async () => ({ changed: 1, failed: 0 }) },
+    });
+    await expect(
+      useCase.execute({ subscriptionId: snapshot.subscription.id }),
+    ).resolves.toEqual({ orgId: null, changed: true });
+    expect(applied).toEqual([]);
+  });
+  it('reports an unassignable subscription without granting access or retrying unlink deliveries', async () => {
+    const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    snapshot.customer.customFields = {};
+    try {
+      await expect(
+        useCase.execute({
+          subscriptionId: snapshot.subscription.id,
+          deliveryId: 'missing-link-delivery',
+        }),
+      ).resolves.toEqual({ orgId: null, changed: false });
+      expect(warn).toHaveBeenCalledWith(
+        {
+          code: 'FYNN_ORG_LINK_MISSING',
+          customerId: snapshot.customer.id,
+          subscriptionId: snapshot.subscription.id,
+          deliveryId: 'missing-link-delivery',
+        },
+        expect.stringContaining('ayunis-core-uuid'),
+      );
+      expect(applied).toEqual([]);
+      expect(queued).toEqual([]);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('acknowledges an unlinked subscription after cleaning up its previously synced org', async () => {
+    snapshot.customer.customFields = {};
+    Object.assign(useCase, {
+      cleanup: { execute: async () => ({ changed: 1, failed: 0 }) },
+    });
+    expect(
+      await useCase.execute({ subscriptionId: snapshot.subscription.id }),
+    ).toEqual({ orgId: null, changed: true });
+    expect(applied).toEqual([]);
+    expect(trialEnded).toBe(false);
+  });
+  it('cleans up the old org even if synchronizing the newly linked org fails', async () => {
+    let cleaned = false;
+    Object.assign(useCase, {
+      cleanup: {
+        execute: async () => {
+          cleaned = true;
+          return { changed: 1, failed: 0 };
+        },
+      },
+      findOrg: {
+        execute: async () => {
+          throw new Error('new Core org does not exist');
+        },
+      },
+    });
+    await expect(
+      useCase.execute({ subscriptionId: snapshot.subscription.id }),
+    ).rejects.toThrow();
+    expect(cleaned).toBe(true);
+  });
+  it('persists outgoing events and awaits local effects before completing', async () => {
     let delivered = false;
     // EventEmitter2.emitAsync awaits promises despite its void listener type.
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -110,8 +231,9 @@ describe('Fynn synchronization orchestration', () => {
     });
     await useCase.execute({ subscriptionId: snapshot.subscription.id });
     expect(delivered).toBe(true);
+    expect(queued).toHaveLength(1);
   });
-  it('logs listener failures after commit without failing an applied sync', async () => {
+  it('rejects failed local effects so the state transaction can roll back', async () => {
     // EventEmitter2.emitAsync awaits promises despite its void listener type.
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     events.on('subscription.created', async () => {
@@ -119,7 +241,7 @@ describe('Fynn synchronization orchestration', () => {
     });
     await expect(
       useCase.execute({ subscriptionId: snapshot.subscription.id }),
-    ).resolves.toMatchObject({ changed: true });
+    ).rejects.toThrow();
     expect(applied).toHaveLength(1);
   });
   it('applies live credits, ends the free trial and enables Academy', async () => {
@@ -135,9 +257,9 @@ describe('Fynn synchronization orchestration', () => {
     expect(trialEnded).toBe(true);
     expect(academyActive).toBe(true);
   });
-  it('reloads state after acquiring the organization lock', async () => {
+  it('loads source state before acquiring the organization lock', async () => {
     client.getEntitlements = async () => {
-      expect(locked).toBe(true);
+      expect(locked).toBe(false);
       return snapshot.entitlements;
     };
     await useCase.execute({ subscriptionId: snapshot.subscription.id });
@@ -303,6 +425,15 @@ describe('Fynn synchronization orchestration', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+  it('preserves manual management when the Fynn feature is disabled', async () => {
+    const reads = jest.spyOn(client, 'getSubscription');
+    setup(true, false);
+    await expect(
+      useCase.execute({ subscriptionId: snapshot.subscription.id }),
+    ).rejects.toThrow();
+    expect(reads).not.toHaveBeenCalled();
+    expect(applied).toEqual([]);
   });
   it('makes no remote request on self-hosted deployments', async () => {
     const reads = jest.spyOn(client, 'getSubscription');

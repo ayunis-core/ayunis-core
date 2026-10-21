@@ -1,6 +1,7 @@
 import {
   Controller,
   HttpCode,
+  Headers,
   Param,
   ParseUUIDPipe,
   Post,
@@ -22,7 +23,11 @@ export class FynnSyncController {
   @HttpCode(200)
   async synchronize(
     @Param('subscriptionId', ParseUUIDPipe) subscriptionId: string,
+    @Headers('x-webhook-id') deliveryId?: string,
   ) {
-    return this.sync.execute({ subscriptionId });
+    return this.sync.execute({
+      subscriptionId,
+      ...(deliveryId ? { deliveryId: deliveryId.slice(0, 200) } : {}),
+    });
   }
 }

@@ -20,3 +20,9 @@ Use cases emit domain events → `WebhookDispatchListener` handles them → cons
 **Error handling:** Delivery failures are logged as warnings but never re-thrown, ensuring webhook issues cannot disrupt core business operations.
 
 Add-on payloads allow `actorUserId: null` for service-originated Fynn synchronization; manual changes still identify their super admin.
+
+Fynn applies local domain effects transactionally under `localBillingEventContext`;
+the listener suppresses immediate HTTP dispatch for those events. Its outbox calls
+`DeliverBillingWebhookUseCase` with a stable event ID/timestamp. That use case maps
+billing events through `application/mappers`, propagates HTTP failures to the retry
+owner, and does not replay domain listeners. Legacy event delivery remains best effort.

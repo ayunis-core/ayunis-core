@@ -1,3 +1,4 @@
+import { localBillingEventContext } from 'src/common/events/durable-event-context';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -37,8 +38,8 @@ import { UsageCollectedWebhookEvent } from 'src/integrations/webhooks/domain/web
 import { ChatSentWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/chat-sent.webhook-event';
 import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-activated.webhook-event';
 import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
-import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
-import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
+import { mapSubscriptionToWebhookPayload } from 'src/integrations/webhooks/application/mappers/subscription-payload.mapper';
+import { mapBillingInfoToWebhookPayload } from 'src/integrations/webhooks/application/mappers/billing-info-payload.mapper';
 import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
@@ -113,7 +114,7 @@ export class WebhookDispatchListener {
     await this.dispatch(new OrgCreatedWebhookEvent(event.org));
   }
 
-  @OnEvent(SubscriptionCreatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionCreatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionCreated(
     event: SubscriptionCreatedEvent,
   ): Promise<void> {
@@ -125,7 +126,9 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME, {
+    suppressErrors: false,
+  })
   async handleSubscriptionMonthlyCreditsUpdated(
     event: SubscriptionMonthlyCreditsUpdatedEvent,
   ): Promise<void> {
@@ -137,7 +140,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME)
+  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {
@@ -149,7 +152,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionUncancelledEvent.EVENT_NAME)
+  @OnEvent(SubscriptionUncancelledEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionUncancelled(
     event: SubscriptionUncancelledEvent,
   ): Promise<void> {
@@ -161,7 +164,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionSeatsUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionSeatsUpdatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionSeatsUpdated(
     event: SubscriptionSeatsUpdatedEvent,
   ): Promise<void> {
@@ -173,7 +176,9 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionBillingInfoUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionBillingInfoUpdatedEvent.EVENT_NAME, {
+    suppressErrors: false,
+  })
   async handleSubscriptionBillingInfoUpdated(
     event: SubscriptionBillingInfoUpdatedEvent,
   ): Promise<void> {
@@ -294,7 +299,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(AddonActivatedEvent.EVENT_NAME)
+  @OnEvent(AddonActivatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
     await this.dispatch(
       new AddonActivatedWebhookEvent({
@@ -305,7 +310,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(AddonDeactivatedEvent.EVENT_NAME)
+  @OnEvent(AddonDeactivatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleAddonDeactivated(event: AddonDeactivatedEvent): Promise<void> {
     await this.dispatch(
       new AddonDeactivatedWebhookEvent({
@@ -373,12 +378,14 @@ export class WebhookDispatchListener {
     orgId: UUID,
     webhookEvent: WebhookEvent,
   ): Promise<void> {
+    if (localBillingEventContext.getStore()) return Promise.resolve();
     return this.webhookDeliverySequencer.enqueue(orgId, () =>
       this.dispatch(webhookEvent),
     );
   }
 
   private async dispatch(webhookEvent: WebhookEvent): Promise<void> {
+    if (localBillingEventContext.getStore()) return;
     try {
       await this.sendWebhookUseCase.execute(
         new SendWebhookCommand(webhookEvent),

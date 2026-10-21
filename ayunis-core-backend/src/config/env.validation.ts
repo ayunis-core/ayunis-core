@@ -1,3 +1,4 @@
+import { validateFynnRules } from './fynn-env.validation';
 import 'reflect-metadata';
 import { plainToInstance, Type } from 'class-transformer';
 import {
@@ -320,6 +321,7 @@ export function validateEnv(
     ...validateProductionRules(env),
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
+    ...validateFynnRules(env),
   ];
   if (messages.length > 0) {
     messages.sort((a, b) => a.localeCompare(b));

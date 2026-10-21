@@ -42,3 +42,9 @@ export class UnexpectedFynnSyncError extends ApplicationError {
     );
   }
 }
+
+export class FynnResourceNotFoundError extends ApplicationError {
+  constructor() {
+    super('Fynn resource no longer exists', 'FYNN_RESOURCE_NOT_FOUND', 404);
+  }
+}

@@ -16,16 +16,28 @@ import {
   InvalidFynnStateError,
 } from 'src/integrations/fynn/application/fynn.errors';
 
-export function getFynnOrgId(customer: FynnCustomer): UUID {
+export function getOptionalFynnOrgId(
+  customer: Pick<FynnCustomer, 'customFields'>,
+): UUID | null {
   const value = Array.isArray(customer.customFields)
     ? undefined
     : customer.customFields['ayunis-core-uuid'];
+  if (value === undefined || value === null || value === '') return null;
   if (typeof value !== 'string' || !isUUID(value)) {
     throw new InvalidFynnStateError(
       'Fynn customer has no valid Core organization UUID',
     );
   }
   return value.toLowerCase() as UUID;
+}
+
+export function getFynnOrgId(customer: FynnCustomer): UUID {
+  const orgId = getOptionalFynnOrgId(customer);
+  if (!orgId)
+    throw new InvalidFynnStateError(
+      'Fynn customer has no valid Core organization UUID',
+    );
+  return orgId;
 }
 
 export function fynnSubscriptionServesAccess(
@@ -64,13 +76,18 @@ export function mapFynnSubscription(
   ) {
     throw new InvalidFynnStateError('Ambiguous Fynn subscription type');
   }
-  const subscription = subscriptionData(snapshot);
-  if (types.has('seat')) {
-    subscription.type = SubscriptionType.SEAT_BASED;
-    subscription.noOfSeats = seats(snapshot.subscription, typeValues);
-  } else {
-    subscription.monthlyCredits = credits(active);
-  }
+  const base = subscriptionData(snapshot);
+  const subscription: SubscriptionSyncData = types.has('seat')
+    ? {
+        ...base,
+        type: SubscriptionType.SEAT_BASED,
+        noOfSeats: seats(snapshot.subscription, typeValues),
+      }
+    : {
+        ...base,
+        type: SubscriptionType.USAGE_BASED,
+        monthlyCredits: credits(active),
+      };
   const academyActive = valuesForFeature(active, 'core-academy').some(
     (entitlement) => entitlement.value === true || entitlement.value === 'true',
   );
@@ -81,6 +98,12 @@ export function activeEntitlements(
   snapshot: Pick<FynnSnapshot, 'subscription' | 'entitlements'>,
   now: Date,
 ): FynnEntitlement[] {
+  for (const entitlement of snapshot.entitlements) {
+    if (
+      !['active', 'pending', 'disabled', 'expired'].includes(entitlement.status)
+    )
+      throw new InvalidFynnStateError('Unknown Fynn entitlement status');
+  }
   const active = snapshot.entitlements.filter(
     (entry) =>
       entry.status === 'active' &&
@@ -122,7 +145,9 @@ export function fynnEntitlementsGrantAccess(
   );
 }
 
-function subscriptionData(snapshot: FynnSnapshot): SubscriptionSyncData {
+function subscriptionData(
+  snapshot: FynnSnapshot,
+): Omit<SubscriptionSyncData, 'type' | 'noOfSeats' | 'monthlyCredits'> {
   const { subscription, customer } = snapshot;
   const address = customer.defaultAddress;
   if (!address)
@@ -131,7 +156,6 @@ function subscriptionData(snapshot: FynnSnapshot): SubscriptionSyncData {
     );
   const cancelled = subscription.status === 'cancelled';
   return {
-    type: SubscriptionType.USAGE_BASED,
     startsAt: date(
       subscription.contractDetails.contractStart ?? subscription.activatedAt,
       'contract start',

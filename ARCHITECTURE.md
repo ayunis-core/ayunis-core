@@ -120,15 +120,15 @@ none of these packages implements the Agent Plugins standard.
 
 ### Infrastructure & Support
 
-| Module                                                          | Summary               | Detail                                           |
-| --------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
-| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns  |
-| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Fynn sync, metrics, webhooks, Connect auth       |
-| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management       |
-| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                       |
-| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                       |
-| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup              |
-| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                            |
+| Module                                                          | Summary               | Detail                                                    |
+| --------------------------------------------------------------- | --------------------- | --------------------------------------------------------- |
+| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns           |
+| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Fynn sync/reconciliation, metrics, webhooks, Connect auth |
+| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management                |
+| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                                |
+| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                                |
+| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup                       |
+| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                                     |
 
 ---
 
@@ -239,3 +239,12 @@ the admin-settings sidebar + route guard. The backend still 403s regardless.
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
 
 Backend transaction enrollment and review checklist: [TRANSACTIONS.md](ayunis-core-backend/TRANSACTIONS.md).
+
+Fynn synchronization records successfully synced customer/org links in
+`fynn_org_links`. Its webhook and scheduled cleanup revoke a previously linked
+org’s paid subscription and Academy access after unlinking or removal of all
+source subscriptions; Core free trials stay independently managed. Provider reads
+happen before the allocation transaction. `fynn_sync_revisions` prevents an older
+prepared snapshot from overwriting newer work; the state transaction also writes
+`fynn_outbox`. Local effects execute transactionally, while persisted billing
+webhooks retry separately with stable event identity and per-org ordering.

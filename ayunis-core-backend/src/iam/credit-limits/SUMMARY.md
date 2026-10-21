@@ -22,3 +22,5 @@ Integrations: **teams** (membership and names), **users** (names), **api-keys** 
 Team credit-limit exceeded errors retain consumption in internal metadata but allowlist only the team ID and configured limit in client responses, omitting numeric consumption from HTTP and streaming error details. Admission decisions remain subject to normal team-limit enforcement.
 
 **Usage visibility (AYC-1342).** Hiding individual usage does not restrict team management, membership, team limits, user deletion or invitation team assignments. Normal role and organization ownership checks still apply. Super-admin team management endpoints remain available.
+
+Organization-wide cancellation cleanup joins the caller’s TransactionHost transaction so a failed Fynn sync cannot delete credit limits before its billing state commits.

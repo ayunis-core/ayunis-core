@@ -1,3 +1,8 @@
+import PQueue from 'p-queue';
+import {
+  fynnSweepContext,
+  fynnReadDeadline,
+} from 'src/integrations/fynn/application/services/fynn-read-context';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { z } from 'zod';
@@ -14,6 +19,7 @@ import type {
 } from 'src/integrations/fynn/application/models/fynn-snapshot';
 import {
   FynnApiError,
+  FynnResourceNotFoundError,
   FynnConfigurationError,
 } from 'src/integrations/fynn/application/fynn.errors';
 import {
@@ -27,6 +33,12 @@ import {
 
 @Injectable()
 export class FynnHttpClient extends FynnClient {
+  // Fynn documents 240 entitlement reads/minute. Leave headroom for webhooks.
+  private readonly requests = new PQueue({
+    concurrency: 1,
+    intervalCap: 3,
+    interval: 1000,
+  });
   constructor(private readonly config: ConfigService) {
     super();
   }
@@ -41,7 +53,10 @@ export class FynnHttpClient extends FynnClient {
     return this.readOne(`/customers/${encodeURIComponent(id)}`, customerSchema);
   }
   async listCustomerLinks(): Promise<FynnCustomerLink[]> {
-    return this.readAll('/customers', customerLinkSchema);
+    const sweep = fynnSweepContext.getStore();
+    if (!sweep) return this.readAll('/customers', customerLinkSchema);
+    sweep.customers ??= this.readAll('/customers', customerLinkSchema);
+    return sweep.customers;
   }
   async listSubscriptions(
     customerId: string,
@@ -122,19 +137,26 @@ export class FynnHttpClient extends FynnClient {
     return baseUrl;
   }
   private async request(path: string): Promise<unknown> {
+    const remaining = (fynnReadDeadline.getStore() ?? Infinity) - Date.now();
+    if (remaining <= 0) throw new FynnApiError();
     const { baseUrl, apiKey } = this.configuration();
     const url = new URL(`${baseUrl.toString().replace(/\/$/, '')}${path}`);
     try {
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: 'application/json',
-        },
-        redirect: 'error',
-        signal: AbortSignal.timeout(
-          this.config.get<number>('fynn.timeoutMs', 10_000),
-        ),
-      });
+      const signal = AbortSignal.timeout(
+        Math.min(this.config.get<number>('fynn.timeoutMs', 10_000), remaining),
+      );
+      const response = await this.requests.add(
+        () =>
+          fetch(url, {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              Accept: 'application/json',
+            },
+            redirect: 'error',
+            signal,
+          }),
+        { signal },
+      );
       if (!response.ok) {
         await response.body?.cancel();
         throw Object.assign(new Error('Fynn API request failed'), {
@@ -143,6 +165,8 @@ export class FynnHttpClient extends FynnClient {
       }
       return await response.json();
     } catch (error) {
+      if (error instanceof Error && 'status' in error && error.status === 404)
+        throw new FynnResourceNotFoundError();
       throw (
         wrapProviderFailure(error, { provider: 'fynn' }) ?? new FynnApiError()
       );
