@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.58.2](https://github.com/ayunis-core/ayunis-core/compare/v2.58.1...v2.58.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **embeddings:** restore eu endpoint for mistral embeddings (AYC-1395) ([#2036](https://github.com/ayunis-core/ayunis-core/issues/2036)) ([e9e9630](https://github.com/ayunis-core/ayunis-core/commit/e9e96303617df0206cd4149460f8854c6acf41ff))
+
 ## [2.58.1](https://github.com/ayunis-core/ayunis-core/compare/v2.58.0...v2.58.1) (2026-10-21)
 
 
