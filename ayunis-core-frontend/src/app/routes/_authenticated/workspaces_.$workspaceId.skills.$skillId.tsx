@@ -2,11 +2,9 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { WorkspaceSkillDetailPage } from '@/pages/workspace/ui/WorkspaceSkillDetailPage';
 import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
-  getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey,
   getSkillsControllerFindOneQueryKey,
   getWorkspacesControllerFindOneQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-  skillKnowledgeBasesControllerListSkillKnowledgeBases,
   skillsControllerFindOne,
   workspacesControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -40,18 +38,9 @@ export const Route = createFileRoute(
       ) {
         throw new Error('Skill is outside the route workspace scope');
       }
-      const assignedKnowledgeBases = await queryClient.query({
-        queryKey:
-          getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey(
-            skillId,
-          ),
-        queryFn: () =>
-          skillKnowledgeBasesControllerListSkillKnowledgeBases(skillId),
-      });
       return {
         workspace,
         skill,
-        assignedKnowledgeBaseIds: assignedKnowledgeBases.map(({ id }) => id),
         isEmbeddingModelEnabled: embeddingModel.isEmbeddingModelEnabled,
       };
     } catch {

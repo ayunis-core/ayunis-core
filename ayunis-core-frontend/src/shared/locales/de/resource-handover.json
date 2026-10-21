@@ -29,7 +29,7 @@
       "audienceTeam": "Alle {{count}} Mitglieder im Team können die {{noun}} nutzen.",
       "audienceOrg": "Alle {{count}} Personen in der Organisation können die {{noun}} nutzen.",
       "severalTeams": "Sollen mehrere Teams sie nutzen, übergeben Sie sie an die Organisation.",
-      "unlinks": "Verknüpfte Wissenssammlungen und Integrationen werden dabei von der Fähigkeit gelöst."
+      "unlinks": "Verknüpfte Integrationen werden dabei von der Fähigkeit gelöst."
     },
     "cancel": "Abbrechen",
     "submitDirect": "Übergeben",
