@@ -14,6 +14,7 @@ import { IngestBulkContentCommand } from './ingest-bulk-content.command';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
+import type { IngestBulkOutcome } from 'src/domain/rag/indexers/domain/ingest-bulk-outcome';
 
 /**
  * Maximum number of texts to send in a single embedding API call.
@@ -38,8 +39,8 @@ export class IngestBulkContentUseCase {
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
 
-  async execute(command: IngestBulkContentCommand): Promise<void> {
-    if (command.entries.length === 0) return;
+  async execute(command: IngestBulkContentCommand): Promise<IngestBulkOutcome> {
+    if (command.entries.length === 0) return { embeddingMs: 0, indexingMs: 0 };
 
     this.logger.debug(
       { entryCount: command.entries.length, orgId: command.orgId },
@@ -67,17 +68,21 @@ export class IngestBulkContentUseCase {
     );
 
     // 4. Embed all child texts in batches
+    const embeddingStartedAt = performance.now();
     const allEmbeddings = await this.embedInBatches(
       allChildTexts,
       permittedModel.model,
       command.orgId,
     );
+    const embeddingMs = performance.now() - embeddingStartedAt;
 
     // 5. Reassemble parent chunks with their embeddings
     const parentChunks = this.assembleParentChunks(parentPlans, allEmbeddings);
 
     // 6. Bulk save all parent chunks
+    const indexingStartedAt = performance.now();
     await this.parentChildIndexerRepository.saveMany(parentChunks);
+    const indexingMs = performance.now() - indexingStartedAt;
 
     this.logger.debug(
       {
@@ -86,6 +91,7 @@ export class IngestBulkContentUseCase {
       },
       'Bulk ingested chunks',
     );
+    return { embeddingMs, indexingMs };
   }
 
   private buildParentPlans(command: IngestBulkContentCommand): ParentPlan[] {

@@ -4,6 +4,7 @@ import { IngestBulkContentCommand } from './ingest-bulk-content.command';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { IngestBulkOutcome } from 'src/domain/rag/indexers/domain/ingest-bulk-outcome';
 
 @Injectable()
 export class IngestBulkContentUseCase {
@@ -11,7 +12,7 @@ export class IngestBulkContentUseCase {
 
   constructor(private readonly indexRegistry: IndexRegistry) {}
 
-  async execute(command: IngestBulkContentCommand): Promise<void> {
+  async execute(command: IngestBulkContentCommand): Promise<IngestBulkOutcome> {
     try {
       const index = this.indexRegistry.get(command.type);
       return await index.ingestBulk({

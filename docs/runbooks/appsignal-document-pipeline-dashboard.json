@@ -1,0 +1,91 @@
+{
+  "charts": [
+    {
+      "title": "Stage duration p95 (ms)",
+      "description": "95th percentile wall-clock time per pipeline stage across all file types. Shows which stage dominates.",
+      "lineLabel": "%stage%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "document_processing_stage_duration_ms",
+          "fields": [{ "field": "P95" }],
+          "tags": [
+            { "key": "stage", "value": "*" },
+            { "key": "file_type", "value": "*" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Stage duration p95 by file type (ms)",
+      "description": "Same stages split by detected file type, so OCR-heavy PDFs can be compared with converted Office documents.",
+      "lineLabel": "%stage% - %file_type%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "document_processing_stage_duration_ms",
+          "fields": [{ "field": "P95" }],
+          "tags": [
+            { "key": "stage", "value": "*" },
+            { "key": "file_type", "value": "*" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "File size per completed document (bytes)",
+      "description": "Mean and p95 upload size of documents that completed processing.",
+      "lineLabel": "%name% %field% - %file_type%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "document_processing_file_size_bytes",
+          "fields": [{ "field": "MEAN" }, { "field": "P95" }],
+          "tags": [{ "key": "file_type", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Page count per completed document",
+      "description": "Mean and p95 pages the extractor returned per completed document.",
+      "lineLabel": "%name% %field% - %file_type%",
+      "drawNullAsZero": false,
+      "metrics": [
+        {
+          "name": "document_processing_page_count",
+          "fields": [{ "field": "MEAN" }, { "field": "P95" }],
+          "tags": [{ "key": "file_type", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Completed documents",
+      "description": "Number of documents that finished processing, by file type.",
+      "lineLabel": "%file_type%",
+      "drawNullAsZero": true,
+      "metrics": [
+        {
+          "name": "document_processing_file_size_bytes",
+          "fields": [{ "field": "COUNT" }],
+          "tags": [{ "key": "file_type", "value": "*" }]
+        }
+      ]
+    },
+    {
+      "title": "Processing failures by error code",
+      "description": "Sources marked FAILED per processingErrorCode. View over a week to see the error distribution.",
+      "lineLabel": "%error_code% - %source_type%",
+      "drawNullAsZero": true,
+      "metrics": [
+        {
+          "name": "source_processing_failure_count",
+          "fields": [{ "field": "COUNTER" }],
+          "tags": [
+            { "key": "error_code", "value": "*" },
+            { "key": "source_type", "value": "*" }
+          ]
+        }
+      ]
+    }
+  ]
+}

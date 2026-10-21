@@ -802,7 +802,8 @@ describe('RetrieveFileContentUseCase', () => {
         fileType: 'application/pdf',
       }),
     );
-    expect(result).toBe(expectedResult);
+    expect(result.pages).toBe(expectedResult.pages);
+    expect(result.conversionMs).toEqual(expect.any(Number));
   });
 
   it.each([
@@ -842,7 +843,8 @@ describe('RetrieveFileContentUseCase', () => {
           fileType: 'application/pdf',
         }),
       );
-      expect(result).toBe(expectedResult);
+      expect(result.pages).toBe(expectedResult.pages);
+      expect(result.conversionMs).toEqual(expect.any(Number));
     },
   );
 });

@@ -12,7 +12,9 @@ vi.mock('@/shared/api/extract-error-data', () => ({
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError }));
 
-const t = ((key: string) => key) as TFunction;
+const t = vi.fn((key: string, options?: { max?: number }) =>
+  options?.max === undefined ? key : `${key}:${options.max}`,
+) as unknown as TFunction;
 
 describe('handleSourceUploadError', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -35,11 +37,40 @@ describe('handleSourceUploadError', () => {
     );
   });
 
-  it('shows the too-large message for a 413 without an error code', () => {
+  it('shows the size-less too-large message for a 413 without an error code', () => {
     extractErrorData.mockReturnValue({ code: 'UNKNOWN_ERROR', status: 413 });
 
     handleSourceUploadError(new Error('upload failed'), t);
 
-    expect(showError).toHaveBeenCalledWith('sources.fileSourceTooLargeError');
+    expect(showError).toHaveBeenCalledWith(
+      'sources.fileSourceTooLargeUnknownLimitError',
+    );
+  });
+
+  it('shows the organization limit from the 413 payload when a file is too large', () => {
+    extractErrorData.mockReturnValue({
+      code: 'FILE_TOO_LARGE',
+      status: 413,
+      metadata: { maxFileSizeBytes: 50 * 1024 * 1024 },
+    });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(t).toHaveBeenCalledWith('sources.fileSourceTooLargeError', {
+      max: 50,
+    });
+    expect(showError).toHaveBeenCalledWith(
+      'sources.fileSourceTooLargeError:50',
+    );
+  });
+
+  it('shows the size-less too-large message when the rejection carries no limit', () => {
+    extractErrorData.mockReturnValue({ code: 'FILE_TOO_LARGE', status: 413 });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith(
+      'sources.fileSourceTooLargeUnknownLimitError',
+    );
   });
 });

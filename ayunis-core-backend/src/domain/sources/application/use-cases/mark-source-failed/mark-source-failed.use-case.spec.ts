@@ -1,3 +1,4 @@
+import { Appsignal } from '@appsignal/nodejs';
 import {
   createLoggerMock,
   type LoggerMock,
@@ -15,7 +16,12 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { metrics: jest.fn() } },
+}));
+
 describe('MarkSourceFailedUseCase', () => {
+  const metrics = { incrementCounter: jest.fn() };
   let useCase: MarkSourceFailedUseCase;
   let mockSourceRepository: jest.Mocked<SourceRepository>;
   let logger: LoggerMock;
@@ -25,6 +31,8 @@ describe('MarkSourceFailedUseCase', () => {
   beforeEach(async () => {
     mockSourceRepository = createMockSourceRepository();
     logger = createLoggerMock();
+    metrics.incrementCounter.mockReset();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -95,6 +103,30 @@ describe('MarkSourceFailedUseCase', () => {
     );
     expect(source.processingErrorCode).toBe(Code.PROCESSING_FAILED);
     expect(mockSourceRepository.save).toHaveBeenLastCalledWith(source);
+  });
+
+  it('counts the failure by processing error code and source type', async () => {
+    const source = new FileSource({
+      id: sourceId,
+      name: 'scan.pdf',
+      fileType: FileType.PDF,
+      type: TextType.FILE,
+    });
+    mockSourceRepository.findById.mockResolvedValue(source);
+
+    await useCase.execute(
+      new MarkSourceFailedCommand({
+        sourceId,
+        errorMessage: 'OCR rejected the scan',
+        errorCode: Code.DOCUMENT_UNREADABLE,
+      }),
+    );
+
+    expect(metrics.incrementCounter).toHaveBeenCalledWith(
+      'source_processing_failure_count',
+      1,
+      { error_code: 'DOCUMENT_UNREADABLE', source_type: 'file' },
+    );
   });
 
   it('should throw SourceNotFoundError when source does not exist', async () => {

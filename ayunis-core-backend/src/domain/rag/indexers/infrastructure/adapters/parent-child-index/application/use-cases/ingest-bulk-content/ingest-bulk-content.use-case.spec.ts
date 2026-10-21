@@ -116,6 +116,39 @@ describe('IngestBulkContentUseCase', () => {
     expect(mockGetModel.execute).toHaveBeenCalledTimes(1);
   });
 
+  it('reports how long embedding and the index write took', async () => {
+    mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
+    mockSplitter.execute.mockReturnValue(
+      new SplitResult([new TextChunk('child text', { index: 0 })], {}),
+    );
+    const now = jest.spyOn(performance, 'now');
+    now
+      .mockReturnValueOnce(1000) // embedding start
+      .mockReturnValueOnce(1350) // embedding end
+      .mockReturnValueOnce(2000) // index write start
+      .mockReturnValueOnce(2025); // index write end
+    mockEmbedder.execute.mockResolvedValue([
+      new Embedding([0.1, 0.2], 'child text', EMBEDDING_MODEL),
+    ]);
+
+    const outcome = await useCase.execute(
+      new IngestBulkContentCommand({
+        orgId: ORG_ID,
+        entries: [
+          {
+            indexEntry: new IndexEntry({
+              relatedDocumentId: DOC_ID,
+              relatedChunkId: CHUNK_ID_1,
+            }),
+            content: 'Bebauungsplan Gewerbegebiet Abschnitt A',
+          },
+        ],
+      }),
+    );
+
+    expect(outcome).toEqual({ embeddingMs: 350, indexingMs: 25 });
+  });
+
   it('should batch all child texts into a single embedding API call', async () => {
     mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
 
@@ -275,6 +308,14 @@ describe('IngestBulkContentUseCase', () => {
     expect(savedChunks[0].children[1].embedding).toEqual([2.0]);
     expect(savedChunks[1].children).toHaveLength(1);
     expect(savedChunks[1].children[0].embedding).toEqual([3.0]);
+  });
+
+  it('reports zero durations when there is nothing to ingest', async () => {
+    await expect(
+      useCase.execute(
+        new IngestBulkContentCommand({ orgId: ORG_ID, entries: [] }),
+      ),
+    ).resolves.toEqual({ embeddingMs: 0, indexingMs: 0 });
   });
 
   it('should do nothing when entries array is empty', async () => {

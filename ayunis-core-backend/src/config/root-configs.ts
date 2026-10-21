@@ -19,6 +19,7 @@ import { redisConfig } from './redis.config';
 import { gotenbergConfig } from './gotenberg.config';
 import { retentionConfig } from './retention.config';
 import { urlConfig } from './url.config';
+import { uploadConfig } from './upload.config';
 import { ssoOidcConfig } from 'src/config/sso-oidc.config';
 
 /**
@@ -53,5 +54,6 @@ export const rootConfigs = [
   gotenbergConfig,
   retentionConfig,
   urlConfig,
+  uploadConfig,
   ssoOidcConfig,
 ];

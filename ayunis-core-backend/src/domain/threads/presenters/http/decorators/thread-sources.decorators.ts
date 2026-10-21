@@ -1,5 +1,4 @@
 import { applyDecorators, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
   ApiConsumes,
@@ -9,10 +8,8 @@ import {
   ApiResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
-import {
-  SOURCE_FILE_API_BODY,
-  SOURCE_FILE_UPLOAD_OPTIONS,
-} from 'src/common/util/source-file-upload';
+import { SOURCE_FILE_API_BODY } from 'src/common/util/source-file-upload';
+import { UploadLimitFileInterceptor } from 'src/common/http/upload-limit-file.interceptor';
 import {
   CSVDataSourceResponseDto,
   FileSourceResponseDto,
@@ -66,10 +63,11 @@ export function ApiSourceListResponse(status: number, description: string) {
 // preserves the emitted OpenAPI (parameter order, response key order) exactly.
 export function ApiFileSourceUpload() {
   return applyDecorators(
-    UseInterceptors(FileInterceptor('file', SOURCE_FILE_UPLOAD_OPTIONS)),
+    UseInterceptors(UploadLimitFileInterceptor),
     ApiResponse({
       status: 413,
-      description: 'File exceeds the 25 MB upload limit',
+      description:
+        "File exceeds the deployment's upload limit (25 MB by default)",
     }),
     ApiSourceListResponse(
       201,

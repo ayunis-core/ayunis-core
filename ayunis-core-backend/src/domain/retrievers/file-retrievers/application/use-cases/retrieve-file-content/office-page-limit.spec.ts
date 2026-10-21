@@ -108,7 +108,8 @@ describe('Office document page limit after conversion', () => {
         }),
       );
 
-      expect(result).toBe(extracted);
+      expect(result.pages).toBe(extracted.pages);
+      expect(result.conversionMs).toEqual(expect.any(Number));
     },
   );
 

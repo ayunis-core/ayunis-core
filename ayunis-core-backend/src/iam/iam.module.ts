@@ -6,7 +6,7 @@ import { InvitesModule } from './invites/invites.module';
 import {
   authenticationConfig,
   AuthProvider,
-} from '../config/authentication.config';
+} from 'src/config/authentication.config';
 import { HashingModule } from './hashing/hashing.module';
 import { UsersModule } from './users/users.module';
 import { OrgsModule } from './orgs/orgs.module';

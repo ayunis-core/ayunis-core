@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import type { IndexEntry } from '../../domain/index-entry.entity';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { IngestBulkOutcome } from 'src/domain/rag/indexers/domain/ingest-bulk-outcome';
 
 export interface SearchInput {
   orgId: UUID;
@@ -25,7 +26,7 @@ export interface IngestBulkInput {
 }
 
 export abstract class IndexerPort {
-  abstract ingestBulk(input: IngestBulkInput): Promise<void>;
+  abstract ingestBulk(input: IngestBulkInput): Promise<IngestBulkOutcome>;
   abstract search(input: SearchInput): Promise<IndexEntry[]>;
   abstract searchMulti(input: SearchMultiInput): Promise<IndexEntry[]>;
   abstract delete(documentId: UUID): Promise<void>;

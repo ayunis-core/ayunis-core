@@ -4,6 +4,7 @@ import type {
   SearchInput,
   SearchMultiInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
+import type { IngestBulkOutcome } from 'src/domain/rag/indexers/domain/ingest-bulk-outcome';
 import { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { IngestBulkContentUseCase } from './use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
@@ -26,8 +27,8 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     super();
   }
 
-  async ingestBulk(params: IngestBulkInput): Promise<void> {
-    await this.ingestBulkContentUseCase.execute(
+  async ingestBulk(params: IngestBulkInput): Promise<IngestBulkOutcome> {
+    return await this.ingestBulkContentUseCase.execute(
       new IngestBulkContentCommand({
         orgId: params.orgId,
         entries: params.entries.map((entry) => ({

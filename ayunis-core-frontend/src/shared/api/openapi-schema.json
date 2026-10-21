@@ -5162,7 +5162,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (max 25 MB)"
+                    "description": "The file to upload (max 25 MB by default; the deployment can configure the limit)"
                   }
                 },
                 "required": ["file"]
@@ -5195,7 +5195,7 @@
             }
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the deployment's upload limit (25 MB by default)"
           }
         },
         "summary": "Add a file source to a thread",
@@ -5770,7 +5770,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB)"
+                    "description": "The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT; max 25 MB by default; the deployment can configure the limit)"
                   }
                 },
                 "required": ["file"]
@@ -5793,7 +5793,7 @@
             "description": "Knowledge base not found"
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the deployment's upload limit (25 MB by default)"
           }
         },
         "summary": "Add a document to a knowledge base",
@@ -6465,7 +6465,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (max 25 MB)"
+                    "description": "The file to upload (max 25 MB by default; the deployment can configure the limit)"
                   }
                 },
                 "required": ["file"]
@@ -6491,7 +6491,7 @@
             "description": "Skill not found"
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the deployment's upload limit (25 MB by default)"
           }
         },
         "summary": "Add a file source to a skill",

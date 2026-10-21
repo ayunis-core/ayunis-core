@@ -28,7 +28,6 @@ import {
 import * as fs from 'fs';
 import {
   cleanupTempUploadFile,
-  createDocumentUploadInterceptor,
   resolveDocumentUploadMimeType,
   type UploadedDocument,
 } from 'src/common/http/document-upload';
@@ -54,7 +53,7 @@ import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bas
 import { ListKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
 import { MissingFileError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
+import { UploadLimitFileInterceptor } from 'src/common/http/upload-limit-file.interceptor';
 
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { ListKnowledgeBasesQueryDto } from './dto/list-knowledge-bases-query.dto';
@@ -89,16 +88,12 @@ const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
         type: 'string',
         format: 'binary',
         description:
-          'The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB)',
+          'The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT; max 25 MB by default; the deployment can configure the limit)',
       },
     },
     required: ['file'],
   },
 };
-
-const DocumentUploadInterceptor = createDocumentUploadInterceptor(
-  KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES,
-);
 
 @ApiTags('knowledge-bases')
 @Controller('knowledge-bases')
@@ -325,9 +320,10 @@ export class KnowledgeBasesController {
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   @ApiResponse({
     status: 413,
-    description: 'File exceeds the 25 MB upload limit',
+    description:
+      "File exceeds the deployment's upload limit (25 MB by default)",
   })
-  @UseInterceptors(DocumentUploadInterceptor)
+  @UseInterceptors(UploadLimitFileInterceptor)
   async addDocument(
     @Param('id', ParseUUIDPipe) id: UUID,
     @UploadedFile() file?: UploadedDocument,

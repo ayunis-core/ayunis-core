@@ -21,6 +21,12 @@ import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/app
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
+import { detectFileType } from 'src/common/util/file-type';
+import { StageStopwatch } from 'src/domain/sources/application/util/stage-stopwatch';
+import {
+  recordDocumentProcessingStages,
+  type DocumentProcessingStage,
+} from 'src/domain/sources/application/util/document-processing-metrics.helper';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
 @Injectable()
@@ -48,40 +54,7 @@ export class StartDocumentProcessingUseCase {
       const userId = this.contextService.get('userId');
       if (!userId) throw new Error('userId is required');
 
-      // Indexing resolves the org's embedding model only inside the worker,
-      // after the (expensive) OCR step — reject here so an unprovisioned org
-      // fails fast with a clear error instead of a doomed processing job.
-      await this.getPermittedEmbeddingModelUseCase.execute(
-        new GetPermittedEmbeddingModelQuery({ orgId }),
-      );
-
-      // OCR would reject an oversized PDF only after the upload round trip —
-      // check the page cap here so it fails before any processing starts.
-      await this.preflightCheckUseCase.execute(
-        new PreflightCheckCommand({
-          fileData: command.fileData,
-          fileName: command.fileName,
-          fileType: command.fileType,
-        }),
-      );
-
-      const savedSource = await this.createProcessingSourceUseCase.execute(
-        new CreateProcessingSourceCommand({
-          fileType: command.fileType,
-          fileName: command.fileName,
-        }),
-      );
-
-      // Upload holds no transaction; enqueue takes its own short lifecycle lock.
-      const minioPath = buildMinioProcessingPath(
-        orgId,
-        savedSource.id,
-        command.fileName,
-      );
-      await this.uploadFileOrFail(savedSource, minioPath, command, orgId);
-      await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
-
-      return savedSource;
+      return await this.start(command, orgId, userId);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -96,6 +69,73 @@ export class StartDocumentProcessingUseCase {
         error: error as Error,
       });
     }
+  }
+
+  private async start(
+    command: StartDocumentProcessingCommand,
+    orgId: UUID,
+    userId: UUID,
+  ): Promise<FileSource> {
+    const timings = new StageStopwatch<DocumentProcessingStage>();
+
+    // Indexing resolves the org's embedding model only inside the worker,
+    // after the (expensive) OCR step — reject here so an unprovisioned org
+    // fails fast with a clear error instead of a doomed processing job.
+    await this.getPermittedEmbeddingModelUseCase.execute(
+      new GetPermittedEmbeddingModelQuery({ orgId }),
+    );
+
+    // OCR would reject an oversized PDF only after the upload round trip —
+    // check the page cap here so it fails before any processing starts.
+    await timings.measure('preflight', () =>
+      this.preflightCheckUseCase.execute(
+        new PreflightCheckCommand({
+          fileData: command.fileData,
+          fileName: command.fileName,
+          fileType: command.fileType,
+        }),
+      ),
+    );
+
+    const savedSource = await this.createProcessingSourceUseCase.execute(
+      new CreateProcessingSourceCommand({
+        fileType: command.fileType,
+        fileName: command.fileName,
+      }),
+    );
+    this.contextService.set('sourceId', savedSource.id);
+
+    // Upload holds no transaction; enqueue takes its own short lifecycle lock.
+    const minioPath = buildMinioProcessingPath(
+      orgId,
+      savedSource.id,
+      command.fileName,
+    );
+    await timings.measure('upload', () =>
+      this.uploadFileOrFail(savedSource, minioPath, command, orgId),
+    );
+    await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
+    this.reportAccepted(command, savedSource, timings);
+
+    return savedSource;
+  }
+
+  private reportAccepted(
+    command: StartDocumentProcessingCommand,
+    source: FileSource,
+    timings: StageStopwatch<DocumentProcessingStage>,
+  ): void {
+    const fileType = detectFileType(command.fileType, command.fileName);
+    this.logger.log(
+      {
+        sourceId: source.id,
+        fileType,
+        fileSizeBytes: command.fileData.length,
+        ...timings.report(),
+      },
+      'Document accepted for processing',
+    );
+    recordDocumentProcessingStages(timings.values(), fileType);
   }
 
   private async uploadFileOrFail(

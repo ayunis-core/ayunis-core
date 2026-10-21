@@ -5857,7 +5857,7 @@ offset?: number;
 };
 
 export type ThreadSourcesControllerAddFileSourceBody = {
-  /** The file to upload (max 25 MB) */
+  /** The file to upload (max 25 MB by default; the deployment can configure the limit) */
   file: Blob | File;
 };
 
@@ -5885,7 +5885,7 @@ export const KnowledgeBasesControllerFindAllOwnerType = {
 } as const;
 
 export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB) */
+  /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT; max 25 MB by default; the deployment can configure the limit) */
   file: Blob | File;
 };
 
@@ -5933,7 +5933,7 @@ export const SkillsControllerFindAllOwnerType = {
 } as const;
 
 export type SkillSourcesControllerAddFileSourceBody = {
-  /** The file to upload (max 25 MB) */
+  /** The file to upload (max 25 MB by default; the deployment can configure the limit) */
   file: Blob | File;
 };
 

@@ -1,5 +1,7 @@
+import { Appsignal } from '@appsignal/nodejs';
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
@@ -9,6 +11,22 @@ import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/applica
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { metrics: jest.fn() } },
+  setTag: jest.fn(),
+}));
+
+const metrics = {
+  addDistributionValue: jest.fn(),
+  incrementCounter: jest.fn(),
+};
+
+function pdfBytes() {
+  return (async function* () {
+    yield Buffer.from('pdf-bytes');
+  })();
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -102,7 +120,7 @@ const spreadsheetParser = {
 };
 
 const helper = {
-  index: jest.fn().mockResolvedValue(undefined),
+  index: jest.fn().mockResolvedValue({ embeddingMs: 0, indexingMs: 0 }),
   markFailed: jest.fn().mockResolvedValue(undefined),
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
 };
@@ -120,6 +138,7 @@ describe('DocumentProcessingConsumer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
     sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
     sourceRepository.saveTextSource.mockResolvedValue(undefined);
     admitOrgProcessing.execute.mockResolvedValue(true);
@@ -267,6 +286,76 @@ describe('DocumentProcessingConsumer', () => {
     expect(indexedOrgId).toBe(ORG_ID);
     expect(indexedChunks).toHaveLength(1);
     expect(indexedChunks[0].content).toBe('hello world');
+  });
+
+  it('reports per-stage timings, file size and page count when a document completes', async () => {
+    const logger = createLoggerMock();
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    downloadObjectUseCase.execute.mockResolvedValueOnce(pdfBytes());
+    retrieveFileContentUseCase.execute.mockResolvedValueOnce({
+      pages: [{ text: 'Seite 1' }, { text: 'Seite 2' }],
+      conversionMs: 40,
+    });
+    helper.index.mockResolvedValueOnce({ embeddingMs: 300, indexingMs: 20 });
+
+    await consumer.process(makeJob());
+
+    expect(contextService.set).toHaveBeenCalledWith('sourceId', SOURCE_ID);
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: SOURCE_ID,
+        fileType: 'pdf',
+        fileSizeBytes: 9,
+        pageCount: 2,
+        chunks: 1,
+        downloadMs: expect.any(Number),
+        conversionMs: 40,
+        extractionMs: expect.any(Number),
+        chunkingMs: expect.any(Number),
+        persistMs: expect.any(Number),
+        embeddingMs: 300,
+        indexingMs: 20,
+        totalMs: expect.any(Number),
+      }),
+      'Document processing complete',
+    );
+    expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+      'document_processing_stage_duration_ms',
+      300,
+      { stage: 'embedding', file_type: 'pdf' },
+    );
+    expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+      'document_processing_file_size_bytes',
+      9,
+      { file_type: 'pdf' },
+    );
+    expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+      'document_processing_page_count',
+      2,
+      { file_type: 'pdf' },
+    );
+  });
+
+  it('names the stage that failed', async () => {
+    const logger = createLoggerMock();
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    retrieveFileContentUseCase.execute.mockRejectedValueOnce(
+      new FileTooLargeError(),
+    );
+
+    await consumer.process(makeJob());
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: SOURCE_ID,
+        failedStage: 'extraction',
+        elapsedMs: expect.any(Number),
+      }),
+      'Document processing failed',
+    );
   });
 
   it('saves a long-running email even when stale cleanup runs during extraction', async () => {
