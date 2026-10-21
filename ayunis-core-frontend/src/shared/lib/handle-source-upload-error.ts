@@ -11,12 +11,29 @@ import type { TFunction } from 'i18next';
  * added to all of them, or the namespace that lacks it falls back to the
  * raw key.
  */
+const BYTES_PER_MEGABYTE = 1024 * 1024;
+
+// The limit is per organization, so only the backend's own rejection knows
+// which one applied; a bare proxy 413 carries no limit.
+function tooLargeMessage(
+  t: TFunction,
+  metadata: Record<string, unknown> | undefined,
+): string {
+  const maxFileSizeBytes = metadata?.maxFileSizeBytes;
+  if (typeof maxFileSizeBytes !== 'number') {
+    return t('sources.fileSourceTooLargeUnknownLimitError');
+  }
+  return t('sources.fileSourceTooLargeError', {
+    max: Math.round(maxFileSizeBytes / BYTES_PER_MEGABYTE),
+  });
+}
+
 export default function handleSourceUploadError(
   error: unknown,
   t: TFunction,
 ): void {
   try {
-    const { code: responseCode, status } = extractErrorData(error);
+    const { code: responseCode, status, metadata } = extractErrorData(error);
     // A proxy or the body-size limit can reject with a bare 413 before the
     // backend's FILE_TOO_LARGE mapping runs.
     const code =
@@ -42,7 +59,7 @@ export default function handleSourceUploadError(
         showError(t('sources.fileSourceEmptyDataError'));
         break;
       case 'FILE_TOO_LARGE':
-        showError(t('sources.fileSourceTooLargeError'));
+        showError(tooLargeMessage(t, metadata));
         break;
       case 'TOO_MANY_PAGES':
         showError(t('sources.fileSourceTooManyPagesError'));

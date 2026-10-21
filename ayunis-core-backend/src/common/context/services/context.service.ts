@@ -8,6 +8,8 @@ export interface MyClsStore extends ClsStore {
   userId?: UUID;
   apiKeyId?: UUID;
   orgId?: UUID;
+  /** Source being processed; lets every log line of a job carry `source.id`. */
+  sourceId?: UUID;
   systemRole?: SystemRole;
   role?: UserRole;
   refreshToken?: string;

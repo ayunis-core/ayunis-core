@@ -3,16 +3,18 @@ import { plainToInstance, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
-  Matches,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsUrl,
+  Matches,
+  Max,
   Min,
-  validateSync,
   type ValidationError,
+  validateSync,
 } from 'class-validator';
 import { validateTrustProxy } from 'src/config/trust-proxy';
+import { MAX_SOURCE_FILE_SIZE_LIMIT_BYTES } from 'src/common/util/source-file-upload';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
@@ -183,6 +185,14 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   URL_RETRIEVER_MAX_DOWNLOAD_BYTES?: number;
+
+  // Uploads
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(MAX_SOURCE_FILE_SIZE_LIMIT_BYTES)
+  UPLOAD_MAX_FILE_SIZE_BYTES?: number;
 
   // Internet search
   @IsOptional() @IsIn(['brave', 'staan']) INTERNET_SEARCH_PROVIDER?: string;

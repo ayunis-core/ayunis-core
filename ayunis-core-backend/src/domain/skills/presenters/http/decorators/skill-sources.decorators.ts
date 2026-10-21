@@ -1,5 +1,4 @@
 import { applyDecorators, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
   ApiConsumes,
@@ -7,11 +6,9 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
-import {
-  SOURCE_FILE_API_BODY,
-  SOURCE_FILE_UPLOAD_OPTIONS,
-} from 'src/common/util/source-file-upload';
-import { SkillResponseDto } from '../dto/skill-response.dto';
+import { SOURCE_FILE_API_BODY } from 'src/common/util/source-file-upload';
+import { UploadLimitFileInterceptor } from 'src/common/http/upload-limit-file.interceptor';
+import { SkillResponseDto } from 'src/domain/skills/presenters/http/dto/skill-response.dto';
 
 export function ApiSkillIdParam() {
   return ApiParam({
@@ -27,10 +24,11 @@ export function ApiSkillIdParam() {
 // preserves the emitted OpenAPI (parameter order, response key order) exactly.
 export function ApiSkillFileSourceUpload() {
   return applyDecorators(
-    UseInterceptors(FileInterceptor('file', SOURCE_FILE_UPLOAD_OPTIONS)),
+    UseInterceptors(UploadLimitFileInterceptor),
     ApiResponse({
       status: 413,
-      description: 'File exceeds the 25 MB upload limit',
+      description:
+        "File exceeds the deployment's upload limit (25 MB by default)",
     }),
     ApiResponse({
       status: 400,

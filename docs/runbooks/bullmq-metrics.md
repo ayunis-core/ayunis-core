@@ -90,6 +90,38 @@ stage spans. They preserve the active BullMQ parent context and mark errors
 without recording payloads or exception contents. AppSignal's existing BullMQ
 instrumentation owns the job root span.
 
+## Document pipeline stage metrics (AYC-1407)
+
+The document consumer and `StartDocumentProcessingUseCase` emit per-stage
+timings so the tier decision in AYC-1412 can be made from production evidence.
+Chart definitions for a **Document pipeline** dashboard are in
+`appsignal-document-pipeline-dashboard.json` beside this runbook; import them
+per environment with the same procedure as the BullMQ dashboard.
+
+| Metric                                  | Field        | Tags                        | Meaning                                                                                   |
+| --------------------------------------- | ------------ | --------------------------- | ----------------------------------------------------------------------------------------- |
+| `document_processing_stage_duration_ms` | distribution | `stage`, `file_type`        | Wall-clock time of one stage of one job attempt (see stages below)                        |
+| `document_processing_file_size_bytes`   | distribution | `file_type`                 | Size of each completed document, recorded once per successful job                         |
+| `document_processing_page_count`        | distribution | `file_type`                 | Pages the extractor returned per completed document (sheets for spreadsheets, 1 for text) |
+| `source_processing_failure_count`       | counter      | `error_code`, `source_type` | One per persisted `processingErrorCode`; `error_code=none` when a failure carried no code |
+
+Stages: `preflight` and `upload` run in the HTTP request (page-count check,
+MinIO upload); `download`, `conversion` (Gotenberg, Office formats only),
+`extraction` (OCR or parser, excluding conversion), `chunking`, `persist`
+(source text and chunk rows), `embedding`, `indexing` (pgvector write) and
+`total` run in the worker. `file_type` is the detected type (`pdf`, `docx`,
+`xlsx`, `eml`, …), never a filename.
+
+The same numbers appear as flat attributes on two log lines per document:
+`Document accepted for processing` (`preflightMs`, `uploadMs`, `fileSizeBytes`)
+and `Document processing complete` (`downloadMs`, `conversionMs`,
+`extractionMs`, `chunkingMs`, `persistMs`, `embeddingMs`, `indexingMs`,
+`totalMs`, `fileSizeBytes`, `pageCount`, `chunks`). A failed attempt logs
+`Document processing failed` with `failedStage` and `elapsedMs`. Every line of a
+job carries `source.id` and `nestjs.context`, so one document can be followed in
+the logs view by filtering on `source.id`. Weekly failure distribution: chart
+`source_processing_failure_count` grouped by `error_code`.
+
 ## Operator response
 
 1. Confirm the AppSignal environment and whether all queue charts have recent

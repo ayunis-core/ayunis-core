@@ -1,5 +1,4 @@
 import { BadRequestException } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import {
   detectFileType,
@@ -8,19 +7,9 @@ import {
   isDocumentSourceFile,
   isSpreadsheetFile,
 } from 'src/common/util/file-type';
-import {
-  SOURCE_FILE_UPLOAD_OPTIONS,
-  type UploadedSourceFile,
-} from 'src/common/util/source-file-upload';
+import type { UploadedSourceFile } from 'src/common/util/source-file-upload';
 
 export type UploadedDocument = UploadedSourceFile;
-
-export function createDocumentUploadInterceptor(maxFileSizeBytes: number) {
-  return FileInterceptor('file', {
-    ...SOURCE_FILE_UPLOAD_OPTIONS,
-    limits: { fileSize: maxFileSizeBytes },
-  });
-}
 
 interface UploadCleanupLogger {
   warn(obj: unknown, msg?: string, ...args: unknown[]): void;

@@ -1,6 +1,8 @@
+import { Appsignal } from '@appsignal/nodejs';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { StartDocumentProcessingUseCase } from './start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
@@ -22,7 +24,12 @@ import {
   UploadFailedError,
 } from 'src/domain/storage/application/storage.errors';
 
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { metrics: jest.fn() } },
+}));
+
 describe('StartDocumentProcessingUseCase', () => {
+  const metrics = { addDistributionValue: jest.fn() };
   let useCase: StartDocumentProcessingUseCase;
   let mockCreateProcessingSourceUseCase: jest.Mocked<CreateProcessingSourceUseCase>;
   let mockMarkSourceFailedUseCase: jest.Mocked<MarkSourceFailedUseCase>;
@@ -83,7 +90,10 @@ describe('StartDocumentProcessingUseCase', () => {
         if (key === 'userId') return userId;
         return undefined;
       }),
+      set: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
+    metrics.addDistributionValue.mockReset();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
 
     mockCreateProcessingSourceUseCase.execute.mockImplementation(async (cmd) =>
       buildProcessingSource({ name: cmd.fileName }),
@@ -153,6 +163,39 @@ describe('StartDocumentProcessingUseCase', () => {
         fileName: 'Protokoll_März_2025.pdf',
         fileType: 'application/pdf',
       }),
+    );
+  });
+
+  it('reports preflight and upload timings under the new source id', async () => {
+    const logger = createLoggerMock();
+    const command = new StartDocumentProcessingCommand({
+      fileData: Buffer.from('fake pdf content'),
+      fileName: 'Bebauungsplan.pdf',
+      fileType: 'application/pdf',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(mockContextService.set).toHaveBeenCalledWith('sourceId', result.id);
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: result.id,
+        fileType: 'pdf',
+        fileSizeBytes: 16,
+        preflightMs: expect.any(Number),
+        uploadMs: expect.any(Number),
+      }),
+      'Document accepted for processing',
+    );
+    expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+      'document_processing_stage_duration_ms',
+      expect.any(Number),
+      { stage: 'preflight', file_type: 'pdf' },
+    );
+    expect(metrics.addDistributionValue).toHaveBeenCalledWith(
+      'document_processing_stage_duration_ms',
+      expect.any(Number),
+      { stage: 'upload', file_type: 'pdf' },
     );
   });
 

@@ -34,6 +34,33 @@ import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
 } from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import { StageStopwatch } from 'src/domain/sources/application/util/stage-stopwatch';
+import {
+  recordDocumentProcessingSize,
+  recordDocumentProcessingStages,
+  type DocumentProcessingStage,
+} from 'src/domain/sources/application/util/document-processing-metrics.helper';
+
+type Timings = StageStopwatch<DocumentProcessingStage>;
+
+interface ExtractedText {
+  text: string;
+  pageCount: number;
+  conversionMs?: number;
+}
+
+interface ExtractedDocument {
+  text: string;
+  chunks: TextSourceContentChunk[];
+  fileSizeBytes: number;
+  pageCount: number;
+}
+
+// Span names predate the stage metrics and are referenced by the BullMQ
+// runbook, so the chunking stage keeps its original span name.
+const STAGE_SPANS: Partial<Record<DocumentProcessingStage, string>> = {
+  chunking: 'document.splitting',
+};
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -75,13 +102,17 @@ export class DocumentProcessingConsumer extends WorkerHost {
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
       this.validateAndSetContext(orgId, userId);
+      this.contextService.set('sourceId', sourceId);
       if (!(await this.isAdmitted(job))) return;
 
+      const timings: Timings = new StageStopwatch((stage, run) =>
+        processingStage(STAGE_SPANS[stage] ?? `document.${stage}`, run),
+      );
       try {
         if (!(await this.loadSourceOrSkip(sourceId, minioPath))) return;
 
-        const { text, chunks } = await this.heartbeat.run(sourceId, () =>
-          this.downloadAndExtractText(job.data),
+        const extracted = await this.heartbeat.run(sourceId, () =>
+          this.downloadAndExtractText(job.data, timings),
         );
 
         // Guard: re-check the source still exists and is PROCESSING
@@ -89,37 +120,85 @@ export class DocumentProcessingConsumer extends WorkerHost {
         const source = await this.reloadIfStillProcessing(sourceId, minioPath);
         if (!source) return;
 
-        await this.updateSourceWithContent(source, text, chunks);
-        await processingStage('document.indexing', () =>
-          this.helper.index(sourceId, orgId, chunks),
+        await timings.measure('persist', () =>
+          this.updateSourceWithContent(
+            source,
+            extracted.text,
+            extracted.chunks,
+          ),
         );
+        await this.indexChunks(sourceId, orgId, extracted.chunks, timings);
         await this.markSourceReady(sourceId, minioPath);
-
-        this.logger.log(
-          {
-            sourceId,
-            chunks: chunks.length,
-          },
-          'Document processing complete',
-        );
+        this.reportCompleted(job.data, extracted, timings);
       } catch (error) {
-        this.logger.error(
-          {
-            sourceId,
-            err: error as Error,
-          },
-          'Document processing failed',
-        );
-
-        const { final, rethrow } = classifyJobFailure(job, error);
-        if (final) {
-          await this.helper.markFailed(sourceId, error);
-          await this.helper.cleanupIndex(sourceId);
-          await this.cleanupMinioFile(minioPath);
-        }
-        if (rethrow) throw rethrow;
+        await this.handleFailure(job, error, timings);
       }
     });
+  }
+
+  private async indexChunks(
+    sourceId: UUID,
+    orgId: UUID,
+    chunks: TextSourceContentChunk[],
+    timings: Timings,
+  ): Promise<void> {
+    const outcome = await timings.measure('indexing', () =>
+      this.helper.index(sourceId, orgId, chunks),
+    );
+    timings.record('embedding', outcome.embeddingMs);
+    timings.record('indexing', outcome.indexingMs);
+  }
+
+  private reportCompleted(
+    jobData: DocumentProcessingJobData,
+    extracted: ExtractedDocument,
+    timings: Timings,
+  ): void {
+    const fileType = detectFileType(jobData.fileType, jobData.fileName);
+    const totalMs = timings.elapsedMs();
+    const { fileSizeBytes, pageCount } = extracted;
+    this.logger.log(
+      {
+        sourceId: jobData.sourceId,
+        fileType,
+        fileSizeBytes,
+        pageCount,
+        chunks: extracted.chunks.length,
+        ...timings.report(),
+        totalMs: Math.round(totalMs),
+      },
+      'Document processing complete',
+    );
+    recordDocumentProcessingStages(
+      { ...timings.values(), total: totalMs },
+      fileType,
+    );
+    recordDocumentProcessingSize({ fileSizeBytes, pageCount }, fileType);
+  }
+
+  private async handleFailure(
+    job: Job<DocumentProcessingJobData>,
+    error: unknown,
+    timings: Timings,
+  ): Promise<void> {
+    const { sourceId, minioPath } = job.data;
+    this.logger.error(
+      {
+        sourceId,
+        failedStage: timings.failedStage,
+        elapsedMs: Math.round(timings.elapsedMs()),
+        err: error as Error,
+      },
+      'Document processing failed',
+    );
+
+    const { final, rethrow } = classifyJobFailure(job, error);
+    if (final) {
+      await this.helper.markFailed(sourceId, error);
+      await this.helper.cleanupIndex(sourceId);
+      await this.cleanupMinioFile(minioPath);
+    }
+    if (rethrow) throw rethrow;
   }
 
   private async isAdmitted(
@@ -184,17 +263,23 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async downloadAndExtractText(
     jobData: DocumentProcessingJobData,
-  ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
+    timings: Timings,
+  ): Promise<ExtractedDocument> {
     const { minioPath, fileName, fileType } = jobData;
 
-    const fileBuffer = await processingStage('document.download', () =>
+    const fileBuffer = await timings.measure('download', () =>
       this.downloadFile(minioPath),
     );
-    const text = await processingStage('document.extraction', () =>
-      this.extractText(fileBuffer, fileName, fileType),
+    const { text, pageCount, conversionMs } = await timings.measure(
+      'extraction',
+      () => this.extractText(fileBuffer, fileName, fileType),
     );
+    if (conversionMs !== undefined) {
+      timings.record('conversion', conversionMs);
+      timings.record('extraction', timings.get('extraction') - conversionMs);
+    }
 
-    const splitResult = processingStage('document.splitting', () =>
+    const splitResult = await timings.measure('chunking', () =>
       this.splitTextUseCase.execute(
         new SplitTextCommand(text, SplitterType.RECURSIVE, {
           chunkSize: 2000,
@@ -210,27 +295,29 @@ export class DocumentProcessingConsumer extends WorkerHost {
         }),
     );
 
-    return { text, chunks };
+    return { text, chunks, pageCount, fileSizeBytes: fileBuffer.length };
   }
 
   private async extractText(
     fileBuffer: Buffer,
     fileName: string,
     fileType: string,
-  ): Promise<string> {
+  ): Promise<ExtractedText> {
     const detected = detectFileType(fileType, fileName);
     if (isCSVFile(detected)) {
       const csv = await this.spreadsheetParser.parseCsv(
         fileBuffer.toString('utf8').replace(/^\uFEFF/, ''),
       );
-      return this.requireRows(
-        tableToText([{ sheetName: '', ...csv }], false),
-        fileName,
-      );
+      const text = tableToText([{ sheetName: '', ...csv }], false);
+      return { text: this.requireRows(text, fileName), pageCount: 1 };
     }
     if (isSpreadsheetFile(detected)) {
       const sheets = await this.spreadsheetParser.parseWorkbook(fileBuffer);
-      return this.requireRows(tableToText(sheets, sheets.length > 1), fileName);
+      const text = tableToText(sheets, sheets.length > 1);
+      return {
+        text: this.requireRows(text, fileName),
+        pageCount: sheets.length,
+      };
     }
     const result = await this.retrieveFileContentUseCase.execute(
       new RetrieveFileContentCommand({
@@ -239,7 +326,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
         fileType,
       }),
     );
-    return result.pages.map((page) => page.text).join('\n');
+    return {
+      text: result.pages.map((page) => page.text).join('\n'),
+      pageCount: result.pages.length,
+      conversionMs: result.conversionMs,
+    };
   }
 
   private requireRows(text: string, fileName: string): string {

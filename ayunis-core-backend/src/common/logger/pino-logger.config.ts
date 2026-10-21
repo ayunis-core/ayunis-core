@@ -193,10 +193,12 @@ function getTenantContext(): Record<string, string> {
 
   const userId = cls.get('userId');
   const orgId = cls.get('orgId');
+  const sourceId = cls.get('sourceId');
 
   return {
     ...(userId ? { 'user.id': userId } : {}),
     ...(orgId ? { 'org.id': orgId } : {}),
+    ...(sourceId ? { 'source.id': sourceId } : {}),
   };
 }
 

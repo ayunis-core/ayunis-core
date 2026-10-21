@@ -2,6 +2,8 @@ export class FileRetrieverResult {
   constructor(
     public readonly pages: FileRetrieverPage[] = [],
     public readonly metadata: Record<string, unknown> = {},
+    /** Time spent converting to PDF before extraction; absent when no conversion ran. */
+    public readonly conversionMs?: number,
   ) {}
 }
 
@@ -14,7 +16,6 @@ export class FileRetrieverPage {
     public readonly metadata: Record<string, unknown> = {},
   ) {
     // Remove null bytes that cause PostgreSQL UTF-8 encoding errors
-    // eslint-disable-next-line no-control-regex
-    this.text = text.replace(/\x00/g, '');
+    this.text = text.replaceAll('\0', '');
   }
 }

@@ -6,6 +6,7 @@ import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/us
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
+import type { IngestBulkOutcome } from 'src/domain/rag/indexers/domain/ingest-bulk-outcome';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
@@ -29,11 +30,11 @@ export class SourceProcessingHelper {
     sourceId: UUID,
     orgId: UUID,
     chunks: TextSourceContentChunk[],
-  ): Promise<void> {
+  ): Promise<IngestBulkOutcome> {
     await this.deleteContentUseCase.execute(
       new DeleteContentCommand({ documentId: sourceId }),
     );
-    await this.ingestBulkContentUseCase.execute(
+    return await this.ingestBulkContentUseCase.execute(
       new IngestBulkContentCommand({
         orgId,
         entries: chunks.map((chunk) => ({

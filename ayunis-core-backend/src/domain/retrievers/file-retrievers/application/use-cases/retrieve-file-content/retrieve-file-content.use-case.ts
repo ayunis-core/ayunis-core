@@ -316,10 +316,12 @@ export class RetrieveFileContentUseCase {
     fileData: Buffer,
     fileName: string,
   ): Promise<FileRetrieverResult> {
+    const conversionStartedAt = performance.now();
     const pdfBuffer = await this.documentConverter.convertToPdf(
       fileData,
       fileName,
     );
+    const conversionMs = performance.now() - conversionStartedAt;
     const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
     await this.preflightCheckUseCase.execute(
       new PreflightCheckCommand({
@@ -328,7 +330,12 @@ export class RetrieveFileContentUseCase {
         fileType: MIME_TYPES.PDF,
       }),
     );
-    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
+    const result = await this.processPdf(
+      pdfBuffer,
+      pdfFileName,
+      MIME_TYPES.PDF,
+    );
+    return new FileRetrieverResult(result.pages, result.metadata, conversionMs);
   }
 
   /**

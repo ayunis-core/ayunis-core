@@ -95,6 +95,18 @@ describe('validateEnv', () => {
       expect(() => validateEnv(baseEnv({ [key]: value }))).toThrow(key);
     });
 
+    it('rejects an upload limit above the processing ceiling', () => {
+      expect(() =>
+        validateEnv(baseEnv({ UPLOAD_MAX_FILE_SIZE_BYTES: '104857601' })),
+      ).toThrow(/UPLOAD_MAX_FILE_SIZE_BYTES/);
+    });
+
+    it('accepts an upload limit at the processing ceiling', () => {
+      expect(() =>
+        validateEnv(baseEnv({ UPLOAD_MAX_FILE_SIZE_BYTES: '104857600' })),
+      ).not.toThrow();
+    });
+
     it('accepts a valid integer var', () => {
       expect(() =>
         validateEnv(baseEnv({ URL_RETRIEVER_MAX_DOWNLOAD_BYTES: '1048576' })),

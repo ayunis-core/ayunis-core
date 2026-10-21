@@ -310,6 +310,7 @@ describe('createPinoLoggerConfig', () => {
       get: jest.fn((key: string) => {
         if (key === 'userId') return 'user-123';
         if (key === 'orgId') return 'org-456';
+        if (key === 'sourceId') return 'source-789';
         return undefined;
       }),
     } as unknown as ClsService<MyClsStore>;
@@ -326,6 +327,7 @@ describe('createPinoLoggerConfig', () => {
     expect(options.mixin?.({}, 30, pino({ enabled: false }))).toEqual({
       'user.id': 'user-123',
       'org.id': 'org-456',
+      'source.id': 'source-789',
       trace_id: '1234567890abcdef1234567890abcdef',
       span_id: '1234567890abcdef',
     });
