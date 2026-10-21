@@ -17,12 +17,14 @@ export class RunUserInput extends RunInput {
     public readonly text: string,
     public readonly pendingImages: ImageUploadData[] = [],
     public readonly skillId?: UUID,
+    private readonly onImagesReleased?: () => void,
   ) {
     super();
   }
 
   releaseImages(): void {
     this.pendingImages.length = 0;
+    this.onImagesReleased?.();
   }
 }
 

@@ -284,7 +284,10 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         if (error instanceof Error) {
           // Handle specific error status codes
-          if (error.message.includes('429')) {
+          if (error.message.includes('IMAGE_UPLOADS_BUSY')) {
+            // Must precede the generic 429 branch, which reports a quota.
+            showError(t('chat.imageUploadsBusy'));
+          } else if (error.message.includes('429')) {
             // Try to extract retry time from error response
             const retryMatch = /retryAfterSeconds[":]+(\d+)/.exec(
               error.message,
