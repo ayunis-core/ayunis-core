@@ -107,4 +107,21 @@ describe('skill create dialog', () => {
 
     expect(trigger().value).toBe('Immer wenn relevant');
   });
+
+  it('reports opening through its own button', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <SkillCreateDialog
+          buttonText="Erstellen"
+          onCreate={vi.fn()}
+          onOpenChange={onOpenChange}
+        />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Erstellen' }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
 });

@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { z } from 'zod';
 import { SkillsPage } from '@/pages/skills';
 import {
   skillsControllerFindAll,
@@ -6,8 +7,13 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
+const searchSchema = z.object({
+  tab: z.enum(['personal', 'shared']).optional(),
+});
+
 export const Route = createFileRoute('/_authenticated/skills/')({
   component: RouteComponent,
+  validateSearch: searchSchema,
   loader: async ({ context: { queryClient } }) => {
     const skills = await queryClient.query({
       queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
@@ -19,5 +25,19 @@ export const Route = createFileRoute('/_authenticated/skills/')({
 
 function RouteComponent() {
   const { skills } = Route.useLoaderData();
-  return <SkillsPage skills={skills} />;
+  const { tab = 'personal' } = Route.useSearch();
+  const navigate = useNavigate();
+  return (
+    <SkillsPage
+      skills={skills}
+      tab={tab}
+      onTabChange={(next) =>
+        void navigate({
+          to: '/skills',
+          search: next === 'personal' ? {} : { tab: next },
+          replace: true,
+        })
+      }
+    />
+  );
 }

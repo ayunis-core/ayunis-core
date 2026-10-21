@@ -155,5 +155,11 @@
     "confirmDescription": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
+  },
+  "readOnly": {
+    "title": "Inhalt",
+    "description": "Sie können diese Fähigkeit nutzen, aber nicht ändern.",
+    "trigger": "Auslöser",
+    "instructions": "Anweisungen"
   }
 }

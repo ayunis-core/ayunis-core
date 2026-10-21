@@ -1,5 +1,5 @@
 import { useSkillTextAssist } from '@/widgets/skill-improve-button';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,9 @@ export function SkillCreateDialog({
   footerHint,
   open,
   onOpenChange,
+  ownerField,
+  description,
+  isSubmitDisabled = false,
 }: Readonly<{
   onCreate: (data: CreateSkillFormData) => Promise<unknown>;
   buttonText?: string;
@@ -39,15 +42,22 @@ export function SkillCreateDialog({
   footerHint?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  ownerField?: ReactNode;
+  description?: string;
+  isSubmitDisabled?: boolean;
 }>) {
   const { t } = useTranslation('skills');
-  const translations = useCreateDialogTranslations('skills');
+  const defaultTranslations = useCreateDialogTranslations('skills');
+  const translations = {
+    ...defaultTranslations,
+    description: description ?? defaultTranslations.description,
+  };
   const isControlled = open !== undefined;
   const [isOwnOpen, setIsOwnOpen] = useState(false);
   const isOpen = isControlled ? open : isOwnOpen;
   const setIsOpen = (next: boolean) => {
-    if (isControlled) onOpenChange?.(next);
-    else setIsOwnOpen(next);
+    if (!isControlled) setIsOwnOpen(next);
+    onOpenChange?.(next);
   };
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateSkillFormData>({
@@ -108,10 +118,11 @@ export function SkillCreateDialog({
       buttonTestId={buttonTestId}
       footerHint={footerHint}
       hideTrigger={isControlled}
-      isSubmitDisabled={assist.isBusy}
+      isSubmitDisabled={assist.isBusy || isSubmitDisabled}
     >
       <Form {...form}>
         <div className="space-y-6">
+          {ownerField}
           <div className="grid grid-cols-1 gap-4">
             <NameField
               control={form.control}
@@ -149,15 +160,27 @@ export function KnowledgeBaseCreateDialog({
   buttonTestId,
   buttonClassName,
   showIcon = false,
+  ownerField,
+  description,
+  onOpen,
+  isSubmitDisabled = false,
 }: Readonly<{
   onCreate: (data: CreateKnowledgeBaseFormData) => Promise<unknown>;
   buttonText?: string;
   buttonTestId?: string;
   buttonClassName?: string;
   showIcon?: boolean;
+  ownerField?: ReactNode;
+  description?: string;
+  onOpen?: () => void;
+  isSubmitDisabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
-  const translations = useCreateDialogTranslations('knowledge-bases');
+  const defaultTranslations = useCreateDialogTranslations('knowledge-bases');
+  const translations = {
+    ...defaultTranslations,
+    description: description ?? defaultTranslations.description,
+  };
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<CreateKnowledgeBaseFormData>({
@@ -193,7 +216,10 @@ export function KnowledgeBaseCreateDialog({
   return (
     <CreateEntityDialog
       isOpen={isOpen}
-      onOpenChange={setIsOpen}
+      onOpenChange={(next) => {
+        if (next) onOpen?.();
+        setIsOpen(next);
+      }}
       onCancel={close}
       onSubmit={(event) => void form.handleSubmit(submit)(event)}
       isLoading={isLoading}
@@ -202,9 +228,11 @@ export function KnowledgeBaseCreateDialog({
       showIcon={showIcon}
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
+      isSubmitDisabled={isSubmitDisabled}
     >
       <Form {...form}>
         <div className="space-y-6">
+          {ownerField}
           <NameField
             control={form.control}
             name="name"

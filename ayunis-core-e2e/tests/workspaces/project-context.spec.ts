@@ -98,7 +98,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
   await expect(createSkillDialog).toBeVisible();
   await expect(
     createSkillDialog.getByRole("heading", {
-      name: "Neue Fähigkeit hinzufügen",
+      name: "Neue Fähigkeit erstellen",
     }),
   ).toBeVisible();
   await createSkillDialog.getByRole("textbox").nth(0).fill(fixture.skill.name);

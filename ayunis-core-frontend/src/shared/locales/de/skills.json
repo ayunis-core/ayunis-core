@@ -8,7 +8,7 @@
   },
   "tabs": {
     "personal": "Eigene Fähigkeiten",
-    "shared": "Geteilte Fähigkeiten"
+    "shared": "Team und Organisation"
   },
   "marketplaceBanner": {
     "title": "Weitere Fähigkeiten im Ayunis Core Marketplace entdecken",
@@ -23,8 +23,8 @@
       "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
     },
     "shared": {
-      "title": "Noch keine geteilten Fähigkeiten",
-      "description": "Fähigkeiten, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
+      "title": "Noch keine Fähigkeiten aus Team und Organisation",
+      "description": "Fähigkeiten Ihrer Teams und der Organisation sowie mit Ihnen geteilte Fähigkeiten erscheinen hier."
     },
     "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace"
   },
@@ -44,12 +44,13 @@
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
-    }
+    },
+    "activeSwitchLabel": "Fähigkeit aktiv"
   },
   "createDialog": {
     "buttonText": "Fähigkeit hinzufügen",
     "buttonTextFirst": "Erstellen Sie Ihre erste Fähigkeit",
-    "title": "Neue Fähigkeit hinzufügen",
+    "title": "Neue Fähigkeit erstellen",
     "description": "Erstellen Sie eine neue Fähigkeit mit spezifischem Wissen und Funktionen. Füllen Sie die Details unten aus.",
     "form": {
       "nameLabel": "Name",
@@ -76,7 +77,8 @@
     "duplicateName": "In diesem Arbeitsbereich gibt es bereits eine Fähigkeit mit diesem Namen.",
     "duplicateNamePersonal": "Sie haben bereits eine Fähigkeit mit diesem Namen. Bitte wählen Sie einen anderen Namen.",
     "success": "Fähigkeit erfolgreich erstellt!",
-    "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "duplicateNameShared": "Im Team oder in der Organisation gibt es bereits eine Fähigkeit mit diesem Namen. Bitte wählen Sie einen anderen Namen."
   },
   "toggleActive": {
     "success": "Fähigkeits-Status erfolgreich aktualisiert!",

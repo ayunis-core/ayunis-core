@@ -48,7 +48,7 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
     const knowledgeBase = await queryClient.query(
       knowledgeBaseQueryOptions(id),
     );
-    if (knowledgeBase.ownerType !== 'personal') {
+    if (knowledgeBase.ownerType === 'workspace') {
       if (!knowledgeBase.workspaceId)
         throw redirect({ to: '/knowledge-bases' });
       throw redirect({
@@ -59,12 +59,14 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
         },
       });
     }
-    const shares = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(sharesQueryOptions(id));
-    const userTeams = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(userTeamsQueryOptions());
+    const isOwnPersonal =
+      knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
+    const shares = isOwnPersonal
+      ? await queryClient.query(sharesQueryOptions(id))
+      : [];
+    const userTeams = isOwnPersonal
+      ? await queryClient.query(userTeamsQueryOptions())
+      : [];
     return { knowledgeBase, shares, userTeams };
   },
 });
