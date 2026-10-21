@@ -7,7 +7,8 @@
     "skillCount_one": "{{count}} skill",
     "skillCount_other": "{{count}} skills",
     "knowledgeBaseCount_one": "{{count}} knowledge base",
-    "knowledgeBaseCount_other": "{{count}} knowledge bases"
+    "knowledgeBaseCount_other": "{{count}} knowledge bases",
+    "lastEdited": "Edited {{date}}"
   },
   "card": {
     "pin": "Add to favorites",

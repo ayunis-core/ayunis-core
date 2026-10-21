@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspaceRow } from './WorkspaceRow';
 
@@ -13,8 +13,11 @@ vi.mock('./WorkspacePinButton', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: { count?: number }) =>
-      options?.count === undefined ? key : `${key}:${options.count}`,
+    t: (key: string, options?: { count?: number; date?: string }) =>
+      [key, options?.count, options?.date]
+        .filter((part) => part !== undefined)
+        .join(':'),
+    i18n: { language: 'en' },
   }),
 }));
 
@@ -35,6 +38,15 @@ function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
 }
 
 describe('WorkspaceRow', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-04T10:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('lists skills and knowledge bases without chats or the description', () => {
     render(
       <WorkspaceRow
@@ -43,7 +55,9 @@ describe('WorkspaceRow', () => {
     );
 
     expect(
-      screen.getByText('page.skillCount:1 · page.knowledgeBaseCount:3'),
+      screen.getByText(
+        'page.skillCount:1 · page.knowledgeBaseCount:3 · page.lastEdited:3 days ago',
+      ),
     ).toBeTruthy();
     expect(screen.queryByText(/Chat/)).toBeNull();
     expect(screen.queryByText(/Test/)).toBeNull();
@@ -53,7 +67,9 @@ describe('WorkspaceRow', () => {
     render(<WorkspaceRow workspace={aWorkspace()} />);
 
     expect(
-      screen.getByText('page.skillCount:0 · page.knowledgeBaseCount:0'),
+      screen.getByText(
+        'page.skillCount:0 · page.knowledgeBaseCount:0 · page.lastEdited:3 days ago',
+      ),
     ).toBeTruthy();
   });
 });

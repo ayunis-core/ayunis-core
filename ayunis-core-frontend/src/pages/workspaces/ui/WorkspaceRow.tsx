@@ -8,6 +8,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
+import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
 import { TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
@@ -22,10 +23,13 @@ export function WorkspaceRow({
   workspace,
   pinTourTarget = false,
 }: Readonly<WorkspaceRowProps>) {
-  const { t } = useTranslation('workspaces');
-  const counts = [
+  const { t, i18n } = useTranslation('workspaces');
+  const details = [
     t('page.skillCount', { count: workspace.skillCount ?? 0 }),
     t('page.knowledgeBaseCount', { count: workspace.knowledgeBaseCount ?? 0 }),
+    t('page.lastEdited', {
+      date: formatRelativeDate(workspace.updatedAt, i18n.language),
+    }),
   ].join(' · ');
 
   return (
@@ -53,7 +57,7 @@ export function WorkspaceRow({
             {workspace.name}
           </Link>
         </ItemTitle>
-        <ItemDescription className="line-clamp-1">{counts}</ItemDescription>
+        <ItemDescription className="line-clamp-none">{details}</ItemDescription>
       </ItemContent>
       <ItemActions className="relative">
         <WorkspacePinButton
