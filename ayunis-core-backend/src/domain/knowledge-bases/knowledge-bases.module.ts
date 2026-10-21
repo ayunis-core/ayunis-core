@@ -1,7 +1,9 @@
 import { FindKnowledgeBaseForThreadUseCase } from './application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { OwnershipModule } from 'src/domain/ownership/ownership.module';
+import { HandoversModule } from 'src/domain/handovers/handovers.module';
 import { KnowledgeBaseOwnershipContextService } from './application/services/knowledge-base-ownership-context.service';
+import { TransferKnowledgeBaseOwnershipUseCase } from './application/use-cases/transfer-knowledge-base-ownership/transfer-knowledge-base-ownership.use-case';
 import { LocalKnowledgeBaseRepositoryModule } from './infrastructure/persistence/local/local-knowledge-base-repository.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
@@ -57,9 +59,11 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
     OwnershipModule,
+    forwardRef(() => HandoversModule),
   ],
   providers: [
     KnowledgeBaseOwnershipContextService,
+    TransferKnowledgeBaseOwnershipUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
     FindAccessibleKnowledgeBasesByIdsUseCase,
@@ -96,6 +100,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   ],
   controllers: [KnowledgeBasesController],
   exports: [
+    TransferKnowledgeBaseOwnershipUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
     FindAccessibleKnowledgeBasesByIdsUseCase,

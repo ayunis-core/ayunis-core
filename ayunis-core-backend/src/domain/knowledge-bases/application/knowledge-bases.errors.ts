@@ -7,6 +7,7 @@ export enum KnowledgeBaseErrorCode {
   DOCUMENT_NOT_IN_KNOWLEDGE_BASE = 'DOCUMENT_NOT_IN_KNOWLEDGE_BASE',
   MISSING_FILE = 'MISSING_FILE',
   SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
+  KNOWLEDGE_BASE_OWNER_CHANGED = 'KNOWLEDGE_BASE_OWNER_CHANGED',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -27,6 +28,16 @@ export class KnowledgeBaseNotFoundError extends KnowledgeBaseError {
       KnowledgeBaseErrorCode.KNOWLEDGE_BASE_NOT_FOUND,
       404,
       metadata,
+    );
+  }
+}
+
+export class KnowledgeBaseOwnerChangedError extends KnowledgeBaseError {
+  constructor(knowledgeBaseId: string) {
+    super(
+      `Knowledge base '${knowledgeBaseId}' is no longer owned by the requester`,
+      KnowledgeBaseErrorCode.KNOWLEDGE_BASE_OWNER_CHANGED,
+      409,
     );
   }
 }

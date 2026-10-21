@@ -22,6 +22,8 @@ export enum SkillErrorCode {
   SKILL_NAME_RESOLUTION_FAILED = 'SKILL_NAME_RESOLUTION_FAILED',
   SKILL_TEXT_IMPROVEMENT_FAILED = 'SKILL_TEXT_IMPROVEMENT_FAILED',
   SKILL_TEXT_IMPROVEMENT_UNAVAILABLE = 'SKILL_TEXT_IMPROVEMENT_UNAVAILABLE',
+  SKILL_OWNER_CHANGED = 'SKILL_OWNER_CHANGED',
+  NAME_TAKEN_AT_TARGET = 'NAME_TAKEN_AT_TARGET',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -54,6 +56,26 @@ export class DuplicateSkillNameError extends SkillError {
       SkillErrorCode.DUPLICATE_SKILL_NAME,
       409,
       metadata,
+    );
+  }
+}
+
+export class SkillOwnerChangedError extends SkillError {
+  constructor(skillId: string) {
+    super(
+      `Skill ${skillId} is no longer owned by the requester`,
+      SkillErrorCode.SKILL_OWNER_CHANGED,
+      409,
+    );
+  }
+}
+
+export class SkillNameTakenAtTargetError extends SkillError {
+  constructor(name: string) {
+    super(
+      `The target already has a skill named "${name}"`,
+      SkillErrorCode.NAME_TAKEN_AT_TARGET,
+      409,
     );
   }
 }

@@ -1,4 +1,5 @@
 import { randomUUID, type UUID } from 'crypto';
+import type { IsHandoverReviewerUseCase } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.use-case';
 import {
   OwnershipViewer,
   type OwnershipViewerParams,
@@ -49,6 +50,7 @@ function setup() {
   };
   const viewer = { execute: jest.fn() };
   const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
+  const reviewer = { execute: jest.fn().mockResolvedValue(false) };
   const viewerWith = (params: Partial<OwnershipViewerParams>) =>
     viewer.execute.mockResolvedValue(
       new OwnershipViewer({
@@ -82,7 +84,9 @@ function setup() {
       context as unknown as ContextService,
       viewer as unknown as GetOwnershipViewerUseCase,
       hasPermission as unknown as HasPermissionUseCase,
+      reviewer as unknown as IsHandoverReviewerUseCase,
     ),
+    reviewer,
   };
 }
 
@@ -268,5 +272,27 @@ describe(SkillAuthorizationService.name, () => {
     await expect(service.requireManage(personal)).rejects.toBeInstanceOf(
       UnauthorizedAccessError,
     );
+  });
+
+  describe('pending handover reviewers', () => {
+    it('let a reviewer view a personal skill that is up for handover', async () => {
+      const { service, personal, reviewer } = setup();
+      const foreign = new PersonalSkill({ ...personal, userId: randomUUID() });
+      reviewer.execute.mockResolvedValue(true);
+
+      await expect(service.requireView(foreign)).resolves.toBeUndefined();
+      await expect(service.requireRead(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+
+    it('hide the skill from everyone else', async () => {
+      const { service, personal } = setup();
+      const foreign = new PersonalSkill({ ...personal, userId: randomUUID() });
+
+      await expect(service.requireView(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
   });
 });

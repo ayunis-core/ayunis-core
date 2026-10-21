@@ -16,6 +16,9 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { IsHandoverReviewerUseCase } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.use-case';
+import { IsHandoverReviewerQuery } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.query';
+import { HandoverResourceType } from 'src/domain/handovers/domain/handover-resource-type.enum';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
@@ -36,6 +39,8 @@ export class SkillAuthorizationService {
     private readonly context: ContextService,
     private readonly getViewer: GetOwnershipViewerUseCase,
     private readonly hasPermission: HasPermissionUseCase,
+    @Inject(forwardRef(() => IsHandoverReviewerUseCase))
+    private readonly isHandoverReviewer: IsHandoverReviewerUseCase,
   ) {}
 
   async requireRead(skill: Skill): Promise<void> {
@@ -62,6 +67,23 @@ export class SkillAuthorizationService {
     await this.authorizeWorkspace(skill, () =>
       this.workspaceRead.execute({ workspaceId: skill.workspaceId }),
     );
+  }
+
+  async requireView(skill: Skill): Promise<void> {
+    try {
+      await this.requireRead(skill);
+    } catch (error) {
+      if (
+        error instanceof SkillNotFoundError &&
+        skill instanceof PersonalSkill &&
+        (await this.isHandoverReviewer.execute(
+          new IsHandoverReviewerQuery(HandoverResourceType.SKILL, skill.id),
+        ))
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 
   async requireWrite(skill: Skill): Promise<void> {

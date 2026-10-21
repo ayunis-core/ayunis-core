@@ -21,6 +21,7 @@ export interface OwnerDescription {
   audienceCount: number | null;
   teamEditors: OwnerEditor[];
   orgEditorsIncludeNonAdmins: boolean;
+  submittedBy: OwnerEditor | null;
 }
 
 export class OwnershipLookup {
@@ -28,6 +29,7 @@ export class OwnershipLookup {
     private readonly kind: OwnedResourceKind,
     readonly viewer: OwnershipViewer,
     private readonly descriptions: CollectiveOwnerDescriptions,
+    private readonly submitterNames: Map<UUID, string> = new Map(),
   ) {}
 
   rightsFor(owner: LookupOwner): ResourceViewerRights {
@@ -44,13 +46,23 @@ export class OwnershipLookup {
     };
   }
 
-  describe(owner: CollectiveOwner): OwnerDescription {
-    return owner.type === 'team'
-      ? this.describeTeam(owner.teamId)
-      : this.describeOrg();
+  describe(
+    owner: CollectiveOwner,
+    submittedByUserId: UUID | null = null,
+  ): OwnerDescription {
+    const description =
+      owner.type === 'team'
+        ? this.describeTeam(owner.teamId)
+        : this.describeOrg();
+    return { ...description, submittedBy: this.submitter(submittedByUserId) };
   }
 
-  private describeTeam(teamId: UUID): OwnerDescription {
+  private submitter(userId: UUID | null): OwnerEditor | null {
+    if (!userId) return null;
+    return { userId, name: this.submitterNames.get(userId) ?? '' };
+  }
+
+  private describeTeam(teamId: UUID): Omit<OwnerDescription, 'submittedBy'> {
     const team = this.descriptions.teams.get(teamId);
     return {
       teamName: team?.name ?? null,
@@ -60,7 +72,7 @@ export class OwnershipLookup {
     };
   }
 
-  private describeOrg(): OwnerDescription {
+  private describeOrg(): Omit<OwnerDescription, 'submittedBy'> {
     const org = this.descriptions.org;
     return {
       teamName: null,

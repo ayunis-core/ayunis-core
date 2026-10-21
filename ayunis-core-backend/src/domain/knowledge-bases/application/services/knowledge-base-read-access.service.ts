@@ -12,6 +12,9 @@ import {
 } from 'src/domain/knowledge-bases/application/models/collective-knowledge-base-owner';
 import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-cases/get-ownership-viewer/get-ownership-viewer.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { IsHandoverReviewerUseCase } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.use-case';
+import { IsHandoverReviewerQuery } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.query';
+import { HandoverResourceType } from 'src/domain/handovers/domain/handover-resource-type.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
@@ -35,6 +38,8 @@ export class KnowledgeBaseReadAccessService {
     private readonly workspaceExecution: AssertWorkspaceExecutionAccessUseCase,
     private readonly context: ContextService,
     private readonly getViewer: GetOwnershipViewerUseCase,
+    @Inject(forwardRef(() => IsHandoverReviewerUseCase))
+    private readonly isHandoverReviewer: IsHandoverReviewerUseCase,
   ) {}
 
   async requireRead(knowledgeBase: KnowledgeBase): Promise<void> {
@@ -58,6 +63,26 @@ export class KnowledgeBaseReadAccessService {
     await this.authorizeWorkspace(knowledgeBase, () =>
       this.workspaceRead.execute({ workspaceId: knowledgeBase.workspaceId }),
     );
+  }
+
+  async requireView(knowledgeBase: KnowledgeBase): Promise<void> {
+    try {
+      await this.requireRead(knowledgeBase);
+    } catch (error) {
+      if (
+        error instanceof KnowledgeBaseNotFoundError &&
+        knowledgeBase instanceof PersonalKnowledgeBase &&
+        (await this.isHandoverReviewer.execute(
+          new IsHandoverReviewerQuery(
+            HandoverResourceType.KNOWLEDGE_BASE,
+            knowledgeBase.id,
+          ),
+        ))
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 
   async requireExecution(

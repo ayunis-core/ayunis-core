@@ -100,6 +100,21 @@ export class LocalCollectiveKnowledgeBaseRepository implements CollectiveKnowled
       .execute();
   }
 
+  async transferFromPersonal(
+    knowledgeBaseId: UUID,
+    owner: { teamId: UUID | null; submittedByUserId: UUID },
+  ): Promise<boolean> {
+    const result = await this.manager.getRepository(KnowledgeBaseRecord).update(
+      { id: knowledgeBaseId, userId: owner.submittedByUserId },
+      {
+        userId: null,
+        teamId: owner.teamId,
+        submittedByUserId: owner.submittedByUserId,
+      },
+    );
+    return Boolean(result.affected);
+  }
+
   private usableQuery(
     scope: CollectiveKnowledgeBaseScope,
   ): SelectQueryBuilder<KnowledgeBaseRecord> {

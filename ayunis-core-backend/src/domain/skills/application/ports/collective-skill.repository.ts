@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { CollectiveSkill } from 'src/domain/skills/domain/skill';
 import type { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 
@@ -36,6 +37,10 @@ export abstract class CollectiveSkillRepository {
     userId: UUID,
     isActive: boolean,
   ): Promise<void>;
+  abstract transferFromPersonal(
+    skill: PersonalSkill,
+    owner: { teamId: UUID | null; orgId: UUID; submittedByUserId: UUID },
+  ): Promise<boolean>;
   abstract setPinned(
     skillId: UUID,
     userId: UUID,

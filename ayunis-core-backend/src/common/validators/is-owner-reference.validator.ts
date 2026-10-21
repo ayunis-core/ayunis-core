@@ -3,6 +3,7 @@ import { isUUID, registerDecorator } from 'class-validator';
 
 export function IsOwnerReference(
   ownerType: string,
+  discriminator = 'ownerType',
   validationOptions?: ValidationOptions,
 ): PropertyDecorator {
   return (target, propertyKey) => {
@@ -13,9 +14,9 @@ export function IsOwnerReference(
       options: validationOptions,
       validator: {
         validate(value: unknown, args: ValidationArguments): boolean {
-          const { ownerType: requested } = args.object as {
-            ownerType?: unknown;
-          };
+          const requested = (args.object as Record<string, unknown>)[
+            discriminator
+          ];
           if (requested === ownerType) {
             return typeof value === 'string' && isUUID(value);
           }

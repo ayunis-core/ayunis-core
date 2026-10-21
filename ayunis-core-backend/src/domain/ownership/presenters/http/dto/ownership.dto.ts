@@ -42,6 +42,13 @@ export class OwnerDescriptionDto {
       'A non-admin role holds the organisation right for this resource',
   })
   orgEditorsIncludeNonAdmins: boolean;
+
+  @ApiProperty({
+    type: OwnerEditorDto,
+    nullable: true,
+    description: 'Who handed the item over to its team or organisation',
+  })
+  submittedBy: OwnerEditorDto | null;
 }
 
 export enum OwnerOptionType {

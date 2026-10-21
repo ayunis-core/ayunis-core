@@ -7,6 +7,7 @@ import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowle
 import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { randomUUID } from 'crypto';
+import type { IsHandoverReviewerUseCase } from 'src/domain/handovers/application/use-cases/is-handover-reviewer/is-handover-reviewer.use-case';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -45,6 +46,7 @@ function setup() {
     get: jest.fn(getFromUserContext({ userId, orgId })),
   };
   const viewer = { execute: jest.fn() };
+  const reviewer = { execute: jest.fn().mockResolvedValue(false) };
   const viewerWith = (params: Partial<OwnershipViewerParams>) =>
     viewer.execute.mockResolvedValue(
       new OwnershipViewer({
@@ -75,8 +77,10 @@ function setup() {
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
       viewer as unknown as GetOwnershipViewerUseCase,
+      reviewer as unknown as IsHandoverReviewerUseCase,
     ),
     viewerWith,
+    reviewer,
   };
 }
 
@@ -236,5 +240,20 @@ describe(KnowledgeBaseReadAccessService.name, () => {
 
       await expect(service.requireUse(org)).resolves.toBeUndefined();
     });
+  });
+
+  it('lets a handover reviewer view a personal knowledge base read-only', async () => {
+    const { service, orgId, reviewer } = setup();
+    const foreign = new PersonalKnowledgeBase({
+      name: 'Kassenprüfung',
+      orgId,
+      userId: randomUUID(),
+    });
+    reviewer.execute.mockResolvedValue(true);
+
+    await expect(service.requireView(foreign)).resolves.toBeUndefined();
+    await expect(
+      service.requireExecution(foreign, randomUUID()),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
   });
 });

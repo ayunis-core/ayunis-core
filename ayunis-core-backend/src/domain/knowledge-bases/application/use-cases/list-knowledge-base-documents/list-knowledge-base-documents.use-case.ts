@@ -28,7 +28,7 @@ export class ListKnowledgeBaseDocumentsUseCase {
     if (!knowledgeBase) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
     }
-    await this.readAccess.requireRead(knowledgeBase);
+    await this.readAccess.requireView(knowledgeBase);
     return this.repository.findSourcesByKnowledgeBaseId(knowledgeBase.id);
   }
 }

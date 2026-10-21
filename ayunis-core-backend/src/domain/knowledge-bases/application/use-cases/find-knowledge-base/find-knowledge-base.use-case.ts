@@ -32,7 +32,7 @@ export class FindKnowledgeBaseUseCase {
     this.logger.log({ id: query.id }, 'Finding knowledge base');
     const knowledgeBase = await this.repository.findById(query.id);
     if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(query.id);
-    await this.readAccess.requireRead(knowledgeBase);
+    await this.readAccess.requireView(knowledgeBase);
     if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
       return this.workspaceContext(knowledgeBase);
     }

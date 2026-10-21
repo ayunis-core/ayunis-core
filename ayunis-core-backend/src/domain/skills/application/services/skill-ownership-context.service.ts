@@ -35,7 +35,7 @@ export class SkillOwnershipLookup {
 
   describe(skill: Skill): OwnerDescription | undefined {
     return isCollectiveSkill(skill)
-      ? this.lookup.describe(collectiveOwnerOf(skill))
+      ? this.lookup.describe(collectiveOwnerOf(skill), skill.submittedByUserId)
       : undefined;
   }
 
@@ -61,6 +61,9 @@ export class SkillOwnershipContextService {
         'skill',
         collective.map(collectiveOwnerOf),
         viewer,
+        collective.flatMap(({ submittedByUserId }) =>
+          submittedByUserId ? [submittedByUserId] : [],
+        ),
       ),
     );
     const states =
