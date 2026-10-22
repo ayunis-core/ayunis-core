@@ -56,6 +56,7 @@ def obtain_pdf(context: JobContext, source: Path, detected_type: str, target: Pa
         ),
     )
     conversion_ms = int((time.perf_counter() - started) * 1000)
+    context.metrics.record_stage("conversion", conversion_ms)
     logger.info(
         "conversion done",
         extra={
@@ -94,6 +95,7 @@ def convert_inline(
 ) -> None:
     """Conversion for a document inside an email: nothing is stored under the prefix."""
     converter = require_converter(context)
+    started = time.perf_counter()
     call_abortable(
         context,
         converter.call(
@@ -103,6 +105,7 @@ def convert_inline(
             context.settings.max_input_bytes,
         ),
     )
+    context.metrics.record_stage("conversion", int((time.perf_counter() - started) * 1000))
 
 
 def require_converter(context: JobContext) -> GotenbergConverter:
