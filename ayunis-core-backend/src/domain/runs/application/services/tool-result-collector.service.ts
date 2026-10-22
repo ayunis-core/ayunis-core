@@ -34,9 +34,8 @@ import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
 import {
   addToolResultTruncationNotice,
   limitToolResult,
-  truncateToolResult,
+  truncateAnonymousToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
-import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -377,7 +376,7 @@ export class ToolResultCollectorService {
 
     let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
-      const limited = truncateToolResult(result, MAX_ANONYMIZATION_TEXT_LENGTH);
+      const limited = truncateAnonymousToolResult(result);
       const anonymized = await this.anonymizeText(
         limited.result,
         orgId,

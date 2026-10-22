@@ -18,9 +18,8 @@ import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import {
   addToolResultTruncationNotice,
-  truncateToolResult,
+  truncateAnonymousToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
-import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 import { serializeRuntimeAnonymizationError } from './runtime-model-error';
 import {
   isAcknowledgementOnlyTool,
@@ -109,7 +108,7 @@ export class BackendToolAdapter {
     const outcome = await this.runTool(tool, input, context);
     let result = outcome.result;
     if (context.isAnonymous && tool.returnsPii) {
-      const limited = truncateToolResult(result, MAX_ANONYMIZATION_TEXT_LENGTH);
+      const limited = truncateAnonymousToolResult(result);
       result = await this.redact(limited.result, context, ctx);
       if (limited.truncated) {
         result = addToolResultTruncationNotice(result);

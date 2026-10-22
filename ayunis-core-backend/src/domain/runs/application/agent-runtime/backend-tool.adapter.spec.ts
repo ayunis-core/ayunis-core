@@ -28,7 +28,7 @@ import {
   ThreadPiiMaskThreadMissingError,
 } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { BackendToolAdapter } from './backend-tool.adapter';
-import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+import { MAX_ANONYMOUS_TOOL_RESULT_LENGTH } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -238,7 +238,7 @@ describe('BackendToolAdapter', () => {
   });
 
   it('limits PII tool output before anonymization', async () => {
-    const retainedResult = 'x'.repeat(MAX_ANONYMIZATION_TEXT_LENGTH);
+    const retainedResult = 'x'.repeat(MAX_ANONYMOUS_TOOL_RESULT_LENGTH);
     execute.mockResolvedValue(`${retainedResult}discarded`);
     anonymize.mockResolvedValue({
       anonymizedText: 'anonymized result',
