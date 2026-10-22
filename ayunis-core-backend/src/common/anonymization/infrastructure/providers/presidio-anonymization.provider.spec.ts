@@ -166,7 +166,7 @@ describe('PresidioAnonymizationProvider', () => {
   });
 
   it('rejects text beyond the input limit without sending it', async () => {
-    const result = provider.detect('A'.repeat(30_001));
+    const result = provider.detect('A'.repeat(60_001));
 
     await expect(result).rejects.toMatchObject({
       code: 'ANONYMIZATION_INPUT_TOO_LONG',
@@ -180,28 +180,28 @@ describe('PresidioAnonymizationProvider', () => {
   // sent as overlapping 5k chunks in parallel, which the service spreads over
   // its workers (AYC-1254).
   it('sends a text at the input limit as overlapping chunks in parallel', async () => {
-    const text = 'A'.repeat(30_000);
+    const text = 'A'.repeat(60_000);
     mockResults([]);
 
     await expect(provider.detect(text)).resolves.toEqual([]);
 
-    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(7);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(14);
     expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(1, {
       text: 'A'.repeat(5_000),
       entities: null,
     });
-    expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(7, {
-      text: 'A'.repeat(3_000),
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenNthCalledWith(14, {
+      text: 'A'.repeat(1_500),
       entities: null,
     });
     expect(logger.log).toHaveBeenCalledWith(
-      expect.objectContaining({ textLength: 30_000, chunkCount: 7 }),
+      expect.objectContaining({ textLength: 60_000, chunkCount: 14 }),
       'PII detection complete',
     );
   });
 
-  it('keeps at most three chunk requests in flight', async () => {
-    const text = 'A'.repeat(30_000);
+  it('keeps at most five chunk requests in flight', async () => {
+    const text = 'A'.repeat(60_000);
     let started = 0;
     let inFlight = 0;
     let maxInFlight = 0;
@@ -220,13 +220,13 @@ describe('PresidioAnonymizationProvider', () => {
     );
 
     const result = provider.detect(text);
-    while (started < 7 || release.length > 0) {
+    while (started < 14 || release.length > 0) {
       await new Promise((resolve) => setImmediate(resolve));
       release.shift()?.();
     }
 
     await expect(result).resolves.toEqual([]);
-    expect(maxInFlight).toBe(3);
+    expect(maxInFlight).toBe(5);
   });
 
   it('shifts chunk spans to full-text offsets', async () => {
