@@ -1,21 +1,20 @@
 """PDF extraction: count, analyse, extract text-layer pages, OCR the rest, write the result."""
 
-import hashlib
 import logging
-import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast
 
-from app.api.models import JobProgress, ResultRef
+from app.api.models import JobProgress
 from app.config import RULE_VERSION, Settings
 from app.errors import ServiceError
+from app.jobs.abortable import call_abortable
 from app.jobs.extractors import DownloadedInput, register_extractor
-from app.jobs.runtime import JobContext, JobInterruptedError
-from app.ocr.backend import OcrBackend, OcrCall, resolve_ocr_backend
+from app.jobs.result_writer import write_result
+from app.jobs.runtime import JobContext
+from app.ocr.backend import OcrBackend, resolve_ocr_backend
 from app.ocr.batching import iter_batches
-from app.pdf.checkpoints import Checkpoints
+from app.pdf.checkpoints import Checkpoints, MemoryCheckpoints
 from app.pdf.decision import PageDecision, apply_document_shortcut, decide_page
 from app.pdf.document import PageContent, PdfFile
 from app.pdf.signals import measure_page
@@ -29,12 +28,27 @@ from app.result import (
     Timings,
     strip_nul,
 )
-from app.storage.objects import ObjectRef
 
 logger = logging.getLogger(__name__)
 
-CALL_POLL_SECONDS = 1.0
-ABORT_GRACE_SECONDS = 5.0
+
+@dataclass(frozen=True)
+class PdfSource:
+    """The PDF a job extracts: the input itself, or what the converter made of it."""
+
+    path: Path
+    detected_type: str
+    download_ms: int = 0
+    conversion_ms: int = 0
+    converter: str | None = None
+
+
+@dataclass(frozen=True)
+class InlineExtraction:
+    """Pages extracted without checkpoints or progress, for a document inside an email."""
+
+    pages: list[PageEntry]
+    warnings: list[str]
 
 
 class _WordListRegistry:
@@ -71,6 +85,8 @@ class Run:
     timings: Timings = field(default_factory=Timings)
     word_cache: WordCache = field(default_factory=WordCache)
     started: float = field(default_factory=time.perf_counter)
+    # Off for a document inside an email: its pages are not the job's pages.
+    publish_progress: bool = True
 
     @property
     def page_count(self) -> int:
@@ -85,15 +101,25 @@ class Run:
             pages_text=sum(1 for page in pages if page.method in ("text", "text_fallback")),
         )
 
+    def report_progress(self) -> None:
+        if self.publish_progress:
+            self.context.report_progress(self.progress())
+
 
 def extract_pdf(context: JobContext, downloaded: DownloadedInput) -> None:
+    extract_pdf_document(context, PdfSource(downloaded.path, "pdf", downloaded.download_ms))
+
+
+def extract_pdf_document(context: JobContext, source: PdfSource) -> None:
+    """The whole job: checkpoints under the output prefix, progress on the job, result.json."""
     context.set_phase("counting")
-    with PdfFile(downloaded.path) as pdf:
+    with PdfFile(source.path) as pdf:
         run = Run(context, pdf, Checkpoints(context), resolve_ocr_backend(context.settings))
-        run.timings.download_ms = downloaded.download_ms
+        run.timings.download_ms = source.download_ms
+        run.timings.conversion_ms = source.conversion_ms
         check_page_limit(run)
         run.checkpoints.load_existing(run.page_count)
-        context.report_progress(run.progress())
+        run.report_progress()
 
         context.set_phase("analyzing")
         analysis_started = time.perf_counter()
@@ -107,7 +133,28 @@ def extract_pdf(context: JobContext, downloaded: DownloadedInput) -> None:
         run.timings.ocr_ms = int((time.perf_counter() - ocr_started) * 1000)
 
         context.set_phase("finalizing")
-        finalize(run, downloaded)
+        finalize(run, source)
+
+
+def extract_pdf_inline(context: JobContext, path: Path) -> InlineExtraction:
+    """Same analysis, text layer and OCR for a PDF attached to an email, kept in memory.
+
+    Nothing is checkpointed: a restart redoes the email's attachments, bounded like the backend's
+    in-process extraction was. The job's own stop checks and page limit still apply.
+    """
+    with PdfFile(path) as pdf:
+        run = Run(
+            context,
+            pdf,
+            MemoryCheckpoints(context),
+            resolve_ocr_backend(context.settings),
+            publish_progress=False,
+        )
+        check_page_limit(run)
+        analyses = analyse_pages(run)
+        pending_ocr = extract_text_pages(run, analyses)
+        extract_ocr_pages(run, analyses, pending_ocr)
+        return InlineExtraction(run.checkpoints.ordered(), sorted(set(run.warnings)))
 
 
 def check_page_limit(run: Run) -> None:
@@ -211,8 +258,8 @@ def extract_text_pages(run: Run, analyses: dict[int, PageAnalysis]) -> list[int]
         )
         written += 1
         if written % run.context.settings.checkpoint_pages == 0:
-            run.context.report_progress(run.progress())
-    run.context.report_progress(run.progress())
+            run.report_progress()
+    run.report_progress()
     if (
         pending_ocr == []
         and run.backend is None
@@ -257,7 +304,7 @@ def extract_ocr_pages(run: Run, analyses: dict[int, PageAnalysis], pending: list
                     size=analysis.size,
                 )
             )
-        run.context.report_progress(run.progress())
+        run.report_progress()
         logger.info(
             "ocr batch done",
             extra={
@@ -269,39 +316,7 @@ def extract_ocr_pages(run: Run, analyses: dict[int, PageAnalysis], pending: list
         )
 
 
-def call_abortable(context: JobContext, call: OcrCall) -> list[str]:
-    """Runs a provider call on its own thread and keeps checking the job while it lasts.
-
-    A cancel, release, lost lease or shutdown interrupts the job at once: the call's connection
-    is closed so the upload stops, its stop check refuses any retry, its result is dropped, and
-    the worker waits briefly for the thread so the request buffers are freed before it moves on.
-    """
-    outcome: list[tuple[str, Any]] = []
-    done = threading.Event()
-
-    def runner() -> None:
-        try:
-            outcome.append(("ok", call.run()))
-        except BaseException as error:
-            outcome.append(("error", error))
-        finally:
-            done.set()
-
-    threading.Thread(target=runner, name="ocr-call", daemon=True).start()
-    while not done.wait(CALL_POLL_SECONDS):
-        try:
-            context.check()
-        except BaseException:
-            call.abort()
-            done.wait(ABORT_GRACE_SECONDS)
-            raise
-    kind, value = outcome[0]
-    if kind == "error":
-        raise value
-    return cast(list[str], value)
-
-
-def finalize(run: Run, downloaded: DownloadedInput) -> None:
+def finalize(run: Run, source: PdfSource) -> None:
     context = run.context
     pages = run.checkpoints.ordered()
     if len(pages) != run.page_count:
@@ -320,8 +335,9 @@ def finalize(run: Run, downloaded: DownloadedInput) -> None:
         document=DocumentInfo(
             file_name=context.request.file_name,
             declared_mime_type=context.request.declared_mime_type,
-            detected_type=downloaded.detected_type,
+            detected_type=source.detected_type,
             page_count=run.page_count,
+            converter=source.converter,
             ocr_model=run.backend.model if run.backend else None,
             rule_version=RULE_VERSION,
             pages_ocr=sum(1 for page in pages if page.method == "ocr"),
@@ -333,65 +349,6 @@ def finalize(run: Run, downloaded: DownloadedInput) -> None:
         pages=pages,
     )
     write_result(context, result)
-
-
-def write_result(context: JobContext, result: ExtractionResult) -> None:
-    """Writes the result, then compare-and-sets succeeded; a cancelled job gets no result (§7.1)."""
-    bucket = context.request.output.bucket
-    prefix = context.request.output.key_prefix
-    data = result.model_dump_json(by_alias=True).encode()
-    final = ObjectRef(bucket, f"{prefix}result.json")
-    temporary = ObjectRef(bucket, f"{prefix}result.json.tmp-{context.attempt}")
-    # The guarded progress write is the last point at which an interruption leaves no object
-    # behind; after it the only exit is the compare-and-set below.
-    context.report_progress(
-        JobProgress(
-            pages_total=result.document.page_count,
-            pages_done=result.document.page_count,
-            pages_ocr=result.document.pages_ocr,
-            pages_text=result.document.pages_text,
-        )
-    )
-    context.objects.put_bytes(temporary, data)
-    context.objects.copy(temporary, final)
-    context.objects.delete(temporary)
-    ref = ResultRef(
-        bucket=bucket,
-        key=final.key,
-        bytes=len(data),
-        sha256=hashlib.sha256(data).hexdigest(),
-        page_count=result.document.page_count,
-    )
-    if not context.store.succeed(
-        context.job_id, ref, context.settings.replica_id, context.settings.record_ttl_seconds
-    ):
-        discard_unclaimed_result(context, final)
-        return
-    logger.info(
-        "result written",
-        extra={
-            "jobId": context.job_id,
-            "pages": result.document.page_count,
-            "pagesOcr": result.document.pages_ocr,
-            "pagesText": result.document.pages_text,
-            "pagesBlank": result.document.pages_blank,
-            "totalMs": result.document.timings.total_ms,
-        },
-    )
-
-
-def discard_unclaimed_result(context: JobContext, final: ObjectRef) -> None:
-    """A cancelled or released job keeps no result; a job another replica now holds keeps its."""
-    state = context.store.state(context.job_id)
-    if state in (None, "cancelled"):
-        context.objects.delete(final)
-        logger.info("result discarded, job no longer running", extra={"jobId": context.job_id})
-        return
-    logger.info(
-        "result left to the replica that holds the job",
-        extra={"jobId": context.job_id, "state": state},
-    )
-    raise JobInterruptedError("lease_lost")
 
 
 def register_pdf_extractor() -> None:

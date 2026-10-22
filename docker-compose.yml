@@ -198,6 +198,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      gotenberg:
+        condition: service_healthy
     # MinIO and Redis credentials come from the env_file (MINIO_ROOT_USER,
     # MINIO_ROOT_PASSWORD, REDIS_PASSWORD), the same values the app uses.
     env_file:
@@ -206,6 +208,7 @@ services:
       MINIO_ENDPOINT: minio:9000
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      GOTENBERG_URL: http://gotenberg:3000
       MAX_CONCURRENT_JOBS: "4"
     volumes:
       - extraction-scratch:/scratch

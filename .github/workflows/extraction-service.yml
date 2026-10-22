@@ -23,6 +23,14 @@ jobs:
     defaults:
       run:
         working-directory: ayunis-core-extraction
+    # The Office fixtures convert through a real Gotenberg (tests/test_office_gotenberg.py).
+    services:
+      gotenberg:
+        image: gotenberg/gotenberg:8
+        ports:
+          - 3000:3000
+    env:
+      GOTENBERG_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

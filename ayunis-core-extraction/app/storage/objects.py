@@ -103,6 +103,32 @@ class ObjectStore:
             raise storage_unavailable(str(error)) from error
         return WrittenObject(ref.bucket, ref.key, len(data), hashlib.sha256(data).hexdigest())
 
+    def put_file(self, ref: ObjectRef, source: Path, content_type: str) -> None:
+        """Streams a scratch file into the store without reading it into memory."""
+        try:
+            self.client.fput_object(ref.bucket, ref.key, str(source), content_type=content_type)
+        except (S3Error, urllib3.exceptions.HTTPError, OSError) as error:
+            raise storage_unavailable(str(error)) from error
+
+    def get_file(self, ref: ObjectRef, destination: Path) -> bool:
+        """Streams an object to disk; False when it does not exist."""
+        try:
+            response = self.client.get_object(ref.bucket, ref.key)
+            try:
+                with destination.open("wb") as target:
+                    for chunk in response.stream(CHUNK_BYTES):
+                        target.write(chunk)
+            finally:
+                response.close()
+                response.release_conn()
+        except S3Error as error:
+            if error.code in ("NoSuchKey", "NoSuchBucket"):
+                return False
+            raise storage_unavailable(str(error)) from error
+        except (urllib3.exceptions.HTTPError, OSError) as error:
+            raise storage_unavailable(str(error)) from error
+        return True
+
     def get_bytes(self, ref: ObjectRef) -> bytes | None:
         try:
             response = self.client.get_object(ref.bucket, ref.key)

@@ -15,10 +15,13 @@ app/
   jobs/runtime.py    worker threads, lease keeper, janitor, graceful shutdown
   jobs/service.py    start / status / result / cancel / release
   jobs/pipeline.py   download and hash check, type detection, extractor dispatch
+  jobs/extractors.py type detection (magic bytes, then declared type and extension) and registry
   storage/objects.py MinIO client: streamed download with hash, checkpoints, result, prefix purge
   pdf/               pypdfium2: page text, rendering, signals, decision rule, sub-PDFs
   ocr/               Mistral OCR client and the deterministic fake backend
-scripts/             corpus harness, fixture generator, OpenAPI export
+  convert/           Gotenberg LibreOffice route, streamed both ways
+  office/            Office input: convert, store converted.pdf under the prefix, run the PDF path
+scripts/             corpus harness, fixture generators, OpenAPI export
 contract/            committed OpenAPI document and example payloads the backend tests validate against
 tests/               pytest, no network (fakeredis, in-memory object store, synthetic PDFs)
 ```
@@ -30,7 +33,7 @@ uv sync
 uv run uvicorn app.main:app --reload
 ```
 
-The dev stack (`./dev up` at the repository root) builds and starts the service next to MinIO and Redis; it listens on `localhost:8003 + slot offset`. The backend only routes PDFs through it when `EXTRACTION_SERVICE_URL` is set; put `EXTRACTION_SERVICE_URL=http://localhost:8003` into `ayunis-core-backend/.env.local` (the slot offset is applied at boot) and restart the backend.
+The dev stack (`./dev up` at the repository root) builds and starts the service next to MinIO, Redis and Gotenberg; it listens on `localhost:8003 + slot offset`. The backend only routes PDFs through it when `EXTRACTION_SERVICE_URL` is set; put `EXTRACTION_SERVICE_URL=http://localhost:8003` into `ayunis-core-backend/.env.local` (the slot offset is applied at boot) and restart the backend.
 
 By default the dev stack runs the service with `OCR_BACKEND=fake`, which returns deterministic text for every page sent to OCR without calling a provider. For real OCR locally, export `EXTRACTION_OCR_BACKEND=mistral` and `MISTRAL_API_KEY` before `./dev up`.
 
@@ -52,6 +55,8 @@ uv run pytest
 | `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_USE_SSL` | `localhost:9000`, empty, empty, `false` | Object store holding inputs, checkpoints and results |
 | `REDIS_URL` | `redis://localhost:6379/0` | Job records under the `extraction:` prefix (shared instance, no keys shared with BullMQ) |
 | `EXTRACTION_SERVICE_TOKEN` | unset | Bearer token checked on `/v1/*` when set |
+| `GOTENBERG_URL` | unset | The Gotenberg container Office input is converted with; unset fails Office jobs with `CONVERSION_UNAVAILABLE` |
+| `CONVERSION_TIMEOUT_SECONDS` | 600 | Per conversion, like the backend converter and the container's `API_TIMEOUT` |
 | `OCR_BACKEND` | `mistral` | `mistral` or `fake` |
 | `MISTRAL_API_KEY`, `MISTRAL_OCR_SERVER_URL`, `OCR_MODEL` | unset, `https://api.mistral.ai`, `mistral-ocr-latest` | OCR provider; without a key pages that need OCR are emitted as `text_fallback` |
 | `MAX_INPUT_BYTES` | 500 MB | `INPUT_TOO_LARGE` above this |
@@ -120,6 +125,14 @@ A provider call runs on its own thread while the job keeps checking its state ev
 
 `OCR_BACKEND=fake` (`app/ocr/fake.py`) returns `[fake-ocr <sha> page i/n]` plus the page's text layer, deterministically and without network; `FAKE_OCR_DELAY_SECONDS` slows it down for restart demonstrations. Without a configured backend, OCR pages are emitted as `text_fallback` and the result carries the warning `ocr_not_configured`.
 
+## Office, email and text input
+
+Type detection (`app/jobs/extractors.py`) reads the bytes first: `%PDF`, zip-based Office (`word/`, `ppt/`, or the ODF `mimetype` entry), `{\rtf`, and compound files (an Outlook message carries `__properties_version1.0`; `.doc`, `.ppt` and `.xls` are recognised but unsupported). `eml`, `txt` and `md` have no signature and follow the declared MIME type, then the extension, in the backend's `detectFileType` order.
+
+**Office** (`docx`, `pptx`, `odt`, `odp`, `rtf`) goes through Gotenberg's LibreOffice route (`app/convert/gotenberg.py`): the input streams from scratch disk into the multipart request and the PDF streams back to disk, with the file named by the detected type so LibreOffice picks the right import filter. The PDF is stored as `<keyPrefix>converted.pdf` and every later run of the job (retry, restart, or a yield on shutdown) reuses it instead of converting again (contract §6), then the PDF path runs unchanged with `document.converter = gotenberg-libreoffice` and `timings.conversionMs`. Failure classification mirrors the backend's `gotenberg-converter.service.ts`: `400` is the document's fault (`UNPROCESSABLE_DOCUMENT`), `413` is `INPUT_TOO_LARGE`, `503` or an unreachable host is `CONVERSION_UNAVAILABLE` and a timeout or any other status is `CONVERSION_FAILED`, both retryable. A cancel, release, lost lease or shutdown aborts the conversion in flight like an OCR call.
+
+`tests/fixtures/office` holds one fixture per format with its expected output, recorded from a real Gotenberg (`tests/test_office_gotenberg.py`, run when `GOTENBERG_URL` is set, as CI does).
+
 ## Contract with the backend
 
 `contract/openapi.json` and `contract/examples/*.json` are generated from the service's own models by `scripts/export_contract.py`; CI fails when they drift from the app. The backend spec `ayunis-core-backend/src/domain/sources/infrastructure/extraction/extraction-contract.spec.ts` validates what its HTTP adapter sends against the request schemas, checks that every field its port reads is required in the response schemas, and parses the example statuses, errors and result through its own mapping code.
@@ -130,4 +143,4 @@ PDFium is not thread-safe, so every pypdfium2 call goes through one process-wide
 
 ## Licences
 
-`pypdfium2` is Apache-2.0 or BSD-3-Clause (PDFium is BSD-3-Clause). `spylls` (pure Python hunspell) is MPL-2.0. The Debian packages `hunspell-de-de` (igerman98, GPL-2.0-or-later or GPL-3.0) and `hunspell-en-us` (SCOWL, permissive) are data files read at runtime. PyMuPDF is deliberately not used.
+`pypdfium2` is Apache-2.0 or BSD-3-Clause (PDFium is BSD-3-Clause). `spylls` (pure Python hunspell) is MPL-2.0. `olefile` (compound-file detection) is BSD-2-Clause. The Debian packages `hunspell-de-de` (igerman98, GPL-2.0-or-later or GPL-3.0) and `hunspell-en-us` (SCOWL, permissive) are data files read at runtime. PyMuPDF is deliberately not used.
