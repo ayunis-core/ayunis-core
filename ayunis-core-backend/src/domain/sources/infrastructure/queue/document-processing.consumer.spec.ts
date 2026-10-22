@@ -197,19 +197,36 @@ describe('DocumentProcessingConsumer', () => {
     consumer = buildConsumer(DISABLED);
   });
 
-  it('never contacts the extraction service while EXTRACTION_SERVICE_URL is unset', async () => {
-    sourceRepository.findById.mockResolvedValue(makeSource());
-    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+  it.each([
+    ['doc.pdf', 'application/pdf'],
+    [
+      'Vorlage.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ],
+    ['Nachricht.eml', 'message/rfc822'],
+    ['Nachricht.msg', 'application/vnd.ms-outlook'],
+    ['Notiz.txt', 'text/plain'],
+  ])(
+    'never contacts the extraction service for %s while EXTRACTION_SERVICE_URL is unset',
+    async (fileName, fileType) => {
+      sourceRepository.findById.mockResolvedValue(makeSource());
+      sourceRepository.updateStatusConditionally.mockResolvedValue(true);
 
-    await consumer.process(makeJob());
+      await consumer.process(
+        makeJob({ data: makeJobData({ fileName, fileType }) }),
+      );
 
-    expect(extractionAdapter.startCalls).toHaveLength(0);
-    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledTimes(1);
-    expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ objectName: MINIO_PATH }),
-    );
-    expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
-  });
+      expect(extractionAdapter.startCalls).toHaveLength(0);
+      expect(retrieveFileContentUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ fileName, fileType }),
+      );
+      expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ objectName: MINIO_PATH }),
+      );
+      expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
+    },
+  );
 
   it('skips work when deletion wins before processing admission', async () => {
     admitOrgProcessing.execute.mockResolvedValue(false);
@@ -840,19 +857,55 @@ describe('DocumentProcessingConsumer', () => {
       );
     });
 
-    it('keeps non-PDF uploads on the in-process path', async () => {
+    it.each([
+      [
+        'Vorlage.docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
+      [
+        'Folien.pptx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
+      ['Nachricht.eml', 'message/rfc822'],
+      ['Nachricht.msg', 'application/vnd.ms-outlook'],
+      ['Notiz.txt', 'text/plain'],
+      ['Notiz.md', 'text/markdown'],
+    ])(
+      'routes %s through the service and never the in-process parsers',
+      async (fileName, fileType) => {
+        const processing = consumer.process(
+          makeJob({ data: makeJobData({ fileName, fileType }) }),
+        );
+        const jobId = await startedJob();
+        extractionAdapter.succeed(jobId, resultRef(1));
+        await processing;
+
+        expect(extractionAdapter.startCalls).toHaveLength(1);
+        expect(extractionAdapter.startCalls[0]).toMatchObject({
+          fileName,
+          declaredMimeType: fileType,
+        });
+        expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+        expect(sourceRepository.saveTextSource).toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      [
+        'Tabelle.xlsx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ],
+      ['Aufnahme.mp3', 'audio/mpeg'],
+    ])('keeps %s on the in-process path', async (fileName, fileType) => {
+      spreadsheetParser.parseWorkbook.mockResolvedValue([
+        { sheetName: 'Fees', headers: ['Permit'], rows: [['Use']] },
+      ]);
+
       await consumer.process(
-        makeJob({
-          data: makeJobData({
-            fileName: 'Vorlage.docx',
-            fileType:
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          }),
-        }),
+        makeJob({ data: makeJobData({ fileName, fileType }) }),
       );
 
       expect(extractionAdapter.startCalls).toHaveLength(0);
-      expect(retrieveFileContentUseCase.execute).toHaveBeenCalledTimes(1);
       expect(deleteObjectUseCase.execute).toHaveBeenCalled();
     });
   });

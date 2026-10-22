@@ -24,9 +24,9 @@ This document is the contract between `ayunis-core-backend` and the new Python e
 | Detected type | Today | New |
 | --- | --- | --- |
 | `pdf` | Mistral OCR whole file, pdf-parse fallback | Service |
-| Office (`docx`, `pptx`, `odt`, `odp`, ...) | Gotenberg in backend, then as PDF | Service (AYC-1410) |
-| `eml`, `msg` | Backend parsers | Service (AYC-1410); backend parsers stay until then |
-| `txt` | Backend | Backend (trivial, no reason to move) |
+| Office (`docx`, `pptx`, `odt`, `odp`; the service also accepts `rtf`) | Gotenberg in backend, then as PDF | Service (AYC-1410): the service calls Gotenberg, then runs its PDF path |
+| `eml`, `msg` | Backend parsers | Service (AYC-1410); the backend parsers stay for the in-process path while `EXTRACTION_SERVICE_URL` is unset |
+| `txt`, `md` | Backend | Service (AYC-1410), one page; keeps every upload type on one path |
 | Audio | Backend transcription | Backend |
 | `csv`, `xlsx`, ... | Backend spreadsheet parser | Backend |
 
@@ -464,7 +464,7 @@ Backend-side constants that change with this contract: `POLL_INTERVAL` 5 s, the 
 - Page-level checkpoints, not "restart once": the difference is the OCR bill on a 1000-page scan.
 - Preflight page counting moves into the job. Keeping it synchronous would require parsing a large file in the API process, which is the constraint this work removes.
 - Table pages default to OCR pending the §9 cost measurement.
-- `txt`, audio, spreadsheets stay in the backend.
+- Audio and spreadsheets stay in the backend.
 
 ## 14. Open points for the reviewers
 
