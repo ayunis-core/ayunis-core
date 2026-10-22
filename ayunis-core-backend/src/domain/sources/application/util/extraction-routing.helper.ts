@@ -2,11 +2,20 @@ import type { DetectedFileType } from 'src/common/util/file-type';
 import type { ExtractionConfig } from 'src/config/extraction.config';
 
 /**
- * Contract §1.1: PDF moves first; Office and email formats follow in
- * AYC-1410, text, audio and spreadsheets stay in the backend.
+ * Contract §1.1: documents, Office formats, email and plain text go to the
+ * service; audio and spreadsheets stay in the backend.
  */
 const EXTRACTION_SERVICE_TYPES: ReadonlySet<DetectedFileType> =
-  new Set<DetectedFileType>(['pdf']);
+  new Set<DetectedFileType>([
+    'pdf',
+    'docx',
+    'pptx',
+    'odt',
+    'odp',
+    'eml',
+    'msg',
+    'txt',
+  ]);
 
 export function usesExtractionService(
   config: Pick<ExtractionConfig, 'url'>,
