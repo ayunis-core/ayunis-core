@@ -59,3 +59,14 @@ class Checkpoints:
 
     def ordered(self) -> list[PageEntry]:
         return [self.pages[index] for index in sorted(self.pages)]
+
+
+class MemoryCheckpoints(Checkpoints):
+    """Pages kept only in memory: nothing is listed from or written to the object store."""
+
+    def load_existing(self, page_count: int) -> int:
+        return 0
+
+    def write(self, entry: PageEntry) -> None:
+        self.context.check()
+        self.pages[entry.index] = entry

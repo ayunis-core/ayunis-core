@@ -129,6 +129,7 @@ services:
     depends_on:
       - minio
       - redis
+      - gotenberg
     ports:
       - '${EXTRACTION_HOST_PORT:-8003}:8000'
     environment:
@@ -136,6 +137,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER (the ./dev script generates it automatically)}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD (the ./dev script generates it automatically)}
       REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD (the ./dev script generates it automatically)}@redis:6379/0
+      GOTENBERG_URL: http://gotenberg:3000
       # Deterministic OCR without a provider key; export EXTRACTION_OCR_BACKEND=mistral and
       # MISTRAL_API_KEY before ./dev up to call the real provider.
       OCR_BACKEND: ${EXTRACTION_OCR_BACKEND:-fake}

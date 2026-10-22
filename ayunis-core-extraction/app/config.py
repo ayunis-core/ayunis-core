@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     ocr_model: str = Field(default="mistral-ocr-latest", alias="OCR_MODEL")
     fake_ocr_delay_seconds: float = Field(default=0.0, alias="FAKE_OCR_DELAY_SECONDS")
 
+    # Office input is converted by the same Gotenberg container the backend used to call; unset
+    # fails Office jobs with CONVERSION_UNAVAILABLE. The timeout matches the backend converter and
+    # the container's API_TIMEOUT.
+    gotenberg_url: str | None = Field(default=None, alias="GOTENBERG_URL")
+    conversion_timeout_seconds: float = Field(default=600.0, alias="CONVERSION_TIMEOUT_SECONDS")
     max_input_bytes: int = Field(default=500 * 1024 * 1024, alias="MAX_INPUT_BYTES")
     max_pages: int = Field(default=1000, alias="MAX_PAGES")
     ocr_batch_pages: int = Field(default=20, alias="OCR_BATCH_PAGES")

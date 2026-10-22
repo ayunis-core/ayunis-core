@@ -10,9 +10,11 @@ from fastapi.testclient import TestClient
 from app.api.models import StartJobRequest
 from app.config import Settings
 from app.errors import ServiceError
+from app.jobs.runtime import JobContext
 from app.jobs.service import JobService
 from app.jobs.store import JobStore
 from app.main import create_app
+from app.office.extractor import register_office_extractor
 from app.pdf.extractor import register_pdf_extractor
 from app.storage.objects import ObjectRef, ObjectStore, WrittenObject
 
@@ -21,6 +23,7 @@ SOURCE_ID = "00000000-0000-0000-0000-000000000001"
 FIXTURES = Path(__file__).parent / "fixtures"
 
 register_pdf_extractor()
+register_office_extractor()
 
 
 class InMemoryObjectStore(ObjectStore):
@@ -70,6 +73,16 @@ class InMemoryObjectStore(ObjectStore):
         self._guard()
         return self.objects.get((ref.bucket, ref.key))
 
+    def put_file(self, ref: ObjectRef, source: Path, content_type: str) -> None:
+        self.put_bytes(ref, source.read_bytes(), content_type)
+
+    def get_file(self, ref: ObjectRef, destination: Path) -> bool:
+        data = self.get_bytes(ref)
+        if data is None:
+            return False
+        destination.write_bytes(data)
+        return True
+
     def copy(self, source: ObjectRef, target: ObjectRef) -> None:
         self._guard()
         with self.lock:
@@ -105,6 +118,9 @@ def make_settings(tmp_path: Path, **overrides: object) -> Settings:
         "SCRATCH_DIR": str(tmp_path / "scratch"),
         "WORD_LISTS_DIR": str(FIXTURES / "wordlists"),
         "OCR_BACKEND": "fake",
+        # Pinned so a GOTENBERG_URL in the environment (CI exports one for the live fixtures)
+        # never configures a converter in the unit tests.
+        "GOTENBERG_URL": None,
         "LEASE_TTL_SECONDS": 2,
         "LEASE_RENEW_SECONDS": 0.2,
         "JANITOR_INTERVAL_SECONDS": 0.2,
@@ -124,18 +140,37 @@ def start_request(
     sha256: str = "a" * 64,
     max_pages: int | None = None,
     ocr: str = "auto",
+    file_name: str = "report.pdf",
+    declared_mime_type: str = "application/pdf",
 ) -> StartJobRequest:
     return StartJobRequest.model_validate(
         {
             "idempotencyKey": f"v1:{source_id}:{sha256}",
             "owner": {"orgId": ORG_ID, "sourceId": source_id},
             "input": {"bucket": "ayunis", "key": key, "sha256": sha256},
-            "fileName": "report.pdf",
-            "declaredMimeType": "application/pdf",
+            "fileName": file_name,
+            "declaredMimeType": declared_mime_type,
             "output": {"bucket": "ayunis", "keyPrefix": f"org/processing/{source_id}/extraction/"},
             "options": {"maxPages": 1000 if max_pages is None else max_pages, "ocr": ocr},
         }
     )
+
+
+def make_context(
+    store: JobStore,
+    objects: InMemoryObjectStore,
+    settings: Settings,
+    scratch: Path,
+    request: StartJobRequest,
+) -> JobContext:
+    """A claimed job the pipeline can run directly, without the worker pool."""
+    created = store.start(request)
+    store.pop_queued(1)
+    assert store.claim(created.job_id, settings.replica_id) == "claimed"
+    record = store.get(created.job_id)
+    assert record is not None
+    scratch.mkdir(parents=True, exist_ok=True)
+    return JobContext(record, store, objects, settings, scratch, threading.Event())
 
 
 @pytest.fixture

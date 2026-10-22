@@ -16,6 +16,7 @@ from app.jobs.runtime import Janitor, WorkerPool
 from app.jobs.service import JobService
 from app.jobs.store import JobStore
 from app.logging import configure_logging
+from app.office.extractor import register_office_extractor
 from app.pdf.extractor import register_pdf_extractor
 from app.storage.objects import ObjectStore
 
@@ -45,6 +46,7 @@ def create_app(
     settings = settings or get_settings()
     configure_logging(settings.log_level)
     register_pdf_extractor()
+    register_office_extractor()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

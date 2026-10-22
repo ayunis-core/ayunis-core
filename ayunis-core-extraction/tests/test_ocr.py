@@ -8,6 +8,7 @@ import pytest
 from app.api.models import JobProgress
 from app.config import Settings
 from app.errors import ServiceError
+from app.jobs import abortable
 from app.jobs.pipeline import run_job
 from app.jobs.runtime import JobContext, JobInterruptedError
 from app.jobs.store import JobStore
@@ -411,7 +412,7 @@ def test_cancel_during_a_provider_call_abandons_it_and_blocks_retries(
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(extractor, "resolve_ocr_backend", lambda _settings: Slow())
-        patch.setattr(extractor, "CALL_POLL_SECONDS", 0.05)
+        patch.setattr(abortable, "CALL_POLL_SECONDS", 0.05)
         worker = threading.Thread(target=guarded)
         worker.start()
         assert started.wait(5)

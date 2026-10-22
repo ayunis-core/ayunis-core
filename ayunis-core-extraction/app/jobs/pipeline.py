@@ -24,7 +24,7 @@ def download_input(context: JobContext) -> DownloadedInput:
         )
     target = context.scratch / "input"
     context.objects.download(source, target, request.input.sha256)
-    detected = detect_type(target)
+    detected = detect_type(target, request.declared_mime_type, request.file_name)
     download_ms = int((time.perf_counter() - started) * 1000)
     logger.info(
         "input downloaded",
