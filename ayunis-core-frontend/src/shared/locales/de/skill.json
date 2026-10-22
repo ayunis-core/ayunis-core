@@ -35,21 +35,6 @@
     "statusFailed": "fehlgeschlagen",
     "retryUpload": "Versuchen Sie, die Datei erneut hochzuladen."
   },
-  "knowledgeBases": {
-    "title": "Wissenssammlungen",
-    "description": "Gemeinsame Wissenssammlungen mit dieser Fähigkeit verbinden",
-    "toggleAriaLabel": "{{name}} Wissenssammlung umschalten",
-    "retryButton": "Erneut versuchen",
-    "success": {
-      "assigned": "Wissenssammlung verbunden",
-      "unassigned": "Wissenssammlung getrennt"
-    },
-    "errors": {
-      "failedToLoad": "Wissenssammlungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-      "failedToAssign": "Wissenssammlung konnte nicht verbunden werden. Bitte versuchen Sie es erneut.",
-      "failedToUnassign": "Wissenssammlung konnte nicht getrennt werden. Bitte versuchen Sie es erneut."
-    }
-  },
   "sources": {
     "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
     "removedSuccessfully": "Quelle erfolgreich entfernt",

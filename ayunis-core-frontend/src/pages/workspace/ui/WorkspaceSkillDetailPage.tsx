@@ -1,8 +1,5 @@
-import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInvalidateWorkspaceResources } from '@/pages/workspace/api/useInvalidateWorkspaceResources';
-import { showError } from '@/shared/lib/toast';
-import { WorkspaceSkillKnowledgeBases } from './WorkspaceSkillKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { Pin, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -20,28 +17,23 @@ import { canEditWorkspace } from '@/features/workspaces';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
+import { SkillKnowledgeTip } from '@/widgets/skill-knowledge-tip';
 import { useWorkspaceSkillSources } from '@/pages/workspace/api/useWorkspaceSkillSources';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import type {
   WorkspaceResponseDto,
   SkillResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import {
-  skillKnowledgeBasesControllerAssignKnowledgeBase,
-  skillKnowledgeBasesControllerUnassignKnowledgeBase,
-  skillsControllerUpdate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { skillsControllerUpdate } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function WorkspaceSkillDetailPage({
   workspace,
   skill,
   isEmbeddingModelEnabled,
-  assignedKnowledgeBaseIds,
 }: Readonly<{
   workspace: WorkspaceResponseDto;
   skill: SkillResponseDto;
   isEmbeddingModelEnabled: boolean;
-  assignedKnowledgeBaseIds: string[];
 }>) {
   const { t } = useTranslation('workspace');
   const { t: tSkills } = useTranslation('skills');
@@ -49,39 +41,10 @@ export function WorkspaceSkillDetailPage({
   const invalidateResources = useInvalidateWorkspaceResources(workspace.id);
   const navigate = useNavigate();
   const { confirm } = useConfirmation();
-  const [isAssigning, setIsAssigning] = useState(false);
   const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
     useWorkspaceContextActions(workspace.id);
   const sourcesHook = useWorkspaceSkillSources({ skillId: skill.id });
   const canEdit = canEditWorkspace(workspace.accessLevel);
-
-  const toggleKnowledgeBase = async (knowledgeBaseId: string) => {
-    setIsAssigning(true);
-    try {
-      if (assignedKnowledgeBaseIds.includes(knowledgeBaseId)) {
-        await skillKnowledgeBasesControllerUnassignKnowledgeBase(
-          skill.id,
-          knowledgeBaseId,
-        );
-      } else {
-        await skillKnowledgeBasesControllerAssignKnowledgeBase(
-          skill.id,
-          knowledgeBaseId,
-        );
-      }
-      await invalidateResources();
-    } catch {
-      showError(
-        tSkill(
-          assignedKnowledgeBaseIds.includes(knowledgeBaseId)
-            ? 'knowledgeBases.errors.failedToUnassign'
-            : 'knowledgeBases.errors.failedToAssign',
-        ),
-      );
-    } finally {
-      setIsAssigning(false);
-    }
-  };
 
   return (
     <AppLayout>
@@ -209,16 +172,7 @@ export function WorkspaceSkillDetailPage({
                 await invalidateResources();
               }}
             />
-            <WorkspaceSkillKnowledgeBases
-              key={skill.id}
-              workspaceId={workspace.id}
-              assignedIds={assignedKnowledgeBaseIds}
-              isPending={isAssigning}
-              disabled={!canEdit}
-              onToggle={(knowledgeBaseId) =>
-                void toggleKnowledgeBase(knowledgeBaseId)
-              }
-            />
+            {canEdit && <SkillKnowledgeTip />}
             <KnowledgeBaseCard
               entity={skill}
               isEnabled={isEmbeddingModelEnabled}

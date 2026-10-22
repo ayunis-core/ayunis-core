@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   findWorkspace: vi.fn(),
   findSkill: vi.fn(),
-  listKnowledgeBases: vi.fn(),
   isEmbeddingModelEnabled: vi.fn(),
 }));
 
@@ -15,14 +14,9 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getModelsControllerIsEmbeddingModelEnabledQueryKey: () => [
     '/models/embedding/enabled',
   ],
-  getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey: (
-    id: string,
-  ) => [`/skills/${id}/knowledge-bases`],
   getSkillsControllerFindOneQueryKey: (id: string) => [`/skills/${id}`],
   getWorkspacesControllerFindOneQueryKey: (id: string) => [`/workspaces/${id}`],
   modelsControllerIsEmbeddingModelEnabled: mocks.isEmbeddingModelEnabled,
-  skillKnowledgeBasesControllerListSkillKnowledgeBases:
-    mocks.listKnowledgeBases,
   skillsControllerFindOne: mocks.findSkill,
   workspacesControllerFindOne: mocks.findWorkspace,
 }));
@@ -52,19 +46,16 @@ describe('workspace skill detail route', () => {
       ownerType: 'workspace',
       workspaceId: 'workspace-a',
     });
-    mocks.listKnowledgeBases.mockResolvedValue([{ id: 'knowledge' }]);
     mocks.isEmbeddingModelEnabled.mockResolvedValue({
       isEmbeddingModelEnabled: true,
     });
   });
 
-  it('loads canonical entity-id skill and knowledge-base endpoints', async () => {
+  it('loads the canonical entity-id skill endpoint', async () => {
     await expect(runLoader()).resolves.toMatchObject({
       skill: { id: 'skill' },
-      assignedKnowledgeBaseIds: ['knowledge'],
     });
     expect(mocks.findSkill).toHaveBeenCalledWith('skill');
-    expect(mocks.listKnowledgeBases).toHaveBeenCalledWith('skill');
   });
 
   it('rejects a skill persisted under another workspace', async () => {
@@ -75,7 +66,6 @@ describe('workspace skill detail route', () => {
     });
 
     await expect(runLoader('workspace-a')).rejects.toBeDefined();
-    expect(mocks.listKnowledgeBases).not.toHaveBeenCalled();
   });
 
   it('rejects a personal skill on a workspace route', async () => {
@@ -85,6 +75,5 @@ describe('workspace skill detail route', () => {
     });
 
     await expect(runLoader()).rejects.toBeDefined();
-    expect(mocks.listKnowledgeBases).not.toHaveBeenCalled();
   });
 });

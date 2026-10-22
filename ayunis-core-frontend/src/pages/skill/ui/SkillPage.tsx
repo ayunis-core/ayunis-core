@@ -4,6 +4,7 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
+import { SkillKnowledgeTip } from '@/widgets/skill-knowledge-tip';
 import { ReadOnlyBadge } from '@/features/resource-ownership';
 import { LinkedWorkspacesSection } from '@/features/workspace-links';
 import {
@@ -24,13 +25,11 @@ import {
   skillAccess,
   skillContentMode,
 } from '@/pages/skill/model/skill-access';
-import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SkillHeaderActions } from './SkillHeaderActions';
 import { SkillReadOnlyContent } from './SkillReadOnlyContent';
 import { SkillHandoverButton } from './SkillHandoverButton';
 import { SkillOwnershipSection } from './SkillOwnershipSection';
-import { SkillKnowledgeTip } from './SkillKnowledgeTip';
 import { MandatorySkillControl } from './MandatorySkillControl';
 
 function useUpdateSkillProperties(skillId: string) {
@@ -89,10 +88,7 @@ function SkillConfiguration({
           onUpdate={updateProperties}
         />
       )}
-      {access.isCollective && access.canEdit && <SkillKnowledgeTip />}
-      {linksResources && isEmbeddingModelEnabled && (
-        <SkillKnowledgeBasesCard disabled={!access.canEdit} />
-      )}
+      {access.canEdit && <SkillKnowledgeTip />}
       {linksResources && (
         <SkillMcpIntegrationsCard disabled={!access.canEdit} />
       )}

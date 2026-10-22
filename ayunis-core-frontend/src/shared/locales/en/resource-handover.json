@@ -29,7 +29,7 @@
       "audienceTeam": "All {{count}} members of the team can use the {{noun}}.",
       "audienceOrg": "All {{count}} people in the organisation can use the {{noun}}.",
       "severalTeams": "If several teams should use it, hand it over to the organisation.",
-      "unlinks": "Linked knowledge bases and integrations are removed from the skill."
+      "unlinks": "Linked integrations are removed from the skill."
     },
     "cancel": "Cancel",
     "submitDirect": "Hand over",
