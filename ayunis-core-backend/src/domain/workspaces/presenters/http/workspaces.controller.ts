@@ -136,13 +136,17 @@ export class WorkspacesController {
     description: 'The updated workspace',
     type: WorkspaceResponseDto,
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Only the owner and people with full access may edit',
+  })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateWorkspaceDto,
   ): Promise<WorkspaceResponseDto> {
     this.logger.log({ id }, 'update');
-    const workspace = await this.updateWorkspaceUseCase.execute(
+    const detail = await this.updateWorkspaceUseCase.execute(
       new UpdateWorkspaceCommand({
         id,
         name: dto.name,
@@ -151,7 +155,7 @@ export class WorkspacesController {
         color: dto.color,
       }),
     );
-    return this.workspaceDtoMapper.toDto(workspace);
+    return this.workspaceDtoMapper.toDetailDto(detail);
   }
 
   @Delete(':id')
@@ -166,6 +170,7 @@ export class WorkspacesController {
     format: 'uuid',
   })
   @ApiResponse({ status: 204, description: 'The workspace was deleted' })
+  @ApiResponse({ status: 403, description: 'Only the owner may delete' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
     this.logger.log({ id }, 'remove');

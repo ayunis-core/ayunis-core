@@ -273,6 +273,8 @@
   "/workspaces/{id}/context",
   "/workspaces/{id}/context/instruction",
   "/workspaces/{id}/members/{userId}",
+  "/workspaces/{id}/ownership",
+  "/workspaces/{id}/ownership/candidates",
   "/workspaces/{id}/share-candidates",
   "/workspaces/{id}/shares",
   "/workspaces/{id}/sharing",

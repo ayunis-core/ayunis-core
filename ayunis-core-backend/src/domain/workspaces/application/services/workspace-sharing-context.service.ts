@@ -4,6 +4,7 @@ import { GetOwnershipViewerUseCase } from 'src/domain/ownership/application/use-
 import type { OrgDirectory } from 'src/domain/workspaces/application/models/org-directory';
 import { WorkspaceSharingRights } from 'src/domain/workspaces/application/models/workspace-sharing-rights';
 import { WorkspaceSharingRepository } from 'src/domain/workspaces/application/ports/workspace-sharing.repository';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import type { WorkspaceSharing } from 'src/domain/workspaces/domain/workspace-sharing';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceAccessService } from './workspace-access.service';
@@ -27,7 +28,13 @@ export class WorkspaceSharingContextService {
     private readonly directoryService: WorkspaceDirectoryService,
     private readonly getViewer: GetOwnershipViewerUseCase,
     private readonly linkCleanup: WorkspaceLinkCleanupService,
+    private readonly workspaces: WorkspacesRepository,
   ) {}
+
+  async loadForChange(workspaceId: UUID): Promise<SharingContext> {
+    await this.workspaces.lockForUpdate(workspaceId);
+    return this.load(workspaceId);
+  }
 
   async load(workspaceId: UUID): Promise<SharingContext> {
     const { workspace, level } = await this.access.require(workspaceId, 'use');

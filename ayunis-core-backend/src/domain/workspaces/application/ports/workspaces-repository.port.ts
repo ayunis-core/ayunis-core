@@ -58,7 +58,9 @@ export abstract class WorkspacesRepository {
     workspaceIds: UUID[],
     userId: UUID,
   ): Promise<Map<UUID, WorkspaceListStats>>;
-  abstract findById(userId: UUID, id: UUID): Promise<Workspace | null>;
+  abstract findAllOwnedBy(userId: UUID): Promise<Workspace[]>;
+  abstract lockForUpdate(id: UUID): Promise<void>;
+  abstract changeOwner(id: UUID, userId: UUID): Promise<void>;
   abstract save(workspace: Workspace): Promise<Workspace>;
   abstract getContextRefs(workspaceId: UUID): Promise<WorkspaceContextRefs>;
   /** Throws `WorkspaceNotFoundError` when the user owns no such workspace. */

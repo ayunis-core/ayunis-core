@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { WorkspaceSharingRepository } from 'src/domain/workspaces/application/ports/workspace-sharing.repository';
+import type { WorkspaceAccess } from 'src/domain/workspaces/application/models/workspace-access';
 import type { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/workspace-access-level';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceDirectoryService } from './workspace-directory.service';
@@ -12,6 +13,10 @@ export interface WorkspaceSummary {
   memberCount: number;
 }
 
+export interface WorkspaceDetail extends WorkspaceSummary {
+  workspace: Workspace;
+}
+
 @Injectable()
 export class WorkspaceSummaryService {
   constructor(
@@ -19,6 +24,17 @@ export class WorkspaceSummaryService {
     private readonly directoryService: WorkspaceDirectoryService,
     private readonly context: ContextService,
   ) {}
+
+  async detail(access: WorkspaceAccess): Promise<WorkspaceDetail> {
+    const summary = (await this.summarize([access.workspace])).get(
+      access.workspace.id,
+    );
+    return {
+      workspace: access.workspace,
+      accessLevel: access.level,
+      memberCount: summary?.memberCount ?? 1,
+    };
+  }
 
   async summarize(
     workspaces: Workspace[],

@@ -1,17 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { WorkspaceDeletionService } from 'src/domain/workspaces/application/services/workspace-deletion.service';
 import {
   UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
+  WorkspaceOwnerOnlyError,
 } from 'src/domain/workspaces/application/workspaces.errors';
 import { DeleteWorkspaceCommand } from './delete-workspace.command';
-import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteWorkspaceUseCase {
@@ -19,46 +16,25 @@ export class DeleteWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly access: WorkspaceAccessService,
+    private readonly deletion: WorkspaceDeletionService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: DeleteWorkspaceCommand): Promise<void> {
     this.logger.log({ workspaceId: command.id }, 'Deleting workspace');
 
-    const userId = this.resolveUserId();
-    const workspace = await this.workspacesRepository.findById(
-      userId,
-      command.id,
-    );
-    if (!workspace) {
-      throw new WorkspaceNotFoundError(command.id);
+    const { workspace, level } = await this.access.require(command.id, 'use');
+    if (level !== 'owner') {
+      throw new WorkspaceOwnerOnlyError(workspace.id);
     }
 
     // Two-phase cleanup: the workspace's threads go by FK cascade, but their
     // object-storage assets do not. Listeners resolve those while the thread
     // rows still exist and defer the purge until the delete has succeeded.
-    const contextRefs = await this.workspacesRepository.getContextRefs(
-      workspace.id,
-    );
-    const event = new WorkspaceDeletionRequestedEvent(
-      workspace.id,
-      workspace.userId,
-      workspace.orgId,
-      contextRefs.skillIds,
-    );
-    await this.eventEmitter.emitAsync(
-      WorkspaceDeletionRequestedEvent.EVENT_NAME,
-      event,
-    );
+    const event = await this.deletion.announce(workspace);
 
-    await this.workspacesRepository.delete(userId, command.id);
+    await this.workspacesRepository.delete(workspace.userId, workspace.id);
     await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
   }
 }
