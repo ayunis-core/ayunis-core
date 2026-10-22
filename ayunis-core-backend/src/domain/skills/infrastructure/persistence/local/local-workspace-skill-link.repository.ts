@@ -6,6 +6,8 @@ import { randomUUID, type UUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import {
   WorkspaceSkillLinkRepository,
+  type PersonalLinkFilter,
+  type PersonalSkillLink,
   type WorkspaceSkillLink,
 } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 import { WorkspaceSkillLinkRecord } from './schema/workspace-skill-link.record';
@@ -67,6 +69,39 @@ export class LocalWorkspaceSkillLinkRepository extends WorkspaceSkillLinkReposit
 
   async unlink(workspaceId: UUID, skillId: UUID): Promise<void> {
     await this.links.delete({ workspaceId, skillId });
+  }
+
+  async findPersonalLinks(
+    filter: PersonalLinkFilter,
+  ): Promise<PersonalSkillLink[]> {
+    const { workspaceIds, ownerIds } = filter;
+    if (workspaceIds?.length === 0 || ownerIds?.length === 0) return [];
+    const query = this.links
+      .createQueryBuilder('link')
+      .innerJoin('link.skill', 'skill')
+      .select('link.workspaceId', 'workspaceId')
+      .addSelect('link.skillId', 'skillId')
+      .addSelect('skill.userId', 'ownerId')
+      .where('skill.userId IS NOT NULL');
+    if (workspaceIds) {
+      query.andWhere('link.workspaceId IN (:...workspaceIds)', {
+        workspaceIds,
+      });
+    }
+    if (ownerIds) {
+      query.andWhere('skill.userId IN (:...ownerIds)', { ownerIds });
+    }
+    return query.getRawMany<PersonalSkillLink>();
+  }
+
+  async removeMany(
+    links: Pick<PersonalSkillLink, 'workspaceId' | 'skillId'>[],
+  ): Promise<number> {
+    if (links.length === 0) return 0;
+    const result = await this.links.delete(
+      links.map(({ workspaceId, skillId }) => ({ workspaceId, skillId })),
+    );
+    return result.affected ?? 0;
   }
 
   private toLink(row: WorkspaceSkillLinkRecord): WorkspaceSkillLink {

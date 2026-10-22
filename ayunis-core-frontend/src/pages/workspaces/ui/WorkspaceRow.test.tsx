@@ -28,6 +28,7 @@ function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
     color: 'violet',
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
+    accessLevel: 'owner',
     skillCount: 0,
     knowledgeBaseCount: 0,
     ...overrides,

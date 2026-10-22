@@ -195,6 +195,16 @@ export class LocalThreadsRepository extends ThreadsRepository {
         workspaceId: filters.workspaceId,
       });
     }
+
+    if (filters?.visibleWorkspaceIds) {
+      const ids = filters.visibleWorkspaceIds;
+      queryBuilder.andWhere(
+        ids.length > 0
+          ? '(thread.workspaceId IS NULL OR thread.workspaceId IN (:...visibleWorkspaceIds))'
+          : 'thread.workspaceId IS NULL',
+        { visibleWorkspaceIds: ids },
+      );
+    }
   }
 
   private applyFindAllRelations(

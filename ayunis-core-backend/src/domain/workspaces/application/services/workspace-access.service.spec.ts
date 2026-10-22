@@ -1,99 +1,85 @@
 import { randomUUID } from 'crypto';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { WorkspaceSharingRepository } from 'src/domain/workspaces/application/ports/workspace-sharing.repository';
+import {
+  WorkspaceInsufficientAccessError,
+  WorkspaceNotFoundError,
+} from 'src/domain/workspaces/application/workspaces.errors';
 import {
   aWorkspace,
   createMockContextService,
   createMockWorkspacesRepository,
-  TEST_USER_ID,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
-import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { WorkspaceSharing } from 'src/domain/workspaces/domain/workspace-sharing';
+import type { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
+import { WorkspaceAccessService } from './workspace-access.service';
 
-function setup() {
+function setup(caller = randomUUID()) {
+  const ownerId = randomUUID();
+  const workspace = aWorkspace({ userId: ownerId });
+  const sharing = new WorkspaceSharing({
+    workspaceId: workspace.id,
+    ownerId,
+  });
   const repository = createMockWorkspacesRepository();
-  const context = createMockContextService();
+  repository.findOne.mockResolvedValue(workspace);
+  const sharingRepository = {
+    loadMany: jest.fn().mockResolvedValue(new Map([[workspace.id, sharing]])),
+  };
+  const listMyTeams = { execute: jest.fn().mockResolvedValue([]) };
   return {
+    ownerId,
+    caller,
+    sharing,
     repository,
-    context,
-    service: new WorkspaceAccessService(repository, context),
+    service: new WorkspaceAccessService(
+      repository,
+      sharingRepository as unknown as WorkspaceSharingRepository,
+      createMockContextService({ userId: caller, orgId: workspace.orgId }),
+      listMyTeams as unknown as ListMyTeamsUseCase,
+    ),
   };
 }
 
 describe(WorkspaceAccessService.name, () => {
-  it('allows an owned workspace using the authenticated user scope', async () => {
-    const { service, repository } = setup();
-    repository.findById.mockResolvedValue(aWorkspace());
+  it('gives the owner every level', async () => {
+    const ownerId = randomUUID();
+    const { service, repository } = setup(ownerId);
+    repository.findOne.mockResolvedValue(aWorkspace({ userId: ownerId }));
+
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).resolves.toBeUndefined();
-    expect(repository.findById).toHaveBeenCalledWith(
-      TEST_USER_ID,
-      TEST_WORKSPACE_ID,
-    );
+      service.require(TEST_WORKSPACE_ID, 'owner'),
+    ).resolves.toMatchObject({ level: 'owner' });
   });
 
-  it('rejects unauthenticated callers before querying persistence', async () => {
-    const { service, repository, context } = setup();
-    context.get.mockReturnValue(undefined);
-    await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
-    expect(repository.findById).not.toHaveBeenCalled();
-  });
+  it('hides a workspace from people without any access', async () => {
+    const { service } = setup();
 
-  it('requires authenticated organization context before querying persistence', async () => {
-    const { service, repository, context } = setup();
-    context.get.mockImplementation((key) =>
-      key === 'userId' ? TEST_USER_ID : undefined,
-    );
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
-    expect(repository.findById).not.toHaveBeenCalled();
-  });
-
-  it('hides a workspace outside the active organization', async () => {
-    const { service, repository } = setup();
-    repository.findById.mockResolvedValue(aWorkspace({ orgId: randomUUID() }));
-    await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.require(TEST_WORKSPACE_ID, 'use'),
     ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
   });
 
-  it('rejects a workspace absent from the authenticated user scope', async () => {
-    const { service, repository } = setup();
-    repository.findById.mockResolvedValue(null);
+  it('refuses a member whose level is too low with 403', async () => {
+    const { service, sharing, caller } = setup();
+    sharing.people.set(caller, 'use');
+
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
-    expect(repository.findById).toHaveBeenCalledWith(
-      TEST_USER_ID,
-      TEST_WORKSPACE_ID,
-    );
+      service.require(TEST_WORKSPACE_ID, 'use'),
+    ).resolves.toMatchObject({
+      level: 'use',
+    });
+    await expect(
+      service.require(TEST_WORKSPACE_ID, 'edit'),
+    ).rejects.toBeInstanceOf(WorkspaceInsufficientAccessError);
   });
 
-  it('uses the current caller rather than a previously authorized owner', async () => {
-    const { service, repository, context } = setup();
-    repository.findById.mockImplementation(async (userId) =>
-      userId === TEST_USER_ID ? aWorkspace() : null,
-    );
-    await service.requireOwned(TEST_WORKSPACE_ID);
-    const otherUserId = randomUUID();
-    context.get.mockReturnValue(otherUserId);
-    await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
-    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
-    expect(repository.findById).toHaveBeenLastCalledWith(
-      otherUserId,
-      TEST_WORKSPACE_ID,
-    );
-  });
-
-  it('propagates repository failures to the use-case error boundary', async () => {
+  it('hides a workspace of another organisation', async () => {
     const { service, repository } = setup();
-    const error = new Error('Database unavailable');
-    repository.findById.mockRejectedValue(error);
-    await expect(service.requireOwned(TEST_WORKSPACE_ID)).rejects.toBe(error);
+    repository.findOne.mockResolvedValue(aWorkspace({ orgId: randomUUID() }));
+
+    await expect(
+      service.require(TEST_WORKSPACE_ID, 'use'),
+    ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
   });
 });

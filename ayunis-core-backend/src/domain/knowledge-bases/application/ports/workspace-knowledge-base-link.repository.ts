@@ -7,6 +7,17 @@ export interface WorkspaceKnowledgeBaseLink {
   linkedAt: Date;
 }
 
+export interface PersonalKnowledgeBaseLink {
+  workspaceId: UUID;
+  knowledgeBaseId: UUID;
+  ownerId: UUID;
+}
+
+export interface PersonalKnowledgeBaseLinkFilter {
+  workspaceIds?: UUID[];
+  ownerIds?: UUID[];
+}
+
 export abstract class WorkspaceKnowledgeBaseLinkRepository {
   abstract findByWorkspace(
     workspaceId: UUID,
@@ -21,4 +32,10 @@ export abstract class WorkspaceKnowledgeBaseLinkRepository {
     linkedByUserId: UUID,
   ): Promise<void>;
   abstract unlink(workspaceId: UUID, knowledgeBaseId: UUID): Promise<void>;
+  abstract findPersonalLinks(
+    filter: PersonalKnowledgeBaseLinkFilter,
+  ): Promise<PersonalKnowledgeBaseLink[]>;
+  abstract removeMany(
+    links: Pick<PersonalKnowledgeBaseLink, 'workspaceId' | 'knowledgeBaseId'>[],
+  ): Promise<number>;
 }

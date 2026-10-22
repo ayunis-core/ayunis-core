@@ -13,6 +13,8 @@ import type { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
 import { LastTeamAdminPolicy } from 'src/iam/teams/application/services/last-team-admin-policy.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TeamMembershipEndedEvent } from 'src/iam/teams/application/events/team-membership-ended.event';
 
 @Injectable()
 export class RemoveTeamMemberUseCase {
@@ -24,6 +26,7 @@ export class RemoveTeamMemberUseCase {
     private readonly contextService: ContextService,
     private readonly teamAccess: TeamAccessService,
     private readonly lastTeamAdmin: LastTeamAdminPolicy,
+    private readonly events: EventEmitter2,
   ) {}
 
   @Transactional()
@@ -64,6 +67,10 @@ export class RemoveTeamMemberUseCase {
     await this.teamMembersRepository.deleteByTeamIdAndUserId(
       command.teamId,
       command.userId,
+    );
+    await this.events.emitAsync(
+      TeamMembershipEndedEvent.EVENT_NAME,
+      new TeamMembershipEndedEvent(orgId, command.teamId, [command.userId]),
     );
     this.logger.debug(
       { teamId: command.teamId, userId: command.userId },

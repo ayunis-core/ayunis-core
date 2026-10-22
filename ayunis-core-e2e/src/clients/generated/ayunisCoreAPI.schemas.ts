@@ -4011,6 +4011,19 @@ export interface CreateWorkspaceDto {
   color?: string;
 }
 
+/**
+ * What the caller may do in the workspace
+ */
+export type WorkspaceResponseDtoAccessLevel = typeof WorkspaceResponseDtoAccessLevel[keyof typeof WorkspaceResponseDtoAccessLevel];
+
+
+export const WorkspaceResponseDtoAccessLevel = {
+  owner: 'owner',
+  full: 'full',
+  edit: 'edit',
+  use: 'use',
+} as const;
+
 export interface WorkspaceResponseDto {
   /** Unique identifier of the workspace */
   id: string;
@@ -4034,11 +4047,15 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** What the caller may do in the workspace */
+  accessLevel: WorkspaceResponseDtoAccessLevel;
+  /** Everyone with access, the owner included (list and detail responses) */
+  memberCount?: number;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
-  /** Number of skills owned by the workspace (list responses only) */
+  /** Number of skills owned by or linked into the workspace (list responses only) */
   skillCount?: number;
-  /** Number of knowledge bases owned by the workspace (list responses only) */
+  /** Number of knowledge bases owned by or linked into the workspace (list responses only) */
   knowledgeBaseCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
   lastActivityAt?: string;
@@ -4097,6 +4114,169 @@ export interface UpdateWorkspaceInstructionDto {
      * @nullable
      */
   instruction: string | null;
+}
+
+export type SharingViewerDtoAccessLevel = typeof SharingViewerDtoAccessLevel[keyof typeof SharingViewerDtoAccessLevel];
+
+
+export const SharingViewerDtoAccessLevel = {
+  owner: 'owner',
+  full: 'full',
+  edit: 'edit',
+  use: 'use',
+} as const;
+
+export interface SharingViewerDto {
+  accessLevel: SharingViewerDtoAccessLevel;
+  canInvite: boolean;
+  /**
+     * Teams the caller may invite from; null means everyone
+     * @nullable
+     */
+  inviteScopeTeamIds: string[] | null;
+  canShareWithOrganization: boolean;
+}
+
+export type SharingMemberDtoAccessLevel = typeof SharingMemberDtoAccessLevel[keyof typeof SharingMemberDtoAccessLevel];
+
+
+export const SharingMemberDtoAccessLevel = {
+  owner: 'owner',
+  full: 'full',
+  edit: 'edit',
+  use: 'use',
+} as const;
+
+export interface SharingMemberDto {
+  userId: string;
+  name: string;
+  /**
+     * Primary team of the person; null without a team
+     * @nullable
+     */
+  affiliation: string | null;
+  accessLevel: SharingMemberDtoAccessLevel;
+  isOwner: boolean;
+  /** Whether the caller may change or remove them */
+  canChange: boolean;
+}
+
+export type SharingTeamDtoAccessLevel = typeof SharingTeamDtoAccessLevel[keyof typeof SharingTeamDtoAccessLevel];
+
+
+export const SharingTeamDtoAccessLevel = {
+  owner: 'owner',
+  full: 'full',
+  edit: 'edit',
+  use: 'use',
+} as const;
+
+export interface SharingTeamDto {
+  teamId: string;
+  name: string;
+  accessLevel: SharingTeamDtoAccessLevel;
+  /** Everyone in the team who has access through it */
+  memberCount: number;
+  /** Members shown in this section; a person shows in their first granted team only */
+  members: SharingMemberDto[];
+  /** Whether the caller may end the team share without losing their own access */
+  canEnd: boolean;
+}
+
+export interface SharingOrganizationDto {
+  memberCount: number;
+  members: SharingMemberDto[];
+}
+
+export interface SharingInvitersDto {
+  /** Managers hold "Arbeitsbereiche verwalten" */
+  managers: boolean;
+  /** Team admins may invite their own teams */
+  teamAdmins: boolean;
+}
+
+export interface WorkspaceSharingResponseDto {
+  isSharedWithOrganization: boolean;
+  /** Everyone with access, the owner included */
+  memberCount: number;
+  viewer: SharingViewerDto;
+  owner: SharingMemberDto;
+  /** People invited directly who are not shown in a team */
+  people: SharingMemberDto[];
+  teams: SharingTeamDto[];
+  /** @nullable */
+  organization: SharingOrganizationDto | null;
+  /** Who besides admins may invite people in this organisation */
+  inviters: SharingInvitersDto;
+}
+
+export interface ShareCandidateOrganizationDto {
+  memberCount: number;
+}
+
+export interface ShareCandidateTeamDto {
+  teamId: string;
+  name: string;
+  memberCount: number;
+  memberIds: string[];
+}
+
+export interface ShareCandidateTeamRefDto {
+  id: string;
+  name: string;
+}
+
+export interface ShareCandidatePersonDto {
+  userId: string;
+  name: string;
+  /** @nullable */
+  primaryTeam: ShareCandidateTeamRefDto | null;
+}
+
+export interface ShareCandidatesResponseDto {
+  /** @nullable */
+  organization: ShareCandidateOrganizationDto | null;
+  teams: ShareCandidateTeamDto[];
+  people: ShareCandidatePersonDto[];
+}
+
+export type ShareWorkspaceDtoAccessLevel = typeof ShareWorkspaceDtoAccessLevel[keyof typeof ShareWorkspaceDtoAccessLevel];
+
+
+export const ShareWorkspaceDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface ShareWorkspaceDto {
+  userIds: string[];
+  teamIds: string[];
+  accessLevel: ShareWorkspaceDtoAccessLevel;
+}
+
+export interface SharingChangeResponseDto {
+  /** Own skills and knowledge collections of people who lost access that were unlinked */
+  unlinkedCount: number;
+}
+
+export type SetWorkspaceMemberAccessDtoAccessLevel = typeof SetWorkspaceMemberAccessDtoAccessLevel[keyof typeof SetWorkspaceMemberAccessDtoAccessLevel];
+
+
+export const SetWorkspaceMemberAccessDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface SetWorkspaceMemberAccessDto {
+  accessLevel: SetWorkspaceMemberAccessDtoAccessLevel;
+  /** The team section the change was made in */
+  teamId?: string;
+}
+
+export interface SetWorkspaceOrganizationSharingDto {
+  shared: boolean;
 }
 
 export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];
@@ -6245,6 +6425,13 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
+
+export type WorkspaceSharingControllerRemoveParams = {
+/**
+ * The team section the person was removed from
+ */
+teamId?: string;
+};
 
 export type HandoverRequestsControllerTargetsParams = {
 resourceType: HandoverResourceType;

@@ -7,7 +7,9 @@ import {
   createMockContextService,
   createMockWorkspacesRepository,
   TEST_USER_ID,
+  TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceSummaryService } from 'src/domain/workspaces/application/services/workspace-summary.service';
 import { FindAllWorkspacesUseCase } from './find-all-workspaces.use-case';
 import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -23,6 +25,18 @@ describe('FindAllWorkspacesUseCase', () => {
         FindAllWorkspacesUseCase,
         { provide: WorkspacesRepository, useValue: repository },
         { provide: ContextService, useValue: contextService },
+        {
+          provide: WorkspaceSummaryService,
+          useValue: {
+            summarize: jest
+              .fn()
+              .mockResolvedValue(
+                new Map([
+                  [TEST_WORKSPACE_ID, { accessLevel: 'edit', memberCount: 4 }],
+                ]),
+              ),
+          },
+        },
       ],
     }).compile();
     useCase = module.get(FindAllWorkspacesUseCase);
@@ -36,9 +50,9 @@ describe('FindAllWorkspacesUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns the caller’s workspaces with their chat and resource stats', async () => {
+  it('returns every workspace the caller can open with access, members and stats', async () => {
     const workspace = aWorkspace();
-    repository.findAllByUserId.mockResolvedValue(
+    repository.findAllAccessible.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
     );
     repository.getListStats.mockResolvedValue(
@@ -60,6 +74,8 @@ describe('FindAllWorkspacesUseCase', () => {
         data: [
           {
             workspace,
+            accessLevel: 'edit',
+            memberCount: 4,
             chatCount: 3,
             skillCount: 2,
             knowledgeBaseCount: 5,
@@ -71,15 +87,15 @@ describe('FindAllWorkspacesUseCase', () => {
         total: 1,
       }),
     );
-    expect(repository.findAllByUserId).toHaveBeenCalledWith(
-      TEST_USER_ID,
+    expect(repository.findAllAccessible).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: TEST_USER_ID }),
       expect.objectContaining({ limit: 20, offset: 0, sort: 'updatedAt' }),
     );
   });
 
   it('reports zero chats for a workspace without stats', async () => {
     const workspace = aWorkspace();
-    repository.findAllByUserId.mockResolvedValue(
+    repository.findAllAccessible.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
     );
 
@@ -92,7 +108,7 @@ describe('FindAllWorkspacesUseCase', () => {
 
   it('reports zero skills and knowledge bases for a workspace without resources', async () => {
     const workspace = aWorkspace();
-    repository.findAllByUserId.mockResolvedValue(
+    repository.findAllAccessible.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
     );
 
@@ -101,7 +117,10 @@ describe('FindAllWorkspacesUseCase', () => {
 
     expect(item.skillCount).toBe(0);
     expect(item.knowledgeBaseCount).toBe(0);
-    expect(repository.getListStats).toHaveBeenCalledWith([workspace.id]);
+    expect(repository.getListStats).toHaveBeenCalledWith(
+      [workspace.id],
+      TEST_USER_ID,
+    );
   });
 
   it('surfaces chat activity newer than the last edit', async () => {
@@ -109,7 +128,7 @@ describe('FindAllWorkspacesUseCase', () => {
       updatedAt: new Date('2026-08-02T10:00:00.000Z'),
     });
     const chatActivity = new Date('2026-08-05T10:00:00.000Z');
-    repository.findAllByUserId.mockResolvedValue(
+    repository.findAllAccessible.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
     );
     repository.getListStats.mockResolvedValue(
@@ -136,7 +155,7 @@ describe('FindAllWorkspacesUseCase', () => {
     const workspace = aWorkspace({
       updatedAt: new Date('2026-08-09T10:00:00.000Z'),
     });
-    repository.findAllByUserId.mockResolvedValue(
+    repository.findAllAccessible.mockResolvedValue(
       new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
     );
     repository.getListStats.mockResolvedValue(

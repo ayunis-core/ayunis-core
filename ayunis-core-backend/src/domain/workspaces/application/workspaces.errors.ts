@@ -6,6 +6,10 @@ export enum WorkspaceErrorCode {
   WORKSPACE_INVALID_NAME = 'WORKSPACE_INVALID_NAME',
   WORKSPACE_INVALID_DESCRIPTION = 'WORKSPACE_INVALID_DESCRIPTION',
   WORKSPACE_INVALID_APPEARANCE = 'WORKSPACE_INVALID_APPEARANCE',
+  WORKSPACE_INSUFFICIENT_ACCESS = 'WORKSPACE_INSUFFICIENT_ACCESS',
+  WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
+  WORKSPACE_INVALID_SHARE_TARGET = 'WORKSPACE_INVALID_SHARE_TARGET',
+  WORKSPACE_TEAM_NOT_SHARED = 'WORKSPACE_TEAM_NOT_SHARED',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -63,6 +67,50 @@ export class InvalidWorkspaceAppearanceError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INVALID_APPEARANCE,
       400,
       { field, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceInsufficientAccessError extends WorkspaceError {
+  constructor(workspaceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Insufficient access to workspace '${workspaceId}'`,
+      WorkspaceErrorCode.WORKSPACE_INSUFFICIENT_ACCESS,
+      403,
+      { workspaceId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceMemberNotFoundError extends WorkspaceError {
+  constructor(workspaceId: string, userId: string) {
+    super(
+      `User '${userId}' has no changeable access to workspace '${workspaceId}'`,
+      WorkspaceErrorCode.WORKSPACE_MEMBER_NOT_FOUND,
+      404,
+      { workspaceId, userId },
+    );
+  }
+}
+
+export class WorkspaceTeamNotSharedError extends WorkspaceError {
+  constructor(workspaceId: string, teamId: string) {
+    super(
+      `Team '${teamId}' has no access to workspace '${workspaceId}'`,
+      WorkspaceErrorCode.WORKSPACE_TEAM_NOT_SHARED,
+      404,
+      { workspaceId, teamId },
+    );
+  }
+}
+
+export class InvalidWorkspaceShareTargetError extends WorkspaceError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid workspace share target: ${reason}`,
+      WorkspaceErrorCode.WORKSPACE_INVALID_SHARE_TARGET,
+      400,
+      metadata,
     );
   }
 }

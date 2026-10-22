@@ -27,9 +27,8 @@ export class DescribeLinkedWorkspacesUseCase {
       { count: query.links.length },
       'Describing linked workspaces',
     );
-    const { userId } = getRequiredUserContext(this.context);
-    const workspaces = await this.workspacesRepository.findAllByIds(
-      userId,
+    const workspaces = await this.workspacesRepository.findAllAccessibleByIds(
+      getRequiredUserContext(this.context),
       query.links.map(({ workspaceId }) => workspaceId),
     );
     const linkedBy = new Map(
