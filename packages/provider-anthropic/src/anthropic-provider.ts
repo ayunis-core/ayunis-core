@@ -178,7 +178,10 @@ const buildParams = (
   // turn and agent-loop iteration reuses the previous request's cache.
   system: convertSystem(request.instructions),
   messages: markCacheBreakpoint(convertMessages(request.messages, codec)),
-  tools: request.tools.map((tool) => convertTool(tool, codec)),
+  tools: request.tools.map((tool) => ({
+    ...convertTool(tool, codec),
+    ...(streamsToolInputEagerly(model) ? { eager_input_streaming: true } : {}),
+  })),
   // Anthropic rejects tool_choice when no tools are supplied, so only send it
   // alongside a non-empty tools array.
   ...(request.tools.length > 0 && request.toolChoice !== undefined
@@ -187,3 +190,16 @@ const buildParams = (
   max_tokens: maxTokens,
   stream: true,
 });
+
+// Without eager streaming the API buffers each tool-input parameter until it
+// is complete, so a long `create_document` body is a multi-minute silent gap
+// that trips the runtime's idle timeout (AYC-1142). The runtime parses the
+// accumulated arguments strictly, so the server-side validation given up here
+// still surfaces as a malformed tool call. Bedrock rejects the field with a
+// 400 on Sonnet 4.5, Opus 4.5 and older. Verified on Bedrock: Opus 4.6–5.5,
+// Sonnet 4.6–5, Haiku 4.5; later families run on the same serving stack.
+const EAGER_TOOL_INPUT_MODEL =
+  /claude-(?:(?:opus|sonnet|haiku|fable|mythos)-[5-9]|(?:opus|sonnet)-4-[6-9]|haiku-4-5)(?!\d)/;
+
+const streamsToolInputEagerly = (model: string): boolean =>
+  EAGER_TOOL_INPUT_MODEL.test(model);
