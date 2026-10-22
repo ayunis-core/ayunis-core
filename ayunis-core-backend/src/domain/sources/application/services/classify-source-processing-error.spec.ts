@@ -8,6 +8,8 @@ import {
   DocumentConversionUnavailableError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
+  DocumentExtractionFailedError,
+  DocumentExtractionResultInvalidError,
   EmptyFileDataError,
   SpreadsheetParseTimeoutError,
 } from 'src/domain/sources/application/sources.errors';
@@ -50,6 +52,18 @@ describe('classifySourceProcessingError', () => {
         diagnostics: { upstreamCode: 'SlowDown' },
       }),
       Code.PROCESSING_UNAVAILABLE,
+    ],
+    [
+      new DocumentExtractionFailedError('SERVICE_UNAVAILABLE', 'busy', true),
+      Code.PROCESSING_UNAVAILABLE,
+    ],
+    [
+      new DocumentExtractionFailedError('RESTART_LIMIT', 'gave up', false),
+      Code.PROCESSING_FAILED,
+    ],
+    [
+      new DocumentExtractionResultInvalidError('unsupported schemaVersion 2'),
+      Code.PROCESSING_FAILED,
     ],
     [new UploadFailedError(), Code.PROCESSING_FAILED],
     [new FileRetrieverUnauthorizedError(), Code.PROCESSING_FAILED],
