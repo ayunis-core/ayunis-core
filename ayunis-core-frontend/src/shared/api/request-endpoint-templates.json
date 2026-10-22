@@ -71,6 +71,7 @@
   "/knowledge-bases/{id}/activation",
   "/knowledge-bases/{id}/documents",
   "/knowledge-bases/{id}/documents/{documentId}",
+  "/knowledge-bases/{id}/linked-workspaces",
   "/knowledge-bases/{id}/urls",
   "/letterheads",
   "/letterheads/{id}",
@@ -130,6 +131,7 @@
   "/skills/owner-options",
   "/skills/{id}",
   "/skills/{id}/activation",
+  "/skills/{id}/linked-workspaces",
   "/skills/{id}/mandatory",
   "/skills/{id}/pin",
   "/skills/{id}/sources",
@@ -269,5 +271,11 @@
   "/workspaces",
   "/workspaces/{id}",
   "/workspaces/{id}/context",
-  "/workspaces/{id}/context/instruction"
+  "/workspaces/{id}/context/instruction",
+  "/workspaces/{workspaceId}/linkable-knowledge-bases",
+  "/workspaces/{workspaceId}/linkable-skills",
+  "/workspaces/{workspaceId}/linked-knowledge-bases",
+  "/workspaces/{workspaceId}/linked-knowledge-bases/{knowledgeBaseId}",
+  "/workspaces/{workspaceId}/linked-skills",
+  "/workspaces/{workspaceId}/linked-skills/{skillId}"
 ]

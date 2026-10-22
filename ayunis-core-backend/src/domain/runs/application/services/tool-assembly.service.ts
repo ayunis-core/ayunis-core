@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import {
@@ -132,8 +133,10 @@ export class ToolAssemblyService {
     skillEntries: SkillEntry[];
   }> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
-    const projectSkills =
-      workspaceContext?.skills.map(({ skill }) => skill) ?? [];
+    const projectSkills: Skill[] = [
+      ...(workspaceContext?.skills.map(({ skill }) => skill) ?? []),
+      ...(workspaceContext?.linkedSkills ?? []),
+    ];
     const { slugMap, skillEntries } = this.buildSkillSlugs(
       this.mergeById(activeSkills, projectSkills),
       alwaysOnTemplates,
@@ -217,6 +220,7 @@ export class ToolAssemblyService {
   ): { slugMap: Map<string, string>; skillEntries: SkillEntry[] } {
     const slugMap = new Map<string, string>();
     const skillEntries: SkillEntry[] = [];
+    const viewerId = this.contextService.get('userId');
 
     type SkillInput = {
       name: string;
@@ -225,7 +229,7 @@ export class ToolAssemblyService {
     };
     const allInputs: SkillInput[] = [
       ...activeSkills.map((s): SkillInput => ({
-        name: skillSlugName(s),
+        name: skillSlugName(s, viewerId),
         prefix: skillSlugPrefix(s),
         description: s.shortDescription,
       })),
@@ -263,8 +267,9 @@ export class ToolAssemblyService {
     advertisedSlugs: Map<string, string>,
   ): Map<string, string> {
     const skillIds = new Map<string, string>();
+    const userId = this.contextService.get('userId');
     for (const skill of skills) {
-      if (skill instanceof TeamSkill || skill instanceof OrgSkill) continue;
+      if (!isEditableBy(skill, userId)) continue;
       try {
         const slug = buildSkillSlug(skillSlugPrefix(skill), skill.name);
         if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
@@ -467,4 +472,9 @@ export class ToolAssemblyService {
       ),
     ];
   }
+}
+
+function isEditableBy(skill: Skill, userId: string | undefined): boolean {
+  if (skill instanceof TeamSkill || skill instanceof OrgSkill) return false;
+  return !(skill instanceof PersonalSkill) || skill.userId === userId;
 }

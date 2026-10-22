@@ -5,6 +5,7 @@ import type { GetOwnershipViewerUseCase } from 'src/domain/ownership/application
 import { anOwnershipViewer } from 'src/domain/ownership/application/testing/ownership.fixtures';
 import type { CollectiveSkillRepository } from 'src/domain/skills/application/ports/collective-skill.repository';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
@@ -18,7 +19,11 @@ const orgId = randomUUID();
 const skillParams = { shortDescription: 'desc', instructions: 'instructions' };
 
 function setup() {
-  const skillRepository = { findByNameAndOwner: jest.fn() };
+  const skillRepository = {
+    findByNameAndOwner: jest.fn().mockResolvedValue(null),
+    findByIds: jest.fn().mockResolvedValue([]),
+  };
+  const links = { findByWorkspace: jest.fn().mockResolvedValue([]) };
   const collectiveRepository = { findUsable: jest.fn().mockResolvedValue([]) };
   const contextService = { get: jest.fn().mockReturnValue(userId) };
   const useCase = new FindSkillByNameUseCase(
@@ -30,8 +35,15 @@ function setup() {
         .fn()
         .mockResolvedValue(anOwnershipViewer({ userId, orgId })),
     } as unknown as GetOwnershipViewerUseCase,
+    links as unknown as WorkspaceSkillLinkRepository,
   );
-  return { useCase, skillRepository, collectiveRepository, contextService };
+  return {
+    useCase,
+    skillRepository,
+    collectiveRepository,
+    contextService,
+    links,
+  };
 }
 
 describe(FindSkillByNameUseCase.name, () => {
@@ -84,5 +96,80 @@ describe(FindSkillByNameUseCase.name, () => {
     await expect(
       useCase.execute(new FindSkillByNameQuery('Notiz')),
     ).rejects.toThrow(UnauthorizedAccessError);
+  });
+
+  describe("skills linked into the thread's workspace", () => {
+    const workspaceId = randomUUID();
+    const lena = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
+    const jonas = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
+    const ofLena = new PersonalSkill({
+      ...skillParams,
+      name: 'Zusammenfassen',
+      userId: lena,
+    });
+    const ofJonas = new PersonalSkill({
+      ...skillParams,
+      name: 'Zusammenfassen',
+      userId: jonas,
+    });
+
+    function linked(...skills: PersonalSkill[]) {
+      const context = setup();
+      context.links.findByWorkspace.mockResolvedValue(
+        skills.map((skill) => ({ workspaceId, skillId: skill.id })),
+      );
+      context.skillRepository.findByIds.mockResolvedValue(skills);
+      return context;
+    }
+
+    it("tells two people's linked skills with the same name apart", async () => {
+      const { useCase } = linked(ofLena, ofJonas);
+
+      await expect(
+        useCase.execute(
+          new FindSkillByNameQuery(
+            skillSlugName(ofJonas, userId),
+            'personal',
+            workspaceId,
+          ),
+        ),
+      ).resolves.toBe(ofJonas);
+      await expect(
+        useCase.execute(
+          new FindSkillByNameQuery(
+            skillSlugName(ofLena, userId),
+            'personal',
+            workspaceId,
+          ),
+        ),
+      ).resolves.toBe(ofLena);
+    });
+
+    it('finds linked skills only inside a workspace thread', async () => {
+      const { useCase, links } = linked(ofLena);
+
+      await expect(
+        useCase.execute(
+          new FindSkillByNameQuery(skillSlugName(ofLena, userId)),
+        ),
+      ).rejects.toBeInstanceOf(SkillNotFoundError);
+      expect(links.findByWorkspace).not.toHaveBeenCalled();
+    });
+
+    it("prefers the caller's own skill with the plain name", async () => {
+      const { useCase, skillRepository } = linked(ofLena);
+      const own = new PersonalSkill({
+        ...skillParams,
+        name: 'Zusammenfassen',
+        userId,
+      });
+      skillRepository.findByNameAndOwner.mockResolvedValue(own);
+
+      await expect(
+        useCase.execute(
+          new FindSkillByNameQuery('Zusammenfassen', 'personal', workspaceId),
+        ),
+      ).resolves.toBe(own);
+    });
   });
 });

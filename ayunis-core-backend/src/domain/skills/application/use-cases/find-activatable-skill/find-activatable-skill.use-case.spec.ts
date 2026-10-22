@@ -7,6 +7,7 @@ import type { SkillAuthorizationService } from 'src/domain/skills/application/se
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 import { FindActivatableSkillUseCase } from './find-activatable-skill.use-case';
 
 function fixture() {
@@ -36,11 +37,14 @@ function fixture() {
   };
   const authorization = {
     requireExecution: jest.fn().mockResolvedValue(undefined),
+    requireUse: jest.fn().mockResolvedValue(undefined),
   };
+  const links = { isLinked: jest.fn().mockResolvedValue(false) };
   const useCase = new FindActivatableSkillUseCase(
     repository as unknown as SkillRepository,
     context as unknown as ContextService,
     authorization as unknown as SkillAuthorizationService,
+    links as unknown as WorkspaceSkillLinkRepository,
   );
   return {
     useCase,
@@ -49,6 +53,7 @@ function fixture() {
     repository,
     context,
     authorization,
+    links,
     userId,
   };
 }
@@ -148,6 +153,44 @@ describe(FindActivatableSkillUseCase.name, () => {
     repository.findById.mockResolvedValue(skill);
     await expect(
       useCase.execute({ skillId: skill.id, thread }),
+    ).rejects.toBeInstanceOf(SkillNotFoundError);
+  });
+
+  it('returns a skill linked into the thread workspace after execution checks', async () => {
+    const { useCase, thread, repository, authorization, links } = fixture();
+    const linked = new PersonalSkill({
+      name: 'Protokoll zusammenfassen',
+      shortDescription: 'Fasst Besprechungen zusammen',
+      instructions: 'Fasse zusammen.',
+      userId: randomUUID(),
+    });
+    repository.findByIds.mockResolvedValue([]);
+    links.isLinked.mockResolvedValue(true);
+    repository.findById.mockResolvedValue(linked);
+
+    await expect(useCase.execute({ skillId: linked.id, thread })).resolves.toBe(
+      linked,
+    );
+    expect(links.isLinked).toHaveBeenCalledWith(thread.workspaceId, linked.id);
+    expect(authorization.requireExecution).toHaveBeenCalledWith(
+      linked,
+      thread.id,
+    );
+  });
+
+  it('does not treat a skill linked elsewhere as part of the thread workspace', async () => {
+    const { useCase, thread, repository } = fixture();
+    const foreign = new PersonalSkill({
+      name: 'Fremd',
+      shortDescription: 'Fremde Fähigkeit',
+      instructions: 'Nicht hier.',
+      userId: randomUUID(),
+    });
+    repository.findByIds.mockResolvedValue([]);
+    repository.findById.mockResolvedValue(foreign);
+
+    await expect(
+      useCase.execute({ skillId: foreign.id, thread }),
     ).rejects.toBeInstanceOf(SkillNotFoundError);
   });
 });

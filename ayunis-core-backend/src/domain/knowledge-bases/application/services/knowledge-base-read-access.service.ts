@@ -1,7 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import {
+  KnowledgeBaseNotFoundError,
+  KnowledgeBaseNotLinkableError,
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { WorkspaceKnowledgeBaseLinkRepository } from 'src/domain/knowledge-bases/application/ports/workspace-knowledge-base-link.repository';
 import type {
   CollectiveKnowledgeBase,
   KnowledgeBase,
@@ -33,6 +37,7 @@ export class KnowledgeBaseReadAccessService {
     private readonly getViewer: GetOwnershipViewerUseCase,
     @Inject(forwardRef(() => IsHandoverReviewerUseCase))
     private readonly isHandoverReviewer: IsHandoverReviewerUseCase,
+    private readonly links: WorkspaceKnowledgeBaseLinkRepository,
   ) {}
 
   async requireRead(knowledgeBase: KnowledgeBase): Promise<void> {
@@ -59,6 +64,68 @@ export class KnowledgeBaseReadAccessService {
   }
 
   async requireView(knowledgeBase: KnowledgeBase): Promise<void> {
+    await this.withLinkFallback(
+      knowledgeBase.id,
+      () => this.requireReadOrReview(knowledgeBase),
+      (workspaceId) => this.workspaceRead.execute({ workspaceId }),
+    );
+  }
+
+  async requireExecution(
+    knowledgeBase: KnowledgeBase,
+    threadId: UUID,
+  ): Promise<void> {
+    this.requirePrincipalInOrganization(knowledgeBase);
+    if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
+      await this.authorizeWorkspace(knowledgeBase, () =>
+        this.workspaceExecution.execute({
+          workspaceId: knowledgeBase.workspaceId,
+          threadId,
+        }),
+      );
+      return;
+    }
+    await this.withLinkFallback(
+      knowledgeBase.id,
+      () => this.requireOwnUse(knowledgeBase),
+      (workspaceId) =>
+        this.workspaceExecution.execute({ workspaceId, threadId }),
+    );
+  }
+
+  async requireLinkable(knowledgeBase: KnowledgeBase): Promise<void> {
+    this.requirePrincipalInOrganization(knowledgeBase);
+    if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
+      throw new KnowledgeBaseNotLinkableError(knowledgeBase.id);
+    }
+    await this.requireOwnUse(knowledgeBase);
+  }
+
+  async requireUse(knowledgeBase: CollectiveKnowledgeBase): Promise<void> {
+    this.requirePrincipalInOrganization(knowledgeBase);
+    const viewer = await this.getViewer.execute();
+    const owner = collectiveOwnerOfKnowledgeBase(knowledgeBase);
+    if (viewer.canUse(owner)) return;
+    if (viewer.canRead('knowledge_base', owner)) {
+      throw new UnauthorizedAccessError();
+    }
+    throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+  }
+
+  private async requireOwnUse(
+    knowledgeBase: PersonalKnowledgeBase | CollectiveKnowledgeBase,
+  ): Promise<void> {
+    if (isCollectiveKnowledgeBase(knowledgeBase)) {
+      await this.requireUse(knowledgeBase);
+      return;
+    }
+    const { userId } = getRequiredUserContext(this.context);
+    this.requirePersonalRead(knowledgeBase, userId);
+  }
+
+  private async requireReadOrReview(
+    knowledgeBase: KnowledgeBase,
+  ): Promise<void> {
     try {
       await this.requireRead(knowledgeBase);
     } catch (error) {
@@ -78,40 +145,48 @@ export class KnowledgeBaseReadAccessService {
     }
   }
 
-  async requireExecution(
-    knowledgeBase: KnowledgeBase,
-    threadId: UUID,
+  private async withLinkFallback(
+    knowledgeBaseId: UUID,
+    authorize: () => Promise<void>,
+    authorizeWorkspace: (workspaceId: UUID) => Promise<void>,
   ): Promise<void> {
-    const knowledgeBaseId = knowledgeBase.id;
-    const userId = this.requirePrincipalInOrganization(knowledgeBase);
-    if (isCollectiveKnowledgeBase(knowledgeBase)) {
-      await this.requireUse(knowledgeBase);
-      return;
+    try {
+      await authorize();
+    } catch (error) {
+      const denied =
+        error instanceof KnowledgeBaseNotFoundError ||
+        error instanceof UnauthorizedAccessError;
+      if (
+        !denied ||
+        !(await this.isReachableThroughLink(
+          knowledgeBaseId,
+          authorizeWorkspace,
+        ))
+      ) {
+        throw error;
+      }
     }
-    if (knowledgeBase instanceof PersonalKnowledgeBase) {
-      this.requirePersonalRead(knowledgeBase, userId);
-      return;
-    }
-    if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
-      throw new KnowledgeBaseNotFoundError(knowledgeBaseId);
-    }
-    await this.authorizeWorkspace(knowledgeBase, () =>
-      this.workspaceExecution.execute({
-        workspaceId: knowledgeBase.workspaceId,
-        threadId,
-      }),
-    );
   }
 
-  async requireUse(knowledgeBase: CollectiveKnowledgeBase): Promise<void> {
-    this.requirePrincipalInOrganization(knowledgeBase);
-    const viewer = await this.getViewer.execute();
-    const owner = collectiveOwnerOfKnowledgeBase(knowledgeBase);
-    if (viewer.canUse(owner)) return;
-    if (viewer.canRead('knowledge_base', owner)) {
-      throw new UnauthorizedAccessError();
+  private async isReachableThroughLink(
+    knowledgeBaseId: UUID,
+    authorizeWorkspace: (workspaceId: UUID) => Promise<void>,
+  ): Promise<boolean> {
+    const links = await this.links.findByKnowledgeBase(knowledgeBaseId);
+    for (const { workspaceId } of links) {
+      try {
+        await authorizeWorkspace(workspaceId);
+        return true;
+      } catch (error) {
+        if (
+          !(error instanceof WorkspaceNotFoundError) &&
+          !(error instanceof UnauthorizedAccessError)
+        ) {
+          throw error;
+        }
+      }
     }
-    throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+    return false;
   }
 
   private requirePrincipalInOrganization(knowledgeBase: KnowledgeBase): UUID {

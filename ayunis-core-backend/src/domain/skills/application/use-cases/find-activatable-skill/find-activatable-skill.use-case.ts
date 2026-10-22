@@ -5,6 +5,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
 import {
   SkillNotFoundError,
   UnexpectedSkillError,
@@ -22,6 +23,7 @@ export class FindActivatableSkillUseCase {
     private readonly repository: SkillRepository,
     private readonly context: ContextService,
     private readonly authorization: SkillAuthorizationService,
+    private readonly links: WorkspaceSkillLinkRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
@@ -36,25 +38,34 @@ export class FindActivatableSkillUseCase {
       throw new UnauthorizedAccessError();
     }
     if (query.thread.workspaceId) {
-      const workspaceSkill = (
-        await this.repository.findByIds(
-          [query.skillId],
-          query.thread.workspaceId,
-        )
-      ).at(0);
-      if (workspaceSkill) {
-        await this.authorization.requireExecution(
-          workspaceSkill,
-          query.thread.id,
-        );
-        await this.requireWorkspaceActivation(
-          workspaceSkill.id,
-          query.thread.workspaceId,
-        );
-        return workspaceSkill;
-      }
+      const skill = await this.findInWorkspace(
+        query.skillId,
+        query.thread,
+        query.thread.workspaceId,
+      );
+      if (skill) return skill;
     }
     return this.findAccessiblePersonalSkill(query.skillId, userId);
+  }
+
+  private async findInWorkspace(
+    skillId: UUID,
+    thread: Thread,
+    workspaceId: UUID,
+  ): Promise<Skill | null> {
+    const workspaceSkill = (
+      await this.repository.findByIds([skillId], workspaceId)
+    ).at(0);
+    if (workspaceSkill) {
+      await this.authorization.requireExecution(workspaceSkill, thread.id);
+      await this.requireWorkspaceActivation(workspaceSkill.id, workspaceId);
+      return workspaceSkill;
+    }
+    if (!(await this.links.isLinked(workspaceId, skillId))) return null;
+    const linked = await this.repository.findById(skillId);
+    if (!linked) return null;
+    await this.authorization.requireExecution(linked, thread.id);
+    return linked;
   }
 
   private async findAccessiblePersonalSkill(

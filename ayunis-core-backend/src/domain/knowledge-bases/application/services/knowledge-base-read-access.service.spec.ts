@@ -16,6 +16,8 @@ import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/worksp
 import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { WorkspaceKnowledgeBaseLinkRepository } from 'src/domain/knowledge-bases/application/ports/workspace-knowledge-base-link.repository';
+import { KnowledgeBaseNotLinkableError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseReadAccessService } from './knowledge-base-read-access.service';
 
 function setup() {
@@ -41,6 +43,7 @@ function setup() {
   };
   const viewer = { execute: jest.fn() };
   const reviewer = { execute: jest.fn().mockResolvedValue(false) };
+  const links = { findByKnowledgeBase: jest.fn().mockResolvedValue([]) };
   const viewerWith = (params: Partial<OwnershipViewerParams>) =>
     viewer.execute.mockResolvedValue(
       new OwnershipViewer({
@@ -68,9 +71,11 @@ function setup() {
       context as unknown as ContextService,
       viewer as unknown as GetOwnershipViewerUseCase,
       reviewer as unknown as IsHandoverReviewerUseCase,
+      links as unknown as WorkspaceKnowledgeBaseLinkRepository,
     ),
     viewerWith,
     reviewer,
+    links,
   };
 }
 
@@ -223,5 +228,78 @@ describe(KnowledgeBaseReadAccessService.name, () => {
     await expect(
       service.requireExecution(foreign, randomUUID()),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+  });
+
+  describe('workspace links', () => {
+    function linkedElsewhere() {
+      const result = setup();
+      const foreign = new PersonalKnowledgeBase({
+        name: 'Satzungen',
+        userId: randomUUID(),
+        orgId: result.orgId,
+      });
+      const linkWorkspaceId = randomUUID();
+      result.links.findByKnowledgeBase.mockResolvedValue([
+        {
+          workspaceId: linkWorkspaceId,
+          knowledgeBaseId: foreign.id,
+          linkedByUserId: null,
+          linkedAt: new Date(),
+        },
+      ]);
+      return { ...result, foreign, linkWorkspaceId };
+    }
+
+    it('lets a workspace reader view another person’s linked knowledge base', async () => {
+      const { service, foreign, workspaceRead, linkWorkspaceId } =
+        linkedElsewhere();
+
+      await expect(service.requireView(foreign)).resolves.toBeUndefined();
+      expect(workspaceRead.execute).toHaveBeenCalledWith({
+        workspaceId: linkWorkspaceId,
+      });
+    });
+
+    it('lets a linked knowledge base answer only in a thread of the linking workspace', async () => {
+      const { service, foreign, workspaceExecution, linkWorkspaceId } =
+        linkedElsewhere();
+      const threadId = randomUUID();
+
+      await expect(
+        service.requireExecution(foreign, threadId),
+      ).resolves.toBeUndefined();
+      expect(workspaceExecution.execute).toHaveBeenCalledWith({
+        workspaceId: linkWorkspaceId,
+        threadId,
+      });
+
+      workspaceExecution.execute.mockRejectedValue(
+        new WorkspaceNotFoundError(linkWorkspaceId),
+      );
+      await expect(
+        service.requireExecution(foreign, threadId),
+      ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+    });
+
+    it('allows linking only own personal and usable collective knowledge bases', async () => {
+      const { service, personal, workspace, orgId, viewerWith } = setup();
+      const foreign = new PersonalKnowledgeBase({
+        name: 'Fremd',
+        userId: randomUUID(),
+        orgId,
+      });
+      viewerWith({});
+
+      await expect(service.requireLinkable(personal)).resolves.toBeUndefined();
+      await expect(
+        service.requireLinkable(new OrgKnowledgeBase({ name: 'Org', orgId })),
+      ).resolves.toBeUndefined();
+      await expect(service.requireLinkable(foreign)).rejects.toBeInstanceOf(
+        KnowledgeBaseNotFoundError,
+      );
+      await expect(service.requireLinkable(workspace)).rejects.toBeInstanceOf(
+        KnowledgeBaseNotLinkableError,
+      );
+    });
   });
 });

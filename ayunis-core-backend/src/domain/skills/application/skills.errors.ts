@@ -26,6 +26,7 @@ export enum SkillErrorCode {
   NAME_TAKEN_AT_TARGET = 'NAME_TAKEN_AT_TARGET',
   SKILL_NOT_ORG_OWNED = 'SKILL_NOT_ORG_OWNED',
   SKILL_IS_MANDATORY = 'SKILL_IS_MANDATORY',
+  SKILL_NOT_LINKABLE = 'SKILL_NOT_LINKABLE',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -98,6 +99,16 @@ export class SkillIsMandatoryError extends SkillError {
       `Skill ${skillId} is mandatory and cannot be switched off`,
       SkillErrorCode.SKILL_IS_MANDATORY,
       409,
+    );
+  }
+}
+
+export class SkillNotLinkableError extends SkillError {
+  constructor(skillId: string) {
+    super(
+      `Skill ${skillId} belongs to a workspace and cannot be linked`,
+      SkillErrorCode.SKILL_NOT_LINKABLE,
+      400,
     );
   }
 }

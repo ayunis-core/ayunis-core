@@ -5561,6 +5561,175 @@
         "tags": ["threads"]
       }
     },
+    "/workspaces/{workspaceId}/linked-knowledge-bases": {
+      "get": {
+        "operationId": "KnowledgeBaseLinksController_linked",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedKnowledgeBaseListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List knowledge bases linked into a workspace",
+        "tags": ["knowledge-base-links"]
+      },
+      "post": {
+        "operationId": "KnowledgeBaseLinksController_link",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkKnowledgeBasesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Link knowledge bases into a workspace; already linked ones are kept",
+        "tags": ["knowledge-base-links"]
+      }
+    },
+    "/workspaces/{workspaceId}/linkable-knowledge-bases": {
+      "get": {
+        "operationId": "KnowledgeBaseLinksController_linkable",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkableKnowledgeBasesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List knowledge bases the caller may link into a workspace, by owner",
+        "tags": ["knowledge-base-links"]
+      }
+    },
+    "/workspaces/{workspaceId}/linked-knowledge-bases/{knowledgeBaseId}": {
+      "delete": {
+        "operationId": "KnowledgeBaseLinksController_unlink",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a knowledge base link from a workspace",
+        "tags": ["knowledge-base-links"]
+      }
+    },
+    "/knowledge-bases/{id}/linked-workspaces": {
+      "get": {
+        "operationId": "KnowledgeBaseLinksController_linkedWorkspaces",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedWorkspacesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the workspaces a knowledge base is linked into",
+        "tags": ["knowledge-base-links"]
+      }
+    },
     "/knowledge-bases": {
       "post": {
         "description": "The owner must be one the caller may create for: personal needs manage_own_knowledge, team needs team admin rights for that team, org needs manage_org_knowledge.",
@@ -6036,6 +6205,175 @@
         },
         "summary": "Make an organisation skill mandatory for everyone, or not",
         "tags": ["skills"]
+      }
+    },
+    "/workspaces/{workspaceId}/linked-skills": {
+      "get": {
+        "operationId": "SkillLinksController_linked",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedSkillListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List skills linked into a workspace",
+        "tags": ["skill-links"]
+      },
+      "post": {
+        "operationId": "SkillLinksController_link",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkSkillsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Link skills into a workspace; already linked ones are kept",
+        "tags": ["skill-links"]
+      }
+    },
+    "/workspaces/{workspaceId}/linkable-skills": {
+      "get": {
+        "operationId": "SkillLinksController_linkable",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkableSkillsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List skills the caller may link into a workspace, by owner",
+        "tags": ["skill-links"]
+      }
+    },
+    "/workspaces/{workspaceId}/linked-skills/{skillId}": {
+      "delete": {
+        "operationId": "SkillLinksController_unlink",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a skill link from a workspace",
+        "tags": ["skill-links"]
+      }
+    },
+    "/skills/{id}/linked-workspaces": {
+      "get": {
+        "operationId": "SkillLinksController_linkedWorkspaces",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedWorkspacesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the workspaces a skill is linked into",
+        "tags": ["skill-links"]
       }
     },
     "/skills/install-from-marketplace": {
@@ -17370,6 +17708,176 @@
         },
         "required": ["url", "expiresAt"]
       },
+      "LinkOwnerDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["personal", "team", "org"]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Person or team name; null for the organisation"
+          }
+        },
+        "required": ["type", "id", "name"]
+      },
+      "KnowledgeBaseLinkSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/LinkOwnerDto"
+          }
+        },
+        "required": ["id", "name", "description", "owner"]
+      },
+      "LinkPersonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "LinkedKnowledgeBaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "knowledgeBase": {
+            "$ref": "#/components/schemas/KnowledgeBaseLinkSummaryDto"
+          },
+          "linkedBy": {
+            "nullable": true,
+            "description": "Null when the person who linked it no longer exists",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LinkPersonDto"
+              }
+            ]
+          },
+          "linkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["knowledgeBase", "linkedBy", "linkedAt"]
+      },
+      "LinkedKnowledgeBaseListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedKnowledgeBaseResponseDto"
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "LinkableKnowledgeBasesResponseDto": {
+        "type": "object",
+        "properties": {
+          "own": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseLinkSummaryDto"
+            }
+          },
+          "team": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseLinkSummaryDto"
+            }
+          },
+          "org": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseLinkSummaryDto"
+            }
+          }
+        },
+        "required": ["own", "team", "org"]
+      },
+      "LinkKnowledgeBasesDto": {
+        "type": "object",
+        "properties": {
+          "knowledgeBaseIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["knowledgeBaseIds"]
+      },
+      "LinkedWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "linkedBy": {
+            "nullable": true,
+            "description": "Null when the person who linked it no longer exists",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LinkPersonDto"
+              }
+            ]
+          }
+        },
+        "required": ["id", "name", "icon", "color", "linkedBy"]
+      },
+      "LinkedWorkspacesResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "All workspaces the item is linked into, including ones the caller cannot open"
+          },
+          "workspaces": {
+            "description": "Only the workspaces the caller can open",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedWorkspaceDto"
+            }
+          }
+        },
+        "required": ["total", "workspaces"]
+      },
       "CreateKnowledgeBaseDto": {
         "type": "object",
         "properties": {
@@ -17847,6 +18355,98 @@
           "isPinned",
           "isMandatory"
         ]
+      },
+      "SkillLinkSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/LinkOwnerDto"
+          }
+        },
+        "required": ["id", "name", "shortDescription", "owner"]
+      },
+      "LinkedSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "$ref": "#/components/schemas/SkillLinkSummaryDto"
+          },
+          "linkedBy": {
+            "nullable": true,
+            "description": "Null when the person who linked it no longer exists",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LinkPersonDto"
+              }
+            ]
+          },
+          "linkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["skill", "linkedBy", "linkedAt"]
+      },
+      "LinkedSkillListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedSkillResponseDto"
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "LinkableSkillsResponseDto": {
+        "type": "object",
+        "properties": {
+          "own": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkSummaryDto"
+            }
+          },
+          "team": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkSummaryDto"
+            }
+          },
+          "org": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkSummaryDto"
+            }
+          }
+        },
+        "required": ["own", "team", "org"]
+      },
+      "LinkSkillsDto": {
+        "type": "object",
+        "properties": {
+          "skillIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["skillIds"]
       },
       "InstallSkillFromMarketplaceDto": {
         "type": "object",

@@ -20,6 +20,8 @@ import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspace
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import type { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { WorkspaceSkillLinkRepository } from 'src/domain/skills/application/ports/workspace-skill-link.repository';
+import { SkillNotLinkableError } from 'src/domain/skills/application/skills.errors';
 import { SkillAuthorizationService } from './skill-authorization.service';
 
 function setup() {
@@ -49,6 +51,7 @@ function setup() {
   const viewer = { execute: jest.fn() };
   const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
   const reviewer = { execute: jest.fn().mockResolvedValue(false) };
+  const links = { findBySkill: jest.fn().mockResolvedValue([]) };
   const viewerWith = (params: Partial<OwnershipViewerParams>) =>
     viewer.execute.mockResolvedValue(
       new OwnershipViewer({
@@ -81,8 +84,10 @@ function setup() {
       viewer as unknown as GetOwnershipViewerUseCase,
       hasPermission as unknown as HasPermissionUseCase,
       reviewer as unknown as IsHandoverReviewerUseCase,
+      links as unknown as WorkspaceSkillLinkRepository,
     ),
     reviewer,
+    links,
   };
 }
 
@@ -289,6 +294,94 @@ describe(SkillAuthorizationService.name, () => {
       await expect(service.requireView(foreign)).rejects.toBeInstanceOf(
         SkillNotFoundError,
       );
+    });
+  });
+
+  describe('workspace links', () => {
+    function linkedElsewhere() {
+      const setupResult = setup();
+      const foreign = new PersonalSkill({
+        name: 'Protokoll zusammenfassen',
+        shortDescription: 'Fasst Besprechungen zusammen',
+        instructions: 'Fasse zusammen.',
+        userId: randomUUID(),
+      });
+      const workspaceId = randomUUID();
+      setupResult.links.findBySkill.mockResolvedValue([
+        { workspaceId, skillId: foreign.id, linkedByUserId: null },
+      ]);
+      return { ...setupResult, foreign, workspaceId };
+    }
+
+    it('lets a workspace reader view another person’s linked skill', async () => {
+      const { service, foreign, workspaceRead, workspaceId } =
+        linkedElsewhere();
+
+      await expect(service.requireView(foreign)).resolves.toBeUndefined();
+      expect(workspaceRead.execute).toHaveBeenCalledWith({ workspaceId });
+    });
+
+    it('keeps another person’s skill hidden without access to a linking workspace', async () => {
+      const { service, foreign, workspaceRead } = linkedElsewhere();
+      workspaceRead.execute.mockRejectedValue(
+        new WorkspaceNotFoundError(randomUUID()),
+      );
+
+      await expect(service.requireView(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+
+    it('lets a linked skill run only in a thread of the linking workspace', async () => {
+      const { service, foreign, workspaceExecution, workspaceId } =
+        linkedElsewhere();
+      const threadId = randomUUID();
+
+      await expect(
+        service.requireExecution(foreign, threadId),
+      ).resolves.toBeUndefined();
+      expect(workspaceExecution.execute).toHaveBeenCalledWith({
+        workspaceId,
+        threadId,
+      });
+
+      workspaceExecution.execute.mockRejectedValue(
+        new WorkspaceNotFoundError(workspaceId),
+      );
+      await expect(
+        service.requireExecution(foreign, threadId),
+      ).rejects.toBeInstanceOf(SkillNotFoundError);
+    });
+
+    it('never makes a linked skill writable', async () => {
+      const { service, foreign } = linkedElsewhere();
+
+      await expect(service.requireWrite(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+
+    it('allows linking only own personal skills and usable collective skills', async () => {
+      const { service, personal, workspace, viewerWith, orgId } = setup();
+      const foreign = new PersonalSkill({
+        name: 'Fremd',
+        shortDescription: 'Fremde Fähigkeit',
+        instructions: 'Nicht verknüpfbar.',
+        userId: randomUUID(),
+      });
+      const teamId = randomUUID();
+      const { team, org } = collectiveSkills(orgId, teamId);
+      viewerWith({ memberTeamIds: [] });
+
+      await expect(service.requireLinkable(personal)).resolves.toBeUndefined();
+      await expect(service.requireLinkable(org)).resolves.toBeUndefined();
+      await expect(service.requireLinkable(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+      await expect(service.requireLinkable(workspace)).rejects.toBeInstanceOf(
+        SkillNotLinkableError,
+      );
+      await expect(service.requireLinkable(team)).rejects.toBeDefined();
     });
   });
 });

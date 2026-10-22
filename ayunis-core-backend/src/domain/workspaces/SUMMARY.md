@@ -11,6 +11,7 @@ Workspaces group a user's chats and own workspace-scoped skills and knowledge ba
 - Workspace skills and knowledge bases use `workspaceId` ownership and cannot be mixed with personal resources.
 - Skill and knowledge-base activation is workspace-wide. Both start active; deactivation excludes them from new run context. Deactivating a skill also clears its pin.
 - Enabled skills are advertised as activation candidates. Instructions and attached resources are loaded only after `activate_skill` or a trusted quick action.
+- Personal, team and organisation skills and knowledge bases can be linked into a workspace. Link storage and rules live in the skills and knowledge-bases modules. Linked items are always active; `GetWorkspaceAiContextUseCase` returns them as `linkedSkills` and `linkedKnowledgeBases`, the run context merges them with the workspace's own items, and list stats count both. `DescribeLinkedWorkspacesUseCase` names the workspaces an item is linked into, limited to the ones the caller can open.
 - `GetWorkspaceAiContextUseCase` resolves instruction, active skill candidates, independently active knowledge bases, and source counts. `BuildWorkspaceRunContextUseCase` prepares this for inference.
 
 ## Access boundary
@@ -50,4 +51,4 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## Dependencies
 
-The runs module consumes `BuildWorkspaceRunContextUseCase`. Skills and knowledge bases use exported workspace access capabilities. Workspace runtime context imports exported skills and knowledge-base application use cases. Cross-module persistence ownership remains represented by foreign keys and database cascades.
+The runs module consumes `BuildWorkspaceRunContextUseCase`. The workspace module imports `OwnershipModule` to name the people who linked items. Skills and knowledge bases use exported workspace access capabilities. Workspace runtime context imports exported skills and knowledge-base application use cases. Cross-module persistence ownership remains represented by foreign keys and database cascades.
