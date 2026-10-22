@@ -19,7 +19,7 @@ import {
 import { useInviteHint } from '@/widgets/workspace-members-dialog/model/useInviteHint';
 import { useOrganizationSharingConfirm } from '@/widgets/workspace-members-dialog/model/useOrganizationSharingConfirm';
 import { useTeamSharingConfirm } from '@/widgets/workspace-members-dialog/model/useTeamSharingConfirm';
-import { LoadErrorAlert } from './LoadErrorAlert';
+import { LoadErrorAlert } from '@/shared/ui/load-error-alert/LoadErrorAlert';
 import { MemberPicker, type ShareSelection } from './MemberPicker';
 import { ShareList } from './ShareList';
 import type { MemberHandlers } from './ShareRow';
@@ -70,6 +70,7 @@ function InviteArea({
     return (
       <LoadErrorAlert
         message={t('picker.loadError')}
+        retryLabel={t('dialog.retry')}
         testId="share-picker-load-error"
         onRetry={() => void refetch()}
       />
@@ -136,6 +137,7 @@ export function WorkspaceMembersDialog({
       {isError && !sharing && (
         <LoadErrorAlert
           message={t('dialog.loadError')}
+          retryLabel={t('dialog.retry')}
           testId="workspace-members-load-error"
           onRetry={() => void refetch()}
         />

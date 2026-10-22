@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import {
   Alert,
@@ -9,22 +8,22 @@ import { Button } from '@ayunis/ui/components/button';
 
 export function LoadErrorAlert({
   message,
+  retryLabel,
   testId,
   onRetry,
 }: Readonly<{
   message: string;
+  retryLabel: string;
   testId: string;
   onRetry: () => void;
 }>) {
-  const { t } = useTranslation('workspace-sharing');
-
   return (
     <Alert variant="destructive" data-testid={testId}>
       <AlertCircle />
       <AlertDescription>{message}</AlertDescription>
       <AlertAction>
         <Button variant="outline" size="sm" onClick={onRetry}>
-          {t('dialog.retry')}
+          {retryLabel}
         </Button>
       </AlertAction>
     </Alert>

@@ -111,7 +111,8 @@
   "actions": {
     "more": "Weitere Aktionen für den Arbeitsbereich",
     "edit": "Arbeitsbereich bearbeiten",
-    "delete": "Arbeitsbereich löschen"
+    "delete": "Arbeitsbereich löschen",
+    "transfer": "Eigentum übertragen"
   },
   "settingsDialog": {
     "title": "Arbeitsbereichseinstellungen",
@@ -126,7 +127,21 @@
     "description": "„{{name}}“ und alle darin enthaltenen Chats werden unwiderruflich gelöscht.",
     "confirmNameLabel": "Wenn Sie diesen Arbeitsbereich wirklich löschen möchten, geben Sie den Namen des Arbeitsbereichs „{{name}}“ ein.",
     "confirmText": "Löschen",
-    "cancelText": "Abbrechen"
+    "cancelText": "Abbrechen",
+    "membersLoseAccess": "Alle Mitglieder verlieren den Zugriff."
+  },
+  "transferDialog": {
+    "title": "Eigentum übertragen",
+    "description": "Die Person wird Eigentümer von „{{name}}“ und kann den Arbeitsbereich dann auch löschen. Sie behalten Vollzugriff.",
+    "noCandidates": "Laden Sie zuerst jemanden in den Arbeitsbereich ein.",
+    "loadError": "Die Personen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "label": "An",
+    "placeholder": "Person auswählen",
+    "noMatch": "Niemand gefunden",
+    "hint": "Zur Auswahl stehen alle, die eingeladen sind.",
+    "cancel": "Abbrechen",
+    "confirm": "Übertragen"
   },
   "picker": {
     "empty": "Noch keine Arbeitsbereiche",
@@ -160,6 +175,10 @@
     "chatMoved": "Chat verschoben",
     "chatRemoved": "Chat aus dem Arbeitsbereich entfernt",
     "chatMoveError": "Der Chat konnte nicht verschoben werden",
-    "chatNotFound": "Chat nicht gefunden"
+    "chatNotFound": "Chat nicht gefunden",
+    "transferSuccess": "„{{workspace}}“ gehört jetzt {{name}}.",
+    "transferError": "Das Eigentum konnte nicht übertragen werden",
+    "transferNotEligible": "Diese Person hat keinen Zugriff mehr auf den Arbeitsbereich",
+    "transferOwnerOnly": "Nur der Eigentümer kann den Arbeitsbereich übertragen"
   }
 }
