@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "IDEMPOTENCY_CONFLICT",
+    "details": {
+      "jobId": "0199f1c3b4a5c6d7e8f9a0b1c2d3"
+    },
+    "message": "Idempotency key exists with a different input or output",
+    "retryable": false
+  }
+}

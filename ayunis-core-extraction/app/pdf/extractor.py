@@ -2,16 +2,19 @@
 
 import hashlib
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 from app.api.models import JobProgress, ResultRef
 from app.config import RULE_VERSION, Settings
 from app.errors import ServiceError
 from app.jobs.extractors import DownloadedInput, register_extractor
 from app.jobs.runtime import JobContext, JobInterruptedError
-from app.ocr.backend import OcrBackend, resolve_ocr_backend
+from app.ocr.backend import OcrBackend, OcrCall, resolve_ocr_backend
+from app.ocr.batching import iter_batches
 from app.pdf.checkpoints import Checkpoints
 from app.pdf.decision import PageDecision, apply_document_shortcut, decide_page
 from app.pdf.document import PageContent, PdfFile
@@ -29,6 +32,9 @@ from app.result import (
 from app.storage.objects import ObjectRef
 
 logger = logging.getLogger(__name__)
+
+CALL_POLL_SECONDS = 1.0
+ABORT_GRACE_SECONDS = 5.0
 
 
 class _WordListRegistry:
@@ -217,9 +223,82 @@ def extract_text_pages(run: Run, analyses: dict[int, PageAnalysis]) -> list[int]
 
 
 def extract_ocr_pages(run: Run, analyses: dict[int, PageAnalysis], pending: list[int]) -> None:
+    """One provider call per batch; every page of a batch is checkpointed before the next call."""
     if not pending:
         return
-    raise ServiceError("INTERNAL", "OCR dispatch is not available in this build")
+    backend = run.backend
+    assert backend is not None
+    settings = run.context.settings
+    scratch = run.context.scratch / "ocr"
+    scratch.mkdir(exist_ok=True)
+    for indices, path in iter_batches(
+        run.pdf, pending, settings.ocr_batch_pages, settings.ocr_batch_bytes, scratch
+    ):
+        run.context.check()
+        started = time.perf_counter()
+        pdf_bytes = path.read_bytes()
+        texts = call_abortable(
+            run.context, backend.call(pdf_bytes, len(indices), run.context.check)
+        )
+        path.unlink(missing_ok=True)
+        if len(texts) != len(indices):
+            run.warnings.append("ocr_page_count_mismatch")
+            texts = (texts + [""] * len(indices))[: len(indices)]
+        for index, text in zip(indices, texts, strict=True):
+            analysis = analyses[index]
+            run.checkpoints.write(
+                PageEntry(
+                    index=index,
+                    number=index + 1,
+                    text=strip_nul(text),
+                    method="ocr",
+                    ocr_reason=analysis.decision.ocr_reason,
+                    quality=analysis.quality,
+                    size=analysis.size,
+                )
+            )
+        run.context.report_progress(run.progress())
+        logger.info(
+            "ocr batch done",
+            extra={
+                "jobId": run.context.job_id,
+                "pages": len(indices),
+                "firstPage": indices[0],
+                "batchMs": int((time.perf_counter() - started) * 1000),
+            },
+        )
+
+
+def call_abortable(context: JobContext, call: OcrCall) -> list[str]:
+    """Runs a provider call on its own thread and keeps checking the job while it lasts.
+
+    A cancel, release, lost lease or shutdown interrupts the job at once: the call's connection
+    is closed so the upload stops, its stop check refuses any retry, its result is dropped, and
+    the worker waits briefly for the thread so the request buffers are freed before it moves on.
+    """
+    outcome: list[tuple[str, Any]] = []
+    done = threading.Event()
+
+    def runner() -> None:
+        try:
+            outcome.append(("ok", call.run()))
+        except BaseException as error:
+            outcome.append(("error", error))
+        finally:
+            done.set()
+
+    threading.Thread(target=runner, name="ocr-call", daemon=True).start()
+    while not done.wait(CALL_POLL_SECONDS):
+        try:
+            context.check()
+        except BaseException:
+            call.abort()
+            done.wait(ABORT_GRACE_SECONDS)
+            raise
+    kind, value = outcome[0]
+    if kind == "error":
+        raise value
+    return cast(list[str], value)
 
 
 def finalize(run: Run, downloaded: DownloadedInput) -> None:

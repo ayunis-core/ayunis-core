@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "details": null,
+    "message": "Redis unreachable",
+    "retryable": true
+  }
+}

@@ -48,10 +48,15 @@ class StartJobRequest(ContractModel):
 
 
 class JobProgress(ContractModel):
-    pages_total: int | None = None
-    pages_done: int = 0
-    pages_ocr: int = 0
-    pages_text: int = 0
+    """Every counter is always present: the backend reads them without defaults."""
+
+    pages_total: int | None
+    pages_done: int
+    pages_ocr: int
+    pages_text: int
+
+
+EMPTY_PROGRESS = JobProgress(pages_total=None, pages_done=0, pages_ocr=0, pages_text=0)
 
 
 class ResultRef(ContractModel):

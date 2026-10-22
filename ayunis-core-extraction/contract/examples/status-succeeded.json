@@ -1,0 +1,26 @@
+{
+  "attempt": 1,
+  "createdAt": "2026-10-22T10:00:00.000Z",
+  "error": null,
+  "finishedAt": "2026-10-22T10:04:15.000Z",
+  "idempotencyKey": "v1:00000000-0000-0000-0000-000000000001:9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e",
+  "jobId": "0199f1c3b4a5c6d7e8f9a0b1c2d3",
+  "phase": null,
+  "progress": {
+    "pagesDone": 4,
+    "pagesOcr": 1,
+    "pagesText": 2,
+    "pagesTotal": 4
+  },
+  "restarts": 0,
+  "result": {
+    "bucket": "ayunis",
+    "bytes": 48213,
+    "key": "00000000-0000-0000-0000-000000000010/processing/00000000-0000-0000-0000-000000000001/extraction/result.json",
+    "pageCount": 4,
+    "sha256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+  },
+  "startedAt": "2026-10-22T10:00:02.000Z",
+  "state": "succeeded",
+  "updatedAt": "2026-10-22T10:04:15.000Z"
+}

@@ -28,7 +28,9 @@ def test_same_key_with_other_input_conflicts(store: JobStore) -> None:
 def test_retryable_failure_is_requeued_in_place_with_checkpoints_kept(store: JobStore) -> None:
     created = store.start(start_request())
     store.claim(created.job_id, "r1")
-    store.set_progress(created.job_id, JobProgress(pages_total=10, pages_done=4), "r1")
+    store.set_progress(
+        created.job_id, JobProgress(pages_total=10, pages_done=4, pages_ocr=0, pages_text=4), "r1"
+    )
     store.fail(
         created.job_id, JobFailure(code="OCR_UNAVAILABLE", message="d", retryable=True), "r1", 60
     )

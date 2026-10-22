@@ -74,7 +74,7 @@ def test_born_digital_pdf_extracts_from_the_text_layer(
         "detectedType": "pdf",
         "pageCount": 3,
         "converter": None,
-        "ocrModel": None,
+        "ocrModel": "fake-ocr",
         "ruleVersion": "ocr-rule/1",
         "pagesOcr": 0,
         "pagesText": 3,
@@ -130,6 +130,7 @@ def test_result_json_matches_the_contract_shape(
 def test_a_scanned_page_without_ocr_falls_back_and_an_all_scanned_document_is_empty(
     store: JobStore, objects: InMemoryObjectStore, settings: Settings, tmp_path: Path
 ) -> None:
+    settings = settings.model_copy(update={"ocr_backend": "mistral", "mistral_api_key": None})
     context = make_context(store, objects, settings, tmp_path, stage(objects, "mixed.pdf"))
     run_job(context)
     result = result_of(objects)

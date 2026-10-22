@@ -8,6 +8,8 @@ on:
       - '.github/actions/setup-node-pnpm/action.yml'
       - '.github/actions/start-minio/action.yml'
       - 'docker-compose.yml'
+      # The extraction contract spec reads the service's committed OpenAPI document and examples.
+      - 'ayunis-core-extraction/contract/**'
   push:
     branches: [main]
     paths:
