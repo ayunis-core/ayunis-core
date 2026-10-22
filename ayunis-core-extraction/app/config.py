@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     record_ttl_seconds: float = Field(default=86400.0, alias="RECORD_TTL_SECONDS")
     janitor_interval_seconds: float = Field(default=30.0, alias="JANITOR_INTERVAL_SECONDS")
     checkpoint_pages: int = Field(default=20, alias="CHECKPOINT_PAGES")
+    # Bounds on what one page may make PDFium materialise; past them the text is cut and the
+    # result carries page_text_truncated, so a hostile text layer cannot grow the process.
+    max_page_chars: int = Field(default=200_000, alias="MAX_PAGE_CHARS")
+    max_page_rects: int = Field(default=5_000, alias="MAX_PAGE_RECTS")
+    max_document_chars: int = Field(default=20_000_000, alias="MAX_DOCUMENT_CHARS")
+    # A page box is not bounded by the file size; renders are downsampled to this many pixels.
+    max_render_pixels: int = Field(default=4_000_000, alias="MAX_RENDER_PIXELS")
 
     scratch_dir: str = Field(default="/tmp/ayunis-extraction", alias="SCRATCH_DIR")
     word_lists_dir: str | None = Field(default="/usr/share/hunspell", alias="WORD_LISTS_DIR")

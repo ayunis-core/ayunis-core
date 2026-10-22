@@ -13,11 +13,14 @@ from app.errors import ServiceError
 from app.jobs.service import JobService
 from app.jobs.store import JobStore
 from app.main import create_app
+from app.pdf.extractor import register_pdf_extractor
 from app.storage.objects import ObjectRef, ObjectStore, WrittenObject
 
 ORG_ID = "00000000-0000-0000-0000-000000000010"
 SOURCE_ID = "00000000-0000-0000-0000-000000000001"
 FIXTURES = Path(__file__).parent / "fixtures"
+
+register_pdf_extractor()
 
 
 class InMemoryObjectStore(ObjectStore):
@@ -119,7 +122,8 @@ def start_request(
     source_id: str = SOURCE_ID,
     key: str = "org/processing/src/report.pdf",
     sha256: str = "a" * 64,
-    **options: object,
+    max_pages: int | None = None,
+    ocr: str = "auto",
 ) -> StartJobRequest:
     return StartJobRequest.model_validate(
         {
@@ -129,7 +133,7 @@ def start_request(
             "fileName": "report.pdf",
             "declaredMimeType": "application/pdf",
             "output": {"bucket": "ayunis", "keyPrefix": f"org/processing/{source_id}/extraction/"},
-            "options": {"maxPages": 1000, **options},
+            "options": {"maxPages": 1000 if max_pages is None else max_pages, "ocr": ocr},
         }
     )
 
