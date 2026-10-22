@@ -1,0 +1,7 @@
+From: "Alice" <alice@example.com>
+Subject: HTML only
+Date: 2026-08-12T10:30:00.000Z
+
+Hallo Welt
+
+Zweiter Absatz & Sonderzeichen

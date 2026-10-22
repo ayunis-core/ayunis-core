@@ -1,0 +1,10 @@
+From: "Alice" <alice@example.com>
+To: "Bob" <bob@example.com>
+Subject: Anfrage zur Anmeldung
+Date: 2026-08-12T10:00:00.000Z
+
+Hallo Bob,
+dies ist der Inhalt der E-Mail mit Umlauten: äöü.
+
+Viele Grüße
+Alice

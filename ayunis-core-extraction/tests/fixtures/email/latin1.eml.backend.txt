@@ -1,0 +1,7 @@
+From: "Jürgen Müller" <juergen@example.de>
+To: amt@example.de, "Schmidt, Petra" <petra@example.de>
+Subject: Gebührenbescheid 2026
+Date: 2026-03-02T08:15:30.000Z
+
+Sehr geehrte Damen und Herren,
+anbei der Bescheid über 117,50 € für Köln.

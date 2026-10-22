@@ -1,0 +1,7 @@
+From: Alice <alice@example.com>
+Subject: HTML only
+Date: Wed, 12 Aug 2026 12:30:00 +0200
+Content-Type: text/html; charset=utf-8
+
+<html><head><style>p { color: red; }</style></head>
+<body><p>Hallo <b>Welt</b></p><p>Zweiter Absatz &amp; Sonderzeichen</p></body></html>

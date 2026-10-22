@@ -21,6 +21,7 @@ app/
   ocr/               Mistral OCR client and the deterministic fake backend
   convert/           Gotenberg LibreOffice route, streamed both ways
   office/            Office input: convert, store converted.pdf under the prefix, run the PDF path
+  email/             .eml (stdlib email), .msg (olefile in a bounded child process), text files
 scripts/             corpus harness, fixture generators, OpenAPI export
 contract/            committed OpenAPI document and example payloads the backend tests validate against
 tests/               pytest, no network (fakeredis, in-memory object store, synthetic PDFs)
@@ -33,7 +34,7 @@ uv sync
 uv run uvicorn app.main:app --reload
 ```
 
-The dev stack (`./dev up` at the repository root) builds and starts the service next to MinIO, Redis and Gotenberg; it listens on `localhost:8003 + slot offset`. The backend only routes PDFs through it when `EXTRACTION_SERVICE_URL` is set; put `EXTRACTION_SERVICE_URL=http://localhost:8003` into `ayunis-core-backend/.env.local` (the slot offset is applied at boot) and restart the backend.
+The dev stack (`./dev up` at the repository root) builds and starts the service next to MinIO, Redis and Gotenberg; it listens on `localhost:8003 + slot offset`. The backend routes PDF, Office, email and text uploads through it when `EXTRACTION_SERVICE_URL` is set (audio and spreadsheets stay in the API); put `EXTRACTION_SERVICE_URL=http://localhost:8003` into `ayunis-core-backend/.env.local` (the slot offset is applied at boot) and restart the backend.
 
 By default the dev stack runs the service with `OCR_BACKEND=fake`, which returns deterministic text for every page sent to OCR without calling a provider. For real OCR locally, export `EXTRACTION_OCR_BACKEND=mistral` and `MISTRAL_API_KEY` before `./dev up`.
 
@@ -57,6 +58,8 @@ uv run pytest
 | `EXTRACTION_SERVICE_TOKEN` | unset | Bearer token checked on `/v1/*` when set |
 | `GOTENBERG_URL` | unset | The Gotenberg container Office input is converted with; unset fails Office jobs with `CONVERSION_UNAVAILABLE` |
 | `CONVERSION_TIMEOUT_SECONDS` | 600 | Per conversion, like the backend converter and the container's `API_TIMEOUT` |
+| `MSG_PARSE_TIMEOUT_SECONDS`, `MSG_PARSE_MEMORY_BYTES` | 30, 256 MB | Bounds of the `.msg` child process (AYC-1003) |
+| `MAX_EMAIL_ATTACHMENTS`, `EMAIL_ATTACHMENT_BUDGET_SECONDS` | 10, 300 | How many attachments of one email are extracted, and for how long new ones are started |
 | `OCR_BACKEND` | `mistral` | `mistral` or `fake` |
 | `MISTRAL_API_KEY`, `MISTRAL_OCR_SERVER_URL`, `OCR_MODEL` | unset, `https://api.mistral.ai`, `mistral-ocr-latest` | OCR provider; without a key pages that need OCR are emitted as `text_fallback` |
 | `MAX_INPUT_BYTES` | 500 MB | `INPUT_TOO_LARGE` above this |
@@ -131,7 +134,11 @@ Type detection (`app/jobs/extractors.py`) reads the bytes first: `%PDF`, zip-bas
 
 **Office** (`docx`, `pptx`, `odt`, `odp`, `rtf`) goes through Gotenberg's LibreOffice route (`app/convert/gotenberg.py`): the input streams from scratch disk into the multipart request and the PDF streams back to disk, with the file named by the detected type so LibreOffice picks the right import filter. The PDF is stored as `<keyPrefix>converted.pdf` and every later run of the job (retry, restart, or a yield on shutdown) reuses it instead of converting again (contract §6), then the PDF path runs unchanged with `document.converter = gotenberg-libreoffice` and `timings.conversionMs`. Failure classification mirrors the backend's `gotenberg-converter.service.ts`: `400` is the document's fault (`UNPROCESSABLE_DOCUMENT`), `413` is `INPUT_TOO_LARGE`, `503` or an unreachable host is `CONVERSION_UNAVAILABLE` and a timeout or any other status is `CONVERSION_FAILED`, both retryable. A cancel, release, lost lease or shutdown aborts the conversion in flight like an OCR call.
 
-`tests/fixtures/office` holds one fixture per format with its expected output, recorded from a real Gotenberg (`tests/test_office_gotenberg.py`, run when `GOTENBERG_URL` is set, as CI does).
+**Email** is one page (contract §4) in the backend's flattened shape: a `From`/`To`/`Cc`/`Subject`/`Date`/`Attachments` header block, a blank line, then the body (text part preferred, HTML rendered to text the way mailparser's html-to-text fallback does, minus its 80-column wrap). `.eml` is parsed with the standard library's `email` package; `.msg` with `olefile` in a child process capped at `MSG_PARSE_MEMORY_BYTES` and `MSG_PARSE_TIMEOUT_SECONDS` (the backend's piscina bounds, AYC-1003), and any way that child fails is `UNPROCESSABLE_DOCUMENT`, never an outage. Non-Unicode `.msg` strings and binary HTML bodies are decoded with the message's codepage, Windows-1252 when it records none. An `.eml`'s attachments follow the message as `--- Attachment: name ---` sections, like the backend's `RetrieveFileContentUseCase`: text files inline, attached emails flattened one level deep (their own attachments only listed), PDFs and Office documents through the same conversion, analysis and OCR as a direct upload but kept in memory, at most `MAX_EMAIL_ATTACHMENTS` within `EMAIL_ATTACHMENT_BUDGET_SECONDS`, and a document the service cannot read leaves a note. An outage inside an attachment (converter or OCR unavailable) fails the job retryably rather than indexing the email without it.
+
+**Plain text and Markdown** pass through as one page, UTF-8 with the BOM removed; a file with no text is `EMPTY_DOCUMENT`.
+
+`tests/fixtures/office`, `tests/fixtures/email` and `tests/fixtures/text` hold one fixture per format with its expected output. The Office expectations come from a real Gotenberg (`tests/test_office_gotenberg.py`, run when `GOTENBERG_URL` is set, as CI does); the email fixtures also carry `.backend.txt`, the text the backend's own `parseEml` and `extractTextFromMsg` produce, and `tests/test_email.py` states where the service differs.
 
 ## Contract with the backend
 
@@ -143,4 +150,4 @@ PDFium is not thread-safe, so every pypdfium2 call goes through one process-wide
 
 ## Licences
 
-`pypdfium2` is Apache-2.0 or BSD-3-Clause (PDFium is BSD-3-Clause). `spylls` (pure Python hunspell) is MPL-2.0. `olefile` (compound-file detection) is BSD-2-Clause. The Debian packages `hunspell-de-de` (igerman98, GPL-2.0-or-later or GPL-3.0) and `hunspell-en-us` (SCOWL, permissive) are data files read at runtime. PyMuPDF is deliberately not used.
+`pypdfium2` is Apache-2.0 or BSD-3-Clause (PDFium is BSD-3-Clause). `spylls` (pure Python hunspell) is MPL-2.0. `olefile` is BSD-2-Clause; `extract-msg` was not used because of its GPL-3.0 licence. The Debian packages `hunspell-de-de` (igerman98, GPL-2.0-or-later or GPL-3.0) and `hunspell-en-us` (SCOWL, permissive) are data files read at runtime. PyMuPDF is deliberately not used.

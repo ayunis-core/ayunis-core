@@ -1,0 +1,31 @@
+From: Alice <alice@example.com>
+To: Bob <bob@example.com>
+Subject: Fwd: Urspruengliche Nachricht
+Date: Wed, 12 Aug 2026 10:00:00 +0000
+Content-Type: multipart/mixed; boundary="----=_Outer_9"
+
+------=_Outer_9
+Content-Type: text/plain; charset=utf-8
+
+Weitergeleitet, siehe unten.
+------=_Outer_9
+Content-Type: message/rfc822
+Content-Disposition: attachment; filename="weiterleitung.eml"
+
+From: Dave <dave@example.com>
+To: Alice <alice@example.com>
+Subject: Urspruengliche Nachricht
+Date: Tue, 11 Aug 2026 15:00:00 +0000
+Content-Type: multipart/mixed; boundary="----=_Inner_7"
+
+------=_Inner_7
+Content-Type: text/plain; charset=utf-8
+
+Bitte weiterleiten.
+------=_Inner_7
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename="tief.txt"
+
+Text in der zweiten Ebene
+------=_Inner_7--
+------=_Outer_9--

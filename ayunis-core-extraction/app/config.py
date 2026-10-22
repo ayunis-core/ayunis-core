@@ -45,6 +45,17 @@ class Settings(BaseSettings):
     # the container's API_TIMEOUT.
     gotenberg_url: str | None = Field(default=None, alias="GOTENBERG_URL")
     conversion_timeout_seconds: float = Field(default=600.0, alias="CONVERSION_TIMEOUT_SECONDS")
+    # Bounds of the backend's piscina .msg worker (AYC-1003): a few KB of crafted CFBF can drive
+    # the parser into unbounded allocation, so it runs in a child process with these limits.
+    msg_parse_timeout_seconds: float = Field(default=30.0, alias="MSG_PARSE_TIMEOUT_SECONDS")
+    msg_parse_memory_bytes: int = Field(default=256 * 1024 * 1024, alias="MSG_PARSE_MEMORY_BYTES")
+    # Email attachments are extracted sequentially with the backend's bounds: at most this many,
+    # within this time budget, one level deep (attached emails list their own attachments).
+    max_email_attachments: int = Field(default=10, alias="MAX_EMAIL_ATTACHMENTS")
+    email_attachment_budget_seconds: float = Field(
+        default=300.0, alias="EMAIL_ATTACHMENT_BUDGET_SECONDS"
+    )
+
     max_input_bytes: int = Field(default=500 * 1024 * 1024, alias="MAX_INPUT_BYTES")
     max_pages: int = Field(default=1000, alias="MAX_PAGES")
     ocr_batch_pages: int = Field(default=20, alias="OCR_BATCH_PAGES")

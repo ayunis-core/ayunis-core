@@ -1,0 +1,8 @@
+From: "Alice" <alice@example.com>
+To: "Bob" <bob@example.com>
+Cc: carol@example.com
+Subject: Mit Anhängen
+Date: 2026-08-13T08:00:00.000Z
+Attachments: notiz.txt, bericht.pdf, logo.png
+
+Siehe Anhang, die Gebühren sind beigefügt.
