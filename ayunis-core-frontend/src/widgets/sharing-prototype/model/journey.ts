@@ -58,7 +58,7 @@ export const JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Admin: Fähigkeit für alle verpflichtend',
-    hint: 'Sabine macht den „Datenschutz-Check“ für alle verpflichtend. Bei allen anderen steht dann „Immer aktiv“ statt des Schalters.',
+    hint: 'Sabine macht den „Datenschutz-Check“ für alle verpflichtend. Bei allen anderen steht dann „Immer aktiv“ statt des Schalters. Das gilt in allen Chats außerhalb von Arbeitsbereichen.',
     role: 'orgAdmin',
     path: '/skills/datenschutz',
   },
@@ -70,7 +70,7 @@ export const JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Admin: Rollen und Berechtigungen',
-    hint: 'Oben die Rechte der Rollen, darunter eine eigene Card für Team-Admins. Nimmt Sabine Team-Admins „Team-Admins ernennen“, kann Jonas die Rolle in seinem Team nur noch sehen.',
+    hint: 'Oben die Rechte der Rollen, darunter eine eigene Card für Team-Admins. Nimmt Sabine Team-Admins „Team-Admins ernennen“, kann Jonas die Rolle in seinem Team nur noch sehen und andere Team-Admins nicht mehr aus dem Team entfernen.',
     role: 'orgAdmin',
     path: '/admin-settings/roles',
   },

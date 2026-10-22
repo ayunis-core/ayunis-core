@@ -119,13 +119,7 @@ function OrgPermissionRow({
   });
   return (
     <PermissionRow
-      label={
-        <PermissionHint
-          label={permission.label}
-          hint={permission.hint}
-          isNew={permission.isNew}
-        />
-      }
+      label={<PermissionHint label={permission.label} hint={permission.hint} />}
       cells={[
         editable('user'),
         editable('manager'),

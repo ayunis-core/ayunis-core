@@ -16,7 +16,7 @@ export function MarketplacePromoBanner() {
       <img
         src={marketplaceBanner}
         alt=""
-        className="absolute inset-0 -z-10 size-full object-cover object-top transition-transform duration-300 group-hover/item:scale-[1.02]"
+        className="absolute inset-0 -z-10 size-full object-cover object-top"
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-brand via-brand/70 via-40% to-brand/20" />
       <ItemContent className="max-w-xl gap-1">

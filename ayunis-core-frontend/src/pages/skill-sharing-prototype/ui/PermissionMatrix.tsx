@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Info } from 'lucide-react';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import {
@@ -20,8 +19,7 @@ import {
 export function PermissionHint({
   label,
   hint,
-  isNew = false,
-}: Readonly<{ label: string; hint?: string; isNew?: boolean }>) {
+}: Readonly<{ label: string; hint?: string }>) {
   return (
     <span className="inline-flex items-center gap-1">
       {label}
@@ -39,7 +37,6 @@ export function PermissionHint({
           <TooltipContent className="max-w-xs">{hint}</TooltipContent>
         </Tooltip>
       )}
-      {isNew && <Badge variant="secondary">Neu</Badge>}
     </span>
   );
 }

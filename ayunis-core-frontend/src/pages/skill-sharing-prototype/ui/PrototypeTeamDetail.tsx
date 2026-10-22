@@ -134,6 +134,8 @@ function MemberRow({
   isAdminViewer: boolean;
 }>) {
   const isProtected = !isAdminViewer && isOnlyTeamAdmin(team, member);
+  const mayRemove =
+    canRemove && (canAppoint || !team.adminIds.includes(member.id));
   return (
     <TableRow>
       <TableCell className="font-medium">{member.name}</TableCell>
@@ -147,7 +149,7 @@ function MemberRow({
       </TableCell>
       <TableCell>{joinedDate(member.id, team.id)}</TableCell>
       <TableCell>
-        {canRemove && !isProtected && (
+        {mayRemove && !isProtected && (
           <RemoveMemberButton team={team} member={member} />
         )}
       </TableCell>

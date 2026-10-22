@@ -36,7 +36,6 @@ export interface PermissionInfo<Key extends string> {
   key: Key;
   label: string;
   hint: string;
-  isNew?: boolean;
 }
 
 export type PermissionDef = PermissionInfo<PermissionKey>;
@@ -68,43 +67,37 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       {
         key: 'manage_own_skills',
         label: 'Eigene Fähigkeiten verwalten',
-        hint: 'Eigene Fähigkeiten erstellen, bearbeiten und löschen. Nutzen kann sie nur die Person selbst.',
+        hint: 'Eigene Fähigkeiten erstellen, bearbeiten und löschen.',
       },
       {
         key: 'install_marketplace_skills',
-        label: 'Aus dem Marketplace übernehmen',
-        hint: 'Fähigkeiten aus dem Ayunis Core Marketplace zu den eigenen hinzufügen. Ohne dieses Recht sind Marketplace-Hinweise und der Menüpunkt ausgeblendet.',
-        isNew: true,
+        label: 'Aus dem Marketplace installieren',
+        hint: 'Fähigkeiten aus dem Ayunis Core Marketplace installieren. Ohne dieses Recht sind Marketplace-Hinweise und der Menüpunkt ausgeblendet.',
       },
       {
         key: 'request_skill_transfer',
         label: 'An eigene Teams übergeben',
         hint: 'Eine eigene Fähigkeit einem Team anbieten, in dem man Mitglied ist. Nach der Freigabe gehört sie dem Team.',
-        isNew: true,
       },
       {
         key: 'request_skill_transfer_other_teams',
         label: 'An andere Teams übergeben',
         hint: 'Eine eigene Fähigkeit auch Teams anbieten, in denen man nicht Mitglied ist. Deren Team-Admins prüfen die Anfrage.',
-        isNew: true,
       },
       {
         key: 'request_skill_transfer_org',
         label: 'An die Organisation übergeben',
         hint: 'Eine eigene Fähigkeit der ganzen Organisation anbieten. Nach der Freigabe gehört sie der Organisation.',
-        isNew: true,
       },
       {
         key: 'manage_org_skills',
         label: 'Fähigkeiten der Organisation verwalten',
         hint: 'Fähigkeiten für alle in der Organisation erstellen, bearbeiten, löschen und für alle verpflichtend machen.',
-        isNew: true,
       },
       {
         key: 'review_all_skill_requests',
         label: 'Alle Anfragen beantworten',
         hint: 'Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.',
-        isNew: true,
       },
     ],
   },
@@ -120,31 +113,26 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
         key: 'request_knowledge_transfer',
         label: 'An eigene Teams übergeben',
         hint: 'Eine eigene Wissenssammlung einem Team anbieten, in dem man Mitglied ist. Nach der Freigabe gehört sie dem Team.',
-        isNew: true,
       },
       {
         key: 'request_knowledge_transfer_other_teams',
         label: 'An andere Teams übergeben',
         hint: 'Eine eigene Wissenssammlung auch Teams anbieten, in denen man nicht Mitglied ist. Deren Team-Admins prüfen die Anfrage.',
-        isNew: true,
       },
       {
         key: 'request_knowledge_transfer_org',
         label: 'An die Organisation übergeben',
         hint: 'Eine eigene Wissenssammlung der ganzen Organisation anbieten. Nach der Freigabe gehört sie der Organisation.',
-        isNew: true,
       },
       {
         key: 'manage_org_knowledge',
         label: 'Wissenssammlungen der Organisation verwalten',
         hint: 'Wissenssammlungen für alle in der Organisation erstellen, bearbeiten und löschen.',
-        isNew: true,
       },
       {
         key: 'review_all_knowledge_requests',
         label: 'Alle Anfragen beantworten',
         hint: 'Anfragen an die Organisation und an jedes Team freigeben oder ablehnen, auch ohne dort Team-Admin zu sein.',
-        isNew: true,
       },
     ],
   },
@@ -155,19 +143,16 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
         key: 'create_workspaces',
         label: 'Arbeitsbereiche erstellen',
         hint: 'Eigene Arbeitsbereiche anlegen und darin Fähigkeiten und Wissen verknüpfen.',
-        isNew: true,
       },
       {
         key: 'share_workspaces',
         label: 'Arbeitsbereiche verwalten',
         hint: 'Personen und Teams in Arbeitsbereiche einladen, in denen man Vollzugriff hat. Eingeladene nutzen alles, was dort verknüpft ist.',
-        isNew: true,
       },
       {
         key: 'share_workspaces_org',
         label: 'Für die ganze Organisation freigeben',
         hint: 'Einen Arbeitsbereich für alle in der Organisation öffnen. Alle nutzen dann, was dort verknüpft ist.',
-        isNew: true,
       },
     ],
   },

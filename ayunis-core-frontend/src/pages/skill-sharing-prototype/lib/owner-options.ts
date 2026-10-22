@@ -62,7 +62,7 @@ export function ownerOptionsFor(
       value: 'self',
       label: 'Ihnen',
       owner: { kind: 'user', userId: person.id },
-      hint: 'Nur Sie können sie nutzen und ändern.',
+      hint: 'Nur Sie können sie ändern.',
     },
     ...teamIds.map(teamOption),
   ];

@@ -23,8 +23,8 @@ export function MandatorySkillControl({
       <ItemContent>
         <ItemTitle>Für alle verpflichtend</ItemTitle>
         <ItemDescription>
-          Die Fähigkeit ist dann für alle immer aktiv und lässt sich nicht
-          ausschalten.
+          Die Fähigkeit ist dann für alle in allen Chats außerhalb von
+          Arbeitsbereichen aktiv und lässt sich nicht ausschalten.
         </ItemDescription>
       </ItemContent>
       <ItemActions>

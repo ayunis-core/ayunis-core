@@ -1,5 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { BookOpenText } from 'lucide-react';
+import { Item, ItemContent, ItemDescription } from '@ayunis/ui/components/item';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -9,6 +10,7 @@ import { showSuccess } from '@/shared/lib/toast';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
 import {
+  allWorkspaces,
   canEditSkill,
   findPerson,
   findSkill,
@@ -71,24 +73,40 @@ function KnowledgeTip() {
   );
 }
 
+function hiddenLinksText(count: number, hasVisible: boolean): string {
+  if (hasVisible) {
+    return count === 1
+      ? 'Außerdem in 1 weiteren Arbeitsbereich verknüpft'
+      : `Außerdem in ${count} weiteren Arbeitsbereichen verknüpft`;
+  }
+  return count === 1
+    ? 'In 1 Arbeitsbereich verknüpft, den Sie nicht öffnen können'
+    : `In ${count} Arbeitsbereichen verknüpft, die Sie nicht öffnen können`;
+}
+
 function LinkedWorkspaces({
   skillId,
   person,
 }: Readonly<{ skillId: string; person: Person }>) {
   const { linkedSkills } = usePrototypeState();
-  const links = workspacesOf(person).flatMap((workspace) =>
+  const openableIds = new Set(workspacesOf(person).map(({ id }) => id));
+  const links = allWorkspaces().flatMap((workspace) =>
     (linkedSkills[workspace.id] ?? [])
       .filter((item) => item.skillId === skillId)
       .map((item) => ({ workspace, linkedBy: item.linkedBy })),
   );
   if (links.length === 0) return null;
+  const visible = links.filter(({ workspace }) =>
+    openableIds.has(workspace.id),
+  );
+  const hiddenCount = links.length - visible.length;
 
   return (
     <SkillPanelSection
       title="Verknüpft in Arbeitsbereichen"
       count={links.length}
     >
-      {links.map(({ workspace, linkedBy }) => (
+      {visible.map(({ workspace, linkedBy }) => (
         <Link
           key={workspace.id}
           to="/workspaces/$workspaceId"
@@ -103,6 +121,15 @@ function LinkedWorkspaces({
           </span>
         </Link>
       ))}
+      {hiddenCount > 0 && (
+        <Item variant="muted" size="sm">
+          <ItemContent>
+            <ItemDescription>
+              {hiddenLinksText(hiddenCount, visible.length > 0)}
+            </ItemDescription>
+          </ItemContent>
+        </Item>
+      )}
     </SkillPanelSection>
   );
 }

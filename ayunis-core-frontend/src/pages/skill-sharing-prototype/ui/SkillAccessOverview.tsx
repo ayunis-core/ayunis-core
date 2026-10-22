@@ -71,8 +71,8 @@ function accessSentence(
     return `Alle Mitglieder des Arbeitsbereichs können die ${noun} nutzen. Ändern kann, wer den Arbeitsbereich bearbeiten darf.`;
   }
   return owner.userId === person.id
-    ? `Nur Sie können die ${noun} nutzen und ändern.`
-    : `Nur ${findPerson(owner.userId).name} kann die ${noun} nutzen und ändern.`;
+    ? `Nur Sie können die ${noun} ändern.`
+    : `Nur ${findPerson(owner.userId).name} kann die ${noun} ändern.`;
 }
 
 function submittedSentence(item: OwnedItem, person: Person): string | null {

@@ -18,6 +18,7 @@ function AlwaysActiveBadge() {
       </TooltipTrigger>
       <TooltipContent>
         Ihre Verwaltung hat diese Fähigkeit für alle verpflichtend aktiviert.
+        Das gilt in allen Chats außerhalb von Arbeitsbereichen.
       </TooltipContent>
     </Tooltip>
   );

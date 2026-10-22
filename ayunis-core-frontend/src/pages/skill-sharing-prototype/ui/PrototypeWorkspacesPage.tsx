@@ -107,7 +107,11 @@ export function PrototypeWorkspacesPage() {
           workspaces.length === 0 ? (
             <EmptyState
               title="Noch keine Arbeitsbereiche"
-              description="Legen Sie einen an, oder lassen Sie sich zu einem einladen."
+              description={
+                mayCreate
+                  ? 'Legen Sie einen an, oder lassen Sie sich zu einem einladen.'
+                  : 'Sie dürfen keine Arbeitsbereiche anlegen. Wenden Sie sich an Ihre Administration.'
+              }
             />
           ) : (
             <ItemGroup className="gap-2">
