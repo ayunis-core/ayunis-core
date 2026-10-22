@@ -232,6 +232,11 @@ describe('BackendToolAdapter', () => {
       isError: false,
     });
     expect(anonymize).toHaveBeenCalledTimes(1);
+    expect(anonymize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        measurementCaller: { source: 'tool_result' },
+      }),
+    );
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'thread_pii_masks' }),
     );

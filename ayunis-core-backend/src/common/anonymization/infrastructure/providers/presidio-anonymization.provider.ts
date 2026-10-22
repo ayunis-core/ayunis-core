@@ -1,3 +1,5 @@
+import { AnonymizationMeasurementService } from './anonymization-measurement.service';
+import type { DetectionMeasurementContext } from 'src/common/anonymization/domain/detection-measurement-context';
 import { Injectable, Logger } from '@nestjs/common';
 import pLimit from 'p-limit';
 import { AnonymizationPort } from 'src/common/anonymization/application/ports/anonymization.port';
@@ -58,19 +60,18 @@ function utf16OffsetsByCodePoint(text: string): number[] {
 export class PresidioAnonymizationProvider extends AnonymizationPort {
   private readonly logger = new Logger(PresidioAnonymizationProvider.name);
 
-  constructor() {
+  constructor(private readonly measurement: AnonymizationMeasurementService) {
     super();
   }
 
-  async detect(text: string, entities?: string[]): Promise<PiiDetection[]> {
+  async detect(
+    text: string,
+    entities?: string[],
+    context?: DetectionMeasurementContext,
+  ): Promise<PiiDetection[]> {
     const utf16Offsets = utf16OffsetsByCodePoint(text);
     const textLength = utf16Offsets.length - 1;
-    if (textLength > MAX_ANONYMIZATION_TEXT_LENGTH) {
-      throw new AnonymizationInputTooLongError(
-        textLength,
-        MAX_ANONYMIZATION_TEXT_LENGTH,
-      );
-    }
+    this.validateTextLength(textLength);
 
     this.logger.debug({ textLength, entities }, 'Detecting PII');
     const startedAt = performance.now();
@@ -82,6 +83,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       ANONYMIZATION_CHUNK_OVERLAP,
     );
 
+    const observation = this.measurement.start(text, entities, context);
     try {
       const results = await this.detectChunks(chunks, entities, codePoints);
       const detections = resolveDetectionOverlaps(
@@ -96,8 +98,10 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         startedAt,
       );
 
+      this.measurement.finish(observation, detections);
       return detections;
     } catch (error: unknown) {
+      this.measurement.finish(observation);
       this.logDetectionFailure(textLength, startedAt, error);
       // Every caller treats a service-call pipeline failure as fatal and
       // fail-closed (the user's message is blocked rather than sent unmasked),
@@ -114,6 +118,15 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       throw new AnonymizationFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { error: error as Error },
+      );
+    }
+  }
+
+  private validateTextLength(textLength: number): void {
+    if (textLength > MAX_ANONYMIZATION_TEXT_LENGTH) {
+      throw new AnonymizationInputTooLongError(
+        textLength,
+        MAX_ANONYMIZATION_TEXT_LENGTH,
       );
     }
   }

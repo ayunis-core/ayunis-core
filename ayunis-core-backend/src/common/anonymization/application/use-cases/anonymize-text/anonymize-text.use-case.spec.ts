@@ -72,7 +72,7 @@ describe('AnonymizeTextUseCase', () => {
 
     await useCase.execute(new AnonymizeTextCommand(text, ['PERSON']));
 
-    expect(detect).toHaveBeenCalledWith(text, ['PERSON']);
+    expect(detect).toHaveBeenCalledWith(text, ['PERSON'], undefined);
   });
 
   it('produces legacy placeholders and no new masks without existingMasks', async () => {

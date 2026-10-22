@@ -22,3 +22,5 @@ Use cases emit domain events → `PrometheusMetricsListener` handles them → re
 - `AYUNIS_METRICS_USER` / `AYUNIS_METRICS_PASSWORD` — When both are set, the `/metrics` endpoint requires Basic Auth. When neither is set, the endpoint is open (with a warning log). Setting only one is treated as a misconfiguration — all requests are rejected until both are provided.
 
 **Cardinality note:** The `user_id` label is included on several metrics. This is acceptable for municipal deployments (hundreds of users) but should be revisited if user count grows significantly. See the comment in `metrics.constants.ts`.
+
+The temporary anonymization study uses `AnonymizationStudyMetricsListener` and `anonymization-study.metrics.ts` to record only global counters/gauges. Its only label is simulated hit/miss; no user, organization, thread, trace, fingerprint, tool name or per-request timestamp is exported. Existing unrelated identity-labelled metrics remain unchanged.

@@ -80,6 +80,7 @@ describe('AnonymizeTextForThreadUseCase', () => {
     expect(anonymizeExecute).toHaveBeenCalledWith(
       expect.objectContaining({
         text,
+        measurementContext: { orgId, source: 'user_message' },
         whitelist: [new PiiWhitelistEntry(PiiCategory.LOCATION, null)],
         existingMasks: [
           {

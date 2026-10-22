@@ -405,7 +405,9 @@ export class ToolResultCollectorService {
   ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
     try {
       const result = await this.anonymizeTextForThreadUseCase.execute(
-        new AnonymizeTextForThreadCommand(text, orgId, threadId),
+        new AnonymizeTextForThreadCommand(text, orgId, threadId, {
+          source: 'tool_result',
+        }),
       );
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {

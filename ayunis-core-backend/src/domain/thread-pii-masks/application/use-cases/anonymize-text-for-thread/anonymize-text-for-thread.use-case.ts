@@ -68,6 +68,7 @@ export class AnonymizeTextForThreadUseCase {
         undefined,
         whitelist,
         existing.map((mask) => mask.toPiiMask()),
+        { ...command.measurementCaller, orgId: command.orgId },
       ),
     );
     const created = await this.runStage('new_masks_build', logContext, () =>
