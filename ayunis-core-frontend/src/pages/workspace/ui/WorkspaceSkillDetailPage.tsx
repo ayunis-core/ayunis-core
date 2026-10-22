@@ -161,6 +161,7 @@ export function WorkspaceSkillDetailPage({
                           title: tSkill('delete.confirmTitle'),
                           description: tSkill('delete.confirmDescription', {
                             name: skill.name,
+                            hint: '',
                           }),
                           confirmText: tSkill('delete.confirmText'),
                           cancelText: tSkill('delete.cancelText'),
