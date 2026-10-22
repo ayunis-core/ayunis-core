@@ -111,7 +111,8 @@ describe('convertChunk', () => {
     ['stop_sequence', 'stop'],
     ['max_tokens', 'length'],
     ['tool_use', 'tool_calls'],
-    ['refusal', null],
+    ['refusal', 'refusal'],
+    ['pause_turn', 'pause_turn'],
     [null, null],
   ])('maps stop reason %s to %s', (stopReason, finishReason) => {
     expect(

@@ -90,7 +90,13 @@ interface ModelCallOutcomeBase<
 }
 
 export type ModelCallRejectedReason =
-  'empty' | 'no_final_answer' | 'malformed' | 'invalid_fallback';
+  | 'empty'
+  | 'no_final_answer'
+  | 'malformed'
+  | 'invalid_fallback'
+  | 'output_limit'
+  | 'refusal'
+  | 'pause_turn';
 
 type ModelCallOutcomeOf<MessageType, UsageType, ErrorType, FailureType> =
   | (ModelCallOutcomeBase<MessageType, UsageType> & {

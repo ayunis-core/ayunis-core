@@ -1,3 +1,4 @@
+import type { RunEventPayload, ToolCallSnapshot } from '../contracts/event';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -35,3 +36,11 @@ export const closeIterator = async (
   const observed = cleanup.catch(() => undefined);
   if (awaitCleanup) await observed;
 };
+
+export function* toolCallSnapshotEvents(
+  snapshots: readonly ToolCallSnapshot[],
+): Generator<RunEventPayload> {
+  for (const toolCall of snapshots) {
+    yield { type: 'tool_call_snapshot', toolCall };
+  }
+}

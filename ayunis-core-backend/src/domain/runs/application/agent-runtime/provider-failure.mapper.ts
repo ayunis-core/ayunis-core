@@ -45,7 +45,7 @@ export function mapPortableProviderError(
     return undefined;
   }
   if (!event.providerFailure) {
-    return mapEmptyModelResponse(event.message, event.modelCall, models);
+    return mapModelResponseFailure(event.message, event.modelCall, models);
   }
   return mapClassifiedProviderFailure(
     {
@@ -116,27 +116,53 @@ function resolveModel(
   }
 }
 
-const EMPTY_RESPONSE_REASONS: Readonly<Record<string, string>> = {
-  'Model provider returned an empty response':
-    'model returned an empty response',
-  'Model provider returned no answer': 'model returned no answer',
+interface ModelResponseFailure {
+  reason: string;
+  completionRejection?: 'output_limit' | 'refusal' | 'pause_turn';
+}
+
+const MODEL_RESPONSE_FAILURES: Readonly<
+  Record<string, ModelResponseFailure | undefined>
+> = {
+  'Model provider returned an empty response': {
+    reason: 'model returned an empty response',
+  },
+  'Model provider returned no answer': { reason: 'model returned no answer' },
+  'Model provider exhausted the output token limit without an answer': {
+    reason: 'model exhausted the output token limit without an answer',
+    completionRejection: 'output_limit',
+  },
+  'Model provider refused the response': {
+    reason: 'model refused the response',
+    completionRejection: 'refusal',
+  },
+  'Model provider paused the response; continuation is not supported': {
+    reason: 'model paused the response; continuation is not supported',
+    completionRejection: 'pause_turn',
+  },
 };
 
-function mapEmptyModelResponse(
+function mapModelResponseFailure(
   message: string,
   modelCall: TerminalModelCallInfo,
   models: RuntimeModelRegistry | undefined,
 ): ApplicationError | undefined {
-  const reason = EMPTY_RESPONSE_REASONS[message];
-  if (!reason) return undefined;
+  const failure = MODEL_RESPONSE_FAILURES[message];
+  if (!failure) return undefined;
   const model = models && resolveModel(models, modelCall.provider);
-  return new InferenceFailedError(reason, {
+  return new InferenceFailedError(failure.reason, {
     ...(model
       ? { provider: model.provider, modelId: model.name }
       : { runtimeProvider: modelCall.provider }),
     modelCallId: modelCall.modelCallId,
     trigger: modelCall.trigger,
     callSequence: modelCall.callSequence,
+    ...(failure.completionRejection
+      ? {
+          completionRejection: failure.completionRejection,
+          modelTurn: modelCall.turn,
+        }
+      : {}),
   });
 }
 

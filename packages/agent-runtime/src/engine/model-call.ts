@@ -20,10 +20,15 @@ import type {
 import type { ModelCallResult } from './accumulator';
 import { ChunkAccumulator } from './accumulator';
 import {
+  invalidFallbackError,
+  terminalCompletionRejection,
+} from './completion-rejection';
+import {
   closeIterator,
   hasAnswerOrToolUse,
   hasToolUse,
   openIterator,
+  toolCallSnapshotEvents,
 } from './model-call-helpers';
 import { IdleTimeoutError, type ModelCallScope } from './model-call-scope';
 import type { ModelCallMode } from './request-snapshot';
@@ -217,9 +222,25 @@ function* completedOutcome(
   result: ModelCallResult,
   execution: ModelCallExecution,
 ): Generator<RunEventPayload, ModelCallOutcome> {
+  const terminal = terminalCompletionRejection(result);
+  if (terminal) {
+    if (execution.visibleOutput) {
+      yield* toolCallSnapshotEvents(
+        execution.accumulator.rejectedToolCallSnapshots(),
+      );
+    }
+    return rejectedOutcome({
+      params,
+      result,
+      ...terminal,
+      visibleOutput: execution.visibleOutput,
+      startedAt: execution.startedAt,
+    });
+  }
   const malformed = malformedError(result);
   if (malformed) {
-    if (execution.visibleOutput) yield* invalidSnapshots(result);
+    if (execution.visibleOutput)
+      yield* toolCallSnapshotEvents(result.invalidToolCallSnapshots);
     return rejectedOutcome({
       params,
       result,
@@ -285,19 +306,6 @@ function* revealCompletedSnapshots(
   execution.bufferedSnapshots.length = 0;
 }
 
-const invalidFallbackError = (
-  result: ModelCallResult,
-): MalformedToolCallError =>
-  new MalformedToolCallError(
-    {
-      toolNames: result.message.content
-        .filter((content) => content.type === 'tool_use')
-        .map((content) => content.name),
-      reason: 'tool_disabled_fallback',
-    },
-    { usage: result.usage },
-  );
-
 // Truncation wins over unparseable arguments: a call cut off at the output
 // token limit leaves incomplete JSON behind, and that is the cause to report.
 const malformedError = (
@@ -322,14 +330,6 @@ const malformedError = (
   }
   return undefined;
 };
-
-function* invalidSnapshots(
-  result: ModelCallResult,
-): Generator<RunEventPayload> {
-  for (const toolCall of result.invalidToolCallSnapshots) {
-    yield { type: 'tool_call_snapshot', toolCall };
-  }
-}
 
 interface RejectedOutcomeParams {
   params: ModelCallParams;

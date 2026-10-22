@@ -109,6 +109,7 @@ const mapStopReason = (
       return 'tool_calls';
     case 'pause_turn':
     case 'refusal':
+      return reason;
     case null:
     default:
       return null;

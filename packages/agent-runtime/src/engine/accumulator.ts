@@ -158,6 +158,12 @@ export class ChunkAccumulator {
     };
   }
 
+  rejectedToolCallSnapshots(): ToolCallSnapshot[] {
+    return [...this.toolCalls.entries()].map(([index, call]) =>
+      this.toSnapshot(index, call, 'invalid'),
+    );
+  }
+
   private finalizeToolCalls(): FinalizedToolCalls {
     const entries = [...this.toolCalls.entries()].sort((a, b) => a[0] - b[0]);
     const contents: ToolUseContent[] = [];

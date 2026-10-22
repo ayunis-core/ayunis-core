@@ -29,6 +29,14 @@ is a distinct **model call**. Provider retries, empty-response recovery,
 malformed-tool recovery, and the tool-disabled fallback are new calls in the
 same turn.
 
+A completion that exhausts its output token budget without an answer is
+rejected as `output_limit` and is not replayed. Provider `refusal` and
+`pause_turn` completions are retained as distinct finish/rejection reasons
+and stop the turn without executing returned tools. Paused-turn continuation
+is not supported. Ordinary unexplained empty completions keep bounded
+recovery; truncated tool calls keep their existing repair/fallback policy.
+All terminal calls still finalize their usage hooks before ending the run.
+
 `RunInput.retry.maxRetries` is the one shared budget for all calls after the
 initial call. It defaults to 3, so a turn opens at most four calls. Together
 with `maxIterations`, this gives the run its hard model-call bound; there is no
@@ -115,9 +123,10 @@ Hooks run sequentially in registration order.
 
 Every call has a stable `modelCallId`, run ID, one-based turn and call sequence,
 trigger, and the actual `ModelProvider`. `afterModelCall` receives a
-discriminated outcome: `accepted`, `rejected` (`empty`, `malformed`, or
-`invalid_fallback`), `provider_failure`, `aborted`, or
-`consumer_abandoned`. Outcomes include usage, partial/final message state,
+discriminated outcome: `accepted`, `rejected` (`empty`, `no_final_answer`,
+`malformed`, `invalid_fallback`, `output_limit`, `refusal`, or `pause_turn`),
+`provider_failure`, `aborted`, or `consumer_abandoned`. Outcomes include usage,
+partial/final message state,
 finish reason, visible-output state, duration, normalized error where
 applicable, and provider failure facts. Terminal hooks share one frozen
 outcome context with deeply isolated and frozen output, usage, error, and

@@ -165,7 +165,9 @@ function assistantMessageForTurn(
     return cloneAssistantMessage(call.message);
   }
   if (
-    call.type === 'rejected' ||
+    (call.type === 'rejected' &&
+      call.reason !== 'refusal' &&
+      call.reason !== 'pause_turn') ||
     !call.visibleOutput ||
     call.message.content.length === 0
   ) {

@@ -608,6 +608,15 @@ describe('adaptRunEventsToStream', () => {
       'model returned an empty response',
     ],
     ['Model provider returned no answer', 'model returned no answer'],
+    [
+      'Model provider exhausted the output token limit without an answer',
+      'model exhausted the output token limit without an answer',
+    ],
+    ['Model provider refused the response', 'model refused the response'],
+    [
+      'Model provider paused the response; continuation is not supported',
+      'model paused the response; continuation is not supported',
+    ],
   ])(
     'maps a terminal "%s" to a classified inference failure with model metadata',
     async (runtimeMessage, reason) => {
@@ -679,6 +688,72 @@ describe('adaptRunEventsToStream', () => {
       }),
     });
   });
+
+  it.each([
+    [
+      'length',
+      'output_limit',
+      'model exhausted the output token limit without an answer',
+    ],
+    ['refusal', 'refusal', 'model refused the response'],
+    [
+      'pause_turn',
+      'pause_turn',
+      'model paused the response; continuation is not supported',
+    ],
+  ] as const)(
+    'accounts a terminal %s before surfacing its classified failure',
+    async (finishReason, reason, message) => {
+      const collectCritical = jest.fn().mockResolvedValue(undefined);
+      const observed: string[] = [];
+      const model = {
+        name: 'claude-opus-5-5',
+        provider: 'bedrock',
+      } as LanguageModel;
+      const provider: ModelProvider = {
+        name: 'bedrock:eu.anthropic.claude-opus-5-5',
+        async *stream() {
+          yield {
+            usage: {
+              inputTokens: 2,
+              cacheReadInputTokens: 39915,
+              outputTokens: 32000,
+            },
+          };
+          yield { finishReason };
+        },
+      };
+      await expect(
+        collectRuntime(provider, model, undefined, [
+          (models) =>
+            new UsageHookFactory({
+              collectCritical,
+            } as unknown as CollectUsageAsyncService).create({
+              resolveModel: models.resolve,
+            }),
+          () => ({
+            name: 'record-outcome',
+            afterModelCall: (ctx) => {
+              expect(collectCritical).toHaveBeenCalledTimes(1);
+              if (ctx.outcome.type === 'rejected')
+                observed.push(ctx.outcome.reason);
+            },
+          }),
+        ]),
+      ).rejects.toMatchObject({
+        code: 'INFERENCE_FAILED',
+        message: `Inference failed: ${message}`,
+      });
+      expect(observed).toEqual([reason]);
+      expect(collectCritical).toHaveBeenCalledWith(
+        model,
+        39917,
+        32000,
+        expect.any(String),
+        'agent_runtime',
+      );
+    },
+  );
 
   it('surfaces a critical hook failure with its execution path', async () => {
     const logger = createLoggerMock();
