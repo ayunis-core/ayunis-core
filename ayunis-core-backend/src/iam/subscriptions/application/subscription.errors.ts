@@ -13,6 +13,7 @@ export enum SubscriptionErrorCode {
   TOO_MANY_USED_SEATS = 'TOO_MANY_USED_SEATS',
   INVALID_RENEWAL_CYCLE = 'INVALID_RENEWAL_CYCLE',
   UNAUTHORIZED_SUBSCRIPTION_ACCESS = 'UNAUTHORIZED_SUBSCRIPTION_ACCESS',
+  INVALID_SUBSCRIPTION_ACCESS_END = 'INVALID_SUBSCRIPTION_ACCESS_END',
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
   INVALID_SUBSCRIPTION_TYPE = 'INVALID_SUBSCRIPTION_TYPE',
   SUBSCRIPTION_EXPIRED = 'SUBSCRIPTION_EXPIRED',
@@ -300,6 +301,16 @@ export class CreditBudgetExceededError extends SubscriptionError {
       SubscriptionErrorCode.CREDIT_BUDGET_EXCEEDED,
       429,
       metadata,
+    );
+  }
+}
+
+export class InvalidSubscriptionAccessEndError extends SubscriptionError {
+  constructor() {
+    super(
+      'Access end must be after the subscription start',
+      SubscriptionErrorCode.INVALID_SUBSCRIPTION_ACCESS_END,
+      400,
     );
   }
 }

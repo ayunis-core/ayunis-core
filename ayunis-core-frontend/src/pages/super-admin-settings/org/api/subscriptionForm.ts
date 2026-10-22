@@ -67,3 +67,22 @@ export const subscriptionFormDefaultValues: CreateSubscriptionFormData = {
   monthlyCredits: 1000,
   startsAt: undefined,
 };
+
+export function buildCreateSubscriptionFormSchema(t: (key: string) => string) {
+  return buildSubscriptionFormSchema(t)
+    .safeExtend({
+      accessEndsAt: z.iso
+        .datetime({ message: t('subscription.createErrorEndDate') })
+        .optional(),
+    })
+    .refine(
+      (data) =>
+        !data.accessEndsAt ||
+        Date.parse(data.accessEndsAt) >
+          (data.startsAt ? Date.parse(data.startsAt) : Date.now()),
+      {
+        path: ['accessEndsAt'],
+        message: t('subscription.createErrorEndDate'),
+      },
+    );
+}

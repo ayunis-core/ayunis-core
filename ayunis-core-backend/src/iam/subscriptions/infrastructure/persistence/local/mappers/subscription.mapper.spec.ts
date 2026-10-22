@@ -138,6 +138,42 @@ describe('SubscriptionMapper', () => {
     });
   });
 
+  it.each(['seat', 'usage'])(
+    'persists a fixed end independently of the shortened cancellation end (%s)',
+    (type) => {
+      const billingInfo = new SubscriptionBillingInfo({
+        companyName: 'Musterstadt',
+        street: 'Hauptstrasse',
+        houseNumber: '1',
+        postalCode: '12345',
+        city: 'Musterstadt',
+        country: 'DE',
+      });
+      const subscription =
+        type === 'seat'
+          ? new SeatBasedSubscription({
+              orgId: randomUUID(),
+              noOfSeats: 5,
+              pricePerSeat: 10,
+              renewalCycle: RenewalCycle.MONTHLY,
+              renewalCycleAnchor: new Date(),
+              billingInfo,
+            })
+          : new UsageBasedSubscription({
+              orgId: randomUUID(),
+              monthlyCredits: 1000,
+              billingInfo,
+            });
+      const fixedAccessEndsAt = new Date('2027-02-01T00:00:00Z');
+      const accessEndsAt = new Date('2027-01-01T00:00:00Z');
+      Object.assign(subscription, { fixedAccessEndsAt, accessEndsAt });
+      expect(mapper.toDomain(mapper.toRecord(subscription))).toMatchObject({
+        fixedAccessEndsAt,
+        accessEndsAt,
+      });
+    },
+  );
+
   describe('round-trip', () => {
     it('should preserve all seat-based fields through domain → record → domain', () => {
       const accessEndsAt = new Date('2026-08-01T00:00:00.000Z');

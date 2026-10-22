@@ -87,7 +87,8 @@
     "changeErrorSubscriptionNotFound": "Kein aktives Abonnement zum Ändern vorhanden",
     "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
     "changeErrorAccessOverlap": "Das neue Abonnement würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden. Passen Sie das Startdatum an oder beenden Sie zuerst das andere Abonnement.",
-    "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
+    "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "createErrorEndDate": "Das Enddatum muss nach dem Startdatum liegen (ohne Startdatum nach dem aktuellen Zeitpunkt)."
   },
   "subscriptionHistory": {
     "title": "Abo-Verlauf",
@@ -212,7 +213,12 @@
     "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt.",
     "startsAtLabel": "Startdatum",
     "startsAtPlaceholder": "Startet sofort",
-    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen."
+    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen.",
+    "accessEndsAtLabel": "Enddatum",
+    "accessEndsAtPlaceholder": "Enddatum wählen",
+    "accessEndsAtDescription": "Leer lassen, wenn das Abonnement unbefristet läuft. Der Zugriff endet zu Beginn des gewählten Tages.",
+    "accessEndsAtClear": "Enddatum entfernen",
+    "startsAtClear": "Startdatum entfernen"
   },
   "changeSubscriptionDialog": {
     "title": "Abonnement ändern",
@@ -680,5 +686,11 @@
     "error": "Verbrauchssichtbarkeit konnte nicht aktualisiert werden",
     "notFound": "Organisation nicht gefunden",
     "description": "Bei aktiviertem Schalter wird die Tabelle „Benutzerverbrauch“ für Admins dieser Organisation ausgeblendet und der Verbrauch einzelner Benutzer ist für sie nicht mehr abrufbar."
+  },
+  "validation": {
+    "accessEndsAt": {
+      "isDateString": "Bitte ein gültiges Enddatum eingeben."
+    },
+    "invalid": "Bitte den Wert prüfen."
   }
 }

@@ -5,6 +5,8 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
+import { classifySubscriptionStatus } from 'src/iam/subscriptions/application/util/classify-subscription-status';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -26,6 +28,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   SubscriptionAlreadyExistsError,
   InvalidSubscriptionDataError,
+  InvalidSubscriptionAccessEndError,
   TooManyUsedSeatsError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -139,6 +142,98 @@ describe('CreateSubscriptionUseCase', () => {
       }),
     );
   }
+
+  describe('optional access end', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-10-22T12:00:00Z'));
+      setupSuperAdminContext();
+      mockNoExistingSubscription();
+      mockInvitesAndUsers(0, 0);
+      configService.get.mockReturnValue(100);
+    });
+    afterEach(() => jest.useRealTimers());
+
+    function boundedCommand(type: SubscriptionType, accessEndsAt?: Date) {
+      return new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type,
+        noOfSeats: 5,
+        monthlyCredits: 1000,
+        ...baseBillingParams,
+        startsAt: new Date('2026-11-01T00:00:00Z'),
+        ...{ accessEndsAt },
+      });
+    }
+
+    it.each([SubscriptionType.SEAT_BASED, SubscriptionType.USAGE_BASED])(
+      'ends %s access at the exclusive boundary without cancelling',
+      async (type) => {
+        const end = new Date('2026-12-01T00:00:00Z');
+        const result = await useCase.execute(boundedCommand(type, end));
+        expect(result.accessEndsAt).toEqual(end);
+        expect(result).toMatchObject({ fixedAccessEndsAt: end });
+        expect(result.cancelledAt).toBeNull();
+        expect(classifySubscriptionStatus(result)).toBe('SCHEDULED');
+        jest.setSystemTime(new Date('2026-11-15T00:00:00Z'));
+        expect(isActive(result)).toBe(true);
+        expect(classifySubscriptionStatus(result)).toBe('ACTIVE');
+        jest.setSystemTime(end);
+        expect(isActive(result)).toBe(false);
+        expect(classifySubscriptionStatus(result)).toBe('HISTORICAL');
+      },
+    );
+    it.each([SubscriptionType.SEAT_BASED, SubscriptionType.USAGE_BASED])(
+      'keeps %s open-ended when the end is omitted',
+      async (type) => {
+        expect(
+          (await useCase.execute(boundedCommand(type))).accessEndsAt,
+        ).toBeNull();
+      },
+    );
+    it.each(['2026-10-31T00:00:00Z', '2026-11-01T00:00:00Z', 'invalid'])(
+      'rejects an invalid end (%s) before persistence',
+      async (end) => {
+        await expect(
+          useCase.execute(
+            boundedCommand(SubscriptionType.USAGE_BASED, new Date(end)),
+          ),
+        ).rejects.toThrow(InvalidSubscriptionAccessEndError);
+        expect(subscriptionRepository.create).not.toHaveBeenCalled();
+        expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+      },
+    );
+    it('rejects an elapsed end when start is omitted', async () => {
+      const command = boundedCommand(
+        SubscriptionType.USAGE_BASED,
+        new Date('2026-10-22T12:00:00Z'),
+      );
+      Object.assign(command, { startsAt: undefined });
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidSubscriptionAccessEndError,
+      );
+      expect(subscriptionRepository.create).not.toHaveBeenCalled();
+    });
+    it('allows a period that ends exactly when the next subscription starts', async () => {
+      const next = await useCase.execute(
+        boundedCommand(SubscriptionType.USAGE_BASED),
+      );
+      Object.assign(next, { startsAt: new Date('2026-12-01T00:00:00Z') });
+      subscriptionRepository.findByOrgId.mockResolvedValue([next]);
+      const result = await useCase.execute(
+        boundedCommand(SubscriptionType.USAGE_BASED, next.startsAt),
+      );
+      expect(result.accessEndsAt).toEqual(next.startsAt);
+      await expect(
+        useCase.execute(
+          boundedCommand(
+            SubscriptionType.USAGE_BASED,
+            new Date('2026-12-02T00:00:00Z'),
+          ),
+        ),
+      ).rejects.toThrow(SubscriptionAlreadyExistsError);
+    });
+  });
 
   describe('usage-based subscription creation', () => {
     it('should create a UsageBasedSubscription when type is USAGE_BASED', async () => {

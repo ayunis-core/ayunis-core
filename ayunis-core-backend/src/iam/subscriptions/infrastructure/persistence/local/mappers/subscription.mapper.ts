@@ -39,6 +39,7 @@ export class SubscriptionMapper {
       record.cancelledAt = domain.cancelledAt;
       record.startsAt = domain.startsAt;
       record.accessEndsAt = domain.accessEndsAt;
+      record.fixedAccessEndsAt = domain.fixedAccessEndsAt;
       record.orgId = domain.orgId;
       record.noOfSeats = domain.noOfSeats;
       record.pricePerSeat = domain.pricePerSeat;
@@ -59,6 +60,7 @@ export class SubscriptionMapper {
       record.cancelledAt = domain.cancelledAt;
       record.startsAt = domain.startsAt;
       record.accessEndsAt = domain.accessEndsAt;
+      record.fixedAccessEndsAt = domain.fixedAccessEndsAt;
       record.orgId = domain.orgId;
       record.monthlyCredits = domain.monthlyCredits;
       record.billingInfo = this.subscriptionBillingInfoMapper.toRecord(
@@ -98,6 +100,7 @@ export class SubscriptionMapper {
       cancelledAt: record.cancelledAt,
       startsAt: record.startsAt,
       accessEndsAt: record.accessEndsAt,
+      fixedAccessEndsAt: record.fixedAccessEndsAt,
       orgId: record.orgId,
       noOfSeats: record.noOfSeats!,
       pricePerSeat: record.pricePerSeat!,
@@ -125,6 +128,7 @@ export class SubscriptionMapper {
       cancelledAt: record.cancelledAt,
       startsAt: record.startsAt,
       accessEndsAt: record.accessEndsAt,
+      fixedAccessEndsAt: record.fixedAccessEndsAt,
       orgId: record.orgId,
       monthlyCredits: record.monthlyCredits,
       billingInfo: this.subscriptionBillingInfoMapper.toDomain(

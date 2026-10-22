@@ -147,6 +147,47 @@ describe('UncancelSubscriptionUseCase', () => {
     requestingUserId: mockUserId,
   });
 
+  it.each(['seat', 'usage'])(
+    'restores the fixed expiry after undoing %s cancellation',
+    async (type) => {
+      const subscription =
+        type === 'seat'
+          ? createSeatBased({
+              cancelledAt: new Date('2025-06-14'),
+              renewalCycleAnchor: new Date('2025-06-01'),
+            })
+          : createUsageBased({ cancelledAt: new Date('2025-06-14') });
+      const fixedAccessEndsAt = new Date('2025-07-15T00:00:00Z');
+      Object.assign(subscription, {
+        fixedAccessEndsAt,
+        accessEndsAt: new Date('2025-07-01'),
+      });
+      subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
+      await useCase.execute(command);
+      expect(subscriptionRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cancelledAt: null,
+          accessEndsAt: fixedAccessEndsAt,
+          fixedAccessEndsAt,
+        }),
+      );
+    },
+  );
+  it('does not resurrect a fixed period that has ended even within the cancellation month', async () => {
+    const subscription = createUsageBased({
+      cancelledAt: new Date('2025-06-01'),
+    });
+    Object.assign(subscription, {
+      fixedAccessEndsAt: new Date('2025-06-14'),
+      accessEndsAt: new Date('2025-06-01'),
+    });
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
+    await expect(useCase.execute(command)).rejects.toThrow(
+      SubscriptionExpiredError,
+    );
+    expect(subscriptionRepository.update).not.toHaveBeenCalled();
+  });
+
   it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
     subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
