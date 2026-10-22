@@ -40,15 +40,41 @@ interface VFileLike {
   value?: unknown;
 }
 
-export function rehypeSourceCitations() {
+export function rehypeSourceCitations(options?: { separator?: string }) {
   return (tree: HastParent, file?: VFileLike): void => {
+    if (options?.separator) restoreSeparators(tree, options.separator);
     const source = typeof file?.value === 'string' ? file.value : null;
     if (source === null) {
       visitTextNodes(tree);
       return;
     }
-    visitPositionedNodes(tree, findSourceCitationMarkers(source));
+    visitPositionedNodes(
+      tree,
+      findSourceCitationMarkers(source, options?.separator),
+    );
   };
+}
+
+function restoreSeparators(node: HastNode, separator: string): void {
+  const restore = (value: string) =>
+    value
+      .replaceAll(separator, '|')
+      .replaceAll(encodeURIComponent(separator), '|')
+      .replaceAll(encodeURIComponent(separator).toLowerCase(), '|');
+  if (isText(node)) node.value = restore(node.value);
+  if (isElement(node) && node.properties) {
+    for (const [key, value] of Object.entries(node.properties)) {
+      if (typeof value === 'string') node.properties[key] = restore(value);
+      else if (Array.isArray(value)) {
+        node.properties[key] = value.map((item: unknown) =>
+          typeof item === 'string' ? restore(item) : item,
+        );
+      }
+    }
+  }
+  (node as HastParent).children?.forEach((child) =>
+    restoreSeparators(child, separator),
+  );
 }
 
 function visitPositionedNodes(

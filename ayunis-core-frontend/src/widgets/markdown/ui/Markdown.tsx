@@ -8,17 +8,12 @@ import SourceCitationInline from './SourceCitationInline';
 import { rehypePiiMasks } from '@/widgets/markdown/lib/rehype-pii-masks';
 import { rehypeLegalMarkers } from '@/widgets/markdown/lib/rehype-legal-markers';
 import { rehypeSourceCitations } from '@/widgets/markdown/lib/rehype-source-citations';
+import { protectSourceCitationPipes } from '@/widgets/markdown/lib/protect-source-citation-pipes';
 
 // Module constants so react-markdown doesn't re-parse on every render.
 const REMARK_PLUGINS = [remarkGfm];
 const REHYPE_PLUGINS = [rehypePiiMasks];
 const LEGAL_REHYPE_PLUGINS = [rehypePiiMasks, rehypeLegalMarkers];
-const SOURCE_REHYPE_PLUGINS = [rehypePiiMasks, rehypeSourceCitations];
-const LEGAL_SOURCE_REHYPE_PLUGINS = [
-  rehypePiiMasks,
-  rehypeLegalMarkers,
-  rehypeSourceCitations,
-];
 
 interface MarkdownProps {
   children: string;
@@ -66,6 +61,9 @@ function Markdown({
   renderSourceCitations = false,
   renderImages = true,
 }: Readonly<MarkdownProps>) {
+  const prepared = renderSourceCitations
+    ? protectSourceCitationPipes(children)
+    : { markdown: children };
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
@@ -75,6 +73,7 @@ function Markdown({
         rehypePlugins={resolveRehypePlugins(
           renderLegalReferences,
           renderSourceCitations,
+          prepared.separator,
         )}
         components={{
           span: (props: SpanComponentProps) => {
@@ -181,7 +180,7 @@ function Markdown({
           },
         }}
       >
-        {children}
+        {prepared.markdown}
       </ReactMarkdown>
     </div>
   );
@@ -190,13 +189,15 @@ function Markdown({
 function resolveRehypePlugins(
   renderLegalReferences: boolean,
   renderSourceCitations: boolean,
+  separator?: string,
 ) {
-  if (renderLegalReferences && renderSourceCitations) {
-    return LEGAL_SOURCE_REHYPE_PLUGINS;
+  const plugins = renderLegalReferences ? LEGAL_REHYPE_PLUGINS : REHYPE_PLUGINS;
+  if (renderSourceCitations) {
+    const sourcePlugin: [typeof rehypeSourceCitations, { separator?: string }] =
+      [rehypeSourceCitations, { separator }];
+    return [...plugins, sourcePlugin];
   }
-  if (renderLegalReferences) return LEGAL_REHYPE_PLUGINS;
-  if (renderSourceCitations) return SOURCE_REHYPE_PLUGINS;
-  return REHYPE_PLUGINS;
+  return plugins;
 }
 
 export default memo(Markdown);
