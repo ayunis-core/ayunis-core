@@ -21,6 +21,45 @@ import type { SourceMapper } from './mappers/source.mapper';
 import type { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 
 describe('LocalSourceRepository', () => {
+  it('writes page progress on the guarded heartbeat update only when given', async () => {
+    const qb = {
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const manager = {
+      getRepository: jest
+        .fn()
+        .mockReturnValue({ createQueryBuilder: () => qb }),
+    } as unknown as EntityManager;
+    const repository = new LocalSourceRepository(
+      {} as Repository<SourceRecord>,
+      {} as SourceMapper,
+      {} as SourceContentChunkMapper,
+      { tx: manager } as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+    const id = randomUUID();
+
+    await repository.refreshProcessingHeartbeat(id);
+    await repository.refreshProcessingHeartbeat(id, {
+      pagesTotal: 312,
+      pagesDone: 140,
+    });
+
+    expect(Object.keys(qb.set.mock.calls[0][0])).toEqual([
+      'processingStartedAt',
+    ]);
+    expect(qb.set.mock.calls[1][0]).toMatchObject({
+      processingPagesTotal: 312,
+      processingPagesDone: 140,
+    });
+    expect(qb.where).toHaveBeenCalledWith('id = :id AND status = :status', {
+      id,
+      status: SourceStatus.PROCESSING,
+    });
+  });
+
   it('clears failure metadata in the same guarded update that makes a source ready', async () => {
     const qb = {
       update: jest.fn().mockReturnThis(),

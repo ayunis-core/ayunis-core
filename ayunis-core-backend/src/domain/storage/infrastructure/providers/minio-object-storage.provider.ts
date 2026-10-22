@@ -109,7 +109,7 @@ export class MinioObjectStorageProvider
 
     const size = Buffer.isBuffer(uploadObject.data)
       ? uploadObject.data.length
-      : undefined;
+      : uploadObject.size;
 
     const result = await this.client.putObject(
       bucketName,

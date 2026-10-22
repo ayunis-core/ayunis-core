@@ -8,7 +8,8 @@ export class UploadOrgObjectCommand extends UploadObjectCommand {
     data: Buffer | NodeJS.ReadableStream,
     options?: Record<string, string | undefined>,
     bucket?: string,
+    size?: number,
   ) {
-    super(objectName, data, options, bucket);
+    super(objectName, data, options, bucket, size);
   }
 }

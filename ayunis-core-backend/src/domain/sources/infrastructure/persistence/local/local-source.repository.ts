@@ -8,7 +8,10 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import {
+  SourceRepository,
+  type SourceProcessingProgress,
+} from 'src/domain/sources/application/ports/source.repository';
 import { SourceMapper } from './mappers/source.mapper';
 import { TextSourceDetailsRecord } from './schema/text-source-details.record';
 import {
@@ -243,11 +246,20 @@ export class LocalSourceRepository extends SourceRepository {
     return (result.affected ?? 0) > 0;
   }
 
-  async refreshProcessingHeartbeat(sourceId: UUID): Promise<boolean> {
+  async refreshProcessingHeartbeat(
+    sourceId: UUID,
+    progress?: SourceProcessingProgress,
+  ): Promise<boolean> {
     const result = await this.sourceRepository
       .createQueryBuilder()
       .update()
-      .set({ processingStartedAt: () => 'now()' })
+      .set({
+        processingStartedAt: () => 'now()',
+        ...(progress && {
+          processingPagesTotal: progress.pagesTotal,
+          processingPagesDone: progress.pagesDone,
+        }),
+      })
       .where('id = :id AND status = :status', {
         id: sourceId,
         status: SourceStatus.PROCESSING,

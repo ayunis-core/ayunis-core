@@ -5,6 +5,8 @@ export interface DocumentProcessingJobData {
   orgId: UUID;
   userId: UUID;
   minioPath: string;
+  /** Hash of the staged object; absent only on jobs enqueued before it was recorded. */
+  sha256?: string;
   fileName: string;
   fileType: string;
 }

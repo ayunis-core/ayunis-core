@@ -21,6 +21,8 @@ export abstract class TextSource extends Source {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -43,6 +45,8 @@ export class FileSource extends TextSource {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -68,6 +72,8 @@ export class UrlSource extends TextSource {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    processingPagesTotal?: number | null;
+    processingPagesDone?: number | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;

@@ -15,6 +15,14 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 const orgId = '11111111-1111-1111-1111-111111111111';
 
+const extraction = {
+  releaseOwner: jest.fn().mockResolvedValue({ released: 0, cancelled: 0 }),
+};
+
+beforeEach(() => {
+  extraction.releaseOwner.mockClear();
+});
+
 function createJob(id: string, jobOrgId = orgId, active = false) {
   return {
     id,
@@ -75,6 +83,7 @@ it('scans stable key pages and removes only retained target payloads', async () 
     queue,
     emptyQueue(),
     emptyQueue(),
+    extraction as never,
   );
   const event = new OrgDeletionRequestedEvent(orgId);
   await listener.handle(event);
@@ -102,11 +111,18 @@ it('finds an active job after other jobs change state between scan batches', asy
   );
   const event = new OrgDeletionRequestedEvent(orgId);
   await expect(
-    new OrgProcessingDeletionListener(queue, emptyQueue(), emptyQueue()).handle(
-      event,
-    ),
+    new OrgProcessingDeletionListener(
+      queue,
+      emptyQueue(),
+      emptyQueue(),
+      extraction as never,
+    ).handle(event),
   ).rejects.toMatchObject({ code: 'ORG_PROCESSING_ACTIVE' });
   expect(owned.remove).not.toHaveBeenCalled();
+  expect(extraction.releaseOwner).toHaveBeenCalledWith({ orgId });
+  expect(extraction.releaseOwner.mock.invocationCallOrder[0]).toBeLessThan(
+    owned.isActive.mock.invocationCallOrder[0],
+  );
   expect(scan).toHaveBeenCalledWith('1', expect.any(Object));
   expect(getJobs).not.toHaveBeenCalled();
 });
@@ -129,6 +145,7 @@ it('waits for each removal batch before starting the next one', async () => {
     queue,
     emptyQueue(),
     emptyQueue(),
+    extraction as never,
   ).handle(event);
 
   const cleanup = event.takeCleanupTasks()[0].run();
@@ -156,6 +173,7 @@ it('retries removal when a job became active after the deletion preflight', asyn
     queue,
     emptyQueue(),
     emptyQueue(),
+    extraction as never,
   ).handle(event);
 
   await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
@@ -178,6 +196,7 @@ it('retries removal when the job completes before its active-state check', async
     queue,
     emptyQueue(),
     emptyQueue(),
+    extraction as never,
   ).handle(event);
 
   await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
@@ -193,6 +212,7 @@ import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { DeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.use-case';
 import { DeleteOrgCommand } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.command';
+import { DocumentExtractionPort } from 'src/domain/sources/application/ports/document-extraction.port';
 
 it('rejects active processing through Nest event dispatch before deleting any rows', async () => {
   const active = createJob('target-active', orgId, true);
@@ -204,6 +224,7 @@ it('rejects active processing through Nest event dispatch before deleting any ro
     imports: [EventEmitterModule.forRoot()],
     providers: [
       OrgProcessingDeletionListener,
+      { provide: DocumentExtractionPort, useValue: extraction },
       ...[
         DOCUMENT_PROCESSING_QUEUE,
         DATA_SOURCE_PROCESSING_QUEUE,

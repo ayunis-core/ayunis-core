@@ -97,7 +97,7 @@ export class AddFileSourceToSkillUseCase {
     }
     const source = await this.startDocumentProcessingUseCase.execute(
       new StartDocumentProcessingCommand({
-        fileData: await fs.promises.readFile(file.path),
+        filePath: file.path,
         fileName: file.originalname,
         fileType: canonicalMimeType,
       }),

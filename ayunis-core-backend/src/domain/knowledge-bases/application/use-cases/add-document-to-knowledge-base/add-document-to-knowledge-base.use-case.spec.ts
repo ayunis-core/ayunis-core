@@ -63,7 +63,7 @@ function setup(scope: 'personal' | 'workspace' = 'personal') {
   const command = new AddDocumentToKnowledgeBaseCommand({
     knowledgeBaseId: knowledgeBase.id,
     file: {
-      data: Buffer.from('PDF contents'),
+      path: '/uploads/upload-1.pdf',
       name: source.name,
       type: 'application/pdf',
     },
@@ -126,7 +126,7 @@ describe(AddDocumentToKnowledgeBaseUseCase.name, () => {
       expect(txHost.withTransaction).toHaveBeenCalledTimes(1);
       expect(processing.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          fileData: command.file.data,
+          filePath: command.file.path,
           fileName: command.file.name,
           fileType: command.file.type,
         }),

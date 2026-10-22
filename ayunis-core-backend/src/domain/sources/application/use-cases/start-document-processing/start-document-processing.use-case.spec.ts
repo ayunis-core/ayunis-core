@@ -1,7 +1,12 @@
 import { Appsignal } from '@appsignal/nodejs';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { createHash } from 'crypto';
 import type { UUID } from 'crypto';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import type { Readable } from 'stream';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { StartDocumentProcessingUseCase } from './start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
@@ -42,6 +47,29 @@ describe('StartDocumentProcessingUseCase', () => {
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const pdfContent = 'fake pdf content';
+  let dir: string;
+  let pdfPath: string;
+
+  async function drainUpload(command: {
+    data: Buffer | NodeJS.ReadableStream;
+  }) {
+    let bytes = 0;
+    for await (const chunk of command.data as Readable) {
+      bytes += (chunk as Buffer).length;
+    }
+    return bytes;
+  }
+
+  beforeAll(async () => {
+    dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'start-doc-'));
+    pdfPath = path.join(dir, 'upload.pdf');
+    await fs.promises.writeFile(pdfPath, pdfContent);
+  });
+
+  afterAll(async () => {
+    await fs.promises.rm(dir, { recursive: true, force: true });
+  });
 
   function buildProcessingSource(
     overrides: Partial<{ name: string }> = {},
@@ -65,7 +93,7 @@ describe('StartDocumentProcessingUseCase', () => {
     } as unknown as jest.Mocked<MarkSourceFailedUseCase>;
 
     mockUploadObjectUseCase = {
-      execute: jest.fn(),
+      execute: jest.fn().mockImplementation(drainUpload),
     } as unknown as jest.Mocked<UploadOrgObjectUseCase>;
 
     mockDeleteObjectUseCase = {
@@ -133,7 +161,7 @@ describe('StartDocumentProcessingUseCase', () => {
 
   it('should create a PROCESSING source, upload to MinIO, and enqueue job', async () => {
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll_März_2025.pdf',
       fileType: 'application/pdf',
     });
@@ -154,22 +182,88 @@ describe('StartDocumentProcessingUseCase', () => {
     expect(uploadCall.objectName).toContain(`${orgId}/processing/`);
     expect(uploadCall.objectName).toContain('Protokoll_M_rz_2025.pdf');
 
-    // Job enqueued with correct params
+    // Job enqueued with correct params, including the hash computed while streaming
     expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceId: result.id,
         orgId,
         userId,
+        sha256: createHash('sha256').update(pdfContent).digest('hex'),
         fileName: 'Protokoll_März_2025.pdf',
         fileType: 'application/pdf',
       }),
     );
   });
 
+  it('streams the upload with its byte length instead of buffering it', async () => {
+    await useCase.execute(
+      new StartDocumentProcessingCommand({
+        filePath: pdfPath,
+        fileName: 'Protokoll.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+
+    const uploadCall = mockUploadObjectUseCase.execute.mock.calls[0][0];
+    expect(Buffer.isBuffer(uploadCall.data)).toBe(false);
+    expect(uploadCall.size).toBe(pdfContent.length);
+  });
+
+  it('reads only a PDF into memory for the page-count preflight', async () => {
+    await useCase.execute(
+      new StartDocumentProcessingCommand({
+        filePath: pdfPath,
+        fileName: 'Vorlage.docx',
+        fileType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      }),
+    );
+
+    expect(mockPreflightCheckUseCase.execute).not.toHaveBeenCalled();
+    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('stages a 200 MB upload without the API process holding the file', async () => {
+    const size = 200 * 1024 * 1024;
+    const largePath = path.join(dir, 'large.docx');
+    await fs.promises.writeFile(largePath, '');
+    await fs.promises.truncate(largePath, size);
+    const megabyte = Buffer.alloc(1024 * 1024);
+    const zerosHash = createHash('sha256');
+    for (let i = 0; i < 200; i += 1) zerosHash.update(megabyte);
+    let uploadedBytes = 0;
+    mockUploadObjectUseCase.execute.mockImplementation(async (command) => {
+      uploadedBytes = await drainUpload(command);
+      return {} as never;
+    });
+    const before = process.memoryUsage();
+
+    await useCase.execute(
+      new StartDocumentProcessingCommand({
+        filePath: largePath,
+        fileName: 'large.docx',
+        fileType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      }),
+    );
+
+    const after = process.memoryUsage();
+    expect(uploadedBytes).toBe(size);
+    expect(
+      after.heapUsed +
+        after.arrayBuffers -
+        before.heapUsed -
+        before.arrayBuffers,
+    ).toBeLessThan(64 * 1024 * 1024);
+    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sha256: zerosHash.digest('hex') }),
+    );
+  });
+
   it('reports preflight and upload timings under the new source id', async () => {
     const logger = createLoggerMock();
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Bebauungsplan.pdf',
       fileType: 'application/pdf',
     });
@@ -203,7 +297,7 @@ describe('StartDocumentProcessingUseCase', () => {
     mockUploadObjectUseCase.execute.mockRejectedValue(new UploadFailedError());
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll.pdf',
       fileType: 'application/pdf',
     });
@@ -220,6 +314,9 @@ describe('StartDocumentProcessingUseCase', () => {
 
     // MinIO file should NOT be cleaned up (upload failed, nothing to clean)
     expect(mockDeleteObjectUseCase.execute).not.toHaveBeenCalled();
+    // The rejected upload never read the stream; the file must not stay open.
+    const upload = mockUploadObjectUseCase.execute.mock.calls[0][0];
+    expect((upload.data as Readable).destroyed).toBe(true);
   });
 
   it('marks the source unavailable, not failed, when object storage is down', async () => {
@@ -231,7 +328,7 @@ describe('StartDocumentProcessingUseCase', () => {
     await expect(
       useCase.execute(
         new StartDocumentProcessingCommand({
-          fileData: Buffer.from('fake pdf content'),
+          filePath: pdfPath,
           fileName: 'Protokoll.pdf',
           fileType: 'application/pdf',
         }),
@@ -251,7 +348,7 @@ describe('StartDocumentProcessingUseCase', () => {
     );
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll.pdf',
       fileType: 'application/pdf',
     });
@@ -275,7 +372,7 @@ describe('StartDocumentProcessingUseCase', () => {
     );
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Haushaltsplan.pdf',
       fileType: 'application/pdf',
     });
@@ -293,7 +390,7 @@ describe('StartDocumentProcessingUseCase', () => {
     );
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll.pdf',
       fileType: 'application/pdf',
     });
@@ -312,7 +409,7 @@ describe('StartDocumentProcessingUseCase', () => {
     mockContextService.get.mockReturnValue(undefined);
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll.pdf',
       fileType: 'application/pdf',
     });
@@ -330,7 +427,7 @@ describe('StartDocumentProcessingUseCase', () => {
     });
 
     const command = new StartDocumentProcessingCommand({
-      fileData: Buffer.from('fake pdf content'),
+      filePath: pdfPath,
       fileName: 'Protokoll.pdf',
       fileType: 'application/pdf',
     });

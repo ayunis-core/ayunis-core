@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Queue } from 'bullmq';
 import type { Job } from 'bullmq';
+import type { UUID } from 'crypto';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import { OrgProcessingActiveError } from 'src/iam/orgs/application/orgs.errors';
+import { DocumentExtractionPort } from 'src/domain/sources/application/ports/document-extraction.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
@@ -16,21 +18,41 @@ type OrgJob = Job<{ orgId?: string }>;
 
 @Injectable()
 export class OrgProcessingDeletionListener {
+  private readonly logger = new Logger(OrgProcessingDeletionListener.name);
+
   constructor(
     @InjectQueue(DOCUMENT_PROCESSING_QUEUE) private readonly documents: Queue,
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
+    private readonly documentExtraction: DocumentExtractionPort,
   ) {}
 
   @OnEvent(OrgDeletionRequestedEvent.EVENT_NAME, { suppressErrors: false })
   async handle(event: OrgDeletionRequestedEvent): Promise<void> {
+    // Released first so an active consumer sees `cancelled` on its next poll
+    // and a retried deletion request finds no active job (contract §7.2).
+    await this.releaseExtractionJobs(event.orgId);
     if (await this.hasActiveJob(event.orgId))
       throw new OrgProcessingActiveError();
     event.deferCleanup('purge processing jobs', async () => {
       const jobs = await this.findJobs(event.orgId);
       await this.removeJobs(jobs);
     });
+  }
+
+  private async releaseExtractionJobs(orgId: UUID): Promise<void> {
+    try {
+      const outcome = await this.documentExtraction.releaseOwner({ orgId });
+      if (outcome.released > 0) {
+        this.logger.log({ orgId, ...outcome }, 'Released extraction jobs');
+      }
+    } catch (err) {
+      this.logger.warn(
+        { orgId, err: err as Error },
+        'Failed to release extraction jobs before organisation deletion',
+      );
+    }
   }
 
   private async hasActiveJob(orgId: string): Promise<boolean> {

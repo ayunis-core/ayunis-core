@@ -52,6 +52,12 @@ export abstract class SourceRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;
 
+  @Column({ type: 'int', nullable: true })
+  processingPagesTotal: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  processingPagesDone: number | null;
+
   @Index()
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;
