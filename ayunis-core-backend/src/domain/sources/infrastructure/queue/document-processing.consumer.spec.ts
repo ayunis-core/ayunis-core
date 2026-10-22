@@ -115,6 +115,14 @@ const admitOrgProcessing = {
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 
+describe('DocumentProcessingConsumer worker', () => {
+  it('runs four document jobs at once per instance', () => {
+    expect(
+      Reflect.getMetadata('bullmq:worker_metadata', DocumentProcessingConsumer),
+    ).toEqual({ concurrency: 4 });
+  });
+});
+
 describe('DocumentProcessingConsumer', () => {
   let consumer: DocumentProcessingConsumer;
 
