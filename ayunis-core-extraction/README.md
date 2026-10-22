@@ -22,6 +22,7 @@ app/
   convert/           Gotenberg LibreOffice route, streamed both ways
   office/            Office input: convert, store converted.pdf under the prefix, run the PDF path
   email/             .eml (stdlib email), .msg (olefile in a bounded child process), text files
+  metrics.py         per-job log event and the /metrics snapshot
 scripts/             corpus harness, fixture generators, OpenAPI export
 contract/            committed OpenAPI document and example payloads the backend tests validate against
 tests/               pytest, no network (fakeredis, in-memory object store, synthetic PDFs)
@@ -139,6 +140,10 @@ Type detection (`app/jobs/extractors.py`) reads the bytes first: `%PDF`, zip-bas
 **Plain text and Markdown** pass through as one page, UTF-8 with the BOM removed; a file with no text is `EMPTY_DOCUMENT`.
 
 `tests/fixtures/office`, `tests/fixtures/email` and `tests/fixtures/text` hold one fixture per format with its expected output. The Office expectations come from a real Gotenberg (`tests/test_office_gotenberg.py`, run when `GOTENBERG_URL` is set, as CI does); the email fixtures also carry `.backend.txt`, the text the backend's own `parseEml` and `extractTextFromMsg` produce, and `tests/test_email.py` states where the service differs.
+
+## Metrics
+
+Like the anonymize service, every finished job logs one structured event (`event: extraction_job`) with its outcome (`succeeded`, `failed_retryable`, `failed_final`, `cancelled`, `released`, `yielded`), failure code, detected type, page counts, OCR pages sent, per-stage durations (`downloadMs`, `conversionMs`, `analysisMs`, `ocrMs`, `totalMs`) and the process's RSS, so the log pipeline can aggregate them. `GET /metrics` serves the same counters accumulated since boot plus the active job count and memory for the deployment's health checks and dashboards (AYC-1411).
 
 ## Contract with the backend
 

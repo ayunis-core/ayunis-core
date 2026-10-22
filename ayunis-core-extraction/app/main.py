@@ -17,6 +17,7 @@ from app.jobs.runtime import Janitor, WorkerPool
 from app.jobs.service import JobService
 from app.jobs.store import JobStore
 from app.logging import configure_logging
+from app.metrics import REGISTRY, MetricsSnapshot
 from app.office.extractor import register_office_extractor
 from app.pdf.extractor import register_pdf_extractor
 from app.storage.objects import ObjectStore
@@ -109,6 +110,15 @@ def create_app(
             raise service_unavailable(f"Redis unreachable: {error}") from error
         request.app.state.objects.ready()
         return HealthResponse(status="ready", contract_version=CONTRACT_VERSION)
+
+    @app.get(
+        "/metrics",
+        response_model=MetricsSnapshot,
+        response_model_by_alias=True,
+        operation_id="metrics",
+    )
+    def metrics() -> MetricsSnapshot:
+        return REGISTRY.snapshot()
 
     @app.exception_handler(ServiceError)
     async def service_error_handler(_: Request, error: ServiceError) -> JSONResponse:

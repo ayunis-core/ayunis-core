@@ -15,6 +15,7 @@ from app.config import Settings
 from app.errors import ServiceError
 from app.jobs.service import JobService
 from app.jobs.store import JobRecord, JobStore
+from app.metrics import REGISTRY, JobMetrics, JobOutcome, classify_outcome
 from app.storage.objects import ObjectStore
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class JobContext:
         self.started_at = time.monotonic()
         self.last_renewed_at = time.monotonic()
         self.progress = EMPTY_PROGRESS
+        self.metrics = JobMetrics()
 
     def check(self) -> None:
         """Called between pages, between OCR batches and before every write (contract §7.1)."""
@@ -156,27 +158,52 @@ class WorkerPool:
         )
         with self.active_lock:
             self.active[job_id] = context
+        REGISTRY.job_started()
         started = time.monotonic()
+        lost_store = False
         try:
-            self.pipeline(context)
-            logger.info(
-                "job finished",
-                extra={"jobId": job_id, "seconds": round(time.monotonic() - started, 2)},
-            )
-        except JobInterruptedError as interrupted:
-            self._handle_interrupt(job_id, interrupted.reason)
-        except ServiceError as error:
-            self._fail(context, error)
+            try:
+                self.pipeline(context)
+                logger.info(
+                    "job finished",
+                    extra={"jobId": job_id, "seconds": round(time.monotonic() - started, 2)},
+                )
+            except JobInterruptedError as interrupted:
+                self._handle_interrupt(job_id, interrupted.reason)
+            except ServiceError as error:
+                self._fail(context, error)
+            except redis.RedisError:
+                raise
+            except Exception as error:
+                logger.exception("job crashed", extra={"jobId": job_id})
+                self._fail(context, ServiceError("INTERNAL", f"{type(error).__name__}: {error}"))
         except redis.RedisError as error:
+            lost_store = True
             logger.error("job lost its store", extra={"jobId": job_id, "reason": str(error)})
-        except Exception as error:
-            logger.exception("job crashed", extra={"jobId": job_id})
-            self._fail(context, ServiceError("INTERNAL", f"{type(error).__name__}: {error}"))
         finally:
             with self.active_lock:
                 self.active.pop(job_id, None)
-            self.store.release_lease(job_id, replica)
+            REGISTRY.job_ended()
+            context.metrics.record_stage("total", int((time.monotonic() - started) * 1000))
+            # The store's view after every handler ran is the attempt's outcome; recorded before
+            # the cleanup below so a store error there cannot drop the event.
+            REGISTRY.record(job_id, context.metrics, self._final_outcome(job_id, lost_store))
+            try:
+                self.store.release_lease(job_id, replica)
+            except redis.RedisError as error:
+                logger.warning(
+                    "lease release failed", extra={"jobId": job_id, "reason": str(error)}
+                )
             shutil.rmtree(scratch, ignore_errors=True)
+
+    def _final_outcome(self, job_id: str, lost_store: bool) -> JobOutcome:
+        if lost_store:
+            return classify_outcome(None, lost_store=True)
+        try:
+            return classify_outcome(self.store.status(job_id))
+        except redis.RedisError as error:
+            logger.error("job outcome unknown", extra={"jobId": job_id, "reason": str(error)})
+            return classify_outcome(None, lost_store=True)
 
     def _handle_interrupt(self, job_id: str, reason: str) -> None:
         if reason == "shutdown":

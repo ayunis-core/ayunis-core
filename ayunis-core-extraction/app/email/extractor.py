@@ -36,11 +36,13 @@ EXTRACTABLE_ATTACHMENT_TYPES = frozenset({"pdf", "eml", "msg"}) | OFFICE_TYPES |
 
 def extract_text_file(context: JobContext, downloaded: DownloadedInput) -> None:
     context.set_phase("extracting")
+    context.metrics.pages_total = 1
     finish_single_page(context, downloaded, decode_text(downloaded.path.read_bytes()), [])
 
 
 def extract_eml(context: JobContext, downloaded: DownloadedInput) -> None:
     context.set_phase("extracting")
+    context.metrics.pages_total = 1
     parsed = parse_eml(downloaded.path.read_bytes())
     warnings: list[str] = []
     if parsed.truncated:
@@ -51,6 +53,7 @@ def extract_eml(context: JobContext, downloaded: DownloadedInput) -> None:
 
 def extract_msg(context: JobContext, downloaded: DownloadedInput) -> None:
     context.set_phase("extracting")
+    context.metrics.pages_total = 1
     finish_single_page(context, downloaded, parse_msg(context, downloaded.path), [])
 
 

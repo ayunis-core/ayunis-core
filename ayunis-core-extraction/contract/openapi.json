@@ -322,6 +322,79 @@
         "title": "JobStatus",
         "type": "object"
       },
+      "MemorySnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "maxRssBytes": {
+            "title": "Maxrssbytes",
+            "type": "integer"
+          },
+          "rssBytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rssbytes"
+          }
+        },
+        "required": [
+          "rssBytes",
+          "maxRssBytes"
+        ],
+        "title": "MemorySnapshot",
+        "type": "object"
+      },
+      "MetricsSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "activeJobs": {
+            "title": "Activejobs",
+            "type": "integer"
+          },
+          "failuresByCode": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Failuresbycode",
+            "type": "object"
+          },
+          "jobs": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Jobs",
+            "type": "object"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemorySnapshot"
+          },
+          "ocrPagesSent": {
+            "title": "Ocrpagessent",
+            "type": "integer"
+          },
+          "stages": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StageSnapshot"
+            },
+            "title": "Stages",
+            "type": "object"
+          }
+        },
+        "required": [
+          "jobs",
+          "failuresByCode",
+          "stages",
+          "ocrPagesSent",
+          "activeJobs",
+          "memory"
+        ],
+        "title": "MetricsSnapshot",
+        "type": "object"
+      },
       "ObjectInput": {
         "additionalProperties": false,
         "properties": {
@@ -434,6 +507,25 @@
         "title": "ResultRef",
         "type": "object"
       },
+      "StageSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "totalMs": {
+            "title": "Totalms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "totalMs"
+        ],
+        "title": "StageSnapshot",
+        "type": "object"
+      },
       "StartJobRequest": {
         "additionalProperties": false,
         "properties": {
@@ -543,6 +635,24 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "metrics",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsSnapshot"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Metrics"
       }
     },
     "/ready": {

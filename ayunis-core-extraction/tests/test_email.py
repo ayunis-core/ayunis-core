@@ -182,7 +182,7 @@ def test_office_attachments_are_converted_and_pdf_attachments_ocr_when_needed(
     path = tmp_path / "office-attachments.eml"
     path.write_bytes(eml)
 
-    _, result = run_fixture(
+    context, result = run_fixture(
         store,
         objects,
         settings.model_copy(update={"gotenberg_url": "http://gotenberg:3000"}),
@@ -194,6 +194,9 @@ def test_office_attachments_are_converted_and_pdf_attachments_ocr_when_needed(
     assert "--- Attachment: vorlage.docx ---\nGedrehte Seite" in text
     assert "--- Attachment: scan.pdf ---\n[fake-ocr" in text
     assert result.document.page_count == 1
+    # The attachments' OCR counts as pages sent, not as pages of the email.
+    assert context.metrics.ocr_pages_sent == 2
+    assert (context.metrics.pages_total, context.metrics.pages_ocr) == (1, 0)
 
 
 def test_unreadable_attachments_leave_a_note_and_a_warning(

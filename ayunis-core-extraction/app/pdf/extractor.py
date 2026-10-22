@@ -105,6 +105,12 @@ class Run:
         if self.publish_progress:
             self.context.report_progress(self.progress())
 
+    def sync_ocr_metric(self) -> None:
+        """The job's OCR page count comes from its checkpoints, reused ones included; a document
+        inside an email does not count towards the job's pages."""
+        if self.publish_progress:
+            self.context.metrics.pages_ocr = self.progress().pages_ocr
+
 
 def extract_pdf(context: JobContext, downloaded: DownloadedInput) -> None:
     extract_pdf_document(context, PdfSource(downloaded.path, "pdf", downloaded.download_ms))
@@ -117,20 +123,24 @@ def extract_pdf_document(context: JobContext, source: PdfSource) -> None:
         run = Run(context, pdf, Checkpoints(context), resolve_ocr_backend(context.settings))
         run.timings.download_ms = source.download_ms
         run.timings.conversion_ms = source.conversion_ms
+        context.metrics.pages_total = run.page_count
         check_page_limit(run)
         run.checkpoints.load_existing(run.page_count)
+        run.sync_ocr_metric()
         run.report_progress()
 
         context.set_phase("analyzing")
         analysis_started = time.perf_counter()
         analyses = analyse_pages(run)
         run.timings.analysis_ms = int((time.perf_counter() - analysis_started) * 1000)
+        context.metrics.record_stage("analysis", run.timings.analysis_ms)
 
         context.set_phase("extracting")
         pending_ocr = extract_text_pages(run, analyses)
         ocr_started = time.perf_counter()
         extract_ocr_pages(run, analyses, pending_ocr)
         run.timings.ocr_ms = int((time.perf_counter() - ocr_started) * 1000)
+        context.metrics.record_stage("ocr", run.timings.ocr_ms)
 
         context.set_phase("finalizing")
         finalize(run, source)
@@ -151,9 +161,15 @@ def extract_pdf_inline(context: JobContext, path: Path) -> InlineExtraction:
             publish_progress=False,
         )
         check_page_limit(run)
+        analysis_started = time.perf_counter()
         analyses = analyse_pages(run)
+        context.metrics.record_stage(
+            "analysis", int((time.perf_counter() - analysis_started) * 1000)
+        )
         pending_ocr = extract_text_pages(run, analyses)
+        ocr_started = time.perf_counter()
         extract_ocr_pages(run, analyses, pending_ocr)
+        context.metrics.record_stage("ocr", int((time.perf_counter() - ocr_started) * 1000))
         return InlineExtraction(run.checkpoints.ordered(), sorted(set(run.warnings)))
 
 
@@ -284,6 +300,8 @@ def extract_ocr_pages(run: Run, analyses: dict[int, PageAnalysis], pending: list
         run.context.check()
         started = time.perf_counter()
         pdf_bytes = path.read_bytes()
+        # Counted before the call: a provider call that fails still spent the pages.
+        run.context.metrics.ocr_pages_sent += len(indices)
         texts = call_abortable(
             run.context, backend.call(pdf_bytes, len(indices), run.context.check)
         )
@@ -305,6 +323,7 @@ def extract_ocr_pages(run: Run, analyses: dict[int, PageAnalysis], pending: list
                 )
             )
         run.report_progress()
+        run.sync_ocr_metric()
         logger.info(
             "ocr batch done",
             extra={
