@@ -55,7 +55,7 @@ jobs:
         with:
           account: ayunis-core
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: 'ayunis-core-app ayunis-core-code-execution ayunis-core-anonymize ayunis-core-python-sandbox'
+          image-names: 'ayunis-core-app ayunis-core-code-execution ayunis-core-anonymize ayunis-core-extraction ayunis-core-python-sandbox'
           image-tags: 'sha-*'
           tag-selection: both
           cut-off: 4w

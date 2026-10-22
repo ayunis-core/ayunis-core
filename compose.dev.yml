@@ -121,6 +121,43 @@ services:
       retries: 3
       start_period: 30s
 
+  extraction:
+    build:
+      context: ./ayunis-core-extraction
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - minio
+      - redis
+    ports:
+      - '${EXTRACTION_HOST_PORT:-8003}:8000'
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER (the ./dev script generates it automatically)}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD (the ./dev script generates it automatically)}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD (the ./dev script generates it automatically)}@redis:6379/0
+      # Deterministic OCR without a provider key; export EXTRACTION_OCR_BACKEND=mistral and
+      # MISTRAL_API_KEY before ./dev up to call the real provider.
+      OCR_BACKEND: ${EXTRACTION_OCR_BACKEND:-fake}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      FAKE_OCR_DELAY_SECONDS: ${EXTRACTION_FAKE_OCR_DELAY_SECONDS:-0}
+    volumes:
+      - extraction-scratch:/scratch
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")'' || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -163,6 +200,7 @@ services:
 volumes:
   postgres-data:
   minio-data:
+  extraction-scratch:
 
 networks:
   default:

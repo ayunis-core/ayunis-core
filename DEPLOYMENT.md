@@ -14,7 +14,7 @@ This guide covers deploying Ayunis Core to production and managing configuration
 ## Initial Deployment
 
 > **Published images:** every push to main and every release tag publishes the
-> four Core images (`app`, `code-execution`, `anonymize`, `python-sandbox`) to
+> five Core images (`app`, `code-execution`, `anonymize`, `extraction`, `python-sandbox`) to
 > `ghcr.io/ayunis-core/*` (`.github/workflows/build-images.yml`). To run a
 > release from the registry instead of building on the host, use the
 > `compose.release.yml` overlay:

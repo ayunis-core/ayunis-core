@@ -1,9 +1,10 @@
 name: Build & Publish Images
 
-# Publishes the four Core images to GHCR (AYC-588):
+# Publishes the Core images to GHCR (AYC-588):
 #   ayunis-core-app             — frontend + backend (root Dockerfile)
 #   ayunis-core-code-execution  — sandbox orchestrator service
 #   ayunis-core-anonymize       — PII anonymization service
+#   ayunis-core-extraction      — document extraction service
 #   ayunis-core-python-sandbox  — image user code executes in (DOCKER_IMAGE)
 #
 # Pushes to main produce sha-<commit> + latest tags (what staging pulls,
@@ -61,6 +62,7 @@ jobs:
           - ayunis-core-app
           - ayunis-core-code-execution
           - ayunis-core-anonymize
+          - ayunis-core-extraction
           - ayunis-core-python-sandbox
         platform: [amd64, arm64]
         # Keys here attach to every combination whose `image` matches, so each
@@ -77,6 +79,10 @@ jobs:
           - image: ayunis-core-anonymize
             context: ./ayunis-core-anonymize
             dockerfile: ./ayunis-core-anonymize/Dockerfile
+            target: ''
+          - image: ayunis-core-extraction
+            context: ./ayunis-core-extraction
+            dockerfile: ./ayunis-core-extraction/Dockerfile
             target: ''
           - image: ayunis-core-python-sandbox
             context: ./ayunis-core-code-execution/sandbox
@@ -175,6 +181,7 @@ jobs:
           - ayunis-core-app
           - ayunis-core-code-execution
           - ayunis-core-anonymize
+          - ayunis-core-extraction
           - ayunis-core-python-sandbox
     steps:
       - name: Download digests

@@ -102,6 +102,7 @@ export MAILCATCHER_SMTP_HOST_PORT=$((1025 + OFFSET))
 export MAILCATCHER_WEB_HOST_PORT=$((1080 + OFFSET))
 export CODE_EXEC_HOST_PORT=$((8080 + OFFSET))
 export ANONYMIZE_HOST_PORT=$((8002 + OFFSET))
+export EXTRACTION_HOST_PORT=$((8003 + OFFSET))
 export REDIS_HOST_PORT=$((6379 + OFFSET))
 export GOTENBERG_HOST_PORT=$((3100 + OFFSET))
 
@@ -124,6 +125,7 @@ INFRA_SERVICES=(
   code-execution
   redis
   gotenberg
+  extraction
 )
 if $WITH_ANONYMISATION; then
   INFRA_SERVICES+=(anonymize)
@@ -369,6 +371,8 @@ SMTP_HOST=127.0.0.1
 SMTP_PORT=1025
 CODE_EXECUTION_SERVICE_URL=http://localhost:8080
 ANONYMIZE_SERVICE_URL=http://localhost:8002
+# The extraction service is running; opt the backend in via .env.local:
+#   EXTRACTION_SERVICE_URL=http://localhost:8003   (slot offset applied at boot)
 FRONTEND_BASEURL=http://localhost:3001
 CORS_ALLOWED_ORIGINS=http://localhost:3001,http://localhost:3000
 MARKETPLACE_SERVICE_URL=http://localhost:3002
@@ -674,6 +678,7 @@ _print_ready_summary() {
     echo "  Anonymize:    disabled"
   fi
   echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
+  echo "  Extraction:   localhost:$EXTRACTION_HOST_PORT  (backend opt-in: EXTRACTION_SERVICE_URL in .env.local)"
 }
 
 _process_belongs_to_tree() {
