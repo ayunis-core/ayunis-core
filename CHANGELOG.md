@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.60.0](https://github.com/ayunis-core/ayunis-core/compare/v2.59.0...v2.60.0) (2026-10-22)
+
+
+### Features
+
+* **anonymization:** raise the input cap to 60,000 characters (AYC-1427) ([#2063](https://github.com/ayunis-core/ayunis-core/issues/2063)) ([85bbea7](https://github.com/ayunis-core/ayunis-core/commit/85bbea740a1612f526f1bbcfed0351dfe80b4f21))
+* **workspaces:** show when a workspace was last edited (AYC-957) ([#2046](https://github.com/ayunis-core/ayunis-core/issues/2046)) ([989c36b](https://github.com/ayunis-core/ayunis-core/commit/989c36be46d4c892d1c36cfb0dc354b6a4e99340))
+
+
+### Bug Fixes
+
+* **chat:** render source citations inside markdown tables (AYC-1422) ([#2062](https://github.com/ayunis-core/ayunis-core/issues/2062)) ([e8fb76f](https://github.com/ayunis-core/ayunis-core/commit/e8fb76f558bcb6d46690f7b328611dbde246fa22))
+* **inference:** stop replaying terminal no-answer completions (AYC-1418) ([#2067](https://github.com/ayunis-core/ayunis-core/issues/2067)) ([546c61a](https://github.com/ayunis-core/ayunis-core/commit/546c61a850025d9eb74f3df3c1d2d989f84cddae))
+
+
+### Performance Improvements
+
+* **sources:** process four documents at once per instance (AYC-000) ([#2070](https://github.com/ayunis-core/ayunis-core/issues/2070)) ([26ccee2](https://github.com/ayunis-core/ayunis-core/commit/26ccee2a55b1c7757190bcd41ab25cd1592cb1d9))
+
+
+### Miscellaneous
+
+* **anonymization:** measure reuse with aggregate metrics (AYC-1434) ([#2069](https://github.com/ayunis-core/ayunis-core/issues/2069)) ([d383354](https://github.com/ayunis-core/ayunis-core/commit/d38335462c06e77893f53ad2c5493d6d48b8f64e))
+
 ## [2.59.0](https://github.com/ayunis-core/ayunis-core/compare/v2.58.2...v2.59.0) (2026-10-21)
 
 
