@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.api.models import ErrorResponse, HealthResponse, JobFailure
 from app.api.routes import router
 from app.config import CONTRACT_VERSION, Settings, get_settings
+from app.email.extractor import register_email_extractors
 from app.errors import ServiceError, invalid_request, service_unavailable
 from app.jobs.pipeline import run_job
 from app.jobs.runtime import Janitor, WorkerPool
@@ -47,6 +48,7 @@ def create_app(
     configure_logging(settings.log_level)
     register_pdf_extractor()
     register_office_extractor()
+    register_email_extractors()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

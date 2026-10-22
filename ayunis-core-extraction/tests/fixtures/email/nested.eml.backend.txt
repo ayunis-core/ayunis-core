@@ -1,0 +1,7 @@
+From: "Alice" <alice@example.com>
+To: "Bob" <bob@example.com>
+Subject: Fwd: Urspruengliche Nachricht
+Date: 2026-08-12T10:00:00.000Z
+Attachments: weiterleitung.eml
+
+Weitergeleitet, siehe unten.

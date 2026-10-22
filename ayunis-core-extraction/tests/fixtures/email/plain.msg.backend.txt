@@ -1,0 +1,9 @@
+From: Alice <alice@example.com>
+To: Bob <bob@example.com>
+Cc: carol@example.com
+Subject: Anfrage zur Anmeldung
+Date: 2026-08-12T10:00:00.000Z
+Attachments: notiz.txt, plan.pdf
+
+Hallo Bob,
+dies ist der Inhalt mit Umlauten: äöü.

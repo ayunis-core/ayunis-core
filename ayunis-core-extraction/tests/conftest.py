@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.api.models import StartJobRequest
 from app.config import Settings
+from app.email.extractor import register_email_extractors
 from app.errors import ServiceError
 from app.jobs.runtime import JobContext
 from app.jobs.service import JobService
@@ -24,6 +25,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 register_pdf_extractor()
 register_office_extractor()
+register_email_extractors()
 
 
 class InMemoryObjectStore(ObjectStore):
