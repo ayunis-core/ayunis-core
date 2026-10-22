@@ -7,7 +7,8 @@
     "skillCount_one": "{{count}} Fähigkeit",
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeBaseCount_one": "{{count}} Wissenssammlung",
-    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen"
+    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen",
+    "lastEdited": "Bearbeitet {{date}}"
   },
   "card": {
     "pin": "Zu Favoriten hinzufügen",

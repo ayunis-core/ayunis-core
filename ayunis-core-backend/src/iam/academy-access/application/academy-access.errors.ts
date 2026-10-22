@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum AcademyAccessErrorCode {
   ACADEMY_CERTIFICATE_REQUIRED = 'ACADEMY_CERTIFICATE_REQUIRED',
+  ORG_MEMBER_NOT_FOUND = 'ACADEMY_ACCESS_ORG_MEMBER_NOT_FOUND',
   UNEXPECTED_ERROR = 'ACADEMY_ACCESS_UNEXPECTED_ERROR',
 }
 
@@ -27,6 +28,17 @@ export class AcademyCertificateRequiredError extends AcademyAccessError {
       'Using Ayunis Core chat requires a valid certificate for the KI-Schulung nach EU AI Act.',
       AcademyAccessErrorCode.ACADEMY_CERTIFICATE_REQUIRED,
       403,
+      metadata,
+    );
+  }
+}
+
+export class OrgMemberNotFoundError extends AcademyAccessError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The user is not a member of your organization',
+      AcademyAccessErrorCode.ORG_MEMBER_NOT_FOUND,
+      404,
       metadata,
     );
   }

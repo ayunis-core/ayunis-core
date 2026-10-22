@@ -33,13 +33,28 @@
       "member": "Benutzer",
       "lastPassed": "Zuletzt abgeschlossen",
       "renewalDue": "Erneuerung fällig",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Aktionen"
     },
     "status": {
       "valid": "Gültig",
       "expiringSoon": "Läuft bald ab",
       "expired": "Abgelaufen",
       "notPassed": "Noch nicht abgeschlossen"
+    },
+    "export": {
+      "fileName": "Schulungsstatus_Ayunis_Core_KI-Schulung.csv",
+      "button": "Als CSV exportieren",
+      "loading": "Wird exportiert...",
+      "error": "Der Export konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "rateLimited": "Zu viele Exporte. Bitte versuchen Sie es in einigen Minuten erneut."
+    },
+    "certificate": {
+      "download": "Teilnahmebestätigung für {{name}} herunterladen",
+      "error": "Die Teilnahmebestätigung konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
+      "notCompleted": "Dieser Benutzer hat die KI-Schulung noch nicht abgeschlossen.",
+      "rateLimited": "Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.",
+      "downloading": "Teilnahmebestätigung für {{name}} wird heruntergeladen"
     }
   }
 }

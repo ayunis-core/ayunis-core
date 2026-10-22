@@ -5,13 +5,18 @@ import type {
   ImageEditParamsNonStreaming,
   ImagesResponse,
 } from 'openai/resources/images';
+import sharp from 'sharp';
 import { contentTypeToExtension } from 'src/common/util/content-type.util';
 import {
   ImageGenerationHandler,
   ImageGenerationInput,
   ImageGenerationResult,
+  type ReferenceImage,
 } from 'src/domain/models/application/ports/image-generation.handler';
 import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
+
+const MAX_REFERENCE_JPEG_PIXELS = 64_000_000;
+const MAX_NORMALIZED_JPEG_BYTES = 10 * 1024 * 1024;
 
 const VALID_SIZES = ['1024x1024', '1024x1536', '1536x1024', 'auto'] as const;
 type ImageSize = (typeof VALID_SIZES)[number];
@@ -167,14 +172,8 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     quality: ImageQuality,
     apiBackground?: 'transparent',
   ): Promise<ImagesResponse> {
-    const image = await Promise.all(
-      (input.referenceImages ?? []).map((reference, index) =>
-        toFile(
-          reference.data,
-          `reference-${index}${contentTypeToExtension(reference.contentType)}`,
-          { type: reference.contentType },
-        ),
-      ),
+    const image = await this.prepareReferenceImages(
+      input.referenceImages ?? [],
     );
     const params: ImageEditParamsNonStreaming = {
       model: input.model.name,
@@ -191,6 +190,49 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       return client.images.edit({ ...params, input_fidelity: 'high' });
     }
     return client.images.edit(params);
+  }
+
+  private async prepareReferenceImages(references: ReferenceImage[]) {
+    const files = [];
+    for (const [index, reference] of references.entries()) {
+      // iPhone HDR photos can be MPO JPEGs with an auxiliary gain-map image.
+      // Azure rejects that container; encode only its oriented primary image.
+      const data =
+        reference.contentType === 'image/jpeg'
+          ? await this.normalizeJpeg(reference.data)
+          : reference.data;
+      files.push(
+        await toFile(
+          data,
+          `reference-${index}${contentTypeToExtension(reference.contentType)}`,
+          {
+            type: reference.contentType,
+          },
+        ),
+      );
+    }
+    return files;
+  }
+
+  private async normalizeJpeg(data: Buffer): Promise<Buffer> {
+    const { width = 0, height = 0 } = await sharp(data).metadata();
+    if (width * height > MAX_REFERENCE_JPEG_PIXELS) {
+      throw new ImageGenerationFailedError(
+        'Reference photos must not exceed 64 megapixels. Please upload a smaller photo.',
+      );
+    }
+    const normalized = await sharp(data, {
+      limitInputPixels: MAX_REFERENCE_JPEG_PIXELS,
+    })
+      .rotate()
+      .jpeg({ quality: 95 })
+      .toBuffer();
+    if (normalized.length > MAX_NORMALIZED_JPEG_BYTES) {
+      throw new ImageGenerationFailedError(
+        'The normalized reference photo exceeds 10 MiB. Please upload a smaller photo.',
+      );
+    }
+    return normalized;
   }
 
   private buildResult(

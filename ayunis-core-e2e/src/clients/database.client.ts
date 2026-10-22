@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import { randomUUID } from 'node:crypto';
 import { config } from '../config';
 
 function databasePort(): number {
@@ -52,6 +53,44 @@ export async function countSubscriptionAccessAdjustments(
       [subscriptionId, reason],
     );
     return Number(result.rows[0]?.count ?? 0);
+  } finally {
+    await client.end();
+  }
+}
+
+export async function seedCertificateOverviewMembers(
+  orgId: string,
+  prefix: string,
+) {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const members = Array.from({ length: 26 }, (_, index) => ({
+      id: randomUUID(),
+      name: `${prefix} ${String(index).padStart(2, "0")}`,
+      email: `${prefix}-${index}@e2e.local`,
+    }));
+    const excluded = {
+      id: randomUUID(),
+      name: `${prefix} Completed`,
+      email: `${prefix}-completed@e2e.local`,
+    };
+    const unrelated = {
+      id: randomUUID(),
+      name: "Unrelated Member",
+      email: `unrelated-${randomUUID()}@example.com`,
+    };
+    await client.query(
+      `INSERT INTO users (id, name, email, role, "orgId", "passwordHash")
+       SELECT id::uuid, name, email, 'user', $1::uuid, NULL
+       FROM jsonb_to_recordset($2::jsonb) AS members(id text, name text, email text)`,
+      [orgId, JSON.stringify([...members, excluded, unrelated])],
+    );
+    await client.query(
+      `INSERT INTO academy_completion (id, "userId", "completedAt") VALUES ($1, $2, $3)`,
+      [randomUUID(), excluded.id, new Date("2026-01-15T12:00:00Z")],
+    );
+    return { members, excluded, unrelated };
   } finally {
     await client.end();
   }

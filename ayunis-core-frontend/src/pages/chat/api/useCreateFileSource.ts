@@ -45,7 +45,8 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     },
     onSettled: () => {
       if (!threadId) return;
-      void queryClient.invalidateQueries({
+      // Sending must stay blocked until the chat sees the new processing source.
+      return queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(threadId),
       });
     },

@@ -131,6 +131,47 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain(marker);
   });
 
+  it('should apply span text color from hex and rgb() values', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p><span style="color: #1a7f37">neu</span> ' +
+        '<span style="color: rgb(207, 34, 46)"><s>entfallen</s></span> ' +
+        '<span style="color: #c00">kurz</span></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('<w:color w:val="1A7F37"/>');
+    expect(xml).toContain('<w:color w:val="CF222E"/>');
+    expect(xml).toContain('<w:color w:val="CC0000"/>');
+  });
+
+  it('should apply span background-color as run shading', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p><span style="background-color: rgb(218, 251, 225)">neu</span></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toMatch(/<w:shd [^>]*w:fill="DAFBE1"/);
+  });
+
+  it('should render <mark> as a yellow highlight', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p>Bußgeld <mark>500 € → 1.000 €</mark></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('<w:highlight w:val="yellow"/>');
+  });
+
+  it('should ignore colors it cannot map to hex', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p><span style="color: var(--brand)">Text</span></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Text');
+    expect(xml).not.toContain('<w:color');
+  });
+
   it('should render ordered lists', async () => {
     const buffer = await convertHtmlToDocx(
       '<ol><li><p>First</p></li><li><p>Second</p></li></ol>',

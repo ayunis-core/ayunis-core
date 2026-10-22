@@ -1,4 +1,5 @@
 import { CreateInviteDtoRole } from '@/shared/api';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 
 export type CsvErrorCode =
   | 'EMPTY_FILE'
@@ -253,12 +254,5 @@ export function generateUrlsCsv(
 
 export function downloadCsv(content: string, filename: string): void {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  saveBlobAs(blob, filename);
 }

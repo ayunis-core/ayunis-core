@@ -6188,3 +6188,14 @@ limit?: number;
 offset?: number;
 };
 
+export type AcademyAccessControllerExportOrgCertificatesParams = {
+/**
+ * Search members by name or email
+ */
+search?: string;
+/**
+ * Only return members whose certificate is in this state
+ */
+status?: CertificateValidityStatus;
+};
+

@@ -15,6 +15,8 @@ export interface RateLimitOptions {
    * Optional custom message when rate limit is exceeded
    */
   message?: string;
+  /** Authenticated user quotas fall back to IP for unauthenticated requests. */
+  keyBy?: 'ip' | 'user';
 }
 
 /**

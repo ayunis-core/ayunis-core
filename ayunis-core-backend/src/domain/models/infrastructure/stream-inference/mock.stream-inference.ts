@@ -1,3 +1,4 @@
+import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import type {
   ModelProvider,
@@ -88,6 +89,8 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
         const lastUserText = lastProviderUserText(request);
         const fileResponse = mockCreateFileResponse(request, lastUserText);
         if (fileResponse) return fileResponse;
+        const imageResponse = mockImageEditResponse(request, lastUserText);
+        if (imageResponse) return imageResponse;
         const researchInput = parseResearchInput(lastUserText);
         if (researchInput) {
           const hasToolResults = request.messages.some(

@@ -49,7 +49,6 @@ import { LocalPasswordSetTokensRepository } from './infrastructure/repositories/
 import { PasswordSetTokenCleanupTask } from './infrastructure/tasks/password-set-token-cleanup.task';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
-import { FindAllUserSummariesByOrgIdUseCase } from './application/use-cases/find-all-user-summaries-by-org-id/find-all-user-summaries-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { InvitesModule } from 'src/iam/invites/invites.module';
@@ -159,7 +158,6 @@ import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/applica
     ValidatePasswordResetTokenUseCase,
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
-    FindAllUserSummariesByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
     SuperAdminTriggerPasswordResetUseCase,
     SendSetInitialPasswordEmailUseCase,
@@ -200,7 +198,6 @@ import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/applica
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
-    FindAllUserSummariesByOrgIdUseCase,
     GetOrgAdminsUseCase,
     AuthorizeUserLoginUseCase,
     VerifyUserEmailUseCase,

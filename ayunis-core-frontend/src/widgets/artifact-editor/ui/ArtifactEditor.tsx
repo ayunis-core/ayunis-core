@@ -11,6 +11,7 @@ import {
   BLOCK_STYLE_TYPES,
   ParagraphSpacing,
 } from '@/widgets/artifact-editor/lib/paragraph-spacing';
+import { TEXT_COLOR_EXTENSIONS } from '@/widgets/artifact-editor/lib/text-color';
 import { Save } from 'lucide-react';
 import {
   forwardRef,
@@ -80,6 +81,7 @@ export const ArtifactEditor = forwardRef<
       Placeholder.configure({ placeholder: t('editor.placeholder') }),
       TableKit.configure({ table: { resizable: false } }),
       ParagraphSpacing,
+      ...TEXT_COLOR_EXTENSIONS,
     ],
     content: currentVersion?.content ?? '',
     editorProps: {
