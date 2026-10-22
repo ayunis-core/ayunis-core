@@ -4085,7 +4085,6 @@ export interface WorkspaceSkillResponseDto {
   name: string;
   shortDescription: string;
   instructions: string;
-  knowledgeBaseIds: string[];
   workspaceId: string;
   isActive: boolean;
   isPinned: boolean;

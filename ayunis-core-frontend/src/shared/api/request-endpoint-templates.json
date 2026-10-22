@@ -137,8 +137,6 @@
   "/skills/{id}/sources",
   "/skills/{id}/sources/file",
   "/skills/{id}/sources/{sourceId}",
-  "/skills/{skillId}/knowledge-bases",
-  "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}",
   "/skills/{skillId}/mcp-integrations",
   "/skills/{skillId}/mcp-integrations/{integrationId}",
   "/subscriptions/active",

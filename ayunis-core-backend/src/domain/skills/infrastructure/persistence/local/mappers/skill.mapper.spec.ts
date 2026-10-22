@@ -48,7 +48,6 @@ describe(SkillMapper.name, () => {
     record.updatedAt = skill.updatedAt;
     record.sources = [];
     record.mcpIntegrations = [];
-    record.knowledgeBases = [];
 
     expect(mapper.toWorkspace(record)).toBeInstanceOf(WorkspaceSkill);
     expect(record.userId).toBeNull();

@@ -17,8 +17,6 @@ import { TransferSkillOwnershipUseCase } from './application/use-cases/transfer-
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
 import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
-import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
@@ -39,9 +37,6 @@ import { ListSkillSourcesUseCase } from './application/use-cases/list-skill-sour
 import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
 import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
-import { AssignKnowledgeBaseToSkillUseCase } from './application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.use-case';
-import { UnassignKnowledgeBaseFromSkillUseCase } from './application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.use-case';
-import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
@@ -86,10 +81,8 @@ import { LocalWorkspaceSkillLinkRepository } from './infrastructure/persistence/
 import { SkillMandatoryController } from './presenters/http/skill-mandatory.controller';
 import { SetSkillMandatoryUseCase } from './application/use-cases/set-skill-mandatory/set-skill-mandatory.use-case';
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
-import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
-import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
 @Module({
   imports: [
@@ -97,12 +90,10 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
       SkillRecord,
       SkillActivationRecord,
       McpIntegrationRecord,
-      KnowledgeBaseRecord,
     ]),
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,
-    forwardRef(() => KnowledgeBasesModule),
     MarketplaceModule,
     UsersModule,
     forwardRef(() => ThreadsModule),
@@ -166,9 +157,6 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     AssignMcpIntegrationToSkillUseCase,
     UnassignMcpIntegrationFromSkillUseCase,
     ListSkillMcpIntegrationsUseCase,
-    AssignKnowledgeBaseToSkillUseCase,
-    UnassignKnowledgeBaseFromSkillUseCase,
-    ListSkillKnowledgeBasesUseCase,
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
     CreateSkillWithUniqueNameUseCase,
@@ -184,7 +172,6 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     // Presenters
     SkillDtoMapper,
     McpIntegrationDtoMapper,
-    KnowledgeBaseDtoMapper,
   ],
   controllers: [
     SkillMandatoryController,
@@ -192,7 +179,6 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillsController,
     SkillSourcesController,
     SkillMcpIntegrationsController,
-    SkillKnowledgeBasesController,
   ],
   exports: [
     TransferSkillOwnershipUseCase,

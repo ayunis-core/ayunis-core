@@ -9,7 +9,7 @@ import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
 import { SkillMapper } from './mappers/skill.mapper';
 import { updateSkill } from './local-skill-update.repository-helper';
 
-type RelationName = 'sources' | 'knowledgeBases' | 'mcpIntegrations';
+type RelationName = 'sources' | 'mcpIntegrations';
 function relationWriter(
   record: Record<RelationName, { id: UUID }[]>,
   name: RelationName,
@@ -37,7 +37,6 @@ describe('skill update deltas', () => {
     const record = {
       ...mapper.toRecord(current),
       sources: current.sourceIds.map((id) => ({ id })),
-      knowledgeBases: current.knowledgeBaseIds.map((id) => ({ id })),
       mcpIntegrations: current.mcpIntegrationIds.map((id) => ({ id })),
     };
     const repository = {
@@ -53,10 +52,7 @@ describe('skill update deltas', () => {
       transaction: async (work: (tx: unknown) => unknown) => work(manager),
       getRepository: () => repository,
       createQueryBuilder: () => ({
-        relation: (
-          _entity: unknown,
-          name: 'sources' | 'knowledgeBases' | 'mcpIntegrations',
-        ) => ({
+        relation: (_entity: unknown, name: RelationName) => ({
           of: () => relationWriter(record, name),
         }),
       }),
@@ -64,10 +60,10 @@ describe('skill update deltas', () => {
     return { manager: manager as unknown as EntityManager, repository };
   }
 
-  it('keeps a concurrently added knowledge base while renaming', async () => {
-    const knowledgeBaseId = randomUUID();
+  it('keeps a concurrently added MCP integration while renaming', async () => {
+    const mcpIntegrationId = randomUUID();
     const { manager } = setup(
-      original.withUpdates({ knowledgeBaseIds: [knowledgeBaseId] }),
+      original.withUpdates({ mcpIntegrationIds: [mcpIntegrationId] }),
     );
     const result = await updateSkill(
       manager,
@@ -76,7 +72,7 @@ describe('skill update deltas', () => {
       original,
     );
     expect(result.name).toBe('Updated permit review');
-    expect(result.knowledgeBaseIds).toEqual([knowledgeBaseId]);
+    expect(result.mcpIntegrationIds).toEqual([mcpIntegrationId]);
   });
 
   it('preserves concurrent scalar edits and unions independently added relationships', async () => {
@@ -99,7 +95,9 @@ describe('skill update deltas', () => {
   });
 
   it('does not resurrect a concurrently removed relationship during a rename', async () => {
-    const previous = original.withUpdates({ knowledgeBaseIds: [randomUUID()] });
+    const previous = original.withUpdates({
+      mcpIntegrationIds: [randomUUID()],
+    });
     const { manager } = setup(original);
     const result = await updateSkill(
       manager,
@@ -107,7 +105,7 @@ describe('skill update deltas', () => {
       previous.withUpdates({ name: 'Renamed' }),
       previous,
     );
-    expect(result.knowledgeBaseIds).toEqual([]);
+    expect(result.mcpIntegrationIds).toEqual([]);
   });
 
   it('checks capacity against the locked current source set', async () => {

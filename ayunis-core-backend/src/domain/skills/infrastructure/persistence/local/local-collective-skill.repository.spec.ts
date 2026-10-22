@@ -47,13 +47,13 @@ describe('LocalCollectiveSkillRepository.transferFromPersonal', () => {
     );
   });
 
-  it('moves the skill and drops its knowledge base and integration links', async () => {
+  it('moves the skill and drops its integration links', async () => {
     update.mockResolvedValue({ affected: 1 });
 
     await expect(repository.transferFromPersonal(skill, owner)).resolves.toBe(
       true,
     );
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('reports a skill that no longer belongs to the requester', async () => {

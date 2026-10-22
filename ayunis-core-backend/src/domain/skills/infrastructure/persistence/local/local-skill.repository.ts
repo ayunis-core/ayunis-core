@@ -80,7 +80,6 @@ export class LocalSkillRepository implements SkillRepository {
     for (const [relation, ids] of [
       ['sources', skill.sourceIds],
       ['mcpIntegrations', skill.mcpIntegrationIds],
-      ['knowledgeBases', skill.knowledgeBaseIds],
     ] as const) {
       if (ids.length > 0) {
         await repository

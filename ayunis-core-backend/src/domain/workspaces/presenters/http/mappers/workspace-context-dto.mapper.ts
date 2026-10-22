@@ -31,7 +31,6 @@ export class WorkspaceContextDtoMapper {
     dto.name = skill.name;
     dto.shortDescription = skill.shortDescription;
     dto.instructions = skill.instructions;
-    dto.knowledgeBaseIds = skill.knowledgeBaseIds;
     dto.workspaceId = skill.workspaceId!;
     dto.isActive = context.isActive;
     dto.isPinned = context.isPinned;
