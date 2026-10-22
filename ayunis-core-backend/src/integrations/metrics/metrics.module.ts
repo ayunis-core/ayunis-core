@@ -1,3 +1,5 @@
+import { anonymizationStudyMetricProviders } from './anonymization-study.metrics';
+import { AnonymizationStudyMetricsListener } from './listeners/anonymization-study-metrics.listener';
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import {
   PrometheusModule,
@@ -144,6 +146,7 @@ const marketplaceInstallsCounter = makeCounterProvider({
 });
 
 const metricProviders = [
+  ...anonymizationStudyMetricProviders,
   tokensCounter,
   runsCounter,
   runDurationHistogram,
@@ -167,7 +170,11 @@ const metricProviders = [
       controller: MetricsController,
     }),
   ],
-  providers: [...metricProviders, PrometheusMetricsListener],
+  providers: [
+    ...metricProviders,
+    PrometheusMetricsListener,
+    AnonymizationStudyMetricsListener,
+  ],
 })
 export class MetricsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

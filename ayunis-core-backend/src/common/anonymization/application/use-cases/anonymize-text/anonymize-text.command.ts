@@ -1,3 +1,4 @@
+import type { DetectionMeasurementContext } from 'src/common/anonymization/domain/detection-measurement-context';
 import type { PiiMask } from 'src/common/anonymization/domain/pii-mask';
 import type { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 
@@ -12,5 +13,6 @@ export class AnonymizeTextCommand {
      * legacy `[ENTITY_TYPE]` placeholders.
      */
     public readonly existingMasks?: PiiMask[],
+    public readonly measurementContext?: DetectionMeasurementContext,
   ) {}
 }

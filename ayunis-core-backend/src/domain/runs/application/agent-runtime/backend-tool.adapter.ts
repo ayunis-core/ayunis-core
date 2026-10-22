@@ -134,6 +134,7 @@ export class BackendToolAdapter {
           result,
           context.orgId,
           context.threadId,
+          { source: 'tool_result' },
         ),
       )
       .catch((error: unknown) => {

@@ -34,6 +34,7 @@ export class AnonymizeTextUseCase {
     const detections = await this.anonymizationPort.detect(
       command.text,
       command.entities,
+      command.measurementContext,
     );
     const remaining = this.filterDetections(command, detections);
 

@@ -1,6 +1,7 @@
-import type { PiiCategory } from '../../domain/pii-category.enum';
-import type { PiiDetection } from '../../domain/pii-detection';
-import type { PiiMask } from '../../domain/pii-mask';
+import type { DetectionMeasurementContext } from 'src/common/anonymization/domain/detection-measurement-context';
+import type { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import type { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
+import type { PiiMask } from 'src/common/anonymization/domain/pii-mask';
 
 export interface AnonymizationReplacement {
   entityType: string;
@@ -26,5 +27,9 @@ export interface AnonymizationResult {
  * layer.
  */
 export abstract class AnonymizationPort {
-  abstract detect(text: string, entities?: string[]): Promise<PiiDetection[]>;
+  abstract detect(
+    text: string,
+    entities?: string[],
+    context?: DetectionMeasurementContext,
+  ): Promise<PiiDetection[]>;
 }

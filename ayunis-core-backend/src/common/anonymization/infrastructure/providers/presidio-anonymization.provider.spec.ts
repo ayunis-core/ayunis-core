@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AnonymizationMeasurementService } from './anonymization-measurement.service';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { PresidioAnonymizationProvider } from './presidio-anonymization.provider';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
@@ -20,7 +22,16 @@ describe('PresidioAnonymizationProvider', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    provider = new PresidioAnonymizationProvider();
+    provider = new PresidioAnonymizationProvider(
+      new AnonymizationMeasurementService(
+        {
+          key: '',
+          detectorVersion: '',
+          expiresAt: '',
+        },
+        new EventEmitter2(),
+      ),
+    );
     mockAnalyzeTextAnalyzePost.mockReset();
   });
 
