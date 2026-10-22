@@ -89,7 +89,7 @@ export class SubscriptionResponseDto {
     format: 'date-time',
     nullable: true,
   })
-  accessEndsAt: Date | null;
+  endsAt: Date | null;
 
   @ApiProperty({
     description: 'Organization ID associated with the subscription',
@@ -147,10 +147,14 @@ export class SubscriptionResponseDto {
   availableSeats?: number | null;
 
   @ApiProperty({
-    description: 'Date of the next renewal',
+    description:
+      'Next renewal before the access end, or null when no renewal remains',
+    type: String,
+    format: 'date-time',
+    nullable: true,
     example: '2024-01-01T10:00:00Z',
   })
-  nextRenewalDate: Date;
+  nextRenewalDate: Date | null;
 
   @ApiProperty({
     description: 'Billing information',

@@ -153,7 +153,7 @@ describe('CancelSubscriptionUseCase', () => {
       expect.objectContaining({
         id: scheduled.id,
         cancelledAt: new Date('2026-06-15T12:00:00.000Z'),
-        accessEndsAt: new Date('2026-12-01T00:00:00.000Z'),
+        endsAt: new Date('2026-12-01T00:00:00.000Z'),
       }),
     );
   });
@@ -167,14 +167,14 @@ describe('CancelSubscriptionUseCase', () => {
     expect(subscriptionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: subscription.id,
-        accessEndsAt: new Date('2026-06-15T12:00:00.000Z'),
+        endsAt: new Date('2026-06-15T12:00:00.000Z'),
       }),
     );
   });
 
   it('refuses to mutate a subscription whose access already ended', async () => {
     const subscription = createSeatBased();
-    subscription.accessEndsAt = new Date('2026-05-01T00:00:00.000Z');
+    subscription.endsAt = new Date('2026-05-01T00:00:00.000Z');
     subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await expect(useCase.execute(command)).rejects.toThrow(
@@ -192,7 +192,7 @@ describe('CancelSubscriptionUseCase', () => {
     expect(subscriptionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: subscription.id,
-        accessEndsAt: new Date('2027-01-01T00:00:00.000Z'),
+        endsAt: new Date('2027-01-01T00:00:00.000Z'),
       }),
     );
   });
@@ -244,7 +244,7 @@ describe('CancelSubscriptionUseCase', () => {
     const ended = createUsageBased({
       createdAt: new Date('2026-05-01T00:00:00.000Z'),
     });
-    ended.accessEndsAt = new Date('2026-06-01T00:00:00.000Z');
+    ended.endsAt = new Date('2026-06-01T00:00:00.000Z');
     subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
 
     await useCase.execute(command);

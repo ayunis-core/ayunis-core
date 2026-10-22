@@ -834,7 +834,7 @@ export interface SubscriptionResponseDto {
      * Exclusive date when this subscription stops controlling product access
      * @nullable
      */
-  accessEndsAt: string | null;
+  endsAt: string | null;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -854,8 +854,11 @@ export interface SubscriptionResponseDto {
      * @nullable
      */
   availableSeats?: number | null;
-  /** Date of the next renewal */
-  nextRenewalDate: string;
+  /**
+     * Next renewal before the access end, or null when no renewal remains
+     * @nullable
+     */
+  nextRenewalDate: string | null;
   /** Billing information */
   billingInfo: SubscriptionBillingInfoResponseDto;
 }
@@ -907,6 +910,8 @@ export interface CreateSubscriptionRequestDto {
   subText?: string;
   /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
   startsAt?: string;
+  /** Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended. */
+  endsAt?: string;
 }
 
 /**
@@ -1045,7 +1050,7 @@ export interface OrgSubscriptionHistoryItemDto {
      * Exclusive date when this subscription stops controlling product access
      * @nullable
      */
-  accessEndsAt: string | null;
+  endsAt: string | null;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -1065,8 +1070,11 @@ export interface OrgSubscriptionHistoryItemDto {
      * @nullable
      */
   availableSeats?: number | null;
-  /** Date of the next renewal */
-  nextRenewalDate: string;
+  /**
+     * Next renewal before the access end, or null when no renewal remains
+     * @nullable
+     */
+  nextRenewalDate: string | null;
   /** Billing information */
   billingInfo: SubscriptionBillingInfoResponseDto;
   /** Lifecycle status of this subscription record */
@@ -1087,7 +1095,7 @@ export interface UpdateSeatsDto { [key: string]: unknown }
 export interface SubscriptionAccessEndAdjustmentDto {
   subscriptionId: string;
   /** Exclusive end of product access for this subscription */
-  accessEndsAt: string;
+  endsAt: string;
 }
 
 export interface ResolveSubscriptionOverlapDto {

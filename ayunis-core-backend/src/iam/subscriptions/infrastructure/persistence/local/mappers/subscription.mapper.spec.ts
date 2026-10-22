@@ -138,9 +138,45 @@ describe('SubscriptionMapper', () => {
     });
   });
 
+  it.each(['seat', 'usage'])(
+    'persists a fixed end independently of the shortened cancellation end (%s)',
+    (type) => {
+      const billingInfo = new SubscriptionBillingInfo({
+        companyName: 'Musterstadt',
+        street: 'Hauptstrasse',
+        houseNumber: '1',
+        postalCode: '12345',
+        city: 'Musterstadt',
+        country: 'DE',
+      });
+      const subscription =
+        type === 'seat'
+          ? new SeatBasedSubscription({
+              orgId: randomUUID(),
+              noOfSeats: 5,
+              pricePerSeat: 10,
+              renewalCycle: RenewalCycle.MONTHLY,
+              renewalCycleAnchor: new Date(),
+              billingInfo,
+            })
+          : new UsageBasedSubscription({
+              orgId: randomUUID(),
+              monthlyCredits: 1000,
+              billingInfo,
+            });
+      const originalEndsAt = new Date('2027-02-01T00:00:00Z');
+      const endsAt = new Date('2027-01-01T00:00:00Z');
+      Object.assign(subscription, { originalEndsAt, endsAt });
+      expect(mapper.toDomain(mapper.toRecord(subscription))).toMatchObject({
+        originalEndsAt,
+        endsAt,
+      });
+    },
+  );
+
   describe('round-trip', () => {
     it('should preserve all seat-based fields through domain → record → domain', () => {
-      const accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
+      const endsAt = new Date('2026-08-01T00:00:00.000Z');
       const original = new SeatBasedSubscription({
         orgId: randomUUID(),
         noOfSeats: 25,
@@ -148,7 +184,7 @@ describe('SubscriptionMapper', () => {
         renewalCycle: RenewalCycle.YEARLY,
         renewalCycleAnchor: new Date('2025-06-15'),
         startsAt: new Date('2025-06-15'),
-        accessEndsAt,
+        endsAt,
         billingInfo: new SubscriptionBillingInfo({
           companyName: 'Stadt Beispielburg',
           street: 'Rathausplatz',
@@ -169,7 +205,7 @@ describe('SubscriptionMapper', () => {
       expect(restored.renewalCycle).toBe(original.renewalCycle);
       expect(restored.renewalCycleAnchor).toEqual(original.renewalCycleAnchor);
       expect(restored.startsAt).toEqual(original.startsAt);
-      expect(restored.accessEndsAt).toEqual(accessEndsAt);
+      expect(restored.endsAt).toEqual(endsAt);
     });
 
     it('should preserve all usage-based fields through domain → record → domain', () => {

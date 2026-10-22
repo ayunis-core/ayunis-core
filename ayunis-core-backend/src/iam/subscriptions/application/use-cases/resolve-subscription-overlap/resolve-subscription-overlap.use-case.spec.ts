@@ -41,7 +41,7 @@ function overlappingSubscriptions() {
     orgId: ORG_ID,
     startsAt: new Date('2025-03-16T00:00:00.000Z'),
     cancelledAt: new Date('2026-07-29T00:00:00.000Z'),
-    accessEndsAt: new Date('2027-03-16T00:00:00.000Z'),
+    endsAt: new Date('2027-03-16T00:00:00.000Z'),
     renewalCycleAnchor: new Date('2025-03-16T00:00:00.000Z'),
     renewalCycle: RenewalCycle.YEARLY,
     noOfSeats: 100,
@@ -98,14 +98,14 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
   it('ends every conflicting subscription and records the correction atomically', async () => {
     const { seat, usage } = overlappingSubscriptions();
     repository.findByOrgId.mockResolvedValue([seat, usage]);
-    const accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
+    const endsAt = new Date('2026-08-01T00:00:00.000Z');
 
     await useCase.execute(
       new ResolveSubscriptionOverlapCommand({
         orgId: ORG_ID,
         requestingUserId: ACTOR_ID,
         authoritativeSubscriptionId: usage.id,
-        adjustments: [{ subscriptionId: seat.id, accessEndsAt }],
+        adjustments: [{ subscriptionId: seat.id, endsAt }],
         reason: 'AYC-1158: usage contract replaced seat contract',
       }),
     );
@@ -122,9 +122,9 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
         },
       ],
     });
-    expect(seat.accessEndsAt).toEqual(accessEndsAt);
+    expect(seat.endsAt).toEqual(endsAt);
     expect(seat.cancelledAt).toEqual(new Date('2026-07-29T00:00:00.000Z'));
-    expect(usage.accessEndsAt).toBeNull();
+    expect(usage.endsAt).toBeNull();
   });
 
   it('stamps cancellation on an ended subscription that was never cancelled', async () => {
@@ -136,14 +136,12 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
         orgId: ORG_ID,
         requestingUserId: ACTOR_ID,
         authoritativeSubscriptionId: seat.id,
-        adjustments: [
-          { subscriptionId: usage.id, accessEndsAt: usage.startsAt },
-        ],
+        adjustments: [{ subscriptionId: usage.id, endsAt: usage.startsAt }],
         reason: 'Usage contract was recorded by mistake',
       }),
     );
 
-    expect(usage.accessEndsAt).toEqual(usage.startsAt);
+    expect(usage.endsAt).toEqual(usage.startsAt);
     expect(usage.cancelledAt).toEqual(new Date('2026-10-02T12:00:00.000Z'));
     expect(seat.cancelledAt).toEqual(new Date('2026-07-29T00:00:00.000Z'));
   });
@@ -167,7 +165,7 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
           adjustments: [
             {
               subscriptionId: seat.id,
-              accessEndsAt: new Date('2026-08-01T00:00:00.000Z'),
+              endsAt: new Date('2026-08-01T00:00:00.000Z'),
             },
           ],
           reason: 'Correct one historical contract',
@@ -190,7 +188,7 @@ describe('ResolveSubscriptionOverlapUseCase', () => {
           adjustments: [
             {
               subscriptionId: seat.id,
-              accessEndsAt: new Date('2026-12-01T00:00:00.000Z'),
+              endsAt: new Date('2026-12-01T00:00:00.000Z'),
             },
           ],
           reason: 'Invalid future correction',

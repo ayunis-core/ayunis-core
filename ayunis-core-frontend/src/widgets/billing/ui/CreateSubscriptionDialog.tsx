@@ -26,33 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ayunis/ui/components/popover';
-import { Calendar } from '@ayunis/ui/components/calendar';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import { CalendarIcon, XIcon } from 'lucide-react';
-import { cn } from '@ayunis/ui/lib/cn';
 
-export interface CreateSubscriptionFormData {
-  companyName: string;
-  subText?: string;
-  street: string;
-  houseNumber: string;
-  postalCode: string;
-  city: string;
-  country: string;
-  vatNumber?: string;
-  type: 'SEAT_BASED' | 'USAGE_BASED';
-  noOfSeats?: number;
-  monthlyCredits?: number;
-  startsAt?: string;
-}
+import type { CreateSubscriptionFormData } from '@/widgets/billing/model/types';
+import SubscriptionDateField from './SubscriptionDateField';
 
 interface CreateSubscriptionDialogProps {
   trigger: ReactNode;
@@ -98,6 +78,7 @@ export default function CreateSubscriptionDialog({
               className="space-y-6"
             >
               <SubscriptionFormFields form={form} t={t} />
+              <SubscriptionDateField form={form} t={t} name="endsAt" />
               {priceSection}
               <DialogFooter>
                 <DialogClose asChild>
@@ -211,7 +192,7 @@ export function SubscriptionFormFields({
           )}
         />
       )}
-      <StartDateField form={form} t={t} />
+      <SubscriptionDateField form={form} t={t} name="startsAt" />
     </>
   );
 }
@@ -358,78 +339,5 @@ function BillingInfoFields({
         )}
       />
     </>
-  );
-}
-
-function StartDateField({
-  form,
-  t,
-}: Readonly<{
-  form: UseFormReturn<CreateSubscriptionFormData>;
-  t: (key: string) => string;
-}>) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <FormField
-      control={form.control}
-      name="startsAt"
-      render={({ field }) => {
-        const selectedDate = field.value ? new Date(field.value) : undefined;
-        return (
-          <FormItem>
-            <FormLabel>{t('subscriptionDialog.startsAtLabel')}</FormLabel>
-            <div className="flex items-center gap-2">
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start font-normal',
-                        !field.value && 'text-muted-foreground',
-                      )}
-                    >
-                      <CalendarIcon />
-                      {selectedDate
-                        ? selectedDate.toLocaleDateString()
-                        : t('subscriptionDialog.startsAtPlaceholder')}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      field.onChange(date?.toISOString());
-                      setOpen(false);
-                    }}
-                    disabled={(date) => date < new Date()}
-                    captionLayout="dropdown"
-                    endMonth={new Date(new Date().getFullYear() + 1, 11)}
-                  />
-                </PopoverContent>
-              </Popover>
-              {field.value && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => field.onChange(undefined)}
-                >
-                  <XIcon className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            <FormDescription>
-              {t('subscriptionDialog.startsAtDescription')}
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        );
-      }}
-    />
   );
 }

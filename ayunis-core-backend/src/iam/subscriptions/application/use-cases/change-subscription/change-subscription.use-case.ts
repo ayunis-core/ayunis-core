@@ -100,7 +100,7 @@ export class ChangeSubscriptionUseCase {
     ) {
       current.cancelledAt = new Date();
     }
-    current.accessEndsAt = oldAccessEndsAt;
+    current.endsAt = oldAccessEndsAt;
     this.emitEvents(command, current, created);
     return created;
   }
@@ -124,7 +124,7 @@ export class ChangeSubscriptionUseCase {
         accessPeriodsOverlap(
           {
             startsAt: subscription.startsAt,
-            accessEndsAt: getEffectiveAccessEnd(subscription),
+            endsAt: getEffectiveAccessEnd(subscription),
           },
           candidate,
         ),

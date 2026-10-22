@@ -63,7 +63,7 @@ export class SuperAdminSubscriptionOverlapController {
         authoritativeSubscriptionId: dto.authoritativeSubscriptionId,
         adjustments: dto.adjustments.map((adjustment) => ({
           subscriptionId: adjustment.subscriptionId,
-          accessEndsAt: new Date(adjustment.accessEndsAt),
+          endsAt: new Date(adjustment.endsAt),
         })),
         reason: dto.reason,
       }),

@@ -220,7 +220,7 @@ describe('GetLatestSubscriptionUseCase', () => {
       startsAt: new Date('2025-05-01'),
     });
     ended.createdAt = new Date('2025-05-01T00:00:00.000Z');
-    ended.accessEndsAt = new Date('2025-06-01T00:00:00.000Z');
+    ended.endsAt = new Date('2025-06-01T00:00:00.000Z');
     subscriptionRepository.findByOrgId.mockResolvedValue([ended, serving]);
 
     const result = await useCase.execute(createQuery());

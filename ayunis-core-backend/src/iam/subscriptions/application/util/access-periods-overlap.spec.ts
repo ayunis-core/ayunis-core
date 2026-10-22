@@ -1,8 +1,8 @@
 import { accessPeriodsOverlap } from './access-periods-overlap';
 
-const open = (startsAt: string, accessEndsAt: string | null = null) => ({
+const open = (startsAt: string, endsAt: string | null = null) => ({
   startsAt: new Date(startsAt),
-  accessEndsAt: accessEndsAt ? new Date(accessEndsAt) : null,
+  endsAt: endsAt ? new Date(endsAt) : null,
 });
 
 describe('accessPeriodsOverlap', () => {

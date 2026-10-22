@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
+  InvalidSubscriptionAccessEndError,
   SubscriptionAlreadyCancelledError,
   SubscriptionAccessOverlapError,
   UnexpectedSubscriptionError,
@@ -27,6 +28,7 @@ export class UpdateStartDateUseCase {
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   @Transactional()
   async execute(command: UpdateStartDateCommand): Promise<Subscription> {
     this.logger.log(
@@ -38,51 +40,39 @@ export class UpdateStartDateUseCase {
       'Updating subscription start date',
     );
 
-    try {
-      validateSubscriptionAccess(
-        this.contextService,
-        command.requestingUserId,
-        command.orgId,
-      );
+    validateSubscriptionAccess(
+      this.contextService,
+      command.requestingUserId,
+      command.orgId,
+    );
 
-      await this.acquireAllocationLock.execute(command.orgId);
-      const subscription = await findManageableSubscription(
-        this.subscriptionRepository,
-        command.orgId,
-      );
+    await this.acquireAllocationLock.execute(command.orgId);
+    const subscription = await findManageableSubscription(
+      this.subscriptionRepository,
+      command.orgId,
+    );
 
-      if (subscription.cancelledAt) {
-        throw new SubscriptionAlreadyCancelledError(command.orgId);
-      }
-      await this.ensureNoAccessOverlap(subscription, command.startsAt);
-
-      return await this.subscriptionRepository.updateStartDate({
-        subscriptionId: subscription.id,
-        startsAt: command.startsAt,
-        renewalCycleAnchor: isSeatBased(subscription)
-          ? command.startsAt
-          : undefined,
-      });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error(
-        { err: error as Error, orgId: command.orgId },
-        'Error updating subscription start date',
-      );
-      throw new UnexpectedSubscriptionError(
-        'Unexpected error during subscription start date update',
-        { error },
-      );
+    if (subscription.cancelledAt) {
+      throw new SubscriptionAlreadyCancelledError(command.orgId);
     }
+    await this.ensureNoAccessOverlap(subscription, command.startsAt);
+
+    return await this.subscriptionRepository.updateStartDate({
+      subscriptionId: subscription.id,
+      startsAt: command.startsAt,
+      renewalCycleAnchor: isSeatBased(subscription)
+        ? command.startsAt
+        : undefined,
+    });
   }
 
   private async ensureNoAccessOverlap(
     candidate: Subscription,
     startsAt: Date,
   ): Promise<void> {
+    if (candidate.endsAt && startsAt >= candidate.endsAt) {
+      throw new InvalidSubscriptionAccessEndError();
+    }
     const subscriptions = await this.subscriptionRepository.findByOrgId(
       candidate.orgId,
     );
@@ -90,10 +80,10 @@ export class UpdateStartDateUseCase {
       .filter(({ id }) => id !== candidate.id)
       .some((subscription) =>
         accessPeriodsOverlap(
-          { startsAt, accessEndsAt: getEffectiveAccessEnd(candidate) },
+          { startsAt, endsAt: getEffectiveAccessEnd(candidate) },
           {
             startsAt: subscription.startsAt,
-            accessEndsAt: getEffectiveAccessEnd(subscription),
+            endsAt: getEffectiveAccessEnd(subscription),
           },
         ),
       );

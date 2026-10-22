@@ -89,9 +89,9 @@ export class ResolveSubscriptionOverlapUseCase {
     const correctedAt = new Date();
     return command.adjustments.map((adjustment) => {
       const subscription = byId.get(adjustment.subscriptionId)!;
-      this.assertValidAccessEnd(subscription, adjustment.accessEndsAt);
-      const previousAccessEndsAt = subscription.accessEndsAt;
-      subscription.accessEndsAt = adjustment.accessEndsAt;
+      this.assertValidAccessEnd(subscription, adjustment.endsAt);
+      const previousAccessEndsAt = subscription.endsAt;
+      subscription.endsAt = adjustment.endsAt;
       // An ended subscription no longer renews. Readers that still key on
       // cancelledAt (user export) must not treat it as current.
       subscription.cancelledAt ??= correctedAt;
@@ -120,14 +120,11 @@ export class ResolveSubscriptionOverlapUseCase {
     }
   }
 
-  private assertValidAccessEnd(
-    subscription: Subscription,
-    accessEndsAt: Date,
-  ): void {
+  private assertValidAccessEnd(subscription: Subscription, endsAt: Date): void {
     if (
-      Number.isNaN(accessEndsAt.getTime()) ||
-      accessEndsAt < subscription.startsAt ||
-      accessEndsAt > new Date()
+      Number.isNaN(endsAt.getTime()) ||
+      endsAt < subscription.startsAt ||
+      endsAt > new Date()
     ) {
       throw new InvalidSubscriptionDataError(
         'Access end must be between the subscription start and now',

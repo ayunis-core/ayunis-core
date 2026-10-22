@@ -33,6 +33,9 @@ describe('ExportUsersUseCase', () => {
     const csv = await new ExportUsersUseCase(repository).execute();
 
     expect(repository.findSubscribedOrgUsers).toHaveBeenCalledTimes(1);
+    expect(repository.findSubscribedOrgUsers).toHaveBeenCalledWith(
+      expect.any(Date),
+    );
     expect(csv).toBe(
       [
         '"Eindeutige ID","Vorname","Nachname","E-Mail","Rolle","Organisation","Teams","Abonnement","Abonnement Startdatum"',

@@ -20,6 +20,7 @@ export class SubscriptionResponseMapper {
     nextRenewalDate: Date;
   }): SubscriptionResponseDto {
     const { subscription, availableSeats, nextRenewalDate } = data;
+    const endsAt = getEffectiveAccessEnd(subscription);
 
     const dto: SubscriptionResponseDto = {
       id: subscription.id,
@@ -27,10 +28,11 @@ export class SubscriptionResponseMapper {
       updatedAt: subscription.updatedAt,
       cancelledAt: subscription.cancelledAt,
       startsAt: subscription.startsAt,
-      accessEndsAt: getEffectiveAccessEnd(subscription),
+      endsAt,
       orgId: subscription.orgId,
       type: subscription.type,
-      nextRenewalDate,
+      nextRenewalDate:
+        endsAt && nextRenewalDate >= endsAt ? null : nextRenewalDate,
       billingInfo: {
         companyName: subscription.billingInfo.companyName,
         street: subscription.billingInfo.street,

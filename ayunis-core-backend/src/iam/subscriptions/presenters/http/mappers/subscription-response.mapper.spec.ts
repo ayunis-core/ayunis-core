@@ -17,7 +17,7 @@ describe('SubscriptionResponseMapper', () => {
       renewalCycle: RenewalCycle.YEARLY,
       renewalCycleAnchor: new Date('2025-01-01'),
       startsAt: new Date('2025-01-01'),
-      accessEndsAt: new Date('2026-08-01T00:00:00.000Z'),
+      endsAt: new Date('2026-08-01T00:00:00.000Z'),
       billingInfo: new SubscriptionBillingInfo({
         companyName: 'Gemeinde Musterstadt',
         street: 'Hauptstraße',
@@ -28,6 +28,30 @@ describe('SubscriptionResponseMapper', () => {
       }),
     });
   }
+
+  it.each(['2026-08-01T00:00:00Z', '2027-01-01T00:00:00Z'])(
+    'does not advertise a renewal at or after the exclusive end (%s)',
+    (renewal) => {
+      const subscription = createSeatBased();
+      const result = mapper.toDto({
+        subscription,
+        availableSeats: 8,
+        nextRenewalDate: new Date(renewal),
+      });
+      expect(result.nextRenewalDate).toBeNull();
+      expect(result.endsAt).toEqual(subscription.endsAt);
+    },
+  );
+
+  it('preserves the cycle date for an open-ended subscription', () => {
+    const subscription = createSeatBased();
+    subscription.endsAt = null;
+    const nextRenewalDate = new Date('2027-01-01');
+    expect(
+      mapper.toDto({ subscription, availableSeats: 8, nextRenewalDate })
+        .nextRenewalDate,
+    ).toEqual(nextRenewalDate);
+  });
 
   it('maps history items with status and latest flag without computing seats', () => {
     const subscription = createSeatBased();
@@ -55,7 +79,7 @@ describe('SubscriptionResponseMapper', () => {
         availableSeats: null,
         status: SubscriptionLifecycleStatus.ACTIVE,
         isLatest: true,
-        accessEndsAt: new Date('2026-08-01T00:00:00.000Z'),
+        endsAt: new Date('2026-08-01T00:00:00.000Z'),
         nextRenewalDate,
       }),
     ]);

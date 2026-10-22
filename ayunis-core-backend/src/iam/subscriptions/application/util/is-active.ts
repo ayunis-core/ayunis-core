@@ -8,6 +8,6 @@ export function isActive(subscription: Subscription): boolean {
     return false;
   }
 
-  const accessEndsAt = getEffectiveAccessEnd(subscription);
-  return accessEndsAt === null || new Date() < accessEndsAt;
+  const endsAt = getEffectiveAccessEnd(subscription);
+  return endsAt === null || new Date() < endsAt;
 }

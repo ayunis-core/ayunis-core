@@ -1,18 +1,18 @@
-import type { APIRequestContext, APIResponse } from '@playwright/test';
+import type { APIRequestContext, APIResponse } from "@playwright/test";
 import type {
   ChangeSubscriptionRequestDto,
   CreateSubscriptionRequestDto,
   UpdateMonthlyCreditsDto,
-} from '../generated/ayunisCoreAPI.schemas';
-import { generatedApi } from './generated-api';
+} from "../generated/ayunisCoreAPI.schemas";
+import { generatedApi } from "./generated-api";
 
 export const e2eSubscriptionBilling = {
-  companyName: 'E2E History GmbH',
-  street: 'Test Street',
-  houseNumber: '1',
-  postalCode: '10115',
-  city: 'Berlin',
-  country: 'Germany',
+  companyName: "E2E History GmbH",
+  street: "Test Street",
+  houseNumber: "1",
+  postalCode: "10115",
+  city: "Berlin",
+  country: "Germany",
 } as const;
 
 export function createSuperAdminSubscription(
@@ -86,6 +86,16 @@ export function updateSuperAdminSeats(
   return generatedApi.superAdminSubscriptionsControllerUpdateSeats(
     orgId,
     { noOfSeats },
+    { api },
+  );
+}
+
+export function uncancelSuperAdminSubscription(
+  api: APIRequestContext,
+  orgId: string,
+) {
+  return generatedApi.superAdminSubscriptionsControllerUncancelSubscription(
+    orgId,
     { api },
   );
 }

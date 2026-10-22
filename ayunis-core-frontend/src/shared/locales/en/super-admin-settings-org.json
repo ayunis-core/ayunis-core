@@ -31,11 +31,11 @@
     "cancelled": "cancelled",
     "reactivate": "Reactivate",
     "reactivateSubscription": "Reactivate Subscription",
-    "reactivateSubscriptionDescription": "The subscription will be reactivated and will continue as usual.",
-    "reactivateAnytime": "You can reactivate the subscription at any time.",
+    "reactivateSubscriptionDescription": "Reactivate the subscription for its remaining term, if eligible.",
+    "reactivateAnytime": "Reactivation is subject to the remaining subscription term.",
     "cancel": "Cancel",
     "cancelSubscription": "Cancel Subscription",
-    "cancelSubscriptionDescription": "Are you sure you want to cancel this subscription? This action cannot be undone.",
+    "cancelSubscriptionDescription": "Cancel this subscription? Access follows the cancellation rules and cannot continue beyond its agreed end date.",
     "confirmCancel": "Confirm Cancel",
     "cancelCancel": "Cancel",
     "nextRenewalDate": "Next Billing: {{date}}",
@@ -87,7 +87,9 @@
     "changeErrorSubscriptionNotFound": "No active subscription to change",
     "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
     "changeErrorAccessOverlap": "The new subscription would overlap another subscription's access period. Adjust its start date or end the other subscription first.",
-    "changeErrorUnexpected": "An unexpected error occurred"
+    "changeErrorUnexpected": "An unexpected error occurred",
+    "createErrorEndDate": "End date must be after the start date (or after now if no start date is set).",
+    "endsAt": "Access ends: {{date}}"
   },
   "subscriptionHistory": {
     "title": "Subscription history",
@@ -112,7 +114,7 @@
       "createdAt": "Created",
       "startsAt": "Starts",
       "cancelledAt": "Cancelled",
-      "accessEndsAt": "Access ends",
+      "endsAt": "Access ends",
       "details": "Details"
     },
     "details": {
@@ -213,7 +215,12 @@
     "monthlyCreditsDescription": "The monthly credit budget for this organization. Resets on the 1st of each month.",
     "startsAtLabel": "Start Date",
     "startsAtPlaceholder": "Starts immediately",
-    "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date."
+    "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date.",
+    "endsAtLabel": "End date",
+    "endsAtPlaceholder": "Choose an end date",
+    "endsAtDescription": "Leave empty for an open-ended subscription. Access ends at the start of the selected day.",
+    "endsAtClear": "Clear end date",
+    "startsAtClear": "Clear start date"
   },
   "changeSubscriptionDialog": {
     "title": "Change Subscription",
@@ -681,5 +688,11 @@
     "error": "Could not update usage visibility",
     "notFound": "Organisation not found",
     "description": "When enabled, the user usage table is hidden for this organisation's admins and usage of individual users is no longer available to them."
+  },
+  "validation": {
+    "endsAt": {
+      "isDateString": "Enter a valid end date."
+    },
+    "invalid": "Please check this value."
   }
 }

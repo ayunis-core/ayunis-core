@@ -20,7 +20,7 @@ function createBillingInfo(): SubscriptionBillingInfo {
 function createSeatBased(
   overrides: Partial<{
     cancelledAt: Date | null;
-    accessEndsAt: Date | null;
+    endsAt: Date | null;
     renewalCycleAnchor: Date;
     startsAt: Date;
   }> = {},
@@ -33,7 +33,7 @@ function createSeatBased(
     renewalCycle: RenewalCycle.MONTHLY,
     renewalCycleAnchor: anchor,
     cancelledAt: overrides.cancelledAt ?? null,
-    accessEndsAt: overrides.accessEndsAt ?? null,
+    endsAt: overrides.endsAt ?? null,
     startsAt: overrides.startsAt ?? anchor,
     billingInfo: createBillingInfo(),
   });
@@ -42,7 +42,7 @@ function createSeatBased(
 function createUsageBased(
   overrides: Partial<{
     cancelledAt: Date | null;
-    accessEndsAt: Date | null;
+    endsAt: Date | null;
     startsAt: Date;
   }> = {},
 ): UsageBasedSubscription {
@@ -50,7 +50,7 @@ function createUsageBased(
     orgId: randomUUID(),
     monthlyCredits: 1000,
     cancelledAt: overrides.cancelledAt ?? null,
-    accessEndsAt: overrides.accessEndsAt ?? null,
+    endsAt: overrides.endsAt ?? null,
     startsAt: overrides.startsAt ?? new Date('2025-01-01'),
     billingInfo: createBillingInfo(),
   });
@@ -76,7 +76,7 @@ describe('classifySubscriptionStatus', () => {
     expect(
       classifySubscriptionStatus(
         createUsageBased({
-          accessEndsAt: new Date('2025-06-01T00:00:00.000Z'),
+          endsAt: new Date('2025-06-01T00:00:00.000Z'),
         }),
       ),
     ).toBe(SubscriptionLifecycleStatus.HISTORICAL);

@@ -19,7 +19,7 @@ function createBillingInfo(): SubscriptionBillingInfo {
 function createSeatBased(
   overrides: Partial<{
     cancelledAt: Date | null;
-    accessEndsAt: Date | null;
+    endsAt: Date | null;
     renewalCycleAnchor: Date;
     startsAt: Date;
   }> = {},
@@ -32,7 +32,7 @@ function createSeatBased(
     renewalCycle: RenewalCycle.MONTHLY,
     renewalCycleAnchor: anchor,
     cancelledAt: overrides.cancelledAt ?? null,
-    accessEndsAt: overrides.accessEndsAt ?? null,
+    endsAt: overrides.endsAt ?? null,
     startsAt: overrides.startsAt ?? anchor,
     billingInfo: createBillingInfo(),
   });
@@ -41,7 +41,7 @@ function createSeatBased(
 function createUsageBased(
   overrides: Partial<{
     cancelledAt: Date | null;
-    accessEndsAt: Date | null;
+    endsAt: Date | null;
     startsAt: Date;
   }> = {},
 ): UsageBasedSubscription {
@@ -49,7 +49,7 @@ function createUsageBased(
     orgId: randomUUID(),
     monthlyCredits: 1000,
     cancelledAt: overrides.cancelledAt ?? null,
-    accessEndsAt: overrides.accessEndsAt ?? null,
+    endsAt: overrides.endsAt ?? null,
     startsAt: overrides.startsAt ?? new Date('2025-01-01'),
     billingInfo: createBillingInfo(),
   });
@@ -81,7 +81,7 @@ describe('isActive', () => {
       isActive(
         createSeatBased({
           cancelledAt: new Date('2025-06-20T00:00:00.000Z'),
-          accessEndsAt: new Date('2025-06-01T00:00:00.000Z'),
+          endsAt: new Date('2025-06-01T00:00:00.000Z'),
         }),
       ),
     ).toBe(false);
@@ -90,13 +90,13 @@ describe('isActive', () => {
   it('serves until but not including its explicit access end', () => {
     const subscription = createUsageBased({
       cancelledAt: new Date('2025-06-01T00:00:00.000Z'),
-      accessEndsAt: new Date('2025-06-15T12:00:00.000Z'),
+      endsAt: new Date('2025-06-15T12:00:00.000Z'),
     });
 
     jest.setSystemTime(new Date('2025-06-15T11:59:59.999Z'));
     expect(isActive(subscription)).toBe(true);
 
-    jest.setSystemTime(subscription.accessEndsAt!);
+    jest.setSystemTime(subscription.endsAt!);
     expect(isActive(subscription)).toBe(false);
   });
 

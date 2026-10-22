@@ -3,13 +3,14 @@ import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQue
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { CreateSubscriptionFormData } from '@/widgets/billing';
 import {
-  buildSubscriptionFormSchema,
+  buildCreateSubscriptionFormSchema,
   subscriptionFormDefaultValues,
 } from './subscriptionForm';
 
@@ -24,7 +25,7 @@ export default function useSuperAdminSubscriptionCreate({
   const queryClient = useQueryClient();
   const router = useRouter();
   const form = useForm<CreateSubscriptionFormData>({
-    resolver: zodResolver(buildSubscriptionFormSchema(t)),
+    resolver: zodResolver(buildCreateSubscriptionFormSchema(t)),
     defaultValues: subscriptionFormDefaultValues,
   });
 
@@ -37,8 +38,17 @@ export default function useSuperAdminSubscriptionCreate({
         },
         onError: (error) => {
           try {
-            const { code } = extractErrorData(error);
+            const { code, errors } = extractErrorData(error);
             switch (code) {
+              case 'VALIDATION_ERROR':
+                if (errors) setValidationErrors(form, errors, t, 'validation');
+                else showError(t('subscription.createErrorUnexpected'));
+                break;
+              case 'INVALID_SUBSCRIPTION_ACCESS_END':
+                form.setError('endsAt', {
+                  message: t('subscription.createErrorEndDate'),
+                });
+                break;
               case 'SUBSCRIPTION_ALREADY_EXISTS':
                 showError(t('subscription.createErrorAlreadyExists'));
                 break;
@@ -76,6 +86,7 @@ export default function useSuperAdminSubscriptionCreate({
         monthlyCredits:
           data.type === 'USAGE_BASED' ? data.monthlyCredits : undefined,
         startsAt: data.startsAt,
+        endsAt: data.endsAt,
       },
     });
   });

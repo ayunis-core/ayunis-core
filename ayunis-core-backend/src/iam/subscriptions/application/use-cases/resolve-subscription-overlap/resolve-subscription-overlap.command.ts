@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 
 export interface SubscriptionAccessEndAdjustment {
   subscriptionId: UUID;
-  accessEndsAt: Date;
+  endsAt: Date;
 }
 
 export class ResolveSubscriptionOverlapCommand {

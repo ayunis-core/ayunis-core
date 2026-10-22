@@ -89,7 +89,7 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
   it('persists access-end corrections and their audit records together', async () => {
     const { repository, manager, subscriptionRecords } = build(true);
     const subscription = aSubscription();
-    subscription.accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
+    subscription.endsAt = new Date('2026-08-01T00:00:00.000Z');
     const requestingUserId = randomUUID();
 
     await repository.applyAccessEndAdjustments({
@@ -101,7 +101,7 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
 
     expect(subscriptionRecords.update).toHaveBeenCalledWith(
       { id: subscription.id, orgId },
-      { accessEndsAt: subscription.accessEndsAt, cancelledAt: null },
+      { endsAt: subscription.endsAt, cancelledAt: null },
     );
     expect(manager.insert).toHaveBeenCalledWith(expect.any(Function), [
       expect.objectContaining({
@@ -109,7 +109,7 @@ describe('LocalSubscriptionsRepository ambient transaction', () => {
         orgId,
         changedByUserId: requestingUserId,
         previousAccessEndsAt: null,
-        accessEndsAt: subscription.accessEndsAt,
+        endsAt: subscription.endsAt,
         reason: 'AYC-1158 contract transition correction',
       }),
     ]);

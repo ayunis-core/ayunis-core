@@ -123,7 +123,7 @@ test('changing a subscription ends the old access period without deleting histor
   expect(history.subscriptions[0]?.status).toBe('ACTIVE');
   expect(history.subscriptions[0]?.isLatest).toBe(true);
   expect(history.subscriptions[1]?.status).toBe('HISTORICAL');
-  expect(history.subscriptions[1]?.accessEndsAt).toBe(
+  expect(history.subscriptions[1]?.endsAt).toBe(
     history.subscriptions[0]?.startsAt,
   );
 
@@ -257,7 +257,7 @@ test('org admin sees overlap guidance before a super admin resolves it', async (
     expect(resolvedHistory.activeCount).toBe(1);
     expect(
       resolvedHistory.subscriptions.find(({ id }) => id === legacy!.id)
-        ?.accessEndsAt,
+        ?.endsAt,
     ).toBe(authoritative!.startsAt);
     expect(
       await countSubscriptionAccessAdjustments(legacy!.id, correctionReason),

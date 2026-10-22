@@ -1,35 +1,35 @@
-import { Client } from 'pg';
-import { randomUUID } from 'node:crypto';
-import { config } from '../config';
+import { Client } from "pg";
+import { randomUUID } from "node:crypto";
+import { config } from "../config";
 
 function databasePort(): number {
   if (process.env.E2E_POSTGRES_PORT) {
     return Number(process.env.E2E_POSTGRES_PORT);
   }
-  const apiPort = Number(new URL(config.apiURL).port || '3000');
+  const apiPort = Number(new URL(config.apiURL).port || "3000");
   return 5432 + (apiPort - 3000);
 }
 
 function createDatabaseClient(): Client {
   return new Client({
-    host: process.env.E2E_POSTGRES_HOST ?? 'localhost',
+    host: process.env.E2E_POSTGRES_HOST ?? "localhost",
     port: databasePort(),
-    user: process.env.E2E_POSTGRES_USER ?? 'postgres',
-    password: process.env.E2E_POSTGRES_PASSWORD ?? 'postgres',
-    database: process.env.E2E_POSTGRES_DB ?? 'ayunis',
+    user: process.env.E2E_POSTGRES_USER ?? "postgres",
+    password: process.env.E2E_POSTGRES_PASSWORD ?? "postgres",
+    database: process.env.E2E_POSTGRES_DB ?? "ayunis",
   });
 }
 
 export async function setSubscriptionAccessEnd(
   subscriptionId: string,
-  accessEndsAt: Date | null,
+  endsAt: Date | null,
 ): Promise<void> {
   const client = createDatabaseClient();
   await client.connect();
   try {
     const result = await client.query(
-      'UPDATE subscriptions SET "accessEndsAt" = $1 WHERE id = $2',
-      [accessEndsAt, subscriptionId],
+      'UPDATE subscriptions SET "endsAt" = $1 WHERE id = $2',
+      [endsAt, subscriptionId],
     );
     if (result.rowCount !== 1) {
       throw new Error(`Subscription ${subscriptionId} was not updated`);
