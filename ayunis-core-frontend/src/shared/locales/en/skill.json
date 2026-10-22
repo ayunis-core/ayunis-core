@@ -104,5 +104,12 @@
     "trigger": "Trigger",
     "instructions": "Instructions"
   },
-  "knowledgeTip": "Should the skill use a knowledge base? Name it in the instructions, for example “Use the knowledge base budget statute 2026”."
+  "knowledgeTip": "Should the skill use a knowledge base? Name it in the instructions, for example “Use the knowledge base budget statute 2026”.",
+  "mandatory": {
+    "title": "Mandatory for everyone",
+    "description": "The skill is then active for everyone in all chats outside workspaces and cannot be switched off.",
+    "toastOn": "“{{name}}” is now always active for everyone.",
+    "toastOff": "“{{name}}” can be switched off again.",
+    "error": "That did not work. Please try again."
+  }
 }

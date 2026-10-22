@@ -27,6 +27,7 @@ import { SkillReadOnlyContent } from './SkillReadOnlyContent';
 import { SkillHandoverButton } from './SkillHandoverButton';
 import { SkillOwnershipSection } from './SkillOwnershipSection';
 import { SkillKnowledgeTip } from './SkillKnowledgeTip';
+import { MandatorySkillControl } from './MandatorySkillControl';
 
 function useUpdateSkillProperties(skillId: string) {
   const queryClient = useQueryClient();
@@ -97,6 +98,9 @@ function SkillConfiguration({
         translationNamespace="skill"
         sourcesHook={sourcesHook}
       />
+      {skill.ownerType === 'org' && access.canEdit && (
+        <MandatorySkillControl skill={skill} />
+      )}
     </div>
   );
 }
