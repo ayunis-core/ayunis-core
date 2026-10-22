@@ -24,6 +24,7 @@ import { ListRow } from './ListRow';
 import { OwnerMeta } from './SkillMeta';
 import { SkillPanelSection } from './SkillPanelSection';
 import { UnlinkButton } from './UnlinkButton';
+import { WorkspaceOwnSkillActions } from './WorkspaceOwnSkillActions';
 
 function LinkedRows({
   workspace,
@@ -85,7 +86,12 @@ function LinkedRows({
 function OwnRows({
   workspace,
   skills,
-}: Readonly<{ workspace: PrototypeWorkspace; skills: PrototypeSkill[] }>) {
+  canEdit,
+}: Readonly<{
+  workspace: PrototypeWorkspace;
+  skills: PrototypeSkill[];
+  canEdit: boolean;
+}>) {
   const navigate = useNavigate();
   if (skills.length === 0) {
     return (
@@ -109,6 +115,7 @@ function OwnRows({
               params: { workspaceId: workspace.id, skillId: skill.id },
             })
           }
+          actions={canEdit && <WorkspaceOwnSkillActions skill={skill} />}
         />
       ))}
     </>
@@ -148,7 +155,7 @@ export function WorkspaceSkillsPanel({
           )
         }
       >
-        <OwnRows workspace={workspace} skills={ownSkills} />
+        <OwnRows workspace={workspace} skills={ownSkills} canEdit={canEdit} />
       </SkillPanelSection>
       <SkillPanelSection title="Verknüpft" count={links.length}>
         <LinkedRows

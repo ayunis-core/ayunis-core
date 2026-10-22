@@ -35,7 +35,8 @@ function useSkillDraft() {
     setName,
     setTrigger,
     setInstructions,
-    isComplete: name.trim() !== '' && trigger.trim() !== '',
+    isComplete:
+      name.trim() !== '' && trigger.trim() !== '' && instructions.trim() !== '',
   };
 }
 

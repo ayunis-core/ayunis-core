@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowUp, Plus } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
@@ -18,7 +18,6 @@ import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
 import {
   allWorkspaces,
   canEditWorkspace,
-  findPerson,
   linkedKnowledgeOf,
   personForRole,
   workspaceAccessOf,
@@ -366,14 +365,7 @@ function WorkspaceContent({
   );
 }
 
-function NoAccess({ workspace }: Readonly<{ workspace?: PrototypeWorkspace }>) {
-  const title = workspace
-    ? `Kein Zugriff auf „${workspace.name}“`
-    : 'Diesen Arbeitsbereich gibt es im Prototyp nicht';
-  const description = workspace
-    ? `Der Arbeitsbereich gehört ${findPerson(workspace.ownerId).name}. Bitten Sie um eine Einladung.`
-    : 'Öffnen Sie einen Arbeitsbereich aus der Liste.';
-
+function NoAccess() {
   return (
     <ContentAreaLayout
       contentHeader={
@@ -381,7 +373,17 @@ function NoAccess({ workspace }: Readonly<{ workspace?: PrototypeWorkspace }>) {
           breadcrumbs={[{ label: 'Arbeitsbereiche', href: '/workspaces' }]}
         />
       }
-      contentArea={<EmptyState title={title} description={description} />}
+      contentArea={
+        <EmptyState
+          title="Kein Zugriff auf diesen Arbeitsbereich"
+          description="Bitten Sie die Person, die ihn verwaltet, um eine Einladung."
+          action={
+            <Button variant="outline" asChild>
+              <Link to="/workspaces">Zu den Arbeitsbereichen</Link>
+            </Button>
+          }
+        />
+      }
     />
   );
 }
@@ -414,7 +416,7 @@ export function PrototypeWorkspacePage({
           initialDialog={dialog}
         />
       ) : (
-        <NoAccess workspace={workspace} />
+        <NoAccess />
       )}
     </AppLayout>
   );

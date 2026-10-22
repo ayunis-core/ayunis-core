@@ -1,6 +1,5 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { BookOpenText } from 'lucide-react';
-import { Item, ItemContent, ItemDescription } from '@ayunis/ui/components/item';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -8,16 +7,12 @@ import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { EmptyState } from '@/widgets/empty-state';
 import { showSuccess } from '@/shared/lib/toast';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
 import {
-  allWorkspaces,
   canEditSkill,
-  findPerson,
   findSkill,
   findWorkspace,
   personForRole,
   canReviewTarget,
-  workspacesOf,
 } from '@/widgets/sharing-prototype/model/access';
 import {
   useHasPermission,
@@ -36,11 +31,15 @@ import { requestFor } from '@/pages/skill-sharing-prototype/lib/requests';
 import { useDeleteWithConfirmation } from '@/pages/skill-sharing-prototype/model/useDeleteWithConfirmation';
 import { ActiveSwitch } from './ActiveSwitch';
 import { DeleteSkillButton } from './DeleteSkillButton';
+import { LinkedWorkspacesSection } from './LinkedWorkspacesSection';
 import { MandatorySkillControl } from './MandatorySkillControl';
 import { ReadOnlyBadge } from './ReadOnlyBadge';
 import { SkillAccessOverview } from './SkillAccessOverview';
-import { SkillPanelSection } from './SkillPanelSection';
 import { SkillReadOnlyContent } from './SkillReadOnlyContent';
+import {
+  SkillDocumentsCard,
+  SkillIntegrationsCard,
+} from './SkillResourceCards';
 import { RequestStatus, ReviewBanner, TransferButton } from './SkillTransfer';
 
 function RequestArea({
@@ -70,67 +69,6 @@ function KnowledgeTip() {
       Soll die Fähigkeit eine Wissenssammlung nutzen? Nennen Sie sie in der
       Anweisung, zum Beispiel „Nutze die Wissenssammlung Haushaltssatzung 2026“.
     </p>
-  );
-}
-
-function hiddenLinksText(count: number, hasVisible: boolean): string {
-  if (hasVisible) {
-    return count === 1
-      ? 'Außerdem in 1 weiteren Arbeitsbereich verknüpft'
-      : `Außerdem in ${count} weiteren Arbeitsbereichen verknüpft`;
-  }
-  return count === 1
-    ? 'In 1 Arbeitsbereich verknüpft, den Sie nicht öffnen können'
-    : `In ${count} Arbeitsbereichen verknüpft, die Sie nicht öffnen können`;
-}
-
-function LinkedWorkspaces({
-  skillId,
-  person,
-}: Readonly<{ skillId: string; person: Person }>) {
-  const { linkedSkills } = usePrototypeState();
-  const openableIds = new Set(workspacesOf(person).map(({ id }) => id));
-  const links = allWorkspaces().flatMap((workspace) =>
-    (linkedSkills[workspace.id] ?? [])
-      .filter((item) => item.skillId === skillId)
-      .map((item) => ({ workspace, linkedBy: item.linkedBy })),
-  );
-  if (links.length === 0) return null;
-  const visible = links.filter(({ workspace }) =>
-    openableIds.has(workspace.id),
-  );
-  const hiddenCount = links.length - visible.length;
-
-  return (
-    <SkillPanelSection
-      title="Verknüpft in Arbeitsbereichen"
-      count={links.length}
-    >
-      {visible.map(({ workspace, linkedBy }) => (
-        <Link
-          key={workspace.id}
-          to="/workspaces/$workspaceId"
-          params={{ workspaceId: workspace.id }}
-          search={{ tab: 'skills' }}
-          className="flex items-center gap-3 rounded-md border px-4 py-3 text-sm hover:bg-accent/50"
-        >
-          <WorkspaceIcon icon={workspace.icon} color={workspace.color} />
-          <span className="font-medium">{workspace.name}</span>
-          <span className="ml-auto text-muted-foreground">
-            von {findPerson(linkedBy).name}
-          </span>
-        </Link>
-      ))}
-      {hiddenCount > 0 && (
-        <Item variant="muted" size="sm">
-          <ItemContent>
-            <ItemDescription>
-              {hiddenLinksText(hiddenCount, visible.length > 0)}
-            </ItemDescription>
-          </ItemContent>
-        </Item>
-      )}
-    </SkillPanelSection>
   );
 }
 
@@ -189,6 +127,43 @@ function HeaderActions({
   );
 }
 
+function SkillBody({
+  skill,
+  person,
+  isEditable,
+}: Readonly<{ skill: PrototypeSkill; person: Person; isEditable: boolean }>) {
+  const linksResources =
+    isOwnSkill(skill, person) || skill.owner.kind === 'workspace';
+  return (
+    <>
+      <div className="space-y-3">
+        {isEditable ? (
+          <SkillPropertiesCard
+            key={skill.id}
+            skill={{
+              name: skill.name,
+              shortDescription: skill.shortDescription,
+              instructions: instructionsFor(skill),
+            }}
+            onUpdate={() => {
+              showSuccess('Änderungen gespeichert.');
+              return Promise.resolve();
+            }}
+          />
+        ) : (
+          <SkillReadOnlyContent
+            trigger={skill.shortDescription}
+            instructions={instructionsFor(skill)}
+          />
+        )}
+        {isEditable && <KnowledgeTip />}
+      </div>
+      {linksResources && <SkillIntegrationsCard disabled={!isEditable} />}
+      <SkillDocumentsCard skillId={skill.id} disabled={!isEditable} />
+    </>
+  );
+}
+
 function SkillDetail({
   skill,
   person,
@@ -231,30 +206,13 @@ function SkillDetail({
               request={request}
             />
           </div>
-          <div className="space-y-3">
-            {isEditable ? (
-              <SkillPropertiesCard
-                key={skill.id}
-                skill={{
-                  name: skill.name,
-                  shortDescription: skill.shortDescription,
-                  instructions: instructionsFor(skill),
-                }}
-                onUpdate={() => {
-                  showSuccess('Änderungen gespeichert.');
-                  return Promise.resolve();
-                }}
-              />
-            ) : (
-              <SkillReadOnlyContent
-                trigger={skill.shortDescription}
-                instructions={instructionsFor(skill)}
-              />
-            )}
-            {isEditable && <KnowledgeTip />}
-          </div>
+          <SkillBody skill={skill} person={person} isEditable={isEditable} />
           {skill.owner.kind !== 'workspace' && (
-            <LinkedWorkspaces skillId={skill.id} person={person} />
+            <LinkedWorkspacesSection
+              resource="skill"
+              itemId={skill.id}
+              person={person}
+            />
           )}
           {skill.owner.kind === 'org' && isEditable && (
             <MandatorySkillControl skill={skill} />

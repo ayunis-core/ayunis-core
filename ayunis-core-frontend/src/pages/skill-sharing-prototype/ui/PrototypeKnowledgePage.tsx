@@ -21,6 +21,7 @@ import type {
   Person,
   PrototypeKnowledge,
 } from '@/widgets/sharing-prototype/model/types';
+import { documentCountLabel } from '@/pages/skill-sharing-prototype/lib/document-count';
 import { ownerOptionsFor } from '@/pages/skill-sharing-prototype/lib/owner-options';
 import { reviewableRequests } from '@/pages/skill-sharing-prototype/lib/requests';
 import {
@@ -30,6 +31,7 @@ import {
 } from '@/pages/skill-sharing-prototype/lib/skill-meta';
 import { CreateKnowledgeItemDialog } from './CreateKnowledgeItemDialog';
 import { EmptyHint } from './EmptyHint';
+import { KnowledgeActiveSwitch } from './ActiveSwitch';
 import { ListRow } from './ListRow';
 import { RequestCountBadge } from './RequestCountBadge';
 import { SkillPanelSection } from './SkillPanelSection';
@@ -54,12 +56,17 @@ function KnowledgeRow({
   return (
     <ListRow
       title={item.name}
-      description={`${item.description} · ${item.documentCount} Dokumente`}
+      description={`${item.description} · ${documentCountLabel(item.documentCount)}`}
       onClick={() =>
         void navigate({ to: '/knowledge-bases/$id', params: { id: item.id } })
       }
       actions={
-        label && <span className="text-sm text-muted-foreground">{label}</span>
+        <>
+          {label && (
+            <span className="text-sm text-muted-foreground">{label}</span>
+          )}
+          <KnowledgeActiveSwitch knowledgeId={item.id} />
+        </>
       }
     />
   );

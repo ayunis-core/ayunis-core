@@ -1,4 +1,3 @@
-import { Button } from '@ayunis/ui/components/button';
 import {
   orgIncludedPeople,
   sharesOf,
@@ -14,16 +13,9 @@ import type {
   Person,
   PrototypeWorkspace,
 } from '@/widgets/sharing-prototype/model/types';
-import { affiliationOf } from '@/pages/skill-sharing-prototype/lib/member-options';
 import { notifyUnlinked } from '@/pages/skill-sharing-prototype/lib/notify-unlinked';
 import { useOrgSharing } from '@/pages/skill-sharing-prototype/model/useOrgSharing';
-import {
-  AccessControl,
-  OwnerLabel,
-  PersonTitle,
-  SectionTitle,
-  ShareRow,
-} from './WorkspaceShareParts';
+import { GrantedMemberRow, SharingSectionHeader } from './WorkspaceShareParts';
 
 const SORT_RANK: Record<MemberAccess, number> = {
   manage: 1,
@@ -62,7 +54,7 @@ export function WorkspaceOrgSection({
 }: Readonly<{
   workspace: PrototypeWorkspace;
   viewer: Person;
-  canChange: boolean;
+  canChange: (personId: string) => boolean;
   canEndSharing: boolean;
 }>) {
   const orgSharing = useOrgSharing(workspace);
@@ -75,42 +67,22 @@ export function WorkspaceOrgSection({
 
   return (
     <>
-      <div className="flex items-start justify-between gap-2">
-        <SectionTitle>Organisation · {included.length} Personen</SectionTitle>
-        {canEndSharing && (
-          <Button
-            variant="link"
-            size="sm"
-            className="h-auto p-0 pt-2 text-xs"
-            onClick={orgSharing.end}
-          >
-            Freigabe beenden
-          </Button>
-        )}
-      </div>
+      <SharingSectionHeader onEnd={canEndSharing ? orgSharing.end : undefined}>
+        Organisation · {included.length} Personen
+      </SharingSectionHeader>
       {rows.map((member) => (
-        <ShareRow
+        <GrantedMemberRow
           key={member.id}
-          title={<PersonTitle member={member} viewer={viewer} />}
-          description={affiliationOf(member)}
-          actions={
-            member.id === workspace.ownerId ? (
-              <OwnerLabel />
-            ) : (
-              <AccessControl
-                access={orgAccessOf(workspace, member)}
-                name={member.name}
-                canChange={canChange}
-                onChange={(next) =>
-                  setOrgMemberAccess(workspace.id, member.id, next)
-                }
-                onRemove={() =>
-                  notifyUnlinked(
-                    excludeOrgMember(workspace.id, member.id),
-                    member.name,
-                  )
-                }
-              />
+          workspace={workspace}
+          member={member}
+          viewer={viewer}
+          access={orgAccessOf(workspace, member)}
+          canChange={canChange(member.id)}
+          onChange={(next) => setOrgMemberAccess(workspace.id, member.id, next)}
+          onRemove={() =>
+            notifyUnlinked(
+              excludeOrgMember(workspace.id, member.id),
+              member.name,
             )
           }
         />

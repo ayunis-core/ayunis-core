@@ -19,6 +19,7 @@ import { showInfo, showSuccess } from '@/shared/lib/toast';
 import {
   canEditSkill,
   canReviewTarget,
+  canUseSkill,
   personForRole,
 } from '@/widgets/sharing-prototype/model/access';
 import { useKnowledgeItems } from '@/widgets/sharing-prototype/model/prototype-knowledge';
@@ -30,10 +31,13 @@ import type {
   Person,
   PrototypeKnowledge,
 } from '@/widgets/sharing-prototype/model/types';
+import { documentCountLabel } from '@/pages/skill-sharing-prototype/lib/document-count';
 import { requestFor } from '@/pages/skill-sharing-prototype/lib/requests';
 import { isOwnSkill } from '@/pages/skill-sharing-prototype/lib/skill-meta';
 import { useDeleteKnowledgeWithConfirmation } from '@/pages/skill-sharing-prototype/model/useDeleteKnowledgeWithConfirmation';
+import { KnowledgeActiveSwitch } from './ActiveSwitch';
 import { DeleteSkillButton } from './DeleteSkillButton';
+import { LinkedWorkspacesSection } from './LinkedWorkspacesSection';
 import { ReadOnlyBadge } from './ReadOnlyBadge';
 import { SkillAccessOverview } from './SkillAccessOverview';
 import { RequestStatus, ReviewBanner, TransferButton } from './SkillTransfer';
@@ -55,7 +59,7 @@ function DocumentsCard({
         <CardDescription>
           {item.documentCount === 0
             ? 'Noch keine Dokumente in dieser Wissenssammlung.'
-            : `${item.documentCount} Dokumente in dieser Wissenssammlung.`}
+            : `${documentCountLabel(item.documentCount)} in dieser Wissenssammlung.`}
         </CardDescription>
         {isEditable && (
           <CardAction>
@@ -111,6 +115,9 @@ function HeaderActions({
   return (
     <>
       <HelpLink path="knowledge-collections/" />
+      {canUseSkill(item, person) && (
+        <KnowledgeActiveSwitch knowledgeId={item.id} />
+      )}
       {canTransfer && (
         <TransferButton item={item} resource="knowledge" person={person} />
       )}
@@ -165,6 +172,13 @@ function KnowledgeDetail({
             />
           )}
           <DocumentsCard item={item} isEditable={isEditable} />
+          {item.owner.kind !== 'workspace' && (
+            <LinkedWorkspacesSection
+              resource="knowledge"
+              itemId={item.id}
+              person={person}
+            />
+          )}
         </div>
       }
     />

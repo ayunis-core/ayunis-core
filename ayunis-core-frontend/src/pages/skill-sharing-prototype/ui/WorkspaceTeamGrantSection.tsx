@@ -14,15 +14,9 @@ import type {
   PrototypeWorkspace,
   WorkspaceTeamGrant,
 } from '@/widgets/sharing-prototype/model/types';
-import { affiliationOf } from '@/pages/skill-sharing-prototype/lib/member-options';
 import { notifyUnlinked } from '@/pages/skill-sharing-prototype/lib/notify-unlinked';
-import {
-  AccessControl,
-  OwnerLabel,
-  PersonTitle,
-  SectionTitle,
-  ShareRow,
-} from './WorkspaceShareParts';
+import { useTeamSharing } from '@/pages/skill-sharing-prototype/model/useTeamSharing';
+import { GrantedMemberRow, SharingSectionHeader } from './WorkspaceShareParts';
 
 function accessOf(grant: WorkspaceTeamGrant, member: Person): MemberAccess {
   const override = grant.overrides?.[member.id];
@@ -34,12 +28,15 @@ export function WorkspaceTeamGrantSection({
   grant,
   viewer,
   canChange,
+  canEnd,
 }: Readonly<{
   workspace: PrototypeWorkspace;
   grant: WorkspaceTeamGrant;
   viewer: Person;
-  canChange: boolean;
+  canChange: (personId: string) => boolean;
+  canEnd: boolean;
 }>) {
+  const teamSharing = useTeamSharing(workspace);
   const team = findTeam(grant.teamId);
   const included = includedTeamMembers(grant);
   const rows = included.filter(
@@ -48,32 +45,26 @@ export function WorkspaceTeamGrantSection({
 
   return (
     <>
-      <SectionTitle>
+      <SharingSectionHeader
+        onEnd={canEnd ? () => teamSharing.end(team.id) : undefined}
+      >
         Team {team.name} · {included.length} Personen
-      </SectionTitle>
+      </SharingSectionHeader>
       {rows.map((member) => (
-        <ShareRow
+        <GrantedMemberRow
           key={member.id}
-          title={<PersonTitle member={member} viewer={viewer} />}
-          description={affiliationOf(member)}
-          actions={
-            member.id === workspace.ownerId ? (
-              <OwnerLabel />
-            ) : (
-              <AccessControl
-                access={accessOf(grant, member)}
-                name={member.name}
-                canChange={canChange}
-                onChange={(next) =>
-                  setTeamMemberOverride(workspace.id, team.id, member.id, next)
-                }
-                onRemove={() =>
-                  notifyUnlinked(
-                    excludeTeamMember(workspace.id, team.id, member.id),
-                    member.name,
-                  )
-                }
-              />
+          workspace={workspace}
+          member={member}
+          viewer={viewer}
+          access={accessOf(grant, member)}
+          canChange={canChange(member.id)}
+          onChange={(next) =>
+            setTeamMemberOverride(workspace.id, team.id, member.id, next)
+          }
+          onRemove={() =>
+            notifyUnlinked(
+              excludeTeamMember(workspace.id, team.id, member.id),
+              member.name,
             )
           }
         />

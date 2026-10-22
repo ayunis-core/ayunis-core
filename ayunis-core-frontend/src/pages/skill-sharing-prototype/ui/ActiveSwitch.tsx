@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import {
+  toggleKnowledgeActive,
   toggleSkillActive,
   usePrototypeState,
 } from '@/widgets/sharing-prototype/model/prototype-store';
@@ -24,27 +25,60 @@ function AlwaysActiveBadge() {
   );
 }
 
-export function ActiveSwitch({ skillId }: Readonly<{ skillId: string }>) {
-  const { inactiveSkillIds, mandatorySkillIds } = usePrototypeState();
-  if (mandatorySkillIds.includes(skillId)) return <AlwaysActiveBadge />;
-  const isActive = !inactiveSkillIds.includes(skillId);
-
+function ActiveToggle({
+  isActive,
+  label,
+  noun,
+  onToggle,
+}: Readonly<{
+  isActive: boolean;
+  label: string;
+  noun: string;
+  onToggle: () => void;
+}>) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="inline-flex">
           <Switch
             checked={isActive}
-            aria-label="Fähigkeit aktiv"
-            onCheckedChange={() => toggleSkillActive(skillId)}
+            aria-label={label}
+            onCheckedChange={onToggle}
           />
         </span>
       </TooltipTrigger>
       <TooltipContent>
         {isActive
-          ? 'Aktiv: Ayunis Core kann die Fähigkeit in Chats nutzen.'
-          : 'Inaktiv: Ayunis Core nutzt die Fähigkeit nicht in Chats.'}
+          ? `Aktiv: Ayunis Core kann die ${noun} in Chats nutzen.`
+          : `Inaktiv: Ayunis Core nutzt die ${noun} nicht in Chats.`}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+export function ActiveSwitch({ skillId }: Readonly<{ skillId: string }>) {
+  const { inactiveSkillIds, mandatorySkillIds } = usePrototypeState();
+  if (mandatorySkillIds.includes(skillId)) return <AlwaysActiveBadge />;
+  return (
+    <ActiveToggle
+      isActive={!inactiveSkillIds.includes(skillId)}
+      label="Fähigkeit aktiv"
+      noun="Fähigkeit"
+      onToggle={() => toggleSkillActive(skillId)}
+    />
+  );
+}
+
+export function KnowledgeActiveSwitch({
+  knowledgeId,
+}: Readonly<{ knowledgeId: string }>) {
+  const { inactiveKnowledgeIds } = usePrototypeState();
+  return (
+    <ActiveToggle
+      isActive={!inactiveKnowledgeIds.includes(knowledgeId)}
+      label="Wissenssammlung aktiv"
+      noun="Wissenssammlung"
+      onToggle={() => toggleKnowledgeActive(knowledgeId)}
+    />
   );
 }

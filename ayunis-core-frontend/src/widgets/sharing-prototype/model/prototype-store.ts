@@ -30,6 +30,7 @@ export interface PrototypeState {
   role: Role;
   step: number;
   inactiveSkillIds: string[];
+  inactiveKnowledgeIds: string[];
   linkedSkills: Partial<Record<string, LinkedSkill[]>>;
   linkedKnowledge: Partial<Record<string, LinkedKnowledge[]>>;
   createdKnowledge: Partial<Record<string, WorkspaceKnowledge[]>>;
@@ -57,6 +58,7 @@ function initialState(): PrototypeState {
     role: 'member',
     step: 0,
     inactiveSkillIds: ['bebauungsplan', 'terminanfragen'],
+    inactiveKnowledgeIds: [],
     linkedSkills: Object.fromEntries(
       WORKSPACES.map((workspace) => [workspace.id, workspace.linkedSkills]),
     ),
@@ -187,6 +189,16 @@ export function toggleSkillActive(skillId: string) {
     inactiveSkillIds: isInactive
       ? state.inactiveSkillIds.filter((id) => id !== skillId)
       : [...state.inactiveSkillIds, skillId],
+  });
+}
+
+function toggled(ids: string[], id: string): string[] {
+  return ids.includes(id) ? ids.filter((other) => other !== id) : [...ids, id];
+}
+
+export function toggleKnowledgeActive(knowledgeId: string) {
+  update({
+    inactiveKnowledgeIds: toggled(state.inactiveKnowledgeIds, knowledgeId),
   });
 }
 

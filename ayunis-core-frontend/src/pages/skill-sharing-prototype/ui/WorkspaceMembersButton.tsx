@@ -33,7 +33,7 @@ function successMessage(selection: ShareSelection, workspace: string): string {
   const count = selection.personIds.length + selection.teamIds.length;
   return count === 1
     ? `Eingeladen. „${workspace}“ ist jetzt geteilt.`
-    : `${count} Einladungen für „${workspace}“ verschickt.`;
+    : `${count} Personen und Teams haben jetzt Zugriff auf „${workspace}“.`;
 }
 
 function joinGerman(parts: string[]): string {
@@ -64,8 +64,14 @@ function MembersDialogBody({
   const invitedTeamIds = isOrgVisible
     ? allTeams().map((team) => team.id)
     : teamGrants.map((grant) => grant.teamId);
-  const { canManage, canInvite, inviteScopeTeamIds, canShareWithOrg } =
-    useWorkspaceSharingRights(workspace, person);
+  const {
+    canManage,
+    canInvite,
+    inviteScopeTeamIds,
+    canShareWithOrg,
+    canChangePerson,
+    canEndTeam,
+  } = useWorkspaceSharingRights(workspace, person);
   const noInviteText = useNoInviteText(canManage);
   const orgSharing = useOrgSharing(workspace);
   const canOfferOrg = canShareWithOrg && !isOrgVisible;
@@ -104,7 +110,8 @@ function MembersDialogBody({
       <WorkspaceShareList
         workspace={workspace}
         viewer={person}
-        canChange={canInvite}
+        canChange={canChangePerson}
+        canEndTeam={canEndTeam}
         canEndOrgSharing={canShareWithOrg}
       />
     </>

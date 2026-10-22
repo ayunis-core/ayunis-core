@@ -31,7 +31,7 @@ function PeopleSection({
 }: Readonly<{
   workspace: PrototypeWorkspace;
   viewer: Person;
-  canChange: boolean;
+  canChange: (personId: string) => boolean;
 }>) {
   const owner = findPerson(workspace.ownerId);
   const showOwner = teamPlacementOf(workspace, owner.id) === null;
@@ -58,7 +58,7 @@ function PeopleSection({
               <AccessControl
                 access={access}
                 name={member.name}
-                canChange={canChange}
+                canChange={canChange(personId)}
                 onChange={(next) =>
                   setMemberAccess(workspace.id, personId, next)
                 }
@@ -81,11 +81,13 @@ export function WorkspaceShareList({
   workspace,
   viewer,
   canChange,
+  canEndTeam,
   canEndOrgSharing,
 }: Readonly<{
   workspace: PrototypeWorkspace;
   viewer: Person;
-  canChange: boolean;
+  canChange: (personId: string) => boolean;
+  canEndTeam: (teamId: string) => boolean;
   canEndOrgSharing: boolean;
 }>) {
   return (
@@ -102,6 +104,7 @@ export function WorkspaceShareList({
           grant={grant}
           viewer={viewer}
           canChange={canChange}
+          canEnd={canEndTeam(grant.teamId)}
         />
       ))}
       <WorkspaceOrgSection

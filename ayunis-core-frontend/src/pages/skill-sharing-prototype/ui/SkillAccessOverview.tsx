@@ -9,8 +9,6 @@ import {
   findTeam,
   findWorkspace,
   orgMemberCount,
-  teamAdminIdsWith,
-  teamManageKey,
   teamMemberCount,
 } from '@/widgets/sharing-prototype/model/access';
 import type {
@@ -18,7 +16,10 @@ import type {
   OwnedItem,
   ResourceKind,
 } from '@/widgets/sharing-prototype/model/types';
-import { orgEditorsSentence } from '@/pages/skill-sharing-prototype/lib/owner-options';
+import {
+  orgEditorsSentence,
+  teamEditors,
+} from '@/pages/skill-sharing-prototype/lib/owner-options';
 import { RESOURCE_NOUN } from '@/pages/skill-sharing-prototype/lib/requests';
 
 function ownerTitle(item: OwnedItem, person: Person): string {
@@ -33,25 +34,6 @@ function ownerTitle(item: OwnedItem, person: Person): string {
   return owner.userId === person.id
     ? 'Gehört Ihnen'
     : `Gehört ${findPerson(owner.userId).name}`;
-}
-
-function teamEditors(
-  teamId: string,
-  person: Person,
-  resource: ResourceKind,
-): string {
-  const editors = teamAdminIdsWith(teamId, teamManageKey(resource));
-  if (editors.includes(person.id)) {
-    return editors.length > 1
-      ? 'Ändern können Sie und die anderen Team-Admins.'
-      : 'Ändern können Sie als Team-Admin.';
-  }
-  if (editors.length === 1) {
-    return `Ändern kann ${findPerson(editors[0]).name} als Team-Admin.`;
-  }
-  return editors.length > 0
-    ? 'Ändern können die Team-Admins.'
-    : 'Ändern können Admins.';
 }
 
 function accessSentence(

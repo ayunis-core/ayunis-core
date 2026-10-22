@@ -249,3 +249,10 @@ export function excludeTeamMember(
       .filter((grant) => includedTeamMembers(grant).length > 0),
   }));
 }
+
+export function endTeamGrant(workspaceId: string, teamId: string): number {
+  return updateShares(workspaceId, (shares) => ({
+    ...shares,
+    teamGrants: shares.teamGrants.filter((grant) => grant.teamId !== teamId),
+  }));
+}

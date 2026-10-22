@@ -17,7 +17,9 @@ import { WORKSPACE_ACCESS_LABEL } from '@/widgets/sharing-prototype/model/fixtur
 import type {
   MemberAccess,
   Person,
+  PrototypeWorkspace,
 } from '@/widgets/sharing-prototype/model/types';
+import { affiliationOf } from '@/pages/skill-sharing-prototype/lib/member-options';
 import { WorkspaceAccessSelect } from './WorkspaceAccessSelect';
 
 export function RemoveButton({
@@ -99,6 +101,65 @@ export function SectionTitle({ children }: Readonly<{ children: ReactNode }>) {
     <h3 className="pt-2 text-xs font-medium text-muted-foreground">
       {children}
     </h3>
+  );
+}
+
+export function SharingSectionHeader({
+  children,
+  onEnd,
+}: Readonly<{ children: ReactNode; onEnd?: () => void }>) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <SectionTitle>{children}</SectionTitle>
+      {onEnd && (
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto p-0 pt-2 text-xs"
+          onClick={onEnd}
+        >
+          Freigabe beenden
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function GrantedMemberRow({
+  workspace,
+  member,
+  viewer,
+  access,
+  canChange,
+  onChange,
+  onRemove,
+}: Readonly<{
+  workspace: PrototypeWorkspace;
+  member: Person;
+  viewer: Person;
+  access: MemberAccess;
+  canChange: boolean;
+  onChange: (access: MemberAccess) => void;
+  onRemove: () => void;
+}>) {
+  return (
+    <ShareRow
+      title={<PersonTitle member={member} viewer={viewer} />}
+      description={affiliationOf(member)}
+      actions={
+        member.id === workspace.ownerId ? (
+          <OwnerLabel />
+        ) : (
+          <AccessControl
+            access={access}
+            name={member.name}
+            canChange={canChange}
+            onChange={onChange}
+            onRemove={onRemove}
+          />
+        )
+      }
+    />
   );
 }
 

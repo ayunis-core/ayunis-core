@@ -18,7 +18,8 @@ export function CreateWorkspaceSkillForm({
   const [name, setName] = useState('');
   const [trigger, setTrigger] = useState('');
   const [instructions, setInstructions] = useState('');
-  const canCreate = name.trim() !== '' && trigger.trim() !== '';
+  const canCreate =
+    name.trim() !== '' && trigger.trim() !== '' && instructions.trim() !== '';
 
   function create() {
     addCreatedSkill({
