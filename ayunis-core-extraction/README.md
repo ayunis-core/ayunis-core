@@ -72,6 +72,44 @@ uv run pytest
 
 Provider limits: the Mistral OCR documentation fetched on 2026-10-22 states no numeric per-request size or page limit; the batch defaults above are the contract's provisional values and stay well inside any plausible limit.
 
+## OCR decision rule
+
+`app/pdf/signals.py` measures the contract §8.1 signals from one 50 dpi grayscale render and the text page; `app/pdf/decision.py` applies the §8.2 rules in order. Rule version `ocr-rule/1` ships these thresholds (all configurable, see `OCR_RULE_*`):
+
+| Rule | Condition | Decision |
+| --- | --- | --- |
+| 1 | `options.ocr == always` | OCR, `forced` |
+| 2 | `inkRatio < 0.002` and `charCount < 5` | `blank` |
+| 3 | `charCount < 20` and `inkRatio >= 0.01` | OCR, `no_text` |
+| 4 | `textInkCoverage < 0.6` | OCR, `low_coverage` |
+| 5 | `garbageRatio > 0.05` | OCR, `garbage` |
+| 6 | `wordValidity < 0.7` (30 or more tokens, dictionaries present) | OCR, `invalid_words` |
+| 7 | `tableLikelihood >= 0.5` and `TABLE_PAGES_TO_OCR` | OCR, `table` |
+| 8 | otherwise | text layer |
+
+Text rectangles are mapped onto the render by PDFium itself (`PdfBitmap.get_posconv`), so pages with `/Rotate` measure the same as upright ones. Two details beyond the contract text: long straight rulings (table grids, letterhead rules) are masked out of the ink that `textInkCoverage` measures, otherwise every ruled table trips rule 4 before rule 7 and the table cost switch has no effect; and when more than 90 % of a document's pages are routed to OCR the remaining text pages follow with `ocrReason: forced` and the warning `ocr_document_shortcut`.
+
+Measured on the committed fixtures (`tests/test_decision.py` asserts these decisions and that the decisive signal keeps margin to its threshold):
+
+| Fixture page | charCount | inkRatio | textInkCoverage | garbageRatio | wordValidity | tableLikelihood | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| born-digital p1 | 3258 | 0.110 | 1.000 | 0.000 | 1.00 | 0.00 | text |
+| blank-scan | 0 | 0.000 | 1.000 | 0.000 | - | 0.00 | blank |
+| scan-no-text p1 | 0 | 0.099 | 0.000 | 0.000 | - | 0.00 | OCR `no_text` |
+| partial-text-layer | 52 | 0.104 | 0.031 | 0.000 | - | 0.00 | OCR `low_coverage` |
+| poor-ocr-layer p1 | 3159 | 0.102 | 0.823 | 0.072 | 0.22 | 0.00 | OCR `garbage` |
+| poor-ocr-layer p2 | 3366 | 0.100 | 0.857 | 0.000 | 0.26 | 0.00 | OCR `invalid_words` |
+| table | 556 | 0.052 | 0.623 | 0.000 | - | 1.00 | OCR `table` |
+| mixed p2 (scan inside a letter) | 0 | 0.102 | 0.000 | 0.000 | - | 0.00 | OCR `no_text` |
+
+The real calibration is the municipal corpus of contract §9, which lives outside the repository:
+
+```bash
+CORPUS_DIR=/path/to/corpus uv run python -m scripts.validate_corpus --price-per-page 0.001
+```
+
+It writes `decisions-ocr-rule-1.csv` next to the manifest with every page's signals and decision, prints the OCR share per category with rule 7 on and off, the recall of "needs OCR" against the manifest's expectations, and the estimated cost. No OCR is called.
+
 ## Threading
 
 PDFium is not thread-safe, so every pypdfium2 call goes through one process-wide lock. Rendering at 50 dpi and text extraction cost milliseconds per page; OCR and MinIO calls run in parallel across the worker threads.

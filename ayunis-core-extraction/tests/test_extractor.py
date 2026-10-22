@@ -127,12 +127,18 @@ def test_result_json_matches_the_contract_shape(
     assert raw["pages"][0]["size"] == {"width": 595.3, "height": 841.9}
 
 
-def test_a_scanned_page_without_ocr_is_blank_and_an_all_blank_document_is_empty(
+def test_a_scanned_page_without_ocr_falls_back_and_an_all_scanned_document_is_empty(
     store: JobStore, objects: InMemoryObjectStore, settings: Settings, tmp_path: Path
 ) -> None:
     context = make_context(store, objects, settings, tmp_path, stage(objects, "mixed.pdf"))
     run_job(context)
-    assert [page.method for page in result_of(objects).pages] == ["text", "blank", "text"]
+    result = result_of(objects)
+    assert [page.method for page in result.pages] == ["text", "text_fallback", "text"]
+    assert (result.pages[1].ocr_reason, result.pages[1].text) == ("no_text", "")
+    assert result.pages[1].quality is not None
+    assert result.pages[1].quality.char_count == 0
+    assert result.document.warnings == ["ocr_not_configured"]
+    assert result.document.pages_text == 3
 
     objects.objects.clear()
     empty = make_context(
@@ -177,6 +183,32 @@ def test_a_restart_resumes_from_the_checkpointed_pages(
     assert [page.text for page in result.pages[:2]] == ["checkpointed 0", "checkpointed 1"]
     assert result.pages[2].text.startswith("Beschlussvorlage 3")
     assert result.document.pages_text == 3
+
+
+def test_restart_counts_fallback_checkpoints_towards_the_document_shortcut(
+    store: JobStore, objects: InMemoryObjectStore, settings: Settings, tmp_path: Path
+) -> None:
+    """Two of three pages were checkpointed as text_fallback by an attempt without a backend;
+    with the share at 50 % the remaining born-digital page follows the document."""
+    no_backend = settings.model_copy(
+        update={"ocr_backend": "mistral", "mistral_api_key": None, "document_ocr_share": 0.5}
+    )
+    for index in (0, 1):
+        entry = PageEntry(
+            index=index, number=index + 1, text="", method="text_fallback", ocr_reason="no_text"
+        )
+        objects.put(
+            f"{PREFIX}pages/{index:05d}.json", entry.model_dump_json(by_alias=True).encode()
+        )
+    context = make_context(store, objects, no_backend, tmp_path, stage(objects, "born-digital.pdf"))
+
+    run_job(context)
+
+    result = result_of(objects)
+    assert [page.method for page in result.pages] == ["text_fallback"] * 3
+    assert result.pages[2].ocr_reason == "forced"
+    assert result.pages[2].text.startswith("Beschlussvorlage 3")
+    assert "ocr_document_shortcut" in result.document.warnings
 
 
 def test_cancel_between_pages_leaves_no_result(
