@@ -1,7 +1,8 @@
 import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-import { WorkspacePage } from '@/pages/workspace';
+import { WorkspaceNoAccessPage, WorkspacePage } from '@/pages/workspace';
+import extractErrorData from '@/shared/api/extract-error-data';
 import {
   workspacesControllerFindOne,
   getWorkspacesControllerFindOneQueryKey,
@@ -51,9 +52,11 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
           queryFn: () => workspacesControllerFindOne(workspaceId),
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          if (isNotFound(error)) return null;
           throw redirect({ to: '/workspaces' });
         });
+      if (!workspace) return { noAccess: true as const };
 
       const chats = await queryClient.query({
         queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
@@ -84,30 +87,30 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
   },
 );
 
+function isNotFound(error: unknown): boolean {
+  try {
+    return extractErrorData(error).status === 404;
+  } catch {
+    return false;
+  }
+}
+
 function RouteComponent() {
   const { tab = 'chats' } = Route.useSearch();
-  const {
-    workspace,
-    chats,
-    chatCount,
-    chatPagination,
-    chatSearch,
-    chatPage,
-    selectedModelId,
-    isEmbeddingModelEnabled,
-  } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  if ('noAccess' in data) return <WorkspaceNoAccessPage />;
   return (
     <WorkspacePage
-      key={workspace.id}
-      workspace={workspace}
+      key={data.workspace.id}
+      workspace={data.workspace}
       activeTab={tab}
-      chats={chats}
-      chatCount={chatCount}
-      chatPagination={chatPagination}
-      chatSearch={chatSearch}
-      chatPage={chatPage}
-      selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      chats={data.chats}
+      chatCount={data.chatCount}
+      chatPagination={data.chatPagination}
+      chatSearch={data.chatSearch}
+      chatPage={data.chatPage}
+      selectedModelId={data.selectedModelId}
+      isEmbeddingModelEnabled={data.isEmbeddingModelEnabled}
     />
   );
 }

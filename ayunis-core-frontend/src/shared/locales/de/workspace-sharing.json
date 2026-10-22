@@ -1,0 +1,99 @@
+{
+  "levels": {
+    "owner": "Eigentümer",
+    "full": "Vollzugriff",
+    "edit": "Kann bearbeiten",
+    "use": "Kann verwenden"
+  },
+  "levelDescriptions": {
+    "full": "Fähigkeiten, Wissen und Anweisungen anpassen, Personen einladen und Rechte vergeben.",
+    "edit": "Fähigkeiten, Wissen und Anweisungen anpassen.",
+    "use": "Im Arbeitsbereich chatten und Inhalte erstellen."
+  },
+  "viewer": {
+    "owner": "Ihr Arbeitsbereich",
+    "full": "Sie haben Vollzugriff",
+    "edit": "Sie können bearbeiten",
+    "use": "Sie können verwenden"
+  },
+  "members_one": "{{count}} Mitglied",
+  "members_other": "{{count}} Mitglieder",
+  "dialog": {
+    "title": "Mitglieder von „{{workspace}}“",
+    "description": "Alle Mitglieder erhalten Zugriff auf Fähigkeiten, Wissen und erstellte Inhalte im Arbeitsbereich. Chats bleiben privat.",
+    "noFullAccess": "Personen einladen und Rechte ändern kann, wer hier Vollzugriff hat.",
+    "noRight": "Einladen dürfen in Ihrer Organisation nur {{list}}.",
+    "noRightPeople": "Einzelne Personen und Teams einladen dürfen in Ihrer Organisation nur {{list}}.",
+    "inviters": {
+      "admins": "Admins",
+      "managers": "Manager",
+      "teamAdmins": "Team-Admins für ihr eigenes Team"
+    },
+    "and": "und",
+    "loadError": "Die Mitglieder konnten nicht geladen werden.",
+    "retry": "Erneut versuchen"
+  },
+  "picker": {
+    "label": "Personen und Teams einladen",
+    "placeholder": "Person oder Team suchen",
+    "groups": {
+      "organization": "Organisation",
+      "teams": "Teams",
+      "noTeam": "Ohne Team"
+    },
+    "organization": "Gesamte Organisation",
+    "team": "Team {{name}}",
+    "people_one": "{{count}} Person",
+    "people_other": "{{count}} Personen",
+    "noMatch": "Niemand gefunden",
+    "everyoneInvited": "Alle in Ihrer Organisation sind schon eingeladen.",
+    "levelLabel": "Recht für die Eingeladenen",
+    "invite": "Einladen",
+    "loadError": "Die Personen und Teams zum Einladen konnten nicht geladen werden."
+  },
+  "list": {
+    "people": "Personen",
+    "team_one": "Team {{name}} · {{count}} Person",
+    "team_other": "Team {{name}} · {{count}} Personen",
+    "organization_one": "Organisation · {{count}} Person",
+    "organization_other": "Organisation · {{count}} Personen",
+    "you": "(Sie)",
+    "noTeam": "Ohne Team",
+    "levelLabel": "Recht von {{name}}",
+    "remove": "Entfernen",
+    "teamFootnote": "Wer später ins Team kommt, erhält „{{level}}“.",
+    "organizationFootnote": "Wer später in die Organisation kommt, erhält „Kann verwenden“.",
+    "endSharing": "Freigabe beenden"
+  },
+  "toasts": {
+    "invitedOne": "Eingeladen. „{{workspace}}“ ist jetzt geteilt.",
+    "invitedMany": "{{count}} Personen und Teams haben jetzt Zugriff auf „{{workspace}}“.",
+    "organizationShared": "„{{workspace}}“ ist jetzt für die gesamte Organisation freigegeben.",
+    "unlinkedPerson": "Die eigenen Fähigkeiten und Wissenssammlungen von {{name}} sind hier nicht mehr verknüpft.",
+    "unlinkedOrganization": "Eigene Fähigkeiten und Wissenssammlungen von Personen ohne Zugriff sind hier nicht mehr verknüpft.",
+    "error": "Die Änderung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+  },
+  "confirmOrganization": {
+    "title": "Für die gesamte Organisation freigeben?",
+    "description": "Alle in Ihrer Organisation können „{{workspace}}“ dann verwenden und alles nutzen, was dort verknüpft ist. Das gilt auch für alle, die später dazukommen. Einzelnen Personen können Sie danach mehr Rechte geben oder den Zugriff wieder entziehen.",
+    "confirm": "Freigeben",
+    "cancel": "Abbrechen"
+  },
+  "confirmEnd": {
+    "title": "Freigabe für die Organisation beenden?",
+    "description": "Dann haben nur noch eingeladene Personen und Teams Zugriff auf „{{workspace}}“.",
+    "confirm": "Freigabe beenden",
+    "cancel": "Abbrechen"
+  },
+  "confirmEndTeam": {
+    "title": "Freigabe für Team {{team}} beenden?",
+    "description": "Wer nur über dieses Team Zugriff auf „{{workspace}}“ hat, verliert ihn. Wer später ins Team kommt, erhält keinen Zugriff mehr.",
+    "confirm": "Freigabe beenden",
+    "cancel": "Abbrechen"
+  },
+  "noAccess": {
+    "title": "Kein Zugriff auf diesen Arbeitsbereich",
+    "description": "Bitten Sie die Person, die ihn verwaltet, um eine Einladung.",
+    "back": "Zu den Arbeitsbereichen"
+  }
+}

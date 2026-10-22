@@ -15,7 +15,8 @@ import {
   WorkspaceDeleteDialog,
   WorkspaceSettingsDialog,
 } from '@/widgets/workspace-settings-dialog';
-import type { Workspace } from '@/features/workspaces';
+import { canEditWorkspace, type Workspace } from '@/features/workspaces';
+import { WorkspaceAccessBadge } from './WorkspaceAccessBadge';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -86,6 +87,7 @@ export default function WorkspacePage({
     (knowledgeBasesPagination?.total ?? 0) + linkedKnowledgeBases.length;
   const skillsCount = (skillsPagination?.total ?? 0) + linkedSkills.length;
   const artifactCount = artifactCountPage?.pagination.total ?? 0;
+  const canEdit = canEditWorkspace(workspace.accessLevel);
 
   return (
     <AppLayout>
@@ -96,6 +98,7 @@ export default function WorkspacePage({
               { label: t('page.breadcrumb'), href: '/workspaces' },
               { label: workspace.name },
             ]}
+            badge={<WorkspaceAccessBadge accessLevel={workspace.accessLevel} />}
             action={
               <WorkspaceHeaderActions
                 workspace={workspace}
@@ -171,13 +174,19 @@ export default function WorkspacePage({
                 <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="skills" className="pt-4">
-                <WorkspaceSkillsTab workspace={workspace} />
+                <WorkspaceSkillsTab workspace={workspace} canEdit={canEdit} />
               </TabsContent>
               <TabsContent value="knowledge" className="pt-4">
-                <WorkspaceKnowledgeTab workspace={workspace} />
+                <WorkspaceKnowledgeTab
+                  workspace={workspace}
+                  canEdit={canEdit}
+                />
               </TabsContent>
               <TabsContent value="instructions" className="pt-4">
-                <WorkspaceInstructionsTab workspaceId={workspace.id} />
+                <WorkspaceInstructionsTab
+                  workspaceId={workspace.id}
+                  canEdit={canEdit}
+                />
               </TabsContent>
             </Tabs>
           </div>

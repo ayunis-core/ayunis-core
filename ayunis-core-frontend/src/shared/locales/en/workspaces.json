@@ -3,12 +3,14 @@
     "title": "Workspaces",
     "addWorkspace": "Add workspace",
     "emptyTitle": "No workspaces yet",
-    "emptyDescription": "Create a workspace to group your chats by topic.",
+    "emptyDescription": "Create one, or get invited to one.",
     "emptyDescriptionNoCreate": "You are not allowed to create workspaces. Please contact your administration.",
     "skillCount_one": "{{count}} skill",
     "skillCount_other": "{{count}} skills",
     "knowledgeBaseCount_one": "{{count}} knowledge base",
-    "knowledgeBaseCount_other": "{{count}} knowledge bases"
+    "knowledgeBaseCount_other": "{{count}} knowledge bases",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members"
   },
   "card": {
     "pin": "Add to favorites",

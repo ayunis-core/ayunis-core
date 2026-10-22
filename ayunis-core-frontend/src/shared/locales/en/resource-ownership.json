@@ -8,7 +8,7 @@
     "org": "Organisation"
   },
   "hints": {
-    "personal": "Only you can use and change it.",
+    "personal": "Only you can change it.",
     "team": "Everyone in team {{team}} can use it. {{editors}}",
     "org": "All {{total}} people in the organisation can use it. {{editors}}"
   },
@@ -28,7 +28,7 @@
       "review": "Belongs to {{name}}"
     },
     "audience": {
-      "personal": "Only you can use and change the {{noun}}.",
+      "personal": "Only you can change the {{noun}}.",
       "team": "All {{total}} members can use the {{noun}}.",
       "org": "All {{total}} people in the organisation can use the {{noun}}.",
       "review": "You are reviewing this request and can view the {{noun}}, but not use or change it."

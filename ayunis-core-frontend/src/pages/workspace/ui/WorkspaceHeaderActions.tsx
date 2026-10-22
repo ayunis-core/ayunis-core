@@ -14,7 +14,8 @@ import {
   useFavorites,
   useToggleFavorite,
 } from '@/features/favorites';
-import type { Workspace } from '@/features/workspaces';
+import { isWorkspaceOwner, type Workspace } from '@/features/workspaces';
+import { WorkspaceMembersButton } from '@/widgets/workspace-members-dialog';
 
 interface WorkspaceHeaderActionsProps {
   workspace: Workspace;
@@ -42,28 +43,31 @@ export function WorkspaceHeaderActions({
         unpinLabel={t('page.unpin')}
         onToggle={() => togglePinned('workspace', workspace.id)}
       />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={tWorkspaces('actions.more')}
-            data-testid="workspace-actions-menu"
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onOpenSettings}>
-            <Pencil />
-            <span>{tWorkspaces('actions.edit')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onClick={onOpenDelete}>
-            <Trash2 />
-            <span>{tWorkspaces('actions.delete')}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <WorkspaceMembersButton workspace={workspace} />
+      {isWorkspaceOwner(workspace.accessLevel) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={tWorkspaces('actions.more')}
+              data-testid="workspace-actions-menu"
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onOpenSettings}>
+              <Pencil />
+              <span>{tWorkspaces('actions.edit')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={onOpenDelete}>
+              <Trash2 />
+              <span>{tWorkspaces('actions.delete')}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
