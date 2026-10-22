@@ -1,8 +1,12 @@
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  type ExtractionConfig,
+  extractionConfig,
+} from 'src/config/extraction.config';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
@@ -26,9 +30,12 @@ import {
   isSpreadsheetFile,
 } from 'src/common/util/file-type';
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
+import { joinExtractionPages } from 'src/domain/sources/application/util/extraction-result.helper';
+import { usesExtractionService } from 'src/domain/sources/application/util/extraction-routing.helper';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { ExtractionJobRunner } from './extraction-job-runner.service';
 import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,
@@ -77,6 +84,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
     private readonly heartbeat: SourceProcessingHeartbeatService,
+    private readonly extractionJobs: ExtractionJobRunner,
+    @Inject(extractionConfig.KEY)
+    private readonly extraction: ExtractionConfig,
   ) {
     super();
   }
@@ -97,7 +107,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
   private async processDocument(
     job: Job<DocumentProcessingJobData>,
   ): Promise<void> {
-    const { sourceId, orgId, userId, minioPath } = job.data;
+    const { sourceId, orgId, userId } = job.data;
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
@@ -109,15 +119,14 @@ export class DocumentProcessingConsumer extends WorkerHost {
         processingStage(STAGE_SPANS[stage] ?? `document.${stage}`, run),
       );
       try {
-        if (!(await this.loadSourceOrSkip(sourceId, minioPath))) return;
+        if (!(await this.loadSourceOrSkip(job.data))) return;
 
-        const extracted = await this.heartbeat.run(sourceId, () =>
-          this.downloadAndExtractText(job.data, timings),
-        );
+        const extracted = await this.extract(job, timings);
+        if (!extracted) return;
 
         // Guard: re-check the source still exists and is PROCESSING
         // before writing content. Prevents resurrection of deleted sources.
-        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+        const source = await this.reloadIfStillProcessing(job.data);
         if (!source) return;
 
         await timings.measure('persist', () =>
@@ -128,12 +137,71 @@ export class DocumentProcessingConsumer extends WorkerHost {
           ),
         );
         await this.indexChunks(sourceId, orgId, extracted.chunks, timings);
-        await this.markSourceReady(sourceId, minioPath);
+        await this.markSourceReady(sourceId);
+        await this.discardArtifacts(job.data);
         this.reportCompleted(job.data, extracted, timings);
       } catch (error) {
         await this.handleFailure(job, error, timings);
       }
     });
+  }
+
+  private routesToService(data: DocumentProcessingJobData): boolean {
+    return usesExtractionService(
+      this.extraction,
+      detectFileType(data.fileType, data.fileName),
+    );
+  }
+
+  /** Null means the attempt ends without touching the source row. */
+  private extract(
+    job: Job<DocumentProcessingJobData>,
+    timings: Timings,
+  ): Promise<ExtractedDocument | null> {
+    if (this.routesToService(job.data)) {
+      return this.extractViaService(job, timings);
+    }
+    return this.heartbeat.run(job.data.sourceId, () =>
+      this.downloadAndExtractText(job.data, timings),
+    );
+  }
+
+  /**
+   * The service reads the staged object itself; the API only polls, then
+   * downloads the result JSON. The runner refreshes the heartbeat per poll.
+   */
+  private async extractViaService(
+    job: Job<DocumentProcessingJobData>,
+    timings: Timings,
+  ): Promise<ExtractedDocument | null> {
+    const outcome = await timings.measure('extraction', () =>
+      this.extractionJobs.run(job),
+    );
+    if (outcome.kind !== 'succeeded') {
+      this.logger.warn(
+        { sourceId: job.data.sourceId, outcome: outcome.kind },
+        'Extraction ended without a result',
+      );
+      if (outcome.kind === 'abandoned') await this.discardArtifacts(job.data);
+      return null;
+    }
+    const { pages, document } = await timings.measure('download', () =>
+      this.extractionJobs.fetchResult(outcome.result),
+    );
+    if (document.warnings.length > 0) {
+      this.logger.warn(
+        { sourceId: job.data.sourceId, warnings: document.warnings },
+        'Extraction service reported warnings',
+      );
+    }
+    const text = joinExtractionPages(pages);
+    const chunks = await this.chunk(text, job.data.fileName, timings);
+    return {
+      text,
+      chunks,
+      pageCount: pages.length,
+      fileSizeBytes: job.data.fileSizeBytes ?? 0,
+    };
   }
 
   private async indexChunks(
@@ -181,7 +249,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     error: unknown,
     timings: Timings,
   ): Promise<void> {
-    const { sourceId, minioPath } = job.data;
+    const { sourceId } = job.data;
     this.logger.error(
       {
         sourceId,
@@ -196,7 +264,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     if (final) {
       await this.helper.markFailed(sourceId, error);
       await this.helper.cleanupIndex(sourceId);
-      await this.cleanupMinioFile(minioPath);
+      await this.discardArtifacts(job.data);
     }
     if (rethrow) throw rethrow;
   }
@@ -231,16 +299,16 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   private async loadSourceOrSkip(
-    sourceId: UUID,
-    minioPath: string,
+    data: DocumentProcessingJobData,
   ): Promise<TextSource | null> {
+    const { sourceId } = data;
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
       this.logger.warn(
         { sourceId, found: !!source },
         'Source missing or no longer processing, skipping',
       );
-      await this.cleanupMinioFile(minioPath);
+      await this.discardArtifacts(data);
       return null;
     }
 
@@ -253,7 +321,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
     if (!alive) {
       this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
-      await this.cleanupMinioFile(minioPath);
+      await this.discardArtifacts(data);
       return null;
     }
     source.processingStartedAt = processingStartedAt;
@@ -279,6 +347,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
       timings.record('extraction', timings.get('extraction') - conversionMs);
     }
 
+    const chunks = await this.chunk(text, fileName, timings);
+    return { text, chunks, pageCount, fileSizeBytes: fileBuffer.length };
+  }
+
+  private async chunk(
+    text: string,
+    fileName: string,
+    timings: Timings,
+  ): Promise<TextSourceContentChunk[]> {
     const splitResult = await timings.measure('chunking', () =>
       this.splitTextUseCase.execute(
         new SplitTextCommand(text, SplitterType.RECURSIVE, {
@@ -287,15 +364,13 @@ export class DocumentProcessingConsumer extends WorkerHost {
         }),
       ),
     );
-    const chunks = splitResult.chunks.map(
+    return splitResult.chunks.map(
       (chunk) =>
         new TextSourceContentChunk({
           content: chunk.text,
           meta: { fileName, ...chunk.metadata },
         }),
     );
-
-    return { text, chunks, pageCount, fileSizeBytes: fileBuffer.length };
   }
 
   private async extractText(
@@ -339,9 +414,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   private async reloadIfStillProcessing(
-    sourceId: UUID,
-    minioPath: string,
+    data: DocumentProcessingJobData,
   ): Promise<TextSource | null> {
+    const { sourceId } = data;
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
       this.logger.warn(
@@ -351,7 +426,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         },
         'Source deleted or status changed mid-processing',
       );
-      await this.cleanupMinioFile(minioPath);
+      await this.discardArtifacts(data);
       return null;
     }
     if (!(source instanceof TextSource)) {
@@ -368,10 +443,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     await this.sourceRepository.saveTextSource(source, { text, chunks });
   }
 
-  private async markSourceReady(
-    sourceId: UUID,
-    minioPath: string,
-  ): Promise<void> {
+  private async markSourceReady(sourceId: UUID): Promise<void> {
     const updated = await this.sourceRepository.updateStatusConditionally(
       sourceId,
       SourceStatus.PROCESSING,
@@ -385,18 +457,27 @@ export class DocumentProcessingConsumer extends WorkerHost {
       );
       await this.helper.cleanupIndex(sourceId);
     }
-    await this.cleanupMinioFile(minioPath);
   }
 
   private async downloadFile(minioPath: string): Promise<Buffer> {
     return downloadMinioFile(this.downloadObjectUseCase, minioPath);
   }
 
-  private async cleanupMinioFile(minioPath: string): Promise<void> {
+  /**
+   * Service jobs own a whole prefix (input, checkpoints, result) and a job
+   * record; the in-process path only staged the input object.
+   */
+  private async discardArtifacts(
+    data: DocumentProcessingJobData,
+  ): Promise<void> {
+    if (this.routesToService(data)) {
+      await this.extractionJobs.release(data);
+      return;
+    }
     await cleanupMinioProcessingFile(
       this.deleteObjectUseCase,
       this.logger,
-      minioPath,
+      data.minioPath,
     );
   }
 }

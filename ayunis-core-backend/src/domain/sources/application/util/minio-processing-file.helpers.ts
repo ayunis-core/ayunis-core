@@ -25,9 +25,10 @@ export function buildMinioProcessingPath(
 export async function downloadMinioFile(
   downloadObjectUseCase: DownloadObjectUseCase,
   minioPath: string,
+  bucket?: string,
 ): Promise<Buffer> {
   const stream = await downloadObjectUseCase.execute(
-    new DownloadObjectCommand(minioPath),
+    new DownloadObjectCommand(minioPath, bucket),
   );
   const chunks: Buffer[] = [];
   for await (const chunk of stream) {

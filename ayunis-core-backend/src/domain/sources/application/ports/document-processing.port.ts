@@ -7,6 +7,9 @@ export interface DocumentProcessingJobData {
   minioPath: string;
   /** Hash of the staged object; absent only on jobs enqueued before it was recorded. */
   sha256?: string;
+  fileSizeBytes?: number;
+  /** Set once the extraction service has accepted the job, so a later attempt can release it. */
+  extractionJobId?: string;
   fileName: string;
   fileType: string;
 }
