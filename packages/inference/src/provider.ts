@@ -4,7 +4,8 @@ import type { ToolSchema } from './tool-schema';
 
 export type ToolChoice = 'auto' | 'required' | { tool: string };
 
-export type FinishReason = 'stop' | 'length' | 'tool_calls' | null;
+export type FinishReason =
+  'stop' | 'length' | 'tool_calls' | 'refusal' | 'pause_turn' | null;
 
 export interface Usage {
   /**

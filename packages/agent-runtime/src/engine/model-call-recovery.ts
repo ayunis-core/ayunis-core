@@ -173,6 +173,9 @@ const rejectedRetry = (
         'answer_only_recovery',
         previousMalformed,
       );
+    case 'output_limit':
+    case 'refusal':
+    case 'pause_turn':
     case 'invalid_fallback':
       return noRetry(mode, previousMalformed);
     case 'malformed':
@@ -256,6 +259,15 @@ const rejectedError = (
   outcome: Extract<ModelCallOutcome, { type: 'rejected' }>,
   malformedError: MalformedToolCallError | undefined,
 ): AgentRuntimeError => {
-  if (malformedError) return malformedError;
-  return outcome.error;
+  switch (outcome.reason) {
+    case 'output_limit':
+    case 'refusal':
+    case 'pause_turn':
+      return outcome.error;
+    case 'empty':
+    case 'no_final_answer':
+    case 'malformed':
+    case 'invalid_fallback':
+      return malformedError ?? outcome.error;
+  }
 };

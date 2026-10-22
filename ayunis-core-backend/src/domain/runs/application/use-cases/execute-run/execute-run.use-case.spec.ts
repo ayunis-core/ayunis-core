@@ -774,6 +774,68 @@ describe('ExecuteRunUseCase', () => {
     },
   );
 
+  it.each(['length', 'refusal', 'pause_turn'] as const)(
+    'preserves completed tools when a later call terminates with %s',
+    async (finishReason) => {
+      const execute = jest.fn().mockResolvedValue('permit found');
+      const lookupTool = {
+        name: 'lookup_permit',
+        description: 'Look up a permit',
+        parameters: { type: 'object' },
+        execute,
+      };
+      const {
+        useCase,
+        save,
+        createToolResult,
+        cleanup,
+        provider,
+        collectUsage,
+      } = buildHarness({
+        modelConsumesCredits: true,
+        runtimeTools: [lookupTool],
+        turns: [
+          toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+          [
+            {
+              finishReason,
+              usage: {
+                inputTokens: 2,
+                cacheReadInputTokens: 39915,
+                outputTokens: 32000,
+              },
+            },
+          ],
+        ],
+      });
+      await expect(
+        drain(await useCase.execute(userCommand())),
+      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(provider.requests).toHaveLength(2);
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(createToolResult).toHaveBeenCalledTimes(1);
+      expect(collectUsage).toHaveBeenCalledTimes(2);
+      expect(cleanup).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['length', 'refusal', 'pause_turn'] as const)(
+    'cleans up a first-turn %s without visible output or completed tools',
+    async (finishReason) => {
+      const { useCase, cleanup, provider } = buildHarness({
+        turns: [
+          [{ finishReason, usage: { inputTokens: 2, outputTokens: 32000 } }],
+        ],
+      });
+      await expect(
+        drain(await useCase.execute(userCommand())),
+      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      expect(provider.requests).toHaveLength(1);
+      expect(cleanup).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it('preserves completed tool phases when a later paid call is rejected', async () => {
     const execute = jest.fn().mockResolvedValue('permit found');
     const lookupTool = {

@@ -197,6 +197,38 @@ describe('PersistenceHookFactory', () => {
     expect(savedContentTypes(save)).toEqual([MessageContentType.TEXT]);
   });
 
+  it.each(['refusal', 'pause_turn'] as const)(
+    'persists safe visible text from a terminal %s without its tool calls',
+    async (finishReason) => {
+      const save = saveSuccessfulMessages();
+      const { hook } = buildHook(save);
+      const model = completingProvider([
+        { textDelta: 'The operation cannot continue.' },
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'not-executed',
+              name: 'search',
+              argumentsDelta: '{"query":"budget"}',
+            },
+          ],
+        },
+        { finishReason },
+      ]);
+      await drain(
+        run({
+          instructions: '',
+          model,
+          messages: [userMessage()],
+          hooks: [hook],
+        }),
+      );
+      expect(savedText(save)).toBe('The operation cannot continue.');
+      expect(savedContentTypes(save)).toEqual([MessageContentType.TEXT]);
+    },
+  );
+
   it('does not persist terminal rejected recovery output', async () => {
     const save = saveSuccessfulMessages();
     const { hook } = buildHook(save);

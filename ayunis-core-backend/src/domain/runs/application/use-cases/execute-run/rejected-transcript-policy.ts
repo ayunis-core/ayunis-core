@@ -1,4 +1,5 @@
 import { ApplicationError } from 'src/common/errors/base.error';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { isCreditPolicyErrorCode } from 'src/domain/runs/application/credit-policy-error';
 import {
   RunMaxIterationsReachedError,
@@ -37,7 +38,8 @@ function findTranscriptPreservingRejection(
   if (!(error instanceof ApplicationError)) return undefined;
   if (
     isCreditPolicyErrorCode(error.code) ||
-    error instanceof RunUsageAccountingFailedError
+    error instanceof RunUsageAccountingFailedError ||
+    isTerminalCompletionFailure(error)
   ) {
     return error;
   }
@@ -46,4 +48,12 @@ function findTranscriptPreservingRejection(
   return error.cause instanceof RunUsageAccountingFailedError
     ? error.cause
     : undefined;
+}
+
+function isTerminalCompletionFailure(error: ApplicationError): boolean {
+  if (!(error instanceof InferenceFailedError)) return false;
+  const reason = error.metadata?.completionRejection;
+  return (
+    reason === 'output_limit' || reason === 'refusal' || reason === 'pause_turn'
+  );
 }
