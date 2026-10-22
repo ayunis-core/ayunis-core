@@ -17,6 +17,10 @@ _PDFIUM_LOCK = threading.RLock()
 DEFAULT_MAX_RENDER_PIXELS = 4_000_000
 
 
+def pdfium_lock() -> threading.RLock:
+    return _PDFIUM_LOCK
+
+
 @dataclass(frozen=True)
 class TextRect:
     """A text rectangle in PDF points, origin bottom-left (pypdfium2 `get_rect`)."""

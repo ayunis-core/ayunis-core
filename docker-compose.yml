@@ -252,6 +252,8 @@ services:
         condition: service_healthy
       anonymize:
         condition: service_healthy
+      extraction:
+        condition: service_healthy
       redis:
         condition: service_healthy
       gotenberg:
@@ -262,6 +264,7 @@ services:
     environment:
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
       ANONYMIZE_SERVICE_URL: http://anonymize:8000
+      EXTRACTION_SERVICE_URL: http://extraction:8000
       GOTENBERG_URL: http://gotenberg:3000
       REDIS_HOST: redis
     volumes:

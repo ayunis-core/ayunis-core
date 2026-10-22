@@ -10,7 +10,7 @@ from pathlib import Path
 
 import redis
 
-from app.api.models import JobFailure, JobProgress, StartJobRequest
+from app.api.models import EMPTY_PROGRESS, JobFailure, JobProgress, StartJobRequest
 from app.config import Settings
 from app.errors import ServiceError
 from app.jobs.service import JobService
@@ -51,7 +51,7 @@ class JobContext:
         self.lease_lost = threading.Event()
         self.started_at = time.monotonic()
         self.last_renewed_at = time.monotonic()
-        self.progress = JobProgress()
+        self.progress = EMPTY_PROGRESS
 
     def check(self) -> None:
         """Called between pages, between OCR batches and before every write (contract §7.1)."""

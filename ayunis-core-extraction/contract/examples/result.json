@@ -1,0 +1,109 @@
+{
+  "document": {
+    "converter": null,
+    "declaredMimeType": "application/pdf",
+    "detectedType": "pdf",
+    "fileName": "report.pdf",
+    "ocrModel": "mistral-ocr-latest",
+    "pageCount": 4,
+    "pagesBlank": 1,
+    "pagesOcr": 1,
+    "pagesText": 2,
+    "ruleVersion": "ocr-rule/1",
+    "timings": {
+      "analysisMs": 980,
+      "conversionMs": 0,
+      "downloadMs": 1200,
+      "ocrMs": 6100,
+      "totalMs": 8400
+    },
+    "warnings": [
+      "ocr_page_count_mismatch"
+    ]
+  },
+  "idempotencyKey": "v1:00000000-0000-0000-0000-000000000001:9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e",
+  "jobId": "0199f1c3b4a5c6d7e8f9a0b1c2d3",
+  "pages": [
+    {
+      "index": 0,
+      "method": "text",
+      "number": 1,
+      "ocrReason": null,
+      "quality": {
+        "charCount": 2310,
+        "garbageRatio": 0.0,
+        "inkRatio": 0.061,
+        "tableLikelihood": 0.05,
+        "textInkCoverage": 0.97,
+        "wordValidity": 0.94
+      },
+      "size": {
+        "height": 841.9,
+        "width": 595.3
+      },
+      "text": "Stadt Musterhausen\nBeschlussvorlage 2024/17",
+      "truncated": false
+    },
+    {
+      "index": 1,
+      "method": "ocr",
+      "number": 2,
+      "ocrReason": "table",
+      "quality": {
+        "charCount": 556,
+        "garbageRatio": 0.0,
+        "inkRatio": 0.052,
+        "tableLikelihood": 1.0,
+        "textInkCoverage": 0.62,
+        "wordValidity": null
+      },
+      "size": {
+        "height": 841.9,
+        "width": 595.3
+      },
+      "text": "| Gebühr | Betrag |\n| --- | --- |\n| Gruppe 1 | 117,00 € |",
+      "truncated": false
+    },
+    {
+      "index": 2,
+      "method": "blank",
+      "number": 3,
+      "ocrReason": null,
+      "quality": {
+        "charCount": 0,
+        "garbageRatio": 0.0,
+        "inkRatio": 0.0,
+        "tableLikelihood": 0.0,
+        "textInkCoverage": 1.0,
+        "wordValidity": null
+      },
+      "size": {
+        "height": 841.9,
+        "width": 595.3
+      },
+      "text": "",
+      "truncated": false
+    },
+    {
+      "index": 3,
+      "method": "text_fallback",
+      "number": 4,
+      "ocrReason": "low_coverage",
+      "quality": {
+        "charCount": 52,
+        "garbageRatio": 0.0,
+        "inkRatio": 0.104,
+        "tableLikelihood": 0.0,
+        "textInkCoverage": 0.03,
+        "wordValidity": null
+      },
+      "size": {
+        "height": 841.9,
+        "width": 595.3
+      },
+      "text": "Eingegangen am 12.03.2024",
+      "truncated": false
+    }
+  ],
+  "schemaVersion": 1
+}

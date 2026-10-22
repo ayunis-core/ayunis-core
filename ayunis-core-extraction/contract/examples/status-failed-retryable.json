@@ -1,0 +1,27 @@
+{
+  "attempt": 2,
+  "createdAt": "2026-10-22T10:00:00.000Z",
+  "error": {
+    "code": "OCR_UNAVAILABLE",
+    "details": {
+      "status": 503
+    },
+    "message": "Mistral OCR answered 503",
+    "retryable": true
+  },
+  "finishedAt": "2026-10-22T10:04:15.000Z",
+  "idempotencyKey": "v1:00000000-0000-0000-0000-000000000001:9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e",
+  "jobId": "0199f1c3b4a5c6d7e8f9a0b1c2d3",
+  "phase": null,
+  "progress": {
+    "pagesDone": 2,
+    "pagesOcr": 0,
+    "pagesText": 2,
+    "pagesTotal": 4
+  },
+  "restarts": 1,
+  "result": null,
+  "startedAt": "2026-10-22T10:00:02.000Z",
+  "state": "failed",
+  "updatedAt": "2026-10-22T10:04:15.000Z"
+}

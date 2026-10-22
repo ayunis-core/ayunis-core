@@ -43,7 +43,7 @@ uv run mypy
 uv run pytest
 ```
 
-`scripts/export_contract.py` regenerates `contract/openapi.json` and the example payloads; CI fails when the committed files differ from the app.
+`uv run python -m scripts.export_contract` regenerates `contract/openapi.json` and the example payloads; CI fails when the committed files differ from the app.
 
 ## Configuration
 
@@ -109,6 +109,20 @@ CORPUS_DIR=/path/to/corpus uv run python -m scripts.validate_corpus --price-per-
 ```
 
 It writes `decisions-ocr-rule-1.csv` next to the manifest with every page's signals and decision, prints the OCR share per category with rule 7 on and off, the recall of "needs OCR" against the manifest's expectations, and the estimated cost. No OCR is called.
+
+## OCR dispatch
+
+Pages the rule routes to OCR are grouped in document order into sub-PDFs of at most `OCR_BATCH_PAGES` pages and `OCR_BATCH_BYTES` bytes (`app/ocr/batching.py`; a batch over the byte limit is halved until it fits). Each batch is one provider call; every page of the batch is checkpointed before the next call, so a restart repeats at most one batch.
+
+`OCR_BACKEND=mistral` (`app/ocr/mistral.py`) posts the sub-PDF inline to `/v1/ocr` with the same request shape as the backend's in-process Mistral handler: image text annotations requested, image bytes not returned. Failures map to contract §10 codes: Mistral `400 document_parser_invalid_file` / `invalid_request_file` and every `422` are `UNPROCESSABLE_DOCUMENT`, `401`/`403` are `OCR_UNAUTHORIZED`, `408`/`429`/`5xx` and connection failures are retried `OCR_TRANSIENT_RETRIES` times with exponential backoff and then `OCR_UNAVAILABLE`, a client deadline is `OCR_TIMEOUT`, and any other `4xx` is `OCR_REJECTED` with `details.status`.
+
+A provider call runs on its own thread while the job keeps checking its state every second: a cancel, release, lost lease or shutdown interrupts the job at once, the late response is dropped, and the backend's stop check runs before every attempt, so a cancelled job never re-sends the document on a retry (contract §7.1).
+
+`OCR_BACKEND=fake` (`app/ocr/fake.py`) returns `[fake-ocr <sha> page i/n]` plus the page's text layer, deterministically and without network; `FAKE_OCR_DELAY_SECONDS` slows it down for restart demonstrations. Without a configured backend, OCR pages are emitted as `text_fallback` and the result carries the warning `ocr_not_configured`.
+
+## Contract with the backend
+
+`contract/openapi.json` and `contract/examples/*.json` are generated from the service's own models by `scripts/export_contract.py`; CI fails when they drift from the app. The backend spec `ayunis-core-backend/src/domain/sources/infrastructure/extraction/extraction-contract.spec.ts` validates what its HTTP adapter sends against the request schemas, checks that every field its port reads is required in the response schemas, and parses the example statuses, errors and result through its own mapping code.
 
 ## Threading
 

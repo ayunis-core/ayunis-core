@@ -166,19 +166,17 @@
       },
       "JobProgress": {
         "additionalProperties": false,
+        "description": "Every counter is always present: the backend reads them without defaults.",
         "properties": {
           "pagesDone": {
-            "default": 0,
             "title": "Pagesdone",
             "type": "integer"
           },
           "pagesOcr": {
-            "default": 0,
             "title": "Pagesocr",
             "type": "integer"
           },
           "pagesText": {
-            "default": 0,
             "title": "Pagestext",
             "type": "integer"
           },
@@ -194,6 +192,12 @@
             "title": "Pagestotal"
           }
         },
+        "required": [
+          "pagesTotal",
+          "pagesDone",
+          "pagesOcr",
+          "pagesText"
+        ],
         "title": "JobProgress",
         "type": "object"
       },

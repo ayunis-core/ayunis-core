@@ -1,0 +1,20 @@
+{
+  "attempt": 1,
+  "createdAt": "2026-10-22T10:00:00.000Z",
+  "error": null,
+  "finishedAt": null,
+  "idempotencyKey": "v1:00000000-0000-0000-0000-000000000001:9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e9a3e",
+  "jobId": "0199f1c3b4a5c6d7e8f9a0b1c2d3",
+  "phase": "extracting",
+  "progress": {
+    "pagesDone": 2,
+    "pagesOcr": 1,
+    "pagesText": 1,
+    "pagesTotal": 4
+  },
+  "restarts": 0,
+  "result": null,
+  "startedAt": "2026-10-22T10:00:02.000Z",
+  "state": "running",
+  "updatedAt": "2026-10-22T10:03:40.000Z"
+}

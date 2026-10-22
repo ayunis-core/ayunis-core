@@ -29,7 +29,7 @@ def test_worker_pool_runs_a_queued_job_to_succeeded(
 
     def pipeline(context: JobContext) -> None:
         context.set_phase("extracting")
-        context.report_progress(JobProgress(pages_total=1, pages_done=1, pages_text=1))
+        context.report_progress(JobProgress(pages_total=1, pages_done=1, pages_ocr=0, pages_text=1))
         assert store.succeed(
             context.job_id, result, settings.replica_id, settings.record_ttl_seconds
         )
