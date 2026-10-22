@@ -184,6 +184,20 @@ const buildParams = (
   ...(request.tools.length > 0 && request.toolChoice !== undefined
     ? { tool_choice: convertToolChoice(request.toolChoice, codec) }
     : {}),
+  ...(thinksByDefault(model)
+    ? { thinking: { type: 'adaptive', display: 'summarized' } }
+    : {}),
   max_tokens: maxTokens,
   stream: true,
 });
+
+// These models always think, but omit the thinking text by default, so a chat
+// shows nothing until the answer starts (AYC-1374). Summarized display streams
+// the reasoning instead without changing how much the model thinks. Older
+// models are excluded: sending `adaptive` would switch thinking on for them.
+// ponytail: verified families only; extend the pattern once another
+// default-thinking family (e.g. Haiku 5.5) is verified to accept `display`.
+const DEFAULT_THINKING_MODEL = /claude-(?:opus|sonnet)-5(?:-\d+)?(?!\d)/;
+
+const thinksByDefault = (model: string): boolean =>
+  DEFAULT_THINKING_MODEL.test(model);
