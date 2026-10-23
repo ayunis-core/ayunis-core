@@ -1,4 +1,4 @@
-import { BudgetWarningScope } from '../../../domain/value-objects/budget-warning-scope.enum';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 
 const HELP_EMAIL = 'help@ayunis.com';
 const HELP_LINK = `<a href="mailto:${HELP_EMAIL}">${HELP_EMAIL}</a>`;
@@ -53,6 +53,12 @@ export function buildBudgetWarningMessage(
       );
     case BudgetWarningScope.TEAM:
       return teamMessage(
+        params.threshold,
+        params.targetName,
+        params.settingsUrl,
+      );
+    case BudgetWarningScope.API_KEY:
+      return apiKeyMessage(
         params.threshold,
         params.targetName,
         params.settingsUrl,
@@ -226,6 +232,49 @@ function teamMessage(
       {
         text: 'Sie können das Limit für einzelne Teams jederzeit in den Einstellungen prüfen und anpassen.',
         html: `Sie können das Limit für einzelne Teams jederzeit in den ${settingsLink(settingsUrl, 'Einstellungen')} prüfen und anpassen.`,
+      },
+    ],
+  };
+}
+
+function apiKeyMessage(
+  threshold: number,
+  name: BudgetWarningName,
+  settingsUrl: string,
+): BudgetWarningMessage {
+  if (threshold >= 100) {
+    return {
+      subject: `Limit erreicht: Der API-Schlüssel ${name.text} kann nicht mehr alle Modelle nutzen`,
+      headline: 'Limit erreicht',
+      preheader: `Der API-Schlüssel ${name.text} hat das festgelegte Limit vollständig erreicht.`,
+      ctaLabel: 'API-Schlüssel öffnen',
+      settingsLinkLabel: 'API-Schlüssel-Einstellungen',
+      paragraphs: [
+        {
+          text: `der API-Schlüssel ${name.text} hat das festgelegte Limit vollständig erreicht. Anfragen der Anwendung, die diesen Schlüssel nutzt, an Credit-pflichtige Modelle werden abgelehnt, bis Sie das Limit anpassen.`,
+          html: `der API-Schlüssel <strong>${name.html}</strong> hat das festgelegte Limit vollständig erreicht. Anfragen der Anwendung, die diesen Schlüssel nutzt, an Credit-pflichtige Modelle werden abgelehnt, bis Sie das Limit anpassen.`,
+        },
+        {
+          text: 'Passen Sie das Limit in den API-Schlüssel-Einstellungen an, damit die Anwendung wieder normal arbeiten kann.',
+          html: `Passen Sie das Limit in den ${settingsLink(settingsUrl, 'API-Schlüssel-Einstellungen')} an, damit die Anwendung wieder normal arbeiten kann.`,
+        },
+      ],
+    };
+  }
+  return {
+    subject: `Limitwarnung: Der API-Schlüssel ${name.text} hat ${threshold} % des Limits erreicht`,
+    headline: 'Limitwarnung',
+    preheader: `Der API-Schlüssel ${name.text} hat mindestens ${threshold} % des festgelegten Limits erreicht.`,
+    ctaLabel: 'API-Schlüssel öffnen',
+    settingsLinkLabel: 'API-Schlüssel-Einstellungen',
+    paragraphs: [
+      {
+        text: `der API-Schlüssel ${name.text} hat mindestens ${threshold} % des festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, werden Anfragen der Anwendung an Credit-pflichtige Modelle abgelehnt, bis Sie das Limit anpassen.`,
+        html: `der API-Schlüssel <strong>${name.html}</strong> hat mindestens <strong>${threshold} %</strong> des festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, werden Anfragen der Anwendung an Credit-pflichtige Modelle abgelehnt, bis Sie das Limit anpassen.`,
+      },
+      {
+        text: 'Sie können das Limit für jeden API-Schlüssel jederzeit in den API-Schlüssel-Einstellungen prüfen und anpassen.',
+        html: `Sie können das Limit für jeden API-Schlüssel jederzeit in den ${settingsLink(settingsUrl, 'API-Schlüssel-Einstellungen')} prüfen und anpassen.`,
       },
     ],
   };
