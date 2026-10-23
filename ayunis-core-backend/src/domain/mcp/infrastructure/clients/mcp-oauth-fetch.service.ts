@@ -3,10 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import type { LookupOptions } from 'node:dns';
 import { lookup } from 'node:dns/promises';
 import { BlockList, isIP, type LookupFunction } from 'node:net';
-// This Agent only works as a `dispatcher` for globalThis.fetch while the
-// undici major matches the one Node embeds — undici 8 dropped the legacy
-// handler API. Bump this dep and the node image together, never apart.
-import { Agent, type Dispatcher } from 'undici';
+// The Agent must be paired with undici's own fetch, not globalThis.fetch:
+// Node's built-in fetch uses its embedded undici, whose handler API breaks
+// across majors when handed a dispatcher from this dependency.
+import {
+  Agent,
+  fetch as undiciFetch,
+  type Response as UndiciResponse,
+} from 'undici';
 import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 
 const MAX_REDIRECTS = 5;
@@ -61,13 +65,14 @@ export class McpOAuthFetchService
     let init = initialInit;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       await this.assertAllowed(url);
-      const response = await globalThis.fetch(url, {
-        ...init,
+      const response = await undiciFetch(url, {
+        ...(init as Parameters<typeof undiciFetch>[1]),
         redirect: 'manual',
         dispatcher: this.dispatcher,
-      } as RequestInit & { dispatcher: Dispatcher });
+      });
       const location = response.headers.get('location');
-      if (!REDIRECT_STATUSES.has(response.status) || !location) return response;
+      if (!REDIRECT_STATUSES.has(response.status) || !location)
+        return toGlobalResponse(response);
       const nextUrl = new URL(location, url);
       await response.body?.cancel();
       await this.assertAllowed(nextUrl);
@@ -172,6 +177,16 @@ export class McpOAuthFetchService
     headers.delete('content-type');
     return { ...init, method: 'GET', headers, body: undefined };
   }
+}
+
+// The MCP SDK parses OAuth error bodies only for `instanceof Response`,
+// which an undici Response from this dependency never satisfies.
+function toGlobalResponse(response: UndiciResponse): Response {
+  return new Response(response.body as ReadableStream | null, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: [...response.headers],
+  });
 }
 
 function normalizeHostname(hostname: string): string {
