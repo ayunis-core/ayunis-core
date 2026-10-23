@@ -6,10 +6,10 @@
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "knip": "^6.24.0",
+    "knip": "^6.42.1",
     "madge": "^8.0.0",
-    "markdownlint-cli2": "^0.23.0",
-    "postcss": "^8.5.29"
+    "markdownlint-cli2": "^0.23.3",
+    "postcss": "^8.5.31"
   },
   "devDependenciesNotes": {
     "postcss": "Not imported anywhere. terser-webpack-plugin (under the frontend's and packages/ui's optional webpack) declares an optional `postcss` peer, which pnpm links only if postcss has already been resolved elsewhere in the graph — so `pnpm dedupe --check` occasionally drops it on an unchanged lockfile. A root dependency makes the peer resolve deterministically (resolve-peers-from-workspace-root). Remove only together with the webpack/terser-webpack-plugin chain, then re-run `pnpm dedupe --check` ~20 times."
