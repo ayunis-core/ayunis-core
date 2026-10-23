@@ -1,6 +1,7 @@
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
 import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
@@ -14,8 +15,6 @@ import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
 } from 'src/domain/skill-templates/application/skill-templates.errors';
-
-const PG_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class LocalSkillTemplateRepository implements SkillTemplateRepository {
@@ -116,11 +115,7 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
     try {
       return await this.repository.save(record);
     } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error as QueryFailedError & { code?: string }).code ===
-          PG_UNIQUE_VIOLATION
-      ) {
+      if (isUniqueConstraintViolation(error)) {
         throw new DuplicateSkillTemplateNameError(name);
       }
       throw error;

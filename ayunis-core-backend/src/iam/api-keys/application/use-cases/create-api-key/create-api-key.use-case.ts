@@ -1,6 +1,6 @@
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { QueryFailedError } from 'typeorm';
 import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { CreateApiKeyCommand } from './create-api-key.command';
@@ -18,7 +18,6 @@ import type { UUID } from 'crypto';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 const SECRET_BYTES = 32;
-const PG_UNIQUE_VIOLATION = '23505';
 const MAX_PREFIX_COLLISION_RETRIES = 1;
 
 @Injectable()
@@ -93,7 +92,7 @@ export class CreateApiKeyUseCase {
         );
         return { apiKey: created, secret };
       } catch (error) {
-        if (!isUniquePrefixViolation(error)) throw error;
+        if (!isUniqueConstraintViolation(error)) throw error;
         this.logger.warn(
           {
             orgId: params.orgId,
@@ -120,12 +119,4 @@ export class CreateApiKeyUseCase {
     );
     return { secret, prefix, hash };
   }
-}
-
-function isUniquePrefixViolation(error: unknown): boolean {
-  return (
-    error instanceof QueryFailedError &&
-    (error.driverError as { code?: string } | undefined)?.code ===
-      PG_UNIQUE_VIOLATION
-  );
 }
