@@ -114,7 +114,7 @@
     "openid-client": "^6.8.7",
     "otplib": "^12.0.1",
     "p-limit": "^7.3.1",
-    "p-queue": "^9.3.3",
+    "p-queue": "^10.0.0",
     "papaparse": "^5.7.0",
     "passport": "^0.7.0",
     "passport-custom": "^1.1.1",
