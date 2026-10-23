@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@ayunis/ui/components/badge';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
-import { TierStars } from '@/widgets/model-type-card';
+import { TierStars } from './TierStars';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export type ModelInfoModel = Pick<

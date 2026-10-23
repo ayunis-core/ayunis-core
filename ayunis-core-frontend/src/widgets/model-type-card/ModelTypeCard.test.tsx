@@ -103,6 +103,37 @@ describe(ModelTypeCard.name, () => {
     }
   });
 
+  it('shows the tier as the chat selector category and the model info card on hover', () => {
+    render(
+      <ModelTypeCard
+        type="language"
+        models={[
+          {
+            ...model('tiered', true),
+            type: 'language',
+            tier: 'high',
+            description: 'Good for long documents',
+          },
+        ]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.getByText('models.category.high')).toBeTruthy();
+    expect(screen.queryByLabelText(/models\.tierPerformance/)).toBeNull();
+    expect(screen.queryByText('Good for long documents')).toBeNull();
+
+    const trigger = screen.getByTestId('model-type-card-model-info-trigger');
+    fireEvent.mouseEnter(trigger);
+
+    expect(screen.getByText('Good for long documents')).toBeTruthy();
+    expect(screen.getByText('models.tierUsage.high')).toBeTruthy();
+
+    // A touch tap fires the hover and the click together.
+    fireEvent.click(trigger);
+    expect(screen.getByText('Good for long documents')).toBeTruthy();
+  });
+
   it('lets callers disable alternatives while keeping the selected model removable', () => {
     const modelActions = actions();
     render(

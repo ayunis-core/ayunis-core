@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,10 +9,7 @@ import {
 import { Switch } from '@ayunis/ui/components/switch';
 import { Label } from '@ayunis/ui/components/label';
 import { Separator } from '@ayunis/ui/components/separator';
-import {
-  ModelWithConfigResponseDtoTier,
-  type ModelWithConfigResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import {
   Item,
@@ -25,62 +23,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { CircleHelp, Star } from 'lucide-react';
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from '@ayunis/ui/components/popover';
+import { CircleHelp } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
 import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
-
-const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
-  [ModelWithConfigResponseDtoTier.zero]: 0,
-  [ModelWithConfigResponseDtoTier.low]: 1,
-  [ModelWithConfigResponseDtoTier.medium]: 2,
-  [ModelWithConfigResponseDtoTier.high]: 3,
-};
-
-interface ModelTierStarsProps {
-  readonly tier: ModelWithConfigResponseDtoTier;
-}
-
-export function TierStars({ tier }: ModelTierStarsProps) {
-  const filled = TIER_FILLED_COUNT[tier];
-  return (
-    <span className="inline-flex items-center" aria-hidden="true">
-      {[0, 1, 2].map((index) => (
-        <Star
-          key={index}
-          className={cn(
-            'h-3 w-3',
-            index < filled
-              ? 'fill-current text-foreground'
-              : 'fill-none text-muted-foreground',
-          )}
-        />
-      ))}
-    </span>
-  );
-}
-
-export function ModelTierStars({ tier }: ModelTierStarsProps) {
-  const { t } = useTranslation('common');
-  const performance = t(`models.tierPerformance.${tier}`);
-  const usage = t(`models.tierUsage.${tier}`);
-  const tierLabel = `${performance} · ${usage}`;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className="ml-1 inline-flex items-center align-middle"
-          aria-label={tierLabel}
-          tabIndex={0}
-        >
-          <TierStars tier={tier} />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{tierLabel}</TooltipContent>
-    </Tooltip>
-  );
-}
+import { ModelInfoCard } from '@/widgets/model-select-options';
 
 export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;
@@ -162,6 +115,54 @@ function ModelTypeCardTitle({ title, hintKey }: ModelTypeCardTitleProps) {
         <TooltipContent className="max-w-xs">{t(hintKey)}</TooltipContent>
       </Tooltip>
     </CardTitle>
+  );
+}
+
+// Same name, category label and hover info card as the chat model selector.
+function ModelTitleWithInfo({
+  model,
+}: {
+  readonly model: ModelWithConfigResponseDto;
+}) {
+  const { t } = useTranslation('common');
+  const [open, setOpen] = useState(false);
+  const displayName = model.displayName || model.name;
+
+  return (
+    // An anchor, not a PopoverTrigger: a trigger's click toggles, which would
+    // close the card a hover or touch tap just opened. Escape and outside
+    // clicks still close it through onOpenChange.
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 text-left"
+          aria-expanded={open}
+          data-testid="model-type-card-model-info-trigger"
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onClick={() => setOpen(true)}
+        >
+          <ProviderFlag provider={model.provider} />
+          {displayName}
+          {model.tier && (
+            <span className="text-muted-foreground text-xs font-normal">
+              {t(`models.category.${model.tier}`)}
+            </span>
+          )}
+        </button>
+      </PopoverAnchor>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        className="pointer-events-none w-80"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <ModelInfoCard model={{ ...model, displayName }} />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -264,12 +265,7 @@ export default function ModelTypeCard({
                 >
                   <ItemContent>
                     <ItemTitle>
-                      <ProviderFlag
-                        provider={model.provider}
-                        className="mr-1"
-                      />
-                      {model.displayName || model.name}
-                      {model.tier && <ModelTierStars tier={model.tier} />}
+                      <ModelTitleWithInfo model={model} />
                     </ItemTitle>
                     {model.displayName && (
                       <ItemDescription>{model.name}</ItemDescription>
