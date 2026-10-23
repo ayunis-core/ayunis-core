@@ -95,6 +95,57 @@ describe('createMessagesProvider prompt caching', () => {
   });
 });
 
+describe('createMessagesProvider thinking display', () => {
+  const capturedParamsFor = async (
+    model: string,
+  ): Promise<MessageCreateParamsStreaming> => {
+    const captured: MessageCreateParamsStreaming[] = [];
+    const provider = createMessagesProvider(
+      captureClient(captured),
+      `test:${model}`,
+      model,
+      1024,
+    );
+    await drain(
+      provider.stream({
+        instructions: '',
+        messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
+        tools: [],
+      }),
+    );
+    return captured[0];
+  };
+
+  it.each([
+    'claude-opus-5-5',
+    'claude-opus-5',
+    'claude-sonnet-5-5',
+    'claude-sonnet-5',
+    'eu.anthropic.claude-opus-5-5',
+    'anthropic.claude-sonnet-5-5-v1:0',
+  ])(
+    'requests summarized thinking for %s, which thinks by default',
+    async (model) => {
+      expect((await capturedParamsFor(model)).thinking).toEqual({
+        type: 'adaptive',
+        display: 'summarized',
+      });
+    },
+  );
+
+  it.each([
+    'claude-sonnet-4-6',
+    'eu.anthropic.claude-sonnet-4-6',
+    'claude-opus-4-8',
+    'claude-sonnet-4-5',
+    'claude-haiku-4-5',
+    'claude-opus-50',
+    'arn:aws:bedrock:eu-central-1:123:application-inference-profile/abc',
+  ])('leaves thinking unset for %s', async (model) => {
+    expect((await capturedParamsFor(model)).thinking).toBeUndefined();
+  });
+});
+
 const scriptedClient = (
   stream: AsyncIterable<unknown>,
 ): AnthropicCompatibleClient => ({
