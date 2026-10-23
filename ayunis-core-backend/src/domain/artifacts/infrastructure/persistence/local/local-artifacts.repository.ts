@@ -19,7 +19,7 @@ import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
-import { isUniqueConstraintViolation } from './unique-constraint.util';
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()

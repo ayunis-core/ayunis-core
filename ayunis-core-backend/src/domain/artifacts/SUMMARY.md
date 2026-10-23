@@ -51,8 +51,7 @@ artifacts/
 │   │   ├── schema/
 │   │   ├── mappers/
 │   │   ├── local-artifacts.repository.ts
-│   │   ├── local-artifacts-repository.module.ts
-│   │   └── unique-constraint.util.ts
+│   │   └── local-artifacts-repository.module.ts
 │   └── export/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
