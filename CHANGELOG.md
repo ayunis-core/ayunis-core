@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.60.1](https://github.com/ayunis-core/ayunis-core/compare/v2.60.0...v2.60.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **inference:** stream claude tool input eagerly to avoid idle timeouts (AYC-1142) ([#2066](https://github.com/ayunis-core/ayunis-core/issues/2066)) ([234484c](https://github.com/ayunis-core/ayunis-core/commit/234484c1d948f5f37ebda2d4cdf0d7df0f9358b0))
+* **invites:** explain subscription overlap during bulk import (AYC-1441) ([#2072](https://github.com/ayunis-core/ayunis-core/issues/2072)) ([21b9ca2](https://github.com/ayunis-core/ayunis-core/commit/21b9ca27621c61a4495e3d80bc80bbf11efdde93))
+* **transcriptions:** transcribe uploaded audio in the processing worker (AYC-1440) ([#2071](https://github.com/ayunis-core/ayunis-core/issues/2071)) ([0adfbf8](https://github.com/ayunis-core/ayunis-core/commit/0adfbf8360b8a97ed94b9973e07e6fce9b25cc0e))
+
+
+### Tests
+
+* **database:** extend integration hook timeouts to 30 seconds (AYC-1370) ([#2047](https://github.com/ayunis-core/ayunis-core/issues/2047)) ([ea80bc6](https://github.com/ayunis-core/ayunis-core/commit/ea80bc6a1df8865fc3c00114d5365ad82c823f15))
+
+
+### Miscellaneous
+
+* **deps:** bump node runtime to 24.22.1 security release (AYC-000) ([#2076](https://github.com/ayunis-core/ayunis-core/issues/2076)) ([b57e6f1](https://github.com/ayunis-core/ayunis-core/commit/b57e6f1dd589a15a40966cffdba841ab0e8b9479))
+
 ## [2.60.0](https://github.com/ayunis-core/ayunis-core/compare/v2.59.0...v2.60.0) (2026-10-22)
 
 
