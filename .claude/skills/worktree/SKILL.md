@@ -29,6 +29,8 @@ Location: `<repo parent>/.worktrees/<repo name>/<name>`, e.g. `~/dev/ayunis/.wor
 
 Never use a Graphite-generated branch name (`08-21-feat_workspaces_…`) or a free-form slug without a ticket ID as the directory name. When the work is on an existing branch, the directory still gets the convention name; if your tool derives the directory from the branch name, create the worktree under the convention name and check out the existing branch inside it.
 
+This is an execution-mode skill. Do not create, modify, or remove a worktree while producing an implementation plan; do so only after the user requests implementation or approves the plan.
+
 ## Creating a Worktree
 
 The user gives you a **task ID** and optionally an **existing branch** to work on.

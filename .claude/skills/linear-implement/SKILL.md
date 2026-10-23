@@ -7,6 +7,8 @@ description: Work a Linear ticket end-to-end — read it, mark it started, imple
 
 Take a Linear ticket and run with it. Generic entry point for "here's a ticket, handle it."
 
+This is an execution-mode skill. If the user asks to plan, design, or investigate the ticket before implementation, use `implementation-plan` instead and stop before changing the issue state. After the user approves the plan, re-read the issue and relevant context, confirm that the scope has not materially changed, re-confirm the workflow classification, and then mark the ticket started before executing the work.
+
 ## Input
 
 The user provides a Linear ticket ID (e.g. `AYC-123`) or URL. If one was mentioned earlier in the conversation, use that without asking again.
