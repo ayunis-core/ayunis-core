@@ -128,6 +128,7 @@
     "authoritative": "Authoritative subscription",
     "authoritativePlaceholder": "Select the subscription that remains active",
     "subscriptionLabel": "{{type}}, starts {{date}}",
+    "subscriptionLabelStarted": "{{type}}, started {{date}}",
     "automaticAccessEnd": "Access for every other subscription will end automatically when it first overlaps the authoritative subscription.",
     "reason": "Correction reason",
     "reasonPlaceholder": "Reference the contract transition or support case",

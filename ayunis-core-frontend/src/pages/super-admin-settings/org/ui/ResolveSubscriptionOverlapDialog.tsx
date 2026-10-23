@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import type { TFunction } from 'i18next';
 import { useForm, useWatch } from 'react-hook-form';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -32,6 +31,7 @@ import type {
   ResolveSubscriptionOverlapFormData,
   SubscriptionHistoryItem,
 } from '@/pages/super-admin-settings/org/model/types';
+import { subscriptionLabel } from '@/pages/super-admin-settings/org/lib/subscription-label';
 import { useResolveSubscriptionOverlap } from '@/pages/super-admin-settings/org/api/useResolveSubscriptionOverlap';
 
 interface ResolveSubscriptionOverlapDialogProps {
@@ -215,14 +215,4 @@ export default function ResolveSubscriptionOverlapDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function subscriptionLabel(
-  subscription: SubscriptionHistoryItem,
-  t: TFunction<'super-admin-settings-org'>,
-): string {
-  return t('subscriptionOverlap.subscriptionLabel', {
-    type: t(`subscriptionHistory.types.${subscription.type}`),
-    date: new Date(subscription.startsAt).toLocaleDateString(),
-  });
 }

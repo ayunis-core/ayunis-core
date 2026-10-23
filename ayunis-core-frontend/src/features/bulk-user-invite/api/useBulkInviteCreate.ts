@@ -47,7 +47,13 @@ export function useBulkInviteCreate(
           showError(t('bulkInvite.validationFailed'));
           onError?.(validationErrorsFrom(metadata));
         } else {
-          showError(t('bulkInvite.error'));
+          showError(
+            t(
+              code === 'MULTIPLE_ACTIVE_SUBSCRIPTIONS'
+                ? 'inviteCreate.multipleActiveSubscriptions'
+                : 'bulkInvite.error',
+            ),
+          );
           onError?.([]);
         }
       } catch {
