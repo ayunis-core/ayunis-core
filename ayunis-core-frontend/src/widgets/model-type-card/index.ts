@@ -1,6 +1,2 @@
-export {
-  default as ModelTypeCard,
-  ModelTierStars,
-  TierStars,
-} from './ModelTypeCard';
+export { default as ModelTypeCard } from './ModelTypeCard';
 export type { ModelActions } from './ModelTypeCard';
