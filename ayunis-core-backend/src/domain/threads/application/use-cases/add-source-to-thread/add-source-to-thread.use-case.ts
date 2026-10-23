@@ -1,3 +1,4 @@
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
@@ -8,23 +9,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
-
-const PG_UNIQUE_VIOLATION = '23505';
-
-// The duplicate check below is check-then-insert and can race with a
-// concurrent add of the same source; the database unique violation is the
-// authoritative signal and must map to the same 409 as the app-level check.
-function isUniqueConstraintViolation(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) {
-    return false;
-  }
-  const record = error as Record<string, unknown>;
-  const driverError = record.driverError as Record<string, unknown> | undefined;
-  return (
-    record.code === PG_UNIQUE_VIOLATION ||
-    driverError?.code === PG_UNIQUE_VIOLATION
-  );
-}
 
 @Injectable()
 export class AddSourceToThreadUseCase {
