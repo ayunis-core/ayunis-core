@@ -9,6 +9,7 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
   InvalidSubscriptionDataError,
+  InvalidSubscriptionAccessEndError,
   TooManyUsedSeatsError,
 } from 'src/iam/subscriptions/application/subscription.errors';
 import type { User } from 'src/iam/users/domain/user.entity';
@@ -37,6 +38,7 @@ export interface BuildSubscriptionParams {
   country: string;
   vatNumber?: string;
   startsAt?: Date;
+  accessEndsAt?: Date;
 }
 
 /**
@@ -59,9 +61,20 @@ export class SubscriptionFactory {
   ) {}
 
   async build(params: BuildSubscriptionParams): Promise<Subscription> {
-    return params.type === SubscriptionType.USAGE_BASED
-      ? this.buildUsageBased(params)
-      : this.buildSeatBased(params);
+    const subscription =
+      params.type === SubscriptionType.USAGE_BASED
+        ? this.buildUsageBased(params)
+        : await this.buildSeatBased(params);
+    const end = params.accessEndsAt;
+    if (
+      end &&
+      (!Number.isFinite(end.getTime()) || end <= subscription.startsAt)
+    ) {
+      throw new InvalidSubscriptionAccessEndError();
+    }
+    subscription.accessEndsAt = end ?? null;
+    subscription.fixedAccessEndsAt = end ?? null;
+    return subscription;
   }
 
   private buildUsageBased(

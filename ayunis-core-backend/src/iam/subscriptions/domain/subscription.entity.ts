@@ -9,6 +9,7 @@ export interface SubscriptionParams {
   updatedAt?: Date;
   cancelledAt?: Date | null;
   accessEndsAt?: Date | null;
+  fixedAccessEndsAt?: Date | null;
   startsAt?: Date;
   orgId: UUID;
   billingInfo: SubscriptionBillingInfo;
@@ -20,6 +21,7 @@ export abstract class Subscription {
   updatedAt: Date;
   cancelledAt: Date | null;
   accessEndsAt: Date | null;
+  fixedAccessEndsAt: Date | null;
   startsAt: Date;
   orgId: UUID;
   billingInfo: SubscriptionBillingInfo;
@@ -31,6 +33,7 @@ export abstract class Subscription {
     this.updatedAt = params.updatedAt ?? new Date();
     this.cancelledAt = params.cancelledAt ?? null;
     this.accessEndsAt = params.accessEndsAt ?? null;
+    this.fixedAccessEndsAt = params.fixedAccessEndsAt ?? null;
     this.startsAt = params.startsAt ?? new Date();
     this.orgId = params.orgId;
     this.billingInfo = params.billingInfo;

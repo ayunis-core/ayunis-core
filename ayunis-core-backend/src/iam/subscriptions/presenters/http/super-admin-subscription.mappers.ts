@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import { CreateSubscriptionCommand } from '../../application/use-cases/create-subscription/create-subscription.command';
-import { ChangeSubscriptionCommand } from '../../application/use-cases/change-subscription/change-subscription.command';
+import { CreateSubscriptionCommand } from 'src/iam/subscriptions/application/use-cases/create-subscription/create-subscription.command';
+import { ChangeSubscriptionCommand } from 'src/iam/subscriptions/application/use-cases/change-subscription/change-subscription.command';
 import type { CreateSubscriptionRequestDto } from './dto/create-subscription-request.dto';
 import type { ChangeSubscriptionRequestDto } from './dto/change-subscription-request.dto';
 import type { BillingInfoFieldsDto } from './dto/billing-info-fields.dto';
@@ -38,6 +38,7 @@ export function toCreateCommand(
     noOfSeats: dto.noOfSeats,
     monthlyCredits: dto.monthlyCredits,
     startsAt: parseStartsAt(dto.startsAt),
+    accessEndsAt: parseStartsAt(dto.accessEndsAt),
   });
 }
 

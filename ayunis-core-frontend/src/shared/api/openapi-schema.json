@@ -14273,6 +14273,11 @@
             "type": "string",
             "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
             "example": "2026-07-01T00:00:00.000Z"
+          },
+          "accessEndsAt": {
+            "type": "string",
+            "description": "Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended.",
+            "example": "2027-02-01T00:00:00.000Z"
           }
         },
         "required": [

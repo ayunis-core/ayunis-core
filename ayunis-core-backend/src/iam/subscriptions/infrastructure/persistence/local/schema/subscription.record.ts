@@ -32,6 +32,9 @@ export abstract class SubscriptionRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   accessEndsAt: Date | null;
 
+  @Column({ type: 'timestamp', nullable: true })
+  fixedAccessEndsAt: Date | null;
+
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;
 

@@ -907,6 +907,8 @@ export interface CreateSubscriptionRequestDto {
   subText?: string;
   /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
   startsAt?: string;
+  /** Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended. */
+  accessEndsAt?: string;
 }
 
 /**

@@ -9,7 +9,7 @@ import {
   SubscriptionAccessOverlapError,
   UnexpectedSubscriptionError,
 } from 'src/iam/subscriptions/application/subscription.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -33,6 +33,7 @@ export class UncancelSubscriptionUseCase {
     private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   @Transactional()
   async execute(command: UncancelSubscriptionCommand): Promise<void> {
     this.logger.log(
@@ -43,46 +44,31 @@ export class UncancelSubscriptionUseCase {
       'Uncancelling subscription',
     );
 
-    try {
-      validateSubscriptionAccess(
-        this.contextService,
-        command.requestingUserId,
-        command.orgId,
-      );
+    validateSubscriptionAccess(
+      this.contextService,
+      command.requestingUserId,
+      command.orgId,
+    );
 
-      await this.acquireAllocationLock.execute(command.orgId);
-      const subscriptions = await this.subscriptionRepository.findByOrgId(
-        command.orgId,
-      );
-      const subscription = selectManageableSubscription(
-        subscriptions,
-        command.orgId,
-        true,
-      );
-      this.ensureCanUncancel(command.orgId, subscription);
-      subscription.cancelledAt = null;
-      subscription.accessEndsAt = null;
-      this.ensureNoAccessOverlap(subscription, subscriptions);
-      await this.subscriptionRepository.update(subscription);
-      this.logger.debug(
-        { subscriptionId: subscription.id, orgId: command.orgId },
-        'Subscription uncancelled successfully',
-      );
-      this.emitUncancelledEvent(command.orgId, subscription);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        },
-        'Subscription uncancellation failed',
-      );
-      throw new UnexpectedSubscriptionError('Unexpected error');
-    }
+    await this.acquireAllocationLock.execute(command.orgId);
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      command.orgId,
+    );
+    const subscription = selectManageableSubscription(
+      subscriptions,
+      command.orgId,
+      true,
+    );
+    this.ensureCanUncancel(command.orgId, subscription);
+    subscription.cancelledAt = null;
+    subscription.accessEndsAt = subscription.fixedAccessEndsAt;
+    this.ensureNoAccessOverlap(subscription, subscriptions);
+    await this.subscriptionRepository.update(subscription);
+    this.logger.debug(
+      { subscriptionId: subscription.id, orgId: command.orgId },
+      'Subscription uncancelled successfully',
+    );
+    this.emitUncancelledEvent(command.orgId, subscription);
   }
 
   private ensureCanUncancel(
@@ -147,6 +133,12 @@ export class UncancelSubscriptionUseCase {
     // Nothing has elapsed for a subscription that has not started, so it cannot
     // have expired. Both checks below answer "is it still serving", which is a
     // different question and is false for a scheduled subscription.
+    if (
+      subscription.fixedAccessEndsAt &&
+      new Date() >= subscription.fixedAccessEndsAt
+    ) {
+      return false;
+    }
     if (new Date() < subscription.startsAt) {
       return true;
     }

@@ -1,11 +1,9 @@
+import type { CreateSubscriptionFormData } from '@/widgets/billing/model/types';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Form } from '@ayunis/ui/components/form';
-import {
-  SubscriptionFormFields,
-  type CreateSubscriptionFormData,
-} from './CreateSubscriptionDialog';
+import { SubscriptionFormFields } from './CreateSubscriptionDialog';
 
 function SubscriptionFormHarness() {
   const form = useForm<CreateSubscriptionFormData>({
