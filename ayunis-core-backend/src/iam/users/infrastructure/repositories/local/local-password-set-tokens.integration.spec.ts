@@ -52,7 +52,7 @@ describe('Password token consumption transaction', () => {
     await runner.release();
     await db.synchronize();
     await configureRepository();
-  });
+  }, 30_000);
 
   async function configureRepository(): Promise<void> {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -88,7 +88,7 @@ describe('Password token consumption transaction', () => {
       expiresAt: new Date(Date.now() + 60_000),
     });
     await db.getRepository(PasswordSetTokenRecord).insert(originalToken);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -96,7 +96,7 @@ describe('Password token consumption transaction', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   it('preserves token usability after password reset rolls back', async () => {
     await expect(

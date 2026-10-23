@@ -161,7 +161,7 @@ describe('PostgresOrgCertificateStatusesRepository', () => {
       name: 'Anna Foreign',
       email: 'foreign@example.com',
     });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -169,7 +169,7 @@ describe('PostgresOrgCertificateStatusesRepository', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   it('reads current completion data through the mapped view without a refresh', async () => {
     const member = {

@@ -55,7 +55,7 @@ describe('Share and scope deletion transaction', () => {
     await runner.release();
     await db.synchronize();
     configureRepository();
-  });
+  }, 30_000);
 
   function configureRepository(): void {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -83,7 +83,7 @@ describe('Share and scope deletion transaction', () => {
     await db
       .getRepository(ShareRecord)
       .insert({ id: shareId, scope: { id: scopeId } });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -91,7 +91,7 @@ describe('Share and scope deletion transaction', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   async function remainingRows(): Promise<number[]> {
     return Promise.all([

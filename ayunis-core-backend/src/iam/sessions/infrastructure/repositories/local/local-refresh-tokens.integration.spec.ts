@@ -67,7 +67,7 @@ describe('Refresh token reads inside a transaction', () => {
       dataSource.getRepository(RefreshTokenRecord),
       txHost,
     );
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     await dataSource.getRepository(RefreshTokenRecord).save({
@@ -79,11 +79,11 @@ describe('Refresh token reads inside a transaction', () => {
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       usedAt: new Date(),
     });
-  });
+  }, 30_000);
 
   afterEach(async () => {
     await dataSource.getRepository(RefreshTokenRecord).delete({ id: tokenId });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -91,7 +91,7 @@ describe('Refresh token reads inside a transaction', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('finds a token by hash without a second pooled connection', async () => {
     const found = await txHost.withTransaction(() =>

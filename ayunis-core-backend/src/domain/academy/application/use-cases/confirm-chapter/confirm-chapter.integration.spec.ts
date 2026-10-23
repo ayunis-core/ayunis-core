@@ -122,7 +122,7 @@ describe('ConfirmChapterUseCase transaction', () => {
         execute: jest.fn().mockResolvedValue(60),
       } as unknown as GetAcademyMinimumModuleSecondsUseCase,
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -130,7 +130,7 @@ describe('ConfirmChapterUseCase transaction', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('keeps completion and the page-time reset together when the reset fails', async () => {
     const userId = randomUUID();

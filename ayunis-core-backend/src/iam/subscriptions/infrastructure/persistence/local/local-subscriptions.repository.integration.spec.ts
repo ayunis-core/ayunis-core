@@ -126,7 +126,7 @@ describe('LocalSubscriptionsRepository access adjustment transaction', () => {
       dataSource,
       txHost,
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -134,7 +134,7 @@ describe('LocalSubscriptionsRepository access adjustment transaction', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('rolls back the access end when the audit insert fails', async () => {
     const orgId = randomUUID();

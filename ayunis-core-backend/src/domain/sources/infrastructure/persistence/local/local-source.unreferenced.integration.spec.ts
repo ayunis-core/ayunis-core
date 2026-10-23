@@ -69,7 +69,7 @@ describe('Unreferenced source lookup', () => {
       {} as SourceContentChunkMapper,
       createTransactionHost(dataSource),
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -77,7 +77,7 @@ describe('Unreferenced source lookup', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('filters candidates across chunks down to orphaned sources older than the cutoff', async () => {
     const cutoff = new Date(Date.now() - 30 * DAY_MS);

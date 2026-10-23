@@ -75,7 +75,7 @@ describe('getApiKeyUsageRows', () => {
     await queryRunner.release();
     await dataSource.synchronize();
     await seed(dataSource);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -83,7 +83,7 @@ describe('getApiKeyUsageRows', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   async function query(organizationId: UUID, withRange = true) {
     const rows = await getApiKeyUsageRows({

@@ -60,7 +60,7 @@ describe('DeleteSourcesUseCase database atomicity', () => {
     await runner.release();
     await db.synchronize();
     await configureUseCase();
-  });
+  }, 30_000);
 
   async function configureUseCase(): Promise<void> {
     const adapter = new TransactionalAdapterTypeOrm({
@@ -110,7 +110,7 @@ describe('DeleteSourcesUseCase database atomicity', () => {
       .insert({ id: randomUUID(), relatedDocumentId: sourceId });
     // Processing discovery is independent of the database writes under test.
     jest.spyOn(sources, 'findByIds').mockResolvedValue([]);
-  });
+  }, 30_000);
 
   afterEach(() => jest.restoreAllMocks());
   afterAll(async () => {
@@ -119,7 +119,7 @@ describe('DeleteSourcesUseCase database atomicity', () => {
     await runner.dropSchema(schema, true, true);
     await runner.release();
     await db.destroy();
-  });
+  }, 30_000);
 
   async function remainingRows(): Promise<number[]> {
     return Promise.all([

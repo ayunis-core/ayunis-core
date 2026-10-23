@@ -132,7 +132,7 @@ describe('RegisterUserUseCase transaction', () => {
         }),
       } as unknown as ConfigService,
     );
-  });
+  }, 30_000);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -147,7 +147,7 @@ describe('RegisterUserUseCase transaction', () => {
     if (dataSource.isInitialized) {
       await dataSource.getRepository(OrgRecord).delete({ name: orgName });
     }
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -155,7 +155,7 @@ describe('RegisterUserUseCase transaction', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   it('rolls back the organization when registration fails after its insert', async () => {
     await expect(

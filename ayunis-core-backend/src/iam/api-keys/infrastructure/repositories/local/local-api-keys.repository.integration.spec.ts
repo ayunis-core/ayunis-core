@@ -57,7 +57,7 @@ describe('LocalApiKeysRepository.updateMetadataIfActive', () => {
     repository = new LocalApiKeysRepository(
       dataSource.getRepository(ApiKeyRecord),
     );
-  });
+  }, 30_000);
 
   afterAll(async () => {
     if (!dataSource.isInitialized) return;
@@ -65,7 +65,7 @@ describe('LocalApiKeysRepository.updateMetadataIfActive', () => {
     await queryRunner.dropSchema(schemaName, true, true);
     await queryRunner.release();
     await dataSource.destroy();
-  });
+  }, 30_000);
 
   async function insertKey(
     overrides: Partial<{
