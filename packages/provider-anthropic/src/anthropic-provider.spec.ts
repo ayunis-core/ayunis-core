@@ -95,6 +95,56 @@ describe('createMessagesProvider prompt caching', () => {
   });
 });
 
+describe('createMessagesProvider tool input streaming', () => {
+  const sentTools = async (model: string) => {
+    const captured: MessageCreateParamsStreaming[] = [];
+    const provider = createMessagesProvider(
+      captureClient(captured),
+      `test:${model}`,
+      model,
+      1024,
+    );
+    await drain(
+      provider.stream({
+        instructions: '',
+        messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
+        tools: [
+          {
+            name: 'create_document',
+            description: 'Create a document',
+            parameters: { type: 'object', properties: {} },
+          },
+        ],
+      }),
+    );
+    return captured[0].tools;
+  };
+
+  it.each([
+    'eu.anthropic.claude-opus-5-5',
+    'eu.anthropic.claude-sonnet-5',
+    'eu.anthropic.claude-opus-4-6-v1',
+    'eu.anthropic.claude-sonnet-4-6',
+    'eu.anthropic.claude-haiku-4-5-20251001-v1:0',
+    'claude-opus-5-5',
+  ])('streams tool input eagerly for %s', async (model) => {
+    expect(await sentTools(model)).toEqual([
+      expect.objectContaining({ eager_input_streaming: true }),
+    ]);
+  });
+
+  // Bedrock rejects the field on these deployments with a 400.
+  it.each([
+    'eu.anthropic.claude-sonnet-4-5-20250929-v1:0',
+    'eu.anthropic.claude-opus-4-5-20251101-v1:0',
+    'anthropic.claude-sonnet-4-20250514-v1:0',
+  ])('omits eager tool input streaming for %s', async (model) => {
+    expect(await sentTools(model)).toEqual([
+      expect.not.objectContaining({ eager_input_streaming: true }),
+    ]);
+  });
+});
+
 const scriptedClient = (
   stream: AsyncIterable<unknown>,
 ): AnthropicCompatibleClient => ({
