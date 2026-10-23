@@ -1,5 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength, ValidateIf } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator';
 
 export class UpdateApiKeyDto {
   @ApiPropertyOptional({
@@ -29,4 +36,20 @@ export class UpdateApiKeyDto {
   @IsString()
   @MaxLength(500)
   description?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'New expiry date (ISO 8601, must be in the future). Omit to keep it, send null to let the key never expire.',
+    example: '2026-12-31T23:59:59.000Z',
+    type: String,
+    format: 'date-time',
+    nullable: true,
+  })
+  @ValidateIf(
+    (dto: UpdateApiKeyDto) =>
+      dto.expiresAt !== undefined && dto.expiresAt !== null,
+  )
+  @Type(() => Date)
+  @IsDate()
+  expiresAt?: Date | null;
 }

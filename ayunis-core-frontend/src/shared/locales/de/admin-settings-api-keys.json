@@ -37,7 +37,7 @@
     "editDialog": {
       "menuItem": "Bearbeiten",
       "title": "API-Schlüssel bearbeiten",
-      "description": "Name und Beschreibung ändern. Der Schlüssel selbst bleibt gleich, Anwendungen müssen nichts anpassen.",
+      "description": "Name, Beschreibung oder Ablaufdatum ändern. Der Schlüssel selbst bleibt gleich, Anwendungen müssen nichts anpassen.",
       "nameLabel": "Name",
       "nameRequired": "Name ist erforderlich",
       "nameTooLong": "Name muss kürzer als 100 Zeichen sein",
