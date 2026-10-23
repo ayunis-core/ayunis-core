@@ -7,7 +7,7 @@ import {
   InvalidAudioFileError,
 } from 'src/domain/transcriptions/application/transcription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 // 25 MB - matches Mistral's API limit for audio transcription
 const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024;
@@ -39,9 +39,9 @@ export class TranscribeUseCase {
     );
 
     try {
-      // Rejects unauthenticated callers; the transcription itself is not
-      // user-scoped, so the identity is not needed beyond this check.
-      getRequiredUserContext(this.contextService);
+      // Org-scoped rather than user-scoped: the document-processing worker
+      // transcribes uploads with only orgId and userId in context (no role).
+      getRequiredOrgId(this.contextService);
 
       this.validateAudio(command);
 
