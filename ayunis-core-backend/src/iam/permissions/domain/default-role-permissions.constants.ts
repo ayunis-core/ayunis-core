@@ -13,29 +13,22 @@ export const CONFIGURABLE_ROLES: ReadonlyArray<UserRole> = [
 export const isConfigurableRole = (role: UserRole): boolean =>
   CONFIGURABLE_ROLES.includes(role);
 
-/**
- * Defaults granted to a role when an org is created (and backfilled onto
- * existing orgs by the CreateRolePermissions migration). Chosen to preserve the
- * pre-RBAC behaviour where any member could manage skills and knowledge bases;
- * team management stays admin-only until an admin grants it.
- *
- * Keep in sync with the backfill VALUES list in the CreateRolePermissions
- * migration — the migration cannot import this module.
- */
+const BASE_PERMISSIONS: Permission[] = [
+  Permission.MANAGE_OWN_SKILLS,
+  Permission.INSTALL_MARKETPLACE_SKILLS,
+  Permission.REQUEST_SKILL_TRANSFER,
+  Permission.REQUEST_SKILL_TRANSFER_ORG,
+  Permission.MANAGE_OWN_KNOWLEDGE,
+  Permission.REQUEST_KNOWLEDGE_TRANSFER,
+  Permission.REQUEST_KNOWLEDGE_TRANSFER_ORG,
+  Permission.CREATE_WORKSPACES,
+  Permission.SHARE_WORKSPACES,
+];
+
 export const DEFAULT_ROLE_PERMISSIONS: Readonly<
   Record<UserRole, Permission[]>
 > = {
   [UserRole.ADMIN]: [],
-  [UserRole.MANAGER]: [
-    Permission.MANAGE_SKILLS,
-    Permission.SHARE_SKILLS,
-    Permission.MANAGE_KNOWLEDGE_BASES,
-    Permission.SHARE_KNOWLEDGE_BASES,
-  ],
-  [UserRole.USER]: [
-    Permission.MANAGE_SKILLS,
-    Permission.SHARE_SKILLS,
-    Permission.MANAGE_KNOWLEDGE_BASES,
-    Permission.SHARE_KNOWLEDGE_BASES,
-  ],
+  [UserRole.MANAGER]: [Permission.ASSIGN_USERS_TO_TEAMS, ...BASE_PERMISSIONS],
+  [UserRole.USER]: [...BASE_PERMISSIONS],
 };

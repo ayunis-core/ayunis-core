@@ -20,18 +20,24 @@
   "permissionHints": {
     "manage_teams": "Teams erstellen, umbenennen und löschen.",
     "assign_users_to_teams": "Mitglieder zu einem Team hinzufügen und wieder entfernen. Erlaubt nicht, Teams zu erstellen oder zu löschen.",
-    "manage_skills": "Fähigkeiten erstellen, bearbeiten und löschen – einschließlich ihrer Anweisungen, Quellen und Integrationen.",
-    "share_skills": "Eine Fähigkeit für ein Team oder die gesamte Organisation freigeben.",
-    "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
-    "share_knowledge_bases": "Eine Wissenssammlung für ein Team oder die gesamte Organisation freigeben."
+    "manage_own_skills": "Eigene Fähigkeiten erstellen, bearbeiten und löschen – einschließlich ihrer Anweisungen, Quellen und Integrationen.",
+    "install_marketplace_skills": "Fähigkeiten aus dem Ayunis Core Marketplace zu den eigenen hinzufügen.",
+    "request_skill_transfer": "Eine eigene Fähigkeit für ein Team freigeben, in dem man Mitglied ist.",
+    "request_skill_transfer_org": "Eine eigene Fähigkeit für die gesamte Organisation freigeben.",
+    "manage_own_knowledge": "Eigene Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
+    "request_knowledge_transfer": "Eine eigene Wissenssammlung für ein Team freigeben, in dem man Mitglied ist.",
+    "request_knowledge_transfer_org": "Eine eigene Wissenssammlung für die gesamte Organisation freigeben."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
     "assign_users_to_teams": "Benutzer zu Teams zuordnen",
-    "manage_skills": "Fähigkeiten verwalten",
-    "share_skills": "Fähigkeiten teilen",
-    "manage_knowledge_bases": "Wissenssammlungen verwalten",
-    "share_knowledge_bases": "Wissenssammlungen teilen"
+    "manage_own_skills": "Eigene Fähigkeiten verwalten",
+    "install_marketplace_skills": "Aus dem Marketplace übernehmen",
+    "request_skill_transfer": "Mit eigenen Teams teilen",
+    "request_skill_transfer_org": "Mit der Organisation teilen",
+    "manage_own_knowledge": "Eigene Wissenssammlungen verwalten",
+    "request_knowledge_transfer": "Mit eigenen Teams teilen",
+    "request_knowledge_transfer_org": "Mit der Organisation teilen"
   },
   "adminHint": "Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden.",
   "save": "Änderungen speichern",

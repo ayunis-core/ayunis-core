@@ -125,7 +125,7 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
       expect.objectContaining({
         orgId: ORG_ID,
         role: UserRole.MANAGER,
-        permission: Permission.MANAGE_KNOWLEDGE_BASES,
+        permission: Permission.MANAGE_OWN_KNOWLEDGE,
       }),
     );
   });

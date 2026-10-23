@@ -101,7 +101,7 @@ export function SkillPage({
 
   const isReadOnly = skill.isShared;
   const { can } = useMyPermissions();
-  const canManageSkills = can('manage_skills');
+  const canManageSkills = can('manage_own_skills');
 
   return (
     <AppLayout>
