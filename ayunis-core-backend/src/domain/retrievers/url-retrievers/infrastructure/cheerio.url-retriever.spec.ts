@@ -11,6 +11,11 @@ import {
   UrlRetrieverTimeoutError,
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
+import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
+
+jest.mock('src/common/util/undici-fetch.util', () => ({
+  fetchWithUndiciDispatcher: jest.fn(),
+}));
 
 interface FakeResponseInit {
   status?: number;
@@ -418,6 +423,8 @@ describe('Cheerio redirect grant timeout', () => {
 });
 
 describe('Cheerio discovered-PDF redirect destinations', () => {
+  beforeEach(() => jest.mocked(fetchWithUndiciDispatcher).mockReset());
+
   class Guard extends UrlDestinationGuardService {
     protected override async resolveAddresses(host: string): Promise<string[]> {
       return host === 'public.customer.de' ? ['1.1.1.1'] : ['127.0.0.2'];
@@ -432,9 +439,10 @@ describe('Cheerio discovered-PDF redirect destinations', () => {
       { getOrThrow: () => 5000 } as never,
       guard,
     );
-    const fetchSpy = jest
-      .spyOn(globalThis, 'fetch')
+    const publicFetch = jest
+      .mocked(fetchWithUndiciDispatcher)
       .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'));
+    const nativeFetch = jest.spyOn(globalThis, 'fetch');
     const requireGrant = jest.fn(async () => {
       throw new CrawlDomainAccessDeniedError();
     });
@@ -445,7 +453,12 @@ describe('Cheerio discovered-PDF redirect destinations', () => {
           assertPrivateDestinationAccess: requireGrant,
         }),
       ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(publicFetch).toHaveBeenCalledTimes(1);
+      expect(publicFetch.mock.calls[0][1]).toMatchObject({
+        dispatcher: expect.anything(),
+        redirect: 'manual',
+      });
+      expect(nativeFetch).not.toHaveBeenCalled();
       expect(requireGrant).toHaveBeenCalledWith('http://127.0.0.2/statute.pdf');
     } finally {
       await guard.onModuleDestroy();
@@ -458,15 +471,16 @@ describe('Cheerio discovered-PDF redirect destinations', () => {
       { getOrThrow: () => 5000 } as never,
       guard,
     );
-    const fetchSpy = jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'))
-      .mockResolvedValueOnce(
-        makeResponse({
-          headers: { 'content-type': 'application/pdf' },
-          body: 'approved PDF bytes',
-        }),
-      );
+    const publicFetch = jest
+      .mocked(fetchWithUndiciDispatcher)
+      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'));
+    // Approved intranet hops deliberately keep the native transport.
+    const nativeFetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      makeResponse({
+        headers: { 'content-type': 'application/pdf' },
+        body: 'approved PDF bytes',
+      }),
+    );
     const requireGrant = jest.fn(async () => undefined);
     try {
       const result = await handler.fetch({
@@ -475,7 +489,9 @@ describe('Cheerio discovered-PDF redirect destinations', () => {
       });
       expect(result.finalUrl).toBe('http://127.0.0.2/statute.pdf');
       expect(result.body.toString()).toBe('approved PDF bytes');
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(publicFetch).toHaveBeenCalledTimes(1);
+      expect(nativeFetch).toHaveBeenCalledTimes(1);
+      expect(nativeFetch.mock.calls[0][1]).not.toHaveProperty('dispatcher');
       expect(requireGrant).toHaveBeenCalledTimes(1);
     } finally {
       await guard.onModuleDestroy();

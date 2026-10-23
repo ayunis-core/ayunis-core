@@ -1,5 +1,15 @@
 import { McpOAuthFetchService } from './mcp-oauth-fetch.service';
 import { isIP } from 'node:net';
+import { fetch, Response } from 'undici';
+import type * as Undici from 'undici';
+
+jest.mock('undici', () => ({
+  ...jest.requireActual<typeof Undici>('undici'),
+  fetch: jest.fn(),
+}));
+
+const fetchMock = jest.mocked(fetch);
+const realFetch = jest.requireActual<typeof Undici>('undici').fetch;
 
 /* eslint-disable sonarjs/no-hardcoded-ip -- These literals exercise SSRF address filtering. */
 
@@ -29,12 +39,10 @@ class RebindingMcpOAuthFetchService extends McpOAuthFetchService {
 
 describe('McpOAuthFetchService', () => {
   beforeEach(() => {
-    jest
-      .spyOn(globalThis, 'fetch')
+    fetchMock
+      .mockReset()
       .mockResolvedValue(new Response('ok', { status: 200 }));
   });
-
-  afterEach(() => jest.restoreAllMocks());
 
   it('rejects non-HTTPS OAuth URLs in production', async () => {
     const service = buildService(false);
@@ -42,7 +50,7 @@ describe('McpOAuthFetchService', () => {
     await expect(
       service.fetch('http://auth.example.com/token'),
     ).rejects.toThrow('OAuth endpoints must use HTTPS');
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('rejects private and reserved IP addresses before requesting them', async () => {
@@ -53,7 +61,7 @@ describe('McpOAuthFetchService', () => {
     ).rejects.toThrow(
       'OAuth endpoint resolves to a private or reserved address',
     );
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('rejects hostnames that resolve to private addresses', async () => {
@@ -64,7 +72,7 @@ describe('McpOAuthFetchService', () => {
     ).rejects.toThrow(
       'OAuth endpoint resolves to a private or reserved address',
     );
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('blocks IPv4-mapped IPv6 addresses for private IPv4 ranges', async () => {
@@ -75,7 +83,7 @@ describe('McpOAuthFetchService', () => {
     ).rejects.toThrow(
       'OAuth endpoint resolves to a private or reserved address',
     );
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('allows IPv4-mapped IPv6 addresses for public IPv4 ranges', async () => {
@@ -86,19 +94,36 @@ describe('McpOAuthFetchService', () => {
     ).resolves.toEqual(expect.objectContaining({ status: 200 }));
   });
 
+  it('returns a global Response so the MCP SDK can parse OAuth errors', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('{"error":"invalid_grant"}', {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    const service = buildService(false, ['1.1.1.1']);
+
+    const response = await service.fetch('https://auth.example.com/token');
+
+    expect(response).toBeInstanceOf(globalThis.Response);
+    expect(response.status).toBe(400);
+    expect(response.headers.get('content-type')).toBe('application/json');
+    await expect(response.text()).resolves.toBe('{"error":"invalid_grant"}');
+  });
+
   it('pins validated DNS lookups for the outbound connection', async () => {
     const service = buildService(false, ['1.1.1.1']);
 
     await service.fetch('https://auth.example.com/token');
 
-    expect(globalThis.fetch).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
       expect.any(URL),
       expect.objectContaining({ dispatcher: expect.anything() }),
     );
   });
 
   it('blocks DNS rebinding between validation and connection', async () => {
-    jest.restoreAllMocks();
+    fetchMock.mockImplementation(realFetch);
     const config = { get: jest.fn().mockReturnValue(false) };
     const service = new RebindingMcpOAuthFetchService(config as never);
 
@@ -113,7 +138,7 @@ describe('McpOAuthFetchService', () => {
   });
 
   it('revalidates redirect destinations before following them', async () => {
-    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+    fetchMock.mockResolvedValueOnce(
       new Response(null, {
         status: 302,
         headers: { location: 'https://127.0.0.1/admin' },
@@ -126,11 +151,11 @@ describe('McpOAuthFetchService', () => {
     ).rejects.toThrow(
       'OAuth endpoint resolves to a private or reserved address',
     );
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('rejects redirects to a different origin', async () => {
-    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+    fetchMock.mockResolvedValueOnce(
       new Response(null, {
         status: 302,
         headers: { location: 'https://other.example.com/token' },
@@ -141,7 +166,7 @@ describe('McpOAuthFetchService', () => {
     await expect(
       service.fetch('https://auth.example.com/token'),
     ).rejects.toThrow('Cross-origin OAuth redirects are not allowed');
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('allows HTTP loopback endpoints only during development', async () => {

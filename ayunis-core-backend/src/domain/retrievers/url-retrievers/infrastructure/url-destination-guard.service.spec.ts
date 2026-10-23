@@ -1,5 +1,6 @@
 import { isIP } from 'node:net';
 import { UrlDestinationGuardService } from './url-destination-guard.service';
+import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
 
 /* eslint-disable sonarjs/no-hardcoded-ip -- These addresses exercise the private-destination policy. */
 class StubGuard extends UrlDestinationGuardService {
@@ -154,9 +155,9 @@ describe('UrlDestinationGuardService', () => {
         );
         expect(dispatcher).toBeDefined();
         await expect(
-          fetch('https://public.customer.de/statute.pdf', {
+          fetchWithUndiciDispatcher('https://public.customer.de/statute.pdf', {
             dispatcher,
-          } as RequestInit),
+          }),
         ).rejects.toMatchObject({
           cause: expect.objectContaining({
             message: expect.stringContaining(
