@@ -2,6 +2,11 @@ import type { AfterModelCallContext, Hook } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import {
+  estimateOutputTokens,
+  estimateRequestTokens,
+  type RequestTokenEstimate,
+} from 'src/domain/runs/application/agent-runtime/model-call-token-estimate.helper';
 import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
@@ -16,15 +21,24 @@ export class UsageHookFactory {
   ) {}
 
   create(params: { resolveModel: RuntimeLanguageModelResolver }): Hook {
+    const requests = new Map<string, RequestTokenEstimate>();
     return {
       name: 'ayunis-usage',
       inheritToChildRuns: true,
       afterModelCallFailureMode: 'critical',
+      beforeModelCall: (ctx) => {
+        requests.set(
+          ctx.modelCallId,
+          estimateRequestTokens(ctx.model, ctx.request),
+        );
+      },
       afterModelCall: async (ctx) => {
+        const request = requests.get(ctx.modelCallId);
+        requests.delete(ctx.modelCallId);
         const model = params.resolveModel(ctx.model);
         const usage = ctx.outcome.usage;
         if (!hasReportedUsage(usage)) {
-          this.handleMissingUsage(ctx, model);
+          await this.handleMissingUsage(ctx, model, request);
           return;
         }
 
@@ -41,18 +55,29 @@ export class UsageHookFactory {
     };
   }
 
-  private handleMissingUsage(
+  private async handleMissingUsage(
     ctx: AfterModelCallContext,
     model: LanguageModel,
-  ): void {
+    request: RequestTokenEstimate | undefined,
+  ): Promise<void> {
     if (!model.consumesCredits || !requiresReportedUsage(ctx.outcome)) {
       return;
     }
-    if (!endedByConsumer(ctx.outcome)) {
+    // OpenAI-compatible and Mistral streams report usage only in their last
+    // chunk, so an interrupted stream never carries it although the provider
+    // bills the work it did. A completed call without usage is a provider
+    // integration defect that an estimate would hide.
+    if (!wasInterrupted(ctx.outcome) || !request) {
       throw new Error('Paid model call completed without reporting usage');
     }
-    // The run is already over for the user, so failing the hook would only
-    // turn a closed tab into an incident without recovering the usage.
+    const estimatedOutputTokens = estimateOutputTokens(ctx.model, ctx.outcome);
+    await this.collectUsageAsyncService.collectCritical(
+      model,
+      request.estimatedInputTokens,
+      estimatedOutputTokens,
+      ctx.modelCallId as UUID,
+      'agent_runtime',
+    );
     this.logger.warn(
       {
         execution_path: 'agent_runtime',
@@ -64,8 +89,11 @@ export class UsageHookFactory {
         outcome: ctx.outcome.type,
         providerConsumptionStarted: ctx.outcome.providerConsumptionStarted,
         producedOutput: ctx.outcome.producedOutput,
+        estimatedInputTokens: request.estimatedInputTokens,
+        estimatedOutputTokens,
+        exactTokenizer: request.exactTokenizer,
       },
-      'Usage unknown for a model call the consumer ended',
+      'Recorded estimated usage for a model call that ended without reporting usage',
     );
   }
 }
@@ -79,8 +107,12 @@ function hasReportedUsage(usage: ModelCallOutcome['usage']): boolean {
   ].some((value) => value !== undefined);
 }
 
-function endedByConsumer(outcome: ModelCallOutcome): boolean {
-  return outcome.type === 'consumer_abandoned' || outcome.type === 'aborted';
+function wasInterrupted(outcome: ModelCallOutcome): boolean {
+  return (
+    outcome.type === 'provider_failure' ||
+    outcome.type === 'consumer_abandoned' ||
+    outcome.type === 'aborted'
+  );
 }
 
 function requiresReportedUsage(outcome: ModelCallOutcome): boolean {

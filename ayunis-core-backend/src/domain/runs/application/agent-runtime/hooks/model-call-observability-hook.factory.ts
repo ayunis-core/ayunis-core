@@ -4,15 +4,8 @@ import type {
   ModelCallOutcomeSnapshot,
   ProviderFailureKind,
   ProviderRequest,
-  BeforeModelCallContext,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  budgetEstimator,
-  countFixedRequestTokens,
-  countMessageTokens,
-} from 'src/common/token-counter/application/util/context-budget.helper';
-import { toRuntimeBudgetParts } from 'src/domain/runs/application/agent-runtime/runtime-message-parts.helper';
 import { findPortableProviderError } from 'src/common/errors/find-portable-provider-error.helper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -22,6 +15,7 @@ import {
 } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { buildProviderRequestDiagnostics } from 'src/domain/runs/application/agent-runtime/provider-request-diagnostics.helper';
+import { estimateRequestTokens } from 'src/domain/runs/application/agent-runtime/model-call-token-estimate.helper';
 import type { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import {
@@ -62,7 +56,7 @@ export class ModelCallObservabilityHookFactory {
       beforeModelCall: (ctx) => {
         try {
           requests.set(ctx.modelCallId, {
-            ...requestTokenEstimate(ctx),
+            ...estimateRequestTokens(ctx.model, ctx.request),
             messageCount: ctx.request.messages.length,
             toolCount: ctx.request.tools.length,
             ...(ctx.request.toolChoice
@@ -302,20 +296,4 @@ function providerFailureContext(failure: {
 
 function isProviderUnavailable(kind: string): boolean {
   return ['connection', 'timeout', 'server', 'rate_limit'].includes(kind);
-}
-
-function requestTokenEstimate(
-  ctx: BeforeModelCallContext,
-): Pick<RequestDiagnostics, 'estimatedInputTokens' | 'exactTokenizer'> {
-  const estimator = budgetEstimator(ctx.model.tokenEstimator);
-  return {
-    exactTokenizer: estimator.exact,
-    estimatedInputTokens:
-      countFixedRequestTokens(ctx.request, estimator) +
-      ctx.request.messages.reduce(
-        (total, message) =>
-          total + countMessageTokens(estimator, toRuntimeBudgetParts(message)),
-        0,
-      ),
-  };
 }

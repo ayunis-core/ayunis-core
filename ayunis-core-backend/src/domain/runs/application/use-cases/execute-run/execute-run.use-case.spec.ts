@@ -921,7 +921,7 @@ describe('ExecuteRunUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
-  it('preserves completed tool phases when a later paid stream fails without usage', async () => {
+  it('bills every retried attempt and rolls back like any provider failure when a later paid stream drops before its usage chunk', async () => {
     const execute = jest.fn().mockResolvedValue('permit found');
     const lookupTool = {
       name: 'lookup_permit',
@@ -930,38 +930,48 @@ describe('ExecuteRunUseCase', () => {
       execute,
     };
     let calls = 0;
-    const { useCase, save, createToolResult, cleanup } = buildHarness({
-      modelConsumesCredits: true,
-      runtimeTools: [lookupTool],
-      providerStream: async function* () {
-        calls += 1;
-        if (calls === 1) {
-          yield* toolCallTurn({
-            id: 'permit-1',
-            name: lookupTool.name,
-            input: {},
+    const { useCase, save, createToolResult, cleanup, collectUsage } =
+      buildHarness({
+        modelConsumesCredits: true,
+        runtimeTools: [lookupTool],
+        providerStream: async function* () {
+          calls += 1;
+          if (calls === 1) {
+            yield* toolCallTurn({
+              id: 'permit-1',
+              name: lookupTool.name,
+              input: {},
+            });
+            return;
+          }
+          yield {};
+          throw new ModelProviderError({
+            kind: 'timeout',
+            stage: 'stream_consumption',
+            timeoutSource: 'whole_stream',
+            cause: new Error('stream deadline exceeded'),
           });
-          return;
-        }
-        yield {};
-        throw new ModelProviderError({
-          kind: 'timeout',
-          stage: 'stream_consumption',
-          timeoutSource: 'whole_stream',
-          cause: new Error('stream deadline exceeded'),
-        });
-      },
-    });
+        },
+      });
 
     await expect(
       drain(await useCase.execute(userCommand())),
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC' });
 
-    expect(calls).toBe(2);
+    expect(calls).toBe(5);
     expect(execute).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledTimes(1);
     expect(createToolResult).toHaveBeenCalledTimes(1);
-    expect(cleanup).not.toHaveBeenCalled();
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+    expect(collectUsage.mock.calls.slice(-4)).toEqual(
+      Array.from({ length: 4 }, () => [
+        expect.anything(),
+        expect.any(Number),
+        0,
+        expect.any(String),
+        'agent_runtime',
+      ]),
+    );
   });
 
   it('does not execute tools after paid output arrives without usage', async () => {
