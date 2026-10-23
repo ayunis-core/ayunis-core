@@ -1,6 +1,9 @@
 import type { UUID } from 'crypto';
 import { MessageContentInvalidError } from 'src/domain/messages/application/messages.errors';
-import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import {
+  MAX_TOTAL_UPLOAD_IMAGE_SIZE_BYTES,
+  MAX_UPLOAD_IMAGE_SIZE_BYTES,
+} from 'src/domain/messages/application/utils/image-upload.policy';
 import {
   sniffAllowedImageContentType,
   isAllowedImageContentType,
@@ -15,8 +18,6 @@ export interface ImageUploadData {
   readonly contentType: string;
   readonly altText?: string;
 }
-
-const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
 
 export class CreateUserMessageCommand {
   constructor(
@@ -45,17 +46,17 @@ export class CreateUserMessageCommand {
       (sum, img) => sum + img.buffer.length,
       0,
     );
-    if (totalSize > MAX_TOTAL_IMAGE_SIZE_BYTES) {
+    if (totalSize > MAX_TOTAL_UPLOAD_IMAGE_SIZE_BYTES) {
       throw new MessageContentInvalidError(
-        `Total image size exceeds maximum of ${MAX_TOTAL_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`,
+        `Total image size exceeds maximum of ${MAX_TOTAL_UPLOAD_IMAGE_SIZE_BYTES / (1024 * 1024)} MiB`,
       );
     }
   }
 
   private validateImage(image: ImageUploadData): void {
-    if (image.buffer.length > MAX_IMAGE_SIZE_BYTES) {
+    if (image.buffer.length > MAX_UPLOAD_IMAGE_SIZE_BYTES) {
       throw new MessageContentInvalidError(
-        `Image exceeds maximum size of ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)} MiB`,
+        `Image exceeds maximum size of ${MAX_UPLOAD_IMAGE_SIZE_BYTES / (1024 * 1024)} MiB`,
       );
     }
     if (!isAllowedImageContentType(image.contentType)) {

@@ -17,6 +17,9 @@ import { CountMessagesTokensUseCase } from './application/use-cases/count-messag
 // Services
 import { ImageContentService } from './application/services/image-content.service';
 
+import { ImageNormalizerPort } from './application/ports/image-normalizer.port';
+import { SharpImageNormalizer } from './infrastructure/images/sharp-image-normalizer';
+
 // Tasks
 import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-images-cleanup.task';
 
@@ -31,6 +34,7 @@ import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-image
       provide: MESSAGES_REPOSITORY,
       useExisting: LocalMessagesRepository,
     },
+    { provide: ImageNormalizerPort, useClass: SharpImageNormalizer },
     // Use Cases
     CreateUserMessageUseCase,
     CreateSystemMessageUseCase,

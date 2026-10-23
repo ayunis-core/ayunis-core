@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { SendMessageDto } from '../dto/send-message.dto';
+import type { SendMessageDto } from 'src/domain/runs/presenters/http/dto/send-message.dto';
+import { MAX_TOTAL_SIZE_BYTES } from 'src/domain/runs/presenters/http/image-upload.constants';
 import { SendMessageRequestValidator } from './send-message-request.validator';
 
 const THREAD_ID = 'f4b2e1d0-3c5a-4b7e-9d8f-1a2b3c4d5e6f' as UUID;
@@ -65,7 +66,7 @@ describe('SendMessageRequestValidator', () => {
   });
 
   it('rejects uploads whose combined size exceeds the total limit', () => {
-    const files = [fileOfSize(30 * 1024 * 1024), fileOfSize(21 * 1024 * 1024)];
+    const files = [fileOfSize(MAX_TOTAL_SIZE_BYTES), fileOfSize(1)];
 
     expect(() => validator.validate(dtoWith(), files)).toThrow(
       BadRequestException,
@@ -73,7 +74,7 @@ describe('SendMessageRequestValidator', () => {
   });
 
   it('accepts uploads exactly at the total size limit', () => {
-    const files = [fileOfSize(50 * 1024 * 1024)];
+    const files = [fileOfSize(MAX_TOTAL_SIZE_BYTES)];
 
     expect(() => validator.validate(dtoWith(), files)).not.toThrow();
   });

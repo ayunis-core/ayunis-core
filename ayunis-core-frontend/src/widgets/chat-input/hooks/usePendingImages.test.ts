@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGES,
+  MAX_TOTAL_IMAGE_SIZE_BYTES,
 } from '@/widgets/chat-input/model/image-upload-policy';
 import { usePendingImages } from '@/widgets/chat-input/hooks/usePendingImages';
 
@@ -34,6 +35,7 @@ describe('usePendingImages', () => {
       added: 1,
       limitExceeded: false,
       oversizedRejected: false,
+      totalExceeded: false,
     });
     expect(result.current.pendingImages).toHaveLength(1);
   });
@@ -53,6 +55,7 @@ describe('usePendingImages', () => {
       added: 1,
       limitExceeded: false,
       oversizedRejected: true,
+      totalExceeded: false,
     });
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     expect(result.current.pendingImages.map((img) => img.file.name)).toEqual([
@@ -77,6 +80,7 @@ describe('usePendingImages', () => {
       added: MAX_IMAGES,
       limitExceeded: false,
       oversizedRejected: true,
+      totalExceeded: false,
     });
   });
   it('accepts only the remaining slot when seven images are attached', () => {
@@ -97,6 +101,7 @@ describe('usePendingImages', () => {
       added: 1,
       limitExceeded: true,
       oversizedRejected: false,
+      totalExceeded: false,
     });
     expect(result.current.pendingImages).toHaveLength(8);
     expect(URL.createObjectURL).toHaveBeenCalledTimes(8);
@@ -116,6 +121,7 @@ describe('usePendingImages', () => {
       added: 0,
       limitExceeded: true,
       oversizedRejected: false,
+      totalExceeded: false,
     });
     expect(URL.createObjectURL).toHaveBeenCalledTimes(MAX_IMAGES);
   });
@@ -132,11 +138,37 @@ describe('usePendingImages', () => {
       added: MAX_IMAGES,
       limitExceeded: true,
       oversizedRejected: true,
+      totalExceeded: false,
     });
     expect(URL.createObjectURL).toHaveBeenCalledTimes(MAX_IMAGES);
   });
 });
 
-it('keeps the upload policy aligned with the documented raw-byte ceiling', () => {
-  expect(MAX_IMAGE_SIZE_BYTES).toBe(3932160);
+it('keeps the attached images within the backend total, across separate additions', () => {
+  const { result } = renderHook(() => usePendingImages());
+  const fifth = MAX_TOTAL_IMAGE_SIZE_BYTES / 5;
+  act(() => {
+    result.current.addImages([imageOf(fifth), imageOf(fifth)]);
+  });
+
+  let outcome;
+  act(() => {
+    outcome = result.current.addImages([
+      imageOf(fifth),
+      imageOf(MAX_IMAGE_SIZE_BYTES),
+      imageOf(fifth),
+    ]);
+  });
+
+  expect(outcome).toEqual({
+    added: 2,
+    limitExceeded: false,
+    oversizedRejected: false,
+    totalExceeded: true,
+  });
+  expect(result.current.pendingImages).toHaveLength(4);
+});
+
+it('keeps the upload policy aligned with the backend upload limit', () => {
+  expect(MAX_IMAGE_SIZE_BYTES).toBe(25 * 1024 * 1024);
 });
