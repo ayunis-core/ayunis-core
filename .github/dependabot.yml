@@ -136,7 +136,7 @@ updates:
       - "docker"
     ignore:
       # node:26 caused severe request slowness (connection stalls); runtime is
-      # pinned to 24.16.0-alpine. Do not remove without re-validating — see AYC-423.
+      # pinned to node 24 (alpine). Do not remove without re-validating — see AYC-423.
       # Moving to node:26 also requires bumping undici to 8 in the same change
       # (node:26 embeds undici 8.10.2); leaving undici on 7 breaks every MCP
       # OAuth request with "invalid onRequestStart method".

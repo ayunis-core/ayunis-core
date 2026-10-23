@@ -330,7 +330,7 @@ jobs:
         with:
           # Same node as the image build (root Dockerfile) so the toolchain
           # producing the hashed asset names is identical.
-          node-version: '24.16.0'
+          node-version: '24.22.1'
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
