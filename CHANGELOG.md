@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.61.0](https://github.com/ayunis-core/ayunis-core/compare/v2.60.1...v2.61.0) (2026-10-23)
+
+
+### Features
+
+* **admin-models:** show model cards instead of tier stars in admin model selection (AYC-524) ([#2074](https://github.com/ayunis-core/ayunis-core/issues/2074)) ([7f16e49](https://github.com/ayunis-core/ayunis-core/commit/7f16e496c7171d38bcdf8b0037e390692a2ff25e))
+
 ## [2.60.1](https://github.com/ayunis-core/ayunis-core/compare/v2.60.0...v2.60.1) (2026-10-23)
 
 
