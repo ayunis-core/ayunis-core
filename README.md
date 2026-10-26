@@ -111,6 +111,10 @@ still has access. Existing allowlists must contain real client IPs when enabling
 proxy trust; otherwise operators can lose access. Verify the current admin IP
 before updating an allowlist.
 
+A proxy must also accept request bodies of at least 100 MiB for chat image
+uploads (nginx defaults to 1 MB); see
+[Request body size for chat image uploads](DEPLOYMENT.md#request-body-size-for-chat-image-uploads).
+
 ### E-Mail Provider Configuration
 
 E-mails for email confirmation and user invite flows will only be sent if at least `SMPT_HOST` and `SMTP_PORT` are configured. See `/ayunis-core-backend/src/config/emails.config.ts`.
