@@ -9,6 +9,8 @@ import { isFinalAttempt, recordJobFailure } from './job-telemetry';
 /**
  * Standard retry/retention options shared by the source processing queues:
  * 3 attempts with exponential backoff, bounded completed/failed retention.
+ * Failed jobs also expire after 7 days; a count cap alone keeps rare
+ * failures in Bull Board indefinitely.
  */
 export const STANDARD_JOB_OPTIONS: JobsOptions = {
   attempts: 3,
@@ -17,7 +19,7 @@ export const STANDARD_JOB_OPTIONS: JobsOptions = {
     delay: 5000,
   },
   removeOnComplete: 100,
-  removeOnFail: 200,
+  removeOnFail: { age: 7 * 24 * 60 * 60, count: 200 },
 };
 
 /**
