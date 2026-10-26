@@ -21,7 +21,11 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CreateThreadDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  CreateThreadDto,
+  ModelMode,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import extractErrorData from '@/shared/api/extract-error-data';
 import type { SourceResponseDtoType } from '@/shared/api';
 
 const PROCESSING_POLL_INTERVAL_MS = 500;
@@ -54,6 +58,8 @@ interface InitiateChatParams {
   message: string;
   images: PendingImageFile[];
   modelId?: string;
+  /** Start the chat in a mode; the backend binds the model it resolves to. */
+  mode?: ModelMode;
   sources: PendingSource[];
   knowledgeBases: KnowledgeBaseSummary[];
   mcpIntegrations: IntegrationSummary[];
@@ -237,6 +243,7 @@ export const useInitiateChat = (options?: {
     message,
     images,
     modelId,
+    mode,
     sources,
     knowledgeBases,
     mcpIntegrations,
@@ -255,6 +262,7 @@ export const useInitiateChat = (options?: {
     try {
       const createThreadData: CreateThreadDto = {
         modelId,
+        mode,
         isAnonymous,
         workspaceId,
       };
@@ -263,7 +271,7 @@ export const useInitiateChat = (options?: {
       });
     } catch (error) {
       console.error('Failed to create thread:', error);
-      showError(t('chat.errorSendMessage'));
+      showError(t(threadCreationErrorKey(error)));
       stopInitiatingChat();
       return;
     }
@@ -394,3 +402,14 @@ export const useInitiateChat = (options?: {
     error: createThreadMutation.error,
   };
 };
+
+function threadCreationErrorKey(error: unknown): string {
+  try {
+    if (extractErrorData(error).code === 'MODEL_MODE_UNAVAILABLE') {
+      return 'chat.errorModeUnavailable';
+    }
+  } catch {
+    // Non-Axios failure: fall through to the generic message.
+  }
+  return 'chat.errorSendMessage';
+}

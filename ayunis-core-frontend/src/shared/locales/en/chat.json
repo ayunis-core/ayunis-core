@@ -325,7 +325,8 @@
         "other": "Personal data"
       }
     },
-    "academyCertificateRequiredError": "Your organization requires the EU AI Act training before you can send messages. Complete the academy to unlock chat."
+    "academyCertificateRequiredError": "Your organization requires the EU AI Act training before you can send messages. Complete the academy to unlock chat.",
+    "errorModeUnavailable": "No model is currently available for this mode. Please choose a model under \"More models\"."
   },
   "newChat": {
     "newChat": "New Chat",

@@ -10,7 +10,15 @@ import type { ModelProviderInfoResponseDtoProvider } from '@/shared/api/generate
 // emoji, so emoji flags degrade to letter pairs (e.g. "DE") there. SVGs render
 // identically on every browser and OS.
 
-// A five-pointed star centred on (cx, cy) with a point facing up.
+const SIZE = 512;
+const CENTER = SIZE / 2;
+
+const RED = '#d80027';
+const GOLD = '#ffda44';
+const BLUE = '#0052b4';
+const WHITE = '#f0f0f0';
+const NAVY = '#41479b';
+
 function starPoints(
   cx: number,
   cy: number,
@@ -24,42 +32,36 @@ function starPoints(
     const radius = i % 2 === 0 ? outerRadius : innerRadius;
     const x = cx + radius * Math.cos(angle);
     const y = cy + radius * Math.sin(angle);
-    points.push(`${x.toFixed(3)},${y.toFixed(3)}`);
+    points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
     angle += step;
   }
   return points.join(' ');
 }
 
-// viewBox is 3 x 2 (the 3:2 aspect used by most national flags).
 const EU_STAR_POINTS: string[] = Array.from({ length: 12 }, (_, i) => {
   const angle = -Math.PI / 2 + (i * Math.PI) / 6;
-  const cx = 1.5 + 0.63 * Math.cos(angle);
-  const cy = 1 + 0.63 * Math.sin(angle);
-  return starPoints(cx, cy, 0.14, 0.056);
+  const cx = CENTER + 172 * Math.cos(angle);
+  const cy = CENTER + 172 * Math.sin(angle);
+  return starPoints(cx, cy, 30, 12);
 });
 
-// 50 stars in the 9-row (6/5 alternating) canton layout, generated once.
-const US_STAR_POINTS: string[] = (() => {
-  const cantonWidth = 1.2;
-  const cantonHeight = (7 * 2) / 13;
-  const colUnit = cantonWidth / 12;
-  const rowUnit = cantonHeight / 10;
-  const stars: string[] = [];
-  for (let row = 0; row < 9; row++) {
-    const cols = row % 2 === 0 ? [1, 3, 5, 7, 9, 11] : [2, 4, 6, 8, 10];
-    for (const col of cols) {
-      stars.push(starPoints(col * colUnit, (row + 1) * rowUnit, 0.036, 0.015));
-    }
-  }
-  return stars;
-})();
+const US_STRIPE_HEIGHT = SIZE / 13;
+const US_CANTON_SIZE = US_STRIPE_HEIGHT * 7;
+
+const US_STAR_POINTS: string[] = Array.from({ length: 7 }, (_, row) => {
+  const cy = 30 + row * 38;
+  const offset = row % 2 === 0 ? 50 : 18;
+  return Array.from({ length: 4 }, (_, col) => offset + col * 65)
+    .filter((cx) => cx < US_CANTON_SIZE - 12)
+    .map((cx) => starPoints(cx, cy, 18, 7));
+}).flat();
 
 function GermanyFlag() {
   return (
     <>
-      <rect width="3" height="2" fill="#ffce00" />
-      <rect width="3" height="1.333" fill="#dd0000" />
-      <rect width="3" height="0.667" fill="#000000" />
+      <rect width={SIZE} height={SIZE} fill={GOLD} />
+      <rect width={SIZE} height={(SIZE * 2) / 3} fill={RED} />
+      <rect width={SIZE} height={SIZE / 3} fill="#000000" />
     </>
   );
 }
@@ -67,31 +69,30 @@ function GermanyFlag() {
 function EuropeanUnionFlag() {
   return (
     <>
-      <rect width="3" height="2" fill="#003399" />
+      <rect width={SIZE} height={SIZE} fill={BLUE} />
       {EU_STAR_POINTS.map((points) => (
-        <polygon key={points} points={points} fill="#ffcc00" />
+        <polygon key={points} points={points} fill={GOLD} />
       ))}
     </>
   );
 }
 
 function UnitedStatesFlag() {
-  const stripeHeight = 2 / 13;
   return (
     <>
-      <rect width="3" height="2" fill="#ffffff" />
+      <rect width={SIZE} height={SIZE} fill={WHITE} />
       {Array.from({ length: 7 }, (_, i) => (
         <rect
           key={i}
-          y={i * 2 * stripeHeight}
-          width="3"
-          height={stripeHeight}
-          fill="#b22234"
+          y={i * 2 * US_STRIPE_HEIGHT}
+          width={SIZE}
+          height={US_STRIPE_HEIGHT}
+          fill={RED}
         />
       ))}
-      <rect width="1.2" height={7 * stripeHeight} fill="#3c3b6e" />
+      <rect width={US_CANTON_SIZE} height={US_CANTON_SIZE} fill={NAVY} />
       {US_STAR_POINTS.map((points) => (
-        <polygon key={points} points={points} fill="#ffffff" />
+        <polygon key={points} points={points} fill={WHITE} />
       ))}
     </>
   );
@@ -120,20 +121,14 @@ export function ProviderFlag({
 
   return (
     <svg
-      viewBox="0 0 3 2"
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
       className={cn(
-        'inline-block shrink-0 overflow-hidden rounded-[2px] align-[-0.1em] ring-1 ring-border',
+        'inline-block size-4 shrink-0 overflow-hidden rounded-full',
         className,
       )}
-      // Dimensions are set inline rather than via h-/w- utilities: the Select
-      // primitives force descendant SVGs without a size- class to `size-4`
-      // (a higher-specificity rule), which would crop the 3:2 flag to a
-      // square. Inline styles win over that class-based override.
-      style={{ height: '0.9em', width: '1.35em' }}
       role="presentation"
       aria-hidden="true"
       focusable="false"
-      preserveAspectRatio="xMidYMid slice"
     >
       <FlagShape />
     </svg>

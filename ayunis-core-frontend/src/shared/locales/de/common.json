@@ -174,6 +174,27 @@
   },
   "models": {
     "availableHeading": "Verfügbare Modelle",
+    "modes": {
+      "heading": "Modus",
+      "current": "Aktuell:",
+      "adminHint": "Ayunis Core wählt aus Ihren freigegebenen Modellen.",
+      "otherModelsHeading": "Weitere verfügbare Modelle",
+      "auto": {
+        "label": "Auto",
+        "description": "Ayunis Core wählt das Modell mit dem besten Verhältnis aus Leistung, Geschwindigkeit und Verbrauch. Bei Störungen weicht Ayunis Core automatisch auf ein anderes Modell aus.",
+        "hint": "Beste Balance"
+      },
+      "max": {
+        "label": "Max Modus",
+        "description": "Ayunis Core wählt das leistungsstärkste verfügbare Modell für anspruchsvolle Aufgaben wie Analysen oder lange Dokumente. Der Verbrauch ist höher.",
+        "hint": "Höchste Leistung"
+      },
+      "moreModels": "Weitere Modelle",
+      "noneAvailable": "Für diesen Modus ist derzeit kein freigegebenes Modell verfügbar.",
+      "defaultSaved": "Standard gespeichert.",
+      "defaultSaveError": "Der Standard konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+      "defaultForbidden": "Sie dürfen diesen Standard nicht ändern."
+    },
     "providerFaultWarning": "Für dieses Modell ist derzeit eine Provider-Störung bekannt. Es funktioniert möglicherweise nicht zuverlässig.",
     "category": {
       "zero": "Sehr schwach",

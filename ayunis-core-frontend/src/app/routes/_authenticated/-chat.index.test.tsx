@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   extractErrorData: vi.fn(),
-  getEffectiveDefaultModel: vi.fn(),
+  getDefaultSelection: vi.fn(),
   getSystemPrompt: vi.fn(),
   getChatStartDefaults: vi.fn(),
   hasActiveSubscription: vi.fn(),
@@ -24,15 +24,14 @@ vi.mock('@/shared/api', () => ({
   getModelsControllerIsEmbeddingModelEnabledQueryKey: () => [
     'embedding-model-enabled',
   ],
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey: () => [
-    'effective-default-model',
+  getModelModeDefaultsControllerGetDefaultSelectionQueryKey: () => [
+    'default-selection',
   ],
   getSubscriptionsControllerHasActiveSubscriptionQueryKey: () => [
     'active-subscription',
   ],
   modelsControllerIsEmbeddingModelEnabled: mocks.isEmbeddingModelEnabled,
-  modelsDefaultsControllerGetEffectiveDefaultModel:
-    mocks.getEffectiveDefaultModel,
+  modelModeDefaultsControllerGetDefaultSelection: mocks.getDefaultSelection,
   subscriptionsControllerHasActiveSubscription: mocks.hasActiveSubscription,
 }));
 vi.mock('@/shared/api/extract-error-data', () => ({
@@ -66,8 +65,9 @@ describe('new chat route', () => {
     mocks.extractErrorData.mockImplementation((error: unknown) => {
       throw error;
     });
-    mocks.getEffectiveDefaultModel.mockResolvedValue({
-      permittedLanguageModel: { id: 'sol' },
+    mocks.getDefaultSelection.mockResolvedValue({
+      mode: null,
+      permittedModelId: 'sol',
     });
     mocks.getSystemPrompt.mockResolvedValue({});
     mocks.getChatStartDefaults.mockResolvedValue({
@@ -83,18 +83,30 @@ describe('new chat route', () => {
 
   it('loads the current default instead of trusting a fresh cached value', async () => {
     const queryClient = appQueryClient();
-    queryClient.setQueryData(['effective-default-model'], {
-      permittedLanguageModel: { id: 'terra' },
+    queryClient.setQueryData(['default-selection'], {
+      mode: null,
+      permittedModelId: 'terra',
     });
 
     const result = await runLoader(queryClient);
 
     expect(result.selectedModelId).toBe('sol');
-    expect(mocks.getEffectiveDefaultModel).toHaveBeenCalledOnce();
+    expect(mocks.getDefaultSelection).toHaveBeenCalledOnce();
+  });
+
+  it('preselects a mode when the default is a mode', async () => {
+    mocks.getDefaultSelection.mockResolvedValue({
+      mode: 'auto',
+      permittedModelId: 'sol',
+    });
+
+    const result = await runLoader(appQueryClient());
+
+    expect(result.selectedModelId).toBe('mode:auto');
   });
 
   it('renders without a preselected model when the default cannot be loaded', async () => {
-    mocks.getEffectiveDefaultModel.mockRejectedValue(new Error('offline'));
+    mocks.getDefaultSelection.mockRejectedValue(new Error('offline'));
 
     const result = await runLoader(appQueryClient());
 
@@ -103,7 +115,7 @@ describe('new chat route', () => {
 
   it('preserves the no-default-model error for the route error page', async () => {
     const error = new Error('no default model');
-    mocks.getEffectiveDefaultModel.mockRejectedValue(error);
+    mocks.getDefaultSelection.mockRejectedValue(error);
     mocks.extractErrorData.mockReturnValue({ code: 'NO_DEFAULT_MODEL_FOUND' });
 
     await expect(runLoader(appQueryClient())).rejects.toBe(error);

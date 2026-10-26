@@ -571,6 +571,24 @@
       "active": "Active",
       "archived": "Archived"
     },
+    "modes": {
+      "auto": {
+        "title": "Auto mode",
+        "description": "For everyday work. Ayunis Core uses the first model in the list that the organization has enabled and that is not disrupted. Applies to all organizations."
+      },
+      "max": {
+        "title": "Max mode",
+        "description": "For demanding tasks. Ayunis Core uses the first model in the list that the organization has enabled and that is not disrupted. Applies to all organizations."
+      },
+      "add": "Add model",
+      "empty": "No models in the list yet.",
+      "dragToReorder": "Drag to reorder",
+      "remove": "Remove from list",
+      "toggle": "Use {{name}} in this mode",
+      "tierNotAllowed": "Only models of tier \"high\" can be added to Max mode.",
+      "modelNotFound": "This model no longer exists in the catalog.",
+      "saveError": "The list could not be saved. Please try again."
+    },
     "emptyArchived": "No archived models",
     "emptyArchivedDescription": "Models you archive will appear here.",
     "catalog": {

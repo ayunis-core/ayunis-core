@@ -10,7 +10,10 @@ import {
   modelsControllerIsEmbeddingModelEnabled,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
+import {
+  defaultModelSelectionQueryOptions,
+  toComposerValue,
+} from './-default-model-selection-query';
 
 const WORKSPACE_CHATS_LIMIT = 20;
 
@@ -60,9 +63,9 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         queryFn: () => threadsControllerFindAll(chatsParams),
       });
 
-      const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
+      const [defaultSelection, embeddingModelResponse] = await Promise.all([
         queryClient
-          .query(effectiveDefaultModelQueryOptions())
+          .query(defaultModelSelectionQueryOptions())
           .catch(() => null),
         queryClient
           .query(queryIsEmbeddingModelEnabledOptions())
@@ -76,7 +79,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         chatPagination: chats.pagination,
         chatSearch: search,
         chatPage: page,
-        selectedModelId: defaultModelResponse?.permittedLanguageModel?.id,
+        selectedModelId: toComposerValue(defaultSelection),
         isEmbeddingModelEnabled:
           embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
       };
