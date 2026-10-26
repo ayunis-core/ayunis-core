@@ -1682,6 +1682,18 @@ export interface ImageGenerationModelResponseDto {
   outputTokenCost?: number;
 }
 
+export interface ModelModeEntryDto {
+  /** Catalog language model ID */
+  modelId: string;
+  /** Disabled entries keep their position but are skipped */
+  enabled: boolean;
+}
+
+export interface ReplaceModelModeEntriesDto {
+  /** Complete ordered list, highest preference first */
+  entries: ModelModeEntryDto[];
+}
+
 /**
  * The provider of the model
  */

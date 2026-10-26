@@ -14,6 +14,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **SuperAdminLanguageCatalogModelsController** (`presenters/http/super-admin-language-catalog-models.controller.ts`): Super admin endpoints for creating and updating language models in the catalog. Both require `contextWindowSize` (AYC-1257), and a check constraint on `models` rejects language rows without one. The migration backfills missing values with the previous 200,000-token trimming fallback for every provider. Ollama-based handlers (local Ollama, Ayunis Ollama, Synaforce) retain the provider’s independent 30,000-token `num_ctx` default.
 - **SuperAdminEmbeddingCatalogModelsController** (`presenters/http/super-admin-embedding-catalog-models.controller.ts`): Super admin endpoints for creating and updating embedding models in the catalog.
 - **SuperAdminImageGenerationCatalogModelsController** (`presenters/http/super-admin-image-generation-catalog-models.controller.ts`): Super admin endpoints for creating and updating image-generation models in the catalog.
+- **SuperAdminModelModesController** (`presenters/http/super-admin-model-modes.controller.ts`): Super admin endpoints to read (`GET /super-admin/model-modes/:mode`) and replace (`PUT`) the ordered model list of a model mode (`auto`, `max`). A replace submits the complete ordered list, so adding, removing, reordering and disabling an entry are all one request (AYC-441).
 - **TeamPermittedModelsController** (`presenters/http/team-permitted-models.controller.ts`): Admin endpoints for managing team-scoped permitted models — listing (language via `GET /`, image-generation via `GET /image-generation`), creating, deleting, and setting team defaults. Language and image-generation models are team-restrictable; embedding models are intentionally excluded so document processing stays available to every team. All operations go through use-case layer with team ownership and org-scoping validation.
 
 ## Application Services
@@ -26,6 +27,10 @@ The models module is the central registry for AI model configuration. The abstra
 ## Domain Value Objects
 
 - **ToolSchema** (`domain/value-objects/tool-schema.ts`): Schema-shaped view of a tool (`{ name, description, parameters }`) decoupled from the executable `Tool` entity. Inference ports and provider converters accept `ToolSchema` so callers without server-executable tools — e.g. the `openai-compat` surface, where the client owns execution — can advertise tools to the LLM without constructing a full `Tool`. `Tool` is structurally assignable to `ToolSchema`.
+
+## Model Modes
+
+`ModelModeEntry` (`domain/model-mode-entry.entity.ts`) places a catalog language model at a position in a mode's ordered preference list, with an `enabled` switch that skips the entry without losing its position. Lists are global and maintained by super admins; per-organization ordering would need an org reference and its own migration, so no placeholder column is kept for it. Entries cascade-delete with their catalog model. Max mode accepts only `high`-tier models (`ModelTierNotAllowedForModeError`).
 
 ## Use Cases
 
@@ -46,6 +51,8 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
 - **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. Without an enabled override it uses the organization grant. With enabled overrides it uses the union of explicit team grants: zero grants means unavailable, repeated grants of one catalog model deduplicate, and different catalog models raise a typed conflict.
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
+- **GetModelModeEntriesUseCase** (`application/use-cases/get-model-mode-entries`): Returns a mode's entries ordered by preference.
+- **ReplaceModelModeEntriesUseCase** (`application/use-cases/replace-model-mode-entries`): Validates every submitted model against the catalog (exists, is a language model, tier allowed for the mode) and replaces the mode's list in one transaction.
 - **GetAllModelsUseCase** (`application/use-cases/get-all-models`): Retrieves all models from the catalog.
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.

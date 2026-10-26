@@ -149,6 +149,7 @@
   "/super-admin/anonymization-whitelist/{wordId}",
   "/super-admin/crawl-domains/{orgId}",
   "/super-admin/crawl-domains/{orgId}/{grantId}",
+  "/super-admin/model-modes/{mode}",
   "/super-admin/models/catalog",
   "/super-admin/models/catalog/embedding",
   "/super-admin/models/catalog/embedding/{id}",
