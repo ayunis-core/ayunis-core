@@ -1,4 +1,6 @@
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import type { UUID } from 'crypto';
+import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
@@ -14,6 +16,17 @@ export abstract class SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource>;
+  /** Completes HTML processing and registers all PDF files atomically; only one delivery can win. */
+  abstract completeCrawlWithFileSources(
+    sourceId: UUID,
+    files: FileSource[],
+    maximumSources?: number,
+  ): Promise<FileSource[] | null>;
+  /** Writes content only while the existing source is processing, without recreating deleted rows. */
+  abstract saveProcessingTextSourceContent(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): Promise<boolean>;
   abstract findStaleProcessingSourceIds(
     staleBefore: Date,
     limit: number,
@@ -24,7 +37,10 @@ export abstract class SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingErrorCode: SourceProcessingErrorCode | null;
+    }>,
   ): Promise<boolean>;
   /**
    * Refreshes processingStartedAt so the stale-processing cron leaves a

@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-hardcoded-ip -- Fixture IPs exercise public/private redirect authorization. */
+import { UrlDestinationGuardService } from './url-destination-guard.service';
 import type { ConfigService } from '@nestjs/config';
 import { CheerioUrlRetrieverHandler } from './cheerio.url-retriever';
 import {
@@ -74,7 +76,9 @@ function streamedResponse({
 
 function makeHandler(): CheerioUrlRetrieverHandler {
   const config = { getOrThrow: () => 5000 } as unknown as ConfigService;
-  return new CheerioUrlRetrieverHandler(config);
+  return new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
 }
 
 function makeHandlerWithCap(
@@ -84,7 +88,9 @@ function makeHandlerWithCap(
     getOrThrow: (key: string) =>
       key === 'url.maxDownloadBytes' ? maxDownloadBytes : 5000,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }
@@ -94,7 +100,9 @@ function makeHandlerWithTimeout(timeoutMs: number): CheerioUrlRetrieverHandler {
     getOrThrow: (key: string) =>
       key === 'url.timeout' ? timeoutMs : 25 * 1024 * 1024,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }
@@ -390,7 +398,103 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
   });
 });
 
+describe('Cheerio redirect grant timeout', () => {
+  afterEach(() => jest.restoreAllMocks());
+  it('times out a stalled redirect authorization without following the redirect', async () => {
+    const handler = makeHandlerWithTimeout(10);
+    const fetchSpy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        redirect('https://redirect.customer.de/statute.pdf'),
+      );
+    await expect(
+      handler.fetch({
+        url: 'https://public.customer.de/statute.pdf',
+        onRedirect: () => new Promise(() => undefined),
+      }),
+    ).rejects.toBeInstanceOf(UrlRetrieverTimeoutError);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Cheerio discovered-PDF redirect destinations', () => {
+  class Guard extends UrlDestinationGuardService {
+    protected override async resolveAddresses(host: string): Promise<string[]> {
+      return host === 'public.customer.de' ? ['1.1.1.1'] : ['127.0.0.2'];
+    }
+  }
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('rejects an ungranted private redirect before fetching its body', async () => {
+    const guard = new Guard();
+    const handler = new CheerioUrlRetrieverHandler(
+      { getOrThrow: () => 5000 } as never,
+      guard,
+    );
+    const fetchSpy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'));
+    const requireGrant = jest.fn(async () => {
+      throw new CrawlDomainAccessDeniedError();
+    });
+    try {
+      await expect(
+        handler.fetch({
+          url: 'https://public.customer.de/statute.pdf',
+          assertPrivateDestinationAccess: requireGrant,
+        }),
+      ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(requireGrant).toHaveBeenCalledWith('http://127.0.0.2/statute.pdf');
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+
+  it('follows a private redirect only after the requesting org is explicitly authorized', async () => {
+    const guard = new Guard();
+    const handler = new CheerioUrlRetrieverHandler(
+      { getOrThrow: () => 5000 } as never,
+      guard,
+    );
+    const fetchSpy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'))
+      .mockResolvedValueOnce(
+        makeResponse({
+          headers: { 'content-type': 'application/pdf' },
+          body: 'approved PDF bytes',
+        }),
+      );
+    const requireGrant = jest.fn(async () => undefined);
+    try {
+      const result = await handler.fetch({
+        url: 'https://public.customer.de/statute.pdf',
+        assertPrivateDestinationAccess: requireGrant,
+      });
+      expect(result.finalUrl).toBe('http://127.0.0.2/statute.pdf');
+      expect(result.body.toString()).toBe('approved PDF bytes');
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(requireGrant).toHaveBeenCalledTimes(1);
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+});
+
 describe('CheerioUrlRetrieverHandler.parseHtml', () => {
+  it('retains PDF link labels and PDF media types even without a file extension', () => {
+    const result = makeHandler().parseHtml(
+      '<a href="https://cdn.test/statute.pdf#page=1"> Hauptsatzung </a><a href="/download/42" type="application/pdf">Gebührenordnung</a>',
+      'https://acme.test/statutes',
+    );
+    expect(result.pdfLinks).toEqual([
+      { url: 'https://cdn.test/statute.pdf', name: 'Hauptsatzung' },
+      { url: 'https://acme.test/download/42', name: 'Gebührenordnung' },
+    ]);
+  });
+
   const handler = makeHandler();
 
   it('extracts cleaned body text and the page title', () => {

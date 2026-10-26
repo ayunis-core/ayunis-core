@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

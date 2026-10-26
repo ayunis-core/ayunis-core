@@ -10,6 +10,8 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     findById: jest.fn().mockResolvedValue(null),
     findByIds: jest.fn().mockResolvedValue([]),
     findByKnowledgeBaseId: jest.fn().mockResolvedValue([]),
+    completeCrawlWithFileSources: jest.fn(),
+    saveProcessingTextSourceContent: jest.fn(),
     saveTextSource: jest
       .fn()
       .mockImplementation((source: TextSource) => Promise.resolve(source)),

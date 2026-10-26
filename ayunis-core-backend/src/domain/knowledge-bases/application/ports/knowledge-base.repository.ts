@@ -21,7 +21,10 @@ export interface WorkspaceKnowledgeBaseState {
 }
 
 export abstract class KnowledgeBaseRepository {
-  abstract findById(id: UUID): Promise<KnowledgeBase | null>;
+  abstract findById(
+    id: UUID,
+    options?: { lock?: boolean },
+  ): Promise<KnowledgeBase | null>;
   abstract findByIds(
     ids: UUID[],
     options: KnowledgeBaseByIdsOptions & { workspaceId: null },

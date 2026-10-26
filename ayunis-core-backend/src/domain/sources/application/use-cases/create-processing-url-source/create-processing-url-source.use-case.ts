@@ -4,7 +4,7 @@ import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
 import { CreateProcessingUrlSourceCommand } from './create-processing-url-source.command';
 
@@ -14,37 +14,26 @@ export class CreateProcessingUrlSourceUseCase {
 
   constructor(private readonly sourceRepository: SourceRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: CreateProcessingUrlSourceCommand): Promise<UrlSource> {
     this.logger.debug({ url: command.url }, 'Creating processing URL source');
 
-    try {
-      const source = new UrlSource({
-        url: command.url,
-        // Placeholder until the crawl resolves the real page title.
-        name: this.placeholderName(command.url),
-        type: TextType.WEB,
-        // Clamp to the crawler's cap so the stored depth never overstates how
-        // deep the source was actually crawled (CrawlUrlUseCase re-clamps too).
-        maxDepth: this.clampDepth(command.maxDepth),
-        status: SourceStatus.PROCESSING,
-        // processingStartedAt is left null and only armed when the worker picks
-        // up the job, so a source waiting in the queue is not reaped by the
-        // stale-processing cleanup before its crawl has even started.
-      });
+    const source = new UrlSource({
+      url: command.url,
+      knowledgeBaseId: command.knowledgeBaseId,
+      // Placeholder until the crawl resolves the real page title.
+      name: this.placeholderName(command.url),
+      type: TextType.WEB,
+      // Clamp to the crawler's cap so the stored depth never overstates how
+      // deep the source was actually crawled (CrawlUrlUseCase re-clamps too).
+      maxDepth: this.clampDepth(command.maxDepth),
+      status: SourceStatus.PROCESSING,
+      // processingStartedAt is left null and only armed when the worker picks
+      // up the job, so a source waiting in the queue is not reaped by the
+      // stale-processing cleanup before its crawl has even started.
+    });
 
-      return (await this.sourceRepository.save(source)) as UrlSource;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error creating processing URL source',
-      );
-      throw new UnexpectedSourceError('Error creating processing URL source', {
-        error: error as Error,
-      });
-    }
+    return (await this.sourceRepository.save(source)) as UrlSource;
   }
 
   private placeholderName(url: string): string {

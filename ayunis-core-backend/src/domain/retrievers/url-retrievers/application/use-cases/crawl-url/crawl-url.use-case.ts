@@ -1,3 +1,10 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedUrlRetrieverError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import {
+  isPdfLink,
+  pdfFileName,
+} from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
+import type { PdfLink } from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import pLimit from 'p-limit';
@@ -23,6 +30,7 @@ export class CrawlUrlUseCase {
 
   constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {}
 
+  @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: CrawlUrlCommand): Promise<UrlCrawlResult> {
     const maxDepth = this.clampDepth(command.maxDepth);
     this.logger.debug({ url: command.url, maxDepth }, 'Crawling URL');
@@ -39,6 +47,9 @@ export class CrawlUrlUseCase {
     const visited = new Set<string>([this.normalize(rootResult.url)]);
     const pages: UrlCrawlPage[] = [this.toPage(rootResult)];
 
+    const pdfLinks = new Map<string, PdfLink>();
+    this.collectPdfs(rootResult, pdfLinks);
+
     let frontier =
       maxDepth >= 1
         ? this.selectLinks(rootResult, rootHost, visited, this.remaining(pages))
@@ -46,6 +57,9 @@ export class CrawlUrlUseCase {
 
     for (let depth = 1; depth <= maxDepth && frontier.length > 0; depth++) {
       const results = await this.fetchConcurrently(frontier, command.orgId);
+      for (const result of results) {
+        if (result) this.collectPdfs(result, pdfLinks);
+      }
       frontier = this.collectNextFrontier(
         results,
         pages,
@@ -59,7 +73,7 @@ export class CrawlUrlUseCase {
       { url: command.url, pageCount: pages.length },
       'URL crawl completed',
     );
-    return new UrlCrawlResult(pages);
+    return new UrlCrawlResult(pages, [...pdfLinks.values()]);
   }
 
   /** Append fetched pages and gather the next wave of same-site links. */
@@ -168,6 +182,8 @@ export class CrawlUrlUseCase {
     const selected: string[] = [];
     for (const link of result.links) {
       if (selected.length >= remaining) break;
+      if (isPdfLink(link) || result.pdfLinks.some((pdf) => pdf.url === link))
+        continue;
       const key = this.normalize(link);
       if (visited.has(key)) continue;
       if (!this.isSameSite(rootHost, link)) continue;
@@ -175,6 +191,26 @@ export class CrawlUrlUseCase {
       selected.push(link);
     }
     return selected;
+  }
+
+  private collectPdfs(
+    result: UrlRetrieverResult,
+    collected: Map<string, PdfLink>,
+  ): void {
+    const candidates = [
+      ...result.pdfLinks,
+      ...result.links
+        .filter(isPdfLink)
+        .map((url) => ({ url, name: pdfFileName(url) })),
+    ];
+    for (const link of candidates) {
+      if (collected.size >= UrlCrawlConstants.MAX_PDFS) break;
+      const parsed = new URL(link.url);
+      parsed.hash = '';
+      if (!['http:', 'https:'].includes(parsed.protocol)) continue;
+      const url = parsed.toString();
+      if (!collected.has(url)) collected.set(url, { ...link, url });
+    }
   }
 
   private remaining(pages: UrlCrawlPage[]): number {

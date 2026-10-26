@@ -1,3 +1,5 @@
+import type { PdfLink } from './pdf-link';
+
 export class UrlRetrieverResult {
   constructor(
     public readonly content: string,
@@ -9,5 +11,7 @@ export class UrlRetrieverResult {
      * Used by the crawler to follow links up to a configured depth.
      */
     public readonly links: string[] = [],
+    public readonly pdfLinks: PdfLink[] = [],
+    public readonly isPdf: boolean = false,
   ) {}
 }

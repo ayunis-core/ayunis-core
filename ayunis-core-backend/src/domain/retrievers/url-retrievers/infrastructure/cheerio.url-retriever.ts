@@ -1,3 +1,10 @@
+import { withAbortSignal } from 'src/common/util/network-address-policy';
+import { UrlDestinationGuardService } from './url-destination-guard.service';
+import {
+  isPdfLink,
+  pdfFileName,
+} from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
+import type { PdfLink } from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
@@ -94,7 +101,10 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   // `url.timeout` and `url.maxDownloadBytes` always resolve — the `url` config
   // factory applies its own defaults (5s / 25 MB) — so read them with
   // getOrThrow rather than duplicating those defaults as dead fallbacks here.
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly destinations: UrlDestinationGuardService,
+  ) {
     super();
     this.defaultTimeout = this.configService.getOrThrow<number>('url.timeout');
     this.maxDownloadBytes = this.configService.getOrThrow<number>(
@@ -215,14 +225,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     let currentUrl = input.url;
 
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-      const response = await fetch(currentUrl, {
-        signal,
-        // This User-Agent is also the key that excludes crawler requests
-        // from AppSignal's undici instrumentation — keep in sync with
-        // appsignal-hooks.cjs.
-        headers: { 'User-Agent': 'Ayunis/1.0' },
-        redirect: 'manual',
-      });
+      const response = await this.fetchPage(currentUrl, input, signal);
 
       const location = response.headers.get('location');
       if (!REDIRECT_STATUSES.has(response.status) || !location) {
@@ -243,11 +246,34 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         );
       }
       // Re-assert the gate before following; throwing rejects the redirect.
-      await input.onRedirect?.(next.href);
+      const assertRedirectAccess = input.onRedirect;
+      if (assertRedirectAccess)
+        await withAbortSignal(() => assertRedirectAccess(next.href), signal);
       currentUrl = next.href;
     }
 
     throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
+  }
+
+  private async fetchPage(
+    url: string,
+    input: UrlRetrieverInput,
+    signal: AbortSignal,
+  ): Promise<Response> {
+    const dispatcher = input.assertPrivateDestinationAccess
+      ? await this.destinations.dispatcherFor(
+          url,
+          input.assertPrivateDestinationAccess,
+          signal,
+        )
+      : undefined;
+    return fetch(url, {
+      signal,
+      // The crawler user-agent also excludes these requests from undici telemetry.
+      headers: { 'User-Agent': 'Ayunis/1.0' },
+      redirect: 'manual',
+      ...(dispatcher ? { dispatcher } : {}),
+    });
   }
 
   private assertHttpOk(response: Response, url: string): void {
@@ -309,12 +335,19 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     try {
       const $ = cheerio.load(html);
 
-      const links = this.extractLinks($, url);
+      const { links, pdfLinks } = this.extractLinks($, url);
 
       const cleanedText = extractStructuredBodyText($);
       const websiteTitle = $('title').text();
 
-      return new UrlRetrieverResult(cleanedText, url, websiteTitle, {}, links);
+      return new UrlRetrieverResult(
+        cleanedText,
+        url,
+        websiteTitle,
+        {},
+        links,
+        pdfLinks,
+      );
     } catch (error) {
       throw new UrlRetrieverParsingError(
         url,
@@ -329,8 +362,12 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
    * against the page URL. Fragments are stripped and duplicates removed so the
    * crawler sees each target page once.
    */
-  private extractLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
+  private extractLinks(
+    $: cheerio.CheerioAPI,
+    baseUrl: string,
+  ): { links: string[]; pdfLinks: PdfLink[] } {
     const links = new Set<string>();
+    const pdfLinks = new Map<string, PdfLink>();
 
     $('a[href]').each((_, element) => {
       const href = $(element).attr('href');
@@ -342,13 +379,22 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
           return;
         }
         resolved.hash = '';
-        links.add(resolved.toString());
+        const url = resolved.toString();
+        links.add(url);
+        if (
+          isPdfLink(url) ||
+          $(element).attr('type')?.toLowerCase() === 'application/pdf'
+        ) {
+          const name =
+            $(element).text().replace(/\s+/g, ' ').trim() || pdfFileName(url);
+          if (!pdfLinks.has(url)) pdfLinks.set(url, { url, name });
+        }
       } catch {
         // Malformed href — skip it.
       }
     });
 
-    return [...links];
+    return { links: [...links], pdfLinks: [...pdfLinks.values()] };
   }
 
   private handleTopLevelError(error: unknown, url: string): never {

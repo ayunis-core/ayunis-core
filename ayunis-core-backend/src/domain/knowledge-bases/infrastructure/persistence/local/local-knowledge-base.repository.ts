@@ -1,3 +1,4 @@
+import { assignSourceWithinCapacity } from 'src/domain/knowledge-bases/infrastructure/persistence/local/queries/knowledge-base-source-capacity.db-query';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
@@ -81,15 +82,18 @@ export class LocalKnowledgeBaseRepository
     );
   }
 
-  async findById(id: UUID): Promise<KnowledgeBase | null> {
+  async findById(
+    id: UUID,
+    options?: { lock?: boolean },
+  ): Promise<KnowledgeBase | null> {
     this.logger.debug({ id }, 'findById');
     const record = await this.knowledgeBaseRepository.findOne({
       where: { id },
+      ...(options?.lock
+        ? { lock: { mode: 'pessimistic_write' as const } }
+        : {}),
     });
-    if (!record) {
-      return null;
-    }
-    return this.mapper.toDomain(record);
+    return record ? this.mapper.toDomain(record) : null;
   }
 
   findByIds(
@@ -408,11 +412,9 @@ export class LocalKnowledgeBaseRepository
     sourceId: UUID,
     knowledgeBaseId: UUID,
   ): Promise<void> {
-    this.logger.debug(
-      { sourceId, knowledgeBaseId },
-      'assignSourceToKnowledgeBase',
+    await this.txHost.withTransaction(() =>
+      assignSourceWithinCapacity(this.txHost.tx, sourceId, knowledgeBaseId),
     );
-    await this.sourceRepository.update(sourceId, { knowledgeBaseId });
   }
 
   async findSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {

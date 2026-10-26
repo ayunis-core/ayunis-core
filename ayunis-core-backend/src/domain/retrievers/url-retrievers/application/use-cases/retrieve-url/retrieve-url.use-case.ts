@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UUID } from 'crypto';
 import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import { Injectable, Logger } from '@nestjs/common';
@@ -8,6 +9,7 @@ import {
   UrlRetrieverHandler,
 } from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
 import {
+  UnexpectedUrlRetrieverError,
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverParsingError,
@@ -34,6 +36,7 @@ export class RetrieveUrlUseCase {
     private readonly pdfExtractionCache: PdfExtractionCachePort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
     this.logger.debug({ url: command.url }, 'Retrieving URL');
 
@@ -52,6 +55,13 @@ export class RetrieveUrlUseCase {
       const raw = await this.handler.fetch({
         url: command.url,
         options: command.options,
+        assertPrivateDestinationAccess:
+          command.privateDestinationPolicy === 'explicit-grant'
+            ? (url) =>
+                this.assertCrawlDomainAccessUseCase.execute(
+                  new AssertCrawlDomainAccessCommand(url, command.orgId, true),
+                )
+            : undefined,
         onRedirect: (url) =>
           this.assertCrawlDomainAccessUseCase.execute(
             new AssertCrawlDomainAccessCommand(url, command.orgId),
@@ -213,6 +223,8 @@ export class RetrieveUrlUseCase {
         fileName,
         result.metadata,
         [],
+        [],
+        true,
       );
     } catch (error) {
       // Domain errors (the file pipeline's own failures) keep their meaning;

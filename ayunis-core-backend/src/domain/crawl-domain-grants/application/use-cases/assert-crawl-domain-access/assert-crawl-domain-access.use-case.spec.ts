@@ -22,6 +22,64 @@ function repoReturning(
 }
 
 describe('AssertCrawlDomainAccessUseCase', () => {
+  it('requires a grant when the caller requests explicit private-destination access', async () => {
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => null),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://10.0.0.5/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+  });
+
+  it('permits explicit private access only for the granted organization', async () => {
+    const grant = new CrawlDomainGrant({
+      orgId: ORG_A,
+      domain: 'intranet.customer.de',
+    });
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => grant),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://intranet.customer.de/statute.pdf',
+          ORG_B,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://intranet.customer.de/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('does not let an ungrantable private IPv6 host bypass explicit access', async () => {
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => null),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://[::1]/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+  });
+
   it('allows when no grant exists for the host', async () => {
     const useCase = new AssertCrawlDomainAccessUseCase(
       repoReturning(() => null),

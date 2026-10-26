@@ -1,3 +1,8 @@
+import {
+  insertCrawledFileSources,
+  selectCrawledFilesWithinCapacity,
+} from './crawled-file-sources.helpers';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, LessThan, Repository } from 'typeorm';
@@ -6,6 +11,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
@@ -166,6 +172,55 @@ export class LocalSourceRepository extends SourceRepository {
     return this.mapper.toDomain(savedSource);
   }
 
+  async completeCrawlWithFileSources(
+    sourceId: UUID,
+    files: FileSource[],
+    maximumSources = Number.MAX_SAFE_INTEGER,
+  ): Promise<FileSource[] | null> {
+    return this.txHost.withTransaction(async () => {
+      const registered = await selectCrawledFilesWithinCapacity(
+        this.getManager(),
+        sourceId,
+        files,
+        maximumSources,
+      );
+      if (
+        !(await this.updateStatusConditionally(
+          sourceId,
+          SourceStatus.PROCESSING,
+          SourceStatus.READY,
+        ))
+      )
+        return null;
+      if (registered.length === 0) return [];
+      await insertCrawledFileSources(this.getManager(), registered);
+      return registered;
+    });
+  }
+
+  async saveProcessingTextSourceContent(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): Promise<boolean> {
+    return this.txHost.withTransaction(async () => {
+      // This guarded write locks the row until content is stored; deletion cannot
+      // race the content save, and no source upsert can resurrect a deleted file.
+      const updated = await this.sourceRepository.update(
+        { id: source.id, status: SourceStatus.PROCESSING },
+        { name: source.name, processingStartedAt: new Date() },
+      );
+      if (!updated.affected) return false;
+      const { details, contentChunks } = this.mapper.toTextSourceRecord(
+        source,
+        content,
+      );
+      await this.textSourceDetailsRepository.save(details);
+      // A stalled delivery may still index prior chunk IDs; keep them citable.
+      await this.sourceContentChunkRepository.save(contentChunks);
+      return true;
+    });
+  }
+
   async findStaleProcessingSourceIds(
     staleBefore: Date,
     limit: number,
@@ -210,7 +265,10 @@ export class LocalSourceRepository extends SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingErrorCode: SourceProcessingErrorCode | null;
+    }>,
   ): Promise<boolean> {
     this.logger.log(
       {
@@ -233,6 +291,9 @@ export class LocalSourceRepository extends SourceRepository {
           : {}),
         ...(updates?.processingError !== undefined
           ? { processingError: updates.processingError }
+          : {}),
+        ...(updates?.processingErrorCode !== undefined
+          ? { processingErrorCode: updates.processingErrorCode }
           : {}),
       })
       .where('id = :id AND status = :fromStatus', {

@@ -32,10 +32,12 @@ export abstract class TextSource extends Source {
 
 export class FileSource extends TextSource {
   fileType: FileType;
+  url: string | null;
 
   constructor(params: {
     id?: UUID;
     fileType: FileType;
+    url?: string | null;
     name: string;
     type: TextType;
     knowledgeBaseId?: UUID | null;
@@ -49,6 +51,7 @@ export class FileSource extends TextSource {
   }) {
     super({ ...params, type: TextType.FILE });
     this.fileType = params.fileType;
+    this.url = params.url ?? null;
   }
 }
 

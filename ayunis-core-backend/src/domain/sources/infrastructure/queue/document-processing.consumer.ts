@@ -28,7 +28,7 @@ import {
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
-import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,

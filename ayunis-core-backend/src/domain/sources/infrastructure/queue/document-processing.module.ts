@@ -14,7 +14,7 @@ import { DocumentProcessingPort } from 'src/domain/sources/application/ports/doc
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
-import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 
 @Module({

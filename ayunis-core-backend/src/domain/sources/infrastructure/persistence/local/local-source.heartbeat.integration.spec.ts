@@ -10,7 +10,7 @@ import { LocalSourceRepository } from './local-source.repository';
 import { SourceRecord } from './schema/source.record';
 import type { SourceMapper } from './mappers/source.mapper';
 import type { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
-import { SourceProcessingHeartbeatService } from 'src/domain/sources/infrastructure/queue/source-processing-heartbeat.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 
 const sourceSchema = new EntitySchema<SourceRecord>({
