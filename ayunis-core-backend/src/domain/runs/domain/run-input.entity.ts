@@ -20,6 +20,10 @@ export class RunUserInput extends RunInput {
   ) {
     super();
   }
+
+  releaseImages(): void {
+    this.pendingImages.length = 0;
+  }
 }
 
 export class RunToolResultInput extends RunInput {

@@ -79,6 +79,7 @@
     "uploadFile": "Datei oder Bild hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",
     "imageTooLarge": "Bilder dürfen höchstens {{maxMiB}} MiB groß sein",
+    "imageTotalTooLarge": "Bilder in einer Nachricht dürfen zusammen höchstens {{maxMiB}} MiB groß sein. Einige Bilder wurden nicht hinzugefügt.",
     "addKnowledgeBase": "Wissenssammlung hinzufügen",
     "knowledgeBasesLoadError": "Fehler beim Laden der Wissenssammlungen",
     "knowledgeBasesEmptyState": "Noch keine Wissenssammlung erstellt",

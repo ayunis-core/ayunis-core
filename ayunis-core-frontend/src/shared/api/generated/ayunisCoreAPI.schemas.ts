@@ -6158,7 +6158,7 @@ export type RunsControllerSendMessageBody = {
   threadId: string;
   /** Message text (optional if images provided) */
   text?: string;
-  /** Image files to attach (max 10, max 10MB each, 50MB total) */
+  /** Image files to attach (max 10, max 20 MiB each, 80 MiB total) */
   images?: (Blob | File)[];
   /** JSON array of alt texts matching image order */
   imageAltTexts?: string;

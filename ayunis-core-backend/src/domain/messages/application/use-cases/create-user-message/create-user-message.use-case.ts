@@ -23,6 +23,18 @@ import { ImageMessageContent } from 'src/domain/messages/domain/message-contents
 import { getImageStoragePath } from 'src/domain/messages/domain/image-storage-path.util';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import type { UUID } from 'crypto';
+import {
+  ImageNormalizerPort,
+  type NormalizableImage,
+} from 'src/domain/messages/application/ports/image-normalizer.port';
+import { MessageContentInvalidError } from 'src/domain/messages/application/messages.errors';
+import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import { sniffAllowedImageContentType } from 'src/common/util/content-type.util';
+import type { ImageUploadData } from './create-user-message.command';
+
+interface StorableImage extends NormalizableImage {
+  readonly altText?: string;
+}
 
 @Injectable()
 export class CreateUserMessageUseCase {
@@ -35,6 +47,7 @@ export class CreateUserMessageUseCase {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly imageNormalizer: ImageNormalizerPort,
   ) {}
 
   async execute(command: CreateUserMessageCommand): Promise<UserMessage> {
@@ -52,12 +65,27 @@ export class CreateUserMessageUseCase {
       'Creating user message',
     );
 
+    const images = await this.normalizeImages(command.pendingImages);
+    return this.persistMessage(command, images, orgId);
+  }
+
+  private async persistMessage(
+    command: CreateUserMessageCommand,
+    images: readonly StorableImage[],
+    orgId: UUID,
+  ): Promise<UserMessage> {
     // Track uploaded images for potential rollback
     const uploadedPaths: string[] = [];
 
     try {
-      const userMessage = this.buildUserMessage(command);
-      await this.uploadImages(command, orgId, userMessage, uploadedPaths);
+      const userMessage = this.buildUserMessage(command, images);
+      await this.uploadImages(
+        command.threadId,
+        images,
+        orgId,
+        userMessage,
+        uploadedPaths,
+      );
       const savedMessage = (await this.messagesRepository.create(
         userMessage,
       )) as UserMessage;
@@ -93,7 +121,42 @@ export class CreateUserMessageUseCase {
     }
   }
 
-  private buildUserMessage(command: CreateUserMessageCommand): UserMessage {
+  private async normalizeImages(
+    pendingImages: readonly ImageUploadData[],
+  ): Promise<StorableImage[]> {
+    const images: StorableImage[] = [];
+    // Sequential, so one request decodes at most one image at a time.
+    for (const pending of pendingImages) {
+      const contentType = sniffAllowedImageContentType(pending.buffer);
+      if (!contentType) {
+        throw new MessageContentInvalidError('Unsupported image format');
+      }
+      const normalized = await this.imageNormalizer.normalize({
+        buffer: pending.buffer,
+        contentType,
+      });
+      if (normalized.buffer.length > MAX_IMAGE_SIZE_BYTES) {
+        throw new MessageContentInvalidError(
+          'Image is still too large after downscaling',
+        );
+      }
+      this.logger.debug(
+        {
+          uploadedBytes: pending.buffer.length,
+          storedBytes: normalized.buffer.length,
+          contentType: normalized.contentType,
+        },
+        'Normalized uploaded image',
+      );
+      images.push({ ...normalized, altText: pending.altText });
+    }
+    return images;
+  }
+
+  private buildUserMessage(
+    command: CreateUserMessageCommand,
+    images: readonly StorableImage[],
+  ): UserMessage {
     const content: (TextMessageContent | ImageMessageContent)[] = [];
     if (command.skillInstructions?.trim()) {
       content.push(
@@ -104,7 +167,7 @@ export class CreateUserMessageUseCase {
       content.push(new TextMessageContent(command.text));
     }
     content.push(
-      ...command.pendingImages.map(
+      ...images.map(
         (image, index) =>
           new ImageMessageContent(index, image.contentType, image.altText),
       ),
@@ -113,30 +176,31 @@ export class CreateUserMessageUseCase {
   }
 
   private async uploadImages(
-    command: CreateUserMessageCommand,
+    threadId: UUID,
+    images: readonly StorableImage[],
     orgId: UUID,
     message: UserMessage,
     uploadedPaths: string[],
   ): Promise<void> {
-    for (const [index, pendingImage] of command.pendingImages.entries()) {
+    for (const [index, image] of images.entries()) {
       const storagePath = getImageStoragePath({
         orgId,
-        threadId: command.threadId,
+        threadId,
         messageId: message.id,
         index,
-        contentType: pendingImage.contentType,
+        contentType: image.contentType,
       });
       this.logger.debug(
         {
           storagePath,
-          contentType: pendingImage.contentType,
-          size: pendingImage.buffer.length,
+          contentType: image.contentType,
+          size: image.buffer.length,
         },
         'Uploading image to storage',
       );
       await this.uploadOrgObjectUseCase.execute(
-        new UploadOrgObjectCommand(orgId, storagePath, pendingImage.buffer, {
-          contentType: pendingImage.contentType,
+        new UploadOrgObjectCommand(orgId, storagePath, image.buffer, {
+          contentType: image.contentType,
         }),
       );
       uploadedPaths.push(storagePath);

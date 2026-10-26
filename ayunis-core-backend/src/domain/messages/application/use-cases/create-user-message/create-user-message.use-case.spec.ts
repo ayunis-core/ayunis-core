@@ -7,7 +7,14 @@ import type { ImageUploadData } from './create-user-message.command';
 import { CreateUserMessageCommand } from './create-user-message.command';
 
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
+import {
+  MessageContentInvalidError,
+  MessageCreationError,
+} from 'src/domain/messages/application/messages.errors';
+import { ImageNormalizerPort } from 'src/domain/messages/application/ports/image-normalizer.port';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import type { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { randomUUID } from 'crypto';
 import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -31,6 +38,7 @@ describe('CreateUserMessageUseCase', () => {
   let mockDeleteObjectUseCase: Partial<DeleteObjectUseCase>;
   let mockContextService: Partial<ContextService>;
   let mockEventEmitter: { emitAsync: jest.Mock };
+  let mockImageNormalizer: { normalize: jest.Mock };
 
   const mockOrgId = randomUUID();
 
@@ -55,6 +63,8 @@ describe('CreateUserMessageUseCase', () => {
       emitAsync: jest.fn().mockResolvedValue([]),
     };
 
+    mockImageNormalizer = { normalize: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateUserMessageUseCase,
@@ -63,6 +73,7 @@ describe('CreateUserMessageUseCase', () => {
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: ImageNormalizerPort, useValue: mockImageNormalizer },
       ],
     }).compile();
 
@@ -73,6 +84,9 @@ describe('CreateUserMessageUseCase', () => {
     (mockContextService.get as jest.Mock).mockReturnValue(mockOrgId);
     (mockUploadObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
     (mockDeleteObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
+    mockImageNormalizer.normalize.mockImplementation((image: unknown) =>
+      Promise.resolve(image),
+    );
   });
 
   it('should be defined', () => {
@@ -369,6 +383,81 @@ describe('CreateUserMessageUseCase', () => {
         },
         'Creating user message',
       );
+    });
+  });
+
+  describe('image normalization', () => {
+    const threadId = randomUUID();
+    const upload = (): ImageUploadData => ({
+      buffer: imageBytes('image/png', 'full-size-photo'),
+      contentType: 'image/png',
+      altText: 'photo',
+    });
+
+    it('stores the normalized bytes under the normalized content type', async () => {
+      const normalized = imageBytes('image/jpeg', 'downscaled');
+      mockImageNormalizer.normalize.mockResolvedValue({
+        buffer: normalized,
+        contentType: 'image/jpeg',
+      });
+      (mockMessagesRepository.create as jest.Mock).mockImplementation(
+        (message: UserMessage) => Promise.resolve(message),
+      );
+
+      const result = await useCase.execute(
+        new CreateUserMessageCommand(threadId, undefined, [upload()]),
+      );
+
+      expect(mockImageNormalizer.normalize).toHaveBeenCalledWith({
+        buffer: upload().buffer,
+        contentType: 'image/png',
+      });
+      const stored = (mockUploadObjectUseCase.execute as jest.Mock).mock
+        .calls[0][0] as UploadOrgObjectCommand;
+      expect(stored.data).toBe(normalized);
+      expect(stored.objectName).toMatch(/\.jpg$/);
+      expect(result.content).toEqual([
+        expect.objectContaining({
+          contentType: 'image/jpeg',
+          altText: 'photo',
+        }),
+      ]);
+      expect(result.content[0]).toBeInstanceOf(ImageMessageContent);
+    });
+
+    it('rejects an image still above the stored-image ceiling without storing anything', async () => {
+      mockImageNormalizer.normalize.mockResolvedValue({
+        buffer: Buffer.alloc(MAX_IMAGE_SIZE_BYTES + 1),
+        contentType: 'image/webp',
+      });
+
+      await expect(
+        useCase.execute(
+          new CreateUserMessageCommand(threadId, undefined, [upload()]),
+        ),
+      ).rejects.toThrow(MessageContentInvalidError);
+      expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
+      expect(mockMessagesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('surfaces an undecodable image as the domain 400 without storing anything', async () => {
+      mockImageNormalizer.normalize.mockRejectedValue(
+        new MessageContentInvalidError('Image could not be processed'),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateUserMessageCommand(threadId, undefined, [
+            upload(),
+            upload(),
+          ]),
+        ),
+      ).rejects.toMatchObject({
+        code: 'MESSAGE_CONTENT_INVALID',
+        statusCode: 400,
+      });
+      expect(mockImageNormalizer.normalize).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });
