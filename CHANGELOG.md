@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.61.0](https://github.com/ayunis-core/ayunis-core/compare/v2.60.1...v2.61.0) (2026-10-26)
+
+
+### Features
+
+* **admin-models:** show model cards instead of tier stars in admin model selection (AYC-524) ([#2074](https://github.com/ayunis-core/ayunis-core/issues/2074)) ([7f16e49](https://github.com/ayunis-core/ayunis-core/commit/7f16e496c7171d38bcdf8b0037e390692a2ff25e))
+* **chat:** bound in-flight image upload bytes per process (AYC-1377) ([#2048](https://github.com/ayunis-core/ayunis-core/issues/2048)) ([48c2eeb](https://github.com/ayunis-core/ayunis-core/commit/48c2eebb40b4830b5a2869c5aa122946d100106a))
+* **chat:** downscale uploaded images before storing them (AYC-1377) ([#2032](https://github.com/ayunis-core/ayunis-core/issues/2032)) ([170cfce](https://github.com/ayunis-core/ayunis-core/commit/170cfce30f9eefb7d3355813e96a0da9e845bd2b))
+
+
+### Bug Fixes
+
+* **deps:** patch critical storybook and sanitizer advisories (AYC-000) ([#2099](https://github.com/ayunis-core/ayunis-core/issues/2099)) ([f723566](https://github.com/ayunis-core/ayunis-core/commit/f723566be9884b8dc76b349d0c9630ca224b1e4b))
+* **inference:** stream thinking summaries for default-thinking claude models (AYC-1374) ([#2064](https://github.com/ayunis-core/ayunis-core/issues/2064)) ([ec212f5](https://github.com/ayunis-core/ayunis-core/commit/ec212f5042e88c0d3568ba17d7efabb1bcbc6bc0))
+* **sources:** index discovered pdfs as file sources (AYC-1031) ([#2094](https://github.com/ayunis-core/ayunis-core/issues/2094)) ([8a94339](https://github.com/ayunis-core/ayunis-core/commit/8a94339b37c4ae74b205013a934f5d9833500bbf))
+* **threads:** enforce unique source assignments (AYC-547) ([#2075](https://github.com/ayunis-core/ayunis-core/issues/2075)) ([3f529e2](https://github.com/ayunis-core/ayunis-core/commit/3f529e28d30a6125d3e857cc8c2be968e3e530a5))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump docker/login-action from 3.7.0 to 4.7.0 ([#2091](https://github.com/ayunis-core/ayunis-core/issues/2091)) ([616b274](https://github.com/ayunis-core/ayunis-core/commit/616b274b9c0c2b4ab0b17af818c453002153ff91))
+* **deps-docker:** bump python in /ayunis-core-anonymize ([#2088](https://github.com/ayunis-core/ayunis-core/issues/2088)) ([3e4122e](https://github.com/ayunis-core/ayunis-core/commit/3e4122e2ae3552910d54b1fff7ff21e7d6ce99e3))
+* **deps-sandbox:** bump pandas in /ayunis-core-code-execution/sandbox ([#2089](https://github.com/ayunis-core/ayunis-core/issues/2089)) ([d60d887](https://github.com/ayunis-core/ayunis-core/commit/d60d8873387aaeee418a08772745c5f1e762bb0f))
+* **deps:** bump the nest group across 1 directory with 7 updates ([#2092](https://github.com/ayunis-core/ayunis-core/issues/2092)) ([9ce0802](https://github.com/ayunis-core/ayunis-core/commit/9ce0802888cc5cac231765110051298f6d58c89c))
+* **deps:** bump the tanstack group across 1 directory with 3 updates ([#2090](https://github.com/ayunis-core/ayunis-core/issues/2090)) ([20d81c1](https://github.com/ayunis-core/ayunis-core/commit/20d81c18a085d97756b6d1e0a982581165d0330b))
+* **sources:** expire failed queue jobs after 7 days (AYC-000) ([#2093](https://github.com/ayunis-core/ayunis-core/issues/2093)) ([40f1418](https://github.com/ayunis-core/ayunis-core/commit/40f1418270e4b707aa39ab6c2da02bec4ab2085f))
+
 ## [2.60.1](https://github.com/ayunis-core/ayunis-core/compare/v2.60.0...v2.60.1) (2026-10-23)
 
 
