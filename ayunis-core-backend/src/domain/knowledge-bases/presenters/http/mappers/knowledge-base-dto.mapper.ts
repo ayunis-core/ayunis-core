@@ -3,6 +3,7 @@ import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
+  FileSource,
   TextSource,
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -58,8 +59,11 @@ export class KnowledgeBaseDtoMapper {
       dto.textType = source.textType;
     }
 
-    if (source instanceof UrlSource) {
-      dto.url = source.url;
+    if (
+      source instanceof UrlSource ||
+      (source instanceof FileSource && source.url)
+    ) {
+      dto.url = source.url ?? undefined;
     }
 
     return dto;

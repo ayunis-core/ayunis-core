@@ -1,3 +1,4 @@
+import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -118,6 +119,39 @@ describe('RetrieveUrlUseCase', () => {
       'https://example.com',
     );
     expect(mockRetrieveFileContent.execute).not.toHaveBeenCalled();
+  });
+
+  it('requires an explicit org grant only when the PDF transport encounters a private destination', async () => {
+    mockHandler.fetch.mockResolvedValue(rawResponse({}));
+    await useCase.execute(
+      new RetrieveUrlCommand(
+        'https://public.example.com/statute.pdf',
+        ORG_ID,
+        undefined,
+        'explicit-grant',
+      ),
+    );
+    const input = mockHandler.fetch.mock.calls.at(-1)![0];
+    await input.assertPrivateDestinationAccess(
+      'https://intranet.customer.de/redirected.pdf',
+    );
+    expect(mockAssertCrawlDomainAccess.execute).toHaveBeenCalledWith(
+      new AssertCrawlDomainAccessCommand(
+        'https://intranet.customer.de/redirected.pdf',
+        ORG_ID,
+        true,
+      ),
+    );
+  });
+
+  it('keeps ordinary URL retrieval on its existing destination policy', async () => {
+    mockHandler.fetch.mockResolvedValue(rawResponse({}));
+    await useCase.execute(
+      new RetrieveUrlCommand('https://intranet.customer.de/', ORG_ID),
+    );
+    expect(
+      mockHandler.fetch.mock.calls.at(-1)![0].assertPrivateDestinationAccess,
+    ).toBeUndefined();
   });
 
   it('passes an onRedirect guard that re-asserts the gate per hop', async () => {

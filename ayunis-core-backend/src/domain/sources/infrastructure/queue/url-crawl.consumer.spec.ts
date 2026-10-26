@@ -92,9 +92,7 @@ const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
   refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
-  saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
+  saveProcessingTextSourceContent: jest.fn().mockResolvedValue(true),
   updateStatusConditionally: jest.fn(),
 };
 
@@ -102,6 +100,13 @@ const indexer = {
   index: jest.fn().mockResolvedValue(undefined),
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
   markFailed: jest.fn().mockResolvedValue(undefined),
+};
+
+const pdfSources = { process: jest.fn().mockResolvedValue(undefined) };
+const heartbeat = {
+  run: jest.fn(async (_id: string, operation: () => Promise<unknown>) =>
+    operation(),
+  ),
 };
 
 const admitOrgProcessing = {
@@ -121,6 +126,8 @@ describe('UrlCrawlConsumer', () => {
       sourceRepository as never,
       indexer as never,
       admitOrgProcessing as never,
+      pdfSources as never,
+      heartbeat as never,
     );
   });
 
@@ -133,6 +140,29 @@ describe('UrlCrawlConsumer', () => {
     expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
   });
 
+  it('hands discovered PDFs and the assigned knowledge base to the atomic completion service', async () => {
+    const source = makeSource();
+    source.knowledgeBaseId = KNOWLEDGE_BASE_ID;
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    const pdfLinks = [
+      { url: 'https://cdn.test/statute.pdf', name: 'Hauptsatzung' },
+    ];
+    crawlUrlUseCase.execute.mockResolvedValueOnce(
+      new UrlCrawlResult(
+        [new UrlCrawlPage('https://acme.test/', 'Ortsrecht', 'Ortsrecht')],
+        pdfLinks,
+      ),
+    );
+    await consumer.process(makeJob());
+    expect(pdfSources.process).toHaveBeenCalledWith(source, pdfLinks, ORG_ID);
+    expect(pdfSources.process).toHaveBeenCalledWith(
+      source,
+      expect.any(Array),
+      ORG_ID,
+    );
+  });
+
   it('aggregates crawled pages and tags each chunk with its origin url', async () => {
     const source = makeSource();
     sourceRepository.findById.mockResolvedValue(source);
@@ -140,7 +170,8 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [, content] = sourceRepository.saveTextSource.mock.calls[0];
+    const [, content] =
+      sourceRepository.saveProcessingTextSourceContent.mock.calls[0];
     expect(content.text).toBe('root content\n\nabout content');
     expect(
       content.chunks.map((c: { meta: { url: string } }) => c.meta.url),
@@ -192,7 +223,8 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [, content] = sourceRepository.saveTextSource.mock.calls[0];
+    const [, content] =
+      sourceRepository.saveProcessingTextSourceContent.mock.calls[0];
     expect(content.text).toBe(`${rootContent}\n\n${documentContent}`);
     expect(content.chunks[0].meta).toMatchObject({
       startCharOffset: 0,
@@ -216,7 +248,8 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    const [savedSource] =
+      sourceRepository.saveProcessingTextSourceContent.mock.calls[0];
     expect(savedSource.name).toBe('Acme Home');
   });
 
@@ -227,11 +260,10 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
-      SOURCE_ID,
-      SourceStatus.PROCESSING,
-      SourceStatus.READY,
-      { processingError: null },
+    expect(pdfSources.process).toHaveBeenCalledWith(
+      source,
+      expect.any(Array),
+      ORG_ID,
     );
   });
 
@@ -259,7 +291,8 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    const [savedSource] =
+      sourceRepository.saveProcessingTextSourceContent.mock.calls[0];
     expect(savedSource.knowledgeBaseId).toBe(KNOWLEDGE_BASE_ID);
     expect(savedSource.name).toBe('Acme Home');
   });
@@ -271,7 +304,9 @@ describe('UrlCrawlConsumer', () => {
     await consumer.process(makeJob());
 
     expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(
+      sourceRepository.saveProcessingTextSourceContent,
+    ).not.toHaveBeenCalled();
   });
 
   it('skips writing content when the source is deleted mid-crawl', async () => {
@@ -283,8 +318,25 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(
+      sourceRepository.saveProcessingTextSourceContent,
+    ).not.toHaveBeenCalled();
     expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+  });
+
+  it('preserves ready HTML and its index when a PDF-phase infrastructure write fails', async () => {
+    const source = makeSource();
+    sourceRepository.findById.mockResolvedValue(source);
+    pdfSources.process.mockImplementationOnce(async () => {
+      source.status = SourceStatus.READY;
+      throw new Error('Database connection interrupted after handoff');
+    });
+    const job = makeJob();
+    job.attemptsMade = 2;
+    await consumer.process(job);
+    expect(source.status).toBe(SourceStatus.READY);
+    expect(indexer.markFailed).not.toHaveBeenCalled();
+    expect(indexer.cleanupIndex).not.toHaveBeenCalled();
   });
 
   it('marks the source failed on the last attempt when the crawl throws', async () => {

@@ -1,3 +1,4 @@
+import { UrlDestinationGuardService } from './infrastructure/url-destination-guard.service';
 import { PdfExtractionCachePort } from './application/ports/pdf-extraction-cache.port';
 import { RequestPdfExtractionCacheService } from './infrastructure/cache/request-pdf-extraction-cache.service';
 import { Module } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { FileRetrieverModule } from 'src/domain/retrievers/file-retrievers/file-
 @Module({
   imports: [CrawlDomainGrantsModule, FileRetrieverModule],
   providers: [
+    UrlDestinationGuardService,
     {
       provide: UrlRetrieverHandler,
       useClass: CheerioUrlRetrieverHandler,

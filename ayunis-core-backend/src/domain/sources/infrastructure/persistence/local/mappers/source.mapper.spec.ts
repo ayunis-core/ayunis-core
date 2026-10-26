@@ -38,6 +38,22 @@ describe('SourceMapper', () => {
     );
   });
 
+  it('preserves a discovered PDF URL through persistence and keeps uploaded files without a URL', () => {
+    const record = new TextSourceRecord();
+    record.id = randomUUID();
+    record.name = 'Hauptsatzung';
+    record.textType = TextType.FILE;
+    record.fileType = FileType.PDF;
+    record.url = 'https://cdn.test/hauptsatzung.pdf';
+    const source = mapper.toDomain(record) as FileSource;
+    expect(source.url).toBe(record.url);
+    expect((mapper.toRecord(source).source as TextSourceRecord).url).toBe(
+      record.url,
+    );
+    record.url = null;
+    expect((mapper.toDomain(record) as FileSource).url).toBeNull();
+  });
+
   describe('CSVDataSource mapping', () => {
     describe('toDomain', () => {
       it('should map SourceCreator.USER from record to domain', () => {

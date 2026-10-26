@@ -1,3 +1,6 @@
+import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
+import type { PdfLink } from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
 import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
@@ -34,6 +37,8 @@ export class UrlCrawlConsumer extends WorkerHost {
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
+    private readonly pdfSources: CrawledPdfSourcesService,
+    private readonly heartbeat: SourceProcessingHeartbeatService,
   ) {
     super();
   }
@@ -48,7 +53,9 @@ export class UrlCrawlConsumer extends WorkerHost {
       'Crawling URL source',
     );
     await observeJob(job, () =>
-      this.contextService.run(() => this.processCrawl(job)),
+      this.contextService.run(() =>
+        this.heartbeat.run(job.data.sourceId, () => this.processCrawl(job)),
+      ),
     );
   }
 
@@ -67,29 +74,31 @@ export class UrlCrawlConsumer extends WorkerHost {
     try {
       if (!(await this.loadSourceOrSkip(sourceId))) return;
 
-      const { text, chunks, title, pageCount } = await this.crawlAndBuild(
-        rootUrl,
-        orgId,
-        maxDepth,
-      );
-      // Re-reading prevents a concurrent deletion from being resurrected and
-      // picks up the collection assignment AddUrlToKnowledgeBase makes right
-      // after enqueueing, which the pre-crawl copy may predate.
+      const { text, chunks, title, pageCount, pdfLinks } =
+        await this.crawlAndBuild(rootUrl, orgId, maxDepth);
+      // Re-read before persisting to observe deletion or a terminal status change.
       const source = await this.reloadIfStillProcessing(sourceId);
       if (!source) return;
 
       if (title) source.name = title;
-      await this.sourceRepository.saveTextSource(source, { text, chunks });
+      if (
+        !(await this.sourceRepository.saveProcessingTextSourceContent(source, {
+          text,
+          chunks,
+        }))
+      )
+        return;
       await processingStage('url_crawl.indexing', () =>
         this.helper.index(sourceId, orgId, chunks),
       );
-      await this.markSourceReady(sourceId);
+      await this.pdfSources.process(source, pdfLinks, orgId);
       this.logger.log(
         { chunks: chunks.length, pages: pageCount, sourceId },
         'URL crawl complete',
       );
     } catch (error) {
       this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
+      if (!(await this.reloadIfStillProcessing(sourceId))) return;
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
         await this.helper.markFailed(sourceId, error);
@@ -143,6 +152,7 @@ export class UrlCrawlConsumer extends WorkerHost {
     chunks: TextSourceContentChunk[];
     title: string;
     pageCount: number;
+    pdfLinks: PdfLink[];
   }> {
     const crawl: UrlCrawlResult = await processingStage(
       'url_crawl.download_extraction',
@@ -174,6 +184,7 @@ export class UrlCrawlConsumer extends WorkerHost {
       chunks,
       title: crawl.rootPage.websiteTitle,
       pageCount: crawl.pages.length,
+      pdfLinks: crawl.pdfLinks,
     };
   }
 
@@ -253,21 +264,5 @@ export class UrlCrawlConsumer extends WorkerHost {
       return null;
     }
     return source;
-  }
-
-  private async markSourceReady(sourceId: UUID): Promise<void> {
-    const updated = await this.sourceRepository.updateStatusConditionally(
-      sourceId,
-      SourceStatus.PROCESSING,
-      SourceStatus.READY,
-      { processingError: null },
-    );
-    if (!updated) {
-      this.logger.warn(
-        { sourceId },
-        'Conditional update to READY failed — source was deleted or status changed',
-      );
-      await this.helper.cleanupIndex(sourceId);
-    }
   }
 }

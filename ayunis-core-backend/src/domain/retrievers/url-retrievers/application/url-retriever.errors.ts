@@ -119,3 +119,14 @@ export class UrlRetrieverTooManyRedirectsError extends UrlRetrieverError {
     this.name = 'UrlRetrieverTooManyRedirectsError';
   }
 }
+
+export class UnexpectedUrlRetrieverError extends UrlRetrieverError {
+  constructor(error: Error) {
+    super(
+      'Unexpected URL retrieval error',
+      UrlRetrieverErrorCode.PROVIDER_NOT_AVAILABLE,
+      500,
+      { error },
+    );
+  }
+}

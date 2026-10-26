@@ -8,3 +8,5 @@ The common module is the shared kernel of the backend, imported globally or by i
 Client IP resolution uses Express `request.ip` with socket fallback; no raw forwarding headers are read. `TRUST_PROXY` defaults to no trust and must match each deployment’s actual proxy boundary.
 
 Anonymization also supports the optional AYC-1434 reuse study: bounded, expiring tenant-scoped fingerprints remain in process memory, while identity-free numeric events update aggregate Prometheus counters. It emits no study logs. Operational activation, coverage limits, metrics and cleanup are documented in `docs/operations/anonymization-reuse-measurement.md`.
+
+`util/network-address-policy.ts` shares special-purpose IP ranges, hostname resolution, and connection-lookup helpers between MCP and discovered-PDF transport. Callers retain their own access policy; the helper does not make tenant or grant decisions.

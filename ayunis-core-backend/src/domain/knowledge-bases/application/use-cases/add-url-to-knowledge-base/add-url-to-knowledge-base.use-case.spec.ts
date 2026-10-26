@@ -13,7 +13,10 @@ import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
+import { CreateProcessingUrlSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
+import { EnqueueUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
@@ -46,17 +49,33 @@ async function setup(knowledgeBase: KnowledgeBase) {
     type: TextType.WEB,
   });
   const crawl = { execute: jest.fn().mockResolvedValue(source) };
+  const enqueue = { execute: jest.fn() };
+  const markFailed = { execute: jest.fn() };
+  let active = false;
   const txHost = {
-    withTransaction: jest.fn(async (callback: () => Promise<unknown>) =>
-      callback(),
-    ),
+    withTransaction: jest.fn(async (callback: () => Promise<unknown>) => {
+      active = true;
+      try {
+        return await callback();
+      } finally {
+        active = false;
+      }
+    }),
   } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
   const module = await Test.createTestingModule({
     providers: [
       AddUrlToKnowledgeBaseUseCase,
       { provide: KnowledgeBaseRepository, useValue: repository },
       { provide: KnowledgeBaseWriteAccessService, useValue: writeAccess },
-      { provide: StartUrlCrawlUseCase, useValue: crawl },
+      { provide: CreateProcessingUrlSourceUseCase, useValue: crawl },
+      { provide: EnqueueUrlCrawlUseCase, useValue: enqueue },
+      { provide: MarkSourceFailedUseCase, useValue: markFailed },
+      {
+        provide: ContextService,
+        useValue: {
+          get: (key: string) => (key === 'orgId' ? ORG_ID : USER_ID),
+        },
+      },
       { provide: TransactionHost, useValue: txHost },
     ],
   }).compile();
@@ -66,6 +85,9 @@ async function setup(knowledgeBase: KnowledgeBase) {
     writeAccess,
     crawl,
     source,
+    enqueue,
+    markFailed,
+    isTransactionActive: () => active,
   };
 }
 
@@ -93,14 +115,17 @@ describe(AddUrlToKnowledgeBaseUseCase.name, () => {
     'adds a URL to an authorized %s knowledge base by entity id',
     async (_scope, makeKnowledgeBase) => {
       const knowledgeBase = makeKnowledgeBase();
-      const { useCase, repository, source } = await setup(knowledgeBase);
+      const { useCase, crawl, source } = await setup(knowledgeBase);
 
       await expect(useCase.execute(command(knowledgeBase.id))).resolves.toBe(
         source,
       );
-      expect(repository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
-        source.id,
-        knowledgeBase.id,
+      expect(crawl.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          knowledgeBaseId: knowledgeBase.id,
+          url: 'https://stadt.example/permit-guidance',
+          maxDepth: 1,
+        }),
       );
     },
   );
@@ -152,6 +177,44 @@ describe(AddUrlToKnowledgeBaseUseCase.name, () => {
       useCase.execute(command(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(KnowledgeBaseSourceLimitExceededError);
     expect(crawl.execute).not.toHaveBeenCalled();
+  });
+
+  it('commits a source under the collection lock before enqueueing', async () => {
+    const kb = new PersonalKnowledgeBase({
+      name: 'Statutes',
+      userId: USER_ID,
+      orgId: ORG_ID,
+    });
+    const { useCase, repository, crawl, enqueue, source, isTransactionActive } =
+      await setup(kb);
+    crawl.execute.mockImplementationOnce(async () => {
+      expect(isTransactionActive()).toBe(true);
+      return source;
+    });
+    enqueue.execute.mockImplementationOnce(async () => {
+      expect(isTransactionActive()).toBe(false);
+    });
+    await useCase.execute(command(kb.id));
+    expect(repository.findById).toHaveBeenCalledWith(kb.id, { lock: true });
+    expect(enqueue.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: source.id, orgId: ORG_ID }),
+    );
+  });
+
+  it('preserves a visible failed source when enqueue fails after commit', async () => {
+    const kb = new PersonalKnowledgeBase({
+      name: 'Statutes',
+      userId: USER_ID,
+      orgId: ORG_ID,
+    });
+    const { useCase, enqueue, markFailed, source } = await setup(kb);
+    enqueue.execute.mockRejectedValueOnce(new Error('Queue unavailable'));
+    await expect(useCase.execute(command(kb.id))).rejects.toBeInstanceOf(
+      UnexpectedKnowledgeBaseError,
+    );
+    expect(markFailed.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: source.id }),
+    );
   });
 
   it('wraps unexpected lookup failures', async () => {

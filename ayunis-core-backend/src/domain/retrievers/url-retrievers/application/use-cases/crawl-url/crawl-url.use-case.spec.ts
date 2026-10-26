@@ -69,6 +69,49 @@ async function buildUseCase(
 }
 
 describe('CrawlUrlUseCase', () => {
+  it('discovers PDFs at depth zero without fetching them as HTML pages', async () => {
+    const retriever = fakeRetriever({
+      'https://acme.test/': {
+        links: [
+          'https://acme.test/navigation',
+          'https://cdn.test/statute.PDF#page=2',
+          'https://cdn.test/statute.PDF',
+        ],
+      },
+    });
+    const useCase = await buildUseCase(retriever);
+    const result = await useCase.execute(
+      new CrawlUrlCommand('https://acme.test/', ORG_ID, 0),
+    );
+    expect(result.pdfLinks).toEqual([
+      { url: 'https://cdn.test/statute.PDF', name: 'statute.PDF' },
+    ]);
+    expect(result.pages).toHaveLength(1);
+    expect(retriever.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps separate HTML and PDF budgets and discovers PDFs on the last HTML page', async () => {
+    const htmlLinks = Array.from(
+      { length: 24 },
+      (_, i) => `https://acme.test/page-${i}`,
+    );
+    const pdfLinks = Array.from(
+      { length: 30 },
+      (_, i) => `https://cdn.test/statute-${i}.pdf`,
+    );
+    const retriever = fakeRetriever({
+      'https://acme.test/': { links: [pdfLinks[0], ...htmlLinks] },
+      ...Object.fromEntries(htmlLinks.map((url) => [url, { links: pdfLinks }])),
+    });
+    const result = await (
+      await buildUseCase(retriever)
+    ).execute(new CrawlUrlCommand('https://acme.test/', ORG_ID, 1));
+    expect(result.pages).toHaveLength(25);
+    expect(result.pdfLinks).toHaveLength(25);
+    expect(new Set(result.pdfLinks.map((link) => link.url)).size).toBe(25);
+    expect(retriever.execute).toHaveBeenCalledTimes(25);
+  });
+
   it('returns only the root page when depth is 0', async () => {
     const retriever = fakeRetriever({
       'https://acme.test/': { links: ['https://acme.test/about'] },

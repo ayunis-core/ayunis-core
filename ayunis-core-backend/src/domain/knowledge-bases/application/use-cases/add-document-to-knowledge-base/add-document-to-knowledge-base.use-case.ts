@@ -37,8 +37,7 @@ export class AddDocumentToKnowledgeBaseUseCase {
       { knowledgeBaseId, fileName: file.name },
       'Adding document to knowledge base',
     );
-    // Preserve the preflight transaction; external processing stays outside it.
-    // This is a capacity check, not a reservation against concurrent uploads.
+    // Reject full collections before processing; assignment rechecks under lock.
     const knowledgeBase = await this.txHost.withTransaction(async () => {
       const knowledgeBase = await this.repository.findById(knowledgeBaseId);
       if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(knowledgeBaseId);

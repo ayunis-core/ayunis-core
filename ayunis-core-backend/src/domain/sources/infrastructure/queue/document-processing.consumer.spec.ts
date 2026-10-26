@@ -8,7 +8,7 @@ import type { DocumentProcessingJobData } from 'src/domain/sources/application/p
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
-import { SourceProcessingHeartbeatService } from './source-processing-heartbeat.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */

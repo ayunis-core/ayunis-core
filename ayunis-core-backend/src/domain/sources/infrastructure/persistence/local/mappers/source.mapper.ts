@@ -55,6 +55,7 @@ export class SourceMapper {
         return new FileSource({
           id: record.id,
           fileType: record.fileType!,
+          url: record.url,
           name: record.name,
           type: TextType.FILE,
           processingErrorCode: record.processingErrorCode,
@@ -164,7 +165,10 @@ export class SourceMapper {
     record.processingErrorCode = source.processingErrorCode;
     record.textType = source.textType;
     record.fileType = source instanceof FileSource ? source.fileType : null;
-    record.url = source instanceof UrlSource ? source.url : null;
+    record.url =
+      source instanceof UrlSource || source instanceof FileSource
+        ? source.url
+        : null;
     record.maxDepth = source instanceof UrlSource ? source.maxDepth : null;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;

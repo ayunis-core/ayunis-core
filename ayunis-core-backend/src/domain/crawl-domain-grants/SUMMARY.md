@@ -40,3 +40,5 @@ org-facing surface.
 Standard hexagonal: `domain/` (entity, `normalizeHost` util, validation error),
 `application/` (ports, use-cases, HTTP-mapped errors), `infrastructure/` (Postgres
 record + mapper + repository), `presenters/http/` (super-admin controller + DTOs).
+
+`AssertCrawlDomainAccessCommand.requireExplicitGrant` additionally denies unassigned or ungrantable hosts. Discovered-PDF transport invokes this mode only for private/reserved destinations after address resolution; the existing default-mode semantics above remain unchanged. Redirect destinations are independently checked.

@@ -5,5 +5,7 @@ export class RetrieveUrlCommand {
     public readonly url: string,
     public readonly orgId: UUID,
     public readonly options?: Record<string, unknown>,
+    public readonly privateDestinationPolicy:
+      'existing' | 'explicit-grant' = 'existing',
   ) {}
 }

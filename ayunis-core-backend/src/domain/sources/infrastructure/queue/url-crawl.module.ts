@@ -1,3 +1,5 @@
+import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
@@ -32,6 +34,8 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
       useExisting: UrlCrawlProducer,
     },
     UrlCrawlConsumer,
+    CrawledPdfSourcesService,
+    SourceProcessingHeartbeatService,
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
   ],

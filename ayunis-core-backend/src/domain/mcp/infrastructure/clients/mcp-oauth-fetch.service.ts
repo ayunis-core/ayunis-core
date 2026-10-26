@@ -1,8 +1,14 @@
+import {
+  buildBlockedAddresses,
+  createConnectionLookup,
+  isBlockedNetworkAddress,
+  normalizeHostname,
+  resolveHostnameAddresses,
+  connectionAddressRecords,
+} from 'src/common/util/network-address-policy';
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { LookupOptions } from 'node:dns';
-import { lookup } from 'node:dns/promises';
-import { BlockList, isIP, type LookupFunction } from 'node:net';
 // This Agent only works as a `dispatcher` for globalThis.fetch while the
 // undici major matches the one Node embeds — undici 8 dropped the legacy
 // handler API. Bump this dep and the node image together, never apart.
@@ -19,16 +25,10 @@ export class McpOAuthFetchService
   implements OnModuleDestroy
 {
   private readonly blockedAddresses = buildBlockedAddresses();
-  private readonly connectionLookup: LookupFunction = (
-    hostname,
-    options,
-    callback,
-  ) => {
-    void this.resolveConnectionAddresses(hostname, options).then(
-      (addresses) => respondToLookup(options, callback, addresses),
-      (error: unknown) => callback(toLookupError(error), '', 0),
-    );
-  };
+  private readonly connectionLookup = createConnectionLookup(
+    (hostname, options) => this.resolveConnectionAddresses(hostname, options),
+    'OAuth DNS lookup failed',
+  );
   private readonly dispatcher = new Agent({
     connect: { lookup: this.connectionLookup },
   });
@@ -47,10 +47,7 @@ export class McpOAuthFetchService
   }
 
   protected async resolveAddresses(hostname: string): Promise<string[]> {
-    const addressFamily = isIP(hostname);
-    if (addressFamily) return [hostname];
-    const addresses = await lookup(hostname, { all: true, verbatim: true });
-    return addresses.map(({ address }) => address);
+    return resolveHostnameAddresses(hostname);
   }
 
   private async fetchFollowingRedirects(
@@ -103,10 +100,7 @@ export class McpOAuthFetchService
       normalizedHostname,
       developmentLoopback,
     );
-    const family = normalizeFamily(options.family);
-    const records = addresses
-      .map((address) => ({ address, family: isIP(address) as 4 | 6 }))
-      .filter((record) => !family || record.family === family);
+    const records = connectionAddressRecords(addresses, options.family);
     if (!records.length)
       throw new Error('OAuth endpoint has no usable address');
     return records;
@@ -132,10 +126,7 @@ export class McpOAuthFetchService
   }
 
   private isBlocked(address: string): boolean {
-    const family = isIP(address);
-    if (family === 4) return this.blockedAddresses.check(address, 'ipv4');
-    if (family === 6) return this.blockedAddresses.check(address, 'ipv6');
-    return true;
+    return isBlockedNetworkAddress(address, this.blockedAddresses);
   }
 
   private async normalizeRequest(
@@ -172,69 +163,4 @@ export class McpOAuthFetchService
     headers.delete('content-type');
     return { ...init, method: 'GET', headers, body: undefined };
   }
-}
-
-function normalizeHostname(hostname: string): string {
-  return hostname.startsWith('[') && hostname.endsWith(']')
-    ? hostname.slice(1, -1)
-    : hostname;
-}
-
-function normalizeFamily(family: LookupOptions['family']): 4 | 6 | undefined {
-  if (family === 4 || family === 'IPv4') return 4;
-  if (family === 6 || family === 'IPv6') return 6;
-  return undefined;
-}
-
-function respondToLookup(
-  options: LookupOptions,
-  callback: Parameters<LookupFunction>[2],
-  addresses: Array<{ address: string; family: 4 | 6 }>,
-): void {
-  if (options.all) callback(null, addresses);
-  else callback(null, addresses[0].address, addresses[0].family);
-}
-
-function toLookupError(error: unknown): NodeJS.ErrnoException {
-  return error instanceof Error ? error : new Error('OAuth DNS lookup failed');
-}
-
-function buildBlockedAddresses(): BlockList {
-  const blockList = new BlockList();
-  /* eslint-disable sonarjs/no-hardcoded-ip -- SSRF protection requires literal special-purpose network ranges. */
-  const ipv4Subnets: Array<[string, number]> = [
-    ['0.0.0.0', 8],
-    ['10.0.0.0', 8],
-    ['100.64.0.0', 10],
-    ['127.0.0.0', 8],
-    ['169.254.0.0', 16],
-    ['172.16.0.0', 12],
-    ['192.0.0.0', 24],
-    ['192.0.2.0', 24],
-    ['192.168.0.0', 16],
-    ['198.18.0.0', 15],
-    ['198.51.100.0', 24],
-    ['203.0.113.0', 24],
-    ['224.0.0.0', 4],
-    ['240.0.0.0', 4],
-  ];
-  const ipv6Subnets: Array<[string, number]> = [
-    ['::', 128],
-    ['::1', 128],
-    ['100::', 64],
-    ['2001::', 32],
-    ['2001:db8::', 32],
-    ['2002::', 16],
-    ['fc00::', 7],
-    ['fe80::', 10],
-    ['ff00::', 8],
-  ];
-  /* eslint-enable sonarjs/no-hardcoded-ip */
-  for (const [address, prefix] of ipv4Subnets) {
-    blockList.addSubnet(address, prefix, 'ipv4');
-  }
-  for (const [address, prefix] of ipv6Subnets) {
-    blockList.addSubnet(address, prefix, 'ipv6');
-  }
-  return blockList;
 }
