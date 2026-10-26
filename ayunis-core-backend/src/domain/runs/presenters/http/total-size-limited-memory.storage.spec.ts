@@ -2,6 +2,8 @@ import { PassThrough } from 'node:stream';
 import type { Request } from 'express';
 import { TotalSizeLimitedMemoryStorage } from './total-size-limited-memory.storage';
 import { UploadBytes, type UploadedImageFile } from './upload-bytes';
+import { ImageUploadAdmission } from './image-upload-admission';
+import { IMAGE_UPLOAD_RETRY_AFTER_SECONDS } from './image-upload.constants';
 
 const LIMIT = 1024;
 
@@ -56,4 +58,30 @@ it('removes completed buffers during Multer rollback', () => {
   storage._removeFile({} as Request, file, callback);
   expect(bytes.isEmpty).toBe(true);
   expect(callback).toHaveBeenCalledWith(null);
+});
+
+it('rejects with 429 the chunk that would exceed the byte budget and retains none of that file', async () => {
+  const admission = new ImageUploadAdmission(LIMIT);
+  const storage = new TotalSizeLimitedMemoryStorage(LIMIT * 2, admission);
+  await receive(storage, {} as Request, Buffer.alloc(LIMIT / 2));
+  const setHeader = jest.fn();
+  const request = { res: { setHeader, once: jest.fn() } } as unknown as Request;
+  const stream = new PassThrough();
+  const callback = jest.fn();
+  storage._handleFile(request, { stream }, callback);
+  stream.write(Buffer.alloc(LIMIT / 4));
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  expect(admission.reservedBytes).toBe(LIMIT / 2 + LIMIT / 4);
+  stream.write(Buffer.alloc(LIMIT / 4 + 1));
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  expect(callback).toHaveBeenCalledWith(
+    expect.objectContaining({ status: 429 }),
+    undefined,
+  );
+  expect(setHeader).toHaveBeenCalledWith(
+    'Retry-After',
+    String(IMAGE_UPLOAD_RETRY_AFTER_SECONDS),
+  );
+  expect(stream.readableFlowing).toBe(true);
+  expect(admission.reservedBytes).toBe(LIMIT / 2 + LIMIT / 4);
 });

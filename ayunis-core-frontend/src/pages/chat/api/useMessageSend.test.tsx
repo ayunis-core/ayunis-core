@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { abortActiveThreadRun } from '@/features/thread-run';
+import { showError } from '@/shared/lib/toast';
 import { useMessageSend } from './useMessageSend';
 
 vi.mock('react-i18next', () => ({
@@ -79,6 +80,44 @@ describe('useMessageSend', () => {
     expect(redirectToLogin).toHaveBeenCalledOnce();
     expect(onError).not.toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalledWith(true);
+  });
+
+  it('asks the user to retry when the image upload cap is reached', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            code: 'IMAGE_UPLOADS_BUSY',
+            message: 'Too many image uploads are being processed',
+          }),
+          { status: 429 },
+        ),
+      ),
+    );
+    const onError = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageSend({ threadId, onError }), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await result.current.sendTextMessage({
+        text: 'Was steht auf dem Schild?',
+        images: [
+          {
+            file: new File(['photo'], 'schild.jpg', { type: 'image/jpeg' }),
+            altText: 'schild.jpg',
+          },
+        ],
+      });
+    });
+
+    expect(showError).toHaveBeenCalledWith('chat.imageUploadsBusy');
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('registers the streamed request for thread-level cancellation', async () => {

@@ -22,7 +22,7 @@ function upload(request: Request, bytes: Buffer): Promise<void> {
 }
 
 it('rejects the aggregate overflow before the overflowing file finishes', async () => {
-  const request = {} as Request;
+  const request = { headers: {} } as Request;
   const bytes = Buffer.alloc(MAX_IMAGE_SIZE_BYTES);
   for (let size = 0; size < MAX_TOTAL_SIZE_BYTES; size += bytes.length) {
     await upload(request, bytes);
