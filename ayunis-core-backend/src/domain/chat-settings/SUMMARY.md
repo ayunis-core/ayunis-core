@@ -63,4 +63,4 @@ Controllers: `ChatSettingsController` (user self-service), `OrgSystemPromptContr
 
 ## Future
 
-- `user_default_models` (currently in `models` module) is a natural candidate to migrate here.
+- Personal default models live in `default_model_selections` (`models` module, AYC-441) next to team and org defaults; they are no longer a candidate to move here.

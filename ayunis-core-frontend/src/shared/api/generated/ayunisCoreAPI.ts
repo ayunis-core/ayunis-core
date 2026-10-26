@@ -95,6 +95,7 @@ import type {
   CreditLimitsControllerGetUserUsageParams,
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
+  DefaultModelSelectionResponseDto,
   DefaultUserCreditLimitResponseDto,
   DeleteAllPendingInvitesResponseDto,
   DeleteOrgRequestDto,
@@ -146,6 +147,7 @@ import type {
   MfaSetupResponseDto,
   MfaStatusResponseDto,
   ModelDistributionResponseDto,
+  ModelModeDefaultResponseDto,
   ModelModeEntryDto,
   ModelModeResolutionResponseDto,
   ModelProviderInfoResponseDto,
@@ -200,6 +202,7 @@ import type {
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
+  SetModelModeDefaultDto,
   SetOrgArchivedRequestDto,
   SetOrgDefaultModelDto,
   SetOrgLocalPasswordLoginEnabledRequestDto,
@@ -8103,6 +8106,583 @@ export function useModelModesControllerGetModelModes<TData = Awaited<ReturnType<
 
 
 
+
+/**
+ * @summary What a new chat preselects: the caller's default mode or model
+ */
+export const modelModeDefaultsControllerGetDefaultSelection = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DefaultModelSelectionResponseDto>(
+      {url: `/models/default-selection`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerGetDefaultSelectionQueryKey = () => {
+    return [
+    `/models/default-selection`
+    ] as const;
+    }
+
+
+export const getModelModeDefaultsControllerGetDefaultSelectionQueryOptions = <TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelModeDefaultsControllerGetDefaultSelectionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>> = ({ signal }) => modelModeDefaultsControllerGetDefaultSelection(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelModeDefaultsControllerGetDefaultSelectionQueryResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>>
+export type ModelModeDefaultsControllerGetDefaultSelectionQueryError = unknown
+
+
+export function useModelModeDefaultsControllerGetDefaultSelection<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetDefaultSelection<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetDefaultSelection<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary What a new chat preselects: the caller's default mode or model
+ */
+
+export function useModelModeDefaultsControllerGetDefaultSelection<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetDefaultSelection>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelModeDefaultsControllerGetDefaultSelectionQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get the caller's personal default mode
+ */
+export const modelModeDefaultsControllerGetUserModeDefault = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelModeDefaultResponseDto>(
+      {url: `/models/mode-defaults/user`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerGetUserModeDefaultQueryKey = () => {
+    return [
+    `/models/mode-defaults/user`
+    ] as const;
+    }
+
+
+export const getModelModeDefaultsControllerGetUserModeDefaultQueryOptions = <TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelModeDefaultsControllerGetUserModeDefaultQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>> = ({ signal }) => modelModeDefaultsControllerGetUserModeDefault(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelModeDefaultsControllerGetUserModeDefaultQueryResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>>
+export type ModelModeDefaultsControllerGetUserModeDefaultQueryError = unknown
+
+
+export function useModelModeDefaultsControllerGetUserModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetUserModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetUserModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the caller's personal default mode
+ */
+
+export function useModelModeDefaultsControllerGetUserModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetUserModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelModeDefaultsControllerGetUserModeDefaultQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set or clear the caller's personal default mode
+ */
+export const modelModeDefaultsControllerSetUserModeDefault = (
+    setModelModeDefaultDto: SetModelModeDefaultDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/models/mode-defaults/user`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setModelModeDefaultDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerSetUserModeDefaultMutationKey = () => ['modelModeDefaultsControllerSetUserModeDefault'] as const;
+
+export const getModelModeDefaultsControllerSetUserModeDefaultMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>, TError,ModelModeDefaultsControllerSetUserModeDefaultMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>, TError,ModelModeDefaultsControllerSetUserModeDefaultMutationVariables, TContext> => {
+
+const mutationKey = getModelModeDefaultsControllerSetUserModeDefaultMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>, ModelModeDefaultsControllerSetUserModeDefaultMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  modelModeDefaultsControllerSetUserModeDefault(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelModeDefaultsControllerSetUserModeDefaultMutationResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>>
+    export type ModelModeDefaultsControllerSetUserModeDefaultMutationBody = SetModelModeDefaultDto
+    export type ModelModeDefaultsControllerSetUserModeDefaultMutationError = unknown
+    export type ModelModeDefaultsControllerSetUserModeDefaultMutationVariables = {data: SetModelModeDefaultDto}
+
+    /**
+ * @summary Set or clear the caller's personal default mode
+ */
+export const useModelModeDefaultsControllerSetUserModeDefault = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>, TError,ModelModeDefaultsControllerSetUserModeDefaultMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelModeDefaultsControllerSetUserModeDefault>>,
+        TError,
+        ModelModeDefaultsControllerSetUserModeDefaultMutationVariables,
+        TContext
+      > => {
+      return useMutation(getModelModeDefaultsControllerSetUserModeDefaultMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the organization's default mode
+ */
+export const modelModeDefaultsControllerGetOrgModeDefault = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelModeDefaultResponseDto>(
+      {url: `/models/mode-defaults/org`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerGetOrgModeDefaultQueryKey = () => {
+    return [
+    `/models/mode-defaults/org`
+    ] as const;
+    }
+
+
+export const getModelModeDefaultsControllerGetOrgModeDefaultQueryOptions = <TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelModeDefaultsControllerGetOrgModeDefaultQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>> = ({ signal }) => modelModeDefaultsControllerGetOrgModeDefault(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelModeDefaultsControllerGetOrgModeDefaultQueryResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>>
+export type ModelModeDefaultsControllerGetOrgModeDefaultQueryError = unknown
+
+
+export function useModelModeDefaultsControllerGetOrgModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetOrgModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetOrgModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the organization's default mode
+ */
+
+export function useModelModeDefaultsControllerGetOrgModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetOrgModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelModeDefaultsControllerGetOrgModeDefaultQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set or clear the organization's default mode
+ */
+export const modelModeDefaultsControllerSetOrgModeDefault = (
+    setModelModeDefaultDto: SetModelModeDefaultDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/models/mode-defaults/org`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setModelModeDefaultDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerSetOrgModeDefaultMutationKey = () => ['modelModeDefaultsControllerSetOrgModeDefault'] as const;
+
+export const getModelModeDefaultsControllerSetOrgModeDefaultMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>, TError,ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>, TError,ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables, TContext> => {
+
+const mutationKey = getModelModeDefaultsControllerSetOrgModeDefaultMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>, ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  modelModeDefaultsControllerSetOrgModeDefault(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelModeDefaultsControllerSetOrgModeDefaultMutationResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>>
+    export type ModelModeDefaultsControllerSetOrgModeDefaultMutationBody = SetModelModeDefaultDto
+    export type ModelModeDefaultsControllerSetOrgModeDefaultMutationError = unknown
+    export type ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables = {data: SetModelModeDefaultDto}
+
+    /**
+ * @summary Set or clear the organization's default mode
+ */
+export const useModelModeDefaultsControllerSetOrgModeDefault = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>, TError,ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelModeDefaultsControllerSetOrgModeDefault>>,
+        TError,
+        ModelModeDefaultsControllerSetOrgModeDefaultMutationVariables,
+        TContext
+      > => {
+      return useMutation(getModelModeDefaultsControllerSetOrgModeDefaultMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a team's default mode
+ */
+export const modelModeDefaultsControllerGetTeamModeDefault = (
+    teamId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelModeDefaultResponseDto>(
+      {url: `/models/mode-defaults/teams/${teamId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerGetTeamModeDefaultQueryKey = (teamId: string,) => {
+    return [
+    `/models/mode-defaults/teams/${teamId}`
+    ] as const;
+    }
+
+
+export const getModelModeDefaultsControllerGetTeamModeDefaultQueryOptions = <TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError = unknown>(teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelModeDefaultsControllerGetTeamModeDefaultQueryKey(teamId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>> = ({ signal }) => modelModeDefaultsControllerGetTeamModeDefault(teamId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: teamId !== null && teamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelModeDefaultsControllerGetTeamModeDefaultQueryResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>>
+export type ModelModeDefaultsControllerGetTeamModeDefaultQueryError = unknown
+
+
+export function useModelModeDefaultsControllerGetTeamModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError = unknown>(
+ teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetTeamModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError = unknown>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>,
+          TError,
+          Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModeDefaultsControllerGetTeamModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError = unknown>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a team's default mode
+ */
+
+export function useModelModeDefaultsControllerGetTeamModeDefault<TData = Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError = unknown>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerGetTeamModeDefault>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelModeDefaultsControllerGetTeamModeDefaultQueryOptions(teamId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set or clear a team's default mode
+ */
+export const modelModeDefaultsControllerSetTeamModeDefault = (
+    teamId: string,
+    setModelModeDefaultDto: SetModelModeDefaultDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/models/mode-defaults/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setModelModeDefaultDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModeDefaultsControllerSetTeamModeDefaultMutationKey = () => ['modelModeDefaultsControllerSetTeamModeDefault'] as const;
+
+export const getModelModeDefaultsControllerSetTeamModeDefaultMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>, TError,ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>, TError,ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables, TContext> => {
+
+const mutationKey = getModelModeDefaultsControllerSetTeamModeDefaultMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>, ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  modelModeDefaultsControllerSetTeamModeDefault(teamId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelModeDefaultsControllerSetTeamModeDefaultMutationResult = NonNullable<Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>>
+    export type ModelModeDefaultsControllerSetTeamModeDefaultMutationBody = SetModelModeDefaultDto
+    export type ModelModeDefaultsControllerSetTeamModeDefaultMutationError = unknown
+    export type ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables = {teamId: string;data: SetModelModeDefaultDto}
+
+    /**
+ * @summary Set or clear a team's default mode
+ */
+export const useModelModeDefaultsControllerSetTeamModeDefault = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>, TError,ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelModeDefaultsControllerSetTeamModeDefault>>,
+        TError,
+        ModelModeDefaultsControllerSetTeamModeDefaultMutationVariables,
+        TContext
+      > => {
+      return useMutation(getModelModeDefaultsControllerSetTeamModeDefaultMutationOptions(options), queryClient);
+    }
 
 /**
  * Create a new language model in the master catalog. This endpoint is only accessible to super admins.

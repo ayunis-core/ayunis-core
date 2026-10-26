@@ -3797,6 +3797,167 @@
         "tags": ["models"]
       }
     },
+    "/models/default-selection": {
+      "get": {
+        "operationId": "ModelModeDefaultsController_getDefaultSelection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultModelSelectionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "What a new chat preselects: the caller's default mode or model",
+        "tags": ["models"]
+      }
+    },
+    "/models/mode-defaults/user": {
+      "get": {
+        "operationId": "ModelModeDefaultsController_getUserModeDefault",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelModeDefaultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the caller's personal default mode",
+        "tags": ["models"]
+      },
+      "put": {
+        "operationId": "ModelModeDefaultsController_setUserModeDefault",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetModelModeDefaultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Set or clear the caller's personal default mode",
+        "tags": ["models"]
+      }
+    },
+    "/models/mode-defaults/org": {
+      "get": {
+        "operationId": "ModelModeDefaultsController_getOrgModeDefault",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelModeDefaultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the organization's default mode",
+        "tags": ["models"]
+      },
+      "put": {
+        "operationId": "ModelModeDefaultsController_setOrgModeDefault",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetModelModeDefaultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Set or clear the organization's default mode",
+        "tags": ["models"]
+      }
+    },
+    "/models/mode-defaults/teams/{teamId}": {
+      "get": {
+        "operationId": "ModelModeDefaultsController_getTeamModeDefault",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelModeDefaultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a team's default mode",
+        "tags": ["models"]
+      },
+      "put": {
+        "operationId": "ModelModeDefaultsController_setTeamModeDefault",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetModelModeDefaultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Set or clear a team's default mode",
+        "tags": ["models"]
+      }
+    },
     "/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
@@ -15553,6 +15714,68 @@
           }
         },
         "required": ["mode", "permittedModelId", "anonymousPermittedModelId"]
+      },
+      "DefaultModelSelectionResponseDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "nullable": true,
+            "description": "Preselected mode; null when a concrete model is preselected",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          },
+          "permittedModelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Permitted model a new chat binds with this selection"
+          }
+        },
+        "required": ["mode", "permittedModelId"]
+      },
+      "ModelModeDefaultResponseDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          },
+          "currentPermittedModelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Healthy model the mode currently resolves to on this level (anonymous-only and faulted models skipped)"
+          },
+          "availableModes": {
+            "type": "array",
+            "description": "Modes that currently resolve to a model on this level; only these should be offered",
+            "items": {
+              "$ref": "#/components/schemas/ModelMode"
+            }
+          }
+        },
+        "required": ["mode", "currentPermittedModelId", "availableModes"]
+      },
+      "SetModelModeDefaultDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "nullable": true,
+            "description": "Mode to use as default; null clears it so the model default applies again",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          }
+        },
+        "required": ["mode"]
       },
       "CreateLanguageModelRequestDto": {
         "type": "object",

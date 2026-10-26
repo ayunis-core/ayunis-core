@@ -1724,6 +1724,29 @@ export interface ModelModeResolutionResponseDto {
   anonymousPermittedModelId: string | null;
 }
 
+export interface DefaultModelSelectionResponseDto {
+  /** Preselected mode; null when a concrete model is preselected */
+  mode: ModelMode | null;
+  /** Permitted model a new chat binds with this selection */
+  permittedModelId: string;
+}
+
+export interface ModelModeDefaultResponseDto {
+  mode: ModelMode | null;
+  /**
+     * Healthy model the mode currently resolves to on this level (anonymous-only and faulted models skipped)
+     * @nullable
+     */
+  currentPermittedModelId: string | null;
+  /** Modes that currently resolve to a model on this level; only these should be offered */
+  availableModes: ModelMode[];
+}
+
+export interface SetModelModeDefaultDto {
+  /** Mode to use as default; null clears it so the model default applies again */
+  mode: ModelMode | null;
+}
+
 /**
  * The provider of the model
  */

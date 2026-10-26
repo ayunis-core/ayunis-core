@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { DefaultModelSelectionsRepository } from 'src/domain/models/application/ports/default-model-selections.repository';
 import {
   ModelError,
   PermittedModelNotFoundError,
@@ -16,7 +16,7 @@ export class SetUserDefaultLanguageModelUseCase {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
+    private readonly defaultModelSelectionsRepository: DefaultModelSelectionsRepository,
     private readonly contextService: ContextService,
   ) {}
 
@@ -55,28 +55,16 @@ export class SetUserDefaultLanguageModelUseCase {
       throw new UnauthorizedAccessError();
     }
     const permittedModel = await this.findPermittedModel(command);
-    const existingDefault = await this.userDefaultModelsRepository.findByUserId(
-      command.userId,
-    );
-    const action = existingDefault ? 'updating' : 'setting';
-    this.logger.debug(
-      {
-        modelName: permittedModel.model.name,
-        modelProvider: permittedModel.model.provider,
-        existingDefaultId: existingDefault?.id,
-        action,
-      },
-      'Permitted model found for user default',
-    );
-    const result = await this.userDefaultModelsRepository.setAsDefault(
-      permittedModel,
-      command.userId,
+    // Replaces a personal mode default too: one default per user.
+    await this.defaultModelSelectionsRepository.setModel(
+      { userId: command.userId },
+      permittedModel.id,
     );
     this.logger.debug(
-      { userId: command.userId, modelId: result.id, action },
+      { userId: command.userId, modelId: permittedModel.id },
       'User default model changed successfully',
     );
-    return result;
+    return permittedModel;
   }
 
   private async findPermittedModel(

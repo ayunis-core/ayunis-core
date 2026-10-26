@@ -3,6 +3,11 @@ import type { UUID } from 'crypto';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
+import {
+  DefaultModelSelectionKind,
+  DefaultModelSelectionRecord,
+} from 'src/domain/models/infrastructure/persistence/local-default-model-selections/schema/default-model-selection.record';
 import { RolePermissionRecord } from 'src/iam/permissions/infrastructure/persistence/local/schema/role-permission.record';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
@@ -12,8 +17,12 @@ import {
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { OrgSeeder } from './base-seeder';
 import { log } from 'src/db/scripts/utils/seed-log';
-import type { SeedState } from '../seed-state';
-import type { SeededModels, MemberFixture, OrgFixture } from '../seed-types';
+import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
+import type {
+  SeededModels,
+  MemberFixture,
+  OrgFixture,
+} from 'src/db/scripts/seed-minimal/seed-types';
 
 interface UserSpec {
   email: string;
@@ -130,15 +139,33 @@ export class OrgUserSeeder extends OrgSeeder {
       }
       const modelId = model.id;
 
-      await this.findOrCreate(
+      const permit = await this.findOrCreate(
         repo,
         { modelId, orgId },
-        () => ({ id: randomUUID(), modelId, orgId, isDefault, anonymousOnly }),
+        () => ({ id: randomUUID(), modelId, orgId, anonymousOnly }),
         {
           entity: 'Permitted model',
           name: `${modelKey} (default=${String(isDefault)})`,
         },
       );
+      // Only language models have an org default (default_model_selections).
+      if (isDefault && model instanceof LanguageModelRecord) {
+        await this.seedOrgDefault(orgId, permit.id);
+      }
     }
+  }
+
+  private async seedOrgDefault(orgId: UUID, permittedModelId: UUID) {
+    await this.findOrCreate(
+      this.repo(DefaultModelSelectionRecord),
+      { orgId },
+      () => ({
+        id: randomUUID(),
+        orgId,
+        kind: DefaultModelSelectionKind.MODEL,
+        permittedModelId,
+      }),
+      { entity: 'Org default model', name: orgId },
+    );
   }
 }

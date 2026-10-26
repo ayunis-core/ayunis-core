@@ -173,4 +173,16 @@ describe('resolveModelMode', () => {
     );
     expect(result?.model.id).toBe(medium.id);
   });
+
+  it('skips the faulted fallback when a healthy-only preview is requested', () => {
+    const faulty = model('faulty', { hasProviderFault: true });
+    const result = resolveModelMode(
+      ModelMode.AUTO,
+      entries(ModelMode.AUTO, [faulty]),
+      [permit(faulty)],
+      false,
+      { allowFaultedFallback: false },
+    );
+    expect(result).toBeNull();
+  });
 });
