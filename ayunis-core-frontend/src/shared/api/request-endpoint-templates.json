@@ -99,6 +99,7 @@
   "/models/available/language",
   "/models/default",
   "/models/embedding/enabled",
+  "/models/modes",
   "/models/org/default",
   "/models/permitted",
   "/models/permitted/language-models",

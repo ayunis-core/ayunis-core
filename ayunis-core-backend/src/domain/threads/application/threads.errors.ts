@@ -14,6 +14,8 @@ export enum ThreadErrorCode {
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_PROVIDED = 'NO_MODEL_PROVIDED',
+  CONFLICTING_MODEL_SELECTION = 'CONFLICTING_MODEL_SELECTION',
+  MODEL_MODE_UNAVAILABLE = 'MODEL_MODE_UNAVAILABLE',
   GENERATED_IMAGE_NOT_FOUND = 'GENERATED_IMAGE_NOT_FOUND',
   MESSAGE_IMAGE_NOT_FOUND = 'MESSAGE_IMAGE_NOT_FOUND',
   GENERATED_IMAGE_SAVE_FAILED = 'GENERATED_IMAGE_SAVE_FAILED',
@@ -183,6 +185,28 @@ export class NoModelProvidedError extends ThreadError {
       ...(userId && { userId }),
       ...metadata,
     });
+  }
+}
+
+export class ConflictingModelSelectionError extends ThreadError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Provide either a model or a mode, not both',
+      ThreadErrorCode.CONFLICTING_MODEL_SELECTION,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class ModelModeUnavailableError extends ThreadError {
+  constructor(mode: string, metadata?: ErrorMetadata) {
+    super(
+      `No permitted model is currently available for mode '${mode}'`,
+      ThreadErrorCode.MODEL_MODE_UNAVAILABLE,
+      422,
+      { mode, ...metadata },
+    );
   }
 }
 

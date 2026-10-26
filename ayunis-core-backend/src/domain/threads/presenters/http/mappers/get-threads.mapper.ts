@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { GetThreadsResponseDtoItem } from '../dto/get-threads-response-item.dto';
-import { GetThreadsResponseDto } from '../dto/get-threads-response.dto';
+import { GetThreadsResponseDtoItem } from 'src/domain/threads/presenters/http/dto/get-threads-response-item.dto';
+import { GetThreadsResponseDto } from 'src/domain/threads/presenters/http/dto/get-threads-response.dto';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
@@ -13,6 +13,7 @@ export class GetThreadsDtoMapper {
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
+      mode: thread.mode,
       workspaceId: thread.workspaceId ?? null,
     };
   }

@@ -95,12 +95,14 @@ export class ThreadsController {
     this.logger.log(
       {
         modelId: createThreadDto.modelId,
+        mode: createThreadDto.mode,
       },
       'create',
     );
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
+        mode: createThreadDto.mode,
         isAnonymous: createThreadDto.isAnonymous,
         workspaceId: createThreadDto.workspaceId,
       }),
