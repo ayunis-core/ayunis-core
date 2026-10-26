@@ -22,3 +22,5 @@ The threads module also manages generated images produced during conversations. 
 Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.
 
 Chat search matches titles and persisted user/assistant text blocks case-insensitively, within the existing owner and workspace scope. System, tool, thinking, image metadata, and skill instructions are excluded. A correlated message EXISTS predicate preserves thread pagination and avoids duplicate results.
+
+Source assignments are unique per `(threadId, sourceId)` at the database level. The application duplicate check provides a fast 409 response; the database constraint also rejects concurrent duplicate inserts, which map to the same `SourceAlreadyAssignedError`.

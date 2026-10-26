@@ -1,4 +1,4 @@
-import { isUniqueConstraintViolation } from './unique-constraint.util';
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 
 describe('isUniqueConstraintViolation', () => {
   it('should return true for TypeORM QueryFailedError with PG code 23505', () => {
@@ -33,6 +33,28 @@ describe('isUniqueConstraintViolation', () => {
       driverError: { code: '23503' },
     });
 
+    expect(isUniqueConstraintViolation(error)).toBe(false);
+  });
+});
+
+describe('Postgres unique violation error shapes', () => {
+  it.each([
+    { code: '23505', driverError: {} },
+    { code: '23505', driverError: { code: '23503' } },
+    { driverError: { code: '23505' } },
+  ])('recognizes a unique code on either error level: %p', (error) => {
+    expect(isUniqueConstraintViolation(error)).toBe(true);
+  });
+
+  it.each([
+    false,
+    23505,
+    '23505',
+    {},
+    { driverError: '23505' },
+    { code: '23503' },
+    { driverError: { code: 23505 } },
+  ])('rejects malformed or unrelated errors: %p', (error) => {
     expect(isUniqueConstraintViolation(error)).toBe(false);
   });
 });
