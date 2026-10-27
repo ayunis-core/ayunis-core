@@ -9,11 +9,17 @@ import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/ma
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { McpOAuthPendingSession } from 'src/domain/mcp/domain/mcp-oauth-pending-session.entity';
 import { McpOAuthFetchService } from 'src/domain/mcp/infrastructure/clients/mcp-oauth-fetch.service';
+import { fetch, Response as UndiciResponse } from 'undici';
+import type * as Undici from 'undici';
 import {
   McpErrorCode,
   McpOAuthServerUnreachableError,
 } from 'src/domain/mcp/application/mcp.errors';
 
+jest.mock('undici', () => ({
+  ...jest.requireActual<typeof Undici>('undici'),
+  fetch: jest.fn(),
+}));
 jest.mock('@modelcontextprotocol/client', () => ({
   auth: jest.fn(),
   discoverOAuthProtectedResourceMetadata: jest.fn(),
@@ -257,8 +263,8 @@ describe('McpOAuthAuthorizationService', () => {
 
   it('does not send credentials to a private revocation endpoint', async () => {
     const fetchSpy = jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(null, { status: 200 }));
+      .mocked(fetch)
+      .mockResolvedValue(new UndiciResponse(null, { status: 200 }));
     tokens.findByIntegrationAndUser.mockResolvedValue({
       issuer: 'https://auth.example.com',
       encryptedAccessToken: 'encrypted-access-token',

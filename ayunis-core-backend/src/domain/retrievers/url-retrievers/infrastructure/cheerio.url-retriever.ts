@@ -1,4 +1,5 @@
 import { withAbortSignal } from 'src/common/util/network-address-policy';
+import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
 import { UrlDestinationGuardService } from './url-destination-guard.service';
 import {
   isPdfLink,
@@ -267,13 +268,15 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
           signal,
         )
       : undefined;
-    return fetch(url, {
+    const init = {
       signal,
       // The crawler user-agent also excludes these requests from undici telemetry.
       headers: { 'User-Agent': 'Ayunis/1.0' },
       redirect: 'manual',
-      ...(dispatcher ? { dispatcher } : {}),
-    });
+    } satisfies RequestInit;
+    return dispatcher
+      ? fetchWithUndiciDispatcher(url, { ...init, dispatcher })
+      : fetch(url, init);
   }
 
   private assertHttpOk(response: Response, url: string): void {

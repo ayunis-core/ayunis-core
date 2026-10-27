@@ -9,10 +9,8 @@ import {
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { LookupOptions } from 'node:dns';
-// This Agent only works as a `dispatcher` for globalThis.fetch while the
-// undici major matches the one Node embeds — undici 8 dropped the legacy
-// handler API. Bump this dep and the node image together, never apart.
-import { Agent, type Dispatcher } from 'undici';
+import { Agent } from 'undici';
+import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
 import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 
 const MAX_REDIRECTS = 5;
@@ -58,11 +56,11 @@ export class McpOAuthFetchService
     let init = initialInit;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       await this.assertAllowed(url);
-      const response = await globalThis.fetch(url, {
-        ...init,
+      const response = await fetchWithUndiciDispatcher(url, {
+        ...(init as Parameters<typeof fetchWithUndiciDispatcher>[1]),
         redirect: 'manual',
         dispatcher: this.dispatcher,
-      } as RequestInit & { dispatcher: Dispatcher });
+      });
       const location = response.headers.get('location');
       if (!REDIRECT_STATUSES.has(response.status) || !location) return response;
       const nextUrl = new URL(location, url);
