@@ -10,6 +10,7 @@ import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/ap
 import { SubscriptionMonthlyCreditsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-monthly-credits-updated.webhook-event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import { SubscriptionExpiredEvent } from 'src/iam/subscriptions/application/events/subscription-expired.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
@@ -30,6 +31,7 @@ import { UserDeletedWebhookEvent } from 'src/integrations/webhooks/domain/webhoo
 import { OrgCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/org-created.webhook-event';
 import { SubscriptionCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-created.webhook-events';
 import { SubscriptionCancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
+import { SubscriptionExpiredWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-expired.webhook-event';
 import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
 import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
@@ -158,6 +160,18 @@ export class WebhookDispatchListener {
       new SubscriptionUncancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
+    );
+  }
+
+  @OnEvent(SubscriptionExpiredEvent.EVENT_NAME, { suppressErrors: false })
+  async handleSubscriptionExpired(
+    event: SubscriptionExpiredEvent,
+  ): Promise<void> {
+    const webhook = new SubscriptionExpiredWebhookEvent(
+      mapSubscriptionToWebhookPayload(event.payload),
+    );
+    await this.webhookDeliverySequencer.enqueue(event.orgId, () =>
+      this.sendWebhookUseCase.execute(new SendWebhookCommand(webhook, true)),
     );
   }
 
