@@ -60,7 +60,7 @@
     "knip": "^6.24.0",
     "madge": "^8.0.0",
     "prettier": "^3.9.4",
-    "tsup": "^8.3.5",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
     "vitest": "^4.1.9"
