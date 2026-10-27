@@ -49,7 +49,9 @@ export class RefreshTokenUseCase {
     private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
   ) {}
 
-  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError, {
+    databaseUnavailable: 'includingExpectedErrors',
+  })
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
     this.logger.log('refreshToken');
     try {
