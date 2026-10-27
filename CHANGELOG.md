@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.61.1](https://github.com/ayunis-core/ayunis-core/compare/v2.61.0...v2.61.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **auth:** return service unavailable when token refresh hits a database timeout (AYC-1467) ([#2103](https://github.com/ayunis-core/ayunis-core/issues/2103)) ([ded9af4](https://github.com/ayunis-core/ayunis-core/commit/ded9af40e58d04c99ffc6daaf1db97a0825e0eac))
+
+
+### Code Refactoring
+
+* **network:** pair undici dispatchers with undici's own fetch (AYC-1009) ([#2086](https://github.com/ayunis-core/ayunis-core/issues/2086)) ([e282161](https://github.com/ayunis-core/ayunis-core/commit/e2821619d8f2ca31aff39558731a2cc2e3a0eb91))
+
+
+### Miscellaneous
+
+* **deps:** bump hookform resolvers to 6 and dedupe lockfile (AYC-000) ([#2085](https://github.com/ayunis-core/ayunis-core/issues/2085)) ([09399a3](https://github.com/ayunis-core/ayunis-core/commit/09399a3d422aecdd4583aa29ebb542e87393a8a0))
+* **deps:** bump p-queue to 10 and dedupe lockfile (AYC-000) ([#2083](https://github.com/ayunis-core/ayunis-core/issues/2083)) ([8940343](https://github.com/ayunis-core/ayunis-core/commit/894034396cc51fecaa0db6f7884f76139ba1a664))
+* **deps:** bump tsup to 9 and dedupe lockfile (AYC-000) ([#2084](https://github.com/ayunis-core/ayunis-core/issues/2084)) ([2caf487](https://github.com/ayunis-core/ayunis-core/commit/2caf487c2917f17124939b0152d66476320011b5))
+
 ## [2.61.0](https://github.com/ayunis-core/ayunis-core/compare/v2.60.1...v2.61.0) (2026-10-26)
 
 
