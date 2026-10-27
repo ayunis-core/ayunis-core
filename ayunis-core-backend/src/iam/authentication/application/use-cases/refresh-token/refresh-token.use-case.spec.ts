@@ -33,7 +33,11 @@ import {
 } from 'src/iam/authentication/application/authentication.errors';
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
-import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
+import {
+  RefreshTokenReuseError,
+  UnexpectedSessionsError,
+} from 'src/iam/sessions/application/sessions.errors';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 import type { UUID } from 'crypto';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
@@ -196,6 +200,31 @@ describe('RefreshTokenUseCase', () => {
     expect(mockRevokeSessionFamilyUseCase.execute).toHaveBeenCalledWith(
       new RevokeSessionFamilyCommand(opaqueToken),
     );
+  });
+
+  it('maps a database statement timeout during rotation to service unavailable', async () => {
+    const statementTimeout = Object.assign(
+      new Error('canceling statement due to statement timeout'),
+      { code: '57014' },
+    );
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new UnexpectedSessionsError(statementTimeout),
+    );
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(ServiceUnavailableError);
+    expect(mockRevokeSessionFamilyUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps non-database rotation failures as unexpected errors', async () => {
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new UnexpectedSessionsError(new Error('boom')),
+    );
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(UnexpectedSessionsError);
   });
 
   it('revokes an already-revoked token family after the transaction closes', async () => {

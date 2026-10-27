@@ -1,7 +1,7 @@
 import { isDatabaseUnavailableError } from './database-unavailable-error.classifier';
 
 describe(isDatabaseUnavailableError.name, () => {
-  it.each(['57P01', '57P02', '57P03', '08001', '08006'])(
+  it.each(['57P01', '57P02', '57P03', '57014', '08001', '08006'])(
     'recognizes PostgreSQL availability code %s',
     (code) => {
       expect(

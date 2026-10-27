@@ -7,7 +7,7 @@ import { DeployGapBanner } from './DeployGapBanner';
 const translations: Record<string, string> = {
   'common.deployGapBanner.title': 'Reconnecting…',
   'common.deployGapBanner.description':
-    'Ayunis is restarting after an update. This page continues automatically.',
+    'Ayunis is temporarily unavailable. This page continues automatically.',
 };
 
 vi.mock('react-i18next', () => ({

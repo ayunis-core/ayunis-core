@@ -5,6 +5,9 @@ const POSTGRES_UNAVAILABLE_CODES = new Set([
   '08004',
   '08006',
   '08007',
+  // statement_timeout: only opted-in boundaries with small indexed queries
+  // classify this, where a timeout means a starved database, not a slow query.
+  '57014',
   '57P01',
   '57P02',
   '57P03',

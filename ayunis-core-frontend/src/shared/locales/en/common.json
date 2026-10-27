@@ -131,7 +131,7 @@
     },
     "deployGapBanner": {
       "title": "Reconnecting…",
-      "description": "Ayunis is restarting after an update. This page continues automatically."
+      "description": "Ayunis is temporarily unavailable. This page continues automatically."
     },
     "helpLink": "Help",
     "pagination": {

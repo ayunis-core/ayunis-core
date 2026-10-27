@@ -131,7 +131,7 @@
     },
     "deployGapBanner": {
       "title": "Verbindung wird wiederhergestellt …",
-      "description": "Ayunis startet nach einem Update neu. Diese Seite lädt automatisch weiter."
+      "description": "Ayunis ist vorübergehend nicht erreichbar. Diese Seite lädt automatisch weiter."
     },
     "helpLink": "Hilfe",
     "pagination": {
