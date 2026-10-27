@@ -26,7 +26,6 @@ describe('PresidioAnonymizationProvider', () => {
       new AnonymizationMeasurementService(
         {
           key: '',
-          detectorVersion: '',
           expiresAt: '',
         },
         new EventEmitter2(),

@@ -88,7 +88,6 @@ export class AnonymizationMeasurementService
         .update(
           JSON.stringify([
             context.orgId,
-            this.config.detectorVersion,
             entities ?? null,
             ANONYMIZATION_CHUNK_LENGTH,
             ANONYMIZATION_CHUNK_OVERLAP,
@@ -206,7 +205,6 @@ export class AnonymizationMeasurementService
   private enabled(): boolean {
     return (
       this.config.key.length >= 32 &&
-      this.config.detectorVersion.trim().length > 0 &&
       Date.parse(this.config.expiresAt) > Date.now()
     );
   }

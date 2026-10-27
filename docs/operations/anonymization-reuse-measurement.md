@@ -20,17 +20,22 @@ repeated input still goes through the real detector.
 
 ## Activation
 
-After merging and deploying, supply these three backend environment settings through
+After merging and deploying, supply these two backend environment settings through
 the normal deployment and secret-management process:
 
 - `ANONYMIZATION_MEASUREMENT_KEY`: a new dedicated random secret of at least 32
   characters. Never reuse a JWT, Redis or other application secret.
-- `ANONYMIZATION_MEASUREMENT_DETECTOR_VERSION`: an immutable identifier covering
-  the anonymizer image/model/recognizers and backend detection/mapping code. Change
-  it when any of those change. Chunk length/overlap and requested entities are also
-  part of the internal fingerprint.
-- `ANONYMIZATION_MEASUREMENT_EXPIRES_AT`: a UTC ISO timestamp after a representative
-  working week. Missing, invalid, short-key or expired settings disable the study.
+- `ANONYMIZATION_MEASUREMENT_EXPIRES_AT`: a UTC ISO timestamp one week after
+  activation, so the window covers a representative working week and the study
+  switches itself off without a second deploy. Missing, invalid, short-key or
+  expired settings disable the study.
+
+The fingerprint covers the tenant, the requested entities, chunk length/overlap and
+the text. It does not include the anonymizer's model or image version: a window of
+one week is short enough to treat the detector as fixed. If an anonymizer image with
+a changed model or recognizer set is deployed inside the window, note the date in the
+report; hits across that deploy count reuse that a real cache keyed by detector
+version would miss.
 
 Ensure the deployment passes these values into the app container. They are read at
 startup. Verify an anonymous document/tool flow increments the study request counter.
@@ -95,7 +100,7 @@ coverage/capacity drops, hit rate, potential time avoided, estimated working set
 instrumentation overhead on AYC-1430. Recommend proceed, collect more evidence, or
 defer. AYC-1434 remains In Development until the report exists.
 
-Remove the three settings and retire the dedicated secret after the study. The
+Remove the two settings and retire the dedicated secret after the study. The
 expiry clears fingerprint memory, but does not delete aggregate series already
 retained by monitoring; apply the approved retention there. Remove this temporary
 instrumentation after the decision. Keep no per-request export because none is

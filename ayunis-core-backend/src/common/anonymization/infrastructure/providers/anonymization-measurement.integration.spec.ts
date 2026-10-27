@@ -25,7 +25,6 @@ jest.mock(
 
 const config = {
   key: 'dedicated-measurement-key-32-characters',
-  detectorVersion: 'presidio-v2.59.0',
   expiresAt: '2099-01-01T00:00:00Z',
 };
 const context = {

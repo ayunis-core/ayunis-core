@@ -5,7 +5,6 @@ import { AnonymizationStudyEvent } from 'src/common/anonymization/application/ev
 
 const config = {
   key: 'measurement-only-secret-32-characters',
-  detectorVersion: 'presidio-v2.59.0',
   expiresAt: '2099-01-01T00:00:00Z',
 };
 const context = { orgId: 'municipality-a', source: 'tool_result' as const };
@@ -80,27 +79,20 @@ describe('aggregate anonymization study', () => {
     ).toEqual([false, false, false]);
   });
 
-  it('separates different text, detector versions and study keys in the same process', () => {
+  it('separates different text and study keys in the same process', () => {
     const options = { ...config };
     service = new AnonymizationMeasurementService(options, events);
     detect();
     detect('Maria Schmidt!');
-    options.detectorVersion = 'next-model';
-    detect();
     options.key = 'another-dedicated-measurement-key-32-characters';
     detect();
-    expect(samples.map((event) => event.hit)).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
+    expect(samples.map((event) => event.hit)).toEqual([false, false, false]);
   });
 
   it.each([
     { ...config, key: 'short' },
     { ...config, expiresAt: 'invalid' },
-    { ...config, detectorVersion: '' },
+    { ...config, expiresAt: '2020-01-01T00:00:00Z' },
   ])(
     'ignores invalid configuration without collecting a request: %j',
     (options) => {
