@@ -67,4 +67,13 @@ export class CreateSubscriptionRequestDto extends BillingInfoFieldsDto {
   @IsOptional()
   @IsDateString()
   startsAt?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended.',
+    example: '2027-02-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  endsAt?: string;
 }

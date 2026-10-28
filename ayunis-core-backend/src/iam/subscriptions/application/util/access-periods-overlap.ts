@@ -1,6 +1,6 @@
 interface AccessPeriod {
   startsAt: Date;
-  accessEndsAt: Date | null;
+  endsAt: Date | null;
 }
 
 export function accessPeriodsOverlap(
@@ -11,12 +11,12 @@ export function accessPeriodsOverlap(
     return false;
   }
   const leftEndsAfterRightStarts =
-    left.accessEndsAt === null || left.accessEndsAt > right.startsAt;
+    left.endsAt === null || left.endsAt > right.startsAt;
   const rightEndsAfterLeftStarts =
-    right.accessEndsAt === null || right.accessEndsAt > left.startsAt;
+    right.endsAt === null || right.endsAt > left.startsAt;
   return leftEndsAfterRightStarts && rightEndsAfterLeftStarts;
 }
 
 function isEmpty(period: AccessPeriod): boolean {
-  return period.accessEndsAt !== null && period.accessEndsAt <= period.startsAt;
+  return period.endsAt !== null && period.endsAt <= period.startsAt;
 }

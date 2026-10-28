@@ -75,7 +75,7 @@ const subscriptionSchema = new EntitySchema<
     orgId: { type: String },
     startsAt: { type: 'timestamp' },
     cancelledAt: { type: 'timestamp', nullable: true },
-    accessEndsAt: { type: 'timestamp', nullable: true },
+    endsAt: { type: 'timestamp', nullable: true },
     renewalCycle: { type: String, nullable: true },
     renewalCycleAnchor: { type: 'timestamp', nullable: true },
   },
@@ -107,7 +107,7 @@ const billingInfo = new SubscriptionBillingInfo({
 type Dates = Partial<{
   startsAt: Date;
   cancelledAt: Date;
-  accessEndsAt: Date;
+  endsAt: Date;
   renewalCycleAnchor: Date;
 }>;
 
@@ -121,7 +121,7 @@ const seatBased = (cycle: RenewalCycle, dates: Dates = {}) => {
     renewalCycleAnchor: anchor,
     startsAt: dates.startsAt ?? anchor,
     cancelledAt: dates.cancelledAt ?? null,
-    accessEndsAt: dates.accessEndsAt ?? null,
+    endsAt: dates.endsAt ?? null,
     billingInfo,
   });
 };
@@ -132,7 +132,7 @@ const usageBased = (dates: Dates = {}) =>
     monthlyCredits: 1000,
     startsAt: dates.startsAt ?? new Date('2025-01-15T00:00:00Z'),
     cancelledAt: dates.cancelledAt ?? null,
-    accessEndsAt: dates.accessEndsAt ?? null,
+    endsAt: dates.endsAt ?? null,
     billingInfo,
   });
 
@@ -174,23 +174,23 @@ const cases: OrgCase[] = [
     subscriptions: [
       usageBased({
         cancelledAt: at('2026-03-01'),
-        accessEndsAt: at('2026-04-01'),
+        endsAt: at('2026-04-01'),
       }),
     ],
   },
   {
     name: 'explicit access end in the past',
-    subscriptions: [usageBased({ accessEndsAt: at('2026-03-01') })],
+    subscriptions: [usageBased({ endsAt: at('2026-03-01') })],
   },
   {
     name: 'trial plus a subscription that ended',
     trial: true,
-    subscriptions: [usageBased({ accessEndsAt: at('2026-03-01') })],
+    subscriptions: [usageBased({ endsAt: at('2026-03-01') })],
   },
   {
     name: 'ended subscription with a scheduled renewal',
     subscriptions: [
-      usageBased({ accessEndsAt: at('2026-03-01') }),
+      usageBased({ endsAt: at('2026-03-01') }),
       usageBased({ startsAt: at('2026-04-15') }),
     ],
   },
@@ -200,7 +200,7 @@ const cases: OrgCase[] = [
       seatBased(RenewalCycle.MONTHLY, {
         renewalCycleAnchor: at('2026-02-01'),
         cancelledAt: at('2026-01-20'),
-        accessEndsAt: at('2026-02-01'),
+        endsAt: at('2026-02-01'),
       }),
     ],
   },
@@ -264,7 +264,7 @@ const cases: OrgCase[] = [
   {
     name: 'ended subscription replaced by an active one',
     subscriptions: [
-      usageBased({ accessEndsAt: at('2025-12-31') }),
+      usageBased({ endsAt: at('2025-12-31') }),
       seatBased(RenewalCycle.MONTHLY, { startsAt: at('2025-12-31') }),
     ],
   },
@@ -344,7 +344,7 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
               : SubscriptionType.USAGE_BASED,
           startsAt: subscription.startsAt,
           cancelledAt: subscription.cancelledAt,
-          accessEndsAt: subscription.accessEndsAt,
+          endsAt: subscription.endsAt,
           ...(subscription instanceof SeatBasedSubscription && {
             renewalCycle: subscription.renewalCycle,
             renewalCycleAnchor: subscription.renewalCycleAnchor,

@@ -10479,6 +10479,9 @@
           "403": {
             "description": "Subscription required"
           },
+          "429": {
+            "description": "Image uploads busy"
+          },
           "500": {
             "description": "Internal server error"
           }
@@ -14114,7 +14117,7 @@
             "description": "Date when the subscription becomes active",
             "example": "2026-07-01T00:00:00Z"
           },
-          "accessEndsAt": {
+          "endsAt": {
             "type": "string",
             "description": "Exclusive date when this subscription stops controlling product access",
             "example": "2026-08-01T00:00:00Z",
@@ -14167,9 +14170,10 @@
             "nullable": true
           },
           "nextRenewalDate": {
-            "format": "date-time",
             "type": "string",
-            "description": "Date of the next renewal",
+            "description": "Next renewal before the access end, or null when no renewal remains",
+            "format": "date-time",
+            "nullable": true,
             "example": "2024-01-01T10:00:00Z"
           },
           "billingInfo": {
@@ -14186,7 +14190,7 @@
           "createdAt",
           "updatedAt",
           "startsAt",
-          "accessEndsAt",
+          "endsAt",
           "orgId",
           "type",
           "nextRenewalDate",
@@ -14273,6 +14277,11 @@
             "type": "string",
             "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
             "example": "2026-07-01T00:00:00.000Z"
+          },
+          "endsAt": {
+            "type": "string",
+            "description": "Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended.",
+            "example": "2027-02-01T00:00:00.000Z"
           }
         },
         "required": [
@@ -14464,7 +14473,7 @@
             "description": "Date when the subscription becomes active",
             "example": "2026-07-01T00:00:00Z"
           },
-          "accessEndsAt": {
+          "endsAt": {
             "type": "string",
             "description": "Exclusive date when this subscription stops controlling product access",
             "example": "2026-08-01T00:00:00Z",
@@ -14517,9 +14526,10 @@
             "nullable": true
           },
           "nextRenewalDate": {
-            "format": "date-time",
             "type": "string",
-            "description": "Date of the next renewal",
+            "description": "Next renewal before the access end, or null when no renewal remains",
+            "format": "date-time",
+            "nullable": true,
             "example": "2024-01-01T10:00:00Z"
           },
           "billingInfo": {
@@ -14547,7 +14557,7 @@
           "createdAt",
           "updatedAt",
           "startsAt",
-          "accessEndsAt",
+          "endsAt",
           "orgId",
           "type",
           "nextRenewalDate",
@@ -14585,13 +14595,13 @@
             "type": "string",
             "format": "uuid"
           },
-          "accessEndsAt": {
+          "endsAt": {
             "type": "string",
             "description": "Exclusive end of product access for this subscription",
             "example": "2026-08-01T00:00:00.000Z"
           }
         },
-        "required": ["subscriptionId", "accessEndsAt"]
+        "required": ["subscriptionId", "endsAt"]
       },
       "ResolveSubscriptionOverlapDto": {
         "type": "object",

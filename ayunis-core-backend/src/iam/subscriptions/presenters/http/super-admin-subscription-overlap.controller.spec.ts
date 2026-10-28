@@ -27,11 +27,11 @@ describe(SuperAdminSubscriptionOverlapController.name, () => {
   });
 
   it('maps the validated request to the correction command', async () => {
-    const accessEndsAt = '2026-08-01T00:00:00.000Z';
+    const endsAt = '2026-08-01T00:00:00.000Z';
 
     await controller.resolveSubscriptionOverlap(ORG_ID, USER_ID, {
       authoritativeSubscriptionId: AUTHORITATIVE_ID,
-      adjustments: [{ subscriptionId: ADJUSTED_ID, accessEndsAt }],
+      adjustments: [{ subscriptionId: ADJUSTED_ID, endsAt }],
       reason: 'Contract transition correction',
     });
 
@@ -41,7 +41,7 @@ describe(SuperAdminSubscriptionOverlapController.name, () => {
         requestingUserId: USER_ID,
         authoritativeSubscriptionId: AUTHORITATIVE_ID,
         adjustments: [
-          { subscriptionId: ADJUSTED_ID, accessEndsAt: new Date(accessEndsAt) },
+          { subscriptionId: ADJUSTED_ID, endsAt: new Date(endsAt) },
         ],
         reason: 'Contract transition correction',
       }),

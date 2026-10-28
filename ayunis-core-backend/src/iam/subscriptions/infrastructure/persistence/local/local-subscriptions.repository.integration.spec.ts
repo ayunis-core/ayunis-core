@@ -46,7 +46,7 @@ const subscriptionSchema = new EntitySchema<SubscriptionRecord>({
     createdAt: { type: 'timestamp', createDate: true },
     updatedAt: { type: 'timestamp', updateDate: true },
     orgId: { type: String },
-    accessEndsAt: { type: 'timestamp', nullable: true },
+    endsAt: { type: 'timestamp', nullable: true },
   },
 });
 
@@ -62,7 +62,7 @@ const adjustmentSchema = new EntitySchema<SubscriptionAccessAdjustmentRecord>({
     orgId: { type: String },
     changedByUserId: { type: String, nullable: true },
     previousAccessEndsAt: { type: 'timestamp', nullable: true },
-    accessEndsAt: { type: 'timestamp' },
+    endsAt: { type: 'timestamp' },
     reason: { type: String, length: 500 },
   },
   relations: {
@@ -140,7 +140,7 @@ describe('LocalSubscriptionsRepository access adjustment transaction', () => {
     const orgId = randomUUID();
     const subscriptionId = randomUUID();
     const missingUserId = randomUUID();
-    const accessEndsAt = new Date('2026-08-01T00:00:00.000Z');
+    const endsAt = new Date('2026-08-01T00:00:00.000Z');
     await insertFixture(orgId, subscriptionId);
     const subscription = new UsageBasedSubscription({
       id: subscriptionId,
@@ -156,7 +156,7 @@ describe('LocalSubscriptionsRepository access adjustment transaction', () => {
         country: 'Germany',
       }),
     });
-    subscription.accessEndsAt = accessEndsAt;
+    subscription.endsAt = endsAt;
 
     await expect(
       txHost.withTransaction(() =>
@@ -175,13 +175,13 @@ describe('LocalSubscriptionsRepository access adjustment transaction', () => {
     ).rejects.toThrow();
 
     const persistedSubscriptions = await dataSource.query(
-      `SELECT "accessEndsAt" FROM "${schemaName}"."subscriptions" WHERE id = $1`,
+      `SELECT "endsAt" FROM "${schemaName}"."subscriptions" WHERE id = $1`,
       [subscriptionId],
     );
     const audits = await dataSource.query(
       `SELECT id FROM "${schemaName}"."subscription_access_adjustments"`,
     );
-    expect(persistedSubscriptions[0].accessEndsAt).toBeNull();
+    expect(persistedSubscriptions[0].endsAt).toBeNull();
     expect(audits).toHaveLength(0);
   });
 

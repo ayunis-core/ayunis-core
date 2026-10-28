@@ -1,9 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { CreateSubscriptionRequestDto } from './create-subscription-request.dto';
 import { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
 
-export class ChangeSubscriptionRequestDto extends CreateSubscriptionRequestDto {
+export class ChangeSubscriptionRequestDto extends OmitType(
+  CreateSubscriptionRequestDto,
+  ['endsAt'] as const,
+) {
   @ApiProperty({
     description:
       'How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way.',

@@ -57,8 +57,8 @@ export function selectCurrentSubscription(
 }
 
 function hasOpenAccess(subscription: Subscription): boolean {
-  const accessEndsAt = getEffectiveAccessEnd(subscription);
-  return accessEndsAt === null || accessEndsAt > new Date();
+  const endsAt = getEffectiveAccessEnd(subscription);
+  return endsAt === null || endsAt > new Date();
 }
 
 function newest(subscriptions: Subscription[]): Subscription | null {

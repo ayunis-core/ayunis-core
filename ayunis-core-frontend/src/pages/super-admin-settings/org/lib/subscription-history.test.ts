@@ -45,7 +45,7 @@ describe('toSubscriptionHistoryItem', () => {
       createdAt: '2025-06-01T00:00:00.000Z',
       updatedAt: '2025-06-01T00:00:00.000Z',
       cancelledAt: '2025-07-01T00:00:00.000Z',
-      accessEndsAt: '2025-08-01T00:00:00.000Z',
+      endsAt: '2025-08-01T00:00:00.000Z',
       startsAt: '2025-06-01T00:00:00.000Z',
       orgId: '11111111-1111-1111-1111-111111111111',
       type: 'SEAT_BASED',
@@ -71,7 +71,7 @@ describe('toSubscriptionHistoryItem', () => {
       createdAt: item.createdAt,
       startsAt: item.startsAt,
       cancelledAt: '2025-07-01T00:00:00.000Z',
-      accessEndsAt: '2025-08-01T00:00:00.000Z',
+      endsAt: '2025-08-01T00:00:00.000Z',
       noOfSeats: 8,
       monthlyCredits: undefined,
     });

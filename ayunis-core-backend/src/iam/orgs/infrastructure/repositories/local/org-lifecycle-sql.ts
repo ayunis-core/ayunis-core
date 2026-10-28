@@ -5,7 +5,7 @@ import type { OrgRecord } from './schema/org.record';
 
 // SQL mirror of the subscriptions module's isActive()/getEffectiveAccessEnd(),
 // which orgs cannot import (the module graph would cycle through users).
-// Legacy cancellations without accessEndsAt end at the cancellation for
+// Legacy cancellations without endsAt end at the cancellation for
 // usage-based, at the next renewal after it for seat-based, and at startsAt when
 // cancelled before the start. generate_series adds the interval to the previous
 // value, so month-end anchors clamp and stick like getNextDate
@@ -14,7 +14,7 @@ const CYCLE = `(CASE s."renewalCycle" WHEN 'yearly' THEN interval '1 year' ELSE 
 const NEXT_RENEWAL_AFTER_CANCELLATION = `(SELECT min(renewal) FROM generate_series(s."renewalCycleAnchor", s."cancelledAt" + ${CYCLE}, ${CYCLE}) AS renewal WHERE renewal > s."cancelledAt")`;
 const LEGACY_ACCESS_END = `CASE WHEN s."cancelledAt" < s."startsAt" THEN s."startsAt" WHEN s.type = 'SEAT_BASED' THEN ${NEXT_RENEWAL_AFTER_CANCELLATION} ELSE s."cancelledAt" END`;
 // NULL means access never ends.
-const EFFECTIVE_ACCESS_END = `COALESCE(s."accessEndsAt", CASE WHEN s."cancelledAt" IS NULL THEN NULL ELSE ${LEGACY_ACCESS_END} END)`;
+const EFFECTIVE_ACCESS_END = `COALESCE(s."endsAt", CASE WHEN s."cancelledAt" IS NULL THEN NULL ELSE ${LEGACY_ACCESS_END} END)`;
 
 const IS_ACTIVE = `(s."startsAt" <= :now AND (${EFFECTIVE_ACCESS_END} IS NULL OR ${EFFECTIVE_ACCESS_END} > :now))`;
 const WAS_EVER_ACTIVE = `(s."startsAt" <= :now AND (${EFFECTIVE_ACCESS_END} IS NULL OR ${EFFECTIVE_ACCESS_END} > s."startsAt"))`;

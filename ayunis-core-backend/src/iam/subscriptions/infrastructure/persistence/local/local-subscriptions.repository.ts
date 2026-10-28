@@ -123,7 +123,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
           type: SubscriptionType.USAGE_BASED,
         })
         .andWhere(
-          '((subscription.accessEndsAt IS NULL AND subscription.cancelledAt IS NULL) OR subscription.accessEndsAt > :now)',
+          '((subscription.endsAt IS NULL AND subscription.cancelledAt IS NULL) OR subscription.endsAt > :now)',
           { now },
         )
         .andWhere('subscription.startsAt <= :now', { now })
@@ -147,7 +147,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         await this.subscriptions.update(
           { id: subscription.id, orgId: params.orgId },
           {
-            accessEndsAt: subscription.accessEndsAt,
+            endsAt: subscription.endsAt,
             cancelledAt: subscription.cancelledAt,
           },
         );
@@ -160,7 +160,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
           orgId: params.orgId,
           changedByUserId: params.requestingUserId,
           previousAccessEndsAt,
-          accessEndsAt: subscription.accessEndsAt!,
+          endsAt: subscription.endsAt!,
           reason: params.reason,
         })),
       );
@@ -216,7 +216,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         } else {
           await manager.update(SubscriptionRecord, oldSubscriptionId, {
             cancelledAt: oldCancelledAt ?? new Date(),
-            accessEndsAt: oldAccessEndsAt,
+            endsAt: oldAccessEndsAt,
           });
         }
         await this.insertSubscriptionWithBilling(manager, record);

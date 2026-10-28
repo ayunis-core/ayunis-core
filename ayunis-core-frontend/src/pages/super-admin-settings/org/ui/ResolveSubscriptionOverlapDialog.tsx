@@ -86,7 +86,7 @@ export default function ResolveSubscriptionOverlapDialog({
       authoritativeSubscriptionId: authoritative.id,
       adjustments: conflicting.map((subscription) => ({
         subscriptionId: subscription.id,
-        accessEndsAt: new Date(
+        endsAt: new Date(
           Math.max(
             new Date(authoritative.startsAt).getTime(),
             new Date(subscription.startsAt).getTime(),

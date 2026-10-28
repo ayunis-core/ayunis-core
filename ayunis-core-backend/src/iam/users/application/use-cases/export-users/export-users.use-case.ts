@@ -19,7 +19,9 @@ export class ExportUsersUseCase {
     this.logger.log('Exporting users for subscribed organizations');
 
     try {
-      const rows = await this.usersExportRepository.findSubscribedOrgUsers();
+      const rows = await this.usersExportRepository.findSubscribedOrgUsers(
+        new Date(),
+      );
 
       return convertCSVToString(
         {

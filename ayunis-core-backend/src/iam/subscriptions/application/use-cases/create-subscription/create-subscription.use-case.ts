@@ -107,7 +107,7 @@ export class CreateSubscriptionUseCase {
       return accessPeriodsOverlap(
         {
           startsAt: subscription.startsAt,
-          accessEndsAt: getEffectiveAccessEnd(subscription),
+          endsAt: getEffectiveAccessEnd(subscription),
         },
         candidate,
       );

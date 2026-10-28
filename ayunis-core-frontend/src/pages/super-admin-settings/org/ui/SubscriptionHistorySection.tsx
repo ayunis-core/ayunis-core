@@ -88,9 +88,7 @@ export default function SubscriptionHistorySection({
                 <TableHead>
                   {t('subscriptionHistory.columns.cancelledAt')}
                 </TableHead>
-                <TableHead>
-                  {t('subscriptionHistory.columns.accessEndsAt')}
-                </TableHead>
+                <TableHead>{t('subscriptionHistory.columns.endsAt')}</TableHead>
                 <TableHead>
                   {t('subscriptionHistory.columns.details')}
                 </TableHead>
@@ -144,8 +142,8 @@ function SubscriptionHistoryRow({
           : t('subscriptionHistory.notCancelled')}
       </TableCell>
       <TableCell>
-        {subscription.accessEndsAt
-          ? formatDate(subscription.accessEndsAt)
+        {subscription.endsAt
+          ? formatDate(subscription.endsAt)
           : t('subscriptionHistory.noAccessEnd')}
       </TableCell>
       <TableCell>{subscriptionDetails(subscription, t)}</TableCell>

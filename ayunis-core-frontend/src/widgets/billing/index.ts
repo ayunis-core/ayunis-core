@@ -2,6 +2,6 @@ export { default as BillingInfoSection } from './ui/BillingInfoSection';
 export { default as BillingInfoUpdateDialog } from './ui/BillingInfoUpdateDialog';
 export { default as CreateSubscriptionDialog } from './ui/CreateSubscriptionDialog';
 export { SubscriptionFormFields } from './ui/CreateSubscriptionDialog';
-export type { CreateSubscriptionFormData } from './ui/CreateSubscriptionDialog';
+export type { CreateSubscriptionFormData } from './model/types';
 export { default as LicenseSeatsSection } from './ui/LicenseSeatsSection';
 export { default as LicenseSeatsUpdateDialog } from './ui/LicenseSeatsUpdateDialog';

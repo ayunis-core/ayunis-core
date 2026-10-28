@@ -223,13 +223,13 @@ describe('ChangeSubscriptionUseCase', () => {
       expect(subscriptionRepository.replace).toHaveBeenCalledWith(
         expect.objectContaining({ oldAccessEndsAt: startsAt }),
       );
-      expect(current.accessEndsAt).toEqual(startsAt);
+      expect(current.endsAt).toEqual(startsAt);
     });
 
     it('does not reopen access that ended before the replacement starts', async () => {
       setupSuperAdminContext();
       const current = existingSeatBased();
-      current.accessEndsAt = new Date('2026-07-01T00:00:00.000Z');
+      current.endsAt = new Date('2026-07-01T00:00:00.000Z');
       mockCurrentSubscription(current);
 
       await useCase.execute(
@@ -245,11 +245,9 @@ describe('ChangeSubscriptionUseCase', () => {
       );
 
       expect(subscriptionRepository.replace).toHaveBeenCalledWith(
-        expect.objectContaining({ oldAccessEndsAt: current.accessEndsAt }),
+        expect.objectContaining({ oldAccessEndsAt: current.endsAt }),
       );
-      expect(current.accessEndsAt).toEqual(
-        new Date('2026-07-01T00:00:00.000Z'),
-      );
+      expect(current.endsAt).toEqual(new Date('2026-07-01T00:00:00.000Z'));
     });
 
     it('does NOT emit cancelled on DELETE, only created', async () => {
@@ -362,7 +360,7 @@ describe('ChangeSubscriptionUseCase', () => {
       serving.createdAt = new Date('2025-01-01T00:00:00.000Z');
       const ended = existingSeatBased();
       ended.createdAt = new Date('2026-05-01T00:00:00.000Z');
-      ended.accessEndsAt = new Date('2026-06-01T00:00:00.000Z');
+      ended.endsAt = new Date('2026-06-01T00:00:00.000Z');
       subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
 
       await useCase.execute(

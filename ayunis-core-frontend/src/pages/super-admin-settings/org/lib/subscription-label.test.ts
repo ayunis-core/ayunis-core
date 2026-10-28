@@ -36,7 +36,7 @@ describe('subscriptionLabel', () => {
         isLatest: true,
         createdAt: startsAt,
         startsAt,
-        accessEndsAt: null,
+        endsAt: null,
       };
       expect(
         subscriptionLabel(

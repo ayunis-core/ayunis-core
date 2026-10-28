@@ -119,6 +119,25 @@ describe('UpdateStartDateUseCase', () => {
     jest.clearAllMocks();
   });
 
+  it.each(['2027-02-01T00:00:00Z', '2027-02-02T00:00:00Z'])(
+    'rejects a new start at or beyond a fixed end (%s)',
+    async (startsAt) => {
+      const subscription = createUsageBasedSubscription();
+      subscription.endsAt = new Date('2027-02-01T00:00:00Z');
+      subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
+      await expect(
+        useCase.execute(
+          new UpdateStartDateCommand({
+            orgId: mockOrgId,
+            requestingUserId: mockUserId,
+            startsAt: new Date(startsAt),
+          }),
+        ),
+      ).rejects.toThrow('Access end must be after the subscription start');
+      expect(subscriptionRepository.updateStartDate).not.toHaveBeenCalled();
+    },
+  );
+
   it('should update the start date of a usage-based subscription', async () => {
     const subscription = createUsageBasedSubscription();
     const newStartsAt = new Date('2026-08-15T00:00:00.000Z');
@@ -183,7 +202,7 @@ describe('UpdateStartDateUseCase', () => {
     const predecessor = createSeatBasedSubscription({
       startsAt: new Date('2025-01-01T00:00:00.000Z'),
     });
-    predecessor.accessEndsAt = new Date('2026-07-01T00:00:00.000Z');
+    predecessor.endsAt = new Date('2026-07-01T00:00:00.000Z');
     subscriptionRepository.findByOrgId.mockResolvedValue([
       predecessor,
       subscription,
@@ -211,7 +230,7 @@ describe('UpdateStartDateUseCase', () => {
       startsAt: new Date('2026-05-01T00:00:00.000Z'),
     });
     ended.createdAt = new Date('2026-05-01T00:00:00.000Z');
-    ended.accessEndsAt = new Date('2026-06-01T00:00:00.000Z');
+    ended.endsAt = new Date('2026-06-01T00:00:00.000Z');
     const newStartsAt = new Date('2026-07-01T00:00:00.000Z');
     subscriptionRepository.findByOrgId.mockResolvedValue([serving, ended]);
     subscriptionRepository.updateStartDate.mockResolvedValue(serving);

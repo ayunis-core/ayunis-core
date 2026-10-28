@@ -21,7 +21,7 @@ const older: SubscriptionHistoryItem = {
   createdAt: '2024-01-01T00:00:00.000Z',
   startsAt: '2024-01-01T00:00:00.000Z',
   cancelledAt: '2024-06-01T00:00:00.000Z',
-  accessEndsAt: '2024-07-01T00:00:00.000Z',
+  endsAt: '2024-07-01T00:00:00.000Z',
   noOfSeats: 5,
 };
 
@@ -32,7 +32,7 @@ const latest: SubscriptionHistoryItem = {
   isLatest: true,
   createdAt: '2025-06-01T00:00:00.000Z',
   startsAt: '2025-06-01T00:00:00.000Z',
-  accessEndsAt: null,
+  endsAt: null,
   monthlyCredits: 1000,
 };
 
@@ -76,9 +76,7 @@ describe('SubscriptionHistorySection', () => {
       screen.getByTestId(`subscription-history-status-${older.id}`).textContent,
     ).toBe('subscriptionHistory.status.HISTORICAL');
     expect(screen.getByTestId('subscription-history-latest')).toBeTruthy();
-    expect(
-      screen.getByText('subscriptionHistory.columns.accessEndsAt'),
-    ).toBeTruthy();
+    expect(screen.getByText('subscriptionHistory.columns.endsAt')).toBeTruthy();
     expect(
       screen.queryByTestId('subscription-multiple-active-alert'),
     ).toBeNull();

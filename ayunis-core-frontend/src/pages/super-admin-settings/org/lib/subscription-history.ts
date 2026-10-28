@@ -44,7 +44,7 @@ export function toSubscriptionHistoryItem(
     createdAt: item.createdAt,
     startsAt: item.startsAt,
     cancelledAt: cancelledAtIso(item.cancelledAt),
-    accessEndsAt: item.accessEndsAt ?? null,
+    endsAt: item.endsAt ?? null,
     noOfSeats: item.noOfSeats,
     monthlyCredits: item.monthlyCredits,
   };

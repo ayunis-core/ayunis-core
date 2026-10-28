@@ -4,12 +4,12 @@ import { Button } from '@ayunis/ui/components/button';
 import { ClockIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SubscriptionCancellationSection as SharedSubscriptionCancellationSection } from '@/widgets/subscription-cancellation-section';
-import useSuperAdminSubscriptionCancel from '../api/useSuperAdminSubscriptionCancel';
-import useSuperAdminSubscriptionUncancel from '../api/useSuperAdminSubscriptionUncancel';
+import useSuperAdminSubscriptionCancel from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionCancel';
+import useSuperAdminSubscriptionUncancel from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionUncancel';
 import {
   toCalendarDateKey,
   utcDateToLocal,
-} from '../lib/subscription-start-date';
+} from '@/pages/super-admin-settings/org/lib/subscription-start-date';
 import SubscriptionStartDateUpdateDialog from './SubscriptionStartDateUpdateDialog';
 
 interface SubscriptionCancellationSectionProps {
@@ -31,11 +31,14 @@ export default function SubscriptionCancellationSection({
 
   const isScheduled = new Date(subscription.startsAt) > new Date();
   const startsAtFormatted = formatDate(subscription.startsAt);
-  const nextRenewalDateFormatted = formatDate(subscription.nextRenewalDate);
+  const nextRenewalDateFormatted = subscription.nextRenewalDate
+    ? formatDate(subscription.nextRenewalDate)
+    : null;
   const showNextRenewalDate =
-    !isScheduled ||
-    toCalendarDateKey(subscription.startsAt) !==
-      toCalendarDateKey(subscription.nextRenewalDate);
+    subscription.nextRenewalDate &&
+    (!isScheduled ||
+      toCalendarDateKey(subscription.startsAt) !==
+        toCalendarDateKey(subscription.nextRenewalDate));
 
   return (
     <SharedSubscriptionCancellationSection
@@ -77,6 +80,16 @@ export default function SubscriptionCancellationSection({
               <ClockIcon className="h-4 w-4" />
               {t('subscription.scheduledDescription', {
                 date: startsAtFormatted,
+              })}
+            </p>
+          )}
+          {subscription.endsAt && (
+            <p
+              data-testid="subscription-access-end"
+              className="text-sm text-muted-foreground"
+            >
+              {t('subscription.endsAt', {
+                date: new Date(subscription.endsAt).toLocaleDateString(),
               })}
             </p>
           )}

@@ -88,8 +88,8 @@ export class CancelSubscriptionUseCase {
       subscription,
       subscription.cancelledAt,
     );
-    subscription.accessEndsAt = this.earlierDate(
-      subscription.accessEndsAt,
+    subscription.endsAt = this.earlierDate(
+      subscription.endsAt,
       cancellationAccessEnd,
     );
     await this.subscriptionRepository.update(subscription);
@@ -98,7 +98,7 @@ export class CancelSubscriptionUseCase {
         subscriptionId: subscription.id,
         orgId: command.orgId,
         cancelledAt: subscription.cancelledAt,
-        accessEndsAt: subscription.accessEndsAt,
+        endsAt: subscription.endsAt,
       },
       'Subscription cancelled successfully',
     );

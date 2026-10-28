@@ -20,7 +20,7 @@ export interface SubscriptionHistoryItem {
   createdAt: string;
   startsAt: string;
   cancelledAt?: string | null;
-  accessEndsAt: string | null;
+  endsAt: string | null;
   noOfSeats?: number;
   monthlyCredits?: number;
 }

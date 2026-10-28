@@ -32,7 +32,7 @@ export class SubscriptionAccessAdjustmentRecord extends BaseRecord {
   previousAccessEndsAt: Date | null;
 
   @Column({ type: 'timestamp' })
-  accessEndsAt: Date;
+  endsAt: Date;
 
   @Column({ type: 'varchar', length: 500 })
   reason: string;
