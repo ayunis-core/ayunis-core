@@ -96,6 +96,16 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  it('instructs URL references only in chat with safe complete URLs', () => {
+    const prompt = service.build({ tools: [], currentTime: new Date() });
+    expect(prompt).toContain('{{url:<url>}}');
+    expect(prompt).toContain('Only use complete http:// or https:// URLs');
+    expect(prompt).toContain(
+      'Never put URL reference markers in tool-call arguments or generated content',
+    );
+    expect(prompt).toContain('Never invent URLs');
+  });
+
   describe('source citation markers', () => {
     it('requires exact chunk IDs from retrieval tools in plain-text markers', () => {
       const result = service.build({

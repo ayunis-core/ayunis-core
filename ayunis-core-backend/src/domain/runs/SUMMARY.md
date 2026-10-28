@@ -78,3 +78,5 @@ Source citations are resolved lazily through `GET /threads/:threadId/source-chun
 Runtime completion recovery distinguishes output-limit exhaustion without an answer, provider refusal, and paused turns from unexplained empty responses. These terminal outcomes keep per-call usage accounting and map to classified `INFERENCE_FAILED` errors. Refused/paused tool calls are never executed and visible tool snapshots end invalid. Safe visible refusal/pause text is persisted without tool calls. Classified terminal completions preserve earlier completed tool phases, while first-turn no-output failures retain cleanup. Paused-turn continuation is not supported.
 
 Both backend tool execution paths identify tool-result callers for the optional AYC-1434 reuse study. Fingerprints remain in bounded process memory; only global aggregate numeric metrics are exported, without tool names or tenant identity.
+
+The base system prompt instructs web-page references in assistant chat to use `{{url:<url>}}` with complete HTTP(S) URLs supplied by users or tools, retaining the path, query and fragment. Generated artifacts and tool arguments use ordinary URLs.
