@@ -172,6 +172,66 @@ describe('convertHtmlToDocx', () => {
     expect(xml).not.toContain('<w:color');
   });
 
+  it.each(['ul', 'ol'])(
+    'should keep mixed inline content in one %s list paragraph',
+    async (tag) => {
+      const buffer = await convertHtmlToDocx(
+        `<${tag}><li>Vor <strong>Fett</strong> und <span style="font-family: Calibri">Schrift</span><mark>Markiert</mark><a href="https://example.com">Link</a><br>danach</li></${tag}>`,
+      );
+      const xml = await extractDocumentXml(buffer);
+      const paragraphs = xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? [];
+
+      expect(paragraphs).toHaveLength(1);
+      expect(paragraphs[0]?.match(/<w:t[^>]*>(.*?)<\/w:t>/g)).toEqual([
+        '<w:t xml:space="preserve">Vor </w:t>',
+        '<w:t xml:space="preserve">Fett</w:t>',
+        '<w:t xml:space="preserve"> und </w:t>',
+        '<w:t xml:space="preserve">Schrift</w:t>',
+        '<w:t xml:space="preserve">Markiert</w:t>',
+        '<w:t xml:space="preserve">Link</w:t>',
+        '<w:t xml:space="preserve">danach</w:t>',
+      ]);
+      expect(xml).toContain('<w:b/>');
+      expect(xml).toContain('<w:highlight w:val="yellow"/>');
+      expect(xml).toContain('<w:hyperlink');
+      expect(xml).toContain('<w:br/>');
+      expect(xml).toContain('<w:ilvl w:val="0"/>');
+    },
+  );
+
+  it('should preserve list headings and text around nested lists in order', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<ol><li><h3>Überschrift</h3>Vor <strong>Unterliste</strong><ul><li><em>Verschachtelt</em></li></ul>Danach <span>weiter</span><p>Absatz</p></li><li>Zweiter Punkt</li></ol>',
+    );
+    const xml = await extractDocumentXml(buffer);
+    const paragraphs = xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? [];
+    const text = paragraphs.map((paragraph) =>
+      [...paragraph.matchAll(/<w:t[^>]*>(.*?)<\/w:t>/g)]
+        .map((match) => match[1])
+        .join(''),
+    );
+
+    expect(text).toEqual([
+      'Überschrift',
+      'Vor Unterliste',
+      'Verschachtelt',
+      'Danach weiter',
+      'Absatz',
+      'Zweiter Punkt',
+    ]);
+    expect(paragraphs[0]).toContain('Heading3');
+    expect(paragraphs[2]).toContain('<w:ilvl w:val="1"/>');
+    expect(paragraphs[2]).toContain('<w:i/>');
+    expect(paragraphs[5]).toContain('<w:ilvl w:val="0"/>');
+    expect(
+      paragraphs.filter((paragraph) => paragraph.includes('<w:numPr>')),
+    ).toHaveLength(3);
+    for (const index of [1, 3, 4]) {
+      expect(paragraphs[index]).not.toContain('<w:numPr>');
+      expect(paragraphs[index]).toContain('<w:ind w:left="720"/>');
+    }
+  });
+
   it('should render ordered lists', async () => {
     const buffer = await convertHtmlToDocx(
       '<ol><li><p>First</p></li><li><p>Second</p></li></ol>',

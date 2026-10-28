@@ -222,9 +222,7 @@ function convertCodeBlock(node: HTMLElement): Paragraph {
   });
 }
 
-// ---------------------------------------------------------------------------
 // Lists
-// ---------------------------------------------------------------------------
 
 function listProps(ordered: boolean, level: number): IParagraphOptions {
   return ordered
@@ -261,39 +259,63 @@ function convertListItem(
   level: number,
   out: Paragraph[],
 ): void {
-  for (const child of li.childNodes as HTMLElement[]) {
-    const childTag = child.tagName ? child.tagName.toLowerCase() : undefined;
-
-    if (childTag === 'ul' || childTag === 'ol') {
-      out.push(...convertList(child, childTag === 'ol', level + 1));
-    } else if (childTag === 'p') {
+  let inlineNodes: HTMLElement['childNodes'] = [];
+  let paragraphCount = 0;
+  const nextParagraphProps = (): IParagraphOptions =>
+    paragraphCount++ === 0
+      ? listProps(ordered, level)
+      : { indent: { left: 720 * (level + 1) } };
+  const flushInlineNodes = () => {
+    if (
+      inlineNodes.some(
+        (node) => node.text.trim() || node.nodeType === NodeType.ELEMENT_NODE,
+      )
+    ) {
       out.push(
-        new Paragraph({
-          children: collectInlineRuns(child, {}),
-          alignment: parseAlignment(child) ?? parseAlignment(li),
-          spacing: mergeSpacing(li, child),
-          ...listProps(ordered, level),
-        }),
+        buildListParagraph(
+          li,
+          { childNodes: inlineNodes },
+          nextParagraphProps(),
+        ),
       );
-    } else if (child.nodeType === NodeType.TEXT_NODE) {
-      const text = (child as unknown as TextNode).text.trim();
-      if (text) {
-        out.push(
-          new Paragraph({
-            children: [new TextRun(text)],
-            alignment: parseAlignment(li),
-            spacing: parseSpacing(li),
-            ...listProps(ordered, level),
-          }),
-        );
-      }
+    }
+    inlineNodes = [];
+  };
+
+  for (const child of li.childNodes as HTMLElement[]) {
+    const tag =
+      child.nodeType === NodeType.ELEMENT_NODE
+        ? child.tagName.toLowerCase()
+        : '';
+    if (tag === 'ul' || tag === 'ol') {
+      flushInlineNodes();
+      out.push(...convertList(child, tag === 'ol', level + 1));
+    } else if (tag === 'p' || tag in HEADING_MAP) {
+      flushInlineNodes();
+      out.push(buildListParagraph(li, child, nextParagraphProps(), child));
+    } else {
+      inlineNodes.push(child);
     }
   }
+  flushInlineNodes();
 }
 
-// ---------------------------------------------------------------------------
+function buildListParagraph(
+  li: HTMLElement,
+  content: Pick<HTMLElement, 'childNodes'>,
+  props: IParagraphOptions,
+  block?: HTMLElement,
+): Paragraph {
+  return new Paragraph({
+    children: collectInlineRuns(content, {}),
+    heading: block ? HEADING_MAP[block.tagName.toLowerCase()] : undefined,
+    alignment: (block && parseAlignment(block)) ?? parseAlignment(li),
+    spacing: block ? mergeSpacing(li, block) : parseSpacing(li),
+    ...props,
+  });
+}
+
 // Tables
-// ---------------------------------------------------------------------------
 
 function convertTable(node: HTMLElement): Table {
   const rowElements = node.querySelectorAll(
@@ -387,12 +409,10 @@ function convertTableCell(
   });
 }
 
-// ---------------------------------------------------------------------------
 // Inline-level conversion
-// ---------------------------------------------------------------------------
 
 function collectInlineRuns(
-  node: HTMLElement,
+  node: Pick<HTMLElement, 'childNodes'>,
   ctx: InlineContext,
 ): InlineChild[] {
   const runs: InlineChild[] = [];
