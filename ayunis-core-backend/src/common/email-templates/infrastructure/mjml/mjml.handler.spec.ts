@@ -2,8 +2,8 @@ import { MjmlHandler } from './mjml.handler';
 import {
   BudgetWarningTemplate,
   type BudgetWarningTemplateContent,
-} from '../../domain/email-template.entity';
-import { BudgetWarningScope } from '../../domain/value-objects/budget-warning-scope.enum';
+} from 'src/common/email-templates/domain/email-template.entity';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 
 describe('MjmlHandler — budget warning', () => {
   const handler = new MjmlHandler();
@@ -21,8 +21,8 @@ describe('MjmlHandler — budget warning', () => {
     settingsUrl: 'https://app.example/settings/credit-limits',
   };
 
-  it('renders the org-scope warning with threshold and settings link', () => {
-    const rendered = handler.renderTemplate(
+  it('renders the org-scope warning with threshold and settings link', async () => {
+    const rendered = await handler.renderTemplate(
       new BudgetWarningTemplate(baseContent),
     );
 
@@ -42,8 +42,8 @@ describe('MjmlHandler — budget warning', () => {
     expect(rendered.text).toContain(baseContent.settingsUrl);
   });
 
-  it('names the affected user for the user scope', () => {
-    const rendered = handler.renderTemplate(
+  it('names the affected user for the user scope', async () => {
+    const rendered = await handler.renderTemplate(
       new BudgetWarningTemplate({
         ...baseContent,
         scope: BudgetWarningScope.USER,
@@ -58,8 +58,8 @@ describe('MjmlHandler — budget warning', () => {
     );
   });
 
-  it('names the affected team for the team scope', () => {
-    const rendered = handler.renderTemplate(
+  it('names the affected team for the team scope', async () => {
+    const rendered = await handler.renderTemplate(
       new BudgetWarningTemplate({
         ...baseContent,
         scope: BudgetWarningScope.TEAM,
@@ -75,8 +75,8 @@ describe('MjmlHandler — budget warning', () => {
     );
   });
 
-  it('keeps user-controlled names on a single line in the plain-text variant', () => {
-    const rendered = handler.renderTemplate(
+  it('keeps user-controlled names on a single line in the plain-text variant', async () => {
+    const rendered = await handler.renderTemplate(
       new BudgetWarningTemplate({
         ...baseContent,
         scope: BudgetWarningScope.USER,

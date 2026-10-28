@@ -1,4 +1,16 @@
 {
+  "anonymousModeDefault": {
+    "title": "Anonymer Modus",
+    "description": "Legen Sie fest, wie neue Chats starten. Dies gilt für alle Benutzer Ihrer Organisation.",
+    "label": "Neue Chats im anonymen Modus starten",
+    "hint": "Benutzer können den anonymen Modus für einzelne Chats ausschalten. Um ihn verbindlich vorzugeben, aktivieren Sie ihn unter „Modelle“ für das jeweilige Modell.",
+    "saved": "Einstellung zum anonymen Modus gespeichert.",
+    "loading": "Anonymen Modus laden",
+    "loadError": "Die Einstellung für den anonymen Modus konnte nicht geladen werden.",
+    "saveError": "Die Einstellung für den anonymen Modus konnte nicht gespeichert werden.",
+    "unauthorized": "Sie haben keine Berechtigung, diese Einstellung zu ändern.",
+    "retry": "Erneut versuchen"
+  },
   "piiWhitelist": {
     "heading": "Ausnahmen von der Anonymisierung",
     "description": "Im anonymen Modus ersetzt Ayunis Core erkannte personenbezogene Daten durch Platzhalter, bevor sie an das Sprachmodell gesendet werden. Hier können Sie einzelne Daten-Arten (z. B. Namen oder E-Mails) von der Anonymisierung ausnehmen – entweder vollständig oder nur für bestimmte Werte, die Sie angeben. Alles andere wird weiterhin maskiert.",

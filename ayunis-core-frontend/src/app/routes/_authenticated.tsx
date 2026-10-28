@@ -1,34 +1,27 @@
 import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import {
-  authenticationControllerMe,
-  getAuthenticationControllerMeQueryKey,
-} from '@/shared/api';
-import {
   appControllerIsCloud,
   getAppControllerIsCloudQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { queryOptions } from '@tanstack/react-query';
+import { meQueryOptions } from '@/shared/api/me-query-options';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
-
-const meQueryOptions = () =>
-  queryOptions({
-    queryKey: getAuthenticationControllerMeQueryKey(),
-    queryFn: () => authenticationControllerMe(),
-  });
+import { setAppsignalTags, clearAppsignalTags } from '@/shared/lib/appsignal';
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
-      const user = await queryClient.fetchQuery(meQueryOptions());
-      await queryClient.fetchQuery({
+      const user = await queryClient.query(meQueryOptions());
+      setAppsignalTags({ userId: user.id, orgId: user.orgId });
+      await queryClient.query({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
       });
       return { user };
     } catch (error) {
+      clearAppsignalTags();
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {

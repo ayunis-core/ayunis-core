@@ -1,35 +1,36 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
-import {
-  StreamInferenceHandler,
-  StreamInferenceInput,
-} from '../../ports/stream-inference.handler';
-import { StreamInferenceResponseChunk } from '../../ports/stream-inference.handler';
-import { Model } from 'src/domain/models/domain/model.entity';
+import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
+import type { StreamInferenceResponseChunk } from 'src/domain/models/application/models/stream-inference-response-chunk';
+import { StreamInferenceInput } from './stream-inference.input';
 import {
   InferenceAbortedError,
   InferenceFailedError,
   InferenceImageTooLargeError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+  type ProviderErrorDiagnostics,
+  ProviderErrorReason,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
 
 @Injectable()
 export class StreamInferenceUseCase {
   private readonly logger = new Logger(StreamInferenceUseCase.name);
-  constructor(
-    private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
-  ) {}
+
+  constructor(private readonly inferenceCallService: InferenceCallService) {}
 
   execute(
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     try {
-      return this.getHandler(input.model)
-        .answer(this.sanitizeReplayedMessages(input))
+      return this.inferenceCallService
+        .stream(this.sanitizeReplayedMessages(input))
         .pipe(
           catchError((error: unknown) =>
             throwError(() => this.handleInferenceError(error, input)),
@@ -46,10 +47,13 @@ export class StreamInferenceUseCase {
   ): Error {
     if (error instanceof ApplicationError) return error;
     if (isAbortError(error)) {
-      this.logger.log('Streaming inference aborted by client', {
-        model: input.model.name,
-        provider: input.model.provider,
-      });
+      this.logger.log(
+        {
+          model: input.model.name,
+          provider: input.model.provider,
+        },
+        'Streaming inference aborted by client',
+      );
       return new InferenceAbortedError();
     }
     const providerError = wrapProviderFailure(error, {
@@ -57,30 +61,46 @@ export class StreamInferenceUseCase {
       modelId: input.model.name,
     });
     if (providerError) {
-      this.logger.error('Provider unavailable during stream inference', {
-        code: providerError.code,
-        ...providerError.context,
-      });
+      this.logger.error(
+        {
+          code: providerError.code,
+          ...providerError.context,
+        },
+        'Provider unavailable during stream inference',
+      );
       return providerError;
     }
-    const status = extractUpstreamStatus(error);
-    const message = error instanceof Error ? error.message : String(error);
-    this.logger.error('Provider stream inference failed', {
-      model: input.model.name,
-      provider: input.model.provider,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
-      errorName: error instanceof Error ? error.name : 'Unknown',
-      status,
-    });
-    // Anthropic/Bedrock reject oversized images with "image exceeds N MB
-    // maximum" — surface a distinct code so the UI can tell the user to shrink
-    // it instead of showing a generic failure.
-    if (/image exceeds .* maximum/i.test(message)) {
+    const diagnostics = extractProviderErrorDiagnostics(error);
+    const status = diagnostics.upstreamStatus;
+    this.logProviderInferenceFailed(error, input, diagnostics);
+    if (diagnostics.upstreamReason === ProviderErrorReason.IMAGE_TOO_LARGE) {
       return new InferenceImageTooLargeError({ status });
     }
-    return new InferenceFailedError('Provider inference failed', { status });
+    return new InferenceFailedError('Provider inference failed', {
+      status,
+      ...diagnostics,
+    });
+  }
+
+  private logProviderInferenceFailed(
+    error: unknown,
+    input: StreamInferenceInput,
+    diagnostics: ProviderErrorDiagnostics,
+  ): void {
+    this.logger.error(
+      {
+        model: input.model.name,
+        provider: input.model.provider,
+        messageCount: input.messages.length,
+        toolCount: input.tools.length,
+        toolChoice: input.toolChoice,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        status: diagnostics.upstreamStatus,
+        ...diagnostics,
+        upstreamMessage: extractProviderExplanation(error),
+      },
+      'Provider stream inference failed',
+    );
   }
 
   private sanitizeReplayedMessages(
@@ -97,11 +117,8 @@ export class StreamInferenceUseCase {
       tools: input.tools,
       toolChoice: input.toolChoice,
       orgId: input.orgId,
+      onCallTerminal: input.onCallTerminal,
     });
-  }
-
-  private getHandler(model: Model): StreamInferenceHandler {
-    return this.streamInferenceRegistry.getHandler(model.provider);
   }
 }
 
@@ -110,6 +127,7 @@ export class StreamInferenceUseCase {
 // separately because it does not reliably pass `instanceof Error` across
 // realms (e.g. under Jest's sandboxed globals).
 function isAbortError(error: unknown): boolean {
+  if (error instanceof ModelProviderError) return error.kind === 'abort';
   return (
     (error instanceof Error || error instanceof DOMException) &&
     error.name === 'AbortError'

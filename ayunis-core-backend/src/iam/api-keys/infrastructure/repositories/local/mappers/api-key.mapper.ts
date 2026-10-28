@@ -1,11 +1,12 @@
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyRecord } from '../schema/api-key.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 
 export class ApiKeyMapper {
   static toDomain(record: ApiKeyRecord): ApiKey {
     return new ApiKey({
       id: record.id,
       name: record.name,
+      description: record.description,
       prefix: record.prefix,
       hash: record.hash,
       expiresAt: record.expiresAt,
@@ -21,6 +22,7 @@ export class ApiKeyMapper {
     const record = new ApiKeyRecord();
     record.id = domain.id;
     record.name = domain.name;
+    record.description = domain.description;
     record.prefix = domain.prefix;
     record.hash = domain.hash;
     record.expiresAt = domain.expiresAt;

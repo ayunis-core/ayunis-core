@@ -1,3 +1,5 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -11,27 +13,35 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
 import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.use-case';
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { FindActiveKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
+
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
 import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
-import { featuresConfig } from 'src/config/features.config';
+import { marketplaceConfig } from 'src/config/marketplace.config';
 import {
   buildSkillSlug,
   SlugCollisionError,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
   type SkillEntry,
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
+import { assembleMarketplaceTools as buildMarketplaceTools } from './marketplace-tool-assembly.helper';
+import { assembleInternetTools as buildInternetTools } from './internet-tool-assembly.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import { mergeKnowledgeBases } from './merge-knowledge-bases';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -43,15 +53,16 @@ export class ToolAssemblyService {
     private readonly mcpToolAssembler: McpToolAssemblerService,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
+    private readonly findActiveKnowledgeBasesUseCase: FindActiveKnowledgeBasesUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
-    @Inject(featuresConfig.KEY)
-    private readonly features: ConfigType<typeof featuresConfig>,
     private readonly contextService: ContextService,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    @Inject(marketplaceConfig.KEY)
+    private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -63,22 +74,24 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     canUseTools: boolean,
     isAnonymous: boolean,
+    workspaceContext?: WorkspaceRunContext,
   ): Promise<{ tools: Tool[]; instructions: string }> {
-    const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
-
-    const { slugMap, skillEntries } = this.buildSkillSlugs(
-      activeSkills,
-      alwaysOnTemplates,
-    );
+    const [skillContext, activeKnowledgeBases] = await Promise.all([
+      this.prepareRunSkillContext(activeSkills, workspaceContext),
+      this.findActiveKnowledgeBasesUseCase.execute(),
+    ]);
 
     const tools = canUseTools
-      ? await this.assembleTools(thread, activeSkills, slugMap)
+      ? await this.assembleTools(
+          thread,
+          skillContext.slugMap,
+          skillContext.workspaceContext,
+          skillContext.editableSkillIds,
+          activeKnowledgeBases,
+        )
       : [];
 
-    // Collect all sources from thread for the system prompt.
-    // All types and statuses are passed — the system prompt builder partitions
-    // them into ready / processing / failed sections.
-    const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
+    const allSources = this.collectRunSources(thread);
 
     const { orgSystemPrompt, userSystemPrompt } =
       await this.fetchSystemPrompts();
@@ -87,16 +100,69 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: allSources,
-      // Only include skills in prompt when tools are enabled and skills feature is on,
-      // otherwise the prompt would instruct the model to use activate_skill which isn't available
-      skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
-      knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
+      skills: canUseTools ? skillContext.skillEntries : [],
+      knowledgeBases: canUseTools
+        ? mergeKnowledgeBases(
+            thread.getUniqueKnowledgeBases(),
+            skillContext.workspaceContext?.runtimeKnowledgeBases ?? [],
+            activeKnowledgeBases,
+          )
+        : [],
+      workspaceInstructions: skillContext.workspaceContext?.instruction,
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous,
     });
 
     return { tools, instructions };
+  }
+
+  private async prepareRunSkillContext(
+    activeSkills: Skill[],
+    workspaceContext?: WorkspaceRunContext,
+  ): Promise<{
+    workspaceContext?: WorkspaceRunContext;
+    slugMap: Map<string, string>;
+    editableSkillIds: Map<string, string>;
+    skillEntries: SkillEntry[];
+  }> {
+    const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
+    const projectSkills =
+      workspaceContext?.skills.map(({ skill }) => skill) ?? [];
+    const { slugMap, skillEntries } = this.buildSkillSlugs(
+      this.mergeById(activeSkills, projectSkills),
+      alwaysOnTemplates,
+    );
+    const editableSkillIds = this.buildEditableSkillIds(
+      this.mergeById(activeSkills, projectSkills),
+      slugMap,
+    );
+
+    return {
+      workspaceContext,
+      slugMap,
+      editableSkillIds,
+      skillEntries,
+    };
+  }
+
+  private collectRunSources(thread: Thread): Source[] {
+    return this.mergeById(
+      [],
+      thread.sourceAssignments?.map((a) => a.source) ?? [],
+    );
+  }
+
+  private mergeById<T extends { id: string }>(base: T[], additional: T[]): T[] {
+    const result = [...base];
+    const seen = new Set(base.map((item) => item.id));
+    for (const item of additional) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        result.push(item);
+      }
+    }
+    return result;
   }
 
   /**
@@ -110,8 +176,8 @@ export class ToolAssemblyService {
       );
     } catch (error) {
       this.logger.error(
-        'Failed to fetch always-on templates, continuing without them',
         { error: error instanceof Error ? error.message : 'Unknown error' },
+        'Failed to fetch always-on templates, continuing without them',
       );
       return [];
     }
@@ -155,7 +221,7 @@ export class ToolAssemblyService {
     const allInputs: SkillInput[] = [
       ...activeSkills.map((s): SkillInput => ({
         name: s.name,
-        prefix: USER_PREFIX,
+        prefix: s instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX,
         description: s.shortDescription,
       })),
       ...alwaysOnTemplates.map((t): SkillInput => ({
@@ -177,20 +243,51 @@ export class ToolAssemblyService {
       } catch (error) {
         const message =
           error instanceof SlugCollisionError
-            ? `Slug collision, skipping skill "${input.name}"`
-            : `Failed to build slug for skill "${input.name}", skipping`;
+            ? 'Slug collision, skipping skill'
+            : 'Failed to build slug for skill, skipping';
         const detail = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(message, { error: detail });
+        this.logger.warn({ skillName: input.name, error: detail }, message);
       }
     }
 
     return { slugMap, skillEntries };
   }
 
+  private buildEditableSkillIds(
+    skills: Skill[],
+    advertisedSlugs: Map<string, string>,
+  ): Map<string, string> {
+    const skillIds = new Map<string, string>();
+    for (const skill of skills) {
+      try {
+        const prefix =
+          skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
+        const slug = buildSkillSlug(prefix, skill.name);
+        if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
+          throw new SlugCollisionError(
+            slug,
+            advertisedSlugs.get(slug) ?? 'unknown',
+            skill.name,
+          );
+        }
+        skillIds.set(slug, skill.id);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          { skillName: skill.name, error: detail },
+          'Failed to build editable skill slug, skipping',
+        );
+      }
+    }
+    return skillIds;
+  }
+
   async assembleTools(
     thread: Thread,
-    _activeSkills: Skill[],
     slugMap: Map<string, string>,
+    workspaceContext?: WorkspaceRunContext,
+    editableSkillIds: Map<string, string> = new Map(),
+    activeKnowledgeBases: KnowledgeBaseSummary[] = [],
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
@@ -202,9 +299,11 @@ export class ToolAssemblyService {
       ...(await this.assembleSimpleTools([
         ToolType.SEND_EMAIL,
         ToolType.CREATE_CALENDAR_EVENT,
+        ToolType.CREATE_FILE,
         ToolType.BAR_CHART,
         ToolType.LINE_CHART,
         ToolType.PIE_CHART,
+        ToolType.MAP,
       ])),
     );
 
@@ -215,28 +314,23 @@ export class ToolAssemblyService {
       ...(await this.artifactToolAssembler.assembleArtifactTools(thread)),
     );
 
-    tools.push(...(await this.assembleSkillManagementTools(slugMap)));
+    tools.push(...(await this.assembleSkillManagementTools(editableSkillIds)));
 
-    // Internet tools (website content + search) — gated by the org chat setting
     tools.push(...(await this.assembleInternetTools()));
+    tools.push(...(await this.assembleMarketplaceTools()));
 
-    // Image generation tool — available when org has a permitted image model
-    tools.push(
-      ...(await assembleImageGenerationTools({
-        orgId: this.contextService.get('orgId'),
-        getPermittedImageGenerationModelUseCase:
-          this.getPermittedImageGenerationModelUseCase,
-        assembleToolsUseCase: this.assembleToolsUseCase,
-        logger: this.logger,
-      })),
-    );
+    tools.push(...(await this.assembleImageTools()));
 
     tools.push(...(await this.assembleSourceTools(thread)));
-    tools.push(...(await this.assembleKnowledgeTools(thread)));
+    tools.push(
+      ...(await this.assembleKnowledgeTools(
+        thread,
+        workspaceContext,
+        activeKnowledgeBases,
+      )),
+    );
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
 
-    // MCP tools/resources go last: their names are third-party and must not
-    // shadow a built-in tool of the same name.
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(
       ...(await this.mcpToolAssembler.assemble(thread, reservedNames)),
@@ -245,9 +339,18 @@ export class ToolAssemblyService {
     return tools;
   }
 
+  private assembleImageTools(): Promise<Tool[]> {
+    return assembleImageGenerationTools({
+      orgId: this.contextService.get('orgId'),
+      getPermittedImageGenerationModelUseCase:
+        this.getPermittedImageGenerationModelUseCase,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+      logger: this.logger,
+    });
+  }
+
   private async assembleCodeExecutionTool(thread: Thread): Promise<Tool> {
-    const threadSources =
-      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+    const threadSources = this.collectRunSources(thread);
     // Match the system prompt's partitioning: PROCESSING/FAILED data sources
     // are announced there as pending/failed, so advertising them here as
     // available would contradict it and steer the model into doomed calls.
@@ -274,23 +377,18 @@ export class ToolAssemblyService {
   private async assembleSkillManagementTools(
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    if (!this.features.skillsEnabled) return [];
-
     const tools: Tool[] = [
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
       ),
     ];
 
-    const userSlugs = [...slugMap.keys()].filter((s) =>
-      s.startsWith(`${USER_PREFIX}__`),
-    );
-    if (userSlugs.length > 0) {
+    if (slugMap.size > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.EDIT_SKILL,
-            context: userSlugs,
+            context: slugMap,
           }),
         ),
       );
@@ -298,39 +396,27 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  /**
-   * Internet access tools: website content reading and web search. Both are
-   * omitted entirely when the organization has disabled internet access in its
-   * chat settings. Web search additionally requires the provider to be
-   * configured (`internetSearch.isAvailable`).
-   */
-  private async assembleInternetTools(): Promise<Tool[]> {
-    const orgChatSettings = await this.getOrgChatSettingsUseCase.execute();
-    if (!orgChatSettings.internetSearchEnabled) {
-      this.logger.debug('Internet access disabled for org, skipping web tools');
-      return [];
-    }
+  private assembleInternetTools(): Promise<Tool[]> {
+    return buildInternetTools({
+      getOrgChatSettingsUseCase: this.getOrgChatSettingsUseCase,
+      configService: this.configService,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+      logger: this.logger,
+    });
+  }
 
-    const tools: Tool[] = [
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({ type: ToolType.WEBSITE_CONTENT }),
-      ),
-    ];
-
-    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
-        ),
-      );
-    }
-    return tools;
+  private assembleMarketplaceTools(): Promise<Tool[]> {
+    return buildMarketplaceTools({
+      marketplaceEnabled: this.marketplace.enabled,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+    });
   }
 
   private async assembleSourceTools(thread: Thread): Promise<Tool[]> {
-    const threadTextSources = (thread.sourceAssignments ?? [])
-      .map((assignment) => assignment.source)
-      .filter((source): source is TextSource => source instanceof TextSource);
+    const sources = this.collectRunSources(thread);
+    const threadTextSources = sources.filter(
+      (source): source is TextSource => source instanceof TextSource,
+    );
 
     if (threadTextSources.length === 0) return [];
 
@@ -343,8 +429,16 @@ export class ToolAssemblyService {
     );
   }
 
-  private async assembleKnowledgeTools(thread: Thread): Promise<Tool[]> {
-    const knowledgeBases = thread.getUniqueKnowledgeBases();
+  private async assembleKnowledgeTools(
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+    activeKnowledgeBases: KnowledgeBaseSummary[] = [],
+  ): Promise<Tool[]> {
+    const knowledgeBases = mergeKnowledgeBases(
+      thread.getUniqueKnowledgeBases(),
+      workspaceContext?.runtimeKnowledgeBases ?? [],
+      activeKnowledgeBases,
+    );
     if (knowledgeBases.length === 0) return [];
 
     return Promise.all(
@@ -359,7 +453,7 @@ export class ToolAssemblyService {
   private async assembleActivateSkillTool(
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    if (!this.features.skillsEnabled || slugMap.size === 0) return [];
+    if (slugMap.size === 0) return [];
     return [
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({

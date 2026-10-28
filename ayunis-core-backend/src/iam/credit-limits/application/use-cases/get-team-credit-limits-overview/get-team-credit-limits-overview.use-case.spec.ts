@@ -1,16 +1,18 @@
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
-import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { GetMonthlyCreditUsageForTeamsUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-teams/get-monthly-credit-usage-for-teams.use-case';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   aTeamCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_TEAM_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { GetTeamCreditLimitsOverviewUseCase } from './get-team-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overview.query';
 
@@ -23,6 +25,7 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
 
   const orgId = TEST_ORG_ID;
   const teamId = TEST_TEAM_ID;
+  const secondTeamId = '44444444-4444-4444-4444-444444444444' as const;
   const since = new Date('2026-07-10T00:00:00.000Z');
 
   const teamLimit = aTeamCreditLimit();
@@ -39,7 +42,7 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
         ]),
     };
     getUsage = {
-      execute: jest.fn().mockResolvedValue({ creditsUsed: 8300 }),
+      execute: jest.fn().mockResolvedValue(new Map([[teamId, 8300]])),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -48,14 +51,29 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
         { provide: ListTeamsUseCase, useValue: listTeams },
-        { provide: GetMonthlyCreditUsageForTeamUseCase, useValue: getUsage },
+        { provide: GetMonthlyCreditUsageForTeamsUseCase, useValue: getUsage },
       ],
     }).compile();
 
     useCase = module.get(GetTeamCreditLimitsOverviewUseCase);
   });
 
-  it('enriches each team limit with name and consumption', async () => {
+  it('enriches all team limits through one batched usage operation', async () => {
+    repository.findTeamLimits.mockResolvedValue([
+      teamLimit,
+      aTeamCreditLimit({ teamId: secondTeamId, monthlyCredits: 10000 }),
+    ]);
+    listTeams.execute.mockResolvedValue([
+      { team: { id: teamId, name: 'Engineering' }, memberCount: 3 },
+      { team: { id: secondTeamId, name: 'Finance' }, memberCount: 2 },
+    ]);
+    getUsage.execute.mockResolvedValue(
+      new Map([
+        [teamId, 8300],
+        [secondTeamId, 2400],
+      ]),
+    );
+
     const result = await useCase.execute();
 
     expect(result).toEqual([
@@ -65,8 +83,34 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
         monthlyCredits: 20000,
         creditsUsed: 8300,
       },
+      {
+        teamId: secondTeamId,
+        name: 'Finance',
+        monthlyCredits: 10000,
+        creditsUsed: 2400,
+      },
     ]);
     expect(repository.findTeamLimits).toHaveBeenCalledWith(orgId);
+    expect(getUsage.execute).toHaveBeenCalledTimes(1);
+    expect(getUsage.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        teamIds: [teamId, secondTeamId],
+      }),
+    );
+  });
+
+  it('returns raw usage when consumption exceeds the configured limit', async () => {
+    getUsage.execute.mockResolvedValue(new Map([[teamId, 23500]]));
+
+    await expect(useCase.execute()).resolves.toEqual([
+      {
+        teamId,
+        name: 'Engineering',
+        monthlyCredits: 20000,
+        creditsUsed: 23500,
+      },
+    ]);
   });
 
   it('forwards an explicit usage start to the consumption query', async () => {
@@ -102,5 +146,32 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
     context.get.mockReturnValue(undefined);
 
     await expect(useCase.execute()).rejects.toThrow(UnauthorizedAccessError);
+  });
+  it('rejects explicit target-org reads by an organisation admin', async () => {
+    const store: Record<string, string> = {
+      orgId,
+      userId: orgId,
+      role: UserRole.ADMIN,
+      systemRole: SystemRole.CUSTOMER,
+    };
+    context.get.mockImplementation((key: string) => store[key]);
+    await expect(
+      useCase.execute(new GetTeamCreditLimitsOverviewQuery(undefined, orgId)),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+  });
+
+  it('returns numeric team consumption to a super admin for the requested organisation', async () => {
+    const store: Record<string, string> = {
+      orgId,
+      userId: orgId,
+      role: UserRole.ADMIN,
+      systemRole: SystemRole.SUPER_ADMIN,
+    };
+    context.get.mockImplementation((key: string) => store[key]);
+    await expect(
+      useCase.execute(new GetTeamCreditLimitsOverviewQuery(undefined, orgId)),
+    ).resolves.toContainEqual(
+      expect.objectContaining({ teamId, creditsUsed: 8300 }),
+    );
   });
 });

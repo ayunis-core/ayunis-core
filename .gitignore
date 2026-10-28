@@ -13,3 +13,6 @@ tsconfig.?????????*.json
 .claude/worktrees/
 .claude/**/*.local.*
 .claude/scheduled_tasks.lock
+
+# Local pnpm content-addressable store (created when pnpm runs with a store-dir inside the checkout)
+.pnpm-store/

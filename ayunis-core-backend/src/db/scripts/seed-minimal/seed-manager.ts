@@ -9,18 +9,28 @@ import { OrgUserSeeder } from './seeders/org-user-seeder';
 import { BillingSeeder } from './seeders/billing-seeder';
 import { UsageSeeder } from './seeders/usage-seeder';
 import { CreditLimitSeeder } from './seeders/credit-limit-seeder';
+import { AcademyContentSeeder } from './seeders/academy-content-seeder';
+import { AcademyAccessSeeder } from './seeders/academy-access-seeder';
+import { WorkspaceSeeder } from './seeders/workspace-seeder';
+import { SharedSkillKnowledgeBaseSeeder } from './seeders/shared-skill-knowledge-base-seeder';
 
 export class SeedManager {
   private readonly globalSeeders: GlobalSeeder[] = [
     new ModelSeeder(),
     new PlatformConfigSeeder(),
+    new AcademyContentSeeder(),
   ];
 
+  // AcademyAccessSeeder runs after OrgUserSeeder: its chapter confirmations
+  // need both the org's users and the globally seeded chapters.
   private readonly orgSeeders: OrgSeeder[] = [
     new OrgUserSeeder(),
     new BillingSeeder(),
     new UsageSeeder(),
     new CreditLimitSeeder(),
+    new AcademyAccessSeeder(),
+    new WorkspaceSeeder(),
+    new SharedSkillKnowledgeBaseSeeder(),
   ];
 
   constructor(private readonly runner: SeedRunner) {}

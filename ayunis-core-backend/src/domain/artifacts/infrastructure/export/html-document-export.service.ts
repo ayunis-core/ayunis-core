@@ -1,12 +1,15 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import {
   DocumentExportPort,
   LetterheadConfig,
-} from '../../application/ports/document-export.port';
+} from 'src/domain/artifacts/application/ports/document-export.port';
 import { convertHtmlToDocx } from './html-to-docx-converter';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
+import { markLayoutTables } from './letter-layout-tables';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
-import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
+import { sanitizeHtmlContent } from 'src/domain/artifacts/application/helpers/sanitize-html-content';
+import { TimeoutError } from 'puppeteer-core';
+import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
 
 /** CSS for PDF export (Puppeteer supports full <style> blocks). */
 const PDF_CSS = `
@@ -45,11 +48,66 @@ const PDF_CSS = `
   a { color: #1a73e8; }
 `;
 
+/**
+ * DIN 5008 head block, applied only to letterhead exports.
+ *
+ * A header-less table (tagged by `markLayoutTables`) holds the recipient
+ * address on the left and the sender's information block on the right. The
+ * block reserves the norm's 45mm address field plus the 8.46mm gap to the
+ * subject line, so the body starts 53.5mm below the content top — 98.5mm on a
+ * Form B letterhead (45mm top margin), 80.5mm on Form A (27mm). The address
+ * field is 45mm tall in both forms, which is why one height serves both.
+ *
+ * The height acts as a minimum, so an information block taller than the
+ * address field grows the row instead of being clipped.
+ */
+const LETTER_LAYOUT_CSS = `
+  table.letter-layout {
+    width: 100%;
+    height: 53.5mm;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+  table.letter-layout td {
+    border: 0;
+    padding: 0;
+    vertical-align: top;
+  }
+  /* Both zones are single-spaced in the norm. The body's paragraph rhythm
+     would push a longer address past the 90mm Anschriftzone — out of a window
+     envelope and into the subject line. */
+  table.letter-layout p {
+    margin: 0;
+    line-height: 1.25;
+  }
+  /* The information block sits 125mm from the page edge and the content box
+     starts at the 25mm left margin, leaving 100mm for the address column.
+     The top padding is the 17.7mm Zusatz- und Vermerkzone, which reserves the
+     top of the address field for return-address and postal notations: the
+     recipient's name belongs in the Anschriftzone below it, so that it lines
+     up with a window envelope. */
+  table.letter-layout td:first-child {
+    width: 100mm;
+    padding-top: 17.7mm;
+  }
+  /* Form B drops the information block 5mm below the address field. */
+  table.letter-layout td + td {
+    padding-top: 5mm;
+  }
+  /* The reserved height only lands the subject on the DIN line if what
+     follows starts flush against the block. Paragraphs keep the user-agent
+     top margin (PDF_CSS sets margin-bottom only), which would push the
+     subject a line below 98.46mm. */
+  table.letter-layout + * {
+    margin-top: 0;
+  }`;
+
 @Injectable()
 export class HtmlDocumentExportService
   implements DocumentExportPort, OnModuleDestroy
 {
   private readonly logger = new Logger(HtmlDocumentExportService.name);
+
   private readonly chromium = new LazyChromiumBrowser();
 
   constructor(
@@ -78,7 +136,15 @@ export class HtmlDocumentExportService
     const page = await browser.newPage();
 
     try {
-      await page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
+      await page.setRequestInterception(true);
+      page.on('request', (request) => {
+        if (request.url().startsWith('data:')) {
+          void request.continue();
+          return;
+        }
+        void request.abort();
+      });
+      await page.setContent(wrappedHtml, { waitUntil: 'load' });
 
       const pdfOptions = letterhead
         ? this.buildLetterheadPdfOptions()
@@ -96,6 +162,11 @@ export class HtmlDocumentExportService
         letterhead.firstPagePdf,
         letterhead.continuationPagePdf,
       );
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        throw new ArtifactExportTimeoutError(error);
+      }
+      throw error;
     } finally {
       await page.close();
     }
@@ -127,20 +198,23 @@ export class HtmlDocumentExportService
     unsafeHtml: string,
     letterhead?: LetterheadConfig,
   ): string {
-    const html = sanitizeHtmlContent(unsafeHtml);
-    const marginCss = letterhead ? this.buildMarginCss(letterhead) : '';
+    const sanitized = sanitizeHtmlContent(unsafeHtml);
+    // Only letters carry a head block, and `markLayoutTables` must run after
+    // sanitization or the marker class is stripped again.
+    const html = letterhead ? markLayoutTables(sanitized) : sanitized;
+    const letterheadCss = letterhead ? this.buildLetterheadCss(letterhead) : '';
 
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>${PDF_CSS}${marginCss}</style>
+  <style>${PDF_CSS}${letterheadCss}</style>
 </head>
 <body>${html}</body>
 </html>`;
   }
 
-  private buildMarginCss(letterhead: LetterheadConfig): string {
+  private buildLetterheadCss(letterhead: LetterheadConfig): string {
     const { continuationPageMargins: cont, firstPageMargins: first } =
       letterhead;
 
@@ -165,6 +239,6 @@ export class HtmlDocumentExportService
   @page :first {
     size: A4;
     margin: ${first.top}mm ${first.right}mm ${first.bottom}mm ${first.left}mm;
-  }`;
+  }${LETTER_LAYOUT_CSS}`;
   }
 }

@@ -1,5 +1,5 @@
-import type { Subscription } from '../../domain/subscription.entity';
-import { isSeatBased } from '../../domain/subscription-type-guards';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { getNextDate } from './get-date-for-anchor-and-cycle';
 
 export function getNextRenewalDate(subscription: Subscription): Date {
@@ -11,6 +11,9 @@ export function getNextRenewalDate(subscription: Subscription): Date {
 
   if (isSeatBased(subscription)) {
     if (subscription.cancelledAt) {
+      if (subscription.cancelledAt < subscription.startsAt) {
+        return subscription.startsAt;
+      }
       return getNextDate({
         anchorDate: subscription.renewalCycleAnchor,
         targetDate: subscription.cancelledAt,

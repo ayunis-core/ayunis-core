@@ -11,11 +11,6 @@ describe('EditDocumentTool', () => {
   it('should have the correct tool type and name', () => {
     expect(tool.type).toBe(ToolType.EDIT_DOCUMENT);
     expect(tool.name).toBe('edit_document');
-    expect(tool.isDisplayable).toBe(true);
-  });
-
-  it('should be executable (hybrid displayable + executable)', () => {
-    expect(tool.isExecutable).toBe(true);
   });
 
   it('should include a descriptionLong explaining edit vs update and mentioning expected_version', () => {

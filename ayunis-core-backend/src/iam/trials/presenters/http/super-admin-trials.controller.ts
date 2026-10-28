@@ -4,10 +4,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -23,12 +23,12 @@ import {
 import { UUID } from 'crypto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
-import { CreateTrialUseCase } from '../../application/use-cases/create-trial/create-trial.use-case';
-import { CreateTrialCommand } from '../../application/use-cases/create-trial/create-trial.command';
-import { GetTrialUseCase } from '../../application/use-cases/get-trial/get-trial.use-case';
-import { GetTrialQuery } from '../../application/use-cases/get-trial/get-trial.query';
-import { UpdateTrialUseCase } from '../../application/use-cases/update-trial/update-trial.use-case';
-import { UpdateTrialCommand } from '../../application/use-cases/update-trial/update-trial.command';
+import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
+import { CreateTrialCommand } from 'src/iam/trials/application/use-cases/create-trial/create-trial.command';
+import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
+import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
+import { UpdateTrialUseCase } from 'src/iam/trials/application/use-cases/update-trial/update-trial.use-case';
+import { UpdateTrialCommand } from 'src/iam/trials/application/use-cases/update-trial/update-trial.command';
 import { CreateTrialRequestDto } from './dtos/create-trial-request.dto';
 import { UpdateTrialRequestDto } from './dtos/update-trial-request.dto';
 import {
@@ -36,7 +36,7 @@ import {
   SuperAdminTrialResponseDtoNullable,
 } from './dtos/super-admin-trial-response.dto';
 import { SuperAdminTrialResponseDtoMapper } from './mappers/super-admin-trial-response-dto.mapper';
-import { TrialNotFoundError } from '../../application/trial.errors';
+import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
 
 @ApiTags('Super Admin Trials')
 @Controller('super-admin/trials')
@@ -81,10 +81,13 @@ export class SuperAdminTrialsController {
   async createTrial(
     @Body() createTrialDto: CreateTrialRequestDto,
   ): Promise<SuperAdminTrialResponseDto> {
-    this.logger.log('Creating trial', {
-      orgId: createTrialDto.orgId,
-      maxMessages: createTrialDto.maxMessages,
-    });
+    this.logger.log(
+      {
+        orgId: createTrialDto.orgId,
+        maxMessages: createTrialDto.maxMessages,
+      },
+      'Creating trial',
+    );
 
     const command = new CreateTrialCommand(
       createTrialDto.orgId,
@@ -165,11 +168,14 @@ export class SuperAdminTrialsController {
     @Param('orgId') orgId: UUID,
     @Body() updateTrialDto: UpdateTrialRequestDto,
   ): Promise<SuperAdminTrialResponseDto> {
-    this.logger.log('Updating trial', {
-      orgId,
-      maxMessages: updateTrialDto.maxMessages,
-      messagesSent: updateTrialDto.messagesSent,
-    });
+    this.logger.log(
+      {
+        orgId,
+        maxMessages: updateTrialDto.maxMessages,
+        messagesSent: updateTrialDto.messagesSent,
+      },
+      'Updating trial',
+    );
 
     const command = new UpdateTrialCommand(
       orgId,

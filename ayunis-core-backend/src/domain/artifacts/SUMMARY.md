@@ -21,6 +21,7 @@ artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
 │   ├── artifact-version.entity.ts
+│   ├── artifacts.constants.ts
 │   └── value-objects/
 │       ├── artifact-type.enum.ts
 │       └── author-type.enum.ts
@@ -41,6 +42,7 @@ artifacts/
 │       ├── create-artifact/
 │       ├── update-artifact/
 │       ├── find-artifacts-by-thread/
+│       ├── find-artifacts-by-workspace/
 │       ├── find-artifact-with-versions/
 │       ├── revert-artifact/
 │       └── export-artifact/
@@ -49,13 +51,15 @@ artifacts/
 │   │   ├── schema/
 │   │   ├── mappers/
 │   │   ├── local-artifacts.repository.ts
-│   │   ├── local-artifacts-repository.module.ts
-│   │   └── unique-constraint.util.ts
+│   │   └── local-artifacts-repository.module.ts
 │   └── export/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
 │       ├── paragraph-style-parser.ts
+│       ├── run-color-parser.ts
 │       ├── docx-document-config.ts
+│       ├── docx-table-styles.ts
+│       ├── letter-layout-tables.ts
 │       ├── pdf-letterhead-compositor.ts
 │       └── xlsx-spreadsheet-export.service.ts
 ├── presenters/http/
@@ -68,13 +72,14 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+- **WorkspacesModule** — Imported for workspace ownership validation when listing artifacts
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
 
 ## Ports
 
 - **ArtifactsRepository** — CRUD for artifacts and versions
-- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins
+- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins. Letterhead exports also render a header-less table as the DIN 5008 head block (recipient address left, sender information block right), tagged at render time by `letter-layout-tables.ts` because the editor schema would drop a stored marker
 - **SpreadsheetExportPort** — Converts validated spreadsheet content to XLSX or CSV buffers
 
 ## Key Behaviors
@@ -87,11 +92,14 @@ artifacts/
 - Reverting copies content from a target version into a new version (non-destructive)
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
-- Export delegates to `DocumentExportPort` for format conversion
+- Export delegates to `DocumentExportPort` for format conversion; PDF rendering blocks non-embedded resource requests, waits only for the document load event rather than generic network idleness, and reports renderer deadlines as `ARTIFACT_EXPORT_TIMEOUT` (504) without retrying the same timed-out content
 - Spreadsheet export delegates to `SpreadsheetExportPort`; XLSX preserves original formula-cell provenance through PII de-anonymization and emits live formulas only after successful local evaluation and dependency validation, while unsupported formulas remain text and CSV formula-like values are neutralized
 - Document HTML sanitization (XSS prevention) before storage and export
 - Spreadsheet content uses the versioned `spreadsheet-v1` JSON format with shape, size, and formula-length validation plus row canonicalization; formulas remain inert until export
 - Diagram content is stored without document HTML or spreadsheet normalization
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts
+- Workspace artifact listings ignore unsupported legacy discriminator values
 - Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)
+
+Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.

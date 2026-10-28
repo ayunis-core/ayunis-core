@@ -1,5 +1,1287 @@
 # Changelog
 
+## [2.61.1](https://github.com/ayunis-core/ayunis-core/compare/v2.61.0...v2.61.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **auth:** return service unavailable when token refresh hits a database timeout (AYC-1467) ([#2103](https://github.com/ayunis-core/ayunis-core/issues/2103)) ([ded9af4](https://github.com/ayunis-core/ayunis-core/commit/ded9af40e58d04c99ffc6daaf1db97a0825e0eac))
+
+
+### Code Refactoring
+
+* **network:** pair undici dispatchers with undici's own fetch (AYC-1009) ([#2086](https://github.com/ayunis-core/ayunis-core/issues/2086)) ([e282161](https://github.com/ayunis-core/ayunis-core/commit/e2821619d8f2ca31aff39558731a2cc2e3a0eb91))
+
+
+### Miscellaneous
+
+* **deps:** bump hookform resolvers to 6 and dedupe lockfile (AYC-000) ([#2085](https://github.com/ayunis-core/ayunis-core/issues/2085)) ([09399a3](https://github.com/ayunis-core/ayunis-core/commit/09399a3d422aecdd4583aa29ebb542e87393a8a0))
+* **deps:** bump p-queue to 10 and dedupe lockfile (AYC-000) ([#2083](https://github.com/ayunis-core/ayunis-core/issues/2083)) ([8940343](https://github.com/ayunis-core/ayunis-core/commit/894034396cc51fecaa0db6f7884f76139ba1a664))
+* **deps:** bump tsup to 9 and dedupe lockfile (AYC-000) ([#2084](https://github.com/ayunis-core/ayunis-core/issues/2084)) ([2caf487](https://github.com/ayunis-core/ayunis-core/commit/2caf487c2917f17124939b0152d66476320011b5))
+
+## [2.61.0](https://github.com/ayunis-core/ayunis-core/compare/v2.60.1...v2.61.0) (2026-10-26)
+
+
+### Features
+
+* **admin-models:** show model cards instead of tier stars in admin model selection (AYC-524) ([#2074](https://github.com/ayunis-core/ayunis-core/issues/2074)) ([7f16e49](https://github.com/ayunis-core/ayunis-core/commit/7f16e496c7171d38bcdf8b0037e390692a2ff25e))
+* **chat:** bound in-flight image upload bytes per process (AYC-1377) ([#2048](https://github.com/ayunis-core/ayunis-core/issues/2048)) ([48c2eeb](https://github.com/ayunis-core/ayunis-core/commit/48c2eebb40b4830b5a2869c5aa122946d100106a))
+* **chat:** downscale uploaded images before storing them (AYC-1377) ([#2032](https://github.com/ayunis-core/ayunis-core/issues/2032)) ([170cfce](https://github.com/ayunis-core/ayunis-core/commit/170cfce30f9eefb7d3355813e96a0da9e845bd2b))
+
+
+### Bug Fixes
+
+* **deps:** patch critical storybook and sanitizer advisories (AYC-000) ([#2099](https://github.com/ayunis-core/ayunis-core/issues/2099)) ([f723566](https://github.com/ayunis-core/ayunis-core/commit/f723566be9884b8dc76b349d0c9630ca224b1e4b))
+* **inference:** stream thinking summaries for default-thinking claude models (AYC-1374) ([#2064](https://github.com/ayunis-core/ayunis-core/issues/2064)) ([ec212f5](https://github.com/ayunis-core/ayunis-core/commit/ec212f5042e88c0d3568ba17d7efabb1bcbc6bc0))
+* **sources:** index discovered pdfs as file sources (AYC-1031) ([#2094](https://github.com/ayunis-core/ayunis-core/issues/2094)) ([8a94339](https://github.com/ayunis-core/ayunis-core/commit/8a94339b37c4ae74b205013a934f5d9833500bbf))
+* **threads:** enforce unique source assignments (AYC-547) ([#2075](https://github.com/ayunis-core/ayunis-core/issues/2075)) ([3f529e2](https://github.com/ayunis-core/ayunis-core/commit/3f529e28d30a6125d3e857cc8c2be968e3e530a5))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump docker/login-action from 3.7.0 to 4.7.0 ([#2091](https://github.com/ayunis-core/ayunis-core/issues/2091)) ([616b274](https://github.com/ayunis-core/ayunis-core/commit/616b274b9c0c2b4ab0b17af818c453002153ff91))
+* **deps-docker:** bump python in /ayunis-core-anonymize ([#2088](https://github.com/ayunis-core/ayunis-core/issues/2088)) ([3e4122e](https://github.com/ayunis-core/ayunis-core/commit/3e4122e2ae3552910d54b1fff7ff21e7d6ce99e3))
+* **deps-sandbox:** bump pandas in /ayunis-core-code-execution/sandbox ([#2089](https://github.com/ayunis-core/ayunis-core/issues/2089)) ([d60d887](https://github.com/ayunis-core/ayunis-core/commit/d60d8873387aaeee418a08772745c5f1e762bb0f))
+* **deps:** bump the nest group across 1 directory with 7 updates ([#2092](https://github.com/ayunis-core/ayunis-core/issues/2092)) ([9ce0802](https://github.com/ayunis-core/ayunis-core/commit/9ce0802888cc5cac231765110051298f6d58c89c))
+* **deps:** bump the tanstack group across 1 directory with 3 updates ([#2090](https://github.com/ayunis-core/ayunis-core/issues/2090)) ([20d81c1](https://github.com/ayunis-core/ayunis-core/commit/20d81c18a085d97756b6d1e0a982581165d0330b))
+* **sources:** expire failed queue jobs after 7 days (AYC-000) ([#2093](https://github.com/ayunis-core/ayunis-core/issues/2093)) ([40f1418](https://github.com/ayunis-core/ayunis-core/commit/40f1418270e4b707aa39ab6c2da02bec4ab2085f))
+
+## [2.60.1](https://github.com/ayunis-core/ayunis-core/compare/v2.60.0...v2.60.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **inference:** stream claude tool input eagerly to avoid idle timeouts (AYC-1142) ([#2066](https://github.com/ayunis-core/ayunis-core/issues/2066)) ([234484c](https://github.com/ayunis-core/ayunis-core/commit/234484c1d948f5f37ebda2d4cdf0d7df0f9358b0))
+* **invites:** explain subscription overlap during bulk import (AYC-1441) ([#2072](https://github.com/ayunis-core/ayunis-core/issues/2072)) ([21b9ca2](https://github.com/ayunis-core/ayunis-core/commit/21b9ca27621c61a4495e3d80bc80bbf11efdde93))
+* **transcriptions:** transcribe uploaded audio in the processing worker (AYC-1440) ([#2071](https://github.com/ayunis-core/ayunis-core/issues/2071)) ([0adfbf8](https://github.com/ayunis-core/ayunis-core/commit/0adfbf8360b8a97ed94b9973e07e6fce9b25cc0e))
+
+
+### Tests
+
+* **database:** extend integration hook timeouts to 30 seconds (AYC-1370) ([#2047](https://github.com/ayunis-core/ayunis-core/issues/2047)) ([ea80bc6](https://github.com/ayunis-core/ayunis-core/commit/ea80bc6a1df8865fc3c00114d5365ad82c823f15))
+
+
+### Miscellaneous
+
+* **deps:** bump node runtime to 24.22.1 security release (AYC-000) ([#2076](https://github.com/ayunis-core/ayunis-core/issues/2076)) ([b57e6f1](https://github.com/ayunis-core/ayunis-core/commit/b57e6f1dd589a15a40966cffdba841ab0e8b9479))
+
+## [2.60.0](https://github.com/ayunis-core/ayunis-core/compare/v2.59.0...v2.60.0) (2026-10-22)
+
+
+### Features
+
+* **anonymization:** raise the input cap to 60,000 characters (AYC-1427) ([#2063](https://github.com/ayunis-core/ayunis-core/issues/2063)) ([85bbea7](https://github.com/ayunis-core/ayunis-core/commit/85bbea740a1612f526f1bbcfed0351dfe80b4f21))
+* **workspaces:** show when a workspace was last edited (AYC-957) ([#2046](https://github.com/ayunis-core/ayunis-core/issues/2046)) ([989c36b](https://github.com/ayunis-core/ayunis-core/commit/989c36be46d4c892d1c36cfb0dc354b6a4e99340))
+
+
+### Bug Fixes
+
+* **chat:** render source citations inside markdown tables (AYC-1422) ([#2062](https://github.com/ayunis-core/ayunis-core/issues/2062)) ([e8fb76f](https://github.com/ayunis-core/ayunis-core/commit/e8fb76f558bcb6d46690f7b328611dbde246fa22))
+* **inference:** stop replaying terminal no-answer completions (AYC-1418) ([#2067](https://github.com/ayunis-core/ayunis-core/issues/2067)) ([546c61a](https://github.com/ayunis-core/ayunis-core/commit/546c61a850025d9eb74f3df3c1d2d989f84cddae))
+
+
+### Performance Improvements
+
+* **sources:** process four documents at once per instance (AYC-000) ([#2070](https://github.com/ayunis-core/ayunis-core/issues/2070)) ([26ccee2](https://github.com/ayunis-core/ayunis-core/commit/26ccee2a55b1c7757190bcd41ab25cd1592cb1d9))
+
+
+### Miscellaneous
+
+* **anonymization:** measure reuse with aggregate metrics (AYC-1434) ([#2069](https://github.com/ayunis-core/ayunis-core/issues/2069)) ([d383354](https://github.com/ayunis-core/ayunis-core/commit/d38335462c06e77893f53ad2c5493d6d48b8f64e))
+
+## [2.59.0](https://github.com/ayunis-core/ayunis-core/compare/v2.58.2...v2.59.0) (2026-10-21)
+
+
+### Features
+
+* **artifacts:** auto-fit spreadsheet columns on boundary double-click (AYC-990) ([#2039](https://github.com/ayunis-core/ayunis-core/issues/2039)) ([f1b60af](https://github.com/ayunis-core/ayunis-core/commit/f1b60af222170ace49babcdf319c79bb3a14d8d2))
+* **embeddings:** use the mistral embeddings server url when available (AYC-1395) ([#2038](https://github.com/ayunis-core/ayunis-core/issues/2038)) ([1c2f377](https://github.com/ayunis-core/ayunis-core/commit/1c2f377878875841c644cf9644a5c53345870b28))
+
+
+### Bug Fixes
+
+* **chat:** explain malformed tool call errors (AYC-1033) ([#2042](https://github.com/ayunis-core/ayunis-core/issues/2042)) ([8fdbb07](https://github.com/ayunis-core/ayunis-core/commit/8fdbb07a5cb6f21b59b1ea945a363800b1f5cee4))
+* **inference:** bound mistral response start instead of whole stream (AYC-1360) ([#2029](https://github.com/ayunis-core/ayunis-core/issues/2029)) ([0cbcb32](https://github.com/ayunis-core/ayunis-core/commit/0cbcb32162973e5985a958e821973f3a10ca768d))
+
+
+### Documentation
+
+* **deployment:** correct backup retention default and note local disk use (AYC-1219) ([#2040](https://github.com/ayunis-core/ayunis-core/issues/2040)) ([7725698](https://github.com/ayunis-core/ayunis-core/commit/77256989f191b7a117d144fd0ce8913e167ed461))
+
+## [2.58.2](https://github.com/ayunis-core/ayunis-core/compare/v2.58.1...v2.58.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **embeddings:** restore eu endpoint for mistral embeddings (AYC-1395) ([#2036](https://github.com/ayunis-core/ayunis-core/issues/2036)) ([e9e9630](https://github.com/ayunis-core/ayunis-core/commit/e9e96303617df0206cd4149460f8854c6acf41ff))
+
+## [2.58.1](https://github.com/ayunis-core/ayunis-core/compare/v2.58.0...v2.58.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **embeddings:** route mistral embeddings to the global endpoint while eu lists no embedding models (AYC-1395) ([#2034](https://github.com/ayunis-core/ayunis-core/issues/2034)) ([cb0e0a0](https://github.com/ayunis-core/ayunis-core/commit/cb0e0a0d715a3a5d5129b2723806b805b3d19dbc))
+
+## [2.58.0](https://github.com/ayunis-core/ayunis-core/compare/v2.57.0...v2.58.0) (2026-10-20)
+
+
+### Features
+
+* **academy:** let admins export the training overview and member confirmations (AYC-671) ([#2012](https://github.com/ayunis-core/ayunis-core/issues/2012)) ([5f88c59](https://github.com/ayunis-core/ayunis-core/commit/5f88c59dbfd354156007593c209b3325bed8a81b))
+* **chat:** scope prompt recall to the open thread (AYC-1376) ([#2020](https://github.com/ayunis-core/ayunis-core/issues/2020)) ([13bd823](https://github.com/ayunis-core/ayunis-core/commit/13bd8232602c5ed0e49b29aa0d6adb8a1281989b))
+
+
+### Bug Fixes
+
+* **artifacts:** keep text colors and highlights in docx export (AYC-1382) ([#2027](https://github.com/ayunis-core/ayunis-core/issues/2027)) ([d708620](https://github.com/ayunis-core/ayunis-core/commit/d70862094b0a136ca74c7f18b5a7e31b31eb68b4))
+* **artifacts:** preserve text colors and highlights in the document editor (AYC-1312) ([#2025](https://github.com/ayunis-core/ayunis-core/issues/2025)) ([5ce56cf](https://github.com/ayunis-core/ayunis-core/commit/5ce56cf75d6f40c499dc501840c2cc6582b388e4))
+* **auth:** accept api keys only in the authorization header (AYC-1354) ([#2026](https://github.com/ayunis-core/ayunis-core/issues/2026)) ([0a8b212](https://github.com/ayunis-core/ayunis-core/commit/0a8b2124e2a829dcd38718b1287c8bbbabf2f0cc))
+* **chat:** apply refreshed defaults to new chat model selection (AYC-1243) ([#2022](https://github.com/ayunis-core/ayunis-core/issues/2022)) ([9464891](https://github.com/ayunis-core/ayunis-core/commit/946489166261d39c2cf648f3942b03bfdd3c061a))
+* **chat:** wait for attachment context before sending (AYC-1273) ([#2028](https://github.com/ayunis-core/ayunis-core/issues/2028)) ([228e828](https://github.com/ayunis-core/ayunis-core/commit/228e82823dba375e1dd16a94392888a530c2a9be))
+* **images:** normalize mobile photo references before editing (AYC-1306) ([#2024](https://github.com/ayunis-core/ayunis-core/issues/2024)) ([dcdf405](https://github.com/ayunis-core/ayunis-core/commit/dcdf40526632683006ab4053d076bc6a41831257))
+* **inference:** keep the idle watchdog alive during silent thinking on anthropic and bedrock (AYC-1318) ([#2023](https://github.com/ayunis-core/ayunis-core/issues/2023)) ([cf3fd64](https://github.com/ayunis-core/ayunis-core/commit/cf3fd643d3f4a62971679db5f7b83f7ec2104873))
+* **skills:** use current ui language for ambiguous skill text (AYC-1266) ([#2019](https://github.com/ayunis-core/ayunis-core/issues/2019)) ([cc3a30f](https://github.com/ayunis-core/ayunis-core/commit/cc3a30f223fba02a861532ff6a349386c2696d12))
+
+
+### Code Refactoring
+
+* **frontend:** route file downloads through saveBlobAs (AYC-000) ([#2013](https://github.com/ayunis-core/ayunis-core/issues/2013)) ([6fc0203](https://github.com/ayunis-core/ayunis-core/commit/6fc02032598d1bd1d0a67fc32fd3cbfe80bdf701))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/cache from 5 to 6 ([#1998](https://github.com/ayunis-core/ayunis-core/issues/1998)) ([53ae2fb](https://github.com/ayunis-core/ayunis-core/commit/53ae2fb2e00820efa6bac2f90754dc2ca5306e7b))
+* **deps-actions:** bump actions/create-github-app-token ([#1996](https://github.com/ayunis-core/ayunis-core/issues/1996)) ([39b6d10](https://github.com/ayunis-core/ayunis-core/commit/39b6d10b372e9ec6e74d3aa7c2d949de8d6b77fb))
+* **deps-actions:** bump docker/build-push-action from 6.19.2 to 7.4.0 ([#2000](https://github.com/ayunis-core/ayunis-core/issues/2000)) ([2f8d1ce](https://github.com/ayunis-core/ayunis-core/commit/2f8d1ce1cffc0948c37e782430b0b9cb3cf58b5a))
+* **deps-actions:** bump pnpm/action-setup from 4.2.0 to 6.1.0 ([#1999](https://github.com/ayunis-core/ayunis-core/issues/1999)) ([fa4403e](https://github.com/ayunis-core/ayunis-core/commit/fa4403e0ed177304b4ba66c90c40ac41dc767df5))
+* **deps-anonymize:** bump fastapi in /ayunis-core-anonymize ([#1995](https://github.com/ayunis-core/ayunis-core/issues/1995)) ([d0395ae](https://github.com/ayunis-core/ayunis-core/commit/d0395aed3110fbc2bf9a739c9ad0108eb168179a))
+* **deps-anonymize:** bump pydantic in /ayunis-core-anonymize ([#2004](https://github.com/ayunis-core/ayunis-core/issues/2004)) ([48dc7f7](https://github.com/ayunis-core/ayunis-core/commit/48dc7f7204d11543b87fa1de2dfbe3348f460050))
+* **deps-anonymize:** bump torch in /ayunis-core-anonymize ([#1993](https://github.com/ayunis-core/ayunis-core/issues/1993)) ([3846175](https://github.com/ayunis-core/ayunis-core/commit/38461754b0ef53f452cc4a145b123d14f148c0c5))
+* **deps-sandbox:** bump numpy in /ayunis-core-code-execution/sandbox ([#1994](https://github.com/ayunis-core/ayunis-core/issues/1994)) ([8341de5](https://github.com/ayunis-core/ayunis-core/commit/8341de50504da89f4fb58df9b94c511925b733e9))
+* **deps:** bump the react group across 1 directory with 2 updates ([#2003](https://github.com/ayunis-core/ayunis-core/issues/2003)) ([66744eb](https://github.com/ayunis-core/ayunis-core/commit/66744eb852214c70e5002b1113193a8573e93aec))
+* **deps:** bump the tanstack group across 1 directory with 3 updates ([#2005](https://github.com/ayunis-core/ayunis-core/issues/2005)) ([ba49b03](https://github.com/ayunis-core/ayunis-core/commit/ba49b03c2f3c6ba7e6917ecc823833fe70784551))
+* **deps:** bump ts-jest from 29.4.14 to 29.4.15 in the typescript group across 1 directory ([#2002](https://github.com/ayunis-core/ayunis-core/issues/2002)) ([f040a1e](https://github.com/ayunis-core/ayunis-core/commit/f040a1e4642a80bec4d672ab5320ddbad39fb83c))
+
+## [2.57.0](https://github.com/ayunis-core/ayunis-core/compare/v2.56.0...v2.57.0) (2026-10-19)
+
+
+### Features
+
+* **chat:** create downloadable xml json and text files (AYC-925) ([#1973](https://github.com/ayunis-core/ayunis-core/issues/1973)) ([f31a9ed](https://github.com/ayunis-core/ayunis-core/commit/f31a9edce68c0cba9c8b041c160d30968dfe573a))
+* **chat:** recall previous prompts with the arrow keys in the composer (AYC-1363) ([#2008](https://github.com/ayunis-core/ayunis-core/issues/2008)) ([3769bfd](https://github.com/ayunis-core/ayunis-core/commit/3769bfd5ef761bf25d56de3846b1f151315a74d5))
+* **credit-limits:** add org-wide default personal credit limit (AYC-1166) ([#1859](https://github.com/ayunis-core/ayunis-core/issues/1859)) ([ad30757](https://github.com/ayunis-core/ayunis-core/commit/ad30757e61079048f4b8bb128e363c2cafda0cbe))
+* **credit-limits:** show monthly consumption for users on the default limit (AYC-1166) ([#1895](https://github.com/ayunis-core/ayunis-core/issues/1895)) ([69140b6](https://github.com/ayunis-core/ayunis-core/commit/69140b6673517de8d71e28845a0d327de1157f9b))
+* **models:** require a context window size for language models (AYC-1257) ([#1923](https://github.com/ayunis-core/ayunis-core/issues/1923)) ([d83c594](https://github.com/ayunis-core/ayunis-core/commit/d83c594a547eed5d690613f820464e2c2c9063f8))
+* **orgs:** show lifecycle status counts under the super-admin org search (AYC-1369) ([#2010](https://github.com/ayunis-core/ayunis-core/issues/2010)) ([c312fac](https://github.com/ayunis-core/ayunis-core/commit/c312fac6adb954a7eab2fc457ec984a8baec403a))
+
+
+### Bug Fixes
+
+* **api:** regenerate request endpoint templates for credit-limit routes (AYC-000) ([#2016](https://github.com/ayunis-core/ayunis-core/issues/2016)) ([4d3d374](https://github.com/ayunis-core/ayunis-core/commit/4d3d374777882786deb0780075ac3033f5817eda))
+* **auth:** resolve client ips through explicit proxy trust (AYC-1353) ([#2014](https://github.com/ayunis-core/ayunis-core/issues/2014)) ([35b4f34](https://github.com/ayunis-core/ayunis-core/commit/35b4f34ee9b279f108a0d4fa8dcc71b895a6c212))
+* **observability:** classify frontend api failures safely (AYC-1356) ([#2011](https://github.com/ayunis-core/ayunis-core/issues/2011)) ([805de4c](https://github.com/ayunis-core/ayunis-core/commit/805de4c663951ccf2262402c74f57be9104a500a))
+* **observability:** isolate chat stream latency from web alerts (AYC-1123) ([#1917](https://github.com/ayunis-core/ayunis-core/issues/1917)) ([9166601](https://github.com/ayunis-core/ayunis-core/commit/9166601a8396169c0448f59072f98a533a2b2887))
+* **retrieval:** reuse pdf extraction within chat requests (AYC-1348) ([#2009](https://github.com/ayunis-core/ayunis-core/issues/2009)) ([c063c48](https://github.com/ayunis-core/ayunis-core/commit/c063c4857445ee31b3b50e7eef896ce8ec0225dc))
+
+
+### Miscellaneous
+
+* **deps:** bump the radix group with 18 updates ([#2006](https://github.com/ayunis-core/ayunis-core/issues/2006)) ([9f2d986](https://github.com/ayunis-core/ayunis-core/commit/9f2d986ede13cf05561727a9b53cc72e896ed935))
+
+
+### CI/CD
+
+* **deps:** make lockfile dedupe check deterministic (AYC-000) ([#2015](https://github.com/ayunis-core/ayunis-core/issues/2015)) ([b97ff5c](https://github.com/ayunis-core/ayunis-core/commit/b97ff5c57497ff940d06de0bafd976c7e74adcbb))
+
+## [2.56.0](https://github.com/ayunis-core/ayunis-core/compare/v2.55.0...v2.56.0) (2026-10-16)
+
+
+### Features
+
+* **academy:** require a minimum time on each video page before confirming a chapter (AYC-913) ([#1945](https://github.com/ayunis-core/ayunis-core/issues/1945)) ([144c73a](https://github.com/ayunis-core/ayunis-core/commit/144c73afdb3df17605e2b09287a0470e91f594bf))
+* **orgs:** replace super-admin org badges with one lifecycle status (AYC-1311) ([#1974](https://github.com/ayunis-core/ayunis-core/issues/1974)) ([104a7e4](https://github.com/ayunis-core/ayunis-core/commit/104a7e4d482af3d8dae3052184cb7399f9bf81c8))
+* **orgs:** show the derived lifecycle status on the super-admin org detail page (AYC-1319) ([#1976](https://github.com/ayunis-core/ayunis-core/issues/1976)) ([1b90e02](https://github.com/ayunis-core/ayunis-core/commit/1b90e02c06b86eb51bf2d19b7e6a3446b8f980a2))
+
+
+### Bug Fixes
+
+* **app:** keep startup loading feedback and add a deploy-restart banner (AYC-1186) ([#1991](https://github.com/ayunis-core/ayunis-core/issues/1991)) ([102678d](https://github.com/ayunis-core/ayunis-core/commit/102678d8984f630bb329e489952b2fb5d8e78e3a))
+* **models:** hide anonymous-only toggle for non-language models (AYC-1352) ([#1992](https://github.com/ayunis-core/ayunis-core/issues/1992)) ([fb272e9](https://github.com/ayunis-core/ayunis-core/commit/fb272e9cf32ac3407da66a41f05eed6ddfc62d91))
+* **runs:** abort runs whose thread is deleted while persisting PII masks (AYC-1343) ([#1988](https://github.com/ayunis-core/ayunis-core/issues/1988)) ([b6e3433](https://github.com/ayunis-core/ayunis-core/commit/b6e3433c245c02b45ab8de54a195613dc33775e5))
+* **spreadsheet:** write grid clipboard synchronously and keep cut data on failure (AYC-1162) ([#1916](https://github.com/ayunis-core/ayunis-core/issues/1916)) ([dc59526](https://github.com/ayunis-core/ayunis-core/commit/dc5952604e7e1cfee19036048b2d8430e1313f63))
+* **usage:** keep team management available when user usage is hidden (AYC-1342) ([#1987](https://github.com/ayunis-core/ayunis-core/issues/1987)) ([ce29a57](https://github.com/ayunis-core/ayunis-core/commit/ce29a573655294bf43c8dafcd8832e646c8c0827))
+
+## [2.55.0](https://github.com/ayunis-core/ayunis-core/compare/v2.54.0...v2.55.0) (2026-10-15)
+
+
+### Features
+
+* **frontend:** add copy buttons for oauth callback uris and sso ids (AYC-000) ([#1957](https://github.com/ayunis-core/ayunis-core/issues/1957)) ([cabf969](https://github.com/ayunis-core/ayunis-core/commit/cabf9696d73837dbd84ed5505157ca09bb022392))
+* **super-admin:** add copy button for the org id on the org detail page (AYC-000) ([#1955](https://github.com/ayunis-core/ayunis-core/issues/1955)) ([d575c39](https://github.com/ayunis-core/ayunis-core/commit/d575c39933a8b4ba6303a093133cdad766e370c1))
+
+
+### Bug Fixes
+
+* **agent-runtime:** retry rate limits with retry-after up to 30 s and spread the wait (AYC-1268) ([#1965](https://github.com/ayunis-core/ayunis-core/issues/1965)) ([a054ad2](https://github.com/ayunis-core/ayunis-core/commit/a054ad26532cef0d2e4f11fc2aa6245de85f746f))
+* **logger:** emit safe error classifications and diagnostic summaries (AYC-1246) ([#1905](https://github.com/ayunis-core/ayunis-core/issues/1905)) ([8c434d4](https://github.com/ayunis-core/ayunis-core/commit/8c434d474f7872f3f83d15a3d216fd64f9447f4e))
+* **runs:** classify truncated tool calls as a client error with a clear toast (AYC-1315) ([#1968](https://github.com/ayunis-core/ayunis-core/issues/1968)) ([facca01](https://github.com/ayunis-core/ayunis-core/commit/facca0149982d1fd500f03913743f298fefd4233))
+* **runs:** stop reporting consumer-ended calls and empty responses as runtime failures (AYC-1308) ([#1969](https://github.com/ayunis-core/ayunis-core/issues/1969)) ([5a11330](https://github.com/ayunis-core/ayunis-core/commit/5a1133068d5d7bdd0e96a238b5a69e910a80378d))
+
+
+### Code Refactoring
+
+* **models:** read the Retry-After cap from the agent-runtime default on every inference path (AYC-1268) ([#1980](https://github.com/ayunis-core/ayunis-core/issues/1980)) ([f96c54f](https://github.com/ayunis-core/ayunis-core/commit/f96c54f355f9a9112512319f63b81a9c015f2bb5))
+
+
+### Documentation
+
+* add security policy with vulnerability reporting contact (AYC-000) ([#1958](https://github.com/ayunis-core/ayunis-core/issues/1958)) ([aa10d4a](https://github.com/ayunis-core/ayunis-core/commit/aa10d4a4a8b23be26ed907adc62c7278a91f05d8))
+
+## [2.54.0](https://github.com/ayunis-core/ayunis-core/compare/v2.53.0...v2.54.0) (2026-10-14)
+
+
+### Features
+
+* **anonymization:** anonymize long inputs as parallel overlapping chunks (AYC-1254) ([#1948](https://github.com/ayunis-core/ayunis-core/issues/1948)) ([0e58a36](https://github.com/ayunis-core/ayunis-core/commit/0e58a36b13e2c232f921c70b87ea51dfb552dd0c))
+* **api-keys:** rename API keys and add a description (AYC-000) ([#1798](https://github.com/ayunis-core/ayunis-core/issues/1798)) ([1f082a3](https://github.com/ayunis-core/ayunis-core/commit/1f082a3b2f253ef973faec8b1ac7fa18d96a042f))
+* **invites:** allow super admins to manage organization invites (AYC-152) ([#1950](https://github.com/ayunis-core/ayunis-core/issues/1950)) ([0498b4d](https://github.com/ayunis-core/ayunis-core/commit/0498b4d77044f4ba05fd0d06104c3470ec0de330))
+* **observability:** add bullmq metrics and alerts (AYC-1038) ([#1946](https://github.com/ayunis-core/ayunis-core/issues/1946)) ([7bd2313](https://github.com/ayunis-core/ayunis-core/commit/7bd231325a14e9c82cd6b5818239dba94d62f7da))
+* **observability:** group super-admin and openai-compat traffic in appsignal namespaces (AYC-1271) ([#1943](https://github.com/ayunis-core/ayunis-core/issues/1943)) ([5cc76bf](https://github.com/ayunis-core/ayunis-core/commit/5cc76bfe24d653980413336fca103fdaa0a11b4e))
+* **orgs:** filter super-admin organizations by paying status (AYC-1141) ([#1940](https://github.com/ayunis-core/ayunis-core/issues/1940)) ([5ebe46d](https://github.com/ayunis-core/ayunis-core/commit/5ebe46d0bb4405a671526a0d3eb630bb6253a2f6))
+* **orgs:** mark paying organizations in the super-admin list (AYC-1141) ([#1941](https://github.com/ayunis-core/ayunis-core/issues/1941)) ([17f0930](https://github.com/ayunis-core/ayunis-core/commit/17f09303206ba905ca9dcfac92dec64d4cd2d42c))
+
+
+### Bug Fixes
+
+* **anonymization:** let token-exact detections win over name detections that cross them (AYC-1254) ([#1949](https://github.com/ayunis-core/ayunis-core/issues/1949)) ([21e9d15](https://github.com/ayunis-core/ayunis-core/commit/21e9d157b6995b7c31abb7753ff341cc3d9b04fa))
+* **api:** stop reporting malformed client JSON as server errors (AYC-1226) ([#1908](https://github.com/ayunis-core/ayunis-core/issues/1908)) ([5897a1e](https://github.com/ayunis-core/ayunis-core/commit/5897a1e314c1b67602f21a9274c7b724960d9483))
+* **chat:** explain oversized chat uploads before sending them (AYC-1034) ([#1952](https://github.com/ayunis-core/ayunis-core/issues/1952)) ([c615586](https://github.com/ayunis-core/ayunis-core/commit/c615586c0308216b6e67f27268ed271283afdf68))
+* **chat:** pin new-chat gradient blobs to a fixed height (AYC-1133) ([#1822](https://github.com/ayunis-core/ayunis-core/issues/1822)) ([57b3f8b](https://github.com/ayunis-core/ayunis-core/commit/57b3f8b5c669e67f8553d1d0ed4915ff9105248b))
+* **frontend:** ignore outlook safe links scanner rejections (AYC-1173) ([#1911](https://github.com/ayunis-core/ayunis-core/issues/1911)) ([a48855d](https://github.com/ayunis-core/ayunis-core/commit/a48855d6806b6da8b56df534ee164ea9d81e3caf))
+* **frontend:** ignore wallet-injected window.ethereum errors (AYC-1207) ([#1909](https://github.com/ayunis-core/ayunis-core/issues/1909)) ([61c3f3f](https://github.com/ayunis-core/ayunis-core/commit/61c3f3fe9ecb78f71a0626fb7e792cec287d704c))
+* **invites:** scope invite deletion and resend to the admin's organization (AYC-1245) ([#1944](https://github.com/ayunis-core/ayunis-core/issues/1944)) ([392ad43](https://github.com/ayunis-core/ayunis-core/commit/392ad43d686008b88b5b899a729dee2f5b91bdf5))
+* **mcp:** classify non-json oauth http error responses (AYC-1155) ([#1939](https://github.com/ayunis-core/ayunis-core/issues/1939)) ([168b4ea](https://github.com/ayunis-core/ayunis-core/commit/168b4ea913d7c5586ea75d4d46d5e4a7fa6cb074))
+* **models:** answer unpaired tool calls before history reaches a provider (AYC-1259) ([#1927](https://github.com/ayunis-core/ayunis-core/issues/1927)) ([e199f15](https://github.com/ayunis-core/ayunis-core/commit/e199f15da94e568ca8be45ed721534788f00ca03))
+* **models:** retry rate-limited inference once after retry-after (AYC-1208) ([#1907](https://github.com/ayunis-core/ayunis-core/issues/1907)) ([608b219](https://github.com/ayunis-core/ayunis-core/commit/608b219eafa768e1f092ff544808ca33042219fa))
+* **retrievers:** log upstream diagnostics for Mistral OCR failures (AYC-1115) ([#1918](https://github.com/ayunis-core/ayunis-core/issues/1918)) ([83cd787](https://github.com/ayunis-core/ayunis-core/commit/83cd787b97c31060650990063a1ced67547f5e1b))
+* **runs:** keep model requests within the provider's limits (AYC-1255) ([#1920](https://github.com/ayunis-core/ayunis-core/issues/1920)) ([fe56863](https://github.com/ayunis-core/ayunis-core/commit/fe568632b56819febe28c0d128673ed31f67e849))
+* **runs:** only roll back messages the failed run persisted (AYC-1259) ([#1926](https://github.com/ayunis-core/ayunis-core/issues/1926)) ([ca2523e](https://github.com/ayunis-core/ayunis-core/commit/ca2523e7eeb2b52d7d17587dd2e27c919317284d))
+* **runs:** run one message at a time per thread (AYC-1259) ([#1928](https://github.com/ayunis-core/ayunis-core/issues/1928)) ([d7f6661](https://github.com/ayunis-core/ayunis-core/commit/d7f6661b30cbb959f50cca69f93bd95199dd6f88))
+* **subscriptions:** clarify replacement action copy (AYC-1158) ([#1848](https://github.com/ayunis-core/ayunis-core/issues/1848)) ([2e2239e](https://github.com/ayunis-core/ayunis-core/commit/2e2239e081fcb9e6fece569965f943529902ef0e))
+
+
+### Tests
+
+* **agent-runtime:** pin the idle-stall retry budget for silent providers (AYC-1157) ([#1914](https://github.com/ayunis-core/ayunis-core/issues/1914)) ([cded851](https://github.com/ayunis-core/ayunis-core/commit/cded851a58e04b77ff601e584213e365f3d49ee3))
+
+
+### Miscellaneous
+
+* **deps:** migrate the frontend to vite 8 (AYC-000) ([#1951](https://github.com/ayunis-core/ayunis-core/issues/1951)) ([4509f1c](https://github.com/ayunis-core/ayunis-core/commit/4509f1c6dfb4e4fe79711011de2ba9e4a63d6ef6))
+
+
+### CI/CD
+
+* **codeowners:** request reviews only for entity and record files (AYC-000) ([#1934](https://github.com/ayunis-core/ayunis-core/issues/1934)) ([323f201](https://github.com/ayunis-core/ayunis-core/commit/323f201d29dc400fe8f8e724ce7aa9db560485cc))
+* **deps:** bump actions/cache to v5 for the node 24 runtime (AYC-000) ([#1954](https://github.com/ayunis-core/ayunis-core/issues/1954)) ([0ea8079](https://github.com/ayunis-core/ayunis-core/commit/0ea80793ad8e9ceb6636f8e95842e70e81ab48d6))
+
+## [2.53.0](https://github.com/ayunis-core/ayunis-core/compare/v2.52.0...v2.53.0) (2026-10-13)
+
+
+### Features
+
+* **chat:** show line numbers on multi-line code blocks (AYC-1248) ([#1932](https://github.com/ayunis-core/ayunis-core/issues/1932)) ([042de1c](https://github.com/ayunis-core/ayunis-core/commit/042de1ccf267e2b80c7b2777fff771f078c6378b))
+* **images:** support transparent backgrounds in generated images (AYC-1042) ([#1929](https://github.com/ayunis-core/ayunis-core/issues/1929)) ([e94febc](https://github.com/ayunis-core/ayunis-core/commit/e94febc5087080082b3d0cd1ad58155e00d17ec0))
+* **invites:** assign invited users to teams (AYC-1189) ([#1933](https://github.com/ayunis-core/ayunis-core/issues/1933)) ([320fbe5](https://github.com/ayunis-core/ayunis-core/commit/320fbe56247bad94db178cb2809649fe23404c9c))
+* **orgs:** search super-admin organizations by organization id (AYC-1141) ([#1937](https://github.com/ayunis-core/ayunis-core/issues/1937)) ([fd0b17b](https://github.com/ayunis-core/ayunis-core/commit/fd0b17b04fbcd52750421952cb6f5668ea674ec7))
+* **sources:** extract attachment content from uploaded emails (AYC-1002) ([#1894](https://github.com/ayunis-core/ayunis-core/issues/1894)) ([258b9ef](https://github.com/ayunis-core/ayunis-core/commit/258b9ef7787c9a6990132e4388ffb856db055ff6))
+* **usage:** show usage per API key in the usage dashboard (AYC-1262) ([#1770](https://github.com/ayunis-core/ayunis-core/issues/1770)) ([f54b3a2](https://github.com/ayunis-core/ayunis-core/commit/f54b3a26ad116968ad699efeed4feef95f19754f))
+
+
+### Bug Fixes
+
+* **anonymize:** expire idle keep-alive sockets before the service closes them (AYC-1171) ([#1915](https://github.com/ayunis-core/ayunis-core/issues/1915)) ([1b4df45](https://github.com/ayunis-core/ayunis-core/commit/1b4df45929f8c83ed77d5107b7bc6203df29c33e))
+* **mcp:** point users at the administrator when an oauth server misbehaves (AYC-1155) ([#1935](https://github.com/ayunis-core/ayunis-core/issues/1935)) ([1b54478](https://github.com/ayunis-core/ayunis-core/commit/1b5447837f8e72746af527a5e56c2cfd7ed3518c))
+* **mcp:** report non-json oauth responses during authorization (AYC-1155) ([#1912](https://github.com/ayunis-core/ayunis-core/issues/1912)) ([fc8e3d3](https://github.com/ayunis-core/ayunis-core/commit/fc8e3d39cc0aab2d1717fc1fa789e8334dd17173))
+* **observability:** report the cause of recovered React render errors (AYC-1206) ([#1879](https://github.com/ayunis-core/ayunis-core/issues/1879)) ([fd643bf](https://github.com/ayunis-core/ayunis-core/commit/fd643bf79cd7d6592b949bef22287ccf95902a6f))
+* **retrievers:** enforce page limits after office conversion (AYC-1247) ([#1925](https://github.com/ayunis-core/ayunis-core/issues/1925)) ([1f9d941](https://github.com/ayunis-core/ayunis-core/commit/1f9d941808caa52b31c77dd30b10e7331bc4a6ea))
+* **runs:** keep rate-limited stream failures out of usage accounting (AYC-1163) ([#1913](https://github.com/ayunis-core/ayunis-core/issues/1913)) ([edec670](https://github.com/ayunis-core/ayunis-core/commit/edec67077f8ca9e060b04437c607449eac30fb73))
+* **runs:** log rejected model calls with recovery diagnostics (AYC-1164) ([#1919](https://github.com/ayunis-core/ayunis-core/issues/1919)) ([7aa2581](https://github.com/ayunis-core/ayunis-core/commit/7aa2581ca79f5ef8be798ba64dbdf71ae7ea015e))
+* **sso:** log which Zitadel broker request failed in transport (AYC-1227) ([#1910](https://github.com/ayunis-core/ayunis-core/issues/1910)) ([dc38012](https://github.com/ayunis-core/ayunis-core/commit/dc380129bdc914b937488e7f5fa2026296b169d7))
+
+
+### Code Refactoring
+
+* **auth:** adopt isSuperAdmin for remaining request checks (AYC-1241) ([#1938](https://github.com/ayunis-core/ayunis-core/issues/1938)) ([d054684](https://github.com/ayunis-core/ayunis-core/commit/d054684802eeb93aab0a554c5fb41f85c284e820))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/download-artifact from 4 to 8 ([#1899](https://github.com/ayunis-core/ayunis-core/issues/1899)) ([60cbbaa](https://github.com/ayunis-core/ayunis-core/commit/60cbbaaf4c7f34db9669739edef18e08b8008a79))
+* **deps-actions:** bump actions/upload-artifact from 4 to 7 ([#1898](https://github.com/ayunis-core/ayunis-core/issues/1898)) ([0d57c2a](https://github.com/ayunis-core/ayunis-core/commit/0d57c2a3c0ce2b994e4415b71759029bce0ff9b9))
+* **deps-actions:** bump docker/setup-buildx-action ([#1712](https://github.com/ayunis-core/ayunis-core/issues/1712)) ([2330888](https://github.com/ayunis-core/ayunis-core/commit/2330888d46b3d1a6bd397f1f9bb726fe02cb58d6))
+* **deps-anonymize:** bump pydantic in /ayunis-core-anonymize ([#1594](https://github.com/ayunis-core/ayunis-core/issues/1594)) ([caaaeae](https://github.com/ayunis-core/ayunis-core/commit/caaaeae926358bffa8ae4dd0d2a39c272a8e9444))
+* **deps-anonymize:** bump torch in /ayunis-core-anonymize ([#1711](https://github.com/ayunis-core/ayunis-core/issues/1711)) ([c21b5df](https://github.com/ayunis-core/ayunis-core/commit/c21b5dfbb4bf736e0f229c5bef5effa005fac27d))
+* **deps:** bump @eslint/js to 10 across workspace packages (AYC-000) ([#1846](https://github.com/ayunis-core/ayunis-core/issues/1846)) ([9d824a8](https://github.com/ayunis-core/ayunis-core/commit/9d824a8b293c84a1c9487378caf669816c05645c))
+* **deps:** bump lucide-react from 0.476.0 to 1.55.0 ([#1670](https://github.com/ayunis-core/ayunis-core/issues/1670)) ([26339c6](https://github.com/ayunis-core/ayunis-core/commit/26339c6a4b11c7d3cd204e66f3d4a6e0f292f8f3))
+* **deps:** bump mjml and @types/mjml ([#1715](https://github.com/ayunis-core/ayunis-core/issues/1715)) ([1235f4a](https://github.com/ayunis-core/ayunis-core/commit/1235f4a2829fa2b9b372f41ded03cb7f8ecfe5da))
+* **deps:** bump react-syntax-highlighter from 15.6.6 to 16.1.2 ([#1669](https://github.com/ayunis-core/ayunis-core/issues/1669)) ([d467d86](https://github.com/ayunis-core/ayunis-core/commit/d467d867974f38ccf692ebaf443736fa8ec6459e))
+* **deps:** bump the radix group with 18 updates ([#1902](https://github.com/ayunis-core/ayunis-core/issues/1902)) ([54445fc](https://github.com/ayunis-core/ayunis-core/commit/54445fcc8d087b74743e1dd6335132e7809a86fe))
+* **deps:** bump the react group across 1 directory with 4 updates ([#1900](https://github.com/ayunis-core/ayunis-core/issues/1900)) ([1225152](https://github.com/ayunis-core/ayunis-core/commit/12251527de1f6d5627999a74342210f791aa4175))
+* **deps:** bump the tanstack group across 1 directory with 4 updates ([#1901](https://github.com/ayunis-core/ayunis-core/issues/1901)) ([d2eb9ed](https://github.com/ayunis-core/ayunis-core/commit/d2eb9edd498dd8a145d22392b65d80fefa2dffe9))
+* **deps:** bump the testing group across 1 directory with 2 updates ([#1897](https://github.com/ayunis-core/ayunis-core/issues/1897)) ([c1be542](https://github.com/ayunis-core/ayunis-core/commit/c1be5427ec2bb4a6bf89e73fc4dab9fe28b738d4))
+* **deps:** bump the typescript group across 1 directory with 2 updates (AYC-000) ([#1896](https://github.com/ayunis-core/ayunis-core/issues/1896)) ([234240b](https://github.com/ayunis-core/ayunis-core/commit/234240b613be369b53629bf93572e31eb02e94ad))
+* **deps:** patch critical transitive advisories (AYC-000) ([#1904](https://github.com/ayunis-core/ayunis-core/issues/1904)) ([c79b9cd](https://github.com/ayunis-core/ayunis-core/commit/c79b9cdf0417b7dba93ac17342e0b1f9a9b24543))
+* **observability:** log backend startup phase durations (AYC-1186) ([#1922](https://github.com/ayunis-core/ayunis-core/issues/1922)) ([34dd605](https://github.com/ayunis-core/ayunis-core/commit/34dd60539942bf1ac83b58dea94f1fd42821edbf))
+* **skills:** add scalability-review agent skill (AYC-000) ([#1924](https://github.com/ayunis-core/ayunis-core/issues/1924)) ([dd37cd7](https://github.com/ayunis-core/ayunis-core/commit/dd37cd7d4de7b1b2272e6cc362a3166cd224dd15))
+* **skills:** sync code-review from agentfiles store (AYC-000) ([#1931](https://github.com/ayunis-core/ayunis-core/issues/1931)) ([442ee3e](https://github.com/ayunis-core/ayunis-core/commit/442ee3ee8123777d09b4215be7e53d8548cde4a9))
+
+
+### CI/CD
+
+* **deps:** auto-dedupe dependabot lockfiles and gate dedupe locally (AYC-000) ([#1936](https://github.com/ayunis-core/ayunis-core/issues/1936)) ([9b554d1](https://github.com/ayunis-core/ayunis-core/commit/9b554d1b96fbdfa6d6c093576facd6c0451761f4))
+
+## [2.52.0](https://github.com/ayunis-core/ayunis-core/compare/v2.51.1...v2.52.0) (2026-10-12)
+
+
+### Features
+
+* **usage:** allow organisations to hide individual usage (AYC-1195) ([#1893](https://github.com/ayunis-core/ayunis-core/issues/1893)) ([306d6c4](https://github.com/ayunis-core/ayunis-core/commit/306d6c473986ddfe0444d85e42d6681da9cc548e))
+
+
+### Bug Fixes
+
+* **agent-runtime:** clone errors with getter-only names without throwing (AYC-1233) ([#1888](https://github.com/ayunis-core/ayunis-core/issues/1888)) ([ecac04d](https://github.com/ayunis-core/ayunis-core/commit/ecac04d81d4086fed2ea3219a873f5baf8389232))
+* **anonymize:** drop queued analyses the caller has already abandoned (AYC-1225) ([#1891](https://github.com/ayunis-core/ayunis-core/issues/1891)) ([2072455](https://github.com/ayunis-core/ayunis-core/commit/2072455bd5eec2a1372565704ef1eb5e3ef77d4e))
+* **cleanup:** keep the nightly sessions and stale thread source cleanups inside the statement timeout (AYC-1237) ([#1903](https://github.com/ayunis-core/ayunis-core/issues/1903)) ([cb76cb8](https://github.com/ayunis-core/ayunis-core/commit/cb76cb8ce738fd959e0a365feff216620ffc357e))
+* **mcp:** report unreachable servers during oauth authorization (AYC-1234) ([#1889](https://github.com/ayunis-core/ayunis-core/issues/1889)) ([96de31d](https://github.com/ayunis-core/ayunis-core/commit/96de31df6598b6543e398379841bc4923c564b24))
+* **mistral:** route mistral sdk clients to the eu region (AYC-000) ([#1873](https://github.com/ayunis-core/ayunis-core/issues/1873)) ([245c98f](https://github.com/ayunis-core/ayunis-core/commit/245c98f2cc9600bc1350cd74ac35e32e2320dc48))
+* **runs:** log bounded upstream messages for provider rejections (AYC-1235) ([#1892](https://github.com/ayunis-core/ayunis-core/issues/1892)) ([b0125e7](https://github.com/ayunis-core/ayunis-core/commit/b0125e7ca1561db943d094e8a87fd88add913462))
+* **runs:** log output visibility for terminal provider failures (AYC-1236) ([#1890](https://github.com/ayunis-core/ayunis-core/issues/1890)) ([ca2c259](https://github.com/ayunis-core/ayunis-core/commit/ca2c259a715e8d6c4bb9f15fb0570d17d96615f2))
+
+
+### Code Refactoring
+
+* **auth:** read roles only through a user context (AYC-85) ([#1852](https://github.com/ayunis-core/ayunis-core/issues/1852)) ([7d3fd84](https://github.com/ayunis-core/ayunis-core/commit/7d3fd84bf74b0f17c31135336b635298aa4420f4))
+
+
+### Documentation
+
+* **deploy:** point internal and production deploys at ayunis-infra (AYC-1186) ([#1886](https://github.com/ayunis-core/ayunis-core/issues/1886)) ([1ff4776](https://github.com/ayunis-core/ayunis-core/commit/1ff47766ac55e4dc678d8104ff876033b8e9629c))
+
+## [2.51.1](https://github.com/ayunis-core/ayunis-core/compare/v2.51.0...v2.51.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **frontend:** add a header comment to robots.txt (AYC-000) ([#1885](https://github.com/ayunis-core/ayunis-core/issues/1885)) ([95fb974](https://github.com/ayunis-core/ayunis-core/commit/95fb9747989c2a1095462c9158ade584fc0c908e))
+
+
+### CI/CD
+
+* **deploy:** remove the manual production deploy to the old server (AYC-1229) ([#1884](https://github.com/ayunis-core/ayunis-core/issues/1884)) ([d6d9587](https://github.com/ayunis-core/ayunis-core/commit/d6d95871ec634d6742f3ba1ff13f1e5c34a982ff))
+* **release:** stop deploying releases to the old production server (AYC-855) ([#1882](https://github.com/ayunis-core/ayunis-core/issues/1882)) ([6e4871d](https://github.com/ayunis-core/ayunis-core/commit/6e4871dce571a28c02135b888bbdd990de9e25e0))
+
+## [2.51.0](https://github.com/ayunis-core/ayunis-core/compare/v2.50.1...v2.51.0) (2026-10-09)
+
+
+### Features
+
+* **academy:** replace quizzes with chapter confirmations (AYC-833) ([#1542](https://github.com/ayunis-core/ayunis-core/issues/1542)) ([9620267](https://github.com/ayunis-core/ayunis-core/commit/9620267a9a194580935f0fde3e1fe33c7edc3411))
+* **skills:** add an endpoint that improves a skill's texts (AYC-968) ([#1765](https://github.com/ayunis-core/ayunis-core/issues/1765)) ([f002269](https://github.com/ayunis-core/ayunis-core/commit/f0022695b903056640ff89c0d0b92d1def5da11f))
+* **skills:** let Ayunis Core improve a skill's trigger and instructions (AYC-968) ([#1766](https://github.com/ayunis-core/ayunis-core/issues/1766)) ([3520080](https://github.com/ayunis-core/ayunis-core/commit/352008022e531c41d07460d7f240f6cd0ad17f55))
+
+
+### Bug Fixes
+
+* **api:** retry reads through the deploy restart gap (AYC-1186) ([#1871](https://github.com/ayunis-core/ayunis-core/issues/1871)) ([8a513fd](https://github.com/ayunis-core/ayunis-core/commit/8a513fdf70647934a058c701cedfdfdee58b7445))
+* **artifacts:** stop waiting for PDF network idle (AYC-1185) ([#1874](https://github.com/ayunis-core/ayunis-core/issues/1874)) ([0fcdeb1](https://github.com/ayunis-core/ayunis-core/commit/0fcdeb13dc41600adf051946861671a7e538ca6b))
+* **auth:** return service unavailable during database outages (AYC-1218) ([#1878](https://github.com/ayunis-core/ayunis-core/issues/1878)) ([3f61763](https://github.com/ayunis-core/ayunis-core/commit/3f61763b882b00e4b499025cd715b366e002751a))
+* **deploy:** match the app's theme on the update page (AYC-1186) ([#1876](https://github.com/ayunis-core/ayunis-core/issues/1876)) ([eccfba9](https://github.com/ayunis-core/ayunis-core/commit/eccfba9d702baec51fae340cee1cee7deb665e9a))
+* **observability:** drop raw connect timeouts duplicated by classified provider failures (AYC-1212) ([#1880](https://github.com/ayunis-core/ayunis-core/issues/1880)) ([b32cb3e](https://github.com/ayunis-core/ayunis-core/commit/b32cb3ef338c51cd1b493f5890088c87476840ee))
+
+
+### Code Refactoring
+
+* **quotas:** own paid-call admission and record usage directly (AYC-968) ([#1864](https://github.com/ayunis-core/ayunis-core/issues/1864)) ([fd9f9c2](https://github.com/ayunis-core/ayunis-core/commit/fd9f9c2b3c0cce8c4bfb782029842bf069c99fec))
+
+
+### Documentation
+
+* **deploy:** document nginx upstream and permission setup for the update page (AYC-1186) ([#1875](https://github.com/ayunis-core/ayunis-core/issues/1875)) ([787c39c](https://github.com/ayunis-core/ayunis-core/commit/787c39c6234db3f2c4b9e584d3b28b0ba59d14fc))
+
+
+### Miscellaneous
+
+* **runs:** derive the execution path from usage and drop the re-export stubs (AYC-000) ([#1877](https://github.com/ayunis-core/ayunis-core/issues/1877)) ([d7513ae](https://github.com/ayunis-core/ayunis-core/commit/d7513ae97a2137c6962c31014397a56a580bedb7))
+
+
+### CI/CD
+
+* **deploy:** keep unchanged services running during deploys (AYC-1194) ([#1863](https://github.com/ayunis-core/ayunis-core/issues/1863)) ([932e2e6](https://github.com/ayunis-core/ayunis-core/commit/932e2e6eff8a693ce8ee051c6dfbfdf8043e8ce3))
+* **deploy:** serve an auto-reloading update page during app restarts (AYC-1186) ([#1872](https://github.com/ayunis-core/ayunis-core/issues/1872)) ([0f47845](https://github.com/ayunis-core/ayunis-core/commit/0f47845c417409265682515fafa9f1fd7f0bac52))
+* **deploy:** start app dependencies before replacing the app (AYC-1186) ([#1870](https://github.com/ayunis-core/ayunis-core/issues/1870)) ([69ffd88](https://github.com/ayunis-core/ayunis-core/commit/69ffd88782603addc836a8afefb0928aa36acf04))
+
+## [2.50.1](https://github.com/ayunis-core/ayunis-core/compare/v2.50.0...v2.50.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **anonymization:** classify thread mask failures (AYC-1184) ([#1858](https://github.com/ayunis-core/ayunis-core/issues/1858)) ([b7d04f2](https://github.com/ayunis-core/ayunis-core/commit/b7d04f2be78a8217b85e96d7ef4e837d84777bdd))
+* **auth:** keep refresh-token reads on the refresh transaction (AYC-1191) ([#1861](https://github.com/ayunis-core/ayunis-core/issues/1861)) ([6f4cd50](https://github.com/ayunis-core/ayunis-core/commit/6f4cd505940ab8a7edebae99c103d70819d3d0f6))
+* **invites:** decode windows-1252 csv uploads in bulk invite (AYC-1190) ([#1867](https://github.com/ayunis-core/ayunis-core/issues/1867)) ([d6167eb](https://github.com/ayunis-core/ayunis-core/commit/d6167eb8dbde3713e1272887a832909454b894bc))
+* **invites:** stabilize invite pagination (AYC-1006) ([#1866](https://github.com/ayunis-core/ayunis-core/issues/1866)) ([591e92e](https://github.com/ayunis-core/ayunis-core/commit/591e92ec781306a14b8cbf21c9044d05b7baaedf))
+* **models:** fall back to default model in threads when a team model is removed (AYC-1177) ([#1865](https://github.com/ayunis-core/ayunis-core/issues/1865)) ([f59c3a0](https://github.com/ayunis-core/ayunis-core/commit/f59c3a0dffb42c6f56f1fc6c5e2c9c9224b038e9))
+
+## [2.50.0](https://github.com/ayunis-core/ayunis-core/compare/v2.49.0...v2.50.0) (2026-10-06)
+
+
+### Features
+
+* **spreadsheet:** add undo/redo for unsaved spreadsheet changes (AYC-826) ([#1855](https://github.com/ayunis-core/ayunis-core/issues/1855)) ([631acb8](https://github.com/ayunis-core/ayunis-core/commit/631acb8adffc947188245080509f109b443b1c21))
+
+
+### Bug Fixes
+
+* **anonymize:** bound GLiNER inference latency (AYC-1182) ([#1853](https://github.com/ayunis-core/ayunis-core/issues/1853)) ([41d7318](https://github.com/ayunis-core/ayunis-core/commit/41d73189aa5547f5d37f94802441ffd4c7ef7b2d))
+* **artifacts:** keep paragraph spacing through the document editor (AYC-1135) ([#1851](https://github.com/ayunis-core/ayunis-core/issues/1851)) ([acb597c](https://github.com/ayunis-core/ayunis-core/commit/acb597c2eedc52f998ea8863aa042524654c4778))
+* **chat:** skip transcription for empty voice recordings (AYC-1170) ([#1856](https://github.com/ayunis-core/ayunis-core/issues/1856)) ([237f3d2](https://github.com/ayunis-core/ayunis-core/commit/237f3d2521ba39c4ddcb59ee82a4fc1831ac8615))
+* **mcp:** report tool-call timeouts as their own incident (AYC-1120) ([#1850](https://github.com/ayunis-core/ayunis-core/issues/1850)) ([4d7dbd1](https://github.com/ayunis-core/ayunis-core/commit/4d7dbd1a5c0446f6b0dc54fe142184759da4d2f8))
+* **skills:** say when a skill name is already taken (AYC-968) ([#1767](https://github.com/ayunis-core/ayunis-core/issues/1767)) ([0198850](https://github.com/ayunis-core/ayunis-core/commit/0198850aae10c3c5e9d76a678f6e92c5ce483a3c))
+
+
+### Documentation
+
+* **auth:** add customer SSO setup guide (AYC-1174) ([#1857](https://github.com/ayunis-core/ayunis-core/issues/1857)) ([82c4d04](https://github.com/ayunis-core/ayunis-core/commit/82c4d0458147d4e51155e5894fe534413d1ce950))
+
+## [2.49.0](https://github.com/ayunis-core/ayunis-core/compare/v2.48.0...v2.49.0) (2026-10-05)
+
+
+### Features
+
+* **subscriptions:** add overlap recovery workflow (AYC-1158) ([#1839](https://github.com/ayunis-core/ayunis-core/issues/1839)) ([9473785](https://github.com/ayunis-core/ayunis-core/commit/9473785cc41b174cc23d319a2dacba3b5c0d8727))
+
+
+### Miscellaneous
+
+* **backend:** migrate to NestJS 12 (AYC-1008) ([#1844](https://github.com/ayunis-core/ayunis-core/issues/1844)) ([73ee472](https://github.com/ayunis-core/ayunis-core/commit/73ee472f44ca4da8e7cb87c8baec6756ee17e2d2))
+
+## [2.48.0](https://github.com/ayunis-core/ayunis-core/compare/v2.47.0...v2.48.0) (2026-10-05)
+
+
+### Features
+
+* **orgs:** archive and delete organisations (AYC-35) ([#1828](https://github.com/ayunis-core/ayunis-core/issues/1828)) ([8122b91](https://github.com/ayunis-core/ayunis-core/commit/8122b914249c6827a04fa2dd86f31efc5f5d524c))
+
+
+### Bug Fixes
+
+* **AYC-35:** coordinate deletion with processing admission ([#1841](https://github.com/ayunis-core/ayunis-core/issues/1841)) ([fdb0344](https://github.com/ayunis-core/ayunis-core/commit/fdb03447deeca34c84ac4cd89257485f28099f51))
+* **inference:** classify statusless provider server faults (AYC-1165) ([#1845](https://github.com/ayunis-core/ayunis-core/issues/1845)) ([120a1db](https://github.com/ayunis-core/ayunis-core/commit/120a1dbf9be1a89fa25bb43cd713af59e03e7055))
+* **inference:** honor duration-formatted retry-after from stackit (AYC-1112) ([#1843](https://github.com/ayunis-core/ayunis-core/issues/1843)) ([11d0ca4](https://github.com/ayunis-core/ayunis-core/commit/11d0ca43b01b858f09c1b7f6b298f709aea530ee))
+* **models:** return conflict for duplicate org model grants (AYC-1110) ([#1840](https://github.com/ayunis-core/ayunis-core/issues/1840)) ([4fa2cca](https://github.com/ayunis-core/ayunis-core/commit/4fa2cca33e0ce477565768466fcc288e979090d2))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/checkout from 6.0.3 to 7.0.1 ([#1220](https://github.com/ayunis-core/ayunis-core/issues/1220)) ([7968954](https://github.com/ayunis-core/ayunis-core/commit/7968954ce0c28b19c4d308aa0fedf09183e16cc3))
+* **deps-actions:** bump docker/metadata-action from 5.10.0 to 6.2.0 ([#1218](https://github.com/ayunis-core/ayunis-core/issues/1218)) ([6f700cd](https://github.com/ayunis-core/ayunis-core/commit/6f700cd5ac97b26e4ac12afa940b97be25cf4b12))
+* **deps:** bump eslint-plugin-sonarjs from 3.0.7 to 4.2.1 ([#1716](https://github.com/ayunis-core/ayunis-core/issues/1716)) ([5c38631](https://github.com/ayunis-core/ayunis-core/commit/5c3863139df446c9b3c649bbd75a6aa42d921daf))
+
+## [2.47.0](https://github.com/ayunis-core/ayunis-core/compare/v2.46.0...v2.47.0) (2026-10-02)
+
+
+### Features
+
+* **sources:** support uploading outlook .msg files (AYC-1003) ([#1825](https://github.com/ayunis-core/ayunis-core/issues/1825)) ([7ccdb09](https://github.com/ayunis-core/ayunis-core/commit/7ccdb09d1a4885122da1147bc6fa2b44a50a7126))
+
+
+### Bug Fixes
+
+* **inference:** classify statusless provider rate limits (AYC-1066) ([#1837](https://github.com/ayunis-core/ayunis-core/issues/1837)) ([92c8b08](https://github.com/ayunis-core/ayunis-core/commit/92c8b085de143985954fd377866a54fd6252e65c))
+* **sources:** sanitize spreadsheet unicode before persistence (AYC-1106) ([#1834](https://github.com/ayunis-core/ayunis-core/issues/1834)) ([bcb6e56](https://github.com/ayunis-core/ayunis-core/commit/bcb6e56e3c2cb1cd820810f32ce73070ca2c35b2))
+* **storage:** classify upload storage failures and retain safe diagnostics (AYC-1109) ([#1835](https://github.com/ayunis-core/ayunis-core/issues/1835)) ([f0e21a3](https://github.com/ayunis-core/ayunis-core/commit/f0e21a3abbe9dff0d611a016767eff6ca914390d))
+
+
+### Documentation
+
+* **frontend:** guide concise UI copy (AYC-000) ([#1836](https://github.com/ayunis-core/ayunis-core/issues/1836)) ([0d34f16](https://github.com/ayunis-core/ayunis-core/commit/0d34f16d11231900839274667347a0b67a97c480))
+
+
+### Miscellaneous
+
+* **deps:** patch piscina 4.x prototype-pollution advisory (AYC-000) ([#1832](https://github.com/ayunis-core/ayunis-core/issues/1832)) ([e249924](https://github.com/ayunis-core/ayunis-core/commit/e2499247eb55017f7ae5f92a3e6ade16028efa21))
+
+## [2.46.0](https://github.com/ayunis-core/ayunis-core/compare/v2.45.0...v2.46.0) (2026-10-01)
+
+
+### Features
+
+* **chat:** search message content alongside titles (AYC-298) ([#1823](https://github.com/ayunis-core/ayunis-core/issues/1823)) ([23c9e34](https://github.com/ayunis-core/ayunis-core/commit/23c9e3407838e5552b48d2b16ae7d05a00a4b90c))
+
+
+### Bug Fixes
+
+* **chat:** keep undo after paste and transcription (AYC-1024) ([#1816](https://github.com/ayunis-core/ayunis-core/issues/1816)) ([871119f](https://github.com/ayunis-core/ayunis-core/commit/871119f44ad499ab64c50ae43784e1758eba71dd))
+* **models:** classify statusless provider rate limits (AYC-1065) ([#1824](https://github.com/ayunis-core/ayunis-core/issues/1824)) ([f785a78](https://github.com/ayunis-core/ayunis-core/commit/f785a787047d5fa66b0d3dacf2334434a7f9adb2))
+* **observability:** suppress raw model idle signals (AYC-1064) ([#1819](https://github.com/ayunis-core/ayunis-core/issues/1819)) ([b6926a4](https://github.com/ayunis-core/ayunis-core/commit/b6926a4716d9f45562d052738aa8354e7dd87502))
+* **runs:** fall back to the upstream MCP tool name on replay (AYC-1102) ([#1829](https://github.com/ayunis-core/ayunis-core/issues/1829)) ([a4abe2a](https://github.com/ayunis-core/ayunis-core/commit/a4abe2a3b5bbb5fa85a6737189dbca1d6d54485b))
+* **tools:** namespace MCP capabilities by integration (AYC-1102) ([#1826](https://github.com/ayunis-core/ayunis-core/issues/1826)) ([af8e760](https://github.com/ayunis-core/ayunis-core/commit/af8e760d7a40085cec34575a7b962e1b6629b2b4))
+
+
+### Miscellaneous
+
+* **deps:** patch @xhmikosr/decompress path traversal advisory (AYC-000) ([#1827](https://github.com/ayunis-core/ayunis-core/issues/1827)) ([f19d215](https://github.com/ayunis-core/ayunis-core/commit/f19d2156a4b577f1fb51d4062404f3d3266626e8))
+
+
+### CI/CD
+
+* cache backend lint, parallelize frontend checks, and raise e2e workers (AYC-0000) ([#1757](https://github.com/ayunis-core/ayunis-core/issues/1757)) ([376d75d](https://github.com/ayunis-core/ayunis-core/commit/376d75d8b0e7a91ebb868b12f30db6a9c71982a1))
+
+## [2.45.0](https://github.com/ayunis-core/ayunis-core/compare/v2.44.1...v2.45.0) (2026-09-30)
+
+
+### Features
+
+* **chat:** add organization default for anonymous mode (AYC-723) ([#1813](https://github.com/ayunis-core/ayunis-core/issues/1813)) ([26c9a45](https://github.com/ayunis-core/ayunis-core/commit/26c9a45dd457fc93118e2f5ba15ec76152439dce))
+* **knowledge-bases:** accept csv, excel and ods uploads (AYC-419) ([#1810](https://github.com/ayunis-core/ayunis-core/issues/1810)) ([cea2e48](https://github.com/ayunis-core/ayunis-core/commit/cea2e48b7e642014b85e4a796698e75266437ad5))
+* **spreadsheet:** show column letters in grid headers and column manager (AYC-737) ([#1808](https://github.com/ayunis-core/ayunis-core/issues/1808)) ([4a90650](https://github.com/ayunis-core/ayunis-core/commit/4a90650c3fe2fe7690a9fe98b319c458c029c2c0))
+* **webhooks:** forward monthly subscription credit updates (AYC-1017) ([#1807](https://github.com/ayunis-core/ayunis-core/issues/1807)) ([bebc5f3](https://github.com/ayunis-core/ayunis-core/commit/bebc5f323759c73fa5ac1a848e825eb408bc8dfd))
+
+
+### Bug Fixes
+
+* **auth:** recover stale chat sessions (AYC-1043) ([#1806](https://github.com/ayunis-core/ayunis-core/issues/1806)) ([b36adb2](https://github.com/ayunis-core/ayunis-core/commit/b36adb2c02cf5f09ecc454b1ebb0ab734bd5b77d))
+* **chat:** remove deleted histories without refresh (AYC-1041) ([#1796](https://github.com/ayunis-core/ayunis-core/issues/1796)) ([ca6b1bb](https://github.com/ayunis-core/ayunis-core/commit/ca6b1bb7faaceb7e2b11494bdd9f45f1b26af634))
+* **chat:** render read documents inline (AYC-966) ([#1805](https://github.com/ayunis-core/ayunis-core/issues/1805)) ([14c40b4](https://github.com/ayunis-core/ayunis-core/commit/14c40b49286bcd6ffcd4590e5403992b89232552))
+* **persistence:** enroll repositories in cls transactions (AYC-496) ([#1811](https://github.com/ayunis-core/ayunis-core/issues/1811)) ([12467fd](https://github.com/ayunis-core/ayunis-core/commit/12467fde537cc88d8b454bdac784d0877d3c09ab))
+* **users:** show invite statuses as badges (AYC-286) ([#1803](https://github.com/ayunis-core/ayunis-core/issues/1803)) ([bef793e](https://github.com/ayunis-core/ayunis-core/commit/bef793e8f7d93d3576b73ccf68386fab8e713cd1))
+
+
+### Documentation
+
+* **frontend:** document behavior hook placement (AYC-937) ([#1660](https://github.com/ayunis-core/ayunis-core/issues/1660)) ([e6d3b37](https://github.com/ayunis-core/ayunis-core/commit/e6d3b37dfaaaf3a28acd63ca5f7d7ca556032a2a))
+
+## [2.44.1](https://github.com/ayunis-core/ayunis-core/compare/v2.44.0...v2.44.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **letterheads:** commit removal before storage cleanup (AYC-1062) ([#1792](https://github.com/ayunis-core/ayunis-core/issues/1792)) ([02b01be](https://github.com/ayunis-core/ayunis-core/commit/02b01bea2cb9552f91ee3000fb95503ffaa84771))
+* **mcp:** retain timeout operation diagnostics (AYC-1063) ([#1793](https://github.com/ayunis-core/ayunis-core/issues/1793)) ([2ee9e1e](https://github.com/ayunis-core/ayunis-core/commit/2ee9e1e0ea3debdce2165091b4c64ca929e73e7c))
+* **observability:** suppress classified socket duplicates (AYC-997) ([#1790](https://github.com/ayunis-core/ayunis-core/issues/1790)) ([1f6f723](https://github.com/ayunis-core/ayunis-core/commit/1f6f723cfd651dc53266d766c29f615207b6dee3))
+* **runs:** recover when research ends without an answer (AYC-1058) ([#1786](https://github.com/ayunis-core/ayunis-core/issues/1786)) ([d42e3c0](https://github.com/ayunis-core/ayunis-core/commit/d42e3c0f8c6f7b131b8862fd42a82bed21c863a2))
+* **runs:** retain provider rejection diagnostics (AYC-999) ([#1791](https://github.com/ayunis-core/ayunis-core/issues/1791)) ([ea6e644](https://github.com/ayunis-core/ayunis-core/commit/ea6e644a30b094003d231907fde84ded3a16279c))
+* **sources:** keep the collection link when the crawl worker races the url assignment (AYC-1048) ([#1734](https://github.com/ayunis-core/ayunis-core/issues/1734)) ([e6bd093](https://github.com/ayunis-core/ayunis-core/commit/e6bd0938b090d8ebf86d2e874dd4061ee369c521))
+* **sources:** recover OCR-rejected PDFs and localize chat failures (AYC-1059) ([#1788](https://github.com/ayunis-core/ayunis-core/issues/1788)) ([baa29af](https://github.com/ayunis-core/ayunis-core/commit/baa29af5f5bbc5e4898f5ff09cc60146680f2282))
+
+
+### Documentation
+
+* **skills:** tool-agnostic worktrees with &lt;ticket-id&gt;-&lt;slug&gt; naming (AYC-000) ([#1797](https://github.com/ayunis-core/ayunis-core/issues/1797)) ([a9e86dd](https://github.com/ayunis-core/ayunis-core/commit/a9e86dd446cac6d5a6baf6b828607f188dfde795))
+
+## [2.44.0](https://github.com/ayunis-core/ayunis-core/compare/v2.43.0...v2.44.0) (2026-09-28)
+
+
+### Features
+
+* **api-keys:** move revoked and expired keys into an archive (AYC-000) ([#1771](https://github.com/ayunis-core/ayunis-core/issues/1771)) ([4ef0258](https://github.com/ayunis-core/ayunis-core/commit/4ef02580c00f7fdeb87647d98c77a7567377c611)), closes [#1768](https://github.com/ayunis-core/ayunis-core/issues/1768)
+* **chat:** install marketplace skills from the conversation (AYC-1080) ([#1763](https://github.com/ayunis-core/ayunis-core/issues/1763)) ([bc13c22](https://github.com/ayunis-core/ayunis-core/commit/bc13c22118ae3dc73d9c6f92e189c042a69b5b5c))
+* **webhooks:** emit first steps progress events (AYC-660) ([#1775](https://github.com/ayunis-core/ayunis-core/issues/1775)) ([9547eed](https://github.com/ayunis-core/ayunis-core/commit/9547eed6146534070c75eed798c0c12be983956b))
+* **webhooks:** emit invited user events (AYC-1006) ([#1764](https://github.com/ayunis-core/ayunis-core/issues/1764)) ([81ac661](https://github.com/ayunis-core/ayunis-core/commit/81ac66127005fca9726a96f688c2ab2e3411b514))
+
+
+### Bug Fixes
+
+* **anonymization:** retry refused connections once fail closed (AYC-958) ([#1784](https://github.com/ayunis-core/ayunis-core/issues/1784)) ([b209190](https://github.com/ayunis-core/ayunis-core/commit/b209190149cce559818896739ffa4148c871401b))
+* **app:** stop browsers reusing a stale index.html (AYC-1090) ([#1782](https://github.com/ayunis-core/ayunis-core/issues/1782)) ([215b2fc](https://github.com/ayunis-core/ayunis-core/commit/215b2fc49c86580bef25dd6e06abc2a0e3c2c9b3))
+* **docker:** pull minio from a public pinned image (AYC-000) ([#1780](https://github.com/ayunis-core/ayunis-core/issues/1780)) ([2c9b866](https://github.com/ayunis-core/ayunis-core/commit/2c9b8661d22f1fbe3dc3e48e5ccc6a947919b5fe))
+* **knowledge-bases:** keep cleanup outside deletion transaction (AYC-898) ([#1787](https://github.com/ayunis-core/ayunis-core/issues/1787)) ([90c48a0](https://github.com/ayunis-core/ayunis-core/commit/90c48a0ce732d2e52907bde00d48e05ab153c0cf))
+* **observability:** suppress classified body-timeout duplicates (AYC-948) ([#1783](https://github.com/ayunis-core/ayunis-core/issues/1783)) ([4335148](https://github.com/ayunis-core/ayunis-core/commit/43351484e35059936fb31f2d7b57fc6f3e0538b3))
+
+
+### Documentation
+
+* **skills:** reconcile agent guidance with agentfiles store (AYC-000) ([#1776](https://github.com/ayunis-core/ayunis-core/issues/1776)) ([c9f0cf9](https://github.com/ayunis-core/ayunis-core/commit/c9f0cf9d1f810d47f5dc8e53dc7290d2cfced53f))
+
+
+### Miscellaneous
+
+* **features:** remove feature flags for released features (AYC-000) ([#1773](https://github.com/ayunis-core/ayunis-core/issues/1773)) ([f3e58db](https://github.com/ayunis-core/ayunis-core/commit/f3e58db8df0e61187a396d95c0be062ef6ce50fd))
+
+## [2.43.0](https://github.com/ayunis-core/ayunis-core/compare/v2.42.0...v2.43.0) (2026-09-25)
+
+
+### Features
+
+* **admin-settings:** explain image model availability in the model card (AYC-943) ([#1745](https://github.com/ayunis-core/ayunis-core/issues/1745)) ([81a3323](https://github.com/ayunis-core/ayunis-core/commit/81a3323d4bbbb5a3bbd9a7c89f7373d483a6e058))
+* **chat:** explain the long-chat warning and let users dismiss it (AYC-985) ([#1744](https://github.com/ayunis-core/ayunis-core/issues/1744)) ([a893158](https://github.com/ayunis-core/ayunis-core/commit/a89315820394e43fcb1f1d05954fe2e652141380))
+* **operations:** add protected queue inspection (AYC-1037) ([#1748](https://github.com/ayunis-core/ayunis-core/issues/1748)) ([dec1c6e](https://github.com/ayunis-core/ayunis-core/commit/dec1c6e1259d4631005596e0af9d5e9191c7b89c))
+
+
+### Bug Fixes
+
+* **analytics:** group dynamic OpenPanel routes (AYC-000) ([#1746](https://github.com/ayunis-core/ayunis-core/issues/1746)) ([dc49f51](https://github.com/ayunis-core/ayunis-core/commit/dc49f519fc6c099c072cd86081aee450fdff342b))
+* **chat:** authorize active knowledge base citations (AYC-1051) ([#1749](https://github.com/ayunis-core/ayunis-core/issues/1749)) ([413b08e](https://github.com/ayunis-core/ayunis-core/commit/413b08e0203b78dfefc43a5a1b3264b13112c822))
+* **chat:** bundle GeoJSON map worker dependencies (AYC-866) ([#1747](https://github.com/ayunis-core/ayunis-core/issues/1747)) ([20bdb8c](https://github.com/ayunis-core/ayunis-core/commit/20bdb8cc0d9bbf0d4d6788b155e2329ce79d814d))
+* **retrievers:** preserve web content block boundaries (AYC-1070) ([#1759](https://github.com/ayunis-core/ayunis-core/issues/1759)) ([2aec927](https://github.com/ayunis-core/ayunis-core/commit/2aec927bf334b0d0d8d5b4f32a13f6f549a3af9f))
+* **runs:** preserve terminal provider failure context (AYC-946) ([#1753](https://github.com/ayunis-core/ayunis-core/issues/1753)) ([03b8dec](https://github.com/ayunis-core/ayunis-core/commit/03b8decf872d14f661fe04949c4ea62b5662e9cf))
+* **storage:** classify missing objects during presigning (AYC-945) ([#1752](https://github.com/ayunis-core/ayunis-core/issues/1752)) ([a20a4d1](https://github.com/ayunis-core/ayunis-core/commit/a20a4d148c7bb0ed4f658dd7928664b883a19e59))
+* **subscriptions:** allow selecting next calendar year (AYC-1052) ([#1754](https://github.com/ayunis-core/ayunis-core/issues/1754)) ([c6a9ce4](https://github.com/ayunis-core/ayunis-core/commit/c6a9ce4071fab4c701a89162fca3268dad79211b))
+* **transcriptions:** classify undecodable mistral audio (AYC-996) ([#1751](https://github.com/ayunis-core/ayunis-core/issues/1751)) ([8900e80](https://github.com/ayunis-core/ayunis-core/commit/8900e809a26d351a407d6c94142c5579b8b106e3))
+
+
+### CI/CD
+
+* restore MinIO-backed checks (AYC-000) ([#1758](https://github.com/ayunis-core/ayunis-core/issues/1758)) ([093902f](https://github.com/ayunis-core/ayunis-core/commit/093902fc765361977b32be7596bc1ed36eed29cf))
+
+## [2.42.0](https://github.com/ayunis-core/ayunis-core/compare/v2.41.0...v2.42.0) (2026-09-23)
+
+
+### Features
+
+* **analytics:** integrate OpenPanel tracking (AYC-914) ([#1624](https://github.com/ayunis-core/ayunis-core/issues/1624)) ([e981779](https://github.com/ayunis-core/ayunis-core/commit/e9817797d4e4dbed014785da418e9300537c9faf))
+* **anonymization:** bulk-add words to the global whitelist (AYC-1030) ([#1731](https://github.com/ayunis-core/ayunis-core/issues/1731)) ([61e0a13](https://github.com/ayunis-core/ayunis-core/commit/61e0a131ac74cedd38dbb83280c866556165cce9))
+* **chat:** add clickable source citations (AYC-289) ([#1637](https://github.com/ayunis-core/ayunis-core/issues/1637)) ([ad9d940](https://github.com/ayunis-core/ayunis-core/commit/ad9d94043b947bdb875178021c1507112d0bb9f4))
+* **mcp:** enable custom integrations for cloud deployments (AYC-000) ([#1736](https://github.com/ayunis-core/ayunis-core/issues/1736)) ([0fe4ec7](https://github.com/ayunis-core/ayunis-core/commit/0fe4ec7b7ee3b14d462a5744f511651d11dc86fc))
+* **onboarding:** add a workspaces category to the getting started steps (AYC-000) ([#1709](https://github.com/ayunis-core/ayunis-core/issues/1709)) ([9ce6895](https://github.com/ayunis-core/ayunis-core/commit/9ce6895310f0c30f4f8412f788af813dbe678535))
+* **usage:** enforce credit limits at model call boundaries (AYC-1011) ([#1732](https://github.com/ayunis-core/ayunis-core/issues/1732)) ([5eeb6c0](https://github.com/ayunis-core/ayunis-core/commit/5eeb6c000068f12d3f56faf203e2255b2be9c110))
+* **users:** assign teams during CSV import (AYC-286) ([#1735](https://github.com/ayunis-core/ayunis-core/issues/1735)) ([0a0eafb](https://github.com/ayunis-core/ayunis-core/commit/0a0eafb58eaf253638e1332b5915a204c24b1c3c))
+* **workspaces:** apply workspaces iteration-1 feedback (AYC-000) ([#1740](https://github.com/ayunis-core/ayunis-core/issues/1740)) ([0d937fc](https://github.com/ayunis-core/ayunis-core/commit/0d937fcc1eddd3c1ef08725cd11a3c522a1d8b0b))
+
+
+### Bug Fixes
+
+* **admin-settings:** remove credit usage column from credit limits table (AYC-916) ([#1629](https://github.com/ayunis-core/ayunis-core/issues/1629)) ([07fba8c](https://github.com/ayunis-core/ayunis-core/commit/07fba8c6029e1eb4f5b18ea8a77cc94e955928d6))
+* **admin-settings:** show credit spend next to limits (AYC-916) ([#1743](https://github.com/ayunis-core/ayunis-core/issues/1743)) ([470a333](https://github.com/ayunis-core/ayunis-core/commit/470a3336b1e446603450a1ca13bab893a5dba676))
+* **chat:** re-enable map widget (AYC-827) ([#1741](https://github.com/ayunis-core/ayunis-core/issues/1741)) ([15070cd](https://github.com/ayunis-core/ayunis-core/commit/15070cd5a83a6d4587189c33a9dad67b730915a7))
+* **models:** use Azure Responses API for reasoning tools (AYC-519) ([#1739](https://github.com/ayunis-core/ayunis-core/issues/1739)) ([7f039a5](https://github.com/ayunis-core/ayunis-core/commit/7f039a52ff710dd97ea934510660bea94ffe14ed))
+* **webhooks:** preserve subscription lifecycle order (AYC-650) ([#1738](https://github.com/ayunis-core/ayunis-core/issues/1738)) ([131ae9b](https://github.com/ayunis-core/ayunis-core/commit/131ae9b2b2b14621dac0b8f3f1f1c743414e3528))
+
+## [2.41.0](https://github.com/ayunis-core/ayunis-core/compare/v2.40.3...v2.41.0) (2026-09-22)
+
+
+### Features
+
+* **admin:** show organisation subscription history to super admins (AYC-977) ([#1695](https://github.com/ayunis-core/ayunis-core/issues/1695)) ([6a4b6b6](https://github.com/ayunis-core/ayunis-core/commit/6a4b6b65a583b9833a8aeb475af80b1097f09db1))
+* **anonymization:** raise whitelist pattern limit to 1000 characters (AYC-951) ([#1730](https://github.com/ayunis-core/ayunis-core/issues/1730)) ([246ebde](https://github.com/ayunis-core/ayunis-core/commit/246ebdedf3b9e941e73f02768d434412d250b38a))
+* **workspaces:** add help links to workspace views (AYC-000) ([#1733](https://github.com/ayunis-core/ayunis-core/issues/1733)) ([33f2e83](https://github.com/ayunis-core/ayunis-core/commit/33f2e83a5db79d2a581b82ac3195c2e133af239c))
+
+
+### Bug Fixes
+
+* **admin-settings:** render credit budget usage link as outline button (AYC-915) ([#1628](https://github.com/ayunis-core/ayunis-core/issues/1628)) ([756fc62](https://github.com/ayunis-core/ayunis-core/commit/756fc62485c492991a38846c33e18084524c8a4d))
+* **auth:** direct existing customers to their own administrator on the closed registration screen (AYC-967) ([#1728](https://github.com/ayunis-core/ayunis-core/issues/1728)) ([3bfaec8](https://github.com/ayunis-core/ayunis-core/commit/3bfaec89884f22c2f470a84ab4dad14f70bd2518))
+* **chat:** accept audio and markdown files on drag-and-drop (AYC-742) ([#1729](https://github.com/ayunis-core/ayunis-core/issues/1729)) ([0e8b783](https://github.com/ayunis-core/ayunis-core/commit/0e8b783fa98a5bde986ef32ef68f14e525fc5656))
+* **chat:** derive context budget from selected model (AYC-1023) ([#1722](https://github.com/ayunis-core/ayunis-core/issues/1722)) ([9237d37](https://github.com/ayunis-core/ayunis-core/commit/9237d37b7fba1256ec225662a0c8cf2782fcd4de))
+* **chat:** keep streamed responses in their originating chat (AYC-978) ([#1726](https://github.com/ayunis-core/ayunis-core/issues/1726)) ([6e7900a](https://github.com/ayunis-core/ayunis-core/commit/6e7900af71791227907c55e1d7dc4fa1cfca1d0d))
+* **inference:** preserve unsupported MCP tool schemas (AYC-911) ([#1724](https://github.com/ayunis-core/ayunis-core/issues/1724)) ([88e9491](https://github.com/ayunis-core/ayunis-core/commit/88e9491d6a2ef63d7792b202b699033cdc139ca2))
+* **models:** make context windows configurable (AYC-1023) ([#1727](https://github.com/ayunis-core/ayunis-core/issues/1727)) ([6a5da49](https://github.com/ayunis-core/ayunis-core/commit/6a5da49cab65388fbd44dd9d65dd3412de2c04a8))
+* **rag:** align crawled chunk text coordinates (AYC-541) ([#1725](https://github.com/ayunis-core/ayunis-core/issues/1725)) ([d6459e6](https://github.com/ayunis-core/ayunis-core/commit/d6459e665175862d2e509a86fdc5745dc3e7e38b))
+* **rag:** allow long document conversions (AYC-993) ([#1705](https://github.com/ayunis-core/ayunis-core/issues/1705)) ([73dc027](https://github.com/ayunis-core/ayunis-core/commit/73dc02758ef12ac3c8bd5a6f0ac96ace6c4aa6fa))
+* **subscriptions:** manage the newest subscription, not the active one (AYC-995) ([#1707](https://github.com/ayunis-core/ayunis-core/issues/1707)) ([af4c17f](https://github.com/ayunis-core/ayunis-core/commit/af4c17f9eac367fb30d55ece7ceb48eedaa46085))
+* **workspaces:** align German knowledge terminology (AYC-1020) ([#1720](https://github.com/ayunis-core/ayunis-core/issues/1720)) ([6c8c0c7](https://github.com/ayunis-core/ayunis-core/commit/6c8c0c7e742bc4fabef7dbad517c58b75bf1fb09))
+* **workspaces:** keep favorites an explicit user choice (AYC-1016) ([#1718](https://github.com/ayunis-core/ayunis-core/issues/1718)) ([c575427](https://github.com/ayunis-core/ayunis-core/commit/c575427bfd4c2bf27829e9a702df4cc81a821955))
+
+
+### Code Refactoring
+
+* **context:** centralize required user context access (AYC-992) ([#1706](https://github.com/ayunis-core/ayunis-core/issues/1706)) ([f0c00e8](https://github.com/ayunis-core/ayunis-core/commit/f0c00e8bf6288ecf8bb15e2b1aea20eee7f046bf))
+
+
+### Miscellaneous
+
+* **deps-sandbox:** bump matplotlib ([#1700](https://github.com/ayunis-core/ayunis-core/issues/1700)) ([61c9d81](https://github.com/ayunis-core/ayunis-core/commit/61c9d815fbf2a68e6e63bbb91579cd97d8b05a72))
+* **deps-sandbox:** bump pandas in /ayunis-core-code-execution/sandbox ([#1699](https://github.com/ayunis-core/ayunis-core/issues/1699)) ([490200f](https://github.com/ayunis-core/ayunis-core/commit/490200f412dc373f2caad82d5a0e3ca0ab41c5c1))
+* **deps:** bump nodemailer from 7.0.13 to 10.0.10 ([#1702](https://github.com/ayunis-core/ayunis-core/issues/1702)) ([dfe4697](https://github.com/ayunis-core/ayunis-core/commit/dfe46972a6f62c676c3f6aa3d039ce016828f16b))
+* **deps:** bump recharts from 2.15.4 to 3.10.1 ([#1703](https://github.com/ayunis-core/ayunis-core/issues/1703)) ([ffa133d](https://github.com/ayunis-core/ayunis-core/commit/ffa133d241acc71cd6dc1c4d112f592c4b9c179c))
+* **deps:** hold undici on the major node embeds (AYC-000) ([#1710](https://github.com/ayunis-core/ayunis-core/issues/1710)) ([87d6824](https://github.com/ayunis-core/ayunis-core/commit/87d68245883050eb260a436039943774288ce101))
+
+
+### CI/CD
+
+* **e2e:** configure seat-based subscription prices (AYC-000) ([#1696](https://github.com/ayunis-core/ayunis-core/issues/1696)) ([0cec120](https://github.com/ayunis-core/ayunis-core/commit/0cec1209f2609cd70f057299a42b29e92559ca68))
+
+## [2.40.3](https://github.com/ayunis-core/ayunis-core/compare/v2.40.2...v2.40.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **auth:** restore browser credential autofill on the auth forms (AYC-982) ([#1692](https://github.com/ayunis-core/ayunis-core/issues/1692)) ([4af03ec](https://github.com/ayunis-core/ayunis-core/commit/4af03ec96b0b7591ae3f9898a2f80a3a91e0d2d0))
+* **chat:** create skills in the thread workspace (AYC-939) ([#1679](https://github.com/ayunis-core/ayunis-core/issues/1679)) ([99eb2c2](https://github.com/ayunis-core/ayunis-core/commit/99eb2c2f8c7dcbb80d730c49077d880c09f9ea99))
+
+
+### Documentation
+
+* **agent:** preserve Linear release lifecycle (AYC-000) ([#1689](https://github.com/ayunis-core/ayunis-core/issues/1689)) ([65280ef](https://github.com/ayunis-core/ayunis-core/commit/65280ef20702cf4d3e738431f79bdc654e06b540))
+
+
+### CI/CD
+
+* **build-images:** stop sourcemap upload failures from blocking staging deploys (AYC-000) ([#1688](https://github.com/ayunis-core/ayunis-core/issues/1688)) ([dcc2323](https://github.com/ayunis-core/ayunis-core/commit/dcc2323aa9cdabd810680c53bacf06b2ac00c2b6))
+
+## [2.40.2](https://github.com/ayunis-core/ayunis-core/compare/v2.40.1...v2.40.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **letterheads:** surface loading and timeout states in the margin preview (AYC-711) ([#1682](https://github.com/ayunis-core/ayunis-core/issues/1682)) ([74e6322](https://github.com/ayunis-core/ayunis-core/commit/74e632276559407fa3492df347cec2a58902a333))
+* **sources:** start PDF timeout after queue pickup (AYC-975) ([#1685](https://github.com/ayunis-core/ayunis-core/issues/1685)) ([472fee1](https://github.com/ayunis-core/ayunis-core/commit/472fee1c7c866cfc52cc0852a43014bbd67c5236))
+
+## [2.40.1](https://github.com/ayunis-core/ayunis-core/compare/v2.40.0...v2.40.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **chat:** show the duplicate-name error when creating or editing a skill (AYC-939) ([#1680](https://github.com/ayunis-core/ayunis-core/issues/1680)) ([5eed229](https://github.com/ayunis-core/ayunis-core/commit/5eed229595a5449b7927c53646294af15cc19164))
+* **tools:** paginate web and document results (AYC-848) ([#1677](https://github.com/ayunis-core/ayunis-core/issues/1677)) ([d5453cf](https://github.com/ayunis-core/ayunis-core/commit/d5453cfe42567ad983c49d6d88289d05a89a1507))
+
+
+### Documentation
+
+* **agent:** make implementation delivery autonomous (AYC-000) ([#1681](https://github.com/ayunis-core/ayunis-core/issues/1681)) ([de24437](https://github.com/ayunis-core/ayunis-core/commit/de24437c97fd0d85892159b5d3de3bcbf34a136c))
+
+
+### Miscellaneous
+
+* **qa:** script the QA teardown and sweep leftovers first (AYC-000) ([#1675](https://github.com/ayunis-core/ayunis-core/issues/1675)) ([7a8e3b8](https://github.com/ayunis-core/ayunis-core/commit/7a8e3b8457fcff44b549433b769266b13a5a149c))
+
+## [2.40.0](https://github.com/ayunis-core/ayunis-core/compare/v2.39.0...v2.40.0) (2026-09-14)
+
+
+### Features
+
+* **auth:** enforce organization SSO-only sessions (AYC-868) ([#1575](https://github.com/ayunis-core/ayunis-core/issues/1575)) ([c7fcbcb](https://github.com/ayunis-core/ayunis-core/commit/c7fcbcb6533eee78cf752f13c87632932df8f0a0))
+* **dev:** add slot management dashboard (AYC-000) ([#1658](https://github.com/ayunis-core/ayunis-core/issues/1658)) ([6dbb8e9](https://github.com/ayunis-core/ayunis-core/commit/6dbb8e94bb0a29693d090d841a213ea391e069dc))
+* **sso:** expose SSO-only organization login (AYC-868) ([#1577](https://github.com/ayunis-core/ayunis-core/issues/1577)) ([2989937](https://github.com/ayunis-core/ayunis-core/commit/2989937bcd928de0b86dd600cba7db246b6af821))
+* **sso:** manage organization password policy (AYC-868) ([#1576](https://github.com/ayunis-core/ayunis-core/issues/1576)) ([4699cf5](https://github.com/ayunis-core/ayunis-core/commit/4699cf5b61c85076b5544e964497d1539565498f))
+* **sso:** persist local password login policy (AYC-868) ([#1574](https://github.com/ayunis-core/ayunis-core/issues/1574)) ([775f442](https://github.com/ayunis-core/ayunis-core/commit/775f442514273d5fd7a671f444af285ed44b9996))
+
+
+### Bug Fixes
+
+* **i18n:** persist the selected display language (AYC-000) ([#1676](https://github.com/ayunis-core/ayunis-core/issues/1676)) ([cbf2c3f](https://github.com/ayunis-core/ayunis-core/commit/cbf2c3f198d80a9a4be83c7d6f15bc2c321e2e68))
+* **integrations:** allow editing connection settings (AYC-942) ([#1664](https://github.com/ayunis-core/ayunis-core/issues/1664)) ([ae2020f](https://github.com/ayunis-core/ayunis-core/commit/ae2020f7988e7cbc4914794ceb26c84104e565a1))
+* **integrations:** refetch the list after disabling an integration (AYC-941) ([#1663](https://github.com/ayunis-core/ayunis-core/issues/1663)) ([1944f89](https://github.com/ayunis-core/ayunis-core/commit/1944f8903b6e20b0c6b85b87ac39d909a2dd420f))
+* **ui:** close the mobile sidebar on link clicks (AYC-937) ([#1659](https://github.com/ayunis-core/ayunis-core/issues/1659)) ([86998a9](https://github.com/ayunis-core/ayunis-core/commit/86998a978301104de69138158851a4e723e773cb))
+* **workspace:** confirm a saved workspace instruction (AYC-954) ([#1662](https://github.com/ayunis-core/ayunis-core/issues/1662)) ([5536dac](https://github.com/ayunis-core/ayunis-core/commit/5536dac82fd671c69f42e8976a0ddaa9ea3aabcc))
+
+
+### Documentation
+
+* **auth:** document authentication architecture (AYC-000) ([#1601](https://github.com/ayunis-core/ayunis-core/issues/1601)) ([43ef58d](https://github.com/ayunis-core/ayunis-core/commit/43ef58df4267cba3b9f34ea9f037c97cc80c15aa))
+* **workflow:** require upfront risk evidence (AYC-942) ([#1674](https://github.com/ayunis-core/ayunis-core/issues/1674)) ([646ca72](https://github.com/ayunis-core/ayunis-core/commit/646ca729775ab443101a9d1bed6fc510043cbc20))
+
+
+### Miscellaneous
+
+* **deps-sandbox:** bump numpy in /ayunis-core-code-execution/sandbox ([#1665](https://github.com/ayunis-core/ayunis-core/issues/1665)) ([76b88ec](https://github.com/ayunis-core/ayunis-core/commit/76b88ec71ae9bb90e7340336945f5a00425357a8))
+
+
+### CI/CD
+
+* **deps:** fail the build on a dedupable lockfile (AYC-000) ([#1656](https://github.com/ayunis-core/ayunis-core/issues/1656)) ([ea674b5](https://github.com/ayunis-core/ayunis-core/commit/ea674b511684c233dbf00e40d9f523d5a63ca388))
+
+## [2.39.0](https://github.com/ayunis-core/ayunis-core/compare/v2.38.0...v2.39.0) (2026-09-09)
+
+
+### Features
+
+* **chat:** show active AI context in sidebar (AYC-677) ([#1636](https://github.com/ayunis-core/ayunis-core/issues/1636)) ([cfcdb91](https://github.com/ayunis-core/ayunis-core/commit/cfcdb91e4338452e2bc3a89657aea268fd38bd9c))
+* **chat:** show AI context hint at chat start (AYC-936) ([#1652](https://github.com/ayunis-core/ayunis-core/issues/1652)) ([314101e](https://github.com/ayunis-core/ayunis-core/commit/314101e3c1dfff91f9c8c0836053ee593b47299c))
+* **editor:** add justified text alignment (AYC-664) ([#1647](https://github.com/ayunis-core/ayunis-core/issues/1647)) ([ecd2e26](https://github.com/ayunis-core/ayunis-core/commit/ecd2e2631bc666b97aabc7097b58e50eef2a102a))
+* **knowledge-bases:** add per-user active state (AYC-821) ([#1569](https://github.com/ayunis-core/ayunis-core/issues/1569)) ([6d8faf7](https://github.com/ayunis-core/ayunis-core/commit/6d8faf7ccc8a0cdfc6439c7e659c79fc448efe4f))
+* **knowledge-bases:** unify personal and workspace operations (AYC-935) ([#1644](https://github.com/ayunis-core/ayunis-core/issues/1644)) ([d5059d7](https://github.com/ayunis-core/ayunis-core/commit/d5059d7a20fd22d0811a137dff3c41a28f918dbd))
+* **skills:** unify personal and workspace operations (AYC-935) ([#1648](https://github.com/ayunis-core/ayunis-core/issues/1648)) ([87cdc6a](https://github.com/ayunis-core/ayunis-core/commit/87cdc6a9db5b8c2d9f378f904c6895a31c38e776))
+* **workspaces:** add workspace resource backend APIs (AYC-871) ([#1618](https://github.com/ayunis-core/ayunis-core/issues/1618)) ([5c39c19](https://github.com/ayunis-core/ayunis-core/commit/5c39c194dc8dc3c31e7e76bc7fe07a79f336e6c7))
+* **workspaces:** add workspace resource frontend flows (AYC-871) ([#1619](https://github.com/ayunis-core/ayunis-core/issues/1619)) ([8339fa1](https://github.com/ayunis-core/ayunis-core/commit/8339fa12ba257e30254c8090a36fac3c2c8fdeaf))
+
+
+### Bug Fixes
+
+* **artifacts:** preserve list item spacing in Word export (AYC-689) ([#1653](https://github.com/ayunis-core/ayunis-core/issues/1653)) ([451f34f](https://github.com/ayunis-core/ayunis-core/commit/451f34f32e18ac1ea1ccebd1d627ef29efd1b8b4))
+* **chat:** align long-chat warning with context budget (AYC-922) ([#1635](https://github.com/ayunis-core/ayunis-core/issues/1635)) ([7d70f73](https://github.com/ayunis-core/ayunis-core/commit/7d70f73deaea525e04e6576ba42e460c7ff697fa))
+* **i18n:** localize zod's default validation messages (AYC-000) ([#1649](https://github.com/ayunis-core/ayunis-core/issues/1649)) ([7e02b5a](https://github.com/ayunis-core/ayunis-core/commit/7e02b5a66d455f68060e560be4e08e7693a5c128))
+* **invites:** make email delivery logs traceable (AYC-918) ([#1639](https://github.com/ayunis-core/ayunis-core/issues/1639)) ([0a647d9](https://github.com/ayunis-core/ayunis-core/commit/0a647d93146660f095899df7ea7b23702a9edc46))
+* **sources:** bound source query results (AYC-934) ([#1641](https://github.com/ayunis-core/ayunis-core/issues/1641)) ([e502232](https://github.com/ayunis-core/ayunis-core/commit/e502232d2b1f5cc488f44fb55d6b0d6ce1a598be))
+* **ui:** keep primary surfaces usable on mobile (AYC-230) ([#1650](https://github.com/ayunis-core/ayunis-core/issues/1650)) ([294c12e](https://github.com/ayunis-core/ayunis-core/commit/294c12e5e93698386013966b8cd1975ffd8bc680))
+
+
+### Code Refactoring
+
+* **workspaces:** align project overview UI patterns (AYC-871) ([#1580](https://github.com/ayunis-core/ayunis-core/issues/1580)) ([70dcf45](https://github.com/ayunis-core/ayunis-core/commit/70dcf4582a0eefc7fafaa157595fed8756028bff))
+* **workspaces:** establish exclusive resource ownership (AYC-871) ([#1617](https://github.com/ayunis-core/ayunis-core/issues/1617)) ([c8ef1af](https://github.com/ayunis-core/ayunis-core/commit/c8ef1afd02fe0d7e8f9fb4ce8f1948fcd93defb4))
+
+
+### Miscellaneous
+
+* **deps-frontend:** bump the other group across 1 directory with 28 updates ([#1563](https://github.com/ayunis-core/ayunis-core/issues/1563)) ([7d2bf5c](https://github.com/ayunis-core/ayunis-core/commit/7d2bf5ccec74a7e9a8fbc1a89932459c7cc1d741))
+* **deps:** align the Mistral SDK across the workspace (AYC-000) ([#1646](https://github.com/ayunis-core/ayunis-core/issues/1646)) ([658388e](https://github.com/ayunis-core/ayunis-core/commit/658388efef74eb3920dcc9229a89b31a369a66a4))
+* **deps:** bump maplibre-gl past the XSS sanitizer advisory (AYC-000) ([#1643](https://github.com/ayunis-core/ayunis-core/issues/1643)) ([5d53c89](https://github.com/ayunis-core/ayunis-core/commit/5d53c8971ca9e6a1e2ed80cab68350e311650199))
+* **deps:** bump zod from 3.25.76 to 4.5.4 ([#1609](https://github.com/ayunis-core/ayunis-core/issues/1609)) ([fc39db1](https://github.com/ayunis-core/ayunis-core/commit/fc39db1685e590ac2982c8daf49ee5b9ba6fb65e))
+* **deps:** dedupe the workspace lockfile (AYC-000) ([#1655](https://github.com/ayunis-core/ayunis-core/issues/1655)) ([93d8587](https://github.com/ayunis-core/ayunis-core/commit/93d85878563cfd0933d45121752ecba7ff3042ff))
+* **deps:** pin shared runtime versions with a pnpm catalog (AYC-000) ([#1654](https://github.com/ayunis-core/ayunis-core/issues/1654)) ([425a75b](https://github.com/ayunis-core/ayunis-core/commit/425a75b03ce69134693aaed091e1479849d9f9e5))
+* **deps:** upgrade Orval past critical advisories (AYC-871) ([#1616](https://github.com/ayunis-core/ayunis-core/issues/1616)) ([96d8c3b](https://github.com/ayunis-core/ayunis-core/commit/96d8c3b0904a9106fb01a09a117cf04f26660c2e))
+* **deps:** upgrade the OpenAI SDK to v7 (AYC-000) ([#1645](https://github.com/ayunis-core/ayunis-core/issues/1645)) ([7b8d603](https://github.com/ayunis-core/ayunis-core/commit/7b8d603a213ff7674654fb0e3d874ad723c55736))
+
+## [2.38.0](https://github.com/ayunis-core/ayunis-core/compare/v2.37.0...v2.38.0) (2026-09-08)
+
+
+### Features
+
+* **chat:** add artifact list side panel (AYC-677) ([#1625](https://github.com/ayunis-core/ayunis-core/issues/1625)) ([3565a43](https://github.com/ayunis-core/ayunis-core/commit/3565a43c00912dfbc65e6720455d9821df9c11ef))
+* **sources:** accept .odt and .odp uploads (AYC-159) ([#1633](https://github.com/ayunis-core/ayunis-core/issues/1633)) ([366fb8b](https://github.com/ayunis-core/ayunis-core/commit/366fb8b528a5832d2e7ab546f5864ebac0c776d6))
+
+
+### Bug Fixes
+
+* **letterheads:** position letter content per DIN 5008 (AYC-711) ([#1630](https://github.com/ayunis-core/ayunis-core/issues/1630)) ([ad91de3](https://github.com/ayunis-core/ayunis-core/commit/ad91de371e2dd175de2b5f0399bf50048d8de206))
+* **letterheads:** say why a letterhead PDF was rejected (AYC-921) ([#1634](https://github.com/ayunis-core/ayunis-core/issues/1634)) ([0fc1721](https://github.com/ayunis-core/ayunis-core/commit/0fc172149d5605b843b212740e0881595ca06e16))
+* **openai-compat:** classify provider input rejections (AYC-901) ([#1632](https://github.com/ayunis-core/ayunis-core/issues/1632)) ([771906d](https://github.com/ayunis-core/ayunis-core/commit/771906d30a245d5a622192b828fbfd3eb488c186))
+
+
+### Code Refactoring
+
+* **chat:** remove direct CSV source download (AYC-828) ([#1631](https://github.com/ayunis-core/ayunis-core/issues/1631)) ([ad658df](https://github.com/ayunis-core/ayunis-core/commit/ad658df60d673487759a17a0be79b252f86940c4))
+
+## [2.37.0](https://github.com/ayunis-core/ayunis-core/compare/v2.36.0...v2.37.0) (2026-09-07)
+
+
+### Features
+
+* **chat:** preserve unsent prompts per chat (AYC-912) ([#1623](https://github.com/ayunis-core/ayunis-core/issues/1623)) ([1dfd9b0](https://github.com/ayunis-core/ayunis-core/commit/1dfd9b06b9986f768a9e0037b4d0c8b9395c5b4a))
+* **settings:** centralize models and credit limits (AYC-903) ([#1612](https://github.com/ayunis-core/ayunis-core/issues/1612)) ([78b8921](https://github.com/ayunis-core/ayunis-core/commit/78b89215cd1030c0950ce16736043c5dd80ea9ae))
+
+
+### Bug Fixes
+
+* **anonymization:** translate presidio spans to utf-16 offsets (AYC-905) ([#1620](https://github.com/ayunis-core/ayunis-core/issues/1620)) ([d2245f6](https://github.com/ayunis-core/ayunis-core/commit/d2245f6f2f4214b3b149fd985d3332595cfc13b6))
+* **email:** block MJML template injection (AYC-890) ([#1614](https://github.com/ayunis-core/ayunis-core/issues/1614)) ([ceb8724](https://github.com/ayunis-core/ayunis-core/commit/ceb87242a7861d1741106be3570890d7ba06ca29))
+* **integrations:** show backend reason in validation toast (AYC-865) ([#1622](https://github.com/ayunis-core/ayunis-core/issues/1622)) ([81deb5a](https://github.com/ayunis-core/ayunis-core/commit/81deb5ac73ee284dec05ebcef7c2f3e9059ea259))
+* **messages:** drop lone surrogates before jsonb writes (AYC-902) ([#1613](https://github.com/ayunis-core/ayunis-core/issues/1613)) ([7dfe199](https://github.com/ayunis-core/ayunis-core/commit/7dfe1996fb2e191b085b3756422226cf98dd58a7))
+* **models:** preserve the missing-default error page (AYC-881) ([#1626](https://github.com/ayunis-core/ayunis-core/issues/1626)) ([fbcf1f8](https://github.com/ayunis-core/ayunis-core/commit/fbcf1f89f1c6b323f72c293fdb9e8a43856b6452))
+* **models:** refresh default model for new chats (AYC-881) ([#1621](https://github.com/ayunis-core/ayunis-core/issues/1621)) ([082865c](https://github.com/ayunis-core/ayunis-core/commit/082865c97b6c9fc9f012c3e89fb685852194ecd0))
+* **models:** retry azure rate limits before output (AYC-900) ([#1610](https://github.com/ayunis-core/ayunis-core/issues/1610)) ([d701707](https://github.com/ayunis-core/ayunis-core/commit/d701707cf137293a153b67b96a676e9349e935cb))
+* **runs:** report a failed tool-result flush once (AYC-904) ([#1615](https://github.com/ayunis-core/ayunis-core/issues/1615)) ([7ac9946](https://github.com/ayunis-core/ayunis-core/commit/7ac9946ccbe4dee498d6a9db4833b0745829adac))
+
+## [2.36.0](https://github.com/ayunis-core/ayunis-core/compare/v2.35.0...v2.36.0) (2026-09-03)
+
+
+### Features
+
+* **academy:** replace certificate with teilnahmebestätigung (AYC-000) ([#1600](https://github.com/ayunis-core/ayunis-core/issues/1600)) ([a750b7f](https://github.com/ayunis-core/ayunis-core/commit/a750b7f9d9e79d29101dbdf7a8a5b3e9e5236d1e))
+* **chat:** highlight legal references (AYC-863) ([#1566](https://github.com/ayunis-core/ayunis-core/issues/1566)) ([37e16f4](https://github.com/ayunis-core/ayunis-core/commit/37e16f4a801623d3cae21ea94fd9838041b84ccd))
+
+
+### Bug Fixes
+
+* **auth:** make registration atomic (AYC-627) ([#1587](https://github.com/ayunis-core/ayunis-core/issues/1587)) ([d96cd8c](https://github.com/ayunis-core/ayunis-core/commit/d96cd8c249c70fb0b830ddb96a846be95c1d368e))
+* **invites:** require tenant admin for invitations (AYC-889) ([#1597](https://github.com/ayunis-core/ayunis-core/issues/1597)) ([b1327e6](https://github.com/ayunis-core/ayunis-core/commit/b1327e67cec4d166affc7d5573fc52e583be62eb))
+* **models:** classify provider rate limits (AYC-893) ([#1599](https://github.com/ayunis-core/ayunis-core/issues/1599)) ([a679df0](https://github.com/ayunis-core/ayunis-core/commit/a679df001bcf9238abfd5b33e6e6183e02c172d2))
+* **tooling:** make bundle-frontend.sh work in the pnpm workspace (AYC-000) ([#1592](https://github.com/ayunis-core/ayunis-core/issues/1592)) ([8659890](https://github.com/ayunis-core/ayunis-core/commit/8659890928d1f778aeae8aa915797f1e1a5f9780))
+
+
+### Code Refactoring
+
+* **logging:** decouple application logging from Pino (AYC-817) ([#1591](https://github.com/ayunis-core/ayunis-core/issues/1591)) ([b53b4f5](https://github.com/ayunis-core/ayunis-core/commit/b53b4f529dc519dd0caa1397da859f4dfcf6a139))
+
+
+### Documentation
+
+* **tooling:** replace stale npm commands with pnpm (AYC-000) ([#1593](https://github.com/ayunis-core/ayunis-core/issues/1593)) ([be2b752](https://github.com/ayunis-core/ayunis-core/commit/be2b7522967a86377d0f3313deb0094fc9de82a6))
+* **tooling:** require feature flag on and off contracts (AYC-000) ([#1520](https://github.com/ayunis-core/ayunis-core/issues/1520)) ([8737b4b](https://github.com/ayunis-core/ayunis-core/commit/8737b4b7d614f72417716ea6fc4d53e2b4f5bb76))
+
+
+### Miscellaneous
+
+* **deps-backend:** bump the other group across 1 directory with 21 updates ([#1562](https://github.com/ayunis-core/ayunis-core/issues/1562)) ([cb362fc](https://github.com/ayunis-core/ayunis-core/commit/cb362fcfe2692f58f01d1067ee285d4ab4ae6fdd))
+* **tooling:** ignore local .pnpm-store directory (AYC-000) ([#1596](https://github.com/ayunis-core/ayunis-core/issues/1596)) ([688e981](https://github.com/ayunis-core/ayunis-core/commit/688e981adb0be6042d38092e07127e3e60aa9959))
+
+
+### CI/CD
+
+* **deps:** move dependabot npm updates to the workspace root (AYC-000) ([#1590](https://github.com/ayunis-core/ayunis-core/issues/1590)) ([76e4dca](https://github.com/ayunis-core/ayunis-core/commit/76e4dca8ae2c07cce7198e24c7324966536126eb))
+
+## [2.35.0](https://github.com/ayunis-core/ayunis-core/compare/v2.34.1...v2.35.0) (2026-09-02)
+
+
+### Features
+
+* **extensions:** add runtime skills extensions (AYC-694) ([#1439](https://github.com/ayunis-core/ayunis-core/issues/1439)) ([c0a555f](https://github.com/ayunis-core/ayunis-core/commit/c0a555f16ae94b8a4b5c606de31754cb028cc870))
+* **orgs:** let super admins rename an organisation (AYC-887) ([#1588](https://github.com/ayunis-core/ayunis-core/issues/1588)) ([9066430](https://github.com/ayunis-core/ayunis-core/commit/90664303666dc47a36fba52b2c63c2cfbbd8b61b))
+
+
+### Bug Fixes
+
+* **academy:** rename KI-Führerschein for AI Act compliance (AYC-833) ([#1528](https://github.com/ayunis-core/ayunis-core/issues/1528)) ([aecb5d3](https://github.com/ayunis-core/ayunis-core/commit/aecb5d32245f7b32ec22ab65624b1f448d64babb))
+* **dev:** terminate the full process tree on ./dev down (AYC-877) ([#1586](https://github.com/ayunis-core/ayunis-core/issues/1586)) ([c6c9717](https://github.com/ayunis-core/ayunis-core/commit/c6c9717a1879dd51284f4d3afc6f42bb8dd727a8))
+
+
+### Documentation
+
+* **workflow:** add proportional validation paths (AYC-000) ([#1567](https://github.com/ayunis-core/ayunis-core/issues/1567)) ([99dd760](https://github.com/ayunis-core/ayunis-core/commit/99dd760b5f8e243a8a6c1430ffd5aa9c37901aa4))
+
+## [2.34.1](https://github.com/ayunis-core/ayunis-core/compare/v2.34.0...v2.34.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **auth:** stop the login rate limit from masking the account lockout error (AYC-377) ([#1573](https://github.com/ayunis-core/ayunis-core/issues/1573)) ([2c05c8d](https://github.com/ayunis-core/ayunis-core/commit/2c05c8d08ff61a982da1ed27115119dcd7f2ff8f))
+* **chat:** temporarily disable map runtime tool (AYC-827) ([#1584](https://github.com/ayunis-core/ayunis-core/issues/1584)) ([9a8054a](https://github.com/ayunis-core/ayunis-core/commit/9a8054a084bd4e79de38c4fd6ab2fa5924a1f142))
+* **super-admin:** guard every super admin route at the layout (AYC-000) ([#1583](https://github.com/ayunis-core/ayunis-core/issues/1583)) ([1b3338b](https://github.com/ayunis-core/ayunis-core/commit/1b3338b3e0f4e09193f5299ebc34f5a2ef5ecde2))
+
+
+### Code Refactoring
+
+* **runs:** remove legacy agent orchestration path (AYC-769) ([#1565](https://github.com/ayunis-core/ayunis-core/issues/1565)) ([1bd9740](https://github.com/ayunis-core/ayunis-core/commit/1bd9740d7e3561ceb68aecd82fc30187e449b489))
+
+
+### Documentation
+
+* **workflow:** place backend responsibilities before coding (AYC-000) ([#1579](https://github.com/ayunis-core/ayunis-core/issues/1579)) ([44fbfd9](https://github.com/ayunis-core/ayunis-core/commit/44fbfd945c6320af889d314c246fe7f0bd69ecd0))
+
+## [2.34.0](https://github.com/ayunis-core/ayunis-core/compare/v2.33.0...v2.34.0) (2026-08-31)
+
+
+### Features
+
+* **auth:** add account lockout management UI (AYC-377) ([#1512](https://github.com/ayunis-core/ayunis-core/issues/1512)) ([1ce7a1c](https://github.com/ayunis-core/ayunis-core/commit/1ce7a1cccdf5da8feb3aa1c39fe825dc703157ee))
+* **auth:** enforce configurable account lockout and recovery (AYC-377) ([#1511](https://github.com/ayunis-core/ayunis-core/issues/1511)) ([0ca0786](https://github.com/ayunis-core/ayunis-core/commit/0ca0786cf5726b6aaa984e5547c61c608fedfca8))
+* **auth:** inform users when their account is locked (AYC-377) ([#1525](https://github.com/ayunis-core/ayunis-core/issues/1525)) ([ac187e1](https://github.com/ayunis-core/ayunis-core/commit/ac187e15fb7388df9d691af4978897438d070298))
+* **auth:** make SSO login generally available (AYC-367) ([#1534](https://github.com/ayunis-core/ayunis-core/issues/1534)) ([341ebad](https://github.com/ayunis-core/ayunis-core/commit/341ebad52fa6f287f764db652668cc62989895e6))
+* **auth:** persist account lockout state (AYC-377) ([#1510](https://github.com/ayunis-core/ayunis-core/issues/1510)) ([d2be72e](https://github.com/ayunis-core/ayunis-core/commit/d2be72efe07b9d7b80eb38246c8b3aac30e1c153))
+* **chat:** allow manual unmasking of pii terms within a chat (AYC-807) ([#1466](https://github.com/ayunis-core/ayunis-core/issues/1466)) ([5abf5bb](https://github.com/ayunis-core/ayunis-core/commit/5abf5bb0e80d9834d7b62f3b4626f68b60c381b6))
+* **credit-limits:** add monthly API key credit limits (AYC-867) ([#1571](https://github.com/ayunis-core/ayunis-core/issues/1571)) ([6566d99](https://github.com/ayunis-core/ayunis-core/commit/6566d99950adbd2ebd9920d18cc969c2c1454c92))
+* **models:** extend team model overrides (AYC-870) ([#1572](https://github.com/ayunis-core/ayunis-core/issues/1572)) ([12dd343](https://github.com/ayunis-core/ayunis-core/commit/12dd343d3694a8182e8bef8dc02173a9fdd9308d))
+
+
+### Bug Fixes
+
+* **retrievers:** extract text from embedded PDF screenshots (AYC-815) ([#1553](https://github.com/ayunis-core/ayunis-core/issues/1553)) ([5c2768c](https://github.com/ayunis-core/ayunis-core/commit/5c2768c5ac052437b47c759034ce2e5348d60356))
+* **sso:** hide local auth settings for SSO users (AYC-861) ([#1568](https://github.com/ayunis-core/ayunis-core/issues/1568)) ([2b6c794](https://github.com/ayunis-core/ayunis-core/commit/2b6c794ad1d1dd6855727dc3d1a04850550a3e04))
+
+
+### Tests
+
+* **e2e:** cover screenshot PDF extraction (AYC-815) ([#1554](https://github.com/ayunis-core/ayunis-core/issues/1554)) ([3edbdda](https://github.com/ayunis-core/ayunis-core/commit/3edbdda7777a42c9479741d8e7b882583b26b378))
+
+## [2.33.0](https://github.com/ayunis-core/ayunis-core/compare/v2.32.0...v2.33.0) (2026-08-28)
+
+
+### Features
+
+* **auth:** show returning SSO sign-in (AYC-856) ([#1561](https://github.com/ayunis-core/ayunis-core/issues/1561)) ([210ca27](https://github.com/ayunis-core/ayunis-core/commit/210ca27ba8d24e8a5ffac0bae313c2ca4ee25de1))
+* **sso:** remember successful SSO organization (AYC-856) ([#1560](https://github.com/ayunis-core/ayunis-core/issues/1560)) ([6cefdbe](https://github.com/ayunis-core/ayunis-core/commit/6cefdbeea2baf36350e8678901886d7a740e6ec2))
+
+
+### Bug Fixes
+
+* **anonymization:** retry transient provider timeouts (AYC-852) ([#1551](https://github.com/ayunis-core/ayunis-core/issues/1551)) ([91b25ec](https://github.com/ayunis-core/ayunis-core/commit/91b25ec0677da79f1a84111a9d54d82affdd37f5))
+* **runs:** bound exhausted provider server retries (AYC-849) ([#1549](https://github.com/ayunis-core/ayunis-core/issues/1549)) ([0311823](https://github.com/ayunis-core/ayunis-core/commit/031182367a06c7e1d600eb479b093e433cbf237a))
+* **runs:** fall back after malformed tool retries (AYC-851) ([#1552](https://github.com/ayunis-core/ayunis-core/issues/1552)) ([10f3d71](https://github.com/ayunis-core/ayunis-core/commit/10f3d71a072211d729574e0f473d7db2617865a8))
+* **runs:** retry bounded provider timeouts (AYC-850) ([#1550](https://github.com/ayunis-core/ayunis-core/issues/1550)) ([61df6d9](https://github.com/ayunis-core/ayunis-core/commit/61df6d9336964aad5b3c71ac907b4bd766bf607a))
+* **sso:** skip broker logout screen (AYC-854) ([#1559](https://github.com/ayunis-core/ayunis-core/issues/1559)) ([cf8bd02](https://github.com/ayunis-core/ayunis-core/commit/cf8bd02fa73307cd3c6034b58ca44f4ba58a5d04))
+
+
+### CI/CD
+
+* **deploy:** retire legacy internal deployment (AYC-591) ([#1557](https://github.com/ayunis-core/ayunis-core/issues/1557)) ([a0911b5](https://github.com/ayunis-core/ayunis-core/commit/a0911b5b88cddba8b9e91af5272a5e4860948363))
+
+## [2.32.0](https://github.com/ayunis-core/ayunis-core/compare/v2.31.0...v2.32.0) (2026-08-28)
+
+
+### Features
+
+* **sso:** allow multiple verified domains (AYC-841) ([#1546](https://github.com/ayunis-core/ayunis-core/issues/1546)) ([b39cf12](https://github.com/ayunis-core/ayunis-core/commit/b39cf12e5d2abd1ebf8c629dce0a94a5ee25e728))
+* **sso:** redirect directly to the org IdP (AYC-842) ([#1543](https://github.com/ayunis-core/ayunis-core/issues/1543)) ([854c355](https://github.com/ayunis-core/ayunis-core/commit/854c35501f025fb7d43e288947418fb569be3d48))
+
+
+### Bug Fixes
+
+* **sso:** remove organization linking widget (AYC-844) ([#1548](https://github.com/ayunis-core/ayunis-core/issues/1548)) ([506046b](https://github.com/ayunis-core/ayunis-core/commit/506046b4af7e8558fa20ca18ad712b8d296f2067))
+
+## [2.31.0](https://github.com/ayunis-core/ayunis-core/compare/v2.30.3...v2.31.0) (2026-08-27)
+
+
+### Features
+
+* **models:** warn users about provider faults (AYC-000) ([#1529](https://github.com/ayunis-core/ayunis-core/issues/1529)) ([6b9cf5d](https://github.com/ayunis-core/ayunis-core/commit/6b9cf5d98dd459e31697ff74e8618c1b2fc016a4))
+* **openai-compat:** support inline documents (AYC-835) ([#1530](https://github.com/ayunis-core/ayunis-core/issues/1530)) ([4d45446](https://github.com/ayunis-core/ayunis-core/commit/4d454468e95b7e60d8fda0f7506257c3bb430384))
+
+
+### Bug Fixes
+
+* **invites:** prevent global bulk invite conflicts (AYC-735) ([0812b16](https://github.com/ayunis-core/ayunis-core/commit/0812b16eff22f6b846c6b8b0ceb7fa6353788995))
+* **retrievers:** classify malformed pdf parse failures (AYC-810) ([#1537](https://github.com/ayunis-core/ayunis-core/issues/1537)) ([7408883](https://github.com/ayunis-core/ayunis-core/commit/74088833f23220c5d584d60cf11f1773f087ac65))
+* **runs:** abort deleted-thread tool persistence (AYC-738) ([#1539](https://github.com/ayunis-core/ayunis-core/issues/1539)) ([2befd9f](https://github.com/ayunis-core/ayunis-core/commit/2befd9f323ed0a9116adb0dba2f32407682205f3))
+* **runs:** preserve anonymization outage classes (AYC-739) ([#1540](https://github.com/ayunis-core/ayunis-core/issues/1540)) ([15e82cf](https://github.com/ayunis-core/ayunis-core/commit/15e82cfda730e442efb4056dd1bc52e46b4017d7))
+* **runs:** preserve large tool results (AYC-000) ([#1533](https://github.com/ayunis-core/ayunis-core/issues/1533)) ([9554199](https://github.com/ayunis-core/ayunis-core/commit/9554199ef044447e90d2ae36fcc1406cd2b8276a))
+* **runs:** recover malformed tool-only turns (AYC-811) ([#1541](https://github.com/ayunis-core/ayunis-core/issues/1541)) ([da3f595](https://github.com/ayunis-core/ayunis-core/commit/da3f5957d973f76ca27e850937f88131250cecc4))
+* **runs:** retry transient provider server failures (AYC-812) ([#1536](https://github.com/ayunis-core/ayunis-core/issues/1536)) ([e191f6f](https://github.com/ayunis-core/ayunis-core/commit/e191f6fb7b62df4bee2bcac152c30f93b59e5866))
+* **sources:** join ambient transactions for skill attachments (AYC-632) ([#1531](https://github.com/ayunis-core/ayunis-core/issues/1531)) ([dfe55bd](https://github.com/ayunis-core/ayunis-core/commit/dfe55bda76a7c5c66334693bea706c90af0b79da))
+* **sources:** reject malformed spreadsheet uploads (AYC-809) ([#1538](https://github.com/ayunis-core/ayunis-core/issues/1538)) ([7720f1c](https://github.com/ayunis-core/ayunis-core/commit/7720f1c8ac3028cd302db3d6447bd6532bd3c6e0))
+* **ui:** stop persisting sidebar cookie (AYC-000) ([#1535](https://github.com/ayunis-core/ayunis-core/issues/1535)) ([d4d13c8](https://github.com/ayunis-core/ayunis-core/commit/d4d13c8938fdc01d5be49c1cd13572a79f7412f2))
+
+## [2.30.3](https://github.com/ayunis-core/ayunis-core/compare/v2.30.2...v2.30.3) (2026-08-26)
+
+
+### Bug Fixes
+
+* **auth:** keep logout lifecycle available with SSO disabled (AYC-367) ([#1519](https://github.com/ayunis-core/ayunis-core/issues/1519)) ([688f67e](https://github.com/ayunis-core/ayunis-core/commit/688f67e9d204dad8ba675edfaffcb1c5cdb3781c))
+* **knowledge-bases:** open collections shared through skills (AYC-13) ([#1527](https://github.com/ayunis-core/ayunis-core/issues/1527)) ([7610a89](https://github.com/ayunis-core/ayunis-core/commit/7610a8932dc9d3c378975d14aaefe4fa91234a82))
+* **mcp:** bound capability discovery latency (AYC-825) ([#1503](https://github.com/ayunis-core/ayunis-core/issues/1503)) ([d6abbfb](https://github.com/ayunis-core/ayunis-core/commit/d6abbfb11ba56b58f90af0661f8e7db477072adb))
+* **observability:** log tool fingerprints on provider failures (AYC-827) ([#1523](https://github.com/ayunis-core/ayunis-core/issues/1523)) ([5a5ae01](https://github.com/ayunis-core/ayunis-core/commit/5a5ae01c8d56d937eb1f6be7673700b78af471e8))
+* **retrievers:** classify Mistral OCR 422 responses (AYC-813) ([#1505](https://github.com/ayunis-core/ayunis-core/issues/1505)) ([4b47a5d](https://github.com/ayunis-core/ayunis-core/commit/4b47a5dd66c639270c458484f251b0821ebd46fc))
+* **runs:** recover residual malformed tool calls (AYC-824) ([#1504](https://github.com/ayunis-core/ayunis-core/issues/1504)) ([c56aadc](https://github.com/ayunis-core/ayunis-core/commit/c56aadcbd869ce887d632f960ea290cdd2eae6fc))
+
+
+### Documentation
+
+* **agent:** require cross-user access testing (AYC-13) ([#1508](https://github.com/ayunis-core/ayunis-core/issues/1508)) ([1dcf35d](https://github.com/ayunis-core/ayunis-core/commit/1dcf35d7c855fdcdfea7775355e76533ecb2909f))
+
+
+### Tests
+
+* **e2e:** cover shared skill knowledge base access (AYC-13) ([#1502](https://github.com/ayunis-core/ayunis-core/issues/1502)) ([9d94b8b](https://github.com/ayunis-core/ayunis-core/commit/9d94b8b74bb78d82053f5950d172382037155c84))
+
+
+### Miscellaneous
+
+* **ai:** add persistence query review skill (AYC-377) ([#1522](https://github.com/ayunis-core/ayunis-core/issues/1522)) ([bf8a0f4](https://github.com/ayunis-core/ayunis-core/commit/bf8a0f483225e94bfb1e69a86e54246c8ee7e661))
+* **seed:** add shared skill knowledge base manual fixture (AYC-13) ([#1501](https://github.com/ayunis-core/ayunis-core/issues/1501)) ([24f711b](https://github.com/ayunis-core/ayunis-core/commit/24f711b97759d481c5a60faec694c9f73b33a556))
+* **ui:** add Storybook component catalog (AYC-000) ([#1353](https://github.com/ayunis-core/ayunis-core/issues/1353)) ([e5ecd39](https://github.com/ayunis-core/ayunis-core/commit/e5ecd397d22bf1cb9ffaad93d399a4151fd81fe1))
+
+## [2.30.2](https://github.com/ayunis-core/ayunis-core/compare/v2.30.1...v2.30.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* **models:** log Azure server diagnostics (AYC-827) ([#1517](https://github.com/ayunis-core/ayunis-core/issues/1517)) ([6c68ebf](https://github.com/ayunis-core/ayunis-core/commit/6c68ebff249e2bfc7978d348d32a788bd92fcb10))
+* **runtime:** retry empty provider responses (AYC-806) ([#1516](https://github.com/ayunis-core/ayunis-core/issues/1516)) ([cfe151b](https://github.com/ayunis-core/ayunis-core/commit/cfe151ba5bbc9d45b75f71e3e78503328e4cb9e5))
+
+## [2.30.1](https://github.com/ayunis-core/ayunis-core/compare/v2.30.0...v2.30.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **auth:** unify logout under authentication route (AYC-000) ([#1514](https://github.com/ayunis-core/ayunis-core/issues/1514)) ([e06b664](https://github.com/ayunis-core/ayunis-core/commit/e06b66466a10fb584c024477f801e64c0828744c))
+* **inference:** normalize unsupported strict tool schemas (AYC-000) ([#1513](https://github.com/ayunis-core/ayunis-core/issues/1513)) ([7998de6](https://github.com/ayunis-core/ayunis-core/commit/7998de6f967ef6efc5c23031b02ee7bd7c8f8878))
+
+## [2.30.0](https://github.com/ayunis-core/ayunis-core/compare/v2.29.1...v2.30.0) (2026-08-24)
+
+
+### Features
+
+* **auth:** add email-first SSO discovery (AYC-643) ([#1417](https://github.com/ayunis-core/ayunis-core/issues/1417)) ([50d7fc9](https://github.com/ayunis-core/ayunis-core/commit/50d7fc9b7dfb22a9fa8cc6fd6c60cbc25674519b))
+* **auth:** add explicit SSO account linking (AYC-642) ([#1410](https://github.com/ayunis-core/ayunis-core/issues/1410)) ([ce358a5](https://github.com/ayunis-core/ayunis-core/commit/ce358a562f82af9cda5b6465f70b781c01f34a37))
+* **auth:** add fixed SSO completion routes (AYC-643) ([#1416](https://github.com/ayunis-core/ayunis-core/issues/1416)) ([dc0e5ba](https://github.com/ayunis-core/ayunis-core/commit/dc0e5ba4c924018dd9831cd0b9e4b051c263a6d7))
+* **auth:** add SSO account linking and logout UX (AYC-643) ([#1418](https://github.com/ayunis-core/ayunis-core/issues/1418)) ([301a839](https://github.com/ayunis-core/ayunis-core/commit/301a839997f6f3c5585aa868986beb720d2b2f58))
+* **auth:** bound SSO reauthentication lifetime (AYC-642) ([#1412](https://github.com/ayunis-core/ayunis-core/issues/1412)) ([29818a9](https://github.com/ayunis-core/ayunis-core/commit/29818a9bc8bd231736ad0764703b12c1a8d9cb7c))
+* **auth:** revoke broker-backed SSO sessions (AYC-642) ([#1411](https://github.com/ayunis-core/ayunis-core/issues/1411)) ([c2b5cda](https://github.com/ayunis-core/ayunis-core/commit/c2b5cda21a67446cf39b2e31129a94f0f734585f))
+* **auth:** share MFA-aware session completion (AYC-642) ([#1408](https://github.com/ayunis-core/ayunis-core/issues/1408)) ([2c15bb0](https://github.com/ayunis-core/ayunis-core/commit/2c15bb081aa9df46c90fde0104f6c3e2a8f3b041))
+* **chat:** add GeoJSON map displayable widget (AYC-729) ([#1379](https://github.com/ayunis-core/ayunis-core/issues/1379)) ([6c9d7d7](https://github.com/ayunis-core/ayunis-core/commit/6c9d7d76c5bf9395945963288afbe84016b70031))
+* **sso:** issue Core sessions from broker callback (AYC-642) ([#1409](https://github.com/ayunis-core/ayunis-core/issues/1409)) ([db12542](https://github.com/ayunis-core/ayunis-core/commit/db125426ce3d1c0f393e005c8d07b9702bbb12d1))
+
+
+### Bug Fixes
+
+* **observability:** suppress raw ERR_SOCKET_TIMEOUT duplicates (AYC-767) ([#1506](https://github.com/ayunis-core/ayunis-core/issues/1506)) ([cf9a835](https://github.com/ayunis-core/ayunis-core/commit/cf9a8354d060b2ac2c7b1dc2f75298849bd834a7))
+* **rag:** enforce PDF page cap on web-fetched and crawled PDFs (AYC-332) ([#1478](https://github.com/ayunis-core/ayunis-core/issues/1478)) ([8f2f4c8](https://github.com/ayunis-core/ayunis-core/commit/8f2f4c8bb54fb2bb2640df7a5096c5b106ba25ba))
+
+
+### Documentation
+
+* **auth:** add municipal SSO rollout runbook (AYC-643) ([#1420](https://github.com/ayunis-core/ayunis-core/issues/1420)) ([292775a](https://github.com/ayunis-core/ayunis-core/commit/292775abd74c9506c3118db59a7a61e9e4b0a6b7))
+
+## [2.29.1](https://github.com/ayunis-core/ayunis-core/compare/v2.29.0...v2.29.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* **workspaces:** repair project listing queries (AYC-000) ([#1491](https://github.com/ayunis-core/ayunis-core/issues/1491)) ([91f71ea](https://github.com/ayunis-core/ayunis-core/commit/91f71eaeb02cb98e0c4c5b7400d21745b3883ead))
+
+## [2.29.0](https://github.com/ayunis-core/ayunis-core/compare/v2.28.0...v2.29.0) (2026-08-20)
+
+
+### Features
+
+* **artifacts:** list artifacts by project (AYC-702) ([#1458](https://github.com/ayunis-core/ayunis-core/issues/1458)) ([bebfeec](https://github.com/ayunis-core/ayunis-core/commit/bebfeecc647f7aafab75f02ad9a1b5573bab9e43))
+* **workspaces:** add project context frontend ui (AYC-701) ([#1402](https://github.com/ayunis-core/ayunis-core/issues/1402)) ([39835ac](https://github.com/ayunis-core/ayunis-core/commit/39835ac5e1a57408423e5d141f73eb1e7006b10b))
+* **workspaces:** show project artifacts (AYC-702) ([#1459](https://github.com/ayunis-core/ayunis-core/issues/1459)) ([dd8985d](https://github.com/ayunis-core/ayunis-core/commit/dd8985d4d0e471ca8a005535a107e638439bd212))
+
+
+### Bug Fixes
+
+* **workspaces:** quote knowledge base assignment alias (AYC-701) ([#1476](https://github.com/ayunis-core/ayunis-core/issues/1476)) ([272a07e](https://github.com/ayunis-core/ayunis-core/commit/272a07e86834b7d3a776cb7b624bb07afff05794))
+
+
+### Documentation
+
+* **workspaces:** document project context changes (AYC-701) ([#1404](https://github.com/ayunis-core/ayunis-core/issues/1404)) ([04e3afc](https://github.com/ayunis-core/ayunis-core/commit/04e3afc08652e35f37e2b1736e59154a7e84f92c))
+
+## [2.28.0](https://github.com/ayunis-core/ayunis-core/compare/v2.27.0...v2.28.0) (2026-08-19)
+
+
+### Features
+
+* **admin-settings:** explain permissions and roles with tooltips (AYC-763) ([#1462](https://github.com/ayunis-core/ayunis-core/issues/1462)) ([e1d9751](https://github.com/ayunis-core/ayunis-core/commit/e1d9751507c7960785003029a6f338ba949dc14e))
+* **admin:** add searchable super-admin user list (AYC-766) ([#1472](https://github.com/ayunis-core/ayunis-core/issues/1472)) ([a0b2248](https://github.com/ayunis-core/ayunis-core/commit/a0b2248ab7de355997d767c941cb70f5574f25b4))
+* **chat:** increase context budget to 200k tokens (AYC-000) ([#1456](https://github.com/ayunis-core/ayunis-core/issues/1456)) ([8373e94](https://github.com/ayunis-core/ayunis-core/commit/8373e94a06913b6b000ee6d0246bcd848f328a25))
+* **e2e:** add deterministic playwright test suite (AYC-0000) ([#1388](https://github.com/ayunis-core/ayunis-core/issues/1388)) ([59200cf](https://github.com/ayunis-core/ayunis-core/commit/59200cf15b104cb4b5674d8ccf64205fe462eb33))
+* **e2e:** add temporary PR media scenes (AYC-0000) ([#1463](https://github.com/ayunis-core/ayunis-core/issues/1463)) ([24a6b59](https://github.com/ayunis-core/ayunis-core/commit/24a6b5934cf42e9fc7227bc24af53c76dff2d63a))
+
+
+### Bug Fixes
+
+* **auth:** redirect signed-in users away from the login page (AYC-659) ([#1453](https://github.com/ayunis-core/ayunis-core/issues/1453)) ([bc3ac3d](https://github.com/ayunis-core/ayunis-core/commit/bc3ac3de977a53bb828f4e9c924c6c6ed2c685db))
+* **runs:** log runtime provider rejection diagnostics (AYC-000) ([#1442](https://github.com/ayunis-core/ayunis-core/issues/1442)) ([a004102](https://github.com/ayunis-core/ayunis-core/commit/a004102b60c390702191417534935f061d4d5bcd))
+* **runs:** retry malformed completed tool calls (AYC-741) ([#1465](https://github.com/ayunis-core/ayunis-core/issues/1465)) ([d18ca89](https://github.com/ayunis-core/ayunis-core/commit/d18ca895f40bb9871878b5965899d274662cce0c))
+
+
+### Documentation
+
+* **skills:** split git-workflow into hot path and on-demand references (AYC-000) ([#1473](https://github.com/ayunis-core/ayunis-core/issues/1473)) ([cde8a24](https://github.com/ayunis-core/ayunis-core/commit/cde8a2485f537536f6c63bc43940dbab0a2a8cd1))
+
+
+### Tests
+
+* **e2e:** add screenshot demo scene registry (AYC-0000) ([#1396](https://github.com/ayunis-core/ayunis-core/issues/1396)) ([cbb134d](https://github.com/ayunis-core/ayunis-core/commit/cbb134df86e92eb4b5580f8a7ded055ecde6a8e0))
+* **e2e:** extract screenshot media helpers (AYC-0000) ([#1395](https://github.com/ayunis-core/ayunis-core/issues/1395)) ([1dfed3b](https://github.com/ayunis-core/ayunis-core/commit/1dfed3b030953500737a66db654f7ad4b4f416ea))
+* **frontend:** add e2e test ids (AYC-0000) ([#1397](https://github.com/ayunis-core/ayunis-core/issues/1397)) ([303b147](https://github.com/ayunis-core/ayunis-core/commit/303b1476ed66adf8011b6a730825f22f0bcd4a30))
+
+
+### Miscellaneous
+
+* **packages:** align agent-runtime, inference and provider engines to node 24 (AYC-000) ([#1455](https://github.com/ayunis-core/ayunis-core/issues/1455)) ([921bbde](https://github.com/ayunis-core/ayunis-core/commit/921bbdef9a277176e3f21676e8f06aaf89a35d7d))
+* **tooling:** enforce absolute imports via eslint (AYC-000) ([#1457](https://github.com/ayunis-core/ayunis-core/issues/1457)) ([fa761f0](https://github.com/ayunis-core/ayunis-core/commit/fa761f0d04ce48e63352c43f083f1ca0630eea3f))
+
+
+### CI/CD
+
+* **e2e:** reuse build artifacts for browser tests (AYC-0000) ([#1468](https://github.com/ayunis-core/ayunis-core/issues/1468)) ([70f99ce](https://github.com/ayunis-core/ayunis-core/commit/70f99ce8cefb5f87f7340279448775eca52bab2d))
+* reduce duplicated workflow setup (AYC-0000) ([#1470](https://github.com/ayunis-core/ayunis-core/issues/1470)) ([c140b1d](https://github.com/ayunis-core/ayunis-core/commit/c140b1de083d12373948b005ccfe64ab9dbd41bd))
+
+## [2.27.0](https://github.com/ayunis-core/ayunis-core/compare/v2.26.0...v2.27.0) (2026-08-15)
+
+
+### Features
+
+* **observability:** add agent runtime rollout telemetry (AYC-770) ([#1436](https://github.com/ayunis-core/ayunis-core/issues/1436)) ([a410088](https://github.com/ayunis-core/ayunis-core/commit/a4100882e55cf520e6031a178c79ceb03c0a1d2d))
+* **observability:** add appsignal process monitors (AYC-000) ([#1441](https://github.com/ayunis-core/ayunis-core/issues/1441)) ([2ce40b3](https://github.com/ayunis-core/ayunis-core/commit/2ce40b3a95b13a93eb2888a5c155bdbc8f588303))
+* **tools:** unify runtime tool execution callbacks (AYC-704) ([#1433](https://github.com/ayunis-core/ayunis-core/issues/1433)) ([27d64e4](https://github.com/ayunis-core/ayunis-core/commit/27d64e44108487c8e55b4d8359f5a96af875f7dc))
+
+
+### Bug Fixes
+
+* **models:** add safe provider rejection telemetry (AYC-000) ([#1434](https://github.com/ayunis-core/ayunis-core/issues/1434)) ([b30dfef](https://github.com/ayunis-core/ayunis-core/commit/b30dfefa16a5d2ee287ff687a09089ef5a1b4ee6))
+* **observability:** allow frontend appsignal telemetry (AYC-000) ([#1440](https://github.com/ayunis-core/ayunis-core/issues/1440)) ([99aac0d](https://github.com/ayunis-core/ayunis-core/commit/99aac0d3b223c9b7a903cc6ff27b644fc15acc78))
+
+## [2.26.0](https://github.com/ayunis-core/ayunis-core/compare/v2.25.0...v2.26.0) (2026-08-15)
+
+
+### Features
+
+* **auth:** manage SSO connections in Superadmin (AYC-640) ([#1378](https://github.com/ayunis-core/ayunis-core/issues/1378)) ([f3018aa](https://github.com/ayunis-core/ayunis-core/commit/f3018aa3b55f7850f8030b3d75c19ad5d89b338e))
+* **logging:** enforce pino-only backend (AYC-760) ([#1431](https://github.com/ayunis-core/ayunis-core/issues/1431)) ([b61cd3f](https://github.com/ayunis-core/ayunis-core/commit/b61cd3f907b07274e7bfe36cb3090951a100e3f3))
+* **observability:** count provider outage failures (AYC-740) ([#1398](https://github.com/ayunis-core/ayunis-core/issues/1398)) ([3c5b3ec](https://github.com/ayunis-core/ayunis-core/commit/3c5b3ec75bfdf4542716677738d7bdc12d062f61))
+* **workspaces:** group chats into projects with sidebar, pinning and pickers (AYC-700) ([#1389](https://github.com/ayunis-core/ayunis-core/issues/1389)) ([e9121b7](https://github.com/ayunis-core/ayunis-core/commit/e9121b7b6f9a86c770d910bec9ef2c6ea1603e70))
+
+
+### Bug Fixes
+
+* **chat:** show full tool source text without clipped rounded container (AYC-731) ([#1381](https://github.com/ayunis-core/ayunis-core/issues/1381)) ([50bb851](https://github.com/ayunis-core/ayunis-core/commit/50bb851635678875fac6ed74834b7a59cb6aa64a))
+* **invites:** reject globally-existing email invites to prevent 500 (AYC-734) ([#1383](https://github.com/ayunis-core/ayunis-core/issues/1383)) ([184ce4c](https://github.com/ayunis-core/ayunis-core/commit/184ce4c309dba17d93780063892e3d8f1b18d62f))
+* **sources:** support .eml email file uploads (AYC-725) ([#1380](https://github.com/ayunis-core/ayunis-core/issues/1380)) ([f059f63](https://github.com/ayunis-core/ayunis-core/commit/f059f634dd5b3a1ef175673871f9d6cbcab1b635))
+
+
+### Code Refactoring
+
+* **iam:** join the ambient transaction in provisioning repositories (AYC-627) ([#1382](https://github.com/ayunis-core/ayunis-core/issues/1382)) ([2429e88](https://github.com/ayunis-core/ayunis-core/commit/2429e8886d33031ce857a5b21e0aee3cffad1594))
+
+
+### Miscellaneous
+
+* **seed:** seed demo workspaces for local development (AYC-700) ([#1347](https://github.com/ayunis-core/ayunis-core/issues/1347)) ([bd68bbc](https://github.com/ayunis-core/ayunis-core/commit/bd68bbc6b8fd4f655a2549569b4627380047d2b7))
+
+## [2.25.0](https://github.com/ayunis-core/ayunis-core/compare/v2.24.0...v2.25.0) (2026-08-12)
+
+
+### Features
+
+* **academy:** show certificate status to members and admins (AYC-598) ([#1322](https://github.com/ayunis-core/ayunis-core/issues/1322)) ([e81dca6](https://github.com/ayunis-core/ayunis-core/commit/e81dca6fa82710543b076c9b7191f8d4e708ab2c))
+* **academy:** warn members before their certificate expires (AYC-599) ([#1323](https://github.com/ayunis-core/ayunis-core/issues/1323)) ([fdf6d9b](https://github.com/ayunis-core/ayunis-core/commit/fdf6d9bd59e03d4ff52b6f86a891c4439330d817))
+* **observability:** frontend appsignal sourcemaps, ignore rules and context tags (AYC-539) ([#1251](https://github.com/ayunis-core/ayunis-core/issues/1251)) ([2e57bf6](https://github.com/ayunis-core/ayunis-core/commit/2e57bf6e65c9c8fcd40c34190c5de8ea3369969e))
+
+
+### Bug Fixes
+
+* **artifacts:** prevent PDF export navigation stalls (AYC-558) ([#1327](https://github.com/ayunis-core/ayunis-core/issues/1327)) ([9211bc3](https://github.com/ayunis-core/ayunis-core/commit/9211bc35ea65926a594508b9f2144c7ef5a4716d))
+* **chat:** abort active run before thread deletion (AYC-688) ([#1337](https://github.com/ayunis-core/ayunis-core/issues/1337)) ([287e990](https://github.com/ayunis-core/ayunis-core/commit/287e990e95264faf7660e8961e9048b734f4928a))
+* **chat:** keep tool activity open until assistant responds (AYC-000) ([#1364](https://github.com/ayunis-core/ayunis-core/issues/1364)) ([de7ed62](https://github.com/ayunis-core/ayunis-core/commit/de7ed62b3c5dc87b9d33b2dec7578448dd59bc88))
+* **errors:** prevent internal details leaking from 5xx responses (AYC-440) ([#1366](https://github.com/ayunis-core/ayunis-core/issues/1366)) ([25adefe](https://github.com/ayunis-core/ayunis-core/commit/25adefefb62eb0230e0b5d3f0587af76975a7c57))
+* **marketplace:** classify expected installation outages (AYC-720) ([#1370](https://github.com/ayunis-core/ayunis-core/issues/1370)) ([26ccc9b](https://github.com/ayunis-core/ayunis-core/commit/26ccc9bb9e3868f795d83e267082e1e11bc2f50e))
+* **mistral:** accept string reference ids in streams (AYC-718) ([#1372](https://github.com/ayunis-core/ayunis-core/issues/1372)) ([d742d50](https://github.com/ayunis-core/ayunis-core/commit/d742d50865ba6918be8308672a2a3fad08c7d5e9))
+* **models:** reject deleting models referenced by usage (AYC-716) ([#1369](https://github.com/ayunis-core/ayunis-core/issues/1369)) ([74996b7](https://github.com/ayunis-core/ayunis-core/commit/74996b7707c6ed9d1bf606b806e7715a0e2d3db8))
+* **retrievers:** classify invalid Mistral OCR documents (AYC-615) ([#1328](https://github.com/ayunis-core/ayunis-core/issues/1328)) ([54fc494](https://github.com/ayunis-core/ayunis-core/commit/54fc4941062b5be2e2f8b163b92856995dde668b))
+* **retrievers:** harden document processing failures (AYC-569) ([#1371](https://github.com/ayunis-core/ayunis-core/issues/1371)) ([7e7fc8e](https://github.com/ayunis-core/ayunis-core/commit/7e7fc8e517232ce4da2b7637a5581db85623ae94))
+* **runs:** abort persistence when thread disappears (AYC-688) ([#1330](https://github.com/ayunis-core/ayunis-core/issues/1330)) ([428abcf](https://github.com/ayunis-core/ayunis-core/commit/428abcf4695bba65043ede3002635d4684801d62))
+* **teams:** search org users server-side in add member picker (AYC-714) ([#1365](https://github.com/ayunis-core/ayunis-core/issues/1365)) ([ebb8ff6](https://github.com/ayunis-core/ayunis-core/commit/ebb8ff62651535eadf307f577f813566a3fae54b))
+* **threads:** return not found for missing title updates (AYC-721) ([#1368](https://github.com/ayunis-core/ayunis-core/issues/1368)) ([d56aa06](https://github.com/ayunis-core/ayunis-core/commit/d56aa06abfcd403274cab125a66e38817d177e95))
+
+
+### Performance Improvements
+
+* **anonymize:** reduce analysis queue latency (AYC-662) ([#1373](https://github.com/ayunis-core/ayunis-core/issues/1373)) ([171e4c4](https://github.com/ayunis-core/ayunis-core/commit/171e4c42a53c08a03ca19f33a527f4e1a94b90dd))
+
+
+### Code Refactoring
+
+* **auth:** centralize frontend authorization checks (AYC-657) ([#1248](https://github.com/ayunis-core/ayunis-core/issues/1248)) ([8daf25b](https://github.com/ayunis-core/ayunis-core/commit/8daf25bb031b9ebf8fa09c528a6853ce161c3b51))
+
+
+### Miscellaneous
+
+* **agent-skills:** update skills AYC-000 ([#1363](https://github.com/ayunis-core/ayunis-core/issues/1363)) ([f203c29](https://github.com/ayunis-core/ayunis-core/commit/f203c29d3955a4191249c41dbeeea23f6c46db30))
+* **seed:** seed academy content and certificate states (AYC-253) ([#1324](https://github.com/ayunis-core/ayunis-core/issues/1324)) ([3ba1345](https://github.com/ayunis-core/ayunis-core/commit/3ba13451c2e03e4bce7fe3f76c8a1695000c3f98))
+
+## [2.24.0](https://github.com/ayunis-core/ayunis-core/compare/v2.23.1...v2.24.0) (2026-08-11)
+
+
+### Features
+
+* **webhooks:** emit product usage events (AYC-475) ([#1339](https://github.com/ayunis-core/ayunis-core/issues/1339)) ([4b431fc](https://github.com/ayunis-core/ayunis-core/commit/4b431fc95abbcaf560626d8619d2207b54da803e))
+
+
+### Bug Fixes
+
+* **anonymization:** reject oversize input before service call (AYC-692) ([#1332](https://github.com/ayunis-core/ayunis-core/issues/1332)) ([c98d589](https://github.com/ayunis-core/ayunis-core/commit/c98d589ab571d18389f91b377601431233f9274e))
+* **chat:** preserve new chat layout with reduced motion (AYC-000) ([#1354](https://github.com/ayunis-core/ayunis-core/issues/1354)) ([2c13949](https://github.com/ayunis-core/ayunis-core/commit/2c13949d55aa6f8d03f6ec57a3fb91208f7fc74e))
+* **mcp:** reuse connections across operations (AYC-571) ([#1331](https://github.com/ayunis-core/ayunis-core/issues/1331)) ([e72edd7](https://github.com/ayunis-core/ayunis-core/commit/e72edd766bfde70669979e282e3eb59af5d2096d))
+* **models:** handle duplicate language model updates (AYC-696) ([#1326](https://github.com/ayunis-core/ayunis-core/issues/1326)) ([535f543](https://github.com/ayunis-core/ayunis-core/commit/535f5435b102351fa9192aa2d342df5b97cdfa7c))
+* **models:** migrate azure chat inference to v1 (AYC-708) ([#1336](https://github.com/ayunis-core/ayunis-core/issues/1336)) ([b325440](https://github.com/ayunis-core/ayunis-core/commit/b3254403cdb481ba17c757d8d85ad88dbdfae535))
+* **models:** show granular catalog error toasts (AYC-696) ([#1338](https://github.com/ayunis-core/ayunis-core/issues/1338)) ([39ab845](https://github.com/ayunis-core/ayunis-core/commit/39ab84502831af865354f7821cca23f8b5ba7cd6))
+* **openai-compat:** return partial text at token limit (AYC-697) ([#1334](https://github.com/ayunis-core/ayunis-core/issues/1334)) ([a13c8c7](https://github.com/ayunis-core/ayunis-core/commit/a13c8c74fb80b8b3ae2023c52fa4032c602dd9d4))
+* **threads:** avoid Cartesian thread detail query (AYC-661) ([#1325](https://github.com/ayunis-core/ayunis-core/issues/1325)) ([abf4b10](https://github.com/ayunis-core/ayunis-core/commit/abf4b107c54ca41d569ccb9a8b37cf7a246c5966))
+* **threads:** load data source details separately (AYC-000) ([#1355](https://github.com/ayunis-core/ayunis-core/issues/1355)) ([6fcd215](https://github.com/ayunis-core/ayunis-core/commit/6fcd215146900e2a7f6d89d50971048ac1c1f5e9))
+
+
+### Miscellaneous
+
+* **dev:** make anonymisation service opt-in (AYC-000) ([#1356](https://github.com/ayunis-core/ayunis-core/issues/1356)) ([f72efa1](https://github.com/ayunis-core/ayunis-core/commit/f72efa1f74af202ae5119c72a868fbd963a7b70e))
+
+
+### CI/CD
+
+* **staging:** prune obsolete build cache before deploy (AYC-000) ([#1357](https://github.com/ayunis-core/ayunis-core/issues/1357)) ([c9893db](https://github.com/ayunis-core/ayunis-core/commit/c9893dbb402c9d7a5728a85c8f84e55b969e8798))
+
+## [2.23.1](https://github.com/ayunis-core/ayunis-core/compare/v2.23.0...v2.23.1) (2026-08-10)
+
+
+### CI/CD
+
+* centralize pull-based deploy safeguards (AYC-589) ([#1226](https://github.com/ayunis-core/ayunis-core/issues/1226)) ([62d39f4](https://github.com/ayunis-core/ayunis-core/commit/62d39f4dd5aa7713ca45dd9b5ff6436c6a027bbb))
+* switch internal and production deploys to ghcr image pulls (AYC-589) ([#1194](https://github.com/ayunis-core/ayunis-core/issues/1194)) ([76d66fb](https://github.com/ayunis-core/ayunis-core/commit/76d66fbde436e8d0610ed30fbd9f445eb102b3d0))
+
 ## [2.23.0](https://github.com/ayunis-core/ayunis-core/compare/v2.22.2...v2.23.0) (2026-08-10)
 
 

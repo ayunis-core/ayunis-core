@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { OnboardingRepository } from '../../ports/onboarding.repository';
+import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { MarkWelcomeVideoSeenCommand } from './mark-welcome-video-seen.command';
 import { MarkWelcomeVideoSeenUseCase } from './mark-welcome-video-seen.use-case';

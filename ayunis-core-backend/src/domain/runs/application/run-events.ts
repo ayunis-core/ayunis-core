@@ -33,9 +33,11 @@ export interface RunThreadEvent {
 }
 
 export interface RunMaskPayload {
+  id: string;
   token: string;
   value: string;
   category: PiiCategory;
+  unmasked: boolean;
 }
 
 export interface RunMasksEvent {

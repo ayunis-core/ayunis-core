@@ -18,8 +18,8 @@ import {
 } from '@ayunis/ui/components/popover';
 import { cn } from '@ayunis/ui/lib/cn';
 import { CalendarIcon } from 'lucide-react';
-import type { UpdateSubscriptionStartDateFormData } from '../model/types';
-import { utcDateToLocal } from '../lib/subscription-start-date';
+import type { UpdateSubscriptionStartDateFormData } from '@/pages/super-admin-settings/org/model/types';
+import { utcDateToLocal } from '@/pages/super-admin-settings/org/lib/subscription-start-date';
 
 interface SubscriptionStartDateFieldProps {
   form: UseFormReturn<UpdateSubscriptionStartDateFormData>;
@@ -69,6 +69,7 @@ export default function SubscriptionStartDateField({
                   setOpen(false);
                 }}
                 captionLayout="dropdown"
+                endMonth={new Date(new Date().getFullYear() + 1, 11)}
               />
             </PopoverContent>
           </Popover>

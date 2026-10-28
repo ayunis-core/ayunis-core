@@ -1,6 +1,6 @@
-import type { SourceRepository } from '../ports/source.repository';
-import type { Source } from '../../domain/source.entity';
-import type { TextSource } from '../../domain/sources/text-source.entity';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 // Port mock factory — defaults model the "empty" state: finders resolve to
 // null/[], save echoes its argument, deletes resolve, guarded UPDATEs report
@@ -10,6 +10,8 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     findById: jest.fn().mockResolvedValue(null),
     findByIds: jest.fn().mockResolvedValue([]),
     findByKnowledgeBaseId: jest.fn().mockResolvedValue([]),
+    completeCrawlWithFileSources: jest.fn(),
+    saveProcessingTextSourceContent: jest.fn(),
     saveTextSource: jest
       .fn()
       .mockImplementation((source: TextSource) => Promise.resolve(source)),
@@ -21,6 +23,7 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
     updateCsvSourceData: jest.fn().mockResolvedValue(true),
     extractTextLines: jest.fn().mockResolvedValue(null),
+    findCitationTarget: jest.fn().mockResolvedValue(null),
     findContentChunksByIds: jest.fn().mockResolvedValue([]),
     delete: jest.fn().mockResolvedValue(undefined),
     deleteMany: jest.fn().mockResolvedValue(undefined),

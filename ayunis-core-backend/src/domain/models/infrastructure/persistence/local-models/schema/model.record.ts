@@ -2,7 +2,14 @@ import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enu
 import { BaseRecord } from 'src/common/db/base-record';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  TableInheritance,
+  ChildEntity,
+} from 'typeorm';
 
 const tokenCostColumnOptions = {
   type: 'decimal' as const,
@@ -22,6 +29,7 @@ const tokenCostColumnOptions = {
 @Entity({ name: 'models' })
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 @Index(['name', 'provider'], { unique: true })
+@Check(`"type" <> 'language' OR "contextWindowSize" IS NOT NULL`)
 export abstract class ModelRecord extends BaseRecord {
   @Column()
   name: string;
@@ -67,6 +75,20 @@ export class LanguageModelRecord extends ModelRecord {
     default: false,
   })
   canVision: boolean;
+
+  // Nullable because the table is shared with embedding and image-generation
+  // models; the class-level check requires it for language models.
+  @Column({
+    type: 'integer',
+    nullable: true,
+  })
+  contextWindowSize: number;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  hasProviderFault: boolean;
 
   @Column(tokenCostColumnOptions)
   inputTokenCost?: number;

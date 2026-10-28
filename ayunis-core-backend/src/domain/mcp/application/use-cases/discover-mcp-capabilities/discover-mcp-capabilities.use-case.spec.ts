@@ -1,12 +1,17 @@
+import { Logger } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -14,7 +19,7 @@ import {
   McpIntegrationDisabledError,
   McpConnectionTimeoutError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import type { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
@@ -23,17 +28,18 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('DiscoverMcpCapabilitiesUseCase', () => {
+  let logger: LoggerMock;
   let useCase: DiscoverMcpCapabilitiesUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
   let contextService: jest.Mocked<ContextService>;
   let capabilityCache: McpCapabilityCacheService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
+  let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
   const mockIntegrationId = randomUUID();
+  const capabilityDiscoveryOptions = { timeout: 10000 };
 
   const mockContextGet = (key?: string | symbol) => {
     if (key === 'orgId') return mockOrgId;
@@ -83,6 +89,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     });
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DiscoverMcpCapabilitiesUseCase,
@@ -116,10 +123,9 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     mcpClientService = module.get(McpClientService);
     contextService = module.get(ContextService);
     capabilityCache = module.get(McpCapabilityCacheService);
-
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    decoratorErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
   });
 
   afterEach(() => {
@@ -184,23 +190,28 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverMcpCapabilities', {
-        id: mockIntegrationId,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesSucceeded',
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'discoverMcpCapabilities',
+      );
+      expect(logger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockIntegrationId,
           name: integration.name,
-          tools: 1,
+          toolCount: 1,
           resources: 2,
           prompts: 1,
         }),
+        'discoverMcpCapabilitiesSucceeded',
       );
     });
 
@@ -218,14 +229,17 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listResources).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
     });
 
@@ -238,7 +252,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(McpIntegrationNotFoundError);
 
       expect(mcpClientService.listTools).not.toHaveBeenCalled();
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('throws McpIntegrationAccessDeniedError for different organization', async () => {
@@ -358,10 +372,12 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         updatedIntegration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
         updatedIntegration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
     });
 
@@ -412,9 +428,9 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       );
       expect((rejection as UnexpectedMcpError).cause).toBe(unexpectedError);
       expect((rejection as UnexpectedMcpError).metadata).toBeUndefined();
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(decoratorErrorSpy).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected use-case error',
-        expect.any(String),
       );
     });
   });

@@ -1,0 +1,136 @@
+import { type DynamicModule, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { InvitesModule } from 'src/iam/invites/invites.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
+import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
+import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
+import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
+import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
+import { ConfigureOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.use-case';
+import { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
+import { GetOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.use-case';
+import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
+import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
+import { SetOrgSsoIdpUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-idp/set-org-sso-idp.use-case';
+import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
+import { SsoEncryptionService } from 'src/iam/sso/infrastructure/encryption/sso-encryption.service';
+import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
+import { PostgresFederatedIdentitiesRepository } from 'src/iam/sso/infrastructure/persistence/postgres/federated-identities.repository';
+import { FederatedIdentityMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/federated-identity.mapper';
+import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
+import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
+import { PostgresSsoLoginTransactionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-login-transactions.repository';
+import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-login-transaction-cleanup.task';
+import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
+import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
+import { SsoProvisioningLock } from 'src/iam/sso/application/ports/sso-provisioning-lock';
+import { PostgresSsoProvisioningLock } from 'src/iam/sso/infrastructure/persistence/postgres/postgres-sso-provisioning-lock';
+import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
+import { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
+import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
+import { LogoutController } from 'src/iam/sso/presenters/http/logout.controller';
+import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
+import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
+import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/link-federated-identity/link-federated-identity.use-case';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
+import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
+import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
+import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broker-logout.client';
+import { SsoBrokerSessionsRepository } from 'src/iam/sso/application/ports/sso-broker-sessions.repository';
+import { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-broker-session.service';
+import { PostgresSsoBrokerSessionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-broker-sessions.repository';
+import { SsoBrokerSessionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-broker-session.record';
+import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-broker-session-cleanup.task';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
+import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.use-case';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      FederatedIdentityRecord,
+      SsoLoginTransactionRecord,
+      SsoBrokerSessionRecord,
+    ]),
+    OrgsModule,
+    InvitesModule,
+    TeamsApplicationModule,
+    SubscriptionsModule,
+    UsersModule,
+    SessionsModule,
+    SsoConnectionPolicyModule,
+  ],
+  controllers: [
+    SuperAdminSsoConnectionsController,
+    SsoLoginController,
+    LogoutController,
+  ],
+  providers: [
+    FederatedIdentityMapper,
+    OrgSsoConnectionResponseDtoMapper,
+    {
+      provide: FederatedIdentitiesRepository,
+      useClass: PostgresFederatedIdentitiesRepository,
+    },
+    ZitadelOidcBrokerClient,
+    { provide: OidcBrokerClient, useExisting: ZitadelOidcBrokerClient },
+    { provide: OidcBrokerLogoutClient, useExisting: ZitadelOidcBrokerClient },
+    {
+      provide: SsoLoginTransactionsRepository,
+      useClass: PostgresSsoLoginTransactionsRepository,
+    },
+    {
+      provide: SsoEncryptionPort,
+      useClass: SsoEncryptionService,
+    },
+    {
+      provide: SsoBrokerSessionsRepository,
+      useClass: PostgresSsoBrokerSessionsRepository,
+    },
+    {
+      provide: SsoProvisioningLock,
+      useClass: PostgresSsoProvisioningLock,
+    },
+    ConfigureOrgSsoConnectionUseCase,
+    SetOrgLocalPasswordLoginEnabledUseCase,
+    SetOrgSsoEnabledUseCase,
+    SetOrgSsoJitProvisioningUseCase,
+    SetOrgSsoIdpUseCase,
+    GetOrgSsoConnectionUseCase,
+    DiscoverOrgSsoUseCase,
+    StartOrgSsoLoginUseCase,
+    StartSsoAccountLinkUseCase,
+    CompleteOrgSsoLoginUseCase,
+    ProvisionOrgSsoUserUseCase,
+    LinkFederatedIdentityUseCase,
+    CompleteSsoAuthenticationUseCase,
+    SsoAuthorizationTransactionService,
+    SsoBrokerSessionService,
+    CompleteSsoLogoutUseCase,
+    HandleSsoBackchannelLogoutUseCase,
+    SsoLoginTransactionCleanupTask,
+    SsoBrokerSessionCleanupTask,
+  ],
+  exports: [
+    ConfigureOrgSsoConnectionUseCase,
+    SetOrgSsoEnabledUseCase,
+    SetOrgSsoJitProvisioningUseCase,
+    SetOrgSsoIdpUseCase,
+    GetOrgSsoConnectionUseCase,
+    DiscoverOrgSsoUseCase,
+    StartOrgSsoLoginUseCase,
+    CompleteOrgSsoLoginUseCase,
+    ProvisionOrgSsoUserUseCase,
+  ],
+})
+export class SsoModule {
+  static register(authenticationModule: DynamicModule): DynamicModule {
+    return {
+      module: SsoModule,
+      imports: [authenticationModule],
+    };
+  }
+}

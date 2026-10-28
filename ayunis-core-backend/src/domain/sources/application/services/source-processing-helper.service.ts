@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { classifySourceProcessingError } from './classify-source-processing-error';
 import type { UUID } from 'crypto';
 import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { MarkSourceFailedUseCase } from '../use-cases/mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from '../use-cases/mark-source-failed/mark-source-failed.command';
-import type { TextSourceContentChunk } from '../../domain/source-content-chunk.entity';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 
 /**
  * Indexing and failure-cleanup helpers shared by the source processing
@@ -51,23 +52,34 @@ export class SourceProcessingHelper {
         new DeleteContentCommand({ documentId: sourceId }),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up partial vector index entries', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to clean up partial vector index entries',
+      );
     }
   }
 
-  async markFailed(sourceId: UUID, errorMessage: string): Promise<void> {
+  async markFailed(sourceId: UUID, error: unknown): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
-        new MarkSourceFailedCommand({ sourceId, errorMessage }),
+        new MarkSourceFailedCommand({
+          sourceId,
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown processing error',
+          errorCode: classifySourceProcessingError(error),
+        }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as failed', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to mark source as failed',
+      );
     }
   }
 }

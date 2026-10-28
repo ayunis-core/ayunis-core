@@ -13,11 +13,11 @@ import type {
   AgentRunBlock,
   AgentRunUnit,
   InlineToolRunBlock,
-} from '../model/types';
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
 import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
-import { renderRichToolCard } from '../lib/render-rich-tool-card';
-import { getArtifactToolTarget } from '../lib/tool-classification';
+import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
+import { getArtifactToolTarget } from '@/pages/chat/ui/agent-run-timeline/lib/tool-classification';
 
 interface AgentRunTimelineProps {
   unit: AgentRunUnit;
@@ -47,6 +47,9 @@ export default function AgentRunTimeline({
           key={block.key}
           block={block}
           index={index}
+          hasFollowingText={unit.blocks
+            .slice(index + 1)
+            .some((candidate) => candidate.kind === 'text')}
           threadId={threadId}
           onOpenArtifact={onOpenArtifact}
         />
@@ -66,6 +69,7 @@ function hasInProgressStep(block: AgentRunBlock): boolean {
 interface RunBlockProps {
   block: AgentRunBlock;
   index: number;
+  hasFollowingText: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
 }
@@ -73,11 +77,12 @@ interface RunBlockProps {
 function RunBlock({
   block,
   index,
+  hasFollowingText,
   threadId,
   onOpenArtifact,
 }: Readonly<RunBlockProps>) {
   if (block.kind === 'activity') {
-    return <ActivityBlock block={block} />;
+    return <ActivityBlock block={block} hasFollowingText={hasFollowingText} />;
   }
   if (block.kind === 'rich-tool' || block.kind === 'pending-tool') {
     return (
@@ -91,21 +96,27 @@ function RunBlock({
   }
   return (
     <div data-copyable="true">
-      <Markdown>{block.content.text}</Markdown>
+      <Markdown renderLegalReferences renderSourceCitations renderUrlReferences>
+        {block.content.text}
+      </Markdown>
     </div>
   );
 }
 
-function ActivityBlock({ block }: Readonly<{ block: ActivityRunBlock }>) {
+function ActivityBlock({
+  block,
+  hasFollowingText,
+}: Readonly<{ block: ActivityRunBlock; hasFollowingText: boolean }>) {
   const { t } = useTranslation('chat');
   const isActive = block.steps.some((step) => step.status === 'in_progress');
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
-  const [lastActive, setLastActive] = useState(isActive);
-  if (lastActive !== isActive) {
-    setLastActive(isActive);
+  const [previousHasFollowingText, setPreviousHasFollowingText] =
+    useState(hasFollowingText);
+  if (previousHasFollowingText !== hasFollowingText) {
+    setPreviousHasFollowingText(hasFollowingText);
     setUserOpen(null);
   }
-  const open = userOpen ?? isActive;
+  const open = userOpen ?? !hasFollowingText;
   const headerLabel = isActive
     ? t('chat.timeline.working')
     : t('chat.timeline.summary', { count: block.steps.length });
@@ -126,12 +137,7 @@ function ActivityBlock({ block }: Readonly<{ block: ActivityRunBlock }>) {
             >
               {headerLabel}
             </span>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform',
-                open && 'rotate-180',
-              )}
-            />
+            <ActivityChevron open={open} />
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -143,6 +149,17 @@ function ActivityBlock({ block }: Readonly<{ block: ActivityRunBlock }>) {
         </CollapsibleContent>
       </div>
     </Collapsible>
+  );
+}
+
+function ActivityChevron({ open }: Readonly<{ open: boolean }>) {
+  return (
+    <ChevronDown
+      className={cn(
+        'h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform',
+        open && 'rotate-180',
+      )}
+    />
   );
 }
 

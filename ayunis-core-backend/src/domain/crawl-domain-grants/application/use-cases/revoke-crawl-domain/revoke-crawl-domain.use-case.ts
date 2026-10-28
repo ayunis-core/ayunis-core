@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
+import { CrawlDomainGrantRepository } from 'src/domain/crawl-domain-grants/application/ports/crawl-domain-grant.repository';
 import {
   CrawlDomainGrantNotFoundError,
   UnexpectedCrawlDomainGrantError,
-} from '../../crawl-domain-grants.errors';
+} from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { RevokeCrawlDomainCommand } from './revoke-crawl-domain.command';
 
 @Injectable()
@@ -16,10 +16,13 @@ export class RevokeCrawlDomainUseCase {
   ) {}
 
   async execute(command: RevokeCrawlDomainCommand): Promise<void> {
-    this.logger.log('Revoking crawl domain', {
-      orgId: command.orgId,
-      grantId: command.grantId,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+        grantId: command.grantId,
+      },
+      'Revoking crawl domain',
+    );
 
     try {
       const grant = await this.crawlDomainGrantRepository.findById(
@@ -34,9 +37,12 @@ export class RevokeCrawlDomainUseCase {
       await this.crawlDomainGrantRepository.delete(command.grantId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error revoking crawl domain', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error revoking crawl domain',
+      );
       throw new UnexpectedCrawlDomainGrantError('revoke', {
         error: error as Error,
       });

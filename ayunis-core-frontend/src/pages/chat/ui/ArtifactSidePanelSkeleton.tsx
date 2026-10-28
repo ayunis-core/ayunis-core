@@ -1,5 +1,6 @@
 import { cn } from '@ayunis/ui/lib/cn';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
+import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 
 /**
  * Placeholder shown while an artifact editor's lazy chunk loads. Sizing mirrors
@@ -26,21 +27,28 @@ function GridRow({ height }: { readonly height: string }) {
 interface ArtifactSidePanelSkeletonProps {
   /** Spreadsheets get a grid-shaped body; other editors get text lines. */
   readonly variant?: 'spreadsheet' | 'document';
+  readonly onClose: () => void;
+  readonly onBack: () => void;
+  readonly showClose?: boolean;
 }
 
 export default function ArtifactSidePanelSkeleton({
   variant = 'document',
+  onClose,
+  onBack,
+  showClose = true,
 }: ArtifactSidePanelSkeletonProps) {
   return (
-    <div className="flex h-full flex-col overflow-hidden border-l">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <Skeleton className="h-5 w-44" />
-        <div className="flex items-center gap-1">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-8" />
-        </div>
-      </div>
+    <div
+      className="flex h-full flex-col overflow-hidden border-l"
+      data-testid="artifact-side-panel-loading"
+    >
+      <ArtifactPanelHeader
+        title={<Skeleton className="h-5 w-44" />}
+        onBack={onBack}
+        onClose={onClose}
+        showClose={showClose}
+      />
 
       <div className="flex items-center gap-1 border-b px-3 py-1.5">
         <Skeleton className="h-7 w-36" />

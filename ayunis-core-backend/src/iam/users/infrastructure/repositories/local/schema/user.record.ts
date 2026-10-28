@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -16,8 +16,8 @@ export class UserRecord extends BaseRecord {
   @Column({ nullable: false })
   name: string;
 
-  @Column()
-  passwordHash: string;
+  @Column({ type: 'varchar', nullable: true })
+  passwordHash: string | null;
 
   @Column({
     type: 'enum',
@@ -28,6 +28,7 @@ export class UserRecord extends BaseRecord {
   @Column({ type: 'enum', enum: SystemRole, default: SystemRole.CUSTOMER })
   systemRole?: SystemRole;
 
+  @Index()
   @Column()
   orgId: UUID;
 
@@ -42,4 +43,13 @@ export class UserRecord extends BaseRecord {
 
   @Column({ nullable: true })
   department?: string;
+
+  @Column({ type: 'integer', default: 0 })
+  failedLoginAttempts: number;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  failedLoginWindowStartedAt: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lockedAt: Date | null;
 }

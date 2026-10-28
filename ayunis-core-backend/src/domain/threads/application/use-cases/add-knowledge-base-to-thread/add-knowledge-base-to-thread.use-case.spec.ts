@@ -1,15 +1,17 @@
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { AddKnowledgeBaseToThreadUseCase } from './add-knowledge-base-to-thread.use-case';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -17,7 +19,7 @@ import type { UUID } from 'crypto';
 describe('AddKnowledgeBaseToThreadUseCase', () => {
   let useCase: AddKnowledgeBaseToThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
-  let knowledgeBaseRepository: jest.Mocked<KnowledgeBaseRepository>;
+  let findAccessibleKnowledgeBaseUseCase: jest.Mocked<FindAccessibleKnowledgeBaseUseCase>;
   let mockContextService: { get: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -33,25 +35,33 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       addKnowledgeBaseAssignment: jest.fn(),
     };
 
-    const mockKnowledgeBaseRepository = {
-      findById: jest.fn(),
+    const mockFindAccessibleKnowledgeBaseUseCase = {
+      execute: jest.fn(),
     };
 
     mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddKnowledgeBaseToThreadUseCase,
+        {
+          provide: FindKnowledgeBaseForThreadUseCase,
+          useValue: {
+            execute: jest.fn(({ knowledgeBaseId }) =>
+              mockFindAccessibleKnowledgeBaseUseCase.execute({
+                knowledgeBaseId,
+              }),
+            ),
+          },
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
-          provide: KnowledgeBaseRepository,
-          useValue: mockKnowledgeBaseRepository,
+          provide: FindAccessibleKnowledgeBaseUseCase,
+          useValue: mockFindAccessibleKnowledgeBaseUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -59,10 +69,9 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
 
     useCase = module.get(AddKnowledgeBaseToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-    knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    findAccessibleKnowledgeBaseUseCase = module.get(
+      FindAccessibleKnowledgeBaseUseCase,
+    );
   });
 
   afterEach(() => {
@@ -77,7 +86,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBaseAssignments: [],
     });
 
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Municipal Zoning Guidelines',
       orgId: mockOrgId,
@@ -85,7 +94,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
@@ -108,7 +117,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBaseAssignments: [],
     });
 
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Municipal Zoning Guidelines',
       orgId: mockOrgId,
@@ -116,7 +125,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -147,7 +156,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       ],
     });
 
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Municipal Zoning Guidelines',
       orgId: mockOrgId,
@@ -155,7 +164,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -176,7 +185,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       ],
     });
 
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Municipal Zoning Guidelines',
       orgId: mockOrgId,
@@ -184,7 +193,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -216,7 +225,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       ],
     });
 
-    const knowledgeBase = new KnowledgeBase({
+    const knowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Municipal Zoning Guidelines',
       orgId: mockOrgId,
@@ -224,7 +233,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(
       mockThreadId,
@@ -254,7 +263,9 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(null);
+    findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(mockKbId),
+    );
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -271,7 +282,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBaseAssignments: [],
     });
 
-    const foreignKnowledgeBase = new KnowledgeBase({
+    const foreignKnowledgeBase = new PersonalKnowledgeBase({
       id: mockKbId,
       name: 'Foreign Org Knowledge Base',
       orgId: mockOtherOrgId,
@@ -279,13 +290,35 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(foreignKnowledgeBase);
+    findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(
+      foreignKnowledgeBase,
+    );
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       KnowledgeBaseNotFoundError,
     );
+    expect(threadsRepository.addKnowledgeBaseAssignment).not.toHaveBeenCalled();
+  });
+
+  it('should reject workspace-owned knowledge bases', async () => {
+    const thread = new Thread({
+      id: mockThreadId,
+      userId: mockUserId,
+      messages: [],
+      knowledgeBaseAssignments: [],
+    });
+    threadsRepository.findOne.mockResolvedValue(thread);
+    findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
+      new KnowledgeBaseNotFoundError(mockKbId),
+    );
+
+    await expect(
+      useCase.execute(
+        new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId),
+      ),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
     expect(threadsRepository.addKnowledgeBaseAssignment).not.toHaveBeenCalled();
   });
 

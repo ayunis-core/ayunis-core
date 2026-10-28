@@ -33,22 +33,8 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     return records.map((record) => this.mapper.chapterToDomain(record));
   }
 
-  async findAllWithQuizContent(): Promise<AcademyChapter[]> {
-    this.logger.log('findAllWithQuizContent');
-    const records = await this.repository.find({
-      relations: { courseModules: true, quizQuestions: true },
-      order: {
-        position: 'ASC',
-        createdAt: 'ASC',
-        courseModules: { position: 'ASC', createdAt: 'ASC' },
-        quizQuestions: { position: 'ASC', createdAt: 'ASC' },
-      },
-    });
-    return records.map((record) => this.mapper.chapterToDomain(record));
-  }
-
   async findOne(id: UUID): Promise<AcademyChapter | null> {
-    this.logger.log('findOne', { id });
+    this.logger.log({ id }, 'findOne');
     const record = await this.repository.findOne({
       where: { id },
       relations: { courseModules: true },
@@ -64,36 +50,27 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     return records.map((record) => record.id);
   }
 
-  async findQuizEnabledIds(): Promise<UUID[]> {
-    this.logger.log('findQuizEnabledIds');
-    const records = await this.repository.find({
-      where: { quizEnabled: true },
-      select: { id: true },
-    });
-    return records.map((record) => record.id);
-  }
-
   async findMaxPosition(): Promise<number | null> {
     this.logger.log('findMaxPosition');
     return this.repository.maximum('position');
   }
 
   async create(chapter: AcademyChapter): Promise<AcademyChapter> {
-    this.logger.log('create', { title: chapter.title });
+    this.logger.log({ title: chapter.title }, 'create');
     const record = this.mapper.chapterToRecord(chapter);
     const saved = await this.repository.save(record);
     return this.mapper.chapterToDomain(saved);
   }
 
   async update(chapter: AcademyChapter): Promise<AcademyChapter> {
-    this.logger.log('update', { id: chapter.id });
+    this.logger.log({ id: chapter.id }, 'update');
     const record = this.mapper.chapterToRecord(chapter);
     const saved = await this.repository.save(record);
     return this.mapper.chapterToDomain(saved);
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.log({ id }, 'delete');
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new ChapterNotFoundError(id);
@@ -101,7 +78,7 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async updatePositions(orderedIds: UUID[]): Promise<void> {
-    this.logger.log('updatePositions', { count: orderedIds.length });
+    this.logger.log({ count: orderedIds.length }, 'updatePositions');
     await this.dataSource.transaction(async (manager) => {
       for (const [index, id] of orderedIds.entries()) {
         await manager.update(AcademyChapterRecord, { id }, { position: index });

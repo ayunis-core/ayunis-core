@@ -1,5 +1,6 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { FindActivatableSkillUseCase } from 'src/domain/skills/application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
@@ -13,8 +14,11 @@ import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/applicati
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { UUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 
 export interface SkillActivationResult {
   instructions: string;
@@ -26,11 +30,13 @@ export class SkillActivationService {
   private readonly logger = new Logger(SkillActivationService.name);
 
   constructor(
-    private readonly skillAccessService: SkillAccessService,
+    private readonly findActivatableSkill: FindActivatableSkillUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
     private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly contextService: ContextService,
   ) {}
 
   /**
@@ -42,18 +48,42 @@ export class SkillActivationService {
     skillId: UUID,
     thread: Thread,
   ): Promise<SkillActivationResult> {
-    this.logger.log('Activating skill on thread', {
-      skillId,
-      threadId: thread.id,
-    });
+    this.logger.log(
+      {
+        skillId,
+        threadId: thread.id,
+      },
+      'Activating skill on thread',
+    );
 
-    const skill = await this.skillAccessService.findAccessibleSkill(skillId);
+    const skill = await this.findActivatableSkill.execute({ skillId, thread });
 
     await this.copySourcesToThread(skill, thread);
     await this.copyMcpIntegrationsToThread(skill, thread);
     await this.copyKnowledgeBasesToThread(skill, thread);
+    this.emitSkillUsed(skill, thread.userId);
 
     return { instructions: skill.instructions, skillName: skill.name };
+  }
+
+  private emitSkillUsed(skill: Skill, userId: UUID): void {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) return;
+
+    this.eventEmitter
+      .emitAsync(
+        SkillUsedEvent.EVENT_NAME,
+        new SkillUsedEvent(userId, orgId, skill.id, skill.name),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          {
+            err: error as Error,
+            skillId: skill.id,
+          },
+          'Failed to emit SkillUsedEvent',
+        );
+      });
   }
 
   /** Copies the skill's sources to the thread (skips non-ready sources). */
@@ -66,11 +96,14 @@ export class SkillActivationService {
     );
     const sources = allSources.filter((source) => {
       if (source.status !== SourceStatus.READY) {
-        this.logger.warn('Skipping non-ready source', {
-          sourceId: source.id,
-          status: source.status,
-          threadId: thread.id,
-        });
+        this.logger.warn(
+          {
+            sourceId: source.id,
+            status: source.status,
+            threadId: thread.id,
+          },
+          'Skipping non-ready source',
+        );
         return false;
       }
       return true;
@@ -82,10 +115,13 @@ export class SkillActivationService {
         );
       } catch (error) {
         if (error instanceof SourceAlreadyAssignedError) {
-          this.logger.log('Source already assigned to thread, skipping', {
-            sourceId: source.id,
-            threadId: thread.id,
-          });
+          this.logger.log(
+            {
+              sourceId: source.id,
+              threadId: thread.id,
+            },
+            'Source already assigned to thread, skipping',
+          );
           continue;
         }
         throw error;
@@ -106,11 +142,11 @@ export class SkillActivationService {
       } catch (error) {
         if (error instanceof McpIntegrationNotFoundError) {
           this.logger.warn(
-            'MCP integration not found, skipping (stale reference)',
             {
               mcpIntegrationId,
               threadId: thread.id,
             },
+            'MCP integration not found, skipping (stale reference)',
           );
           continue;
         }
@@ -136,11 +172,11 @@ export class SkillActivationService {
       } catch (error) {
         if (error instanceof KnowledgeBaseNotFoundError) {
           this.logger.warn(
-            'Knowledge base not found, skipping (stale reference)',
             {
               knowledgeBaseId,
               threadId: thread.id,
             },
+            'Knowledge base not found, skipping (stale reference)',
           );
           continue;
         }

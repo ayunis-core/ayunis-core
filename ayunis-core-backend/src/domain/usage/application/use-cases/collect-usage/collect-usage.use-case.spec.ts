@@ -3,13 +3,13 @@ import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CollectUsageUseCase } from './collect-usage.use-case';
 import { CollectUsageCommand } from './collect-usage.command';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import {
   InvalidUsageDataError,
   UsageCollectionFailedError,
   UnexpectedUsageError,
-} from '../../usage.errors';
-import { UsageCollectedEvent } from '../../events/usage-collected.event';
+} from 'src/domain/usage/application/usage.errors';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
@@ -47,6 +47,7 @@ describe('CollectUsageUseCase', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: false,
+      contextWindowSize: 128_000,
       isArchived: false,
       ...overrides,
     });

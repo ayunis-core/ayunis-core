@@ -11,6 +11,7 @@ import {
 @Injectable()
 export class TokenCounterRegistry {
   private readonly logger = new Logger(TokenCounterRegistry.name);
+
   private readonly handlers = new Map<TokenCounterType, TokenCounterHandler>();
 
   registerHandler(handler: TokenCounterHandler): void {
@@ -18,7 +19,7 @@ export class TokenCounterRegistry {
   }
 
   getHandler(type: TokenCounterType): TokenCounterHandler {
-    this.logger.debug('getHandler', { type });
+    this.logger.debug({ type }, 'getHandler');
     const handler = this.handlers.get(type);
 
     if (!handler) {

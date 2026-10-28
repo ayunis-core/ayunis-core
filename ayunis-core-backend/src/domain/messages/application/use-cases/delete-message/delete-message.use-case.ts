@@ -1,9 +1,9 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DeleteMessageCommand } from './delete-message.command';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 
 @Injectable()
 export class DeleteMessageUseCase {
@@ -15,20 +15,29 @@ export class DeleteMessageUseCase {
   ) {}
 
   async execute(command: DeleteMessageCommand): Promise<void> {
-    this.logger.log('Deleting message', {
-      messageId: command.messageId,
-    });
+    this.logger.log(
+      {
+        messageId: command.messageId,
+      },
+      'Deleting message',
+    );
 
     try {
       await this.messagesRepository.delete(command.messageId);
-      this.logger.log('Message deleted successfully', {
-        messageId: command.messageId,
-      });
+      this.logger.log(
+        {
+          messageId: command.messageId,
+        },
+        'Message deleted successfully',
+      );
     } catch (error) {
-      this.logger.error('Failed to delete message', {
-        messageId: command.messageId,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          messageId: command.messageId,
+          err: error as Error,
+        },
+        'Failed to delete message',
+      );
       throw error;
     }
   }

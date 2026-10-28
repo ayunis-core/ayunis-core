@@ -1,9 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { FindAllLetterheadsUseCase } from './find-all-letterheads.use-case';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
@@ -39,8 +38,6 @@ describe('FindAllLetterheadsUseCase', () => {
 
     useCase = module.get(FindAllLetterheadsUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {

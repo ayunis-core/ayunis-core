@@ -17,6 +17,9 @@
       "cancelText": "Cancel"
     },
     "accountSettings": "Account Settings",
+    "logout": {
+      "error": "We could not confirm the logout with the server. Please sign in again if your session remains active."
+    },
     "adminSettings": "Admin Settings",
     "superAdminSettings": "Super Admin Settings",
     "signOut": "Sign out",
@@ -44,7 +47,21 @@
     "renameThreadError": "Failed to rename chat",
     "renameThreadEmptyError": "Title cannot be empty",
     "renameThreadMaxLengthError": "Title cannot exceed {{max}} characters",
-    "showMore": "Show more..."
+    "pinError": "Favorites could not be updated. Please try again.",
+    "showMore": "Show more...",
+    "workspaces": "Workspaces",
+    "pinnedChats": "Favorites",
+    "pinChat": "Add to favorites",
+    "unpinChat": "Remove from favorites",
+    "addToWorkspace": "Add to workspace",
+    "removeFromWorkspace": "Remove from workspace",
+    "workspaceOptions": "Workspace options",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "unpinWorkspace": "Remove from favorites",
+    "deleteWorkspace": "Delete",
+    "dragWorkspace": "Move workspace",
+    "settings": "Settings"
   },
   "chatInput": {
     "placeholder": "How can I help today?",
@@ -61,6 +78,8 @@
     "sourceNotFound": "File not found. It may have been deleted.",
     "uploadFile": "Upload File or Image",
     "imageLimitExceeded": "Maximum {{max}} images allowed. Some images were not added.",
+    "imageTooLarge": "Images may be up to {{maxMiB}} MiB",
+    "imageTotalTooLarge": "Images in one message may total up to {{maxMiB}} MiB. Some images were not added.",
     "addKnowledgeBase": "Add Knowledge Base",
     "knowledgeBasesLoadError": "Error loading knowledge bases",
     "knowledgeBasesEmptyState": "No knowledge bases created yet",
@@ -86,6 +105,7 @@
     },
     "fileSourceDisabled": "To upload documents, an embedding model must be enabled.",
     "dropFilesHint": "Drop files here",
+    "fileTooLarge": "The file “{{name}}” is too large ({{size}} MB). The current maximum is {{limit}} MB.",
     "invalidDroppedFileType": "Some files were skipped because they are not supported.",
     "microphoneTooltip": "Dictate",
     "microphoneRecording": "Recording... Click to stop",
@@ -100,14 +120,29 @@
   "pinnedSkills": {
     "empty": "No pinned skills",
     "activateTooltip": "Activate skill",
+    "projectLoadError": "Could not load pinned workspace skills.",
     "pinHint": "Pin skills for quick access"
   },
   "common": {
     "loading": "Loading...",
+    "pagePending": {
+      "title": "Loading page…",
+      "description": "This may take a moment."
+    },
+    "deployGapBanner": {
+      "title": "Reconnecting…",
+      "description": "Ayunis is temporarily unavailable. This page continues automatically."
+    },
     "helpLink": "Help",
     "pagination": {
       "previous": "Previous",
       "next": "Next"
+    },
+    "hintTriggerLabel": "More information about {{label}}",
+    "copy": {
+      "label": "Copy {{label}}",
+      "success": "Copied to clipboard",
+      "error": "Could not copy to clipboard"
     }
   },
   "error": {
@@ -117,6 +152,15 @@
     "tryAgain": "Try again"
   },
   "sources": {
+    "removeFile": "Remove file {{name}}",
+    "processingErrors": {
+      "failed": "The file could not be processed. Remove it and upload it again in this chat. If the problem persists, contact support.",
+      "unreadable": "Couldn’t read this file. Remove it and try uploading it again.",
+      "empty": "No text could be read from the document. Use a more legible version and upload it again in this chat.",
+      "timeout": "Document processing timed out. Remove the file and upload it again in this chat. Splitting large documents may help.",
+      "tooManyPages": "The document has too many pages. Split it into smaller files and upload them in this chat.",
+      "unavailable": "The document processing service is temporarily unavailable. Remove the file and upload it again in this chat later."
+    },
     "failedToAdd": "Error uploading file",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
@@ -130,6 +174,7 @@
   },
   "models": {
     "availableHeading": "Available models",
+    "providerFaultWarning": "This model currently has a known provider issue and may not work reliably.",
     "category": {
       "zero": "Very weak",
       "low": "Weak",
@@ -161,6 +206,22 @@
       "synaforce": "Hosted in Germany on Ayunis sovereign cloud.",
       "ayunis": "Hosted in Germany on Ayunis sovereign cloud.",
       "ollama": "Self-hosted via Ollama."
+    }
+  },
+  "accountLock": {
+    "status": {
+      "active": "Active",
+      "locked": "Locked"
+    },
+    "unlock": {
+      "menuItem": "Unlock account",
+      "confirmTitle": "Unlock account?",
+      "confirmDescription": "Allow {{name}} to sign in again and clear their unsuccessful login attempts?",
+      "confirmText": "Unlock",
+      "cancelText": "Cancel",
+      "success": "Account unlocked successfully.",
+      "notFound": "User not found.",
+      "error": "Could not unlock the account."
     }
   },
   "mfa": {

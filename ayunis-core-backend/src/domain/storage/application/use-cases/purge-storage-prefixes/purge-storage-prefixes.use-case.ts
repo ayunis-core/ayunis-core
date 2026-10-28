@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ListObjectsUseCase } from '../list-objects/list-objects.use-case';
-import { ListObjectsCommand } from '../list-objects/list-objects.command';
-import { DeleteObjectUseCase } from '../delete-object/delete-object.use-case';
-import { DeleteObjectCommand } from '../delete-object/delete-object.command';
-import { ObjectNotFoundError } from '../../storage.errors';
+import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
+import { ListObjectsCommand } from 'src/domain/storage/application/use-cases/list-objects/list-objects.command';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import { PurgeStoragePrefixesCommand } from './purge-storage-prefixes.command';
 
 export interface PurgeStoragePrefixesResult {
@@ -35,21 +35,29 @@ export class PurgeStoragePrefixesUseCase {
   async execute(
     command: PurgeStoragePrefixesCommand,
   ): Promise<PurgeStoragePrefixesResult> {
-    this.logger.log('Purging storage prefixes', {
-      prefixCount: command.prefixes.length,
-    });
+    this.logger.log(
+      {
+        prefixCount: command.prefixes.length,
+      },
+      'Purging storage prefixes',
+    );
 
-    const objectNames = await this.collectObjects(command.prefixes);
+    const { objectNames, failedCount } = await this.collectObjects(
+      command.prefixes,
+    );
     if (objectNames.length === 0) {
-      return { deletedCount: 0, failedCount: 0 };
+      return { deletedCount: 0, failedCount };
     }
 
     const result = await this.deleteObjects(objectNames);
-    this.logger.log('Finished purging storage prefixes', { ...result });
-    return result;
+    this.logger.log({ ...result }, 'Finished purging storage prefixes');
+    return { ...result, failedCount: result.failedCount + failedCount };
   }
 
-  private async collectObjects(prefixes: string[]): Promise<string[]> {
+  private async collectObjects(
+    prefixes: string[],
+  ): Promise<{ objectNames: string[]; failedCount: number }> {
+    let failedCount = 0;
     const objectNames = new Set<string>();
     for (const prefix of prefixes) {
       // A prefix that fails to list leaks its blobs, but must not abort the
@@ -62,13 +70,14 @@ export class PurgeStoragePrefixesUseCase {
           objectNames.add(name);
         }
       } catch (error) {
-        this.logger.error('Failed to list storage prefix', {
-          prefix,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        failedCount++;
+        this.logger.error(
+          { err: error as Error, prefix },
+          'Failed to list storage prefix',
+        );
       }
     }
-    return Array.from(objectNames);
+    return { objectNames: Array.from(objectNames), failedCount };
   }
 
   private async deleteObjects(
@@ -96,10 +105,10 @@ export class PurgeStoragePrefixesUseCase {
       if (error instanceof ObjectNotFoundError) {
         return true;
       }
-      this.logger.warn('Failed to delete object from storage', {
-        objectName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error, fileName: objectName },
+        'Failed to delete object from storage',
+      );
       return false;
     }
   }

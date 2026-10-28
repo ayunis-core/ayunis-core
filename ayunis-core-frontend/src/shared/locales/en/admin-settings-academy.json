@@ -1,9 +1,9 @@
 {
   "requirement": {
-    "title": "AI certificate requirement",
-    "description": "Decide whether members of your organization need to pass the AI certificate (KI-Führerschein) in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
-    "saved": "Certificate requirement updated",
-    "error": "Could not update the certificate requirement",
+    "title": "EU AI Act training requirement",
+    "description": "Decide whether members of your organization need to complete the EU AI Act training in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
+    "saved": "Training requirement updated",
+    "error": "Could not update the training requirement",
     "errorUnexpected": "Something went wrong while saving. Please try again.",
     "modes": {
       "unrestricted": {
@@ -12,12 +12,49 @@
       },
       "requiredOnce": {
         "label": "Required once",
-        "description": "Members must pass the certificate before using chat. Once passed, it never expires."
+        "description": "Members must complete the EU AI Act training before using chat. Once completed, it never expires."
       },
       "requiredAnnually": {
         "label": "Required every year",
-        "description": "Members must pass the certificate before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
+        "description": "Members must complete the EU AI Act training before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
       }
+    }
+  },
+  "overview": {
+    "title": "Training status by member",
+    "description": "Who has completed the EU AI Act training, when they completed it, and who needs attention. Members whose renewal is due within 30 days count as expiring soon.",
+    "searchPlaceholder": "Search by name or email",
+    "empty": "No members match these filters",
+    "emptyDescription": "Clear the search or status filter to see everyone.",
+    "filter": {
+      "all": "All statuses"
+    },
+    "column": {
+      "member": "Member",
+      "lastPassed": "Last completed",
+      "renewalDue": "Renewal due",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "valid": "Valid",
+      "expiringSoon": "Expiring soon",
+      "expired": "Expired",
+      "notPassed": "Not yet completed"
+    },
+    "export": {
+      "fileName": "Training_status_Ayunis_Core_AI_training.csv",
+      "button": "Export as CSV",
+      "loading": "Exporting...",
+      "error": "The export could not be created. Please try again.",
+      "rateLimited": "Too many exports. Please try again in a few minutes."
+    },
+    "certificate": {
+      "download": "Download participation confirmation for {{name}}",
+      "error": "The participation confirmation could not be downloaded. Please try again.",
+      "notCompleted": "This member has not completed the training yet.",
+      "rateLimited": "Too many downloads in a short time. Please try again in a few minutes.",
+      "downloading": "Downloading participation confirmation for {{name}}"
     }
   }
 }

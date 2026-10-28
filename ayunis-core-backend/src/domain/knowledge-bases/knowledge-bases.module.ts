@@ -1,18 +1,27 @@
+import { FindKnowledgeBaseForThreadUseCase } from './application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { LocalKnowledgeBaseRepositoryModule } from './infrastructure/persistence/local/local-knowledge-base-repository.module';
-import { SourcesModule } from '../sources/sources.module';
-import { IndexersModule } from '../rag/indexers/indexers.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { ContextModule } from 'src/common/context/context.module';
-import { StorageModule } from '../storage/storage.module';
-import { SharesModule } from '../shares/shares.module';
-import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
-import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
+import { SharesModule } from 'src/domain/shares/shares.module';
+import { getShareAuthStrategyToken } from 'src/domain/shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
-import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
+import { FindAccessibleKnowledgeBaseUseCase } from './application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
+import { FindAccessibleKnowledgeBasesByIdsUseCase } from './application/use-cases/find-accessible-knowledge-bases-by-ids/find-accessible-knowledge-bases-by-ids.use-case';
+import { GetAccessibleKnowledgeBaseContextsUseCase } from './application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
+import { KnowledgeBaseWriteAccessService } from './application/services/knowledge-base-write-access.service';
+import { KnowledgeBaseReadAccessService } from './application/services/knowledge-base-read-access.service';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { CountKnowledgeBaseDocumentsUseCase } from './application/use-cases/count-knowledge-base-documents/count-knowledge-base-documents.use-case';
 import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { KnowledgeBasesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
-import { SkillsModule } from '../skills/skills.module';
-import { ThreadsModule } from '../threads/threads.module';
+import { KnowledgeBasesWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
+import { SkillsModule } from 'src/domain/skills/skills.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 
 // Use Cases
 import { CreateKnowledgeBaseUseCase } from './application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
@@ -26,7 +35,8 @@ import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
-import { GetKnowledgeBasesByIdsUseCase } from './application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
+import { SetKnowledgeBaseActivationUseCase } from './application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
+import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
@@ -38,12 +48,21 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     SourcesModule,
     IndexersModule,
     ContextModule,
+    PermissionsModule,
     StorageModule,
     forwardRef(() => SharesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => ThreadsModule),
+    forwardRef(() => WorkspacesModule),
   ],
   providers: [
+    FindKnowledgeBaseForThreadUseCase,
+    FindAccessibleKnowledgeBaseUseCase,
+    FindAccessibleKnowledgeBasesByIdsUseCase,
+    GetAccessibleKnowledgeBaseContextsUseCase,
+    CountKnowledgeBaseDocumentsUseCase,
+    KnowledgeBaseWriteAccessService,
+    KnowledgeBaseReadAccessService,
     // Use Cases
     CreateKnowledgeBaseUseCase,
     UpdateKnowledgeBaseUseCase,
@@ -56,14 +75,14 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
-    GetKnowledgeBasesByIdsUseCase,
+    SetKnowledgeBaseActivationUseCase,
+    FindActiveKnowledgeBasesUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
-    // Services
-    KnowledgeBaseAccessService,
     // Listeners
     KnowledgeBaseShareDeletedListener,
     KnowledgeBasesUserDeletionRequestedListener,
+    KnowledgeBasesWorkspaceDeletionRequestedListener,
     // Strategies
     KnowledgeBaseShareAuthorizationStrategy,
     {
@@ -73,8 +92,11 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   ],
   controllers: [KnowledgeBasesController],
   exports: [
-    LocalKnowledgeBaseRepositoryModule,
-    KnowledgeBaseAccessService,
+    FindKnowledgeBaseForThreadUseCase,
+    FindAccessibleKnowledgeBaseUseCase,
+    FindAccessibleKnowledgeBasesByIdsUseCase,
+    GetAccessibleKnowledgeBaseContextsUseCase,
+    CountKnowledgeBaseDocumentsUseCase,
     KnowledgeBaseShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
     CreateKnowledgeBaseUseCase,
@@ -88,7 +110,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
-    GetKnowledgeBasesByIdsUseCase,
+    FindActiveKnowledgeBasesUseCase,
   ],
 })
 export class KnowledgeBasesModule {}

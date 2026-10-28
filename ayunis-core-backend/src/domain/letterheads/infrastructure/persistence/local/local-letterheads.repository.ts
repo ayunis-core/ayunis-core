@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,10 +18,16 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
 
   constructor(
     @InjectRepository(LetterheadRecord)
-    private readonly repo: Repository<LetterheadRecord>,
+    private readonly defaultRepo: Repository<LetterheadRecord>,
     private readonly mapper: LetterheadMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repo(): Repository<LetterheadRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(LetterheadRecord) ?? this.defaultRepo;
   }
 
   async findAllByOrgId(orgId: UUID): Promise<Letterhead[]> {
@@ -35,10 +44,31 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
   }
 
   async save(letterhead: Letterhead): Promise<Letterhead> {
-    this.logger.log(`Saving letterhead ${letterhead.id}`);
+    this.logger.log({ letterheadId: letterhead.id }, 'Saving letterhead');
     const record = this.mapper.toRecord(letterhead);
     const saved = await this.repo.save(record);
     return this.mapper.toDomain(saved);
+  }
+
+  async updateIfUnchanged(
+    letterhead: Letterhead,
+    expectedUpdatedAt: Date,
+  ): Promise<Letterhead | null> {
+    this.logger.log({ letterheadId: letterhead.id }, 'Updating letterhead');
+    const record = this.mapper.toRecord(letterhead);
+    const result = await this.repo.update(
+      { id: record.id, orgId: record.orgId, updatedAt: expectedUpdatedAt },
+      {
+        name: record.name,
+        description: record.description,
+        firstPageStoragePath: record.firstPageStoragePath,
+        continuationPageStoragePath: record.continuationPageStoragePath,
+        firstPageMargins: record.firstPageMargins,
+        continuationPageMargins: record.continuationPageMargins,
+        updatedAt: record.updatedAt,
+      },
+    );
+    return result.affected ? letterhead : null;
   }
 
   async delete(orgId: UUID, id: UUID): Promise<void> {

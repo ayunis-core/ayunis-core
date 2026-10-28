@@ -1,7 +1,7 @@
 import {
-  CERTIFICATE_VALIDITY_MONTHS,
+  ACADEMY_COMPLETION_VALIDITY_MONTHS,
   certificateExpiresAt,
-  isPassWithinValidity,
+  isConfirmationWithinValidity,
 } from './certificate-validity';
 
 describe('certificateExpiresAt', () => {
@@ -28,32 +28,32 @@ describe('certificateExpiresAt', () => {
   });
 
   it('is a 12-month window', () => {
-    expect(CERTIFICATE_VALIDITY_MONTHS).toBe(12);
+    expect(ACADEMY_COMPLETION_VALIDITY_MONTHS).toBe(12);
   });
 });
 
-describe('isPassWithinValidity', () => {
+describe('isConfirmationWithinValidity', () => {
   const now = new Date('2026-07-31T12:00:00.000Z');
 
-  it('counts a pass from today', () => {
-    expect(isPassWithinValidity(now, now)).toBe(true);
+  it('counts a confirmation from today', () => {
+    expect(isConfirmationWithinValidity(now, now)).toBe(true);
   });
 
-  it('counts a pass one day short of the window', () => {
+  it('counts a confirmation one day short of the window', () => {
     expect(
-      isPassWithinValidity(new Date('2025-08-01T12:00:00.000Z'), now),
+      isConfirmationWithinValidity(new Date('2025-08-01T12:00:00.000Z'), now),
     ).toBe(true);
   });
 
-  it('drops a pass exactly one validity period old', () => {
+  it('drops a confirmation exactly one validity period old', () => {
     expect(
-      isPassWithinValidity(new Date('2025-07-31T12:00:00.000Z'), now),
+      isConfirmationWithinValidity(new Date('2025-07-31T12:00:00.000Z'), now),
     ).toBe(false);
   });
 
-  it('drops a pass older than the window', () => {
+  it('drops a confirmation older than the window', () => {
     expect(
-      isPassWithinValidity(new Date('2025-06-30T12:00:00.000Z'), now),
+      isConfirmationWithinValidity(new Date('2025-06-30T12:00:00.000Z'), now),
     ).toBe(false);
   });
 });

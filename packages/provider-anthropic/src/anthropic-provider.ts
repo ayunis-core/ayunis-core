@@ -1,14 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { MessageCreateParamsStreaming } from '@anthropic-ai/sdk/resources/messages';
+import { Stream } from '@anthropic-ai/sdk/streaming';
 
 import type {
   ModelProvider,
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
-import { ToolNameCodec } from '@ayunis/inference';
+import {
+  normalizeProviderError,
+  normalizeProviderStreamErrors,
+  ToolNameCodec,
+} from '@ayunis/inference';
 
-import { convertChunk } from './convert-chunk';
+import { classifyAnthropicRejection } from './classify-rejection';
+import { convertChunk, type AnthropicStreamEvent } from './convert-chunk';
 import {
   convertMessages,
   convertSystem,
@@ -44,7 +50,7 @@ export interface AnthropicProviderOptions {
   model: string;
   maxTokens?: number;
   baseUrl?: string;
-  /** SDK-level retry count for transient failures. Default: 2. */
+  /** SDK retries are for direct non-streaming calls only. Streaming hosts must pass 0. */
   maxRetries?: number;
   /** Per-attempt timeout in ms until the response starts. Default: 120s. */
   timeoutMs?: number;
@@ -94,17 +100,71 @@ async function* streamMessages(
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(model, maxTokens, request, codec);
-  const stream = await client.messages.create(
-    params,
-    request.signal ? { signal: request.signal } : undefined,
-  );
-  for await (const event of stream) {
+  const response = await openMessageStream(client, params, request.signal);
+  const normalizedStream = normalizeProviderStreamErrors(readEvents(response), {
+    stage: 'stream_consumption',
+    signal: request.signal,
+    classifyRejection: classifyAnthropicRejection,
+  });
+  for await (const event of normalizedStream) {
     const chunk = convertChunk(event, codec);
-    if (chunk) {
-      yield chunk;
+    if (chunk) yield chunk;
+  }
+}
+
+const openMessageStream = async (
+  client: AnthropicCompatibleClient,
+  params: MessageCreateParamsStreaming,
+  signal?: AbortSignal,
+): Promise<Response> => {
+  try {
+    return await client.messages
+      .create(params, signal ? { signal } : undefined)
+      .asResponse();
+  } catch (error) {
+    throw normalizeProviderError(error, {
+      stage: 'stream_establishment',
+      signal,
+      timeoutSource: 'response_start',
+      classifyRejection: classifyAnthropicRejection,
+    });
+  }
+};
+
+const FORWARDED_EVENTS = new Set([
+  'message_start',
+  'message_delta',
+  'message_stop',
+  'content_block_start',
+  'content_block_delta',
+  'content_block_stop',
+  'ping',
+]);
+
+// The SDK's own Stream drops `ping`, but during a thinking phase with
+// `display` omitted (the default on current models) pings are the only
+// traffic, so the raw events are read here to keep `ping` visible.
+async function* readEvents(
+  response: Response,
+): AsyncIterable<AnthropicStreamEvent> {
+  for await (const sse of Stream.rawEvents(response)) {
+    if (sse.event === 'error') {
+      const body = JSON.parse(sse.data) as StreamErrorBody;
+      throw new Anthropic.APIError(
+        undefined,
+        body,
+        undefined,
+        response.headers,
+        body.error?.type,
+      );
+    }
+    if (sse.event && FORWARDED_EVENTS.has(sse.event)) {
+      yield JSON.parse(sse.data) as AnthropicStreamEvent;
     }
   }
 }
+
+type StreamErrorBody = { error?: { type?: Anthropic.ErrorType } };
 
 const buildParams = (
   model: string,
@@ -118,12 +178,42 @@ const buildParams = (
   // turn and agent-loop iteration reuses the previous request's cache.
   system: convertSystem(request.instructions),
   messages: markCacheBreakpoint(convertMessages(request.messages, codec)),
-  tools: request.tools.map((tool) => convertTool(tool, codec)),
+  tools: request.tools.map((tool) => ({
+    ...convertTool(tool, codec),
+    ...(streamsToolInputEagerly(model) ? { eager_input_streaming: true } : {}),
+  })),
   // Anthropic rejects tool_choice when no tools are supplied, so only send it
   // alongside a non-empty tools array.
   ...(request.tools.length > 0 && request.toolChoice !== undefined
     ? { tool_choice: convertToolChoice(request.toolChoice, codec) }
     : {}),
+  ...(thinksByDefault(model)
+    ? { thinking: { type: 'adaptive', display: 'summarized' } }
+    : {}),
   max_tokens: maxTokens,
   stream: true,
 });
+
+// Without eager streaming the API buffers each tool-input parameter until it
+// is complete, so a long `create_document` body is a multi-minute silent gap
+// that trips the runtime's idle timeout (AYC-1142). The runtime parses the
+// accumulated arguments strictly, so the server-side validation given up here
+// still surfaces as a malformed tool call. Bedrock rejects the field with a
+// 400 on Sonnet 4.5, Opus 4.5 and older. Verified on Bedrock: Opus 4.6–5.5,
+// Sonnet 4.6–5, Haiku 4.5; later families run on the same serving stack.
+const EAGER_TOOL_INPUT_MODEL =
+  /claude-(?:(?:opus|sonnet|haiku|fable|mythos)-[5-9]|(?:opus|sonnet)-4-[6-9]|haiku-4-5)(?!\d)/;
+
+const streamsToolInputEagerly = (model: string): boolean =>
+  EAGER_TOOL_INPUT_MODEL.test(model);
+
+// These models always think, but omit the thinking text by default, so a chat
+// shows nothing until the answer starts (AYC-1374). Summarized display streams
+// the reasoning instead without changing how much the model thinks. Older
+// models are excluded: sending `adaptive` would switch thinking on for them.
+// ponytail: verified families only; extend the pattern once another
+// default-thinking family (e.g. Haiku 5.5) is verified to accept `display`.
+const DEFAULT_THINKING_MODEL = /claude-(?:opus|sonnet)-5(?:-\d+)?(?!\d)/;
+
+const thinksByDefault = (model: string): boolean =>
+  DEFAULT_THINKING_MODEL.test(model);

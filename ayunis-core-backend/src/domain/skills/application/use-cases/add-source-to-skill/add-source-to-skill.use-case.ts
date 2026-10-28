@@ -1,60 +1,40 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillRepository } from '../../ports/skill.repository';
-import { AddSourceToSkillCommand } from './add-source-to-skill.command';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   SkillNotFoundError,
   SkillSourceAlreadyAssignedError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { assertSkillHasSourceCapacity } from '../../util/skill-source-capacity';
-import { ApplicationError } from 'src/common/errors/base.error';
+} from 'src/domain/skills/application/skills.errors';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { assertSkillHasSourceCapacity } from 'src/domain/skills/application/util/skill-source-capacity';
+import { AddSourceToSkillCommand } from './add-source-to-skill.command';
 
 @Injectable()
 export class AddSourceToSkillUseCase {
   private readonly logger = new Logger(AddSourceToSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: AddSourceToSkillCommand): Promise<Skill> {
-    this.logger.log('Adding source to skill', {
-      skillId: command.skillId,
-      sourceId: command.sourceId,
-    });
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
-
-      if (skill.sourceIds.includes(command.sourceId)) {
-        throw new SkillSourceAlreadyAssignedError(command.sourceId);
-      }
-
-      assertSkillHasSourceCapacity(skill.sourceIds);
-
-      const updatedSkill = new Skill({
-        ...skill,
-        sourceIds: [...skill.sourceIds, command.sourceId],
-      });
-
-      return await this.skillRepository.update(updatedSkill);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error adding source to skill', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillError(error);
+    this.logger.log(command, 'Adding source to skill');
+    const skill = await this.repository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    if (skill.sourceIds.includes(command.sourceId)) {
+      throw new SkillSourceAlreadyAssignedError(command.sourceId);
     }
+    assertSkillHasSourceCapacity(skill.sourceIds);
+    return this.repository.update(
+      skill.withUpdates({
+        sourceIds: [...skill.sourceIds, command.sourceId],
+      }),
+      skill,
+    );
   }
 }

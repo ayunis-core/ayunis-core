@@ -5,6 +5,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
  * Error codes specific to the Orgs domain
  */
 export enum OrgErrorCode {
+  ORG_PROCESSING_ACTIVE = 'ORG_PROCESSING_ACTIVE',
+  ORG_DELETE_CONFIRMATION_MISMATCH = 'ORG_DELETE_CONFIRMATION_MISMATCH',
+  ORG_NOT_ACTIVE = 'ORG_NOT_ACTIVE',
+  ORG_SESSION_EXPIRED = 'ORG_SESSION_EXPIRED',
   ORG_NOT_FOUND = 'ORG_NOT_FOUND',
   ORG_ALREADY_EXISTS = 'ORG_ALREADY_EXISTS',
   ORG_CREATION_FAILED = 'ORG_CREATION_FAILED',
@@ -93,7 +97,7 @@ export class OrgDeletionFailedError extends OrgError {
     super(
       `Failed to delete organization with ID '${orgId}': ${reason}`,
       OrgErrorCode.ORG_DELETION_FAILED,
-      400,
+      500,
       metadata,
     );
   }
@@ -132,5 +136,39 @@ export class UnexpectedOrgError extends OrgError {
     super('Unexpected org error', OrgErrorCode.ORG_UNEXPECTED_ERROR, 500, {
       error,
     });
+  }
+}
+
+export class OrgProcessingActiveError extends OrgError {
+  constructor() {
+    super(
+      'Document processing is still running; retry deletion after it finishes',
+      OrgErrorCode.ORG_PROCESSING_ACTIVE,
+      409,
+    );
+  }
+}
+
+export class OrgAccessError extends OrgError {
+  constructor(sessionExpired = false) {
+    super(
+      sessionExpired
+        ? 'Organisation session has expired'
+        : 'Organisation is not active',
+      sessionExpired
+        ? OrgErrorCode.ORG_SESSION_EXPIRED
+        : OrgErrorCode.ORG_NOT_ACTIVE,
+      401,
+    );
+  }
+}
+
+export class OrgDeleteConfirmationError extends OrgError {
+  constructor() {
+    super(
+      'Organisation name does not match',
+      OrgErrorCode.ORG_DELETE_CONFIRMATION_MISMATCH,
+      400,
+    );
   }
 }

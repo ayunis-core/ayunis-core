@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TranscribeUseCase } from '../../application/use-cases/transcribe/transcribe.use-case';
-import { TranscribeCommand } from '../../application/use-cases/transcribe/transcribe.command';
+import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import { TranscriptionResponseDto } from './dtos/transcription-response.dto';
 import { ApiTranscribe } from './decorators/api-transcribe.decorator';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
@@ -41,12 +41,15 @@ export class TranscriptionsController {
       throw new BadRequestException('No audio file provided');
     }
 
-    this.logger.log('Transcription request received', {
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-      language,
-    });
+    this.logger.log(
+      {
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        language,
+      },
+      'Transcription request received',
+    );
 
     const command = new TranscribeCommand({
       file: file.buffer,

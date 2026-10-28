@@ -2,129 +2,69 @@
 
 ## Purpose
 
-Skills are reusable knowledge + integration bundles that an AI assistant can activate on-demand during a conversation. Unlike agents, skills don't have their own model or tool assignments — they bring sources (knowledge bases) and MCP integrations that get injected into a thread when activated.
+Skills are reusable instruction and resource bundles that an AI assistant can activate during a conversation. A skill has exactly one owner: either a user (`PersonalSkill`) or a workspace (`WorkspaceSkill`).
 
-## Key Concepts
+## Ownership and authorization
 
-- **Skill**: A named bundle with a short description (shown in system prompt), long description (instructions, returned on activation), sources, and MCP integrations.
-- **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, and `getActiveSkillIds` methods to manage activation state.
-- **Pinning**: Active skills can be pinned so they appear prominently in the UI. Pinning state is stored as an `isPinned` boolean column on `SkillActivationRecord`. The repository provides `isSkillPinned` (checks if a skill is pinned for a user), `toggleSkillPinned` (returns the new pinned state), and `getPinnedSkillIds` methods. A skill must be active before it can be pinned — attempting to pin an inactive skill raises `SkillNotActiveError`.
-- **User context resolution**: Per-user state (isActive, isPinned, isShared) is resolved by `SkillAccessService` via `resolveUserContext(skillId)` (single skill) and `resolveUserContextBatch()` (all skills for a user). Controllers never import repository ports directly — they use use cases and `SkillAccessService` instead. This boundary is enforced by a `controllers-no-ports` dependency-cruiser rule.
-- **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread.
-- **Name uniqueness**: Skill names must be unique per user (enforced at repository level) because the `activate_skill` tool uses the name as the identifier.
+- Personal reads allow the owner and recipients covered by a skill share; personal writes are owner-only.
+- Workspace reads, writes, and trusted execution delegate to the workspace module's exported access capabilities.
+- ID-based operations load the persisted skill first and derive its owner. Clients never supply owner IDs for detail, mutation, state, relation, or source operations.
+- Workspace authorization failures are exposed as `SkillNotFoundError`, so resource existence is not leaked.
+- MCP integration assignment remains personal-only.
 
-## Structure
+## API
 
-```text
-skills/
-├── SUMMARY.md
-├── domain/
-│   └── skill.entity.ts                    # Skill domain entity
-├── application/
-│   ├── ports/skill.repository.ts          # Abstract repository (includes activation + pinning methods)
-│   ├── services/
-│   │   ├── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
-│   │   ├── skill-access.service.ts        # Shared access-check logic (exported cross-module, used by runs)
-│   │   ├── skill-activation.service.ts    # Activates a skill on a thread (sources, MCP, instructions)
-│   │   └── skill-creator-name.service.ts  # Resolves shared-skill creators' display names (single + batched)
-│   ├── listeners/
-│   │   ├── share-deleted.listener.ts      # Reconciles activations on share deletion
-│   │   └── user-created.listener.ts       # Installs pre-installed marketplace skills for new users
-│   ├── skills.errors.ts                   # Domain errors
-│   └── use-cases/
-│       ├── create-skill/
-│       ├── update-skill/
-│       ├── delete-skill/
-│       ├── find-one-skill/
-│       ├── find-all-skills/
-│       ├── find-skill-by-name/
-│       ├── toggle-skill-active/
-│       ├── toggle-skill-pinned/
-│       ├── find-active-skills/
-│       ├── add-source-to-skill/
-│       ├── add-file-source-to-skill/
-│       ├── remove-source-from-skill/
-│       ├── list-skill-sources/
-│       ├── assign-mcp-integration-to-skill/
-│       ├── unassign-mcp-integration-from-skill/
-│       ├── list-skill-mcp-integrations/
-│       ├── assign-knowledge-base-to-skill/
-│       ├── unassign-knowledge-base-from-skill/
-│       ├── list-skill-knowledge-bases/
-│       ├── check-knowledge-base-skill-share-access/  # KB reachable via a shared skill of the KB owner? (exported, used by knowledge-bases)
-│       └── install-skill-from-marketplace/
-├── infrastructure/
-│   └── persistence/local/
-│       ├── schema/
-│       │   ├── skill.record.ts             # TypeORM entity (ManyToMany for sources, MCP, knowledge bases)
-│       │   └── skill-activation.record.ts  # Activation state (unique per skillId + userId)
-│       ├── mappers/skill.mapper.ts
-│       ├── local-skill.repository.ts
-│       └── local-skill-repository.module.ts
-├── presenters/http/
-│   ├── skills.controller.ts                # Core CRUD + toggle-active + toggle-pinned
-│   ├── skill-sources.controller.ts         # Source management endpoints
-│   ├── skill-mcp-integrations.controller.ts # MCP integration endpoints
-│   ├── skill-knowledge-bases.controller.ts # Knowledge base assignment endpoints
-│   ├── dto/
-│   │   ├── base-skill.dto.ts
-│   │   ├── create-skill.dto.ts
-│   │   ├── update-skill.dto.ts
-│   │   └── skill-response.dto.ts
-│   └── mappers/skill.mapper.ts
-└── skills.module.ts
-```
+Create and list are owner-discriminated while retaining one behavioral contract:
 
-## Design Decisions
+- `ownerType=personal` has no owner ID and resolves the authenticated user.
+- `ownerType=workspace` requires `workspaceId`.
+- Invalid combinations are rejected by DTO validation.
+- Omitted search and pagination return the complete owner scope with deterministic name ordering; either scope uses the same paginated path when search or pagination is supplied.
+- Creation honors `isActive` for either owner type and defaults it to `true` when omitted.
+- `GET /skills/marketplace/:identifier` answers per user whether the caller already installed a marketplace entry (`FindInstalledMarketplaceSkillUseCase` over `SkillRepository.findPersonalByMarketplaceIdentifier`). It returns the oldest matching personal skill's ID or `null`; the chat install card uses it to link to the existing skill instead of creating a numbered duplicate.
 
-Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` pattern. The domain entity stores `sourceIds: UUID[]` and `mcpIntegrationIds: UUID[]`. Full entity objects are fetched via dedicated list use cases (`ListSkillSourcesUseCase`, `ListSkillMcpIntegrationsUseCase`) that batch-fetch by IDs.
+| Method          | Path                                                | Description                                           |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| POST            | `/skills`                                           | Create in a personal or workspace owner scope         |
+| POST            | `/skills/improve-text`                              | Rewrite a draft's trigger or instructions             |
+| GET             | `/skills`                                           | Paginated list in a personal or workspace owner scope |
+| GET             | `/skills/marketplace/:identifier`                   | Caller's skill installed from a marketplace entry     |
+| GET             | `/skills/:id`                                       | Read a skill using persisted-owner authorization      |
+| PUT             | `/skills/:id`                                       | Update a skill                                        |
+| DELETE          | `/skills/:id`                                       | Delete a skill                                        |
+| PATCH           | `/skills/:id/activation`                            | Idempotently set `{ isActive }`                       |
+| PATCH           | `/skills/:id/pin`                                   | Idempotently set `{ isPinned }`                       |
+| GET             | `/skills/:id/sources`                               | List sources                                          |
+| POST            | `/skills/:id/sources/file`                          | Add a file source                                     |
+| DELETE          | `/skills/:id/sources/:sourceId`                     | Remove a source                                       |
+| GET             | `/skills/:skillId/knowledge-bases`                  | List assigned knowledge bases with state              |
+| POST            | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign a knowledge base                               |
+| DELETE          | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign a knowledge base                             |
+| GET/POST/DELETE | `/skills/:skillId/mcp-integrations/...`             | Personal-only MCP integration operations              |
 
-File uploads are orchestrated by `AddFileSourceToSkillUseCase`. It first resolves the skill (ownership check) and asserts the `SkillsConstants.MAX_SOURCES` cap (via `assertSkillHasSourceCapacity` in `application/util/skill-source-capacity.ts`) — object-storage uploads and enqueued processing jobs cannot be rolled back, so a skill already at the cap must be rejected before any of that work happens. It then detects the file type and starts async processing via the sources module: documents/audio through `StartDocumentProcessingUseCase`, CSV/spreadsheet files through `StartDataSourceProcessingUseCase` (which re-checks the cap with the actual per-sheet source count via the command's `ensureCapacityFor` callback before creating anything). Every returned PROCESSING source is attached to the skill transactionally, with attach failures compensated by deleting the pre-created sources; a background job fills the data and flips the status. `AddSourceToSkillUseCase` re-checks ownership and the cap against a freshly loaded skill and remains authoritative for concurrent adds. The controller only handles the HTTP concerns.
+`POST /skills/improve-text` (`ImproveSkillTextUseCase`, requires `MANAGE_SKILLS`) rewrites a draft's trigger or instructions using the other text and the name as context; nothing is persisted. The optional `language` (`en` or `de`) carries the current UI language as the fallback for unidentifiable draft text; recognizable author languages are preserved, and older clients default to English. `SkillTextModelResolver` picks the organization default model when the caller may use it, else an eligible user default, team default, or deterministic alphabetical fallback, and never an anonymous-only one (anonymized placeholders would end up in the skill); when every permitted model is anonymous-only it fails with `SKILL_TEXT_IMPROVEMENT_UNAVAILABLE` (422), and when nothing is permitted at all the models module's `NO_DEFAULT_MODEL_FOUND` passes through unchanged. Like send-message, the route requires an active subscription or a trial with messages left (`@RequireSubscription()`) and, when the organization gates chat behind the KI-Schulung certificate, a valid completion (`@RequireAcademyCertificate()` on this handler only, so skill CRUD stays open to blocked members); and a rewrite admitted on trial capacity consumes one trial message (fire-and-forget `IncrementTrialMessagesUseCase`, mirroring send-message) because trial organizations have no credit budget for `InferenceAdmissionGuard` to enforce. The call is a paid model call: admission goes through the quotas module's `InferenceAdmissionGuard` (fair-use and credit checks) and the tokens used are recorded through the usage module's `CollectUsageAsyncService`, awaited at the inference response boundary before truncation checks. Model eligibility and fallback selection reuse the Models module's default resolver without a second effective-grant lookup. An answer that is empty after stripping surrounding quotes fails with `SKILL_TEXT_IMPROVEMENT_FAILED` (502) instead of clearing the field.
 
-Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
+The former bodyless toggle routes and nested `/workspaces/:id/context/skills` lifecycle/source routes do not exist. Workspace run-context and instruction endpoints remain under `/workspaces/:id/context`.
 
-Pinning state is co-located on `SkillActivationRecord` (the `isPinned` column, defaulting to `false`) rather than in a separate table. This ensures pinning is tightly coupled to activation — when a skill is deactivated, its pinned state is naturally removed with the activation record. `SkillNotActiveError` is thrown when attempting to pin a skill that has no activation record.
+## State semantics
 
-When a new user is created, the `UserCreatedListener` listens for `UserCreatedEvent` and installs pre-installed marketplace skills via `MarketplaceSkillInstallationService`. The service encapsulates the shared install logic (fetch marketplace skill → resolve unique name → create `Skill` → activate) used by both the listener and `InstallSkillFromMarketplaceUseCase`. If the marketplace is unavailable during user creation, the listener logs a warning and continues — pre-installed skills are best-effort.
+Activation is represented by `skill_activations`; pinning is stored on the same row. Personal/shared skill state is per authenticated user. Workspace skill state is workspace-wide. Pinning requires active state. Deactivation deletes the activation row and therefore clears pinning. Activation and pin setters are idempotent.
 
-When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `FindAllUserIdsByOrgIdUseCase` and `FindAllUserIdsByTeamIdUseCase`) and only deactivates users who are no longer covered by any remaining share scope.
+## Relations and sources
 
-## Dependencies
+Knowledge-base assignment derives both owners from persistence and resolves read access before attachment. Personal skills reference accessible personal knowledge bases; workspace skills reference workspace knowledge bases from the same workspace. Duplicate assignment and absent unassignment use the same documented relation errors for either skill owner. Listing resolves authorization and activation state for both personal and workspace knowledge bases in bulk, omitting references deleted during resolution.
 
-- **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
-- **McpModule** — for MCP integration validation and batch fetch
-- **KnowledgeBasesModule** — for resolving assigned knowledge bases (`GetKnowledgeBasesByIdsUseCase`)
-- **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
-- **SharesModule** — for share authorization strategy registration
-- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`) and shared-skill creator display names (`FindUsersByIdsUseCase`, consumed by `SkillCreatorNameService`)
-- **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
-- **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
-- **ContextService** — for user context (userId, orgId)
+File source creation authorizes the skill before external processing starts, enforces the source cap, and compensates pre-created sources if attachment fails. Relation updates use the original aggregate snapshot so persistence can apply deltas safely.
 
-## Marketplace Integration
+## Runtime orchestration
 
-The skills module supports installing skills from the external Ayunis Marketplace. The `InstallSkillFromMarketplaceUseCase` fetches a skill definition from the marketplace (via `GetMarketplaceSkillUseCase` from the **MarketplaceModule**) and creates a local `Skill` entity with the marketplace skill's name, short description, and instructions. The `marketplaceIdentifier` field on the `Skill` entity tracks which skills were installed from the marketplace.
+`GetWorkspaceSkillsUseCase`, `ActivateWorkspaceSkillByNameUseCase`, `GetWorkspaceAiContextUseCase`, and `BuildWorkspaceRunContextUseCase` remain. Workspace skills are activation candidates; trusted activation derives workspace scope from the persisted thread. `FindActivatableSkillUseCase` resolves personal or workspace activation access, while `SkillActivationService` attaches sources, knowledge bases, and MCP integrations. `FindOneSkillUseCase` is exported so cross-module consumers such as citation retrieval can reauthorize a persisted skill reference before exposing its resources.
 
-Error handling: `MarketplaceInstallFailedError` is raised when the installation process fails unexpectedly.
+## Main structure
 
-## API Endpoints
-
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| POST | `/skills/install-from-marketplace` | Install a skill from the marketplace |
-| POST | `/skills` | Create a skill |
-| GET | `/skills` | List all skills for current user |
-| GET | `/skills/:id` | Get a skill by ID |
-| PUT | `/skills/:id` | Update a skill |
-| DELETE | `/skills/:id` | Delete a skill |
-| PATCH | `/skills/:id/toggle-active` | Toggle skill active/inactive |
-| PATCH | `/skills/:id/toggle-pinned` | Toggle skill pinned/unpinned |
-| GET | `/skills/:id/sources` | List sources for a skill |
-| POST | `/skills/:id/sources/file` | Add a file source to a skill |
-| DELETE | `/skills/:id/sources/:sourceId` | Remove a source from a skill |
-| POST | `/skills/:skillId/mcp-integrations/:integrationId` | Assign MCP integration |
-| DELETE | `/skills/:skillId/mcp-integrations/:integrationId` | Unassign MCP integration |
-| GET | `/skills/:skillId/mcp-integrations` | List assigned MCP integrations |
-| POST | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign knowledge base |
-| DELETE | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign knowledge base |
-| GET | `/skills/:skillId/knowledge-bases` | List assigned knowledge bases |
+- `domain/`: `PersonalSkill`, `WorkspaceSkill`, shared `AbstractSkill`, and the `Skill` union.
+- `application/models/skill-owner.ts`: discriminated owner scope.
+- `application/services/skill-authorization.service.ts`: owner-aware read/write/execution policy.
+- `application/use-cases/`: unified CRUD, state, knowledge-base, and source operations plus runtime orchestration.
+- `infrastructure/persistence/local/`: TypeORM repository, state helpers, records, and mappers.
+- `presenters/http/`: canonical `/skills` controllers, owner/state DTOs, and response mapper.

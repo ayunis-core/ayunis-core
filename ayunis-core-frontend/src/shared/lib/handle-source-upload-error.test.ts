@@ -1,0 +1,45 @@
+import type { TFunction } from 'i18next';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import handleSourceUploadError from './handle-source-upload-error';
+
+const { extractErrorData, showError } = vi.hoisted(() => ({
+  extractErrorData: vi.fn(),
+  showError: vi.fn(),
+}));
+
+vi.mock('@/shared/api/extract-error-data', () => ({
+  default: extractErrorData,
+}));
+vi.mock('@/shared/lib/toast', () => ({ showError }));
+
+const t = ((key: string) => key) as TFunction;
+
+describe('handleSourceUploadError', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('shows the unreadable-file message for malformed spreadsheets', () => {
+    extractErrorData.mockReturnValue({ code: 'UNPROCESSABLE_SPREADSHEET' });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith('sources.fileSourceUnreadableError');
+  });
+
+  it('shows the service-busy message when object storage is temporarily unavailable', () => {
+    extractErrorData.mockReturnValue({ code: 'STORAGE_UNAVAILABLE' });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith(
+      'sources.fileSourceServiceBusyError',
+    );
+  });
+
+  it('shows the too-large message for a 413 without an error code', () => {
+    extractErrorData.mockReturnValue({ code: 'UNKNOWN_ERROR', status: 413 });
+
+    handleSourceUploadError(new Error('upload failed'), t);
+
+    expect(showError).toHaveBeenCalledWith('sources.fileSourceTooLargeError');
+  });
+});

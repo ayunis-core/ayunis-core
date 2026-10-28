@@ -1,7 +1,10 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
-import type { FindManyOptions, Repository } from 'typeorm';
+import { In, type FindManyOptions, type Repository } from 'typeorm';
 import type {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -13,7 +16,7 @@ import {
   EmbeddingModelRecord,
   ImageGenerationModelRecord,
   LanguageModelRecord,
-} from '../local-models/schema/model.record';
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 
@@ -23,23 +26,32 @@ export class PermittedModelFinder {
 
   constructor(
     @InjectRepository(PermittedModelRecord)
-    private readonly permittedModelRepository: Repository<PermittedModelRecord>,
+    private readonly defaultPermittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
+  private get permittedModelRepository(): Repository<PermittedModelRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(PermittedModelRecord) ??
+      this.defaultPermittedModelRepository
+    );
+  }
+
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
-    this.logger.debug('findOneEmbedding', { orgId });
+    this.logger.debug({ orgId }, 'findOneEmbedding');
     const permittedEmbeddingModels = await this.findManyEmbedding(orgId);
     if (permittedEmbeddingModels.length === 0) {
       return null;
     }
     if (permittedEmbeddingModels.length > 1) {
       this.logger.warn(
-        'Multiple permitted embedding models found for org; returning the first. Write path enforces single-per-org.',
         {
           orgId,
           permittedEmbeddingModelIds: permittedEmbeddingModels.map((m) => m.id),
         },
+        'Multiple permitted embedding models found for org; returning the first. Write path enforces single-per-org.',
       );
     }
     return permittedEmbeddingModels[0];
@@ -48,7 +60,7 @@ export class PermittedModelFinder {
   async findOneImageGeneration(
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel | null> {
-    this.logger.debug('findOneImageGeneration', { orgId });
+    this.logger.debug({ orgId }, 'findOneImageGeneration');
     const permittedImageGenerationModels =
       await this.findManyImageGeneration(orgId);
     if (permittedImageGenerationModels.length === 0) {
@@ -56,13 +68,13 @@ export class PermittedModelFinder {
     }
     if (permittedImageGenerationModels.length > 1) {
       this.logger.warn(
-        'Multiple permitted image-generation models found for org; returning the first. Write path enforces single-per-org.',
         {
           orgId,
           permittedImageGenerationModelIds: permittedImageGenerationModels.map(
             (m) => m.id,
           ),
         },
+        'Multiple permitted image-generation models found for org; returning the first. Write path enforces single-per-org.',
       );
     }
     return permittedImageGenerationModels[0];
@@ -127,13 +139,38 @@ export class PermittedModelFinder {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]> {
-    const permittedModels = await this.permittedModelRepository.find(
-      this.buildActiveScopedQuery({
-        orgId,
-        scope: PermittedModelScope.TEAM,
-        scopeId: teamId,
-        modelType: ModelType.LANGUAGE,
-      }),
+    return this.findManyLanguageByTeams([teamId], orgId);
+  }
+
+  async findManyLanguageByTeams(
+    teamIds: UUID[],
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]> {
+    if (teamIds.length === 0) return [];
+    const permittedModels = await this.findTeamModels(
+      teamIds,
+      orgId,
+      ModelType.LANGUAGE,
+    );
+    return permittedModels
+      .filter(
+        (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
+      )
+      .map((permittedModel) =>
+        this.permittedModelMapper.toDomain(permittedModel),
+      ) as PermittedLanguageModel[];
+  }
+
+  async findManyTeamDefaultLanguage(
+    teamIds: UUID[],
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]> {
+    if (teamIds.length === 0) return [];
+    const permittedModels = await this.findTeamModels(
+      teamIds,
+      orgId,
+      ModelType.LANGUAGE,
+      true,
     );
     return permittedModels
       .filter(
@@ -148,13 +185,18 @@ export class PermittedModelFinder {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]> {
-    const permittedModels = await this.permittedModelRepository.find(
-      this.buildActiveScopedQuery({
-        orgId,
-        scope: PermittedModelScope.TEAM,
-        scopeId: teamId,
-        modelType: ModelType.IMAGE_GENERATION,
-      }),
+    return this.findManyImageGenerationByTeams([teamId], orgId);
+  }
+
+  async findManyImageGenerationByTeams(
+    teamIds: UUID[],
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel[]> {
+    if (teamIds.length === 0) return [];
+    const permittedModels = await this.findTeamModels(
+      teamIds,
+      orgId,
+      ModelType.IMAGE_GENERATION,
     );
     return permittedModels
       .filter(
@@ -166,18 +208,39 @@ export class PermittedModelFinder {
       );
   }
 
+  private findTeamModels(
+    teamIds: UUID[],
+    orgId: UUID,
+    modelType: ModelType,
+    isDefault?: boolean,
+  ): Promise<PermittedModelRecord[]> {
+    return this.permittedModelRepository.find(
+      this.buildActiveScopedQuery({
+        orgId,
+        scope: PermittedModelScope.TEAM,
+        teamIds: [...new Set(teamIds)],
+        modelType,
+        isDefault,
+      }),
+    );
+  }
+
   private buildActiveScopedQuery(params: {
     orgId: UUID;
     scope: PermittedModelScope;
     modelType?: ModelType;
     scopeId?: UUID;
+    teamIds?: UUID[];
+    isDefault?: boolean;
   }): FindManyOptions<PermittedModelRecord> {
-    const { orgId, scope, modelType, scopeId } = params;
+    const { orgId, scope, modelType, scopeId, teamIds, isDefault } = params;
     return {
       where: {
         orgId,
         scope,
         ...(scopeId && { scopeId }),
+        ...(teamIds && { scopeId: In(teamIds) }),
+        ...(isDefault !== undefined && { isDefault }),
         model: {
           isArchived: false,
           ...(modelType && { type: modelType }),

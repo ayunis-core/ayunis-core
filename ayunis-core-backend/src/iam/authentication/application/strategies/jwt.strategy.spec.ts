@@ -1,10 +1,10 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { JwtStrategy } from './jwt.strategy';
-import { JWT_SECRET } from '../tokens/jwt-secret.token';
+import { JWT_SECRET } from 'src/iam/authentication/application/tokens/jwt-secret.token';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -26,6 +26,12 @@ describe('JwtStrategy', () => {
       providers: [
         JwtStrategy,
         {
+          provide: AssertCachedOrgActiveUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue({ sessionVersion: 0 }),
+          },
+        },
+        {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('access_token') },
         },
@@ -34,30 +40,27 @@ describe('JwtStrategy', () => {
     }).compile();
 
     strategy = module.get(JwtStrategy);
-
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should return an ActiveUser for a valid access payload', () => {
-    const result = strategy.validate(validAccessPayload);
+  it('should return an ActiveUser for a valid access payload', async () => {
+    const result = await strategy.validate(validAccessPayload);
 
     expect(result).not.toBeNull();
     expect(result?.id).toBe(validAccessPayload.sub);
     expect(result?.email).toBe(validAccessPayload.email);
   });
 
-  it('should reject a typed token (e.g. refresh) presented as access', () => {
+  it('should reject a typed token (e.g. refresh) presented as access', async () => {
     expect(
-      strategy.validate({ ...validAccessPayload, type: 'refresh' }),
+      await strategy.validate({ ...validAccessPayload, type: 'refresh' }),
     ).toBeNull();
   });
 
-  it('should reject a bare {sub} payload with no email', () => {
+  it('should reject a bare {sub} payload with no email', async () => {
     expect(
-      strategy.validate({
+      await strategy.validate({
         sub: validAccessPayload.sub,
       } as unknown as typeof validAccessPayload),
     ).toBeNull();

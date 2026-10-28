@@ -1,36 +1,36 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { McpOAuthAuthorizationService } from '../../application/services/mcp-oauth-authorization.service';
-import { McpOAuthClientConfigurationService } from '../../application/services/mcp-oauth-client-configuration.service';
+import { McpOAuthAuthorizationService } from 'src/domain/mcp/application/services/mcp-oauth-authorization.service';
+import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 import { McpIntegrationsController } from './mcp-integrations.controller';
 import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
 import { McpIntegrationResponseMapper } from './mappers/mcp-integration-response.mapper';
 import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
-import { CreateMcpIntegrationUseCase } from '../../application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
-import { GetMcpIntegrationUseCase } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
-import { ListOrgMcpIntegrationsUseCase } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
-import { ListAvailableMcpIntegrationsUseCase } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
-import { UpdateMcpIntegrationUseCase } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
-import { DeleteMcpIntegrationUseCase } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
-import { EnableMcpIntegrationUseCase } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
-import { DisableMcpIntegrationUseCase } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
-import { ValidateMcpIntegrationUseCase } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
-import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
-import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
-import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
-import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
-import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
-import { aCustomMcpIntegration } from '../../application/testing/mcp-integration.fixtures';
-import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
+import { CreateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
+import { GetMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
+import { ListOrgMcpIntegrationsUseCase } from 'src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
+import { ListAvailableMcpIntegrationsUseCase } from 'src/domain/mcp/application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
+import { UpdateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
+import { DeleteMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
+import { EnableMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
+import { DisableMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
+import { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import { ListPredefinedMcpIntegrationConfigsUseCase } from 'src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
+import { InstallMarketplaceIntegrationUseCase } from 'src/domain/mcp/application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import type { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import type { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import type { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
 import { randomUUID } from 'crypto';
-import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { CredentialFieldType } from '../../domain/predefined-mcp-integration-config';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 describe('McpIntegrationsController', () => {
   let controller: McpIntegrationsController;
@@ -44,6 +44,7 @@ describe('McpIntegrationsController', () => {
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let listConfigsUseCase: jest.Mocked<ListPredefinedMcpIntegrationConfigsUseCase>;
   let oauthClientConfiguration: jest.Mocked<McpOAuthClientConfigurationService>;
+  let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
   beforeEach(async () => {
     const mockCreateUseCase = {
       execute: jest.fn(),
@@ -179,6 +180,7 @@ describe('McpIntegrationsController', () => {
     validateUseCase = module.get(ValidateMcpIntegrationUseCase);
     listConfigsUseCase = module.get(ListPredefinedMcpIntegrationConfigsUseCase);
     oauthClientConfiguration = module.get(McpOAuthClientConfigurationService);
+    configService = module.get(ConfigService);
   });
 
   describe('createPredefined', () => {
@@ -272,6 +274,29 @@ describe('McpIntegrationsController', () => {
   });
 
   describe('createCustom', () => {
+    it('allows custom integrations on cloud deployments', async () => {
+      configService.get.mockReturnValue(true);
+      const dto: CreateCustomIntegrationDto = {
+        name: 'Council Archive',
+        serverUrl: 'https://archive.example.com/mcp',
+        configSchema: {
+          orgFields: [],
+          userFields: [],
+        },
+        orgConfigValues: {},
+      };
+      createUseCase.execute.mockResolvedValue(
+        aCustomMcpIntegration({
+          name: dto.name,
+          serverUrl: dto.serverUrl,
+        }),
+      );
+
+      const result = await controller.createCustom(dto);
+
+      expect(result.type).toBe('custom');
+    });
+
     it('forwards schema-configured credentials when creating custom integration', async () => {
       const dto: CreateCustomIntegrationDto = {
         name: 'Custom Server',

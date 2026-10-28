@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindAllThreadsQuery } from './find-all-threads.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -11,12 +11,17 @@ export class FindAllThreadsUseCase {
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(query: FindAllThreadsQuery): Promise<Paginated<Thread>> {
-    this.logger.log('findAll', {
-      userId: query.userId,
-      filters: query.filters,
-      limit: query.limit,
-      offset: query.offset,
-    });
+    const { search: text, ...safeFilters } = query.filters ?? {};
+    this.logger.log(
+      {
+        userId: query.userId,
+        ...safeFilters,
+        text,
+        limit: query.limit,
+        offset: query.offset,
+      },
+      'findAll',
+    );
     try {
       return await this.threadsRepository.findAll(
         query.userId,
@@ -28,10 +33,13 @@ export class FindAllThreadsUseCase {
         },
       );
     } catch (error) {
-      this.logger.error('Failed to find all threads', {
-        userId: query.userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId: query.userId,
+          err: error as Error,
+        },
+        'Failed to find all threads',
+      );
       throw error;
     }
   }

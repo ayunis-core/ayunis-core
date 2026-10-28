@@ -4,6 +4,7 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
 import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
@@ -16,24 +17,36 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { WebhookEventType } from '../domain/value-objects/webhook-event-type.enum';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 import { User } from 'src/iam/users/domain/user.entity';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
-import type { UsageCollectedWebhookPayload } from '../domain/webhook-events/usage-collected.webhook-event';
+import type { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import type { UsageCollectedWebhookPayload } from 'src/integrations/webhooks/domain/webhook-events/usage-collected.webhook-event';
 import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
+import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
 const SUB_ID = '00000000-0000-0000-0000-000000000003' as UUID;
 const THREAD_ID = '00000000-0000-0000-0000-000000000004' as UUID;
 const MESSAGE_ID = '00000000-0000-0000-0000-000000000005' as UUID;
+const SKILL_ID = '00000000-0000-0000-0000-000000000006' as UUID;
+const INTEGRATION_ID = '00000000-0000-0000-0000-000000000007' as UUID;
+const API_KEY_ID = '00000000-0000-0000-0000-000000000008' as UUID;
+const INVITE_ID = '00000000-0000-0000-0000-000000000009' as UUID;
 
 function makeUser(): User {
   return new User({
@@ -97,6 +110,7 @@ describe('WebhookDispatchListener', () => {
       findUserByIdUseCase,
       findOrgByIdUseCase,
       configService,
+      new WebhookDeliverySequencer(),
     );
   });
 
@@ -148,6 +162,31 @@ describe('WebhookDispatchListener', () => {
     });
   });
 
+  describe('handleInviteCreated', () => {
+    it('dispatches an invited user without triggering user onboarding', async () => {
+      const invite = new Invite({
+        id: INVITE_ID,
+        email: 'invited.user@stadt.example',
+        orgId: ORG_ID,
+        role: UserRole.USER,
+        expiresAt: new Date('2026-10-02T12:00:00.000Z'),
+      });
+
+      await listener.handleInviteCreated(new InviteCreatedEvent(invite));
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_INVITED);
+      expect(command.event.data).toEqual({
+        id: INVITE_ID,
+        email: 'invited.user@stadt.example',
+        orgId: ORG_ID,
+        name: 'invited.user@stadt.example',
+      });
+      expect(findOrgByIdUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
   describe('handleUserUpdated', () => {
     it('should dispatch UserUpdatedWebhookEvent', async () => {
       const user = makeUser();
@@ -178,6 +217,46 @@ describe('WebhookDispatchListener', () => {
     });
   });
 
+  describe('handleOnboardingUpdated', () => {
+    it('should dispatch onboarding progress enriched with the user identity', async () => {
+      await listener.handleOnboardingUpdated(
+        new OnboardingUpdatedEvent(
+          USER_ID,
+          ['sendFirstMessage'],
+          ['sendFirstMessage', 'uploadDocument'],
+          false,
+          true,
+        ),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ONBOARDING_UPDATED);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+        userRole: UserRole.ADMIN,
+        previousCompletedStepIds: ['sendFirstMessage'],
+        completedStepIds: ['sendFirstMessage', 'uploadDocument'],
+        previousHidden: false,
+        hidden: true,
+      });
+    });
+
+    it('should skip onboarding progress when no webhook receiver is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleOnboardingUpdated(
+        new OnboardingUpdatedEvent(USER_ID, [], [], false, false),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
   describe('handleOrgCreated', () => {
     it('should dispatch OrgCreatedWebhookEvent with the bare Org payload', async () => {
       const org = makeOrg();
@@ -192,6 +271,33 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.data).not.toHaveProperty('userName');
     });
   });
+
+  it.each([10000, 0])(
+    'dispatches monthly credit updates including %s credits',
+    async (monthlyCredits) => {
+      const base = makeSeatBasedPayload();
+      await listener.handleSubscriptionMonthlyCreditsUpdated(
+        new SubscriptionMonthlyCreditsUpdatedEvent(ORG_ID, {
+          ...base,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits,
+        }),
+      );
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: expect.objectContaining({
+            eventType: 'subscription.monthly_credits_updated',
+            data: expect.objectContaining({
+              orgId: ORG_ID,
+              type: 'USAGE_BASED',
+              monthlyCredits,
+              startsAt: base.startsAt.toISOString(),
+            }),
+          }),
+        }),
+      );
+    },
+  );
 
   describe('handleSubscriptionCreated', () => {
     it('should dispatch SubscriptionCreatedWebhookEvent with mapped payload', async () => {
@@ -225,6 +331,46 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.eventType).toBe(
         WebhookEventType.SUBSCRIPTION_CANCELLED,
       );
+    });
+  });
+
+  describe('subscription lifecycle ordering', () => {
+    it('waits for cancellation delivery before dispatching replacement creation', async () => {
+      let finishCancellation = (): void => undefined;
+      const cancellationDelivery = new Promise<void>((resolve) => {
+        finishCancellation = resolve;
+      });
+      sendWebhookUseCase.execute.mockImplementation((command) =>
+        command.event.eventType === WebhookEventType.SUBSCRIPTION_CANCELLED
+          ? cancellationDelivery
+          : Promise.resolve(),
+      );
+
+      const cancellation = listener.handleSubscriptionCancelled(
+        new SubscriptionCancelledEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+      const creation = listener.handleSubscriptionCreated(
+        new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+      await new Promise<void>((resolve) => setImmediate(resolve));
+
+      expect(
+        sendWebhookUseCase.execute.mock.calls.map(
+          ([command]) => command.event.eventType,
+        ),
+      ).toEqual([WebhookEventType.SUBSCRIPTION_CANCELLED]);
+
+      finishCancellation();
+      await Promise.all([cancellation, creation]);
+
+      expect(
+        sendWebhookUseCase.execute.mock.calls.map(
+          ([command]) => command.event.eventType,
+        ),
+      ).toEqual([
+        WebhookEventType.SUBSCRIPTION_CANCELLED,
+        WebhookEventType.SUBSCRIPTION_CREATED,
+      ]);
     });
   });
 
@@ -294,10 +440,14 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUsageCollected', () => {
-    function makeUsage(userId: UUID | null = USER_ID): Usage {
+    function makeUsage(
+      userId: UUID | null = USER_ID,
+      apiKeyId: UUID | null = null,
+    ): Usage {
       return new Usage({
         id: '00000000-0000-0000-0000-000000000099',
         userId,
+        apiKeyId,
         organizationId: ORG_ID,
         modelId: '00000000-0000-0000-0000-0000000000aa',
         provider: ModelProvider.OPENAI,
@@ -338,6 +488,9 @@ describe('WebhookDispatchListener', () => {
           createdAt: '2026-04-07T12:00:00.000Z',
         }),
       );
+      expect(
+        (command.event.data as UsageCollectedWebhookPayload).apiKeyId,
+      ).toBeUndefined();
     });
 
     it('should enrich the payload with user email and name', async () => {
@@ -354,9 +507,9 @@ describe('WebhookDispatchListener', () => {
       );
     });
 
-    it('should dispatch unenriched without a user lookup for API-key usage (null userId)', async () => {
+    it('should dispatch API key identity without a user lookup', async () => {
       await listener.handleUsageCollected(
-        new UsageCollectedEvent(makeUsage(null), 'gpt-4o-mini'),
+        new UsageCollectedEvent(makeUsage(null, API_KEY_ID), 'gpt-4o-mini'),
       );
 
       expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
@@ -364,6 +517,7 @@ describe('WebhookDispatchListener', () => {
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       const data = command.event.data as UsageCollectedWebhookPayload;
       expect(data.userId).toBeNull();
+      expect(data.apiKeyId).toBe(API_KEY_ID);
       expect(data.userEmail).toBeUndefined();
       expect(data.userName).toBeUndefined();
     });
@@ -393,6 +547,84 @@ describe('WebhookDispatchListener', () => {
 
       expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('product usage events', () => {
+    it('should dispatch skill usage with user identity', async () => {
+      await listener.handleSkillUsed(
+        new SkillUsedEvent(USER_ID, ORG_ID, SKILL_ID, 'Legal Research'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.SKILL_USED);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        skillId: SKILL_ID,
+        skillName: 'Legal Research',
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+      });
+    });
+
+    it('should dispatch marketplace skill installs', async () => {
+      await listener.handleMarketplaceSkillInstalled(
+        new MarketplaceSkillInstalledEvent(USER_ID, ORG_ID, 'legal-research'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.SKILL_INSTALLED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({ identifier: 'legal-research' }),
+      );
+    });
+
+    it('should dispatch MCP integration usage with user identity', async () => {
+      await listener.handleToolUsed(
+        new ToolUsedEvent(
+          USER_ID,
+          ORG_ID,
+          'search_council_sessions',
+          INTEGRATION_ID,
+          'Council Data',
+        ),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.INTEGRATION_USED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          integrationId: INTEGRATION_ID,
+          integrationName: 'Council Data',
+        }),
+      );
+    });
+
+    it('should ignore non-integration tool usage', async () => {
+      await listener.handleToolUsed(
+        new ToolUsedEvent(USER_ID, ORG_ID, 'internet_search'),
+      );
+
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should dispatch marketplace integration installs', async () => {
+      await listener.handleMarketplaceIntegrationInstalled(
+        new MarketplaceIntegrationInstalledEvent(
+          USER_ID,
+          ORG_ID,
+          'council-data',
+        ),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.INTEGRATION_INSTALLED,
+      );
+      expect(command.event.data).toEqual(
+        expect.objectContaining({ identifier: 'council-data' }),
+      );
     });
   });
 

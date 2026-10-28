@@ -2,15 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateImageGenerationModelUseCase } from './update-image-generation-model.use-case';
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ImageGenerationModelProviderNotSupportedError,
   ModelNotFoundByIdError,
-} from '../../models.errors';
-import { ModelPolicyService } from '../../services/model-policy.service';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+} from 'src/domain/models/application/models.errors';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import type { UUID } from 'crypto';
 
 describe('UpdateImageGenerationModelUseCase', () => {

@@ -19,7 +19,7 @@ export function useRegister() {
 
   const registerFormSchema = z
     .object({
-      email: z.string().email({
+      email: z.email({
         message: t('register.emailInvalid'),
       }),
       password: z.string().min(8, {

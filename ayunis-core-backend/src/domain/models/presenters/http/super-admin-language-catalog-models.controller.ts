@@ -4,10 +4,10 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -27,10 +27,10 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateLanguageModelCommand } from '../../application/use-cases/create-language-model/create-language-model.command';
-import { CreateLanguageModelUseCase } from '../../application/use-cases/create-language-model/create-language-model.use-case';
-import { UpdateLanguageModelCommand } from '../../application/use-cases/update-language-model/update-language-model.command';
-import { UpdateLanguageModelUseCase } from '../../application/use-cases/update-language-model/update-language-model.use-case';
+import { CreateLanguageModelCommand } from 'src/domain/models/application/use-cases/create-language-model/create-language-model.command';
+import { CreateLanguageModelUseCase } from 'src/domain/models/application/use-cases/create-language-model/create-language-model.use-case';
+import { UpdateLanguageModelCommand } from 'src/domain/models/application/use-cases/update-language-model/update-language-model.command';
+import { UpdateLanguageModelUseCase } from 'src/domain/models/application/use-cases/update-language-model/update-language-model.use-case';
 import { CreateLanguageModelRequestDto } from './dto/create-language-model-request.dto';
 import { LanguageModelResponseDto } from './dto/language-model-response.dto';
 import { UpdateLanguageModelRequestDto } from './dto/update-language-model-request.dto';
@@ -86,13 +86,17 @@ export class SuperAdminLanguageCatalogModelsController {
     @Body() dto: CreateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
     this.logger.log(
-      `Creating language model ${dto.name} by super admin ${userId}`,
+      { modelName: dto.name, userId },
+      'Creating language model by super admin',
     );
     const command = new CreateLanguageModelCommand(dto);
     const model = await this.createLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.log(`Successfully created language model ${model.id}`);
+    this.logger.log(
+      { modelId: model.id },
+      'Successfully created language model',
+    );
     return responseDto;
   }
 
@@ -133,12 +137,15 @@ export class SuperAdminLanguageCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
-    this.logger.log(`Updating language model ${id} by super admin ${userId}`);
+    this.logger.log(
+      { modelId: id, userId },
+      'Updating language model by super admin',
+    );
     const command = new UpdateLanguageModelCommand({ ...dto, id });
     const model = await this.updateLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.log(`Successfully updated language model ${id}`);
+    this.logger.log({ modelId: id }, 'Successfully updated language model');
     return responseDto;
   }
 }

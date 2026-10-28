@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateSystemMessageUseCase } from './create-system-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { MessageCreationError } from '../../messages.errors';
+import { MessageCreationError } from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
 
 describe('CreateSystemMessageUseCase', () => {
@@ -172,9 +172,12 @@ describe('CreateSystemMessageUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating system message', {
-        threadId,
-      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+        },
+        'Creating system message',
+      );
     });
   });
 });

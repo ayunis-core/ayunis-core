@@ -1,14 +1,19 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ResetPasswordUseCase } from './reset-password.use-case';
 import { ResetPasswordCommand } from './reset-password.command';
-import { UsersRepository } from '../../ports/users.repository';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokensRepository } from '../../ports/password-set-tokens.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
-import { IsValidPasswordUseCase } from '../is-valid-password/is-valid-password.use-case';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import {
   InvalidPasswordError,
@@ -20,7 +25,9 @@ import {
   aPasswordSetToken,
   createMockPasswordSetTokensRepository,
   TEST_USER_ID,
-} from '../../testing/password-set-token.fixtures';
+} from 'src/iam/users/application/testing/password-set-token.fixtures';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 describe('ResetPasswordUseCase', () => {
   let useCase: ResetPasswordUseCase;
@@ -33,16 +40,17 @@ describe('ResetPasswordUseCase', () => {
   let mockHashTextUseCase: { execute: jest.Mock };
   let mockIsValidPasswordUseCase: { execute: jest.Mock };
   let mockRevokeAllSessionsForUserUseCase: { execute: jest.Mock };
+  let mockGetOrgAuthenticationPolicy: { execute: jest.Mock };
 
   const orgId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
 
-  const buildUser = () =>
+  const buildUser = (passwordHash: string | null = 'old-hash') =>
     new User({
       id: TEST_USER_ID,
       name: 'Maria Müller',
       email: 'maria@gemeinde.de',
       emailVerified: true,
-      passwordHash: 'old-hash',
+      passwordHash,
       role: UserRole.USER,
       orgId,
       hasAcceptedMarketing: false,
@@ -56,6 +64,9 @@ describe('ResetPasswordUseCase', () => {
     mockIsValidPasswordUseCase = { execute: jest.fn().mockResolvedValue(true) };
     mockRevokeAllSessionsForUserUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
+    };
+    mockGetOrgAuthenticationPolicy = {
+      execute: jest.fn().mockResolvedValue({ localPasswordLoginEnabled: true }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,15 +87,14 @@ describe('ResetPasswordUseCase', () => {
           provide: RevokeAllSessionsForUserUseCase,
           useValue: mockRevokeAllSessionsForUserUseCase,
         },
+        {
+          provide: GetOrgAuthenticationPolicyUseCase,
+          useValue: mockGetOrgAuthenticationPolicy,
+        },
       ],
     }).compile();
 
     useCase = module.get(ResetPasswordUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -162,5 +172,63 @@ describe('ResetPasswordUseCase', () => {
 
     await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
     expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+  });
+
+  it('rejects reset tokens for users without a local password', async () => {
+    mockTokenService.findValid.mockResolvedValue(aPasswordSetToken());
+    mockUsersRepository.findOneById.mockResolvedValue(buildUser(null));
+
+    await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
+
+    expect(mockHashTextUseCase.execute).not.toHaveBeenCalled();
+    expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('allows an explicit initial-password token to create a local password', async () => {
+    const user = buildUser(null);
+    mockTokenService.findValid.mockResolvedValue(
+      aPasswordSetToken({ purpose: PasswordSetTokenPurpose.INITIAL }),
+    );
+    mockUsersRepository.findOneById.mockResolvedValue(user);
+
+    await useCase.execute(command());
+
+    expect(user.passwordHash).toBe('new-hash');
+    expect(mockUsersRepository.update).toHaveBeenCalledWith(user);
+  });
+
+  it('rejects an outstanding password token after SSO-only is enabled', async () => {
+    mockTokenService.findValid.mockResolvedValue(aPasswordSetToken());
+    mockUsersRepository.findOneById.mockResolvedValue(buildUser());
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    });
+
+    await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
+
+    expect(mockHashTextUseCase.execute).not.toHaveBeenCalled();
+    expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects when SSO-only is enabled while the password is being prepared', async () => {
+    mockTokenService.findValid.mockResolvedValue(aPasswordSetToken());
+    mockUsersRepository.findOneById.mockResolvedValue(buildUser());
+    mockGetOrgAuthenticationPolicy.execute
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: true })
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: false });
+
+    await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
+
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orgId,
+        lockForSessionIssuance: true,
+      }),
+    );
+    expect(mockHashTextUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
   });
 });

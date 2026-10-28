@@ -32,7 +32,7 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 ### Prerequisites
 
 - Node.js (v24 or higher)
-- npm
+- pnpm (run `corepack enable` to get the version pinned in package.json)
 - Docker and Docker Compose
 
 ### Installation
@@ -77,6 +77,39 @@ Change `HOST_PORT` in the `.env` file in the project root
 - OpenAPI JSON: <http://localhost:3000/api/docs-json>
 
 ## ⚙️ Configuration
+
+### Client IP and reverse proxies
+
+The backend defaults to `TRUST_PROXY=0`: only the TCP peer determines the client
+IP. Client-supplied `X-Forwarded-For`, `X-Real-IP`, and `CF-Connecting-IP` cannot
+override it. This IP is used for rate limiting, IP allowlists, admin lockout
+protection, and access-denied audit logs.
+
+When deploying behind a reverse proxy, set `TRUST_PROXY` in
+`ayunis-core-backend/.env` and restart the backend. Prefer a comma-separated list
+of the actual proxy IPs/CIDRs, for example `10.20.0.10/32,fd00::10/128`.
+Express follows `X-Forwarded-For` from the socket toward the client and selects
+the nearest untrusted address. Other client-IP headers are ignored, including
+when the peer is trusted. Configure your proxy to supply `X-Forwarded-For`.
+
+A hop count such as `TRUST_PROXY=1` is also supported. Use it for a single Caddy
+edge **only after verifying** every request passes through that edge and the
+backend port cannot be reached directly. A hop count trusts proximity rather
+than the peer's identity; direct access or a shorter proxy path permits spoofing.
+Do not enable proxy trust in the default directly published Compose setup without
+first restricting backend access. Unset/blank/zero disables proxy trust;
+invalid values, booleans, and named subnet aliases fail startup. Trust only
+actual proxy addresses. CIDRs with a `/0` prefix are unsupported by Express
+and would crash application startup; they are rejected during environment
+validation. Numeric `TRUST_PROXY=0` remains valid and disables proxy trust.
+See [Express proxy configuration](https://expressjs.com/en/guide/behind-proxies/).
+
+Before rollout, check the proxy chain and reachable backend ports for **each**
+environment. Verify a spoofed-header request is still denied by an IP allowlist
+or consumes the same rate-limit quota, and verify a legitimately allowed client
+still has access. Existing allowlists must contain real client IPs when enabling
+proxy trust; otherwise operators can lose access. Verify the current admin IP
+before updating an allowlist.
 
 ### E-Mail Provider Configuration
 
@@ -177,9 +210,9 @@ All super admin endpoints require JWT authentication with a user that has the `S
 ```bash
 cd ayunis-core-backend
 # Look up the user's ID by email
-npm run cli:ts -- users:get --email <email>
+pnpm run cli:ts -- users:get --email <email>
 # Promote that user to super admin
-npm run cli:ts -- users:make-super-admin --userId <userId>
+pnpm run cli:ts -- users:make-super-admin --userId <userId>
 ```
 
 Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.
@@ -197,11 +230,21 @@ See also:
 To skip manual setup locally, seed a demo org, a super admin, and standard models:
 
 ```bash
+./dev up --slot 2
 cd ayunis-core-backend
-npm run seed:minimal:ts
+pnpm seed
 ```
 
 This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.
+
+The seed also creates a shared-skill knowledge-base scenario for manual access testing:
+
+- Admin: `admin@demo.local` / `admin`
+- Member: `shared-skill-viewer@demo.local` / `admin`
+- Shared skill: `Geteiltes Bürgerwissen`
+- Shared knowledge base: `Geteiltes Bürgerwissen`
+
+Sign in as the member and open `/knowledge-bases`. Select the shared tab and verify that the seeded knowledge base is listed with its shared badge. To test the workspace path, create a workspace as the member, open its **Wissen** tab, and use **Hinzufügen** to verify that the shared knowledge base is available.
 
 ## 🎯 First steps
 
@@ -238,6 +281,7 @@ port, it exits with an actionable error instead of terminating that process.
 
 ```bash
 # Start or converge a slot to a healthy stack. The slot is remembered.
+# Anonymisation is omitted by default; add --with-anonymisation when needed.
 ./dev up --slot 2
 
 # Check process/session state and backend/frontend HTTP readiness.
@@ -247,6 +291,12 @@ port, it exits with an actionable error instead of terminating that process.
 ./dev logs --slot 2 backend
 ./dev logs --slot 2 frontend
 ./dev logs --slot 2 infra
+
+# Inspect every worktree that has selected a slot.
+./dev slots
+
+# Open the local slot control panel URL printed by this command.
+./dev ui
 
 # Recover an unhealthy managed backend or frontend session.
 ./dev up --slot 2
@@ -258,6 +308,25 @@ backend or frontend sessions before waiting for both services to become ready.
 Do not kill a process reported as an unmanaged port owner; stop it from its
 own checkout or choose another slot.
 
+The control panel binds to `127.0.0.1` and exposes safe, checkout-owned stop
+operations. It blocks stopping duplicate slot claims because Docker
+infrastructure is shared by slot number. Stopped checkouts can release their
+slot selection without deleting the worktree or database data. A stopped,
+uncontested slot can separately delete its Compose containers, network, and
+Postgres/MinIO volumes after typing `DELETE SLOT N`; the worktree and slot claim
+remain. Once slot data is gone, a clean stopped linked worktree whose branch is
+published and has no unpushed commits can be removed after typing
+`REMOVE WORKTREE N`; its branch is preserved. The primary checkout and the
+checkout serving the dashboard cannot be removed there. Unmanaged process
+termination is intentionally not available from the UI. **Stop all safely**
+stops every eligible managed slot while
+skipping stopped, conflicting, or unmanaged entries. Unmanaged listeners include
+read-only ownership details:
+PID, command, working directory, and a conservative active-worktree, orphan,
+or unknown classification. Stopped checkouts can be started on their current
+slot or reassigned to a verified free slot; managed running checkouts can be
+restarted in standard, E2E-mock, or anonymisation mode.
+
 ### Git Hooks (Husky)
 
 This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks for code quality checks.
@@ -267,7 +336,7 @@ This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks
 When you clone the repository, Git hooks are automatically set up when you run:
 
 ```bash
-npm install
+pnpm install
 ```
 
 This installs Husky and configures Git to use the hooks in the `.husky/` directory.
@@ -305,8 +374,8 @@ Valid types: `feat`, `feature`, `fix`, `chore`, `refactor`, `docs`, `style`, `pe
 If hooks aren't working, you can manually set them up:
 
 ```bash
-npm install
-npx husky install
+pnpm install
+pnpm exec husky install
 ```
 
 **Note**: On some systems (especially Windows), Git may not preserve executable permissions for hook files. If hooks aren't running, ensure the hook files are executable:
@@ -328,6 +397,9 @@ git update-index --chmod=+x .husky/commit-msg
 - **Documentation (Coming Soon)**
 - **[Contributing Guide](CONTRIBUTING.md)**
 - **[Deployment Guide](DEPLOYMENT.md)**
+- **[Authentication architecture](docs/architecture/authentication.md)**
+- **[Customer SSO setup guide](docs/guides/customer-sso-setup.md)**
+- **[Municipal SSO V1 operator runbook](docs/runbooks/municipal-sso-v1.md)**
 - **[License](LICENSE.md)**
 
 ## 🤝 Contributing

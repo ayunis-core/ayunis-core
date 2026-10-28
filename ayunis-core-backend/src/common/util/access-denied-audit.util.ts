@@ -12,7 +12,7 @@ export interface AuditPrincipal {
 
 /**
  * Structured audit context describing who was denied access and where.
- * Emitted as a `Logger.warn` payload whenever a guard rejects a request
+ * Emitted as structured warning metadata whenever a guard rejects a request
  * with a 403 (wrong role or IP allowlist), so that silent denials become
  * auditable.
  */

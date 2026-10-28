@@ -4,24 +4,26 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
+import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceRepository } from '../../ports/source.repository';
-import { SpreadsheetParserPort } from '../../ports/spreadsheet-parser.port';
-import type { DataSourceProcessingTarget } from '../../ports/data-source-processing.port';
-import { MarkSourceFailedUseCase } from '../mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from '../mark-source-failed/mark-source-failed.command';
-import { EnqueueDataSourceProcessingUseCase } from '../enqueue-data-source-processing/enqueue-data-source-processing.use-case';
-import { EnqueueDataSourceProcessingCommand } from '../enqueue-data-source-processing/enqueue-data-source-processing.command';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import type { DataSourceProcessingTarget } from 'src/domain/sources/application/ports/data-source-processing.port';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
+import { EnqueueDataSourceProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { StartDataSourceProcessingCommand } from './start-data-source-processing.command';
 
 interface SourcePlan {
@@ -45,7 +47,7 @@ export class StartDataSourceProcessingUseCase {
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDataSourceProcessingUseCase: EnqueueDataSourceProcessingUseCase,
     private readonly contextService: ContextService,
@@ -55,10 +57,13 @@ export class StartDataSourceProcessingUseCase {
   async execute(
     command: StartDataSourceProcessingCommand,
   ): Promise<CSVDataSource[]> {
-    this.logger.log('Starting async data source processing', {
-      fileName: command.fileName,
-      kind: command.kind,
-    });
+    this.logger.log(
+      {
+        fileName: command.fileName,
+        kind: command.kind,
+      },
+      'Starting async data source processing',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -78,13 +83,13 @@ export class StartDataSourceProcessingUseCase {
     // The job and its file are shared by every sheet source, so they are
     // keyed by a fresh upload id rather than any (deletable) source id.
     const uploadId = randomUUID();
-    // Upload and enqueue both happen outside the transaction
+    // Upload holds no transaction; enqueue takes its own short lifecycle lock.
     const minioPath = buildMinioProcessingPath(
       orgId,
       uploadId,
       command.fileName,
     );
-    await this.uploadFileOrFail(sources, minioPath, command);
+    await this.uploadFileOrFail(sources, minioPath, command, orgId);
     await this.enqueueOrFail(
       { sources, plans, uploadId, minioPath, orgId, userId },
       command,
@@ -107,7 +112,7 @@ export class StartDataSourceProcessingUseCase {
       throw new EmptyFileDataError(command.fileName);
     }
 
-    const baseFileName = command.fileName.replace(/\.(xlsx|xls)$/i, '');
+    const baseFileName = command.fileName.replace(/\.(xlsx|xls|ods)$/i, '');
     return sheetNames.map((sheetName) => ({
       sheetName,
       name:
@@ -138,15 +143,17 @@ export class StartDataSourceProcessingUseCase {
     sources: CSVDataSource[],
     minioPath: string,
     command: StartDataSourceProcessingCommand,
+    orgId: UUID,
   ): Promise<void> {
     try {
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(minioPath, command.fileData),
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
       );
     } catch (error) {
       await this.tryMarkSourcesFailed(
         sources,
         'Failed to upload file to storage',
+        classifySourceProcessingError(error),
       );
       throw error;
     }
@@ -183,10 +190,13 @@ export class StartDataSourceProcessingUseCase {
         }),
       );
     } catch (error) {
-      this.logger.error('Failed to enqueue data source processing job', {
-        sourceIds: batch.sources.map((source) => source.id),
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceIds: batch.sources.map((source) => source.id),
+          err: error as Error,
+        },
+        'Failed to enqueue data source processing job',
+      );
       await this.tryMarkSourcesFailed(
         batch.sources,
         'Failed to enqueue processing job',
@@ -202,16 +212,20 @@ export class StartDataSourceProcessingUseCase {
         new DeleteObjectCommand(minioPath),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up MinIO processing file', {
-        minioPath,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          fileName: minioPath,
+          err: err as Error,
+        },
+        'Failed to clean up MinIO processing file',
+      );
     }
   }
 
   private async tryMarkSourcesFailed(
     sources: CSVDataSource[],
     errorMessage: string,
+    errorCode?: SourceProcessingErrorCode,
   ): Promise<void> {
     for (const source of sources) {
       try {
@@ -219,13 +233,17 @@ export class StartDataSourceProcessingUseCase {
           new MarkSourceFailedCommand({
             sourceId: source.id,
             errorMessage,
+            errorCode,
           }),
         );
       } catch (err) {
-        this.logger.error('Failed to mark source as FAILED', {
-          sourceId: source.id,
-          error: err as Error,
-        });
+        this.logger.error(
+          {
+            sourceId: source.id,
+            err: err as Error,
+          },
+          'Failed to mark source as FAILED',
+        );
       }
     }
   }

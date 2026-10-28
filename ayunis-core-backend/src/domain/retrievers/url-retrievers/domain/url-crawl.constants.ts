@@ -10,6 +10,7 @@ export const UrlCrawlConstants = {
   MAX_DEPTH: 2,
   /** Hard cap on the total number of pages fetched per crawl. */
   MAX_PAGES: 25,
+  MAX_PDFS: 25,
   /** Maximum number of pages fetched concurrently within the crawl. */
   FETCH_CONCURRENCY: 5,
 } as const;

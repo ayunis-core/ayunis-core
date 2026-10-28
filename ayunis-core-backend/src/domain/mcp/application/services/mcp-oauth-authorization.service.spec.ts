@@ -1,15 +1,25 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Logger } from '@nestjs/common';
 import {
   auth,
   discoverOAuthProtectedResourceMetadata,
 } from '@modelcontextprotocol/client';
 import { createHash, randomUUID } from 'crypto';
 import { McpOAuthAuthorizationService } from './mcp-oauth-authorization.service';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpOAuthPendingSession } from '../../domain/mcp-oauth-pending-session.entity';
-import { McpOAuthFetchService } from '../../infrastructure/clients/mcp-oauth-fetch.service';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpOAuthPendingSession } from 'src/domain/mcp/domain/mcp-oauth-pending-session.entity';
+import { McpOAuthFetchService } from 'src/domain/mcp/infrastructure/clients/mcp-oauth-fetch.service';
+import { fetch, Response as UndiciResponse } from 'undici';
+import type * as Undici from 'undici';
+import {
+  McpErrorCode,
+  McpOAuthServerUnreachableError,
+} from 'src/domain/mcp/application/mcp.errors';
 
+jest.mock('undici', () => ({
+  ...jest.requireActual<typeof Undici>('undici'),
+  fetch: jest.fn(),
+}));
 jest.mock('@modelcontextprotocol/client', () => ({
   auth: jest.fn(),
   discoverOAuthProtectedResourceMetadata: jest.fn(),
@@ -43,6 +53,7 @@ describe('McpOAuthAuthorizationService', () => {
   const registrations = { findByIntegrationAndIssuer: jest.fn() };
   const encryption = { encrypt: jest.fn(), decrypt: jest.fn() };
   const cache = { invalidate: jest.fn() };
+  const mcpClient = { invalidateConnections: jest.fn() };
   const config = { get: jest.fn() };
   const oauthFetch = new McpOAuthFetchService(config as never);
   let service: McpOAuthAuthorizationService;
@@ -67,6 +78,7 @@ describe('McpOAuthAuthorizationService', () => {
       encryption,
       cache as never,
       oauthFetch,
+      mcpClient as never,
     );
   });
 
@@ -84,12 +96,93 @@ describe('McpOAuthAuthorizationService', () => {
     expect(discoverOAuthProtectedResourceMetadata).toHaveBeenCalledWith(
       integration.serverUrl,
       undefined,
-      oauthFetch.fetch,
+      expect.any(Function),
     );
     expect(auth).toHaveBeenCalledWith(provider, {
       serverUrl: integration.serverUrl,
       scope: 'tools:read',
-      fetchFn: oauthFetch.fetch,
+      fetchFn: expect.any(Function),
+    });
+  });
+
+  describe('transport failures', () => {
+    const fetchFailed = () =>
+      Object.assign(new TypeError('fetch failed'), {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND x'), {
+          code: 'ENOTFOUND',
+        }),
+      });
+    let warn: jest.SpyInstance;
+
+    beforeEach(() => {
+      warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    });
+
+    async function expectUnreachable(
+      act: Promise<unknown>,
+      stage: string,
+    ): Promise<McpOAuthServerUnreachableError> {
+      const error: unknown = await act.then(
+        () => undefined,
+        (caught: unknown) => caught,
+      );
+      expect(error).toBeInstanceOf(McpOAuthServerUnreachableError);
+      const unreachable = error as McpOAuthServerUnreachableError;
+      expect(unreachable.statusCode).toBe(502);
+      expect(unreachable.code).toBe(McpErrorCode.MCP_OAUTH_SERVER_UNREACHABLE);
+      expect(unreachable.message).toContain('https://mcp.example.com');
+      expect(unreachable.message).not.toContain('example.com/mcp');
+      expect(unreachable.message).toContain(stage);
+      expect(unreachable.metadata).toEqual({
+        integrationId: integration.id,
+        stage,
+        code: 'ENOTFOUND',
+      });
+      expect(warn).toHaveBeenCalledWith(
+        { integrationId: integration.id, stage, code: 'ENOTFOUND' },
+        expect.any(String),
+      );
+      return unreachable;
+    }
+
+    it('maps a transport failure during protected-resource discovery', async () => {
+      (discoverOAuthProtectedResourceMetadata as jest.Mock).mockRejectedValue(
+        fetchFailed(),
+      );
+
+      await expectUnreachable(service.authorize(integration.id), 'discovery');
+      expect(auth).not.toHaveBeenCalled();
+    });
+
+    it('maps a transport failure during authorization-server discovery or registration', async () => {
+      (auth as jest.Mock).mockRejectedValue(fetchFailed());
+
+      await expectUnreachable(
+        service.authorize(integration.id),
+        'authorization',
+      );
+    });
+
+    it('maps a transport failure during token exchange', async () => {
+      const state = 'opaque-state';
+      pendingSessions.consumeByStateHash.mockResolvedValue(buildPending(state));
+      (auth as jest.Mock).mockRejectedValue(fetchFailed());
+
+      await expectUnreachable(
+        service.complete({ state, code: 'code' }),
+        'token exchange',
+      );
+      expect(cache.invalidate).not.toHaveBeenCalled();
+    });
+
+    it('leaves non-transport failures untouched', async () => {
+      const failure = new Error('boom');
+      (discoverOAuthProtectedResourceMetadata as jest.Mock).mockRejectedValue(
+        failure,
+      );
+
+      await expect(service.authorize(integration.id)).rejects.toBe(failure);
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 
@@ -121,9 +214,13 @@ describe('McpOAuthAuthorizationService', () => {
       serverUrl: integration.serverUrl,
       authorizationCode: 'code',
       iss: pending.issuer,
-      fetchFn: oauthFetch.fetch,
+      fetchFn: expect.any(Function),
     });
     expect(cache.invalidate).toHaveBeenCalledWith(integration.id, userId);
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+      userId,
+    );
   });
 
   it('rejects a callback when the SDK does not complete authorization', async () => {
@@ -166,8 +263,8 @@ describe('McpOAuthAuthorizationService', () => {
 
   it('does not send credentials to a private revocation endpoint', async () => {
     const fetchSpy = jest
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(null, { status: 200 }));
+      .mocked(fetch)
+      .mockResolvedValue(new UndiciResponse(null, { status: 200 }));
     tokens.findByIntegrationAndUser.mockResolvedValue({
       issuer: 'https://auth.example.com',
       encryptedAccessToken: 'encrypted-access-token',
@@ -187,6 +284,13 @@ describe('McpOAuthAuthorizationService', () => {
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(tokens.delete).toHaveBeenCalledWith(integration.id, userId);
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+      userId,
+    );
+    expect(
+      mcpClient.invalidateConnections.mock.invocationCallOrder[0],
+    ).toBeLessThan(tokens.delete.mock.invocationCallOrder[0]);
   });
 
   function buildPending(state: string): McpOAuthPendingSession {

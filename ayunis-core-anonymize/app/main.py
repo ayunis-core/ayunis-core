@@ -1,27 +1,35 @@
+import json
+import logging
 import os
+import time
+from dataclasses import dataclass
 from functools import partial
 
 import anyio
 import anyio.to_thread
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.models import (
     AnalyzeRequest,
     AnalyzeResponse,
-    RecognizerResult,
     HealthResponse,
+    RecognizerResult,
 )
-from app.presidio_service import get_presidio_service
+from app.presidio_service import (
+    get_presidio_service,
+    is_presidio_service_loaded,
+)
 
 # How many analyses may run at once. Analysis is synchronous CPU-bound GLiNER
 # inference, so it must not run on the event loop — there it blocks every other
 # request, including /health, until it finishes (AYC-561).
 #
-# The bound matters as much as the dispatch: working memory scales with input
-# length (~3.3 MB per 1k characters), so unbounded concurrency on long inputs
-# can exhaust the container. Throughput does not reward a larger pool either —
-# measured on 4 cores, 2 concurrent analyses cost 1.4x the wall time of 1,
-# while 8 cost 7.4x.
+# GLiNER inference must share the four-CPU allocation deliberately. Without
+# batching, four workers with four threads each took ~135-138s for four
+# maximum-size requests in a local container with production's 4-CPU/6-GB
+# limits. With batching, two workers with two threads each completed the same
+# burst at roughly 29/29/57/57s (AYC-1182).
 MAX_CONCURRENT_ANALYSES = int(os.getenv("MAX_CONCURRENT_ANALYSES", "2"))
 
 # Each workload gets a dedicated thread budget instead of the global default
@@ -36,15 +44,97 @@ MAX_CONCURRENT_ANALYSES = int(os.getenv("MAX_CONCURRENT_ANALYSES", "2"))
 # `async def` handler serialises inline on the event loop and never competes.
 _analysis_limiter = anyio.CapacityLimiter(MAX_CONCURRENT_ANALYSES)
 
+# The backend abandons an analysis after 60s. Work that waited longer than that
+# in the queue has no consumer any more, yet it would still occupy one of the
+# analysis slots and push live requests behind it, so it is dropped at dequeue
+# time instead. Kept below the caller's timeout to absorb clock and transport
+# skew.
+ANALYSIS_QUEUE_DEADLINE_MS = int(os.getenv("ANALYSIS_QUEUE_DEADLINE_MS", "55000"))
+
 # Separate again for /health, so a saturated analysis queue can never delay the
 # container healthcheck past its timeout and get the service declared unhealthy.
 _health_limiter = anyio.CapacityLimiter(1)
+_analysis_logger = logging.getLogger("uvicorn.error.anonymize.analysis")
 
 
-def _analyze(text: str, entities):
-    """Runs on a worker thread — including the first-call model load, which
-    must never happen on the event loop."""
-    return get_presidio_service().analyze(text=text, entities=entities)
+@dataclass(frozen=True)
+class AnalysisMetrics:
+    queue_duration_ms: float
+    model_load_duration_ms: float
+    processing_duration_ms: float
+    cold_start: bool
+
+
+@dataclass(frozen=True)
+class AnalysisRun:
+    results: list[dict]
+    metrics: AnalysisMetrics
+
+
+class AnalysisQueueExpiredError(Exception):
+    def __init__(self, queue_duration_ms: float):
+        super().__init__(
+            f"analysis request expired after {queue_duration_ms:.0f}ms in queue"
+        )
+        self.queue_duration_ms = queue_duration_ms
+
+
+def _log_analysis(outcome: str, text_length: int, metrics: AnalysisMetrics) -> None:
+    _analysis_logger.info(
+        json.dumps(
+            {
+                "event": "anonymize_analysis",
+                "outcome": outcome,
+                "text_length": text_length,
+                "queue_duration_ms": round(metrics.queue_duration_ms, 2),
+                "model_load_duration_ms": round(metrics.model_load_duration_ms, 2),
+                "processing_duration_ms": round(metrics.processing_duration_ms, 2),
+                "cold_start": metrics.cold_start,
+            }
+        )
+    )
+
+
+def _analyze(text: str, entities, enqueued_at: float) -> AnalysisRun:
+    """Runs on a worker thread, outside the event loop."""
+    worker_started_at = time.perf_counter()
+    cold_start = not is_presidio_service_loaded()
+    queue_duration_ms = (worker_started_at - enqueued_at) * 1000
+    if queue_duration_ms > ANALYSIS_QUEUE_DEADLINE_MS:
+        _log_analysis(
+            "expired",
+            len(text),
+            AnalysisMetrics(
+                queue_duration_ms=queue_duration_ms,
+                model_load_duration_ms=0,
+                processing_duration_ms=0,
+                cold_start=cold_start,
+            ),
+        )
+        raise AnalysisQueueExpiredError(queue_duration_ms)
+    model_load_started_at = time.perf_counter()
+    service = get_presidio_service()
+    processing_started_at = time.perf_counter()
+    outcome = "success"
+
+    try:
+        results = service.analyze(text=text, entities=entities)
+    except Exception:
+        outcome = "error"
+        raise
+    finally:
+        processing_finished_at = time.perf_counter()
+        metrics = AnalysisMetrics(
+            queue_duration_ms=queue_duration_ms,
+            model_load_duration_ms=(processing_started_at - model_load_started_at)
+            * 1000,
+            processing_duration_ms=(processing_finished_at - processing_started_at)
+            * 1000,
+            cold_start=cold_start,
+        )
+        _log_analysis(outcome, len(text), metrics)
+
+    return AnalysisRun(results=results, metrics=metrics)
 
 
 # Initialize FastAPI app
@@ -79,7 +169,7 @@ async def health_check():
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze_text(request: AnalyzeRequest):
+async def analyze_text(request: AnalyzeRequest, response: Response):
     """
     Analyze text for PII entities
 
@@ -96,26 +186,37 @@ async def analyze_text(request: AnalyzeRequest):
         HTTPException: If analysis fails
     """
     try:
-        results = await anyio.to_thread.run_sync(
-            partial(_analyze, request.text, request.entities),
+        enqueued_at = time.perf_counter()
+        analysis_run = await anyio.to_thread.run_sync(
+            partial(_analyze, request.text, request.entities, enqueued_at),
             limiter=_analysis_limiter,
         )
+        metrics = analysis_run.metrics
+        response.headers["Server-Timing"] = (
+            f"queue;dur={metrics.queue_duration_ms:.2f}, "
+            f"model_load;dur={metrics.model_load_duration_ms:.2f}, "
+            f"processing;dur={metrics.processing_duration_ms:.2f}"
+        )
+        response.headers["X-Anonymize-Cold-Start"] = str(metrics.cold_start).lower()
 
         # Convert to response model
         recognizer_results = [
-            RecognizerResult(**result)
-            for result in results
+            RecognizerResult(**result) for result in analysis_run.results
         ]
 
         return AnalyzeResponse(results=recognizer_results)
 
-    except Exception as e:
+    except AnalysisQueueExpiredError as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Analysis failed: {str(e)}"
+            status_code=503,
+            detail=f"Analysis not started: {e!s}",
+            headers={"Retry-After": "5"},
         )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e!s}")
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

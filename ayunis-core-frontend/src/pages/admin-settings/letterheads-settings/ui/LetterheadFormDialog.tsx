@@ -22,14 +22,17 @@ import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
 import { Switch } from '@ayunis/ui/components/switch';
-import { MarginEditor } from '@/widgets/margin-editor';
-import { useCreateLetterhead } from '../api/useCreateLetterhead';
-import type { PageMargins } from '../model/types';
-import { DEFAULT_MARGINS } from '../model/types';
+import { MarginEditor, useDinLetterPresets } from '@/widgets/margin-editor';
+import { useCreateLetterhead } from '@/pages/admin-settings/letterheads-settings/api/useCreateLetterhead';
+import type { PageMargins } from '@/pages/admin-settings/letterheads-settings/model/types';
+import {
+  DEFAULT_CONTINUATION_MARGINS,
+  DEFAULT_MARGINS,
+} from '@/pages/admin-settings/letterheads-settings/model/types';
 import {
   createLetterheadFormSchema,
   type LetterheadFormValues,
-} from '../model/letterheadFormSchema';
+} from '@/pages/admin-settings/letterheads-settings/model/letterheadFormSchema';
 
 interface LetterheadFormDialogProps {
   open: boolean;
@@ -70,10 +73,11 @@ function LetterheadFormContent({
   const [continuationPagePdf, setContinuationPagePdf] = useState<File | null>(
     null,
   );
+  const dinLetterPresets = useDinLetterPresets();
   const [firstPageMargins, setFirstPageMargins] =
     useState<PageMargins>(DEFAULT_MARGINS);
   const [continuationPageMargins, setContinuationPageMargins] =
-    useState<PageMargins>(DEFAULT_MARGINS);
+    useState<PageMargins>(DEFAULT_CONTINUATION_MARGINS);
 
   const form = useForm<LetterheadFormValues>({
     resolver: zodResolver(createLetterheadFormSchema(t)),
@@ -89,7 +93,7 @@ function LetterheadFormContent({
     setUseDifferentFollowingPages(false);
     setContinuationPagePdf(null);
     setFirstPageMargins(DEFAULT_MARGINS);
-    setContinuationPageMargins(DEFAULT_MARGINS);
+    setContinuationPageMargins(DEFAULT_CONTINUATION_MARGINS);
   };
 
   const handleClose = () => {
@@ -188,6 +192,7 @@ function LetterheadFormContent({
               margins={firstPageMargins}
               onMarginsChange={setFirstPageMargins}
               label={t('letterheads.createDialog.firstPageMarginsLabel')}
+              presets={dinLetterPresets}
             />
 
             {/* Toggle: different letterhead for following pages */}

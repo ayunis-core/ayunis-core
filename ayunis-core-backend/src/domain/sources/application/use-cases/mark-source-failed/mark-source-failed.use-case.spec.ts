@@ -1,11 +1,16 @@
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { MarkSourceFailedUseCase } from './mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
-import { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
-import { SourceNotFoundError } from '../../sources.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
+import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -13,11 +18,13 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 describe('MarkSourceFailedUseCase', () => {
   let useCase: MarkSourceFailedUseCase;
   let mockSourceRepository: jest.Mocked<SourceRepository>;
+  let logger: LoggerMock;
 
   const sourceId = '44444444-4444-4444-4444-444444444444' as UUID;
 
   beforeEach(async () => {
     mockSourceRepository = createMockSourceRepository();
+    logger = createLoggerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -53,6 +60,41 @@ describe('MarkSourceFailedUseCase', () => {
     expect(savedSource.processingError).toBe(
       'Failed to upload file to storage',
     );
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        sourceId,
+        err: expect.objectContaining({
+          message: 'Failed to upload file to storage',
+        }),
+      },
+      'Source marked as failed',
+    );
+  });
+
+  it('persists the failure code and replaces it on a subsequent unknown failure', async () => {
+    const source = new FileSource({
+      id: sourceId,
+      name: 'report.pdf',
+      fileType: FileType.PDF,
+      type: TextType.FILE,
+    });
+    mockSourceRepository.findById.mockResolvedValue(source);
+    await useCase.execute(
+      new MarkSourceFailedCommand({
+        sourceId,
+        errorMessage: 'Internal diagnostic',
+        errorCode: Code.DOCUMENT_PAGE_LIMIT_EXCEEDED,
+      }),
+    );
+    expect(source.processingErrorCode).toBe(Code.DOCUMENT_PAGE_LIMIT_EXCEEDED);
+    await useCase.execute(
+      new MarkSourceFailedCommand({
+        sourceId,
+        errorMessage: 'Unknown failure',
+      }),
+    );
+    expect(source.processingErrorCode).toBe(Code.PROCESSING_FAILED);
+    expect(mockSourceRepository.save).toHaveBeenLastCalledWith(source);
   });
 
   it('should throw SourceNotFoundError when source does not exist', async () => {

@@ -10,9 +10,13 @@ import { ConfigService } from '@nestjs/config';
 import {
   RATE_LIMIT_KEY,
   RateLimitOptions,
-} from '../decorators/rate-limit.decorator';
-import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
-import { getClientIp } from '../util/ip.util';
+} from 'src/common/decorators/rate-limit.decorator';
+import { RateLimitExceededError } from 'src/common/errors/rate-limit-exceeded.error';
+import { getClientIp } from 'src/common/util/ip.util';
+
+type RateLimitedRequest = Request & {
+  user?: { id: string; orgId: string };
+};
 
 interface RateLimitRecord {
   count: number;
@@ -22,6 +26,7 @@ interface RateLimitRecord {
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
+
   private readonly store = new Map<string, RateLimitRecord>();
   private cleanupCounter = 0;
 
@@ -45,21 +50,34 @@ export class RateLimitGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<RateLimitedRequest>();
     const clientIp = getClientIp(request);
+    const identity = this.getIdentity(request, rateLimitOptions, clientIp);
 
-    if (!clientIp) {
+    if (!identity) {
       this.logger.warn('Unable to determine client IP address');
       return true; // Allow request if IP cannot be determined
     }
 
-    const key = `${clientIp}:${context.getClass().name}:${context.getHandler().name}`;
+    const key = `${identity}:${context.getClass().name}:${context.getHandler().name}`;
     const now = Date.now();
 
     // Clean up expired entries periodically
     this.cleanupExpiredEntries(now);
 
-    return this.consumeQuota(key, clientIp, rateLimitOptions, now);
+    return this.consumeQuota(key, identity, rateLimitOptions, now);
+  }
+
+  private getIdentity(
+    request: RateLimitedRequest,
+    options: RateLimitOptions,
+    clientIp: string | null,
+  ): string | undefined {
+    const user = request.user;
+    if (options.keyBy === 'user' && user?.id && user.orgId) {
+      return `user:${user.orgId}:${user.id}`;
+    }
+    return clientIp ? `ip:${clientIp}` : undefined;
   }
 
   /**
@@ -68,7 +86,7 @@ export class RateLimitGuard implements CanActivate {
    */
   private consumeQuota(
     key: string,
-    clientIp: string,
+    identity: string,
     rateLimitOptions: RateLimitOptions,
     now: number,
   ): boolean {
@@ -82,13 +100,16 @@ export class RateLimitGuard implements CanActivate {
       };
       this.store.set(key, record);
 
-      this.logger.debug('Rate limit: new window started', {
-        clientIp,
-        key,
-        count: record.count,
-        limit: rateLimitOptions.limit,
-        resetTime: new Date(record.resetTime).toISOString(),
-      });
+      this.logger.debug(
+        {
+          identity,
+          key,
+          count: record.count,
+          limit: rateLimitOptions.limit,
+          resetTime: new Date(record.resetTime).toISOString(),
+        },
+        'Rate limit: new window started',
+      );
 
       return true;
     }
@@ -97,42 +118,48 @@ export class RateLimitGuard implements CanActivate {
     record.count++;
 
     if (record.count > rateLimitOptions.limit) {
-      this.throwLimitExceeded(key, clientIp, rateLimitOptions, record, now);
+      this.throwLimitExceeded(key, identity, rateLimitOptions, record, now);
     }
 
-    this.logger.debug('Rate limit: request allowed', {
-      clientIp,
-      key,
-      count: record.count,
-      limit: rateLimitOptions.limit,
-      remaining: rateLimitOptions.limit - record.count,
-    });
+    this.logger.debug(
+      {
+        identity,
+        key,
+        count: record.count,
+        limit: rateLimitOptions.limit,
+        remaining: rateLimitOptions.limit - record.count,
+      },
+      'Rate limit: request allowed',
+    );
 
     return true;
   }
 
   private throwLimitExceeded(
     key: string,
-    clientIp: string,
+    identity: string,
     rateLimitOptions: RateLimitOptions,
     record: RateLimitRecord,
     now: number,
   ): never {
     const timeToReset = record.resetTime - now;
 
-    this.logger.warn('Rate limit exceeded', {
-      clientIp,
-      key,
-      count: record.count,
-      limit: rateLimitOptions.limit,
-      timeToResetMs: timeToReset,
-    });
+    this.logger.warn(
+      {
+        identity,
+        key,
+        count: record.count,
+        limit: rateLimitOptions.limit,
+        timeToResetMs: timeToReset,
+      },
+      'Rate limit exceeded',
+    );
 
     throw new RateLimitExceededError(
       rateLimitOptions.message ||
         `Rate limit exceeded. Try again in ${Math.ceil(timeToReset / 1000)} seconds.`,
       {
-        clientIp,
+        identity,
         limit: rateLimitOptions.limit,
         windowMs: rateLimitOptions.windowMs,
         retryAfter: Math.ceil(timeToReset / 1000),

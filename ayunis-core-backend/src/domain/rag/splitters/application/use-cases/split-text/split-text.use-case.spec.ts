@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SplitTextUseCase } from './split-text.use-case';
 import { SplitTextCommand } from './split-text.command';
-import { SplitterHandlerRegistry } from '../../splitter-handler.registry';
+import { SplitterHandlerRegistry } from 'src/domain/rag/splitters/application/splitter-handler.registry';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import {
   SplitResult,

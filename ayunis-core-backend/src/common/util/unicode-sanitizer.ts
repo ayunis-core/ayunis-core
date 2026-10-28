@@ -7,7 +7,7 @@
  * No complex regex, just targets the exact problems we've seen in production.
  *
  * @param input - The string to sanitize
- * @returns The sanitized string
+ * @returns The sanitized string, well-formed per {@link toWellFormedText}
  */
 export function sanitizeUnicodeEscapes(input: unknown): string {
   if (input === null || input === undefined || typeof input !== 'string') {
@@ -24,7 +24,10 @@ export function sanitizeUnicodeEscapes(input: unknown): string {
     current = next;
     next = sanitizeUnicodeEscapesOnce(current);
   }
-  return next;
+  // Runs after the fixpoint, not inside it: replacing a lone surrogate keeps
+  // the length, so it would break the loop's "every changing pass shortens
+  // the string" termination argument. U+FFFD is inert for the escape passes.
+  return toWellFormedText(next);
 }
 
 function sanitizeUnicodeEscapesOnce(input: string): string {

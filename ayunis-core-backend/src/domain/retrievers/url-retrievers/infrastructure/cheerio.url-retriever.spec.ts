@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-hardcoded-ip -- Fixture IPs exercise public/private redirect authorization. */
+import { UrlDestinationGuardService } from './url-destination-guard.service';
 import type { ConfigService } from '@nestjs/config';
 import { CheerioUrlRetrieverHandler } from './cheerio.url-retriever';
 import {
@@ -7,8 +9,13 @@ import {
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverHttpError,
   UrlRetrieverTimeoutError,
-} from '../application/url-retriever.errors';
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
+import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
+
+jest.mock('src/common/util/undici-fetch.util', () => ({
+  fetchWithUndiciDispatcher: jest.fn(),
+}));
 
 interface FakeResponseInit {
   status?: number;
@@ -74,7 +81,9 @@ function streamedResponse({
 
 function makeHandler(): CheerioUrlRetrieverHandler {
   const config = { getOrThrow: () => 5000 } as unknown as ConfigService;
-  return new CheerioUrlRetrieverHandler(config);
+  return new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
 }
 
 function makeHandlerWithCap(
@@ -84,7 +93,9 @@ function makeHandlerWithCap(
     getOrThrow: (key: string) =>
       key === 'url.maxDownloadBytes' ? maxDownloadBytes : 5000,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }
@@ -94,7 +105,9 @@ function makeHandlerWithTimeout(timeoutMs: number): CheerioUrlRetrieverHandler {
     getOrThrow: (key: string) =>
       key === 'url.timeout' ? timeoutMs : 25 * 1024 * 1024,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(config, {
+    dispatcherFor: jest.fn(),
+  } as never);
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }
@@ -390,7 +403,114 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
   });
 });
 
+describe('Cheerio redirect grant timeout', () => {
+  afterEach(() => jest.restoreAllMocks());
+  it('times out a stalled redirect authorization without following the redirect', async () => {
+    const handler = makeHandlerWithTimeout(10);
+    const fetchSpy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        redirect('https://redirect.customer.de/statute.pdf'),
+      );
+    await expect(
+      handler.fetch({
+        url: 'https://public.customer.de/statute.pdf',
+        onRedirect: () => new Promise(() => undefined),
+      }),
+    ).rejects.toBeInstanceOf(UrlRetrieverTimeoutError);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Cheerio discovered-PDF redirect destinations', () => {
+  beforeEach(() => jest.mocked(fetchWithUndiciDispatcher).mockReset());
+
+  class Guard extends UrlDestinationGuardService {
+    protected override async resolveAddresses(host: string): Promise<string[]> {
+      return host === 'public.customer.de' ? ['1.1.1.1'] : ['127.0.0.2'];
+    }
+  }
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('rejects an ungranted private redirect before fetching its body', async () => {
+    const guard = new Guard();
+    const handler = new CheerioUrlRetrieverHandler(
+      { getOrThrow: () => 5000 } as never,
+      guard,
+    );
+    const publicFetch = jest
+      .mocked(fetchWithUndiciDispatcher)
+      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'));
+    const nativeFetch = jest.spyOn(globalThis, 'fetch');
+    const requireGrant = jest.fn(async () => {
+      throw new CrawlDomainAccessDeniedError();
+    });
+    try {
+      await expect(
+        handler.fetch({
+          url: 'https://public.customer.de/statute.pdf',
+          assertPrivateDestinationAccess: requireGrant,
+        }),
+      ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+      expect(publicFetch).toHaveBeenCalledTimes(1);
+      expect(publicFetch.mock.calls[0][1]).toMatchObject({
+        dispatcher: expect.anything(),
+        redirect: 'manual',
+      });
+      expect(nativeFetch).not.toHaveBeenCalled();
+      expect(requireGrant).toHaveBeenCalledWith('http://127.0.0.2/statute.pdf');
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+
+  it('follows a private redirect only after the requesting org is explicitly authorized', async () => {
+    const guard = new Guard();
+    const handler = new CheerioUrlRetrieverHandler(
+      { getOrThrow: () => 5000 } as never,
+      guard,
+    );
+    const publicFetch = jest
+      .mocked(fetchWithUndiciDispatcher)
+      .mockResolvedValueOnce(redirect('http://127.0.0.2/statute.pdf'));
+    // Approved intranet hops deliberately keep the native transport.
+    const nativeFetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      makeResponse({
+        headers: { 'content-type': 'application/pdf' },
+        body: 'approved PDF bytes',
+      }),
+    );
+    const requireGrant = jest.fn(async () => undefined);
+    try {
+      const result = await handler.fetch({
+        url: 'https://public.customer.de/statute.pdf',
+        assertPrivateDestinationAccess: requireGrant,
+      });
+      expect(result.finalUrl).toBe('http://127.0.0.2/statute.pdf');
+      expect(result.body.toString()).toBe('approved PDF bytes');
+      expect(publicFetch).toHaveBeenCalledTimes(1);
+      expect(nativeFetch).toHaveBeenCalledTimes(1);
+      expect(nativeFetch.mock.calls[0][1]).not.toHaveProperty('dispatcher');
+      expect(requireGrant).toHaveBeenCalledTimes(1);
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+});
+
 describe('CheerioUrlRetrieverHandler.parseHtml', () => {
+  it('retains PDF link labels and PDF media types even without a file extension', () => {
+    const result = makeHandler().parseHtml(
+      '<a href="https://cdn.test/statute.pdf#page=1"> Hauptsatzung </a><a href="/download/42" type="application/pdf">Gebührenordnung</a>',
+      'https://acme.test/statutes',
+    );
+    expect(result.pdfLinks).toEqual([
+      { url: 'https://cdn.test/statute.pdf', name: 'Hauptsatzung' },
+      { url: 'https://acme.test/download/42', name: 'Gebührenordnung' },
+    ]);
+  });
+
   const handler = makeHandler();
 
   it('extracts cleaned body text and the page title', () => {
@@ -401,6 +521,90 @@ describe('CheerioUrlRetrieverHandler.parseHtml', () => {
 
     expect(result.content).toBe('Hello world');
     expect(result.websiteTitle).toBe('Hi');
+  });
+
+  it('preserves block boundaries while keeping inline text together', () => {
+    const result = handler.parseHtml(
+      [
+        '<main>',
+        '<h1>Digital services</h1>',
+        '<p>Apply <strong>online</strong> now.</p>',
+        '<section><h2>Opening hours</h2><p>Monday to Friday</p></section>',
+        '</main>',
+      ].join(''),
+      'https://stadt.example.de/services',
+    );
+
+    expect(result.content).toBe(
+      'Digital services\nApply online now.\nOpening hours\nMonday to Friday',
+    );
+  });
+
+  it('omits non-visible page content from extracted text', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><p>Public information</p>',
+        '<script>trackVisitor()</script>',
+        '<style>.hidden { display: none; }</style>',
+        '<noscript><iframe>tracking fallback</iframe></noscript>',
+        '<template>dialog placeholder</template></body>',
+      ].join(''),
+      'https://stadt.example.de/information',
+    );
+
+    expect(result.content).toBe('Public information');
+  });
+
+  it('keeps readable SVG text', () => {
+    const result = handler.parseHtml(
+      '<body><svg><text>Permit fee: €25</text></svg></body>',
+      'https://stadt.example.de/fees',
+    );
+
+    expect(result.content).toBe('Permit fee: €25');
+  });
+
+  it('extracts only body text when optional body tags are omitted', () => {
+    const result = handler.parseHtml(
+      '<title>Service portal</title><p>Apply for a permit</p>',
+      'https://stadt.example.de/permits',
+    );
+
+    expect(result.content).toBe('Apply for a permit');
+    expect(result.websiteTitle).toBe('Service portal');
+  });
+
+  it('does not insert artificial line breaks into long blocks', () => {
+    const paragraph = 'Municipal service guidance '.repeat(20).trim();
+    const result = handler.parseHtml(
+      `<body><p>${paragraph}</p></body>`,
+      'https://stadt.example.de/guidance',
+    );
+
+    expect(result.content).toBe(paragraph);
+  });
+
+  it('collapses source formatting inside a block', () => {
+    const result = handler.parseHtml(
+      '<body><p>Apply online\nfor a parking\npermit.</p></body>',
+      'https://stadt.example.de/parking',
+    );
+
+    expect(result.content).toBe('Apply online for a parking permit.');
+  });
+
+  it('separates text around nested blocks', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>Services<ul>',
+        '<li>Permits<ul><li>Building</li></ul></li>',
+        '<li>Registration</li>',
+        '</ul></body>',
+      ].join(''),
+      'https://stadt.example.de/services',
+    );
+
+    expect(result.content).toBe('Services\nPermits\nBuilding\nRegistration');
   });
 
   it('resolves relative links against the page URL', () => {

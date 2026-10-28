@@ -5,12 +5,13 @@ import type { UseFormReturn } from 'react-hook-form';
 import {
   useApiKeysControllerCreateApiKey,
   getApiKeysControllerListApiKeysQueryKey,
+  getApiKeyUsageControllerGetApiKeyUsageQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { CreateApiKeyFormValues } from '../model/createApiKeyFormSchema';
+import type { CreateApiKeyFormValues } from '@/pages/admin-settings/api-keys-settings/model/createApiKeyFormSchema';
 
 export function useCreateApiKey(
   form: UseFormReturn<CreateApiKeyFormValues>,
@@ -46,15 +47,25 @@ export function useCreateApiKey(
         void queryClient.invalidateQueries({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
         });
+        void queryClient.invalidateQueries({
+          queryKey: getApiKeyUsageControllerGetApiKeyUsageQueryKey(),
+        });
         void router.invalidate();
       },
     },
   });
 
-  function createApiKey(data: { name: string; expiresAt?: string }) {
+  function createApiKey(data: {
+    name: string;
+    description?: string;
+    expiresAt?: string;
+  }) {
     mutation.mutate({
       data: {
         name: data.name.trim(),
+        ...(data.description?.trim()
+          ? { description: data.description.trim() }
+          : {}),
         ...(data.expiresAt ? { expiresAt: data.expiresAt } : {}),
       },
     });

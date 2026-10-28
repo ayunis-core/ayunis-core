@@ -8,6 +8,7 @@ import {
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { resolveModelErrorToastKey } from '../lib/resolveModelErrorToastKey';
 
 export function useCreateImageGenerationModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
@@ -29,11 +30,9 @@ export function useCreateImageGenerationModel(onSuccess?: () => void) {
             console.error('Create image generation model failed:', error);
             try {
               const { code } = extractErrorData(error);
-              if (code === 'MODEL_ALREADY_EXISTS') {
-                showError(t('models.alreadyExists'));
-              } else {
-                showError(t('models.createError'));
-              }
+              showError(
+                t(resolveModelErrorToastKey(code, 'models.createError')),
+              );
             } catch {
               showError(t('models.createError'));
             }

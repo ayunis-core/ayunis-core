@@ -1,0 +1,63 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { ContextService } from 'src/common/context/services/context.service';
+import {
+  UserContext,
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import {
+  UserNotFoundError,
+  UserUnauthorizedError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
+import { UnlockUserAccountCommand } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.command';
+import type { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+
+@Injectable()
+export class UnlockUserAccountUseCase {
+  private readonly logger = new Logger(UnlockUserAccountUseCase.name);
+
+  constructor(
+    private readonly contextService: ContextService,
+    private readonly usersRepository: UsersRepository,
+  ) {}
+
+  @HandleUnexpectedErrors(UserUnexpectedError)
+  async execute(command: UnlockUserAccountCommand): Promise<void> {
+    this.logger.log({ userId: command.userId }, 'unlockUserAccount');
+    const principal = getUserContext(this.contextService);
+    const callerIsSuperAdmin = isSuperAdmin(this.contextService);
+    const user = await this.usersRepository.findOneById(command.userId);
+    if (
+      !user ||
+      (!callerIsSuperAdmin && user.orgId !== this.contextService.get('orgId'))
+    ) {
+      throw new UserNotFoundError(command.userId);
+    }
+    this.assertAuthorized(user, principal, callerIsSuperAdmin);
+
+    if (!(await this.usersRepository.clearLoginLock(command.userId))) {
+      throw new UserNotFoundError(command.userId);
+    }
+    this.logger.log({ userId: command.userId }, 'User account unlocked');
+  }
+
+  private assertAuthorized(
+    user: User,
+    principal: UserContext | undefined,
+    isSuperAdmin: boolean,
+  ): void {
+    const isOrgAdmin =
+      principal?.role === UserRole.ADMIN &&
+      this.contextService.get('orgId') === user.orgId;
+    const isSelfUnlock = this.contextService.get('userId') === user.id;
+    if ((!isSuperAdmin && !isOrgAdmin) || isSelfUnlock) {
+      throw new UserUnauthorizedError(
+        'You are not allowed to unlock this user',
+      );
+    }
+  }
+}

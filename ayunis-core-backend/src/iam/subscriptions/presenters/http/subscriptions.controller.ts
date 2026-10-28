@@ -11,9 +11,9 @@ import {
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
-import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
-import { HasActiveSubscriptionQuery } from '../../application/use-cases/has-active-subscription/has-active-subscription.query';
-import { GetCurrentPriceUseCase } from '../../application/use-cases/get-current-price/get-current-price.use-case';
+import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
+import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
+import { GetCurrentPriceUseCase } from 'src/iam/subscriptions/application/use-cases/get-current-price/get-current-price.use-case';
 import { PriceResponseDto } from './dto/price-response.dto';
 import { UUID } from 'crypto';
 
@@ -46,13 +46,14 @@ export class SubscriptionsController {
   async hasActiveSubscription(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ActiveSubscriptionResponseDto> {
-    this.logger.log(`Checking active subscription for org ${orgId}`);
+    this.logger.log({ orgId }, 'Checking active subscription');
 
     const query = new HasActiveSubscriptionQuery(orgId);
     const result = await this.hasActiveSubscriptionUseCase.execute(query);
 
     this.logger.log(
-      `Active subscription check result for org ${orgId}: ${result.hasActiveSubscription}`,
+      { orgId, hasActiveSubscription: result.hasActiveSubscription },
+      'Active subscription check completed',
     );
 
     return {
@@ -86,7 +87,8 @@ export class SubscriptionsController {
     const pricePerSeatMonthly = this.getCurrentPriceUseCase.execute();
 
     this.logger.log(
-      `Successfully retrieved current price: ${pricePerSeatMonthly}`,
+      { pricePerSeatMonthly },
+      'Successfully retrieved current price',
     );
 
     return { pricePerSeatMonthly };

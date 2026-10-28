@@ -1,18 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import {
   SubscriptionNotFoundError,
   UnexpectedSubscriptionError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import { computeAvailableSeats } from '../../util/compute-available-seats';
-import { getNextRenewalDate } from '../../util/get-next-renewal-date';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { computeAvailableSeats } from 'src/iam/subscriptions/application/util/compute-available-seats';
+import { getNextRenewalDate } from 'src/iam/subscriptions/application/util/get-next-renewal-date';
+import { selectCurrentSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
 
 @Injectable()
 export class GetLatestSubscriptionUseCase {
@@ -30,10 +31,13 @@ export class GetLatestSubscriptionUseCase {
     availableSeats: number | null;
     nextRenewalDate: Date;
   }> {
-    this.logger.log('Getting latest subscription', {
-      orgId: query.orgId,
-      requestingUserId: query.requestingUserId,
-    });
+    this.logger.log(
+      {
+        orgId: query.orgId,
+        requestingUserId: query.requestingUserId,
+      },
+      'Getting latest subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -42,8 +46,8 @@ export class GetLatestSubscriptionUseCase {
         query.orgId,
       );
 
-      const subscription = await this.subscriptionRepository.findLatestByOrgId(
-        query.orgId,
+      const subscription = selectCurrentSubscription(
+        await this.subscriptionRepository.findByOrgId(query.orgId),
       );
 
       if (!subscription) {
@@ -62,9 +66,10 @@ export class GetLatestSubscriptionUseCase {
       return { subscription, availableSeats, nextRenewalDate };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting latest subscription', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Error getting latest subscription',
+      );
       throw new UnexpectedSubscriptionError(
         'Failed to get latest subscription',
       );

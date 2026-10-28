@@ -13,15 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@ayunis/ui/components/table';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@ayunis/ui/components/dropdown-menu';
-import { Trash2, MoreHorizontal, Mail } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
   UserResponseDto,
@@ -29,13 +20,15 @@ import type {
   PaginationDto,
 } from '@/shared/api';
 import { formatDate } from '@/shared/lib/format-date';
-import { useSuperAdminDeleteUser } from '../api/useSuperAdminDeleteUser';
-import { useSuperAdminTriggerPasswordReset } from '../api/useSuperAdminTriggerPasswordReset';
-import { useConfirmation } from '@/widgets/confirmation-modal';
 import CreateUserDialog from './CreateUserDialog';
-import PasswordResetSuccessDialog from './PasswordResetSuccessDialog';
 import SuperAdminUsersSearch from './SuperAdminUsersSearch';
 import SuperAdminUsersPagination from './SuperAdminUsersPagination';
+import { SuperAdminUserActions } from '@/widgets/super-admin-user-actions';
+import { UserLockStatus } from '@/widgets/user-lock-status';
+import { BulkInviteDialog } from '@/features/bulk-user-invite';
+import { Button } from '@ayunis/ui/components/button';
+import { Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface UsersTableProps {
   users: UserResponseDto[];
@@ -53,64 +46,16 @@ export default function UsersTable({
   currentPage,
 }: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const { t: tUsers } = useTranslation('admin-settings-users');
+  const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const roleLabels: Record<UserResponseDtoRole, string> = {
     admin: t('table.roleAdmin'),
     manager: t('table.roleManager'),
     user: t('table.roleUser'),
   };
-  const { deleteUser, isLoading: isDeleting } = useSuperAdminDeleteUser({
-    orgId,
-  });
-  const [resetDialogState, setResetDialogState] = useState<{
-    open: boolean;
-    resetUrl: string;
-    email: string;
-  }>({ open: false, resetUrl: '', email: '' });
-
-  const triggerPasswordResetMutation = useSuperAdminTriggerPasswordReset({
-    onSuccess: (resetUrl: string) => {
-      setResetDialogState((prev) => ({ ...prev, open: true, resetUrl }));
-    },
-  });
-  const { confirm } = useConfirmation();
-
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
-
-  const handleDeleteUser = (user: UserResponseDto) => {
-    confirm({
-      title: t('confirmDelete.title'),
-      description: t('confirmDelete.description', {
-        name: user.name,
-      }),
-      confirmText: t('confirmDelete.confirmText'),
-      cancelText: t('confirmDelete.cancelText'),
-      variant: 'destructive',
-      onConfirm: () => {
-        deleteUser(user.id);
-      },
-    });
-  };
-
-  const handleTriggerPasswordReset = (user: UserResponseDto) => {
-    confirm({
-      title: t('confirmPasswordReset.title'),
-      description: t('confirmPasswordReset.description', {
-        name: user.name,
-        email: user.email,
-      }),
-      confirmText: t('confirmPasswordReset.confirmText'),
-      cancelText: t('confirmPasswordReset.cancelText'),
-      variant: 'default',
-      onConfirm: () => {
-        setResetDialogState((prev) => ({ ...prev, email: user.email }));
-        triggerPasswordResetMutation.mutate({ userId: user.id });
-      },
-    });
-  };
-
-  const isLoading = isDeleting || triggerPasswordResetMutation.isPending;
 
   return (
     <Card>
@@ -125,7 +70,17 @@ export default function UsersTable({
             </CardTitle>
             <CardDescription>{t('header.description')}</CardDescription>
           </div>
-          <CreateUserDialog orgId={orgId} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setBulkInviteOpen(true)}
+              data-testid="super-admin-bulk-invite"
+            >
+              <Upload />
+              {tUsers('inviteMenu.inviteMany')}
+            </Button>
+            <CreateUserDialog orgId={orgId} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -148,6 +103,7 @@ export default function UsersTable({
                   <TableHead>{t('table.createdAt')}</TableHead>
                   <TableHead>{t('table.email')}</TableHead>
                   <TableHead>{t('table.role')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
                   </TableHead>
@@ -155,42 +111,30 @@ export default function UsersTable({
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableRow
+                    key={user.id}
+                    data-testid="super-admin-user-row"
+                    data-user-id={user.id}
+                  >
+                    <TableCell
+                      className="font-medium"
+                      data-testid={`super-admin-user-id-${user.id}`}
+                    >
+                      {user.name}
+                    </TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell className="capitalize">
                       {roleLabels[user.role]}
                     </TableCell>
+                    <TableCell>
+                      <UserLockStatus isLocked={user.isLocked} />
+                    </TableCell>
                     <TableCell className="w-[100px]">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                            disabled={isLoading}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleTriggerPasswordReset(user)}
-                            disabled={isLoading}
-                          >
-                            <Mail />
-                            {t('table.sendPasswordReset')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => handleDeleteUser(user)}
-                            disabled={isLoading}
-                          >
-                            <Trash2 />
-                            {t('table.delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <SuperAdminUserActions
+                        user={user}
+                        showOrganizationLink={false}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -205,13 +149,10 @@ export default function UsersTable({
           </>
         )}
       </CardContent>
-      <PasswordResetSuccessDialog
-        open={resetDialogState.open}
-        onOpenChange={(open) =>
-          setResetDialogState((prev) => ({ ...prev, open }))
-        }
-        resetUrl={resetDialogState.resetUrl}
-        userEmail={resetDialogState.email}
+      <BulkInviteDialog
+        open={bulkInviteOpen}
+        onOpenChange={setBulkInviteOpen}
+        orgId={orgId}
       />
     </Card>
   );

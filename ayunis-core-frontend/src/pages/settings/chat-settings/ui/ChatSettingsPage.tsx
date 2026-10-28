@@ -1,9 +1,9 @@
-import { SettingsLayout } from '../../settings-layout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { ChatSettingsCard } from './ChatSettingsCard';
 import { SystemPromptCard } from './SystemPromptCard';
+import { SettingsLayout } from '@/pages/settings/settings-layout';
 
 export default function ChatSettingsPage() {
   const { t } = useTranslation('settings');

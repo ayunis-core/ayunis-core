@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from 'src/iam/subscriptions/application/use-cases/list-usage-based-subscription-org-ids/list-usage-based-subscription-org-ids.use-case';
 
-import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
+import { BudgetAlertEvaluator } from 'src/iam/budget-alerts/application/services/budget-alert-evaluator.service';
 
 /**
  * Daily safety net behind the event-driven evaluation (BudgetAlertsListener).
@@ -27,18 +28,21 @@ export class BudgetAlertEvaluationTask {
   async handleDailyEvaluation(): Promise<void> {
     this.logger.log('Running daily budget alert evaluation sweep');
     try {
-      const orgIds =
-        await this.listUsageBasedSubscriptionOrgIdsUseCase.execute();
-      // Sequential on purpose: the sweep is not latency-sensitive, and one
-      // org at a time keeps the load on the database and mail transport flat.
-      for (const orgId of orgIds) {
-        await this.budgetAlertEvaluator.evaluate(orgId);
-      }
+      await checkIn.cron('budget_alert_evaluation', async () => {
+        const orgIds =
+          await this.listUsageBasedSubscriptionOrgIdsUseCase.execute();
+        // Sequential on purpose: the sweep is not latency-sensitive, and one
+        // org at a time keeps the load on the database and mail transport flat.
+        for (const orgId of orgIds) {
+          await this.budgetAlertEvaluator.evaluate(orgId);
+        }
+      });
     } catch (error) {
       // Only the org listing can throw — the evaluator never rejects.
-      this.logger.error('Daily budget alert evaluation sweep failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Daily budget alert evaluation sweep failed',
+      );
     }
   }
 }

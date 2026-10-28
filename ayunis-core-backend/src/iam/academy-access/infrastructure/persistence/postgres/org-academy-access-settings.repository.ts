@@ -29,7 +29,7 @@ export class PostgresOrgAcademyAccessSettingsRepository extends OrgAcademyAccess
   async upsert(
     settings: OrgAcademyAccessSettings,
   ): Promise<OrgAcademyAccessSettings> {
-    this.logger.log('upsert', { orgId: settings.orgId, mode: settings.mode });
+    this.logger.log({ orgId: settings.orgId, mode: settings.mode }, 'upsert');
 
     await this.repository.upsert(this.mapper.toRecord(settings), {
       conflictPaths: ['orgId'],

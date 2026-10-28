@@ -1,126 +1,126 @@
 # Academy
 
 Platform-global learning content for the **Ayunis Core Academy** add-on
-(`AddonType.AYUNIS_CORE_ACADEMY`): chapters containing video courseModules and an
-optional per-chapter quiz, authored centrally by super admins. Learners in an
-org with the add-on active read the content, take chapter quizzes, and build up
-progress toward whole-academy completion.
+(`AddonType.AYUNIS_CORE_ACADEMY`): ordered chapters containing Loom video course
+modules, authored centrally by super admins. Learners confirm each chapter after
+watching its videos and build toward whole-academy completion.
 
-## Model
+## Model and completion
 
-- `AcademyChapter` — `{ id, title, description, position, quizEnabled,
-  passThreshold, courseModules[], quizQuestions[] }`. `quizEnabled` shows the
-  quiz at chapter end; `passThreshold` is the percent of correct answers needed
-  to pass (default 80).
+- `AcademyChapter` — `{ id, title, description, position, courseModules[] }`.
 - `AcademyCourseModule` — `{ id, chapterId, title, description?, loomUrl, position }`,
-  cascade-deleted with its chapter. `loomUrl` is a validated Loom share/embed
-  link (`https://loom.com/(share|embed)/...`).
-- `AcademyQuizQuestion` — `{ id, chapterId, text, options[], position }`,
-  cascade-deleted with its chapter. `options` is jsonb `{ text, isCorrect }[]`
-  with 2–6 options, exactly one correct (`util/quiz-question-validation.ts`).
+  cascade-deleted with its chapter. Loom URLs are validated share/embed links.
+- `AcademyChapterConfirmation` — `{ id, userId, chapterId, confirmedAt }`, one
+  row per user and chapter. The repository uses a single atomic upsert;
+  reconfirming refreshes `confirmedAt` for annual renewal.
+- `AcademyModuleViewTime` — `{ userId, courseModuleId, visibleSeconds }`, one
+  row per user and course module (`academy_module_view_times`), cascade-deleted
+  with either. It is page time, not watch time: Loom embeds expose no playback
+  events, so the frontend sends a heartbeat every 15 s while the page is
+  visible and the player is in the viewport.
+- `AcademyCompletion` — the single per-user whole-academy snapshot. Confirming
+  the final configured chapter stamps `completedAt`. Existing snapshots are
+  never cleared by content changes, so adding a chapter does not revoke a
+  previous completion.
 
-## Quiz-taking & progress
+`RecordModuleHeartbeatUseCase` credits the time since the learner's latest
+heartbeat on any course module, capped at one 15 s interval; a `sessionStart`
+heartbeat only stamps the clock. There is one clock per learner, so tabs or
+windows showing several videos at once split the time instead of each earning
+it. A per-learner advisory lock (`lock-learner.ts`) serialises concurrent
+heartbeats, and the server never trusts a client-reported duration. The
+frontend sends heartbeats through one ordered queue per tab, so a module's
+closing beat always arrives before the next module's session start.
 
-Learner-facing, add-on gated (`@RequireAddon`), correct answers never sent to
-the client:
+`ConfirmChapterUseCase` rejects unknown chapters, rejects a chapter whose
+modules have not each reached the platform-wide minimum
+(`GetAcademyMinimumModuleSecondsUseCase` from platform-config, default 60 s;
+chapters without modules stay confirmable) with
+`ChapterModulesBelowMinimumTimeError` (409, listing the short module ids),
+atomically writes the
+confirmation, then completes the academy only when every configured chapter has
+a confirmation inside the 12-month validity window. An empty academy is not
+complete. Renewal therefore requires reconfirming every chapter rather than
+refreshing only one. Stamping a completion deletes the user's module view
+times, so a renewal needs the minimum time on every video page again.
+The confirmation, completion and reset run in one transaction
+(`@Transactional`) that first takes the same per-learner lock, so a completion
+is never committed without its reset and two final-chapter confirmations sent
+at once cannot each miss the other and leave the certificate unrecorded.
+A confirmation of the same chapter repeated within five minutes is replayed
+(the existing confirmation is returned without re-checking page time), so a
+retried final confirmation still succeeds after that reset; progress reports
+it per chapter as `replayable` so the UI does not block that retry.
 
-- `GetChapterQuizUseCase` draws up to `DRAWN_QUESTION_COUNT` (10) random
-  questions — the whole pool when smaller (`quiz.constants.ts`).
-- `SubmitChapterQuizUseCase` grades against `requiredCorrect(total, threshold)`
-  (ceil), enforces the drawn answer count (the drawn set itself is not
-  persisted), upserts `AcademyChapterProgress` (one row per user+chapter:
-  `passedAt` refreshed on each pass, `lastScore`), and — when every
-  `quizEnabled` chapter has a passing row **inside the validity window** —
-  stamps the single per-user `AcademyCompletion.completedAt` snapshot. That
-  snapshot is the anchor for the access gate (`src/iam/academy-access`): it is
-  only ever written on full completion, never cleared by content changes, so
-  adding a chapter never revokes a completion.
-- `GetAcademyProgressUseCase` returns per-chapter pass state + the completion
-  date and its expiry. Unlimited retries; each retry re-draws.
+`GetAcademyProgressUseCase` returns per-chapter `confirmed`,
+`confirmationValid`, and `confirmedAt` fields, the whole-academy completion
+and expiry dates, per-module `visibleSeconds`, and `minimumModuleSeconds`.
 
-## Certificate validity
+## Completion validity and access
 
-`util/certificate-validity.ts` owns `CERTIFICATE_VALIDITY_MONTHS` (12) and derives
-`certificateExpiresAt` (month-end clamped, so 29 Feb + 12 months is 28 Feb) and
-`isPassWithinValidity`. Two consequences:
+`application/util/certificate-validity.ts` owns the 12-month period and derives
+`certificateExpiresAt` with month-end clamping. `AcademyCompletionView`
+publishes `{ completedAt, expiresAt }` to consumers. For its database reporting
+query, academy-access directly imports `ACADEMY_COMPLETION_VALIDITY_MONTHS`
+from the same utility. This shared policy constant is a deliberate exception
+to cross-module use-case composition. Reporting reads only whole-academy
+completion rows; it never reads chapter confirmations. SQL/TypeScript parity tests cover leap-day, UTC
+and daylight-saving boundaries.
 
-- Renewal means re-passing the **whole** academy. A chapter pass that has itself
-  aged out no longer counts toward a completion, so a lapsed learner cannot
-  refresh their certificate by re-taking one chapter's quiz.
-- `ChapterProgressView.passValid` distinguishes "ever passed" (`passed`, true
-  forever) from "still counts" — a lapsed learner needs it to see what to redo.
+The academy-access reporting view `academy_certificate_members` depends on
+`academy_completion.userId` and `academy_completion.completedAt`. Migrations
+that drop or change the type of those columns must drop the view first and
+recreate it afterward, preserving the definition in academy-access's
+`AcademyCertificateMemberView` record. Coordinate that migration with the
+users module, whose columns are also referenced by the view.
 
-Only the academy knows the period. `GetAcademyCompletionUseCase` exports
-`{ completedAt, expiresAt }` so gating consumers never import the constant
-across a module boundary. Recomputation is forward-only: an existing
-`AcademyCompletion` row is never re-derived under the newer rule.
+The reporting query duplicates calendar arithmetic in SQL so status filtering,
+urgency sorting and pagination all run in PostgreSQL. Changes to
+`certificateExpiresAt` must update that SQL and its parity coverage together.
+The reporting integration suite remains part of the regular backend tests.
+For expiry or timestamp-handling changes, run the local timezone check documented
+in [Academy Access](../../iam/academy-access/SUMMARY.md#timezone-parity-check).
+Fixtures include leap days, month ends and repeated local hours. Non-UTC handling
+preserves existing pg timestamp decoding in local development and other deployment
+timezones rather than assuming UTC.
 
-## Certificate
+## Participation confirmation PDF
 
-`GetAcademyCertificateUseCase` renders the German "KI-Führerschein" completion
-certificate as a PDF **on demand** from the `AcademyCompletion` row (404 via
-`AcademyCompletionNotFoundError` when the academy is not completed). Nothing is
-stored: the PDF is derived from the user's current name
-(`FindUserByIdUseCase`) and `completedAt` — a rename changes a re-downloaded
-certificate by design. Rendering goes through `CertificateRendererPort`,
-implemented by `PuppeteerCertificateRendererService`
-(`infrastructure/certificate/`): an owned HTML template
-(`certificate-template.ts`, layout metrics measured from the official template
-PDF, user name HTML-escaped, assets + Source Sans 3 font embedded as data URIs
-in `certificate-assets.ts`) printed to A4 by a lazy headless-Chromium
-singleton (same pattern as the artifacts export service).
+`GetAcademyCertificateUseCase` retains the existing download API while rendering
+a German **Teilnahmebestätigung** for the “KI-Schulung nach EU AI Act” on demand
+from the whole-academy completion. The document states participation and contains
+no quiz or examination language. Rendering uses the owned HTML template and the
+lazy Puppeteer renderer under `infrastructure/certificate/`. The module exports
+it so `academy-access` can serve an org admin the same PDF for a member of their
+own organization; that caller performs the org-membership check.
 
 ## Ordering
 
-Both chapters (globally) and courseModules (per chapter) carry a 0-based `position`
-and are freely sortable:
+Chapters globally and course modules per chapter carry a 0-based `position`.
+Creates append at the current maximum. Reorder operations require exact set
+equality and persist `0..n-1` in a transaction. Concurrent super-admin reorders
+are last-write-wins.
 
-- Creates append at `max(position) + 1`; reads order by
-  `position ASC, createdAt ASC`.
-- Reorder use cases require the submitted ids to be exactly the current set
-  (set equality, validated via `util/reorder-validation.ts`) and rewrite positions
-  `0..n-1` in a single transaction. Mismatches throw `InvalidReorderError`
-  (400) with `missing`/`extra` metadata.
-- Concurrent reorders are last-write-wins (acceptable for a super-admin-only
-  surface).
+## HTTP
 
-Quiz questions also carry an append-only `position` (no reorder surface).
+Learner routes are authenticated and add-on gated:
 
-## Learner surface
+- `GET /academy/chapters` — ordered chapters with ordered course modules.
+- `POST /academy/chapters/:chapterId/confirm` — idempotently confirm or
+  reconfirm a chapter.
+- `GET /academy/progress` — chapter confirmation, module page time, and
+  academy completion state.
+- `POST /academy/course-modules/:courseModuleId/heartbeat` — record page time
+  for a course module.
+- `GET /academy/certificate` — download the participation confirmation PDF;
+  unavailable until whole-academy completion.
 
-Authenticated users in an org with the academy add-on active
-(`@RequireAddon(AYUNIS_CORE_ACADEMY)`), three controllers under `academy`:
-
-- `AcademyChaptersController` (`academy/chapters`) — list chapters with nested
-  ordered courseModules (no quiz questions).
-- `AcademyQuizController` (`academy`) — draw a quiz
-  (`GET chapters/:chapterId/quiz`), submit answers
-  (`POST chapters/:chapterId/quiz/submit`), and read progress
-  (`GET progress`: per-chapter pass state + `academyCompletedAt`).
-- `AcademyCertificateController` (`academy/certificate`) — download the
-  completion certificate PDF (`GET`, streamed with `Content-Disposition:
-  attachment`; 404 until the academy is completed).
-
-## Management
-
-Super-admin only (`@SystemRoles(SUPER_ADMIN)`) under `super-admin/academy`:
-
-- `SuperAdminAcademyChaptersController` (`super-admin/academy/chapters`) —
-  list (chapters with nested ordered courseModules **and quiz questions incl.
-  correct answers**), create, update (title/description/`quizEnabled`/
-  `passThreshold`), delete, reorder (`PUT chapters/order`, before `:id`).
-- `SuperAdminAcademyCourseModulesController` (`super-admin/academy`) — create
-  (`POST chapters/:chapterId/course-modules`), reorder
-  (`PUT chapters/:chapterId/course-modules/order`), update/delete (`course-modules/:id`).
-- `SuperAdminAcademyQuizQuestionsController` (`super-admin/academy`) — create
-  (`POST chapters/:chapterId/quiz-questions`), update/delete (`quiz-questions/:id`).
+Super-admin routes under `/super-admin/academy` manage and reorder chapters and
+course modules. There is no quiz enablement, pass threshold, or question
+management configuration.
 
 ## Layout
 
-Standard hexagonal: `domain/` (chapter, courseModule, quizQuestion, chapter
-progress + completion entities), `application/` (repository ports, use-cases,
-errors, `quiz.constants.ts`, and pure helpers in `util/` — reorder +
-quiz-question validation, certificate validity),
-`infrastructure/` (Postgres records + mapper + repositories), `presenters/http/`
-(super-admin + learner controllers, DTOs, response mapper). The learner DTOs
-deliberately omit `isCorrect`; grading is server-side.
+Standard hexagonal layout: pure entities in `domain/`, ports and use cases in
+`application/`, TypeORM records/mappers/repositories and PDF rendering in
+`infrastructure/`, and thin HTTP controllers/DTO mappers in `presenters/http/`.

@@ -9,6 +9,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
+  PayloadTooLargeException,
+  RequestTimeoutException,
   ServiceUnavailableException,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -17,6 +19,14 @@ import {
 export interface ErrorMetadata {
   [key: string]: unknown;
 }
+
+export interface ClientErrorResponse {
+  code: string;
+  message: string;
+  metadata?: ErrorMetadata;
+}
+
+export const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
 /**
  * Base application error class that all domain-specific errors should extend
@@ -53,16 +63,26 @@ export abstract class ApplicationError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    const body = {
+  toClientResponse(): ClientErrorResponse {
+    if (this.statusCode >= 500) {
+      return {
+        code: this.code,
+        message: INTERNAL_SERVER_ERROR_MESSAGE,
+      };
+    }
+
+    return {
       code: this.code,
       message: this.message,
       ...(this.metadata && { metadata: this.metadata }),
     };
+  }
 
+  /**
+   * Convert to a NestJS HTTP exception
+   */
+  toHttpException() {
+    const body = this.toClientResponse();
     const factory = EXCEPTION_FACTORIES[this.statusCode];
     return factory ? factory(body) : new BadRequestException(body);
   }
@@ -77,7 +97,9 @@ const EXCEPTION_FACTORIES: Record<
   401: (body) => new UnauthorizedException(body),
   403: (body) => new ForbiddenException(body),
   404: (body) => new NotFoundException(body),
+  408: (body) => new RequestTimeoutException(body),
   409: (body) => new ConflictException(body),
+  413: (body) => new PayloadTooLargeException(body),
   422: (body) => new UnprocessableEntityException(body),
   // Nest ships no TooManyRequestsException; use the generic base.
   429: (body) => new HttpException(body, HttpStatus.TOO_MANY_REQUESTS),

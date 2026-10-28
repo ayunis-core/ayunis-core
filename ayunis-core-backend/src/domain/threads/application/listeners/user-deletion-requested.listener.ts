@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
-import { ThreadsRepository } from '../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
 
@@ -42,10 +42,13 @@ export class ThreadsUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.log('Deferring thread storage cleanup for deleted user', {
-        userId: event.userId,
-        threadCount: threadIds.length,
-      });
+      this.logger.log(
+        {
+          userId: event.userId,
+          threadCount: threadIds.length,
+        },
+        'Deferring thread storage cleanup for deleted user',
+      );
 
       const prefixes = threadIds.flatMap((threadId) => [
         `${event.orgId}/${threadId}/`,
@@ -57,10 +60,13 @@ export class ThreadsUserDeletionRequestedListener {
         );
       });
     } catch (error) {
-      this.logger.error('Failed to resolve thread storage for deleted user', {
-        userId: event.userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId: event.userId,
+          err: error as Error,
+        },
+        'Failed to resolve thread storage for deleted user',
+      );
     }
   }
 }

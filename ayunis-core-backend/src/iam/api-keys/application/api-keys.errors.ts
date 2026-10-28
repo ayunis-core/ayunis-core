@@ -6,6 +6,7 @@ export enum ApiKeyErrorCode {
   API_KEY_INVALID_INPUT = 'API_KEY_INVALID_INPUT',
   API_KEY_EXPIRATION_IN_PAST = 'API_KEY_EXPIRATION_IN_PAST',
   API_KEY_EXPIRED = 'API_KEY_EXPIRED',
+  API_KEY_NOT_EDITABLE = 'API_KEY_NOT_EDITABLE',
   UNEXPECTED_API_KEY_ERROR = 'UNEXPECTED_API_KEY_ERROR',
 }
 
@@ -61,6 +62,17 @@ export class ApiKeyExpirationInPastError extends ApiKeyError {
 export class ApiKeyExpiredError extends ApiKeyError {
   constructor() {
     super('API key has expired', ApiKeyErrorCode.API_KEY_EXPIRED, 401);
+  }
+}
+
+export class ApiKeyNotEditableError extends ApiKeyError {
+  constructor(apiKeyId: string) {
+    super(
+      'Revoked or expired API keys cannot be edited',
+      ApiKeyErrorCode.API_KEY_NOT_EDITABLE,
+      409,
+      { apiKeyId },
+    );
   }
 }
 

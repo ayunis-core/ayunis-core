@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BudgetAlertNotificationRepository } from '../../ports/budget-alert-notification.repository';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 import { CleanupBudgetAlertNotificationsUseCase } from './cleanup-budget-alert-notifications.use-case';
 
 describe('CleanupBudgetAlertNotificationsUseCase', () => {

@@ -6,7 +6,7 @@ import {
 } from './create-legal-acceptance.command';
 import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
 import { ConfigService } from '@nestjs/config';
-import { LegalAcceptancesRepository } from '../../ports/legal-acceptances.repository';
+import { LegalAcceptancesRepository } from 'src/iam/legal-acceptances/application/ports/legal-acceptances.repository';
 import { TosAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/tos-acceptance.entity';
 import { PrivacyPolicyAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/privacy-policy-acceptance.entity';
 

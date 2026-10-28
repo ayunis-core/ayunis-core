@@ -1,8 +1,8 @@
 import { createHmac, randomBytes } from 'crypto';
 import type { ConfigService } from '@nestjs/config';
 import { HttpWebhookHandler } from './http-webhook.handler';
-import { WebhookEvent } from '../../domain/webhook-event.entity';
-import { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 class TestWebhookEvent extends WebhookEvent<{ hello: string }> {
   readonly eventType = WebhookEventType.USER_CREATED;

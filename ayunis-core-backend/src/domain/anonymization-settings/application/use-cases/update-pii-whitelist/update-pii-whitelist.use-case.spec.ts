@@ -1,12 +1,11 @@
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { UpdatePiiWhitelistUseCase } from './update-pii-whitelist.use-case';
 import { UpdatePiiWhitelistCommand } from './update-pii-whitelist.command';
-import type { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
+import type { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
 import {
   DuplicateCategoryError,
   InvalidPatternError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
@@ -27,8 +26,6 @@ describe('UpdatePiiWhitelistUseCase', () => {
       replaceForOrg,
     } as unknown as AnonymizationWhitelistRepository;
     useCase = new UpdatePiiWhitelistUseCase(repository);
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('replaces the whitelist with validated entries', async () => {
@@ -91,11 +88,26 @@ describe('UpdatePiiWhitelistUseCase', () => {
     expect(replaceForOrg).not.toHaveBeenCalled();
   });
 
+  it('persists a pattern at the length limit unchanged', async () => {
+    const pattern = 'a'.repeat(1000);
+
+    const result = await useCase.execute(
+      new UpdatePiiWhitelistCommand(orgId, [
+        { category: PiiCategory.LOCATION, pattern },
+      ]),
+    );
+
+    expect(result[0]).toMatchObject({
+      category: PiiCategory.LOCATION,
+      pattern,
+    });
+  });
+
   it('rejects a pattern exceeding the length limit', async () => {
     await expect(
       useCase.execute(
         new UpdatePiiWhitelistCommand(orgId, [
-          { category: PiiCategory.LOCATION, pattern: 'a'.repeat(201) },
+          { category: PiiCategory.LOCATION, pattern: 'a'.repeat(1001) },
         ]),
       ),
     ).rejects.toThrow(InvalidPatternError);

@@ -1,19 +1,23 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { UUID } from 'crypto';
 import { GetMcpPromptUseCase } from './get-mcp-prompt.use-case';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -27,8 +31,7 @@ describe('GetMcpPromptUseCase', () => {
   let mcpClientService: McpClientService;
   let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
+  let logger: LoggerMock;
 
   const mockOrgId = 'org-123' as UUID;
   const mockUserId = 'user-789' as UUID;
@@ -42,6 +45,7 @@ describe('GetMcpPromptUseCase', () => {
   };
 
   beforeEach(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetMcpPromptUseCase,
@@ -81,10 +85,6 @@ describe('GetMcpPromptUseCase', () => {
       PredefinedMcpIntegrationRegistry,
     );
     contextService = module.get<ContextService>(ContextService);
-
-    // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -153,15 +153,18 @@ describe('GetMcpPromptUseCase', () => {
         mockArguments,
         mockUserId,
       );
-      expect(loggerLogSpy).toHaveBeenCalledWith('getMcpPrompt', {
-        id: mockIntegrationId,
-        prompt: mockPromptName,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('promptRetrieved', {
-        id: mockIntegrationId,
-        prompt: mockPromptName,
-        messageCount: 2,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        { id: mockIntegrationId, prompt: mockPromptName },
+        'getMcpPrompt',
+      );
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+          prompt: mockPromptName,
+          messageCount: 2,
+        },
+        'promptRetrieved',
+      );
     });
 
     it('should successfully retrieve prompt without arguments', async () => {
@@ -404,9 +407,9 @@ describe('GetMcpPromptUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(UnexpectedMcpError);
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error getting prompt',
-        { error: unexpectedError },
       );
     });
 
@@ -451,15 +454,18 @@ describe('GetMcpPromptUseCase', () => {
       await useCase.execute(query);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('getMcpPrompt', {
-        id: mockIntegrationId,
-        prompt: mockPromptName,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('promptRetrieved', {
-        id: mockIntegrationId,
-        prompt: mockPromptName,
-        messageCount: 3,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        { id: mockIntegrationId, prompt: mockPromptName },
+        'getMcpPrompt',
+      );
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+          prompt: mockPromptName,
+          messageCount: 3,
+        },
+        'promptRetrieved',
+      );
     });
   });
 });

@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GetAcademyCertificateUseCase } from './get-academy-certificate.use-case';
 import { GetAcademyCertificateQuery } from './get-academy-certificate.query';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { CertificateRendererPort } from '../../ports/certificate-renderer.port';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { CertificateRendererPort } from 'src/domain/academy/application/ports/certificate-renderer.port';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -13,7 +12,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   AcademyCompletionNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 describe('GetAcademyCertificateUseCase', () => {
   let useCase: GetAcademyCertificateUseCase;
@@ -34,9 +33,6 @@ describe('GetAcademyCertificateUseCase', () => {
   });
 
   beforeEach(async () => {
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-
     completionRepository = {
       findByUser: jest.fn(),
       upsert: jest.fn(),
@@ -76,7 +72,7 @@ describe('GetAcademyCertificateUseCase', () => {
     expect(certificateRenderer.render).not.toHaveBeenCalled();
   });
 
-  it('renders the certificate with the user name and German date line', async () => {
+  it('renders the Teilnahmebestätigung with the user name and German date line', async () => {
     completionRepository.findByUser.mockResolvedValue(
       new AcademyCompletion({
         userId,
@@ -92,10 +88,12 @@ describe('GetAcademyCertificateUseCase', () => {
 
     expect(certificateRenderer.render).toHaveBeenCalledWith({
       userName: 'Käthe Müller',
-      dateLine: '15. Juli 2026, München',
+      dateLine: '15.07.2026, München',
     });
     expect(result.buffer.toString()).toBe('%PDF-fake');
-    expect(result.fileName).toBe('Ayunis-Core-KI-Fuehrerschein-Zertifikat.pdf');
+    expect(result.fileName).toBe(
+      'Teilnahmebestaetigung_Ayunis_Core_KI-Schulung.pdf',
+    );
     expect(result.mimeType).toBe('application/pdf');
   });
 

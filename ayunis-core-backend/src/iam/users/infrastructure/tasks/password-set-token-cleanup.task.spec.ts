@@ -1,6 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { PasswordSetTokenCleanupTask } from './password-set-token-cleanup.task';
-import { createMockPasswordSetTokensRepository } from '../../application/testing/password-set-token.fixtures';
+import { createMockPasswordSetTokensRepository } from 'src/iam/users/application/testing/password-set-token.fixtures';
 
 describe('PasswordSetTokenCleanupTask', () => {
   let task: PasswordSetTokenCleanupTask;
@@ -9,10 +8,6 @@ describe('PasswordSetTokenCleanupTask', () => {
   beforeEach(() => {
     repository = createMockPasswordSetTokensRepository();
     task = new PasswordSetTokenCleanupTask(repository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PurgeOrgStorageCommand } from './purge-org-storage.command';
-import { PurgeStoragePrefixesUseCase } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
-import { PurgeStoragePrefixesCommand } from '../purge-storage-prefixes/purge-storage-prefixes.command';
-import type { PurgeStoragePrefixesResult } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
-import { orgStoragePrefixes } from '../../../domain/org-storage-layout';
+import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
+import type { PurgeStoragePrefixesResult } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { orgStoragePrefixes } from 'src/domain/storage/domain/org-storage-layout';
 
 export type PurgeOrgStorageResult = PurgeStoragePrefixesResult;
 
@@ -29,7 +29,7 @@ export class PurgeOrgStorageUseCase {
   async execute(
     command: PurgeOrgStorageCommand,
   ): Promise<PurgeOrgStorageResult> {
-    this.logger.log('Purging org storage', { orgId: command.orgId });
+    this.logger.log({ orgId: command.orgId }, 'Purging org storage');
     return this.purgeStoragePrefixesUseCase.execute(
       new PurgeStoragePrefixesCommand(orgStoragePrefixes(command.orgId)),
     );

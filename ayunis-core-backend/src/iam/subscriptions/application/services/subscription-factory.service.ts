@@ -9,8 +9,9 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
   InvalidSubscriptionDataError,
+  InvalidSubscriptionAccessEndError,
   TooManyUsedSeatsError,
-} from '../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
@@ -37,6 +38,7 @@ export interface BuildSubscriptionParams {
   country: string;
   vatNumber?: string;
   startsAt?: Date;
+  endsAt?: Date;
 }
 
 /**
@@ -59,9 +61,20 @@ export class SubscriptionFactory {
   ) {}
 
   async build(params: BuildSubscriptionParams): Promise<Subscription> {
-    return params.type === SubscriptionType.USAGE_BASED
-      ? this.buildUsageBased(params)
-      : this.buildSeatBased(params);
+    const subscription =
+      params.type === SubscriptionType.USAGE_BASED
+        ? this.buildUsageBased(params)
+        : await this.buildSeatBased(params);
+    const end = params.endsAt;
+    if (
+      end &&
+      (!Number.isFinite(end.getTime()) || end <= subscription.startsAt)
+    ) {
+      throw new InvalidSubscriptionAccessEndError();
+    }
+    subscription.endsAt = end ?? null;
+    subscription.originalEndsAt = end ?? null;
+    return subscription;
   }
 
   private buildUsageBased(
@@ -73,10 +86,13 @@ export class SubscriptionFactory {
       );
     }
 
-    this.logger.log('Building usage-based subscription', {
-      orgId: params.orgId,
-      monthlyCredits: params.monthlyCredits,
-    });
+    this.logger.log(
+      {
+        orgId: params.orgId,
+        monthlyCredits: params.monthlyCredits,
+      },
+      'Building usage-based subscription',
+    );
 
     return new UsageBasedSubscription({
       orgId: params.orgId,
@@ -91,10 +107,13 @@ export class SubscriptionFactory {
   ): Promise<SeatBasedSubscription> {
     const noOfSeats = params.noOfSeats ?? 1;
 
-    this.logger.log('Building seat-based subscription', {
-      orgId: params.orgId,
-      noOfSeats,
-    });
+    this.logger.log(
+      {
+        orgId: params.orgId,
+        noOfSeats,
+      },
+      'Building seat-based subscription',
+    );
 
     if (noOfSeats <= 0) {
       throw new InvalidSubscriptionDataError(
@@ -152,10 +171,13 @@ export class SubscriptionFactory {
       openInvitesCount + (usersResult.total ?? usersResult.data.length) >
       noOfSeats
     ) {
-      this.logger.warn('Too many used seats', {
-        orgId,
-        openInvites: openInvitesCount,
-      });
+      this.logger.warn(
+        {
+          orgId,
+          openInvites: openInvitesCount,
+        },
+        'Too many used seats',
+      );
       throw new TooManyUsedSeatsError({
         orgId,
         openInvites: openInvitesCount,

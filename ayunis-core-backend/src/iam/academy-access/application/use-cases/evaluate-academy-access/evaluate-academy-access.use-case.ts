@@ -6,10 +6,10 @@ import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-ad
 import { IsAddonActiveQuery } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.query';
 import { GetAcademyCompletionUseCase } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.use-case';
 import { GetAcademyCompletionQuery } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.query';
-import { AcademyAccessMode } from '../../../domain/value-objects/academy-access-mode.enum';
-import { UnexpectedAcademyAccessError } from '../../academy-access.errors';
-import { GetOrgAcademyAccessSettingsUseCase } from '../get-org-academy-access-settings/get-org-academy-access-settings.use-case';
-import { GetOrgAcademyAccessSettingsQuery } from '../get-org-academy-access-settings/get-org-academy-access-settings.query';
+import { AcademyAccessMode } from 'src/iam/academy-access/domain/value-objects/academy-access-mode.enum';
+import { UnexpectedAcademyAccessError } from 'src/iam/academy-access/application/academy-access.errors';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsQuery } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
 import { EvaluateAcademyAccessQuery } from './evaluate-academy-access.query';
 
 export interface AcademyAccessEvaluation {
@@ -53,10 +53,13 @@ export class EvaluateAcademyAccessUseCase {
       new IsAddonActiveQuery(query.orgId, AddonType.AYUNIS_CORE_ACADEMY),
     );
     if (!addonActive) {
-      this.logger.warn('Academy gate configured but add-on inactive', {
-        orgId: query.orgId,
-        mode: settings.mode,
-      });
+      this.logger.warn(
+        {
+          orgId: query.orgId,
+          mode: settings.mode,
+        },
+        'Academy gate configured but add-on inactive',
+      );
       return this.ungated(settings.mode);
     }
 

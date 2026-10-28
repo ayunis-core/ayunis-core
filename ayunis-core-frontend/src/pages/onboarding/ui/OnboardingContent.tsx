@@ -6,10 +6,11 @@ import { Progress } from '@ayunis/ui/components/progress';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
-import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { MeResponseDtoRole } from '@/shared/api';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
+import { createAuthorization } from '@/features/permissions';
 import { useUpdateOnboarding } from '../api/useUpdateOnboarding';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
@@ -31,7 +32,8 @@ export default function OnboardingContent() {
   const navigate = useNavigate();
   const { confirm } = useConfirmation();
   const { user } = useMe();
-  const isAdmin = user?.role === MeResponseDtoRole.admin;
+  const authorization = createAuthorization(user?.role);
+  const isAdmin = authorization.hasRole(MeResponseDtoRole.admin);
   const {
     completedStepIds,
     hidden,

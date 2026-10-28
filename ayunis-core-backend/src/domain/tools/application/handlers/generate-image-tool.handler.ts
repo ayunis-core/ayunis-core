@@ -3,9 +3,9 @@ import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GetPermittedImageGenerationModelQuery } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.query';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
@@ -104,6 +104,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         model: permittedModel.model,
         prompt: validatedInput.prompt,
         size: validatedInput.size,
+        background: validatedInput.background,
         referenceImages,
       }),
     );
@@ -200,7 +201,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
-    this.logger.error('Failed to load reference images', error);
+    this.logger.error({ err: error }, 'Failed to load reference images');
     return new ToolExecutionFailedError({
       toolName,
       message:
@@ -250,14 +251,21 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         usage.outputTokens,
       );
     }
-    return id;
+    return this.formatToolResult(id, result.transparencyApplied);
+  }
+
+  private formatToolResult(id: string, transparencyApplied?: boolean): string {
+    if (transparencyApplied !== false) {
+      return id;
+    }
+    return `${id}\nTransparency was not applied because this image model does not support transparent backgrounds. The image was generated with the default background. Tell the user, and use only the image ID above when referring to this image.`;
   }
 
   private handleError(error: unknown, toolName: string): never {
     if (error instanceof ToolExecutionFailedError) {
       throw error;
     }
-    this.logger.error('Failed to execute generate_image tool', error);
+    this.logger.error({ err: error }, 'Failed to execute generate_image tool');
     // ApplicationError messages (quota, content policy, provider outage) are
     // curated for end users — expose them so the model can explain the
     // failure instead of retrying blind into the repeated-failure breaker

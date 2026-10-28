@@ -1,92 +1,52 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-
-// Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+    () => (_target: unknown, _prop: string, descriptor: PropertyDescriptor) =>
       descriptor,
 }));
 
-import { Logger } from '@nestjs/common';
-import { DeleteSkillUseCase } from './delete-skill.use-case';
+import { randomUUID } from 'crypto';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { DeleteSkillCommand } from './delete-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { ContextService } from 'src/common/context/services/context.service';
-import type { UUID } from 'crypto';
-import { SkillNotFoundError } from '../../skills.errors';
+import { DeleteSkillUseCase } from './delete-skill.use-case';
 
-describe('DeleteSkillUseCase', () => {
-  let useCase: DeleteSkillUseCase;
-  let skillRepository: jest.Mocked<SkillRepository>;
-
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
-
-  beforeAll(async () => {
-    const mockSkillRepository = {
-      findOne: jest.fn(),
+describe(DeleteSkillUseCase.name, () => {
+  it('derives workspace ownership from the persisted skill before deleting', async () => {
+    const skill = new WorkspaceSkill({
+      workspaceId: randomUUID(),
+      name: 'Permit review',
+      shortDescription: 'Review permits',
+      instructions: 'Use project rules.',
+    });
+    const repository = {
+      findById: jest.fn().mockResolvedValue(skill),
       delete: jest.fn(),
     };
-
-    const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
-    } as unknown as jest.Mocked<ContextService>;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DeleteSkillUseCase,
-        { provide: SkillRepository, useValue: mockSkillRepository },
-        { provide: ContextService, useValue: mockContextService },
-      ],
-    }).compile();
-
-    useCase = module.get<DeleteSkillUseCase>(DeleteSkillUseCase);
-    skillRepository = module.get(SkillRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should delete an existing skill', async () => {
-    const existingSkill = new Skill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'You are a legal research assistant.',
-      userId: mockUserId,
-    });
-
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.delete.mockResolvedValue();
-
-    await useCase.execute(new DeleteSkillCommand({ skillId: mockSkillId }));
-
-    expect(skillRepository.findOne).toHaveBeenCalledWith(
-      mockSkillId,
-      mockUserId,
+    const authorization = { requireWrite: jest.fn() };
+    const useCase = new DeleteSkillUseCase(
+      repository as unknown as SkillRepository,
+      authorization as unknown as SkillAuthorizationService,
     );
-    expect(skillRepository.delete).toHaveBeenCalledWith(
-      mockSkillId,
-      mockUserId,
-    );
+    await useCase.execute(new DeleteSkillCommand(skill.id));
+    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect(repository.delete).toHaveBeenCalledWith(skill.id);
   });
 
-  it('should throw SkillNotFoundError when skill does not exist', async () => {
-    skillRepository.findOne.mockResolvedValue(null);
-
+  it('returns not found before authorization when the skill does not exist', async () => {
+    const repository = {
+      findById: jest.fn().mockResolvedValue(null),
+      delete: jest.fn(),
+    };
+    const authorization = { requireWrite: jest.fn() };
+    const useCase = new DeleteSkillUseCase(
+      repository as unknown as SkillRepository,
+      authorization as unknown as SkillAuthorizationService,
+    );
     await expect(
-      useCase.execute(new DeleteSkillCommand({ skillId: mockSkillId })),
-    ).rejects.toThrow(SkillNotFoundError);
-
-    expect(skillRepository.delete).not.toHaveBeenCalled();
+      useCase.execute(new DeleteSkillCommand(randomUUID())),
+    ).rejects.toBeInstanceOf(SkillNotFoundError);
+    expect(authorization.requireWrite).not.toHaveBeenCalled();
   });
 });

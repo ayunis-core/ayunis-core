@@ -15,6 +15,7 @@ import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remo
 import { rootConfigs } from 'src/config/root-configs';
 import { validateEnv } from 'src/config/env.validation';
 import dataSource from 'src/db/datasource';
+import { LoggingModule } from 'src/common/logger/logging.module';
 
 /**
  * CLI Module for administrative commands
@@ -34,6 +35,7 @@ import dataSource from 'src/db/datasource';
       load: rootConfigs,
       validate: validateEnv,
     }),
+    LoggingModule,
     ClsModule.forRoot({
       global: true,
       plugins: [

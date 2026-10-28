@@ -3,15 +3,16 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
+  aDefaultUserCreditLimit,
   aTeamCreditLimit,
   aUserCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_TEAM_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { ResolveCreditLimitsForUserUseCase } from './resolve-credit-limits-for-user.use-case';
 import { ResolveCreditLimitsForUserQuery } from './resolve-credit-limits-for-user.query';
 
@@ -71,5 +72,87 @@ describe('ResolveCreditLimitsForUserUseCase', () => {
       teamAId,
       teamBId,
     ]);
+  });
+
+  describe('org default personal limit', () => {
+    it('applies the default when the user has no individual limit', async () => {
+      repository.findDefaultUserLimit.mockResolvedValue(
+        aDefaultUserCreditLimit({ monthlyCredits: 100 }),
+      );
+
+      const result = await useCase.execute(
+        new ResolveCreditLimitsForUserQuery(orgId, userId),
+      );
+
+      expect(result.personalCreditLimit).toBe(100);
+      expect(repository.findDefaultUserLimit).toHaveBeenCalledWith(orgId);
+    });
+
+    it.each([
+      ['higher', 300],
+      ['lower', 50],
+    ])(
+      'prefers an individual limit %s than the default',
+      async (_label, individual) => {
+        repository.findByUserId.mockResolvedValue(
+          aUserCreditLimit({ monthlyCredits: individual }),
+        );
+        repository.findDefaultUserLimit.mockResolvedValue(
+          aDefaultUserCreditLimit({ monthlyCredits: 100 }),
+        );
+
+        const result = await useCase.execute(
+          new ResolveCreditLimitsForUserQuery(orgId, userId),
+        );
+
+        expect(result.personalCreditLimit).toBe(individual);
+      },
+    );
+
+    it('keeps a zero default as a blocking limit', async () => {
+      repository.findDefaultUserLimit.mockResolvedValue(
+        aDefaultUserCreditLimit({ monthlyCredits: 0 }),
+      );
+
+      const result = await useCase.execute(
+        new ResolveCreditLimitsForUserQuery(orgId, userId),
+      );
+
+      expect(result.personalCreditLimit).toBe(0);
+    });
+
+    it('keeps a zero individual limit over a higher default', async () => {
+      repository.findByUserId.mockResolvedValue(
+        aUserCreditLimit({ monthlyCredits: 0 }),
+      );
+      repository.findDefaultUserLimit.mockResolvedValue(
+        aDefaultUserCreditLimit({ monthlyCredits: 100 }),
+      );
+
+      const result = await useCase.execute(
+        new ResolveCreditLimitsForUserQuery(orgId, userId),
+      );
+
+      expect(result.personalCreditLimit).toBe(0);
+    });
+
+    it('still returns team limits alongside the default', async () => {
+      repository.findDefaultUserLimit.mockResolvedValue(
+        aDefaultUserCreditLimit({ monthlyCredits: 100 }),
+      );
+      findTeams.execute.mockResolvedValue([team(teamAId)]);
+      repository.findByTeamIds.mockResolvedValue([
+        aTeamCreditLimit({ teamId: teamAId, monthlyCredits: 1000 }),
+      ]);
+
+      const result = await useCase.execute(
+        new ResolveCreditLimitsForUserQuery(orgId, userId),
+      );
+
+      expect(result).toEqual({
+        personalCreditLimit: 100,
+        teamCreditLimits: [{ teamId: teamAId, monthlyCredits: 1000 }],
+      });
+    });
   });
 });

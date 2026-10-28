@@ -1,58 +1,92 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetInferenceCommand } from './get-inference.command';
-import { InferenceHandlerRegistry } from '../../registry/inference-handler.registry';
+import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import {
-  InferenceInput,
-  InferenceResponse,
-} from '../../ports/inference.handler';
-import { InferenceFailedError } from '../../models.errors';
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import {
+  extractProviderErrorDiagnostics,
+  extractProviderExplanation,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
 @Injectable()
 export class GetInferenceUseCase {
   private readonly logger = new Logger(GetInferenceUseCase.name);
 
   constructor(
-    private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
+    private readonly inferenceCallService: InferenceCallService,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
-    this.logger.log('triggerInference', {
-      model: command.model.name,
-      messageCount: command.messages.length,
-      toolCount: command.tools.length,
-      toolChoice: command.toolChoice,
-      hasInstructions: Boolean(command.instructions),
-    });
+    this.logger.log(
+      {
+        model: command.model.name,
+        messageCount: command.messages.length,
+        toolCount: command.tools.length,
+        toolChoice: command.toolChoice,
+        hasInstructions: Boolean(command.instructions),
+      },
+      'triggerInference',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
       throw new UnauthorizedException('Organization context required');
     }
 
-    try {
-      const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
-        command.model.provider,
-      );
+    const response = await this.requestInference(command, orgId);
+    await command.onUsage?.(response.meta);
+    this.assertTokenLimitResponseAllowed(
+      response,
+      command.acceptTokenLimitCompletion,
+    );
+    return response;
+  }
 
-      return await inferenceHandler.answer(
-        new InferenceInput({
-          model: command.model,
-          messages: stripReplayedToolNulls(command.messages, command.tools),
-          systemPrompt: command.instructions,
-          tools: command.tools,
-          toolChoice: command.toolChoice,
-          orgId,
-        }),
-      );
+  private async requestInference(
+    command: GetInferenceCommand,
+    orgId: string,
+  ): Promise<InferenceResponse> {
+    try {
+      return await this.inferenceCallService.complete({
+        model: command.model,
+        messages: stripReplayedToolNulls(command.messages, command.tools),
+        systemPrompt: command.instructions,
+        tools: command.tools,
+        toolChoice: command.toolChoice,
+        orgId,
+        onCallTerminal: command.onCallTerminal,
+      });
     } catch (error) {
       this.handleInferenceError(error, command);
     }
+  }
+
+  private assertTokenLimitResponseAllowed(
+    response: InferenceResponse,
+    acceptTokenLimitCompletion: boolean,
+  ): void {
+    if (response.finishReason !== 'length') return;
+    const toolCalls = response.content.filter(
+      (content) => content instanceof ToolUseMessageContent,
+    );
+    if (toolCalls.length > 0) {
+      throw new InferenceTokenLimitError({
+        toolNames: toolCalls.map((toolCall) => toolCall.name),
+      });
+    }
+    if (acceptTokenLimitCompletion) return;
+    throw new InferenceFailedError(
+      'Model response was truncated (reached the maximum token limit)',
+    );
   }
 
   private handleInferenceError(
@@ -65,22 +99,34 @@ export class GetInferenceUseCase {
       modelId: command.model.name,
     });
     if (providerError) {
-      this.logger.error('Provider unavailable during inference', {
-        code: providerError.code,
-        ...providerError.context,
-      });
+      this.logger.error(
+        {
+          code: providerError.code,
+          ...providerError.context,
+        },
+        'Provider unavailable during inference',
+      );
       throw providerError;
     }
-    const status = extractUpstreamStatus(error);
-    this.logger.error('Provider inference failed', {
-      model: command.model.name,
-      provider: command.model.provider,
-      messageCount: command.messages.length,
-      toolCount: command.tools.length,
-      toolChoice: command.toolChoice,
-      errorName: error instanceof Error ? error.name : 'Unknown',
+    const diagnostics = extractProviderErrorDiagnostics(error);
+    const status = diagnostics.upstreamStatus;
+    this.logger.error(
+      {
+        model: command.model.name,
+        provider: command.model.provider,
+        messageCount: command.messages.length,
+        toolCount: command.tools.length,
+        toolChoice: command.toolChoice,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        status,
+        ...diagnostics,
+        upstreamMessage: extractProviderExplanation(error),
+      },
+      'Provider inference failed',
+    );
+    throw new InferenceFailedError('Provider inference failed', {
       status,
+      ...diagnostics,
     });
-    throw new InferenceFailedError('Provider inference failed', { status });
   }
 }

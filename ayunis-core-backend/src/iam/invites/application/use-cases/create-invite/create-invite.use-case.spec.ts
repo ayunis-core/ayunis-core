@@ -1,17 +1,21 @@
+import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
+import type { UUID } from 'crypto';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateInviteUseCase } from './create-invite.use-case';
 import { CreateInviteCommand } from './create-invite.command';
-import { InvitesRepository } from '../../ports/invites.repository';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
-import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  MultipleActiveSubscriptionsError,
+  SubscriptionNotFoundError,
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
@@ -20,7 +24,7 @@ import {
   EmailNotAvailableError,
   InvalidSeatsError,
   UnexpectedInviteError,
-} from '../../invites.errors';
+} from 'src/iam/invites/application/invites.errors';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 
 describe('CreateInviteUseCase', () => {
@@ -33,8 +37,8 @@ describe('CreateInviteUseCase', () => {
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let findUserByEmailUseCase: jest.Mocked<FindUserByEmailUseCase>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockEmail = 'test@test.com';
 
   beforeEach(async () => {
@@ -75,6 +79,10 @@ describe('CreateInviteUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateInviteUseCase,
+        {
+          provide: FindTeamsByIdsAndOrgIdUseCase,
+          useValue: { execute: jest.fn().mockResolvedValue([]) },
+        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: InviteJwtService, useValue: mockInviteJwtService },
@@ -105,11 +113,7 @@ describe('CreateInviteUseCase', () => {
 
     // Default: no existing invite
     invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    invitesRepository.findOneByEmail.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -164,7 +168,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: 5,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -213,7 +217,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: null,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new UsageBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           monthlyCredits: 500,
           billingInfo: new SubscriptionBillingInfo({
@@ -244,6 +248,22 @@ describe('CreateInviteUseCase', () => {
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
       expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalled();
+    });
+
+    it('should preserve the multiple-subscriptions error on cloud instances', async () => {
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+      const overlapError = new MultipleActiveSubscriptionsError(mockOrgId);
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get.mockReturnValueOnce([]).mockReturnValueOnce(true);
+      getActiveSubscriptionUseCase.execute.mockRejectedValue(overlapError);
+
+      await expect(useCase.execute(command)).rejects.toBe(overlapError);
+      expect(invitesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should create invite when no active subscription is found in cloud instance', async () => {
@@ -294,7 +314,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: 0,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -345,7 +365,9 @@ describe('CreateInviteUseCase', () => {
       });
 
       const mockExistingUser = { id: 'existing-user-id' };
-      findUserByEmailUseCase.execute.mockResolvedValue(mockExistingUser as any);
+      findUserByEmailUseCase.execute.mockResolvedValue(
+        mockExistingUser as never,
+      );
 
       configService.get
         .mockReturnValueOnce([]) // auth.emailProviderBlacklist
@@ -369,10 +391,43 @@ describe('CreateInviteUseCase', () => {
         userId: mockUserId,
       });
 
-      invitesRepository.findOneByEmailAndOrg.mockResolvedValue({
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      invitesRepository.findOneByEmail.mockResolvedValue({
         id: 'existing-invite-id',
         email: mockEmail,
-      } as any);
+      } as never);
+
+      configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        EmailNotAvailableError,
+      );
+      expect(invitesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw EmailNotAvailableError when an invite for the email exists in a different org (global unique constraint) instead of a 500', async () => {
+      // Regression for AYC-734: invites.email is globally unique. A pending
+      // invite for this email in another org is invisible to the org-scoped
+      // lookup, so the insert previously hit a DB unique violation and
+      // surfaced as a generic UnexpectedInviteError (500). It must be rejected
+      // up front with a clear domain error instead.
+      const command = new CreateInviteCommand({
+        email: 'schichler-koep@sveinfo.de',
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      // No user yet and no pending invite in THIS org...
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
+      // ...but an invite row already exists for this email in another org.
+      invitesRepository.findOneByEmail.mockResolvedValue({
+        id: 'existing-invite-id',
+        email: 'schichler-koep@sveinfo.de',
+        orgId: '123e4567-e89b-12d3-a456-426614174999',
+      } as never);
 
       configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
 
@@ -420,7 +475,7 @@ describe('CreateInviteUseCase', () => {
         availableSeats: -1,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subscription: new SeatBasedSubscription({
-          id: 'sub-id' as any,
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
@@ -495,15 +550,10 @@ describe('CreateInviteUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       invitesRepository.create.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedInviteError,
       );
-      expect(errorSpy).toHaveBeenCalledWith('Error creating invite', {
-        error: 'Database connection failed',
-      });
     });
 
     it('should parse different time formats correctly', async () => {

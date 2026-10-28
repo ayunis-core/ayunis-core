@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { ArtifactResponseDto } from '@/shared/api';
 import type { GridRow, GridState } from './spreadsheet-grid-state';
 import {
@@ -17,6 +17,15 @@ import {
   serializeSpreadsheetContent,
 } from './spreadsheet-content-format';
 import { computeDisplayValues } from './formula-engine';
+import {
+  canRedo,
+  canUndo,
+  commitHistory,
+  createHistory,
+  redoHistory,
+  undoHistory,
+  type EditHistory,
+} from './edit-history';
 
 function loadGridState(content: string | undefined): {
   state: GridState;
@@ -24,6 +33,44 @@ function loadGridState(content: string | undefined): {
 } {
   const { data, isValid } = parseSpreadsheetContent(content ?? '');
   return { state: toGridState(data), isValid };
+}
+
+interface EditorHistoryState {
+  history: EditHistory<GridState>;
+  // Reference to the last loaded state; matching it means nothing is unsaved.
+  saved: GridState;
+}
+
+type EditorHistoryAction =
+  | { type: 'edit'; update: (state: GridState) => GridState }
+  | { type: 'undo' }
+  | { type: 'redo' }
+  | { type: 'reset'; state: GridState };
+
+function initEditorHistory(state: GridState): EditorHistoryState {
+  return { history: createHistory(state), saved: state };
+}
+
+function editorHistoryReducer(
+  state: EditorHistoryState,
+  action: EditorHistoryAction,
+): EditorHistoryState {
+  switch (action.type) {
+    case 'edit':
+      return {
+        ...state,
+        history: commitHistory(
+          state.history,
+          action.update(state.history.present),
+        ),
+      };
+    case 'undo':
+      return { ...state, history: undoHistory(state.history) };
+    case 'redo':
+      return { ...state, history: redoHistory(state.history) };
+    case 'reset':
+      return initEditorHistory(action.state);
+  }
 }
 
 export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
@@ -47,9 +94,14 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
   );
 
   const [loaded] = useState(() => loadGridState(currentVersion?.content));
-  const [gridState, setGridState] = useState<GridState>(loaded.state);
+  const [{ history, saved }, dispatch] = useReducer(
+    editorHistoryReducer,
+    loaded.state,
+    initEditorHistory,
+  );
+  const gridState = history.present;
+  const isDirty = gridState !== saved;
   const [isValid, setIsValid] = useState(loaded.isValid);
-  const [isDirty, setIsDirty] = useState(false);
 
   // Reload the editable state when the artifact or current version changes,
   // discarding unsaved edits in favor of the server state.
@@ -73,9 +125,8 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
       };
       const reloaded = loadGridState(currentContent);
       setUserSelectedVersion(null);
-      setGridState(reloaded.state);
+      dispatch({ type: 'reset', state: reloaded.state });
       setIsValid(reloaded.isValid);
-      setIsDirty(false);
     }
   }, [artifact.id, artifact.currentVersionNumber, currentContent]);
 
@@ -98,8 +149,7 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
     if (isViewingHistory) {
       return;
     }
-    setGridState(updater);
-    setIsDirty(true);
+    dispatch({ type: 'edit', update: updater });
   };
 
   return {
@@ -109,6 +159,18 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
     isValid: displayedIsValid,
     isViewingHistory,
     displayedVersionNumber,
+    canUndo: !isViewingHistory && canUndo(history),
+    canRedo: !isViewingHistory && canRedo(history),
+    undo: () => {
+      if (!isViewingHistory) {
+        dispatch({ type: 'undo' });
+      }
+    },
+    redo: () => {
+      if (!isViewingHistory) {
+        dispatch({ type: 'redo' });
+      }
+    },
     selectVersion: (versionNumber: number) => {
       if (isDirty) {
         return;

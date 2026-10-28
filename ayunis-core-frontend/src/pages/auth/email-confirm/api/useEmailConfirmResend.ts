@@ -10,7 +10,7 @@ export function useEmailConfirmResend() {
   const resendEmailMutation = useUserControllerResendEmailConfirmation();
   const { t } = useTranslation('auth');
   const emailConfirmFormSchema = z.object({
-    email: z.string().email({
+    email: z.email({
       message: t('emailConfirm.emailPlaceholder'),
     }),
   });

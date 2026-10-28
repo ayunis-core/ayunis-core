@@ -3,10 +3,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import {
   OpenAIModelNotFoundError,
   OpenAIUnexpectedError,
-} from '../../openai-compat.errors';
-import type { OpenAIModelObject } from '../../types/openai-model.types';
-import { ListOpenAIModelsUseCase } from '../list-openai-models/list-openai-models.use-case';
-import { ListOpenAIModelsQuery } from '../list-openai-models/list-openai-models.query';
+} from 'src/domain/openai-compat/application/openai-compat.errors';
+import type { OpenAIModelObject } from 'src/domain/openai-compat/application/types/openai-model.types';
+import { ListOpenAIModelsUseCase } from 'src/domain/openai-compat/application/use-cases/list-openai-models/list-openai-models.use-case';
+import { ListOpenAIModelsQuery } from 'src/domain/openai-compat/application/use-cases/list-openai-models/list-openai-models.query';
 import { GetOpenAIModelQuery } from './get-openai-model.query';
 
 @Injectable()
@@ -18,10 +18,13 @@ export class GetOpenAIModelUseCase {
   ) {}
 
   async execute(query: GetOpenAIModelQuery): Promise<OpenAIModelObject> {
-    this.logger.log('Getting OpenAI-compatible model', {
-      orgId: query.orgId,
-      modelName: query.modelName,
-    });
+    this.logger.log(
+      {
+        orgId: query.orgId,
+        modelName: query.modelName,
+      },
+      'Getting OpenAI-compatible model',
+    );
 
     try {
       const list = await this.listOpenAIModelsUseCase.execute(
@@ -34,9 +37,12 @@ export class GetOpenAIModelUseCase {
       return match;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting OpenAI-compatible model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error getting OpenAI-compatible model',
+      );
       throw new OpenAIUnexpectedError(error);
     }
   }

@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_TEAM_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { RemoveTeamCreditLimitUseCase } from './remove-team-credit-limit.use-case';
 import { RemoveTeamCreditLimitCommand } from './remove-team-credit-limit.command';
 

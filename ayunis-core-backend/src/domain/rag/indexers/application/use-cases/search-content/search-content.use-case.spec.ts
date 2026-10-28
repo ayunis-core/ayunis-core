@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SearchContentUseCase } from './search-content.use-case';
-import { IndexRegistry } from '../../indexer.registry';
+import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { SearchMultiContentQuery } from './search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
-import { UnexpectedIndexError } from '../../indexer.errors';
-import type { IndexerPort } from '../../ports/indexer';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
+import type { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
 import type { UUID } from 'crypto';
 
 describe('SearchContentUseCase', () => {

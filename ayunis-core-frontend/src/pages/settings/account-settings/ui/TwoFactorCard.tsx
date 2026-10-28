@@ -21,7 +21,8 @@ import {
   MfaEnrollmentPanel,
   RecoveryCodesPanel,
 } from '@/widgets/mfa-enrollment';
-import { useMfa } from '../api/useMfa';
+import { useMfa } from '@/pages/settings/account-settings/api/useMfa';
+import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 export function TwoFactorCard() {
   const { t } = useTranslation('settings');
@@ -54,10 +55,10 @@ export function TwoFactorCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         {mfa.isLoadingStatus && (
-          <div className="flex items-center justify-between gap-4">
+          <SettingsFieldRow>
             <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-9 w-24" />
-          </div>
+            <Skeleton className="h-9 w-24 shrink-0" />
+          </SettingsFieldRow>
         )}
         {mfa.isStatusError && (
           <p className="text-sm text-destructive">
@@ -65,8 +66,8 @@ export function TwoFactorCard() {
           </p>
         )}
         {!mfa.isLoadingStatus && !mfa.isStatusError && (
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-sm text-muted-foreground">
+          <SettingsFieldRow>
+            <div className="min-w-0 text-sm text-muted-foreground">
               {enabled
                 ? t('account.mfa.enabledDescription', {
                     count: mfa.status?.recoveryCodesRemaining ?? 0,
@@ -74,15 +75,22 @@ export function TwoFactorCard() {
                 : t('account.mfa.disabledDescription')}
             </div>
             {enabled ? (
-              <Button variant="outline" onClick={() => setDisableOpen(true)}>
+              <Button
+                variant="outline"
+                className="w-full shrink-0 sm:w-auto"
+                onClick={() => setDisableOpen(true)}
+              >
                 {t('account.mfa.disableButton')}
               </Button>
             ) : (
-              <Button onClick={openEnable}>
+              <Button
+                className="w-full shrink-0 sm:w-auto"
+                onClick={openEnable}
+              >
                 {t('account.mfa.enableButton')}
               </Button>
             )}
-          </div>
+          </SettingsFieldRow>
         )}
       </CardContent>
 

@@ -1,9 +1,16 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
+export interface StorageFailureDiagnostics extends ErrorMetadata {
+  upstreamName?: string;
+  upstreamCode?: string;
+  upstreamStatus?: number;
+}
+
 export enum StorageErrorCode {
   OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND',
   UPLOAD_FAILED = 'UPLOAD_FAILED',
+  STORAGE_UNAVAILABLE = 'STORAGE_UNAVAILABLE',
   DOWNLOAD_FAILED = 'DOWNLOAD_FAILED',
   DELETE_FAILED = 'DELETE_FAILED',
   BUCKET_NOT_FOUND = 'BUCKET_NOT_FOUND',
@@ -41,21 +48,52 @@ export class ObjectNotFoundError extends StorageError {
   }
 }
 
-// The object name and the upstream driver message are deliberately kept out
-// of these messages: ApplicationError.message is serialised into the HTTP
-// response body, so embedding them exposes the bucket layout
-// ('<orgId>/<threadId>/<messageId>/3.jpg') and the CDN hostname to the
-// client. Every thrower logs both server-side before constructing these.
+// Raw object names and driver messages stay out of these wrappers because
+// they can contain bucket layouts or hostnames. Upload errors carry only
+// allowlisted machine diagnostics; 5xx client responses remain generic.
 export class UploadFailedError extends StorageError {
-  constructor(params?: { metadata?: ErrorMetadata }) {
+  constructor(params?: { diagnostics?: StorageFailureDiagnostics }) {
     super(
-      'Failed to upload object',
+      formatStorageFailureMessage(
+        'Failed to upload object',
+        params?.diagnostics,
+      ),
       StorageErrorCode.UPLOAD_FAILED,
       500,
-      params?.metadata,
+      params?.diagnostics,
     );
     this.name = 'UploadFailedError';
   }
+}
+
+// A distinct class, not a flag on UploadFailedError: AppSignal groups
+// incidents by error name, so an outage of the object store must not share
+// an incident with upload bugs that need code changes.
+export class StorageUnavailableError extends StorageError {
+  constructor(params?: { diagnostics?: StorageFailureDiagnostics }) {
+    super(
+      formatStorageFailureMessage(
+        'Object storage unavailable',
+        params?.diagnostics,
+      ),
+      StorageErrorCode.STORAGE_UNAVAILABLE,
+      503,
+      params?.diagnostics,
+    );
+    this.name = 'StorageUnavailableError';
+  }
+}
+
+function formatStorageFailureMessage(
+  summary: string,
+  diagnostics?: StorageFailureDiagnostics,
+): string {
+  const details = [
+    diagnostics?.upstreamName,
+    diagnostics?.upstreamCode && `code ${diagnostics.upstreamCode}`,
+    diagnostics?.upstreamStatus && `status ${diagnostics.upstreamStatus}`,
+  ].filter(Boolean);
+  return details.length > 0 ? `${summary} (${details.join(', ')})` : summary;
 }
 
 export class DownloadFailedError extends StorageError {

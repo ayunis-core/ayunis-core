@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import {
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
-} from '../../subscription.errors';
-import { isActive } from '../../util/is-active';
+} from 'src/iam/subscriptions/application/subscription.errors';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import { computeAvailableSeats } from '../../util/compute-available-seats';
-import { getNextRenewalDate } from '../../util/get-next-renewal-date';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { computeAvailableSeats } from 'src/iam/subscriptions/application/util/compute-available-seats';
+import { getNextRenewalDate } from 'src/iam/subscriptions/application/util/get-next-renewal-date';
 
 @Injectable()
 export class GetActiveSubscriptionUseCase {
@@ -31,10 +31,13 @@ export class GetActiveSubscriptionUseCase {
     availableSeats: number | null;
     nextRenewalDate: Date;
   }> {
-    this.logger.log('Getting subscription', {
-      orgId: query.orgId,
-      requestingUserId: query.requestingUserId,
-    });
+    this.logger.log(
+      {
+        orgId: query.orgId,
+        requestingUserId: query.requestingUserId,
+      },
+      'Getting subscription',
+    );
 
     try {
       this.logger.debug('Checking if user is from organization');
@@ -44,23 +47,7 @@ export class GetActiveSubscriptionUseCase {
         query.orgId,
       );
 
-      const subscriptions = (
-        await this.subscriptionRepository.findByOrgId(query.orgId)
-      ).filter(isActive);
-      if (subscriptions.length === 0) {
-        this.logger.warn('Subscription not found', {
-          orgId: query.orgId,
-        });
-        throw new SubscriptionNotFoundError(query.orgId);
-      }
-      if (subscriptions.length > 1) {
-        this.logger.warn('Multiple active subscriptions found', {
-          orgId: query.orgId,
-        });
-        throw new MultipleActiveSubscriptionsError(query.orgId);
-      }
-
-      const subscription = subscriptions[0];
+      const subscription = await this.findActiveSubscription(query.orgId);
 
       const availableSeats = await computeAvailableSeats(
         subscription,
@@ -76,12 +63,32 @@ export class GetActiveSubscriptionUseCase {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
-      this.logger.error('Getting subscription failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-        requestingUserId: query.requestingUserId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: query.orgId,
+          requestingUserId: query.requestingUserId,
+        },
+        'Getting subscription failed',
+      );
       throw error;
     }
+  }
+
+  private async findActiveSubscription(
+    orgId: GetActiveSubscriptionQuery['orgId'],
+  ): Promise<Subscription> {
+    const subscriptions = (
+      await this.subscriptionRepository.findByOrgId(orgId)
+    ).filter(isActive);
+    if (subscriptions.length === 0) {
+      this.logger.warn({ orgId }, 'Subscription not found');
+      throw new SubscriptionNotFoundError(orgId);
+    }
+    if (subscriptions.length > 1) {
+      this.logger.warn({ orgId }, 'Multiple active subscriptions found');
+      throw new MultipleActiveSubscriptionsError(orgId);
+    }
+    return subscriptions[0];
   }
 }

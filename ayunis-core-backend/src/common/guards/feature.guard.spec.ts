@@ -1,11 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { ConfigService } from '@nestjs/config';
-import { FeatureGuard } from './feature.guard';
+import { FeatureGuard } from 'src/common/guards/feature.guard';
 import type { ExecutionContext } from '@nestjs/common';
-import { FeatureFlag } from 'src/config/features.config';
+import type { FeatureFlag } from 'src/config/features.config';
 
 describe('FeatureGuard', () => {
+  const exampleFlag = 'exampleEnabled' as unknown as FeatureFlag;
+
   let guard: FeatureGuard;
   let reflector: jest.Mocked<Reflector>;
   let configService: jest.Mocked<ConfigService>;
@@ -36,29 +38,27 @@ describe('FeatureGuard', () => {
   });
 
   it('should allow access when the feature is enabled', () => {
-    reflector.getAllAndOverride.mockReturnValue(FeatureFlag.KnowledgeBases);
+    reflector.getAllAndOverride.mockReturnValue(exampleFlag);
     configService.get.mockReturnValue(true);
 
     const result = guard.canActivate(mockExecutionContext);
 
     expect(result).toBe(true);
-    expect(configService.get).toHaveBeenCalledWith(
-      'features.knowledgeBasesEnabled',
-    );
+    expect(configService.get).toHaveBeenCalledWith('features.exampleEnabled');
   });
 
   it('should throw NotFoundException when the feature is disabled', () => {
-    reflector.getAllAndOverride.mockReturnValue(FeatureFlag.Skills);
+    reflector.getAllAndOverride.mockReturnValue(exampleFlag);
     configService.get.mockReturnValue(false);
 
     expect(() => guard.canActivate(mockExecutionContext)).toThrow(
       NotFoundException,
     );
-    expect(configService.get).toHaveBeenCalledWith('features.skillsEnabled');
+    expect(configService.get).toHaveBeenCalledWith('features.exampleEnabled');
   });
 
   it('should throw NotFoundException when the feature config value is undefined', () => {
-    reflector.getAllAndOverride.mockReturnValue(FeatureFlag.Skills);
+    reflector.getAllAndOverride.mockReturnValue(exampleFlag);
     configService.get.mockReturnValue(undefined);
 
     expect(() => guard.canActivate(mockExecutionContext)).toThrow(

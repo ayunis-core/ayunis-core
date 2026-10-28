@@ -12,5 +12,5 @@ export interface UserExportRow {
 }
 
 export abstract class UsersExportRepository {
-  abstract findSubscribedOrgUsers(): Promise<UserExportRow[]>;
+  abstract findSubscribedOrgUsers(now: Date): Promise<UserExportRow[]>;
 }

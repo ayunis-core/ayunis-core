@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourcesCommand } from './delete-sources.command';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { CleanupSourceProcessingCommand } from '../cleanup-source-processing/cleanup-source-processing.command';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 
@@ -26,7 +26,10 @@ export class DeleteSourcesUseCase {
       return;
     }
 
-    this.logger.debug(`Deleting ${command.sourceIds.length} sources`);
+    this.logger.debug(
+      { sourceCount: command.sourceIds.length },
+      'Deleting sources',
+    );
     try {
       // Cancel jobs and clean MinIO for any processing sources
       await this.cancelProcessingSources(command.sourceIds, command.orgId);
@@ -41,15 +44,19 @@ export class DeleteSourcesUseCase {
       await this.sourceRepository.deleteMany(command.sourceIds);
 
       this.logger.debug(
-        `Successfully deleted ${command.sourceIds.length} sources and their indexed content`,
+        { sourceCount: command.sourceIds.length },
+        'Successfully deleted sources and their indexed content',
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting sources', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error deleting sources',
+      );
       throw new UnexpectedSourceError('Error deleting sources', {
         error: error as Error,
       });

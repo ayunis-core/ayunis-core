@@ -4,9 +4,9 @@ import { randomBytes, type UUID } from 'crypto';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import { getMillisecondsFromJwtExpiry } from 'src/common/util/jwt.util';
-import { PasswordSetToken } from '../../domain/password-set-token.entity';
-import { PasswordSetTokenPurpose } from '../../domain/value-objects/password-set-token-purpose.enum';
-import { PasswordSetTokensRepository } from '../ports/password-set-tokens.repository';
+import { PasswordSetToken } from 'src/iam/users/domain/password-set-token.entity';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 
 /**
  * Issues and validates opaque, single-use password-set tokens. The plaintext
@@ -26,10 +26,13 @@ export class PasswordSetTokenService {
     userId: UUID;
     purpose: PasswordSetTokenPurpose;
   }): Promise<string> {
-    this.logger.log('issue', {
-      userId: params.userId,
-      purpose: params.purpose,
-    });
+    this.logger.log(
+      {
+        userId: params.userId,
+        purpose: params.purpose,
+      },
+      'issue',
+    );
 
     const plaintext = randomBytes(32).toString('base64url');
     const token = new PasswordSetToken({

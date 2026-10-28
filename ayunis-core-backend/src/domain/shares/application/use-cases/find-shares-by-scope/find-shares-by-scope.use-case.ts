@@ -1,10 +1,10 @@
 import {
   Inject,
   Injectable,
-  Logger,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeQuery } from './find-shares-by-scope.query';
 import { Share } from 'src/domain/shares/domain/share.entity';
@@ -34,9 +34,12 @@ export class FindSharesByScopeUseCase {
    * @throws UnauthorizedException if user is not authenticated or has no organization
    */
   async execute(query: FindSharesByScopeQuery): Promise<Share[]> {
-    this.logger.log('execute', {
-      entityType: query.entityType,
-    });
+    this.logger.log(
+      {
+        entityType: query.entityType,
+      },
+      'execute',
+    );
 
     // Get current user's organization from context
     const orgId = this.contextService.get('orgId');

@@ -1,10 +1,15 @@
 import type { UUID } from 'crypto';
-import type { Team } from '../../domain/team.entity';
+import type { Team } from 'src/iam/teams/domain/team.entity';
 
 export abstract class TeamsRepository {
   abstract findById(id: UUID): Promise<Team | null>;
   abstract findByOrgId(orgId: UUID): Promise<Team[]>;
+  abstract findByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<Team[]>;
   abstract findByUserId(userId: UUID): Promise<Team[]>;
+  abstract findByUserIdsAndOrgId(
+    userIds: UUID[],
+    orgId: UUID,
+  ): Promise<Map<UUID, Pick<Team, 'id' | 'name'>[]>>;
   abstract findByNameAndOrgId(name: string, orgId: UUID): Promise<Team | null>;
   abstract create(team: Team): Promise<Team>;
   abstract update(team: Team): Promise<Team>;

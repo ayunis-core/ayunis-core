@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import type {
@@ -9,7 +9,7 @@ import type {
   ChatCompletionResponseChoice,
   ChatCompletionResponseMessage,
   ChatCompletionToolCallResponse,
-} from '../types/openai-response.types';
+} from 'src/domain/openai-compat/application/types/openai-response.types';
 
 @Injectable()
 export class OpenAIResponseMapper {
@@ -20,10 +20,7 @@ export class OpenAIResponseMapper {
     tools: readonly ToolSchema[];
   }): ChatCompletionResponse {
     const message = this.buildAssistantMessage(params.response, params.tools);
-    const finishReason: ChatCompletionResponseChoice['finish_reason'] =
-      message.tool_calls && message.tool_calls.length > 0
-        ? 'tool_calls'
-        : 'stop';
+    const finishReason = this.mapFinishReason(params.response, message);
 
     return {
       id: params.id,
@@ -44,6 +41,16 @@ export class OpenAIResponseMapper {
             }
           : undefined,
     };
+  }
+
+  private mapFinishReason(
+    response: InferenceResponse,
+    message: ChatCompletionResponseMessage,
+  ): ChatCompletionResponseChoice['finish_reason'] {
+    if (response.finishReason === 'length') return 'length';
+    if (message.tool_calls && message.tool_calls.length > 0)
+      return 'tool_calls';
+    return 'stop';
   }
 
   private buildAssistantMessage(

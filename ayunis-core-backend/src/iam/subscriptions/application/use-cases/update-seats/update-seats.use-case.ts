@@ -1,26 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateSeatsCommand } from './update-seats.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
-  SubscriptionNotFoundError,
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
   UnexpectedSubscriptionError,
   InvalidSubscriptionTypeError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
+import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionSeatsUpdatedEvent } from '../../events/subscription-seats-updated.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import type { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 
 @Injectable()
 export class UpdateSeatsUseCase {
@@ -36,11 +36,14 @@ export class UpdateSeatsUseCase {
   ) {}
 
   async execute(command: UpdateSeatsCommand): Promise<void> {
-    this.logger.log('Adding seats to subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-      noOfSeats: command.noOfSeats,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        noOfSeats: command.noOfSeats,
+      },
+      'Adding seats to subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -48,110 +51,122 @@ export class UpdateSeatsUseCase {
         command.requestingUserId,
         command.orgId,
       );
-      this.logger.debug('Validating seat count');
-      if (command.noOfSeats <= 0) {
-        this.logger.warn('Invalid number of seats provided', {
-          noOfSeats: command.noOfSeats,
-        });
-        throw new InvalidSubscriptionDataError(
-          'Number of seats must be greater than 0',
-        );
-      }
-
-      this.logger.debug('Finding subscription');
-      const result = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        }),
-      );
-      if (!result) {
-        this.logger.warn('Subscription not found', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionNotFoundError(command.orgId);
-      }
-      const subscription = result.subscription;
-
-      if (!isSeatBased(subscription)) {
-        throw new InvalidSubscriptionTypeError(
-          'Seat updates are only allowed for seat-based subscriptions',
-        );
-      }
-
-      const usersResult = await this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery({
-          orgId: command.orgId,
-          pagination: { limit: 1000, offset: 0 },
-        }),
-      );
-      const openInvitesResult = await this.getInvitesByOrgUseCase.execute(
-        new GetInvitesByOrgQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-          onlyOpen: true,
-        }),
-      );
-      const openInvitesCount =
-        openInvitesResult.total ?? openInvitesResult.data.length;
-      if (
-        command.noOfSeats <
-        (usersResult.total ?? usersResult.data.length) + openInvitesCount
-      ) {
-        this.logger.warn('Too many used seats', {
-          orgId: command.orgId,
-          openInvites: openInvitesCount,
-        });
-        throw new TooManyUsedSeatsError({
-          orgId: command.orgId,
-          openInvites: openInvitesCount,
-        });
-      }
-
-      this.logger.debug('Updating seats of subscription', {
-        currentSeats: subscription.noOfSeats,
-        newSeats: command.noOfSeats,
-      });
-
-      const previousSeats = subscription.noOfSeats;
-      subscription.noOfSeats = command.noOfSeats;
-      await this.subscriptionRepository.update(subscription);
-
-      this.logger.debug('Seats updated successfully', {
-        subscriptionId: subscription.id,
-        orgId: command.orgId,
-        previousSeats,
-        newSeats: subscription.noOfSeats,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionSeatsUpdatedEvent.EVENT_NAME,
-          new SubscriptionSeatsUpdatedEvent(
-            command.orgId,
-            toSubscriptionEventData(subscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionSeatsUpdatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
+      this.validateSeatCount(command.noOfSeats);
+      const subscription = await this.findSubscription(command);
+      await this.ensureEnoughSeats(command);
+      await this.updateSubscription(command, subscription);
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
-      this.logger.error('Adding seats failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-        noOfSeats: command.noOfSeats,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+          noOfSeats: command.noOfSeats,
+        },
+        'Adding seats failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during seat addition',
       );
     }
+  }
+
+  private validateSeatCount(noOfSeats: number): void {
+    if (noOfSeats <= 0) {
+      this.logger.warn({ noOfSeats }, 'Invalid number of seats provided');
+      throw new InvalidSubscriptionDataError(
+        'Number of seats must be greater than 0',
+      );
+    }
+  }
+
+  // Must resolve the *serving* subscription, not the newest one: the org-admin
+  // invite flow reads noOfSeats from the active subscription and calls this with
+  // that count + 1. Retargeting it at a scheduled subscription would bump the
+  // future contract instead, leaving the serving seat count full while invites
+  // keep succeeding.
+  private async findSubscription(
+    command: UpdateSeatsCommand,
+  ): Promise<SeatBasedSubscription> {
+    const { subscription } = await this.getActiveSubscriptionUseCase.execute(
+      new GetActiveSubscriptionQuery({
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+      }),
+    );
+    if (!isSeatBased(subscription)) {
+      throw new InvalidSubscriptionTypeError(
+        'Seat updates are only allowed for seat-based subscriptions',
+      );
+    }
+    return subscription;
+  }
+
+  private async ensureEnoughSeats(command: UpdateSeatsCommand): Promise<void> {
+    const users = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery({
+        orgId: command.orgId,
+        pagination: { limit: 1000, offset: 0 },
+      }),
+    );
+    const invites = await this.getInvitesByOrgUseCase.execute(
+      new GetInvitesByOrgQuery({
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        onlyOpen: true,
+      }),
+    );
+    const openInvites = invites.total ?? invites.data.length;
+    const occupiedSeats = (users.total ?? users.data.length) + openInvites;
+    if (command.noOfSeats < occupiedSeats) {
+      this.logger.warn(
+        { orgId: command.orgId, openInvites },
+        'Too many used seats',
+      );
+      throw new TooManyUsedSeatsError({ orgId: command.orgId, openInvites });
+    }
+  }
+
+  private async updateSubscription(
+    command: UpdateSeatsCommand,
+    subscription: SeatBasedSubscription,
+  ): Promise<void> {
+    const previousSeats = subscription.noOfSeats;
+    subscription.noOfSeats = command.noOfSeats;
+    await this.subscriptionRepository.update(subscription);
+    this.logger.debug(
+      {
+        subscriptionId: subscription.id,
+        orgId: command.orgId,
+        previousSeats,
+        newSeats: subscription.noOfSeats,
+      },
+      'Seats updated successfully',
+    );
+    this.emitUpdatedEvent(command.orgId, subscription);
+  }
+
+  private emitUpdatedEvent(
+    orgId: UpdateSeatsCommand['orgId'],
+    subscription: SeatBasedSubscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionSeatsUpdatedEvent.EVENT_NAME,
+        new SubscriptionSeatsUpdatedEvent(
+          orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId },
+          'Failed to emit SubscriptionSeatsUpdatedEvent',
+        );
+      });
   }
 }

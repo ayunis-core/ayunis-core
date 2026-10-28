@@ -1,23 +1,42 @@
+import { CreditLimitScope } from 'src/iam/credit-limits/domain/value-objects/credit-limit-scope.enum';
 import { Injectable } from '@nestjs/common';
-import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import type { ApiKeyCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/api-key-credit-limit.view';
+import type { AdminTeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-admin-team-credit-limits-overview/admin-team-credit-limit.view';
+import type { AdminUserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-admin-user-credit-limits-overview/admin-user-credit-limit.view';
+import type { UserCreditUsageItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-usage/user-credit-usage.view';
+import type { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
+import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
-import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
-import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
-  UserCreditLimitResponseDto,
-  TeamCreditLimitResponseDto,
-} from '../dtos/credit-limit-response.dto';
-import {
-  UserCreditLimitItemDto,
+  ApiKeyCreditLimitItemDto,
   TeamCreditLimitItemDto,
-} from '../dtos/credit-limit-item.dto';
+  UserCreditLimitItemDto,
+  UserCreditUsageItemDto,
+} from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-item.dto';
+import {
+  ApiKeyCreditLimitResponseDto,
+  DefaultUserCreditLimitResponseDto,
+  TeamCreditLimitResponseDto,
+  UserCreditLimitResponseDto,
+} from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-response.dto';
 
 @Injectable()
 export class CreditLimitDtoMapper {
   toUserDto(limit: UserCreditLimit): UserCreditLimitResponseDto {
     return {
       id: limit.id,
+      scope: CreditLimitScope.USER,
       userId: limit.userId,
+      monthlyCredits: limit.monthlyCredits,
+    };
+  }
+
+  toApiKeyDto(limit: ApiKeyCreditLimit): ApiKeyCreditLimitResponseDto {
+    return {
+      id: limit.id,
+      scope: CreditLimitScope.API_KEY,
+      apiKeyId: limit.apiKeyId,
       monthlyCredits: limit.monthlyCredits,
     };
   }
@@ -25,16 +44,40 @@ export class CreditLimitDtoMapper {
   toTeamDto(limit: TeamCreditLimit): TeamCreditLimitResponseDto {
     return {
       id: limit.id,
+      scope: CreditLimitScope.TEAM,
       teamId: limit.teamId,
       monthlyCredits: limit.monthlyCredits,
     };
   }
 
-  toUserItems(items: UserCreditLimitOverviewItem[]): UserCreditLimitItemDto[] {
+  toDefaultUserDto(
+    limit: DefaultUserCreditLimit | null,
+  ): DefaultUserCreditLimitResponseDto {
+    return {
+      scope: CreditLimitScope.USER_DEFAULT,
+      monthlyCredits: limit?.monthlyCredits ?? null,
+    };
+  }
+
+  toUserItems(
+    items: AdminUserCreditLimitOverviewItem[],
+  ): UserCreditLimitItemDto[] {
     return items.map((item) => ({ ...item }));
   }
 
-  toTeamItems(items: TeamCreditLimitOverviewItem[]): TeamCreditLimitItemDto[] {
+  toUserUsageItems(items: UserCreditUsageItem[]): UserCreditUsageItemDto[] {
+    return items.map((item) => ({ ...item }));
+  }
+
+  toApiKeyItems(
+    items: ApiKeyCreditLimitOverviewItem[],
+  ): ApiKeyCreditLimitItemDto[] {
+    return items.map((item) => ({ ...item }));
+  }
+
+  toTeamItems(
+    items: AdminTeamCreditLimitOverviewItem[],
+  ): TeamCreditLimitItemDto[] {
     return items.map((item) => ({ ...item }));
   }
 }

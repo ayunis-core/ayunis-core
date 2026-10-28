@@ -9,7 +9,7 @@ import type { Request } from 'express';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-audit.util';
-import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
+import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 
 @Injectable()
 export class SystemRolesGuard implements CanActivate {
@@ -31,11 +31,14 @@ export class SystemRolesGuard implements CanActivate {
       return true;
     }
 
-    this.logger.warn('Access denied: insufficient system role', {
-      ...buildAccessDeniedAuditContext(request, user),
-      userSystemRole: user?.systemRole,
-      requiredSystemRoles: requiredRoles,
-    });
+    this.logger.warn(
+      {
+        ...buildAccessDeniedAuditContext(request, user),
+        userSystemRole: user?.systemRole,
+        requiredSystemRoles: requiredRoles,
+      },
+      'Access denied: insufficient system role',
+    );
     return false;
   }
 }

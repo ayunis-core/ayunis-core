@@ -1,10 +1,11 @@
 import type { UUID } from 'crypto';
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum SubscriptionErrorCode {
   SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND',
   MULTIPLE_ACTIVE_SUBSCRIPTIONS = 'MULTIPLE_ACTIVE_SUBSCRIPTIONS',
+  SUBSCRIPTION_ACCESS_OVERLAP = 'SUBSCRIPTION_ACCESS_OVERLAP',
   SUBSCRIPTION_ALREADY_EXISTS = 'SUBSCRIPTION_ALREADY_EXISTS',
   SUBSCRIPTION_ALREADY_CANCELLED = 'SUBSCRIPTION_ALREADY_CANCELLED',
   SUBSCRIPTION_NOT_CANCELLED = 'SUBSCRIPTION_NOT_CANCELLED',
@@ -12,6 +13,7 @@ export enum SubscriptionErrorCode {
   TOO_MANY_USED_SEATS = 'TOO_MANY_USED_SEATS',
   INVALID_RENEWAL_CYCLE = 'INVALID_RENEWAL_CYCLE',
   UNAUTHORIZED_SUBSCRIPTION_ACCESS = 'UNAUTHORIZED_SUBSCRIPTION_ACCESS',
+  INVALID_SUBSCRIPTION_ACCESS_END = 'INVALID_SUBSCRIPTION_ACCESS_END',
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
   INVALID_SUBSCRIPTION_TYPE = 'INVALID_SUBSCRIPTION_TYPE',
   SUBSCRIPTION_EXPIRED = 'SUBSCRIPTION_EXPIRED',
@@ -53,8 +55,6 @@ export class SubscriptionNotFoundError extends SubscriptionError {
 
 /**
  * Error thrown when there are multiple active subscriptions for an organization
-/**
- * Error thrown when there are multiple active subscriptions for an organization
  */
 export class MultipleActiveSubscriptionsError extends SubscriptionError {
   constructor(orgId: UUID, metadata?: ErrorMetadata) {
@@ -73,6 +73,17 @@ export class MultipleActiveSubscriptionsError extends SubscriptionError {
 /**
  * Error thrown when a subscription already exists for an organization
  */
+export class SubscriptionAccessOverlapError extends SubscriptionError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Subscription access periods overlap for organization '${orgId}'`,
+      SubscriptionErrorCode.SUBSCRIPTION_ACCESS_OVERLAP,
+      409,
+      { orgId, ...metadata },
+    );
+  }
+}
+
 export class SubscriptionAlreadyExistsError extends SubscriptionError {
   constructor(orgId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -145,8 +156,6 @@ export class InsufficientSeatsError extends SubscriptionError {
 
 /**
  * Error thrown when there are too many used seats
-/**
- * Error thrown when there are too many used seats
  */
 export class TooManyUsedSeatsError extends SubscriptionError {
   constructor(metadata?: ErrorMetadata) {
@@ -212,12 +221,26 @@ export class InvalidSubscriptionDataError extends SubscriptionError {
  * Error thrown when an unexpected error occurs
  */
 export class UnexpectedSubscriptionError extends SubscriptionError {
-  constructor(reason?: string, metadata?: ErrorMetadata) {
+  // Accepts an Error so it can be used as the @HandleUnexpectedErrors boundary,
+  // which hands the decorator the raw cause.
+  constructor(reason?: string | Error, metadata?: ErrorMetadata) {
+    const detail = reason instanceof Error ? reason.message : reason;
     super(
-      `Unexpected error: ${reason ? `: ${reason}` : ''}`,
+      detail ? `Unexpected error: ${detail}` : 'Unexpected error',
       SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedSeatAdmissionError extends SubscriptionError {
+  constructor(error: Error) {
+    super(
+      'Unexpected error checking seat admission',
+      SubscriptionErrorCode.UNEXPECTED_ERROR,
+      500,
+      { error },
     );
   }
 }
@@ -278,6 +301,16 @@ export class CreditBudgetExceededError extends SubscriptionError {
       SubscriptionErrorCode.CREDIT_BUDGET_EXCEEDED,
       429,
       metadata,
+    );
+  }
+}
+
+export class InvalidSubscriptionAccessEndError extends SubscriptionError {
+  constructor() {
+    super(
+      'Access end must be after the subscription start',
+      SubscriptionErrorCode.INVALID_SUBSCRIPTION_ACCESS_END,
+      400,
     );
   }
 }

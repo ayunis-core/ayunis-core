@@ -20,23 +20,45 @@ export type {
 export type {
   FinishReason,
   ModelProvider,
+  ModelProviderErrorDetails,
   ProviderChunk,
+  ProviderFailureFacts,
+  ProviderFailureKind,
+  ProviderFailureStage,
+  ProviderRejectionReason,
   ProviderRequest,
+  ProviderTimeoutSource,
+  TokenEstimator,
   ToolCallDelta,
   ToolChoice,
+  ToolDescription,
   Usage,
 } from './contracts/provider';
+export { estimatedTokens, ModelProviderError } from './contracts/provider';
 export type {
   AfterModelCallContext,
+  AfterModelTurnContext,
   AfterToolCallContext,
   BeforeModelCallContext,
+  BeforeModelTurnContext,
   BeforeToolCallContext,
   Hook,
   HookApi,
+  HookControlApi,
+  ModelCallIdentity,
   ModelCallInterruptedContext,
   ModelCallInterruptionReason,
+  ModelCallOutcome,
+  ModelCallOutcomeSnapshot,
+  ModelCallRejectedReason,
+  ModelCallTrigger,
+  ModelTurnOutcome,
+  ModelTurnOutcomeSnapshot,
+  ReadonlySnapshot,
   RunEndContext,
   RunStartContext,
+  TerminalHookFailureMode,
+  ToolCallOutcome,
 } from './contracts/hook';
 export type {
   CustomEventInput,
@@ -44,11 +66,24 @@ export type {
   RunEventEnvelope,
   RunEventPayload,
   RunStatus,
+  TerminalModelCallInfo,
   ToolCallSnapshot,
   ToolCallSummary,
 } from './contracts/event';
-export type { ChildRunInput, RunInput } from './contracts/run-input';
-export { DEFAULT_MAX_ITERATIONS } from './contracts/run-input';
+export type {
+  ChildRunInput,
+  ResolvedRetryConfig,
+  RetryAfterConfig,
+  RetryAfterPrecedence,
+  RetryBackoffConfig,
+  RetryConfig,
+  RunInput,
+} from './contracts/run-input';
+export {
+  DEFAULT_MAX_ITERATIONS,
+  DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS,
+  DEFAULT_RETRY_CONFIG,
+} from './contracts/run-input';
 export {
   AgentRuntimeError,
   HookFailedError,
@@ -59,6 +94,7 @@ export {
   RepeatedToolFailureError,
   RunAbortedError,
 } from './contracts/errors';
+export { MAX_TOOL_RESULT_LENGTH } from './engine/tool-executor';
 export { ToolFailureBreaker } from './engine/tool-failure-breaker';
 export type {
   ToolOutcomeSample,

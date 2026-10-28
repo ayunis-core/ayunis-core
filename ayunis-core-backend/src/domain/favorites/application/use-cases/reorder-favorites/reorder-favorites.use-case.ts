@@ -1,0 +1,64 @@
+import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { Favorite } from 'src/domain/favorites/domain/favorite.entity';
+import { FavoritesRepository } from 'src/domain/favorites/application/ports/favorites-repository.port';
+import { UnexpectedFavoriteError } from 'src/domain/favorites/application/favorites.errors';
+import { ReorderFavoritesCommand } from './reorder-favorites.command';
+import { getRequiredUserContext } from 'src/common/context/required-context';
+
+@Injectable()
+export class ReorderFavoritesUseCase {
+  private readonly logger = new Logger(ReorderFavoritesUseCase.name);
+
+  constructor(
+    private readonly favoritesRepository: FavoritesRepository,
+    private readonly contextService: ContextService,
+  ) {}
+
+  @HandleUnexpectedErrors(UnexpectedFavoriteError)
+  async execute(command: ReorderFavoritesCommand): Promise<Favorite[]> {
+    this.logger.log(
+      {
+        count: command.favoriteIds.length,
+      },
+      'Reordering favorites',
+    );
+    const userId = this.requireUserId();
+    const current = await this.favoritesRepository.findAllByUserId(userId);
+    const currentById = new Map(
+      current.map((favorite) => [favorite.id, favorite]),
+    );
+    const requested = this.resolveRequested(command.favoriteIds, currentById);
+    const requestedIds = new Set(requested.map((favorite) => favorite.id));
+    const ordered = [
+      ...requested,
+      ...current.filter((favorite) => !requestedIds.has(favorite.id)),
+    ];
+
+    await this.favoritesRepository.reorder(
+      userId,
+      ordered.map((favorite) => favorite.id),
+    );
+    return ordered.map((favorite, position) => {
+      favorite.position = position;
+      return favorite;
+    });
+  }
+
+  private resolveRequested(
+    favoriteIds: UUID[],
+    currentById: Map<UUID, Favorite>,
+  ): Favorite[] {
+    return [...new Set(favoriteIds)].flatMap((id) => {
+      const favorite = currentById.get(id);
+      return favorite ? [favorite] : [];
+    });
+  }
+
+  private requireUserId(): UUID {
+    const { userId } = getRequiredUserContext(this.contextService);
+    return userId;
+  }
+}

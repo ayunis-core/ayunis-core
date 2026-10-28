@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 
 const sendEmailToolParameters = {
   type: 'object' as const,
@@ -27,7 +27,7 @@ const sendEmailToolParameters = {
 
 type SendEmailToolParameters = FromSchema<typeof sendEmailToolParameters>;
 
-export class SendEmailTool extends DisplayableTool {
+export class SendEmailTool extends Tool {
   constructor() {
     super({
       name: ToolType.SEND_EMAIL,

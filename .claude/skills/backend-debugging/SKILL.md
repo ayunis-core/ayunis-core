@@ -101,9 +101,4 @@ import { DataSource } from 'typeorm';
 2. Wait for `nest --watch` to reload (or check `./dev logs backend` for compilation errors)
 3. Re-run the curl command from Step 2
 4. Check `./dev logs backend` to confirm no new errors
-5. Run the validation sequence:
-
-```bash
-cd ayunis-core-backend
-pnpm run lint && pnpm exec tsc --noEmit && pnpm run test
-```
+5. Load `nestjs-hexagonal-backend` and run its validation sequence at the level required by the repository's Proportional Workflow.

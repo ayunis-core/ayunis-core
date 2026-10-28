@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PriceNotFoundError } from '../../subscription.errors';
+import { PriceNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 
 @Injectable()
 export class GetCurrentPriceUseCase {
   private readonly logger = new Logger(GetCurrentPriceUseCase.name);
+
   constructor(private readonly configService: ConfigService) {}
 
   execute(): number {

@@ -1,43 +1,64 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateKnowledgeBaseUseCase {
   private readonly logger = new Logger(CreateKnowledgeBaseUseCase.name);
 
   constructor(
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly repository: KnowledgeBaseRepository,
+    @Inject(forwardRef(() => AssertWorkspaceWriteAccessUseCase))
+    private readonly workspaceWriteAccess: AssertWorkspaceWriteAccessUseCase,
+    private readonly context: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
+  @Transactional()
   async execute(command: CreateKnowledgeBaseCommand): Promise<KnowledgeBase> {
-    this.logger.log('Creating knowledge base', {
-      name: command.name,
-      userId: command.userId,
-    });
+    this.logger.log(
+      { name: command.name, ownerType: command.owner.type },
+      'Creating knowledge base',
+    );
+    const { userId, orgId } = getRequiredUserContext(this.context);
 
-    try {
-      const knowledgeBase = new KnowledgeBase({
-        name: command.name,
-        description: command.description,
-        orgId: command.orgId,
-        userId: command.userId,
-      });
-
-      return await this.knowledgeBaseRepository.save(knowledgeBase);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError('Error creating knowledge base', {
-        error: error as Error,
+    if (command.owner.type === 'workspace') {
+      await this.workspaceWriteAccess.execute({
+        workspaceId: command.owner.workspaceId,
       });
     }
+
+    const params = {
+      name: command.name,
+      description: command.description,
+      orgId,
+    };
+    const knowledgeBase =
+      command.owner.type === 'workspace'
+        ? new WorkspaceKnowledgeBase({
+            ...params,
+            workspaceId: command.owner.workspaceId,
+          })
+        : new PersonalKnowledgeBase({ ...params, userId });
+
+    const created = await this.repository.save(knowledgeBase);
+    if (created instanceof WorkspaceKnowledgeBase) {
+      await this.repository.activateForWorkspace(
+        created.id,
+        created.workspaceId,
+      );
+    } else {
+      await this.repository.activate(created.id, userId);
+    }
+    return created;
   }
 }

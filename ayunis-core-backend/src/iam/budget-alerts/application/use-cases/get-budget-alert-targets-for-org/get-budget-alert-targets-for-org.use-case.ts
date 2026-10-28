@@ -11,9 +11,9 @@ import { GetUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/applic
 import { GetUserCreditLimitsOverviewQuery } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.query';
 import { GetTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewQuery } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.query';
-import { BudgetAlertScope } from '../../../domain/value-objects/budget-alert-scope.enum';
-import type { BudgetTarget } from '../../utils/budget-alert-crossing';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
+import type { BudgetTarget } from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 import { GetBudgetAlertTargetsForOrgQuery } from './get-budget-alert-targets-for-org.query';
 
 function currentMonthStartUtc(): Date {
@@ -42,7 +42,7 @@ export class GetBudgetAlertTargetsForOrgUseCase {
   async execute(
     query: GetBudgetAlertTargetsForOrgQuery,
   ): Promise<BudgetAlertTargets | null> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'execute');
 
     const { monthlyCredits, startsAt } =
       await this.getMonthlyCreditLimitUseCase.execute(

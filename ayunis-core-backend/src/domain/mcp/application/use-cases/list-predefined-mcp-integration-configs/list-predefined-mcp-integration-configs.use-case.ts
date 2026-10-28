@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
 import { PredefinedMcpIntegrationConfig } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 
 /**
  * Use case for listing all available predefined MCP integration configurations.
@@ -30,9 +30,12 @@ export class ListPredefinedMcpIntegrationConfigsUseCase {
       }
 
       // Log and wrap unexpected errors
-      this.logger.error('Unexpected error listing predefined configs', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing predefined configs',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

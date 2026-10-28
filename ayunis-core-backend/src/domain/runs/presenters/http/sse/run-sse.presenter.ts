@@ -1,10 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ApplicationError,
+  INTERNAL_SERVER_ERROR_MESSAGE,
+} from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
-import type { RunErrorResponseDto } from '../dto/run-response.dto';
-import { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
+import type { RunErrorResponseDto } from 'src/domain/runs/presenters/http/dto/run-response.dto';
+import { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
+import { markStreamingTransaction } from 'src/common/streaming/streaming-transaction.helper';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -61,6 +65,7 @@ export class RunSsePresenter {
   }
 
   private openConnection(response: Response): void {
+    markStreamingTransaction();
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
@@ -106,15 +111,18 @@ export class RunSsePresenter {
     // Object wrapper so TS recognises async mutation from the handlers
     const state: ConnectionState = { disconnected: false };
     const disconnectHandler = () => {
-      this.logger.log('Client disconnected from SSE stream', { threadId });
+      this.logger.log({ threadId }, 'Client disconnected from SSE stream');
       state.disconnected = true;
       abortController.abort();
     };
     const errorHandler = (err: Error) => {
-      this.logger.warn('SSE response stream error', {
-        threadId,
-        error: err.message,
-      });
+      this.logger.warn(
+        {
+          threadId,
+          error: err.message,
+        },
+        'SSE response stream error',
+      );
       state.disconnected = true;
       abortController.abort(err);
     };
@@ -161,10 +169,13 @@ export class RunSsePresenter {
       } catch (err) {
         state.disconnected = true;
         abortController.abort(err);
-        this.logger.warn('SSE heartbeat write failed', {
-          threadId,
-          error: err instanceof Error ? err.message : String(err),
-        });
+        this.logger.warn(
+          {
+            threadId,
+            error: err instanceof Error ? err.message : String(err),
+          },
+          'SSE heartbeat write failed',
+        );
       }
     }, HEARTBEAT_INTERVAL_MS);
   }
@@ -178,31 +189,35 @@ export class RunSsePresenter {
     threadId: UUID,
     error: unknown,
   ): void {
-    this.logger.error('Error in run event stream', error);
+    this.logger.error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Error in run event stream',
+    );
 
-    // Preserve error code and metadata from domain errors (e.g.
-    // RUN_NO_MODEL_FOUND, retryAfterSeconds on QUOTA_EXCEEDED). Stack traces
-    // stay in logs and Sentry, never in client responses.
+    const clientError =
+      error instanceof ApplicationError ? error.toClientResponse() : undefined;
     const errorResponse: RunErrorResponseDto = {
       type: 'error',
-      message:
-        error instanceof Error
-          ? error.message
-          : 'An error occurred while executing the run',
+      message: clientError?.message ?? INTERNAL_SERVER_ERROR_MESSAGE,
       threadId,
       timestamp: new Date().toISOString(),
-      code: error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR',
-      details: error instanceof ApplicationError ? error.metadata : undefined,
+      code: clientError?.code ?? 'EXECUTION_ERROR',
+      details: clientError?.metadata,
     };
 
     try {
       this.writeEvent(response, 'execution-error', errorResponse);
     } catch (writeError) {
-      this.logger.warn('Failed to write SSE error event', {
-        threadId,
-        error:
-          writeError instanceof Error ? writeError.message : String(writeError),
-      });
+      this.logger.warn(
+        {
+          threadId,
+          error:
+            writeError instanceof Error
+              ? writeError.message
+              : String(writeError),
+        },
+        'Failed to write SSE error event',
+      );
     }
   }
 }

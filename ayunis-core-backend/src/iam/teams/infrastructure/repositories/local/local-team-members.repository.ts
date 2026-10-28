@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TeamMemberRecord } from './schema/team-member.record';
-import { TeamMemberMapper } from './mappers/team-member.mapper';
+import { EntityManager, Repository } from 'typeorm';
+import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
+import { TeamMemberMapper } from 'src/iam/teams/infrastructure/repositories/local/mappers/team-member.mapper';
 import { UUID } from 'crypto';
 import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
 
@@ -13,20 +14,27 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   private readonly logger = new Logger(LocalTeamMembersRepository.name);
 
   constructor(
-    @InjectRepository(TeamMemberRecord)
-    private readonly teamMemberRepository: Repository<TeamMemberRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
     this.logger.log('constructor');
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get teamMembers(): Repository<TeamMemberRecord> {
+    return this.getManager().getRepository(TeamMemberRecord);
   }
 
   async findByTeamId(
     teamId: UUID,
     pagination: PaginatedQueryParams,
   ): Promise<Paginated<TeamMember>> {
-    this.logger.log('findByTeamId', { teamId, pagination });
+    this.logger.log({ teamId, pagination }, 'findByTeamId');
 
-    const [records, total] = await this.teamMemberRepository.findAndCount({
+    const [records, total] = await this.teamMembers.findAndCount({
       where: { teamId },
       relations: ['user'],
       order: { createdAt: 'DESC' },
@@ -34,10 +42,13 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
       take: pagination.limit,
     });
 
-    this.logger.debug('Team members found', {
-      teamId,
-      count: records.length,
-    });
+    this.logger.debug(
+      {
+        teamId,
+        count: records.length,
+      },
+      'Team members found',
+    );
 
     return new Paginated({
       data: records.map((record) => TeamMemberMapper.toDomain(record)),
@@ -51,84 +62,140 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     teamId: UUID,
     userId: UUID,
   ): Promise<TeamMember | null> {
-    this.logger.log('findByTeamIdAndUserId', { teamId, userId });
+    this.logger.log({ teamId, userId }, 'findByTeamIdAndUserId');
 
-    const record = await this.teamMemberRepository.findOne({
+    const record = await this.teamMembers.findOne({
       where: { teamId, userId },
       relations: ['user'],
     });
 
     if (!record) {
-      this.logger.debug('Team member not found', { teamId, userId });
+      this.logger.debug({ teamId, userId }, 'Team member not found');
       return null;
     }
 
-    this.logger.debug('Team member found', { teamId, userId });
+    this.logger.debug({ teamId, userId }, 'Team member found');
     return TeamMemberMapper.toDomain(record);
   }
 
   async create(teamMember: TeamMember): Promise<TeamMember> {
-    this.logger.log('create', {
-      id: teamMember.id,
-      teamId: teamMember.teamId,
-      userId: teamMember.userId,
-    });
+    this.logger.log(
+      {
+        id: teamMember.id,
+        teamId: teamMember.teamId,
+        userId: teamMember.userId,
+      },
+      'create',
+    );
 
     const record = TeamMemberMapper.toRecord(teamMember);
-    const savedRecord = await this.teamMemberRepository.save(record);
+    const savedRecord = await this.teamMembers.save(record);
 
     // Reload with user relation
-    const reloadedRecord = await this.teamMemberRepository.findOne({
+    const reloadedRecord = await this.teamMembers.findOne({
       where: { id: savedRecord.id },
       relations: ['user'],
     });
 
-    this.logger.debug('Team member created successfully', {
-      id: savedRecord.id,
-    });
+    this.logger.debug(
+      {
+        id: savedRecord.id,
+      },
+      'Team member created successfully',
+    );
 
     return TeamMemberMapper.toDomain(reloadedRecord!);
   }
 
-  async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+  async createMany(teamMembers: TeamMember[]): Promise<void> {
+    if (teamMembers.length === 0) return;
+    const records = teamMembers.map((member) =>
+      TeamMemberMapper.toRecord(member),
+    );
+    await this.teamMembers
+      .createQueryBuilder()
+      .insert()
+      .into(TeamMemberRecord)
+      .values(records)
+      .orIgnore()
+      .execute();
+  }
 
-    await this.teamMemberRepository.delete(id);
-    this.logger.debug('Team member deleted successfully', { id });
+  async delete(id: UUID): Promise<void> {
+    this.logger.log({ id }, 'delete');
+
+    await this.teamMembers.delete(id);
+    this.logger.debug({ id }, 'Team member deleted successfully');
   }
 
   async deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('deleteByTeamIdAndUserId', { teamId, userId });
+    this.logger.log({ teamId, userId }, 'deleteByTeamIdAndUserId');
 
-    await this.teamMemberRepository.delete({ teamId, userId });
-    this.logger.debug('Team member deleted successfully', { teamId, userId });
+    await this.teamMembers.delete({ teamId, userId });
+    this.logger.debug({ teamId, userId }, 'Team member deleted successfully');
   }
 
   async findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]> {
-    this.logger.log('findAllUserIdsByTeamId', { teamId });
+    this.logger.log({ teamId }, 'findAllUserIdsByTeamId');
 
-    const records = await this.teamMemberRepository.find({
+    const records = await this.teamMembers.find({
       where: { teamId },
       select: ['userId'],
     });
 
-    this.logger.debug('All team member user IDs found', {
-      teamId,
-      count: records.length,
-    });
+    this.logger.debug(
+      {
+        teamId,
+        count: records.length,
+      },
+      'All team member user IDs found',
+    );
 
     return records.map((record) => record.userId);
   }
 
+  async findAllUserIdsByTeamIds(
+    organizationId: UUID,
+    teamIds: UUID[],
+  ): Promise<Map<UUID, UUID[]>> {
+    this.logger.log(
+      { organizationId, count: teamIds.length },
+      'findAllUserIdsByTeamIds',
+    );
+
+    if (teamIds.length === 0) {
+      return new Map();
+    }
+    const userIdsByTeam = new Map<UUID, UUID[]>(
+      teamIds.map((teamId) => [teamId, []]),
+    );
+
+    const rows = await this.teamMembers
+      .createQueryBuilder('tm')
+      .select('tm.team_id', 'teamId')
+      .addSelect('ARRAY_AGG(tm.user_id)', 'userIds')
+      .innerJoin('tm.team', 'team')
+      .where('team.org_id = :organizationId', { organizationId })
+      .andWhere('tm.team_id IN (:...teamIds)', { teamIds })
+      .groupBy('tm.team_id')
+      .getRawMany<{ teamId: UUID; userIds: UUID[] }>();
+
+    for (const { teamId, userIds } of rows) {
+      userIdsByTeam.set(teamId, userIds);
+    }
+
+    return userIdsByTeam;
+  }
+
   async countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>> {
-    this.logger.log('countByTeamIds', { count: teamIds.length });
+    this.logger.log({ count: teamIds.length }, 'countByTeamIds');
 
     const counts = new Map<UUID, number>(teamIds.map((id) => [id, 0]));
     if (teamIds.length === 0) {
       return counts;
     }
 
-    const rows = await this.teamMemberRepository
+    const rows = await this.teamMembers
       .createQueryBuilder('tm')
       .select('tm.team_id', 'teamId')
       .addSelect('COUNT(*)', 'count')

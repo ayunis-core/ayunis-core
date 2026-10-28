@@ -1,19 +1,14 @@
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Trash2 } from 'lucide-react';
-import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
+import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
 import { PermissionGate } from '@/features/permissions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import type { KnowledgeBase } from '../model/openapi';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from '@ayunis/ui/components/item';
+import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
+import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
 
 interface KnowledgeBaseCardProps {
   knowledgeBase: KnowledgeBase;
@@ -45,50 +40,51 @@ export default function KnowledgeBaseCard({
   const isShared = knowledgeBase.isShared;
 
   return (
-    <Item
-      variant="outline"
-      className="cursor-pointer"
+    <KnowledgeBaseListItem
+      testId={`knowledge-base-card-${knowledgeBase.id}`}
+      title={
+        <>
+          <span>{knowledgeBase.name}</span>
+          {isShared && (
+            <Badge
+              variant="secondary"
+              className="ml-2 text-xs"
+              data-testid={`knowledge-base-shared-badge-${knowledgeBase.id}`}
+            >
+              {t('shared.badge')}
+            </Badge>
+          )}
+        </>
+      }
+      description={knowledgeBase.description}
       onClick={() =>
         void router.navigate({
           to: '/knowledge-bases/$id',
           params: { id: knowledgeBase.id },
         })
       }
-    >
-      <ItemContent>
-        <ItemTitle>
-          <span>{knowledgeBase.name}</span>
-          {isShared && (
-            <Badge variant="secondary" className="ml-2 text-xs">
-              {t('shared.badge')}
-            </Badge>
+      actions={
+        <>
+          <KnowledgeBaseActivationToggle
+            knowledgeBaseId={knowledgeBase.id}
+            isActive={knowledgeBase.isActive}
+            testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
+          />
+          {!isShared && (
+            <PermissionGate permission="manage_knowledge_bases">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive"
+                onClick={handleDelete}
+                disabled={deleteKnowledgeBase.isPending}
+              >
+                <Trash2 />
+              </Button>
+            </PermissionGate>
           )}
-        </ItemTitle>
-        {knowledgeBase.description && (
-          <ItemDescription>{knowledgeBase.description}</ItemDescription>
-        )}
-      </ItemContent>
-      {/* The gate wraps ItemActions rather than the button: delete is the only
-          action here, so gating inside would leave an empty flex sibling and a
-          trailing gap that shared cards don't have. */}
-      {!isShared && (
-        <PermissionGate permission="manage_knowledge_bases">
-          <ItemActions>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              disabled={deleteKnowledgeBase.isPending}
-            >
-              <Trash2 />
-            </Button>
-          </ItemActions>
-        </PermissionGate>
-      )}
-    </Item>
+        </>
+      }
+    />
   );
 }

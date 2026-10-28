@@ -1,9 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
-import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
-import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from '../use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
-import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
+import { RemoveSkillSourcesFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
+import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';

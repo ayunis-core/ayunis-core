@@ -26,10 +26,18 @@ import { Trash2 } from 'lucide-react';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
-import KnowledgeBasePropertiesCard from './KnowledgeBasePropertiesCard';
+import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
+import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  knowledgeBasesControllerUpdate,
+  getKnowledgeBasesControllerFindAllQueryKey,
+  getKnowledgeBasesControllerFindOneQueryKey,
+} from '@/shared/api/generated/ayunisCoreAPI';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 export function KnowledgeBasePage({
   knowledgeBase,
@@ -44,6 +52,8 @@ export function KnowledgeBasePage({
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const navigate = useNavigate();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { id } = useParams({
     from: '/_authenticated/knowledge-bases/$id',
   });
@@ -86,8 +96,24 @@ export function KnowledgeBasePage({
   const configContent = (
     <div className="grid gap-4">
       <KnowledgeBasePropertiesCard
-        knowledgeBase={knowledgeBase}
+        key={knowledgeBase.id}
+        knowledgeBase={{
+          name: knowledgeBase.name,
+          description: knowledgeBase.description,
+        }}
         disabled={isReadOnly || !canManageKb}
+        onUpdate={async (data) => {
+          await knowledgeBasesControllerUpdate(knowledgeBase.id, data);
+          await Promise.all(
+            [
+              getKnowledgeBasesControllerFindAllQueryKey(
+                personalKnowledgeBaseListParams,
+              ),
+              getKnowledgeBasesControllerFindOneQueryKey(knowledgeBase.id),
+            ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+          );
+          await router.invalidate();
+        }}
       />
       <OnboardingTourTarget name={TOUR_TARGET.addDocuments}>
         <KnowledgeBaseDocumentsCard
@@ -113,23 +139,30 @@ export function KnowledgeBasePage({
               ) : undefined
             }
             action={
-              !isReadOnly && canManageKb ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={handleDelete}
-                      disabled={deleteKnowledgeBase.isPending}
-                      aria-label={t('detail.deleteLabel')}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
-                </Tooltip>
-              ) : undefined
+              <>
+                <KnowledgeBaseActivationToggle
+                  knowledgeBaseId={knowledgeBase.id}
+                  isActive={knowledgeBase.isActive}
+                  testId="knowledge-base-detail-active-toggle"
+                />
+                {!isReadOnly && canManageKb && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={handleDelete}
+                        disabled={deleteKnowledgeBase.isPending}
+                        aria-label={t('detail.deleteLabel')}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>
+                  </Tooltip>
+                )}
+              </>
             }
           />
         }

@@ -8,68 +8,73 @@
   },
   "placeholder": {
     "title": "Ayunis Core Academy freischalten",
-    "description": "Das Academy-Add-on ist für Ihre Organisation noch nicht aktiviert. Erfahren Sie, wie der KI-Führerschein Ihr Team sicher mit Ayunis Core arbeiten lässt.",
+    "description": "Das Academy-Add-on ist für Ihre Organisation noch nicht aktiviert. Erfahren Sie, wie die KI-Schulung nach EU AI Act Ihr Team auf den sicheren Umgang mit Ayunis Core vorbereitet.",
     "cta": "Academy entdecken"
   },
   "detail": {
     "letsGo": "Los geht's!",
     "previous": "Zurück",
     "next": "Weiter",
-    "finish": "Abschließen",
-    "startQuiz": "Quiz starten",
+    "openConfirmation": "Kapitel abschließen",
     "modulesTitle": "Module",
     "noModules": {
       "title": "Noch keine Module",
       "description": "Dieses Kapitel enthält noch keine Module."
     }
   },
-  "quiz": {
-    "title": "Quiz",
-    "questionCounter": "Frage {{current}} von {{total}}",
-    "submit": "Antworten absenden",
-    "answerAll": "Beantworten Sie alle Fragen, um abzusenden",
-    "retry": "Erneut versuchen",
-    "backToAcademy": "Zurück zur Academy",
-    "passed": {
-      "title": "Kapitel bestanden!"
-    },
-    "failed": {
-      "title": "Noch nicht ganz"
-    },
-    "result": {
-      "score": "Sie haben {{correct}} von {{total}} richtig ({{score}} %)",
-      "required": "Sie brauchen {{required}} richtige Antworten zum Bestehen."
-    },
-    "completed": {
-      "title": "Academy abgeschlossen!",
-      "description": "Sie haben jedes Kapitel bestanden. Glückwunsch!"
-    },
+  "confirmation": {
+    "title": "Kapitel abschließen",
+    "description": "Bestätigen Sie, dass Sie alle Videos dieses Kapitels angesehen haben.",
+    "watchedVideos": "Ich habe die Videos angesehen",
+    "completeChapter": "Kapitel abschließen",
+    "minimumTime": "Jede Videoseite dieses Kapitels muss mindestens {{seconds}} Sekunden geöffnet sein. Noch nicht erreicht:",
     "errors": {
-      "loadFailed": "Das Quiz konnte nicht geladen werden.",
-      "loadFailedDescription": "Bitte versuchen Sie es erneut.",
-      "notAvailable": "Dieses Quiz ist nicht verfügbar.",
-      "notAvailableDescription": "Dieses Kapitel hat derzeit kein Quiz.",
-      "invalidSubmission": "Ihre Eingabe war ungültig. Bitte versuchen Sie es erneut.",
-      "submitFailed": "Ihre Antworten konnten nicht gesendet werden. Bitte versuchen Sie es erneut."
+      "chapterNotFound": "Das Kapitel wurde nicht gefunden.",
+      "submitFailed": "Das Kapitel konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "modulesBelowMinimumTime": "Nicht alle Videoseiten dieses Kapitels waren lange genug geöffnet."
     }
   },
   "progress": {
-    "passed": "Bestanden",
+    "confirmed": "Abgeschlossen",
     "completed": {
       "title": "Academy abgeschlossen!",
-      "description": "Sie haben jedes Kapitel bestanden."
+      "description": "Sie haben alle Kapitel abgeschlossen."
     },
     "renewalDue": "Erneuerung fällig"
   },
-  "certificate": {
-    "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
-    "download": "Zertifikat herunterladen"
+  "participationConfirmation": {
+    "downloadError": "Die Teilnahmebestätigung konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
+    "download": "Teilnahmebestätigung herunterladen"
+  },
+  "expiry": {
+    "title_one": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tag erneuert werden",
+    "title_other": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tagen erneuert werden",
+    "description": "Erneuern Sie sie in der Academy, um den Ayunis Core Chat ohne Unterbrechung weiter zu nutzen.",
+    "urgentDescription": "Wiederholen Sie die Schulung jetzt — nach Ablauf der Frist ist der Ayunis Core Chat gesperrt, bis Sie die KI-Schulung nach EU AI Act erneut abgeschlossen haben.",
+    "banner_one": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tag erneuert werden. Danach ist der Chat gesperrt.",
+    "banner_other": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tagen erneuert werden. Danach ist der Chat gesperrt.",
+    "later": "Später",
+    "action": "Zur Academy"
+  },
+  "account": {
+    "title": "KI-Schulung nach EU AI Act",
+    "lastPassed": "Zuletzt abgeschlossen:",
+    "nextRenewal": "Nächste Erneuerung fällig:",
+    "expiredOn": "Abgelaufen am:",
+    "notPassedDescription": "Sie haben die KI-Schulung nach EU AI Act noch nicht abgeschlossen.",
+    "action": "Zur Academy",
+    "status": {
+      "valid": "Gültig",
+      "expiringSoon": "Läuft bald ab",
+      "expired": "Abgelaufen",
+      "notPassed": "Noch nicht abgeschlossen"
+    }
   },
   "gate": {
-    "title": "Zertifikat erforderlich",
-    "description": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um ihn freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",
+    "title": "KI-Schulung erforderlich",
+    "description": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um den Chat freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",
     "action": "Zur Academy",
     "emptyTitle": "Noch keine Academy-Inhalte",
-    "emptyDescription": "Der Chat ist gesperrt, bis Sie das Zertifikat bestanden haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."
+    "emptyDescription": "Der Chat ist gesperrt, bis Sie die KI-Schulung abgeschlossen haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."
   }
 }

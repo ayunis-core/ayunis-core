@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedModelsUseCase {
@@ -16,23 +16,27 @@ export class GetPermittedModelsUseCase {
   ) {}
 
   async execute(query: GetPermittedModelsQuery): Promise<PermittedModel[]> {
-    this.logger.debug('Getting permitted models', {
-      orgId: query.orgId,
-      filter: query.filter,
-    });
+    this.logger.debug(
+      {
+        orgId: query.orgId,
+        filter: query.filter,
+      },
+      'Getting permitted models',
+    );
     try {
       const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
       const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
+      if (!isFromOrg && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       return this.permittedModelsRepository.findAll(query.orgId, query.filter);
     } catch (error) {
-      this.logger.error('Error getting permitted models', {
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      this.logger.error(
+        {
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Error getting permitted models',
+      );
       throw error;
     }
   }

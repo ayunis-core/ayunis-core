@@ -3,12 +3,12 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Post,
   Get,
   Req,
   Res,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,7 +20,7 @@ import {
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
-import { LocalAuthGuard } from '../../application/guards/local-auth.guard';
+import { LocalAuthGuard } from 'src/iam/authentication/application/guards/local-auth.guard';
 import { Public } from 'src/common/guards/public.guard';
 import { RegisterDto } from './dtos/register.dto';
 import { LoginDto } from './dtos/login.dto';
@@ -32,48 +32,51 @@ import {
 } from './dtos/auth-response.dto';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   setCookies,
   clearCookies,
+  getAccessTokenCookieName,
   setMfaPendingCookie,
 } from 'src/common/util/cookie.util';
-import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
-import { CheckMfaLoginRequirementQuery } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.query';
-import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
+import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
+import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 
-// Import use cases
-import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
-import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
-import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
-import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
-import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
-import { LoginCommand } from '../../application/use-cases/login/login.command';
-import { RefreshTokenCommand } from '../../application/use-cases/refresh-token/refresh-token.command';
-import { RegisterUserCommand } from '../../application/use-cases/register-user/register-user.command';
-import { GetCurrentUserCommand } from '../../application/use-cases/get-current-user/get-current-user.command';
+const LOGIN_BODY_DESCRIPTION = 'User credentials for authentication';
+
+import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
+import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
+import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
+import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
+import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
+import { RegisterUserCommand } from 'src/iam/authentication/application/use-cases/register-user/register-user.command';
+import { GetCurrentUserCommand } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.command';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
   private readonly logger = new Logger(AuthenticationController.name);
+
+  // NestJS injects these use cases and adapters through the controller constructor.
+  // eslint-disable-next-line max-params
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
-    private readonly revokeSessionFamilyUseCase: RevokeSessionFamilyUseCase,
-    private readonly checkMfaLoginRequirementUseCase: CheckMfaLoginRequirementUseCase,
-    private readonly mfaPendingJwtService: MfaPendingJwtService,
+    private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
     private readonly configService: ConfigService,
     private readonly meResponseDtoMapper: MeResponseDtoMapper,
   ) {}
 
   @Public()
-  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 }) // 10 login attempts per 15 minutes
+  // Must stay above DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS so the per-account
+  // lockout fires before this per-IP limit masks it with a 429.
+  @RateLimit({ limit: 20, windowMs: 15 * 60 * 1000 })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -82,10 +85,7 @@ export class AuthenticationController {
     description:
       'Authenticate user with email and password. Sets authentication cookies on successful login.',
   })
-  @ApiBody({
-    type: LoginDto,
-    description: 'User credentials for authentication',
-  })
+  @ApiBody({ type: LoginDto, description: LOGIN_BODY_DESCRIPTION })
   @ApiResponse({
     status: HttpStatus.OK,
     description:
@@ -105,16 +105,20 @@ export class AuthenticationController {
     this.logger.log('login');
     const user = req.user as ActiveUser;
 
-    const mfaRequirement = await this.checkMfaLoginRequirementUseCase.execute(
-      new CheckMfaLoginRequirementQuery(user.id, user.orgId),
+    const result = await this.startAuthenticatedSession.execute(
+      new StartAuthenticatedSessionCommand(
+        user,
+        SessionAuthenticationMethod.PASSWORD,
+      ),
     );
-
-    if (mfaRequirement !== 'none') {
-      return this.respondMfaPending(res, user, mfaRequirement === 'enroll');
+    if (result.status === 'mfa_required') {
+      return this.respondMfaPending(
+        res,
+        result.mfaPendingToken,
+        result.enrollmentRequired,
+      );
     }
-
-    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
-    setCookies(res, tokens, this.configService, true);
+    setCookies(res, result.tokens, this.configService, true);
     return res.json({
       success: true,
       mfaRequired: false,
@@ -128,13 +132,9 @@ export class AuthenticationController {
    */
   private respondMfaPending(
     res: Response,
-    user: ActiveUser,
+    pendingToken: string,
     enrollmentRequired: boolean,
   ) {
-    const pendingToken = this.mfaPendingJwtService.generate({
-      userId: user.id,
-      enrollmentRequired,
-    });
     setMfaPendingCookie(res, pendingToken, this.configService);
     return res.json({
       success: true,
@@ -182,7 +182,9 @@ export class AuthenticationController {
         department: body.department,
       }),
     );
-    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
+    const tokens = await this.loginUseCase.execute(
+      new LoginCommand(user, SessionAuthenticationMethod.PASSWORD),
+    );
     setCookies(res, tokens, this.configService, true);
 
     return res.json({ success: true });
@@ -253,7 +255,10 @@ export class AuthenticationController {
       // Any refresh failure (expired, reuse/theft, unknown) leaves the browser
       // holding a useless refresh cookie — clear it so the client logs out
       // cleanly instead of retrying a doomed token.
-      this.logger.warn('Refresh failed; clearing cookies', error);
+      this.logger.warn(
+        { err: error as Error },
+        'Refresh failed; clearing cookies',
+      );
       clearCookies(res, this.configService);
       return res
         .status(HttpStatus.UNAUTHORIZED)
@@ -285,9 +290,7 @@ export class AuthenticationController {
   async me(@Req() req: Request, @Res() res: Response) {
     this.logger.log('me');
 
-    const accessTokenName = this.configService.get<string>(
-      'auth.cookie.accessTokenName',
-    );
+    const accessTokenName = getAccessTokenCookieName(this.configService);
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
@@ -330,7 +333,10 @@ export class AuthenticationController {
         new GetCurrentUserCommand(accessToken),
       );
     } catch (error) {
-      this.logger.debug('Access token verification failed', error);
+      this.logger.debug(
+        { err: error as Error },
+        'Access token verification failed',
+      );
       return null;
     }
   }
@@ -354,7 +360,10 @@ export class AuthenticationController {
       );
       return res.json(this.meResponseDtoMapper.toDto(user));
     } catch (error) {
-      this.logger.error('Token refresh failed during me request', error);
+      this.logger.error(
+        { err: error as Error },
+        'Token refresh failed during me request',
+      );
       // Clear the now-useless refresh cookie so the client logs out cleanly.
       clearCookies(res, this.configService);
       return res.status(HttpStatus.UNAUTHORIZED).json({
@@ -362,37 +371,5 @@ export class AuthenticationController {
         message: 'Not authenticated',
       });
     }
-  }
-
-  @Public()
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'User logout',
-    description: 'Log out the current user by clearing authentication cookies.',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Logout successful. Authentication cookies are cleared.',
-    type: SuccessResponseDto,
-  })
-  async logout(@Req() req: Request, @Res() res: Response) {
-    const refreshTokenName = this.configService.get<string>(
-      'auth.cookie.refreshTokenName',
-      'refresh_token',
-    );
-    const cookies = req.cookies as Record<string, string>;
-    const refreshToken = cookies[refreshTokenName];
-
-    if (refreshToken) {
-      // Revoke the whole family so the session cannot be resurrected via a
-      // still-live refresh token on another device sharing this login.
-      await this.revokeSessionFamilyUseCase.execute(
-        new RevokeSessionFamilyCommand(refreshToken),
-      );
-    }
-
-    clearCookies(res, this.configService);
-    return res.json({ success: true });
   }
 }

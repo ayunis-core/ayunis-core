@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { GetTeamPermittedModelsQuery } from './get-team-permitted-models.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedModelError } from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 @Injectable()
 export class GetTeamPermittedModelsUseCase {
@@ -18,10 +18,13 @@ export class GetTeamPermittedModelsUseCase {
   async execute(
     query: GetTeamPermittedModelsQuery,
   ): Promise<PermittedLanguageModel[]> {
-    this.logger.log('execute', {
-      teamId: query.teamId,
-      orgId: query.orgId,
-    });
+    this.logger.log(
+      {
+        teamId: query.teamId,
+        orgId: query.orgId,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(query.orgId);
@@ -35,7 +38,7 @@ export class GetTeamPermittedModelsUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error listing team permitted models', error);
+      this.logger.error({ err: error }, 'Error listing team permitted models');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

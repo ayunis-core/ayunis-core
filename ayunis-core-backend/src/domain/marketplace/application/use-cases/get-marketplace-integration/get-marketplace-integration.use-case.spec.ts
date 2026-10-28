@@ -1,11 +1,12 @@
 import { GetMarketplaceIntegrationUseCase } from './get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
-import type { MarketplaceClient } from '../../ports/marketplace-client.port';
+import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import {
   MarketplaceIntegrationNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { createMockMarketplaceClient } from 'src/domain/marketplace/application/testing/marketplace.fixtures';
 
 describe('GetMarketplaceIntegrationUseCase', () => {
   let useCase: GetMarketplaceIntegrationUseCase;
@@ -48,11 +49,7 @@ describe('GetMarketplaceIntegrationUseCase', () => {
   };
 
   beforeEach(() => {
-    marketplaceClient = {
-      getSkillByIdentifier: jest.fn(),
-      getPreInstalledSkills: jest.fn(),
-      getIntegrationByIdentifier: jest.fn(),
-    };
+    marketplaceClient = createMockMarketplaceClient();
 
     useCase = new GetMarketplaceIntegrationUseCase(marketplaceClient);
   });

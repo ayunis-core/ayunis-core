@@ -1,16 +1,13 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import * as fs from 'fs';
-import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   detectFileType,
   getCanonicalMimeType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
+  isDocumentSourceFile,
   isSpreadsheetFile,
   isCSVFile,
   SUPPORTED_FILE_TYPES,
@@ -26,17 +23,19 @@ import { StartDataSourceProcessingCommand } from 'src/domain/sources/application
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
-import { Skill } from '../../../domain/skill.entity';
-import { SkillRepository } from '../../ports/skill.repository';
+
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import {
   SkillNotFoundError,
   UnsupportedFileTypeError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { assertSkillHasSourceCapacity } from '../../util/skill-source-capacity';
-import { AddSourceToSkillUseCase } from '../add-source-to-skill/add-source-to-skill.use-case';
-import { AddSourceToSkillCommand } from '../add-source-to-skill/add-source-to-skill.command';
+} from 'src/domain/skills/application/skills.errors';
+import { assertSkillHasSourceCapacity } from 'src/domain/skills/application/util/skill-source-capacity';
+import { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
+import { AddSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.command';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddFileSourceToSkillUseCase {
@@ -49,61 +48,46 @@ export class AddFileSourceToSkillUseCase {
     private readonly startDataSourceProcessingUseCase: StartDataSourceProcessingUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: AddFileSourceToSkillCommand): Promise<Skill> {
-    this.logger.log('addFileSourceToSkill', {
-      skillId: command.skillId,
-      fileName: command.file.originalname,
-    });
-
-    const detectedType = detectFileType(
-      command.file.mimetype,
-      command.file.originalname,
+    this.logger.log(
+      { skillId: command.skillId, fileName: command.file.originalname },
+      'addFileSourceToSkill',
     );
+    const skill = await this.skillRepository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    return this.processFile(skill, command.file);
+  }
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    // Processing uploads to object storage and enqueues a job, neither of
-    // which the attach below can undo cheaply — so ownership and the cap are
-    // checked first. AddSourceToSkillUseCase re-checks both against a freshly
-    // loaded skill and stays authoritative for concurrent adds.
-    const skill = await this.skillRepository.findOne(command.skillId, userId);
-    if (!skill) {
-      throw new SkillNotFoundError(command.skillId);
-    }
+  private async processFile(
+    skill: Skill,
+    file: UploadedFileRef,
+  ): Promise<Skill> {
+    const detectedType = detectFileType(file.mimetype, file.originalname);
     assertSkillHasSourceCapacity(skill.sourceIds);
 
-    if (
-      isDocumentFile(detectedType) ||
-      isPlainTextFile(detectedType) ||
-      isAudioFile(detectedType)
-    ) {
-      return this.addDocumentSource(
-        command.skillId,
-        command.file,
-        detectedType,
-      );
+    if (isDocumentSourceFile(detectedType)) {
+      return this.addDocumentSource(skill, file, detectedType);
     }
     if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {
       return this.addDataSources(
         skill,
-        command.file,
+        file,
         isCSVFile(detectedType) ? 'csv' : 'spreadsheet',
       );
     }
     throw new UnsupportedFileTypeError(
-      detectedType === 'unknown' ? command.file.originalname : detectedType,
+      detectedType === 'unknown' ? file.originalname : detectedType,
       SUPPORTED_FILE_TYPES,
     );
   }
 
   private async addDocumentSource(
-    skillId: UUID,
+    skill: Skill,
     file: UploadedFileRef,
     detectedType: DetectedFileType,
   ): Promise<Skill> {
@@ -118,7 +102,7 @@ export class AddFileSourceToSkillUseCase {
         fileType: canonicalMimeType,
       }),
     );
-    return this.attachOrCompensate(skillId, [source]);
+    return this.attachOrCompensate(skill, [source]);
   }
 
   private async addDataSources(
@@ -138,49 +122,55 @@ export class AddFileSourceToSkillUseCase {
           assertSkillHasSourceCapacity(skill.sourceIds, sourceCount),
       }),
     );
-    return this.attachOrCompensate(skill.id, sources);
+    return this.attachOrCompensate(skill, sources);
   }
 
   // Processing has already started when attaching fails, so the pre-created
   // sources must be deleted or they survive as untracked orphans.
   private async attachOrCompensate(
-    skillId: UUID,
+    skill: Skill,
     sources: Source[],
   ): Promise<Skill> {
     try {
-      return await this.attachSources(skillId, sources);
+      return await this.attachSources(skill, sources);
     } catch (error) {
       try {
-        const orgId = this.contextService.get('orgId');
-        if (!orgId) throw new UnauthorizedAccessError();
-        await this.deleteSourcesUseCase.execute(
-          new DeleteSourcesCommand(
-            sources.map((source) => source.id),
-            orgId,
-          ),
-        );
+        await this.deleteCreatedSources(sources);
       } catch (cleanupError) {
-        this.logger.error('Failed to delete sources after attach failure', {
-          sourceIds: sources.map((source) => source.id),
-          error: cleanupError as Error,
-        });
+        this.logger.error(
+          {
+            sourceIds: sources.map((source) => source.id),
+            err: cleanupError as Error,
+          },
+          'Failed to delete sources after attach failure',
+        );
       }
       throw error;
     }
   }
 
+  private async deleteCreatedSources(sources: Source[]): Promise<void> {
+    const orgId = getRequiredOrgId(this.contextService);
+    await this.deleteSourcesUseCase.execute(
+      new DeleteSourcesCommand(
+        sources.map((source) => source.id),
+        orgId,
+      ),
+    );
+  }
+
   @Transactional()
-  private async attachSources(
-    skillId: UUID,
-    sources: Source[],
-  ): Promise<Skill> {
-    let updatedSkill: Skill | undefined;
+  private async attachSources(skill: Skill, sources: Source[]): Promise<Skill> {
+    let updatedSkill = skill;
     for (const source of sources) {
       updatedSkill = await this.addSourceToSkillUseCase.execute(
-        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+        new AddSourceToSkillCommand({
+          skillId: skill.id,
+          sourceId: source.id,
+        }),
       );
     }
     // The start use case guarantees at least one source.
-    return updatedSkill as Skill;
+    return updatedSkill;
   }
 }

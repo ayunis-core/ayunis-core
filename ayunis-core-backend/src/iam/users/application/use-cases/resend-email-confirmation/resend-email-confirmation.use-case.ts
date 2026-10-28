@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ResendEmailConfirmationCommand } from './resend-email-confirmation.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   UserEmailAlreadyVerifiedError,
   UserUnexpectedError,
-} from '../../users.errors';
-import { SendConfirmationEmailUseCase } from '../send-confirmation-email/send-confirmation-email.use-case';
-import { SendConfirmationEmailCommand } from '../send-confirmation-email/send-confirmation-email.command';
+} from 'src/iam/users/application/users.errors';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
 
 @Injectable()
 export class ResendEmailConfirmationUseCase {
@@ -20,12 +20,12 @@ export class ResendEmailConfirmationUseCase {
 
   async execute(command: ResendEmailConfirmationCommand): Promise<void> {
     try {
-      this.logger.log('execute', { email: command.email });
+      this.logger.log({ email: command.email }, 'execute');
 
       // Find the user by email
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {
-        this.logger.error('User not found', { email: command.email });
+        this.logger.error({ email: command.email }, 'User not found');
         return; // Silently return without error for security reasons
       }
 
@@ -33,16 +33,22 @@ export class ResendEmailConfirmationUseCase {
         .execute(new SendConfirmationEmailCommand(user))
         .catch((error) => {
           if (error instanceof UserEmailAlreadyVerifiedError) return; // Silently return without error for security reasons
-          this.logger.error('Error resending email confirmation', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
+          this.logger.error(
+            {
+              error: error instanceof Error ? error.message : 'Unknown error',
+            },
+            'Error resending email confirmation',
+          );
           throw new UserUnexpectedError(error as Error);
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error resending email confirmation', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error resending email confirmation',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }

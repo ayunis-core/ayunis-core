@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { UpdateOrgCommand } from './update-org.command';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgError, OrgUpdateFailedError } from '../../orgs.errors';
+import {
+  OrgUpdateFailedError,
+  UnexpectedOrgError,
+} from 'src/iam/orgs/application/orgs.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class UpdateOrgUseCase {
@@ -10,30 +14,29 @@ export class UpdateOrgUseCase {
 
   constructor(private readonly orgsRepository: OrgsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: UpdateOrgCommand): Promise<Org> {
-    this.logger.log('update', { id: command.org.id, name: command.org.name });
+    this.logger.log({ id: command.orgId, name: command.name }, 'update');
 
-    try {
-      this.logger.debug('Updating organization', { id: command.org.id });
-      const updatedOrg = await this.orgsRepository.update(command.org);
-      this.logger.debug('Organization updated successfully', {
-        id: updatedOrg.id,
-        name: updatedOrg.name,
-      });
-      return updatedOrg;
-    } catch (error) {
-      if (error instanceof OrgError) {
-        // Error already logged and properly formatted, just rethrow
-        throw error;
-      }
-      this.logger.error('Failed to update organization', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        id: command.org.id,
-      });
+    if (!command.name || command.name.trim() === '') {
+      this.logger.warn(
+        { id: command.orgId },
+        'Attempted to update organization with empty name',
+      );
       throw new OrgUpdateFailedError(
-        command.org.id,
-        'Failed to update organization',
+        command.orgId,
+        'Organization name cannot be empty',
       );
     }
+
+    const updatedOrg = await this.orgsRepository.updateName(
+      command.orgId,
+      command.name,
+    );
+    this.logger.debug(
+      { id: updatedOrg.id, name: updatedOrg.name },
+      'Organization updated successfully',
+    );
+    return updatedOrg;
   }
 }

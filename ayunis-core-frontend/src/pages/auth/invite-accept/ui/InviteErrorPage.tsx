@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 
 interface InviteErrorPageProps {
-  error: Error;
+  error: unknown;
 }
 
 export default function InviteErrorPage({
@@ -12,9 +12,11 @@ export default function InviteErrorPage({
 }: Readonly<InviteErrorPageProps>) {
   const { t } = useTranslation('auth');
 
-  function getErrorMessage(error: Error) {
+  function getErrorMessage(error: unknown) {
     try {
-      const errorMessage: unknown = JSON.parse(error.message);
+      const errorMessage: unknown = JSON.parse(
+        error instanceof Error ? error.message : '',
+      );
       if (Array.isArray(errorMessage)) {
         const errorItem: unknown = errorMessage.find(
           (m: { code?: string; path?: string[] }) =>

@@ -1,26 +1,62 @@
+let mockTransactionActive = false;
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) => {
+      const original = descriptor.value as (...args: unknown[]) => unknown;
+      descriptor.value = async function (...args: unknown[]) {
+        mockTransactionActive = true;
+        try {
+          return await original.apply(this, args);
+        } finally {
+          mockTransactionActive = false;
+        }
+      };
+      return descriptor;
+    },
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import { RefreshTokenCommand } from './refresh-token.command';
-import type { AuthenticationRepository } from '../../ports/authentication.repository';
-import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
+import type { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
+import { AUTHENTICATION_REPOSITORY } from 'src/iam/authentication/application/tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { InvalidTokenError } from '../../authentication.errors';
+import {
+  InvalidTokenError,
+  LocalPasswordLoginDisabledError,
+} from 'src/iam/authentication/application/authentication.errors';
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
-import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
+import {
+  RefreshTokenReuseError,
+  UnexpectedSessionsError,
+} from 'src/iam/sessions/application/sessions.errors';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 import type { UUID } from 'crypto';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
+import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.use-case';
+import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
   let mockAuthRepository: Partial<AuthenticationRepository>;
   let mockJwtService: { verify: jest.Mock };
   let mockFindUserByIdUseCase: { execute: jest.Mock };
+  let mockPrepareSessionRotationUseCase: { execute: jest.Mock };
   let mockRotateSessionUseCase: { execute: jest.Mock };
   let mockCreateSessionUseCase: { execute: jest.Mock };
+  let mockRevokeSessionFamilyUseCase: { execute: jest.Mock };
+  let mockLocalPasswordLoginPolicy: {
+    assertSessionIssuanceAllowed: jest.Mock;
+  };
 
   const userId = 'user-id-123' as UUID;
   const opaqueToken = 'opaque-refresh-token-no-dots';
@@ -39,11 +75,17 @@ describe('RefreshTokenUseCase', () => {
     });
 
   beforeEach(async () => {
+    mockTransactionActive = false;
     mockAuthRepository = { generateAccessToken: jest.fn() };
     mockJwtService = { verify: jest.fn() };
     mockFindUserByIdUseCase = { execute: jest.fn() };
+    mockPrepareSessionRotationUseCase = { execute: jest.fn() };
     mockRotateSessionUseCase = { execute: jest.fn() };
     mockCreateSessionUseCase = { execute: jest.fn() };
+    mockRevokeSessionFamilyUseCase = { execute: jest.fn() };
+    mockLocalPasswordLoginPolicy = {
+      assertSessionIssuanceAllowed: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -51,8 +93,20 @@ describe('RefreshTokenUseCase', () => {
         { provide: AUTHENTICATION_REPOSITORY, useValue: mockAuthRepository },
         { provide: JwtService, useValue: mockJwtService },
         { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
+        {
+          provide: PrepareSessionRotationUseCase,
+          useValue: mockPrepareSessionRotationUseCase,
+        },
         { provide: RotateSessionUseCase, useValue: mockRotateSessionUseCase },
         { provide: CreateSessionUseCase, useValue: mockCreateSessionUseCase },
+        {
+          provide: RevokeSessionFamilyUseCase,
+          useValue: mockRevokeSessionFamilyUseCase,
+        },
+        {
+          provide: LocalPasswordLoginPolicyService,
+          useValue: mockLocalPasswordLoginPolicy,
+        },
       ],
     }).compile();
 
@@ -62,6 +116,13 @@ describe('RefreshTokenUseCase', () => {
       .spyOn(mockAuthRepository, 'generateAccessToken')
       .mockResolvedValue('new-access-token');
     mockFindUserByIdUseCase.execute.mockResolvedValue(buildUser());
+    mockPrepareSessionRotationUseCase.execute.mockResolvedValue({
+      userId,
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+    });
+    mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mockResolvedValue(
+      0,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -70,24 +131,117 @@ describe('RefreshTokenUseCase', () => {
     mockRotateSessionUseCase.execute.mockResolvedValue({
       userId,
       refreshToken: 'rotated-refresh-token',
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
     });
 
     const result = await useCase.execute(new RefreshTokenCommand(opaqueToken));
 
     expect(result.access_token).toBe('new-access-token');
     expect(result.refresh_token).toBe('rotated-refresh-token');
+    expect(mockPrepareSessionRotationUseCase.execute).toHaveBeenCalled();
     expect(mockRotateSessionUseCase.execute).toHaveBeenCalled();
+    expect(
+      mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(
+      mockRotateSessionUseCase.execute.mock.invocationCallOrder[0],
+    );
     expect(mockJwtService.verify).not.toHaveBeenCalled();
   });
 
-  it('should propagate a reuse error un-flattened (theft response)', async () => {
-    mockRotateSessionUseCase.execute.mockRejectedValue(
-      new RefreshTokenReuseError(),
+  it('revokes a rotated password family when the organization requires SSO', async () => {
+    mockRotateSessionUseCase.execute.mockResolvedValue({
+      userId,
+      refreshToken: 'rotated-refresh-token',
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+    });
+    mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mockRejectedValue(
+      new LocalPasswordLoginDisabledError(),
     );
 
     await expect(
       useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toBeInstanceOf(LocalPasswordLoginDisabledError);
+    expect(mockRotateSessionUseCase.execute).not.toHaveBeenCalled();
+    expect(mockAuthRepository.generateAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('does not apply the local password policy to SSO refresh', async () => {
+    mockPrepareSessionRotationUseCase.execute.mockResolvedValue({
+      userId,
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+    });
+    mockRotateSessionUseCase.execute.mockResolvedValue({
+      userId,
+      refreshToken: 'rotated-refresh-token',
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).resolves.toBeDefined();
+    expect(
+      mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed,
+    ).toHaveBeenCalledWith(expect.anything(), SessionAuthenticationMethod.SSO);
+  });
+
+  it('revokes post-grace replay after the transaction and preserves the theft response', async () => {
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new RefreshTokenReuseError(),
+    );
+    mockRevokeSessionFamilyUseCase.execute.mockImplementation(() => {
+      expect(mockTransactionActive).toBe(false);
+      return Promise.resolve(null);
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
     ).rejects.toThrow(RefreshTokenReuseError);
+    expect(mockRevokeSessionFamilyUseCase.execute).toHaveBeenCalledWith(
+      new RevokeSessionFamilyCommand(opaqueToken),
+    );
+  });
+
+  it('maps a database statement timeout during rotation to service unavailable', async () => {
+    const statementTimeout = Object.assign(
+      new Error('canceling statement due to statement timeout'),
+      { code: '57014' },
+    );
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new UnexpectedSessionsError(statementTimeout),
+    );
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(ServiceUnavailableError);
+    expect(mockRevokeSessionFamilyUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps non-database rotation failures as unexpected errors', async () => {
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new UnexpectedSessionsError(new Error('boom')),
+    );
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(UnexpectedSessionsError);
+  });
+
+  it('revokes an already-revoked token family after the transaction closes', async () => {
+    mockPrepareSessionRotationUseCase.execute.mockRejectedValue(
+      new RefreshTokenReuseError(),
+    );
+    mockRevokeSessionFamilyUseCase.execute.mockImplementation(() => {
+      expect(mockTransactionActive).toBe(false);
+      return Promise.resolve(null);
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(RefreshTokenReuseError);
+    expect(mockRevokeSessionFamilyUseCase.execute).toHaveBeenCalledWith(
+      new RevokeSessionFamilyCommand(opaqueToken),
+    );
   });
 
   it('should migrate a valid legacy JWT refresh token to an opaque session', async () => {
@@ -101,7 +255,19 @@ describe('RefreshTokenUseCase', () => {
 
     expect(result.refresh_token).toBe('migrated-refresh-token');
     expect(mockCreateSessionUseCase.execute).toHaveBeenCalled();
+    expect(mockPrepareSessionRotationUseCase.execute).not.toHaveBeenCalled();
     expect(mockRotateSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects legacy refresh tokens after archive and restore', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId, type: 'refresh' });
+    mockLocalPasswordLoginPolicy.assertSessionIssuanceAllowed.mockResolvedValue(
+      1,
+    );
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).rejects.toThrow(InvalidTokenError);
+    expect(mockCreateSessionUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should migrate a bare {sub} legacy refresh token', async () => {

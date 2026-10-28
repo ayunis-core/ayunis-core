@@ -2,6 +2,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Download } from 'lucide-react';
 import { useCallback, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
 import type { PiiMaskEntry } from '@/widgets/markdown';
@@ -9,17 +10,6 @@ import type { PiiMaskEntry } from '@/widgets/markdown';
 interface DiagramExportButtonsProps {
   readonly containerRef: RefObject<HTMLDivElement | null>;
   readonly fileName: string;
-}
-
-function triggerDownload(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
 }
 
 function safeTitle(input: string): string {
@@ -134,7 +124,7 @@ export function DiagramExportButtons({
     const serializer = new XMLSerializer();
     const svgString = serializer.serializeToString(cloned);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    triggerDownload(blob, `${safeTitle(fileName)}.svg`);
+    saveBlobAs(blob, `${safeTitle(fileName)}.svg`);
   }, [containerRef, fileName, masks]);
 
   const handlePngExport = useCallback(() => {
@@ -150,7 +140,7 @@ export function DiagramExportButtons({
       rasteriseToPng(img, width, height)
         .then((pngBlob) => {
           if (pngBlob) {
-            triggerDownload(pngBlob, `${safeTitle(fileName)}.png`);
+            saveBlobAs(pngBlob, `${safeTitle(fileName)}.png`);
           } else {
             fail();
           }

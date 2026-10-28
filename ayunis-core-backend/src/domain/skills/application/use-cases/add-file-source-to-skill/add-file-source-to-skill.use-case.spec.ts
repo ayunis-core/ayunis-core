@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -10,18 +11,18 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { AddFileSourceToSkillUseCase } from './add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
-import type { AddSourceToSkillUseCase } from '../add-source-to-skill/add-source-to-skill.use-case';
+import type { AddSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import type { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { SkillRepository } from '../../ports/skill.repository';
+import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import {
   SkillSourceLimitExceededError,
   UnsupportedFileTypeError,
-} from '../../skills.errors';
-import { SkillsConstants } from '../../../domain/skills.constants';
-import type { Skill } from '../../../domain/skill.entity';
+} from 'src/domain/skills/application/skills.errors';
+import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
+
 import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
@@ -29,7 +30,13 @@ describe('AddFileSourceToSkillUseCase', () => {
   const skillId = randomUUID();
   const userId = randomUUID();
   const orgId = randomUUID();
-  const updatedSkill = { id: skillId } as Skill;
+  const updatedSkill = new PersonalSkill({
+    id: skillId,
+    userId,
+    name: 'Skill',
+    shortDescription: '',
+    instructions: '',
+  });
 
   let skillRepository: jest.Mocked<SkillRepository>;
   let addSourceToSkill: jest.Mocked<AddSourceToSkillUseCase>;
@@ -45,7 +52,7 @@ describe('AddFileSourceToSkillUseCase', () => {
 
   beforeEach(() => {
     skillRepository = {
-      findOne: jest.fn().mockResolvedValue({ id: skillId, sourceIds: [] }),
+      findById: jest.fn().mockResolvedValue({ id: skillId, sourceIds: [] }),
     } as unknown as jest.Mocked<SkillRepository>;
     addSourceToSkill = {
       execute: jest.fn().mockResolvedValue(updatedSkill),
@@ -67,6 +74,8 @@ describe('AddFileSourceToSkillUseCase', () => {
       get: jest.fn((key: string) => (key === 'orgId' ? orgId : userId)),
     } as unknown as ContextService;
 
+    const authorization = { requireWrite: jest.fn() };
+
     useCase = new AddFileSourceToSkillUseCase(
       skillRepository,
       addSourceToSkill,
@@ -74,6 +83,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       startDataSourceProcessing,
       deleteSources,
       contextService,
+      authorization as never,
     );
   });
 
@@ -82,12 +92,12 @@ describe('AddFileSourceToSkillUseCase', () => {
   });
 
   it('rejects a skill at the source cap before any processing starts', async () => {
-    skillRepository.findOne.mockResolvedValue({
+    skillRepository.findById.mockResolvedValue({
       id: skillId,
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES }, () =>
         randomUUID(),
       ),
-    } as unknown as Skill);
+    } as unknown as PersonalSkill);
     const file = {
       originalname: 'bericht.pdf',
       mimetype: 'application/pdf',
@@ -102,12 +112,12 @@ describe('AddFileSourceToSkillUseCase', () => {
   });
 
   it('passes a capacity check that accounts for every sheet of a workbook', async () => {
-    skillRepository.findOne.mockResolvedValue({
+    skillRepository.findById.mockResolvedValue({
       id: skillId,
       sourceIds: Array.from({ length: SkillsConstants.MAX_SOURCES - 1 }, () =>
         randomUUID(),
       ),
-    } as unknown as Skill);
+    } as unknown as PersonalSkill);
     // One slot left, workbook has two sheets — the callback must throw.
     startDataSourceProcessing.execute.mockImplementation(
       (command: { ensureCapacityFor?: (count: number) => void }) => {

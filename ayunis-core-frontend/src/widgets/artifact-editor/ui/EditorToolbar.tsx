@@ -12,6 +12,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
   Link,
   Undo,
   Redo,
@@ -163,6 +164,12 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           isActive: editor.isActive({ textAlign: 'right' }),
           icon: AlignRight,
           title: t('editor.toolbar.alignRight'),
+        },
+        {
+          onClick: () => chain().setTextAlign('justify').run(),
+          isActive: editor.isActive({ textAlign: 'justify' }),
+          icon: AlignJustify,
+          title: t('editor.toolbar.alignJustify'),
         },
       ],
       [

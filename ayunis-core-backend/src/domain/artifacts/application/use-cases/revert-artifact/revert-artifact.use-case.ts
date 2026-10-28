@@ -1,19 +1,19 @@
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { RevertArtifactCommand } from './revert-artifact.command';
 import {
   ArtifactNotFoundError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
-} from '../../artifacts.errors';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
+} from 'src/domain/artifacts/application/artifacts.errors';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class RevertArtifactUseCase {
@@ -26,15 +26,15 @@ export class RevertArtifactUseCase {
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: RevertArtifactCommand): Promise<ArtifactVersion> {
-    this.logger.log('Reverting artifact', {
-      artifactId: command.artifactId,
-      targetVersion: command.versionNumber,
-    });
+    this.logger.log(
+      {
+        artifactId: command.artifactId,
+        targetVersion: command.versionNumber,
+      },
+      'Reverting artifact',
+    );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     return await addVersionWithRetry({
       repository: this.artifactsRepository,

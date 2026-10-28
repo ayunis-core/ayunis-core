@@ -17,7 +17,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `EnableMcpIntegrationUseCase` / `DisableMcpIntegrationUseCase` — Toggles integration enabled state
 - `ValidateMcpIntegrationUseCase` — Validates connection to the MCP server
 - `ListPredefinedMcpIntegrationConfigsUseCase` — Lists available predefined integration configurations
-- `DiscoverMcpCapabilitiesUseCase` — Discovers tools, resources, and prompts from a server
+- `DiscoverMcpCapabilitiesUseCase` — Discovers tools, resources, and prompts with a 10-second request and connection budget so an unavailable integration cannot delay run preparation for the full 30-second validation/runtime-operation timeout
 - `ExecuteMcpToolUseCase` — Executes a tool on a remote MCP server
 - `RetrieveMcpResourceUseCase` — Retrieves a resource from a remote MCP server
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
@@ -26,14 +26,15 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 **Services:**
 
-- `McpClientService` — Handles actual server communication via the MCP SDK
+- `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets; classified transport failures retain privacy-safe integration, organization, server host, operation, timeout, and underlying error diagnostics
+- `McpClientPoolService` — Pools SDK connections per tenant, integration, user, configuration, and connection timeout budget; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
-- `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants
+- `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants; transport failures during discovery, authorization, or token exchange surface as `McpOAuthServerUnreachableError` (502) with a privacy-safe `{ integrationId, stage, code }` log line; non-JSON responses (HTML login/error pages, malformed JSON), including HTTP error bodies consumed by the SDK, surface as `McpOAuthInvalidResponseError` (502) naming the failing request stage, with a `{ integrationId, stage, status, contentType }` log line; valid JSON OAuth errors and metadata discovery fallbacks remain SDK-owned, and classified errors do not retain body-bearing SDK causes
 - `McpOAuthClientConfigurationService` — Validates static client configuration and invalidates issuer-bound OAuth state when it changes
 - `McpOAuthProviderFactory` — Implements the SDK OAuth provider with durable discovery, registration, PKCE, tokens, and locked refresh
-- `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request
+- `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request and all MCP transport requests on cloud deployments
 
 **Ports:**
 

@@ -1,10 +1,12 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignMcpIntegrationToSkillCommand } from './assign-mcp-integration-to-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import {
   SkillNotFoundError,
   SkillMcpIntegrationNotFoundError,
@@ -12,9 +14,9 @@ import {
   SkillMcpIntegrationDisabledError,
   SkillMcpIntegrationWrongOrganizationError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+} from 'src/domain/skills/application/skills.errors';
+import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class AssignMcpIntegrationToSkillUseCase {
@@ -29,59 +31,53 @@ export class AssignMcpIntegrationToSkillUseCase {
   ) {}
 
   @Transactional()
-  async execute(command: AssignMcpIntegrationToSkillCommand): Promise<Skill> {
-    this.logger.log('Assigning MCP integration to skill', {
-      skillId: command.skillId,
-      integrationId: command.integrationId,
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(
+    command: AssignMcpIntegrationToSkillCommand,
+  ): Promise<PersonalSkill> {
+    this.logger.log(
+      {
+        skillId: command.skillId,
+        integrationId: command.integrationId,
+      },
+      'Assigning MCP integration to skill',
+    );
+
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
+
+    const skill = await this.skillRepository.findOne(command.skillId, userId);
+    if (!skill) {
+      throw new SkillNotFoundError(command.skillId);
+    }
+
+    await this.assertIntegrationCanBeAssigned(command.integrationId, orgId);
+
+    if (skill.mcpIntegrationIds.includes(command.integrationId)) {
+      throw new SkillMcpIntegrationAlreadyAssignedError(command.integrationId);
+    }
+
+    const updatedSkill = skill.withUpdates({
+      ...skill,
+      mcpIntegrationIds: [...skill.mcpIntegrationIds, command.integrationId],
     });
 
-    try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    return await this.skillRepository.update(updatedSkill, skill);
+  }
 
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
-
-      const integration = await this.mcpIntegrationsRepository.findById(
-        command.integrationId,
-      );
-      if (!integration) {
-        throw new SkillMcpIntegrationNotFoundError(command.integrationId);
-      }
-
-      if (!integration.enabled) {
-        throw new SkillMcpIntegrationDisabledError(command.integrationId);
-      }
-
-      if (integration.orgId !== orgId) {
-        throw new SkillMcpIntegrationWrongOrganizationError(
-          command.integrationId,
-        );
-      }
-
-      if (skill.mcpIntegrationIds.includes(command.integrationId)) {
-        throw new SkillMcpIntegrationAlreadyAssignedError(
-          command.integrationId,
-        );
-      }
-
-      const updatedSkill = new Skill({
-        ...skill,
-        mcpIntegrationIds: [...skill.mcpIntegrationIds, command.integrationId],
-      });
-
-      return await this.skillRepository.update(updatedSkill);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Unexpected error assigning MCP integration', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillError(error);
+  private async assertIntegrationCanBeAssigned(
+    integrationId: UUID,
+    orgId: UUID,
+  ): Promise<void> {
+    const integration =
+      await this.mcpIntegrationsRepository.findById(integrationId);
+    if (!integration) {
+      throw new SkillMcpIntegrationNotFoundError(integrationId);
+    }
+    if (!integration.enabled) {
+      throw new SkillMcpIntegrationDisabledError(integrationId);
+    }
+    if (integration.orgId !== orgId) {
+      throw new SkillMcpIntegrationWrongOrganizationError(integrationId);
     }
   }
 }

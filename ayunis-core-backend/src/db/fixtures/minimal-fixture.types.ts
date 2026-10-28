@@ -23,6 +23,7 @@ export interface LanguageModelFixture {
   isArchived: boolean;
   canUseTools: boolean;
   canVision: boolean;
+  contextWindowSize: number;
   inputTokenCost: number;
   outputTokenCost: number;
 }
@@ -82,6 +83,59 @@ export interface MemberFixture {
   creditLimit?: number;
 }
 
+/**
+ * Offsets are relative to seed time rather than absolute dates, so a fixture
+ * seeded once keeps hitting the same completion state months later.
+ */
+export interface AcademyCompletionFixture {
+  email: string;
+  completedDaysAgo: number;
+  /** What the offset is meant to exercise — shown in the seed log. */
+  expectedState: string;
+}
+
+export interface SeedDocumentFixture {
+  name: string;
+  text: string;
+}
+
+export interface SkillFixture {
+  name: string;
+  shortDescription: string;
+  instructions: string;
+}
+
+export interface KnowledgeBaseFixture {
+  name: string;
+  description: string;
+  documents: readonly SeedDocumentFixture[];
+}
+
+export interface SharedSkillKnowledgeBaseFixture {
+  skillName: string;
+  knowledgeBaseName: string;
+}
+
+/**
+ * A workspace ("Projekt") owned by the org's admin user. The icon is a key
+ * from the frontend catalogue (`shared/lib/workspace-appearance.ts`); the
+ * colour is either a palette key from that catalogue or a `#rrggbb` literal.
+ */
+export interface WorkspaceFixture {
+  name: string;
+  description?: string;
+  instruction?: string;
+  icon: string;
+  color: string;
+  skillNames?: readonly string[];
+  knowledgeBaseNames?: readonly string[];
+  /**
+   * Pinned workspaces get a favorites row for the org admin; their sidebar
+   * order follows the fixture order of the pinned entries.
+   */
+  pinned: boolean;
+}
+
 export interface OrgFixture {
   key: string;
   name: string;
@@ -91,6 +145,27 @@ export interface OrgFixture {
   teams: readonly string[];
   memberships: Readonly<Record<string, readonly string[]>>;
   teamLimits?: Readonly<Record<string, number>>;
+  /** Whether the org holds the academy add-on. Without it the academy is invisible. */
+  academyAddon?: boolean;
+  academyCompletions?: readonly AcademyCompletionFixture[];
+  skills?: readonly SkillFixture[];
+  knowledgeBases?: readonly KnowledgeBaseFixture[];
+  sharedSkillKnowledgeBases?: readonly SharedSkillKnowledgeBaseFixture[];
+  workspaces?: readonly WorkspaceFixture[];
+}
+
+export interface CourseModuleFixture {
+  title: string;
+  description: string;
+  loomUrl: string;
+  position: number;
+}
+
+export interface AcademyChapterFixture {
+  title: string;
+  description: string;
+  position: number;
+  modules: readonly CourseModuleFixture[];
 }
 
 export interface PermittedModelFixture {
@@ -111,4 +186,5 @@ export interface SeedFixture {
   platformConfig: { creditsPerEuro: number };
   orgs: readonly OrgFixture[];
   permittedModels: readonly PermittedModelFixture[];
+  academyChapters: readonly AcademyChapterFixture[];
 }

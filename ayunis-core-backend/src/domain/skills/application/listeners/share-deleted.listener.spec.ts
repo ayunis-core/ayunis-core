@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';

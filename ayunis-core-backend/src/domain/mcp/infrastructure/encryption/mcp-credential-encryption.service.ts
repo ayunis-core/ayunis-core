@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credential-encryption.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
 
 /**
  * Concrete implementation of credential encryption using AES-256-GCM.
@@ -20,6 +20,7 @@ import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credent
 @Injectable()
 export class McpCredentialEncryptionService extends McpCredentialEncryptionPort {
   private readonly logger = new Logger(McpCredentialEncryptionService.name);
+
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16; // 128 bits
   private readonly authTagLength = 16; // 128 bits
@@ -85,10 +86,13 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
       const combined = Buffer.concat([iv, encrypted, authTag]);
       return Promise.resolve(combined.toString('base64'));
     } catch (error) {
-      this.logger.error('Failed to encrypt credential', {
-        error: error as Error,
-      });
-      throw new Error('Failed to encrypt credential');
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to encrypt credential',
+      );
+      throw new Error('Failed to encrypt credential', { cause: error });
     }
   }
 
@@ -130,10 +134,13 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
 
       return Promise.resolve(decrypted.toString('utf8'));
     } catch (error) {
-      this.logger.error('Failed to decrypt credential', {
-        error: error as Error,
-      });
-      throw new Error('Failed to decrypt credential');
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to decrypt credential',
+      );
+      throw new Error('Failed to decrypt credential', { cause: error });
     }
   }
 }

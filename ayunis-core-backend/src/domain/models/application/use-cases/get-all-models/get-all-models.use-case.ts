@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { Model } from 'src/domain/models/domain/model.entity';
-import { UnexpectedModelError } from '../../models.errors';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class GetAllModelsUseCase {

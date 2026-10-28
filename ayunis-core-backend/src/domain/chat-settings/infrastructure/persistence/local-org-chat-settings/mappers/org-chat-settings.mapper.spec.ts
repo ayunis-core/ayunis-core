@@ -1,6 +1,6 @@
 import { OrgChatSettingsMapper } from './org-chat-settings.mapper';
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
-import { OrgChatSettingsRecord } from '../schema/org-chat-settings.record';
+import { OrgChatSettingsRecord } from 'src/domain/chat-settings/infrastructure/persistence/local-org-chat-settings/schema/org-chat-settings.record';
 import { randomUUID } from 'crypto';
 
 describe('OrgChatSettingsMapper', () => {
@@ -16,6 +16,7 @@ describe('OrgChatSettingsMapper', () => {
         id: randomUUID(),
         orgId: randomUUID(),
         internetSearchEnabled: false,
+        anonymousModeByDefault: true,
         createdAt: new Date('2026-01-15T10:00:00Z'),
         updatedAt: new Date('2026-02-10T14:30:00Z'),
       });
@@ -25,6 +26,7 @@ describe('OrgChatSettingsMapper', () => {
 
       expect(restored.id).toEqual(original.id);
       expect(restored.orgId).toEqual(original.orgId);
+      expect(restored).toHaveProperty('anonymousModeByDefault', true);
       expect(restored.internetSearchEnabled).toEqual(
         original.internetSearchEnabled,
       );
@@ -58,6 +60,7 @@ describe('OrgChatSettingsMapper', () => {
       const domain = new OrgChatSettings({
         orgId: randomUUID(),
         internetSearchEnabled: false,
+        anonymousModeByDefault: true,
       });
 
       const record = mapper.toRecord(domain);

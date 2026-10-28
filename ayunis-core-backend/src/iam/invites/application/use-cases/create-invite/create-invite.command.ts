@@ -7,16 +7,19 @@ export class CreateInviteCommand {
   public readonly orgId: UUID;
   public readonly role: UserRole;
   public readonly userId: UUID;
+  public readonly teamIds?: UUID[];
 
   constructor(params: {
     email: string;
     orgId: UUID;
     role: UserRole;
     userId: UUID;
+    teamIds?: UUID[];
   }) {
     this.email = params.email;
     this.orgId = params.orgId;
     this.role = params.role;
     this.userId = params.userId;
+    this.teamIds = params.teamIds;
   }
 }

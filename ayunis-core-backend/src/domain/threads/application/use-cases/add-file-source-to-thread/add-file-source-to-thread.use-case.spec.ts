@@ -10,16 +10,16 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { AddFileSourceToThreadUseCase } from './add-file-source-to-thread.use-case';
 import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.command';
-import type { FindThreadUseCase } from '../find-thread/find-thread.use-case';
-import type { AddSourceToThreadUseCase } from '../add-source-to-thread/add-source-to-thread.use-case';
+import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import type { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import type { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { UnsupportedFileTypeError } from 'src/domain/sources/application/sources.errors';
-import { ThreadsConstants } from '../../../domain/threads.constants';
-import { ThreadSourceLimitExceededError } from '../../threads.errors';
-import type { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
-import type { Thread } from '../../../domain/thread.entity';
+import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
+import { ThreadSourceLimitExceededError } from 'src/domain/threads/application/threads.errors';
+import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { ContextService } from 'src/common/context/services/context.service';

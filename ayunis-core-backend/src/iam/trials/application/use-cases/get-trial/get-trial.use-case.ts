@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
-import { TrialRepository } from '../../ports/trial.repository';
+import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
-import { TrialNotFoundError, UnexpectedTrialError } from '../../trial.errors';
+import {
+  TrialNotFoundError,
+  UnexpectedTrialError,
+} from 'src/iam/trials/application/trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -12,9 +15,12 @@ export class GetTrialUseCase {
   constructor(private readonly trialRepository: TrialRepository) {}
 
   async execute(query: GetTrialQuery): Promise<Trial> {
-    this.logger.debug('Getting trial for organization', {
-      orgId: query.orgId,
-    });
+    this.logger.debug(
+      {
+        orgId: query.orgId,
+      },
+      'Getting trial for organization',
+    );
 
     try {
       this.logger.debug('Finding trial in repository');
@@ -30,10 +36,10 @@ export class GetTrialUseCase {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
-      this.logger.error('Failed to get trial', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: query.orgId },
+        'Failed to get trial',
+      );
       throw new UnexpectedTrialError(
         query.orgId,
         'Unexpected error during trial retrieval',

@@ -1,7 +1,7 @@
 Metrics Module
 Exposes Prometheus metrics at `/metrics` with optional basic auth protection.
 
-This module provides application-level Prometheus metrics for monitoring LLM usage, inference performance, message throughput, and user activity. Metrics are recorded by `PrometheusMetricsListener`, which subscribes to domain events emitted by use cases — no domain or IAM code imports from this module directly.
+This module provides application-level Prometheus metrics for monitoring LLM usage, inference performance, message throughput, user activity, and agent-runtime health. Metrics are recorded by `PrometheusMetricsListener`, which subscribes to domain events emitted by use cases — no domain or IAM code imports from this module directly. Run metrics retain the bounded `execution_path` label for monitoring continuity: all new runs emit `agent_runtime`, while the `legacy` value remains available for rollout-era series. The affected metrics are `ayunis_runs_total`, `ayunis_run_duration_seconds`, inference duration/errors, `ayunis_run_tool_calls_total`, and `ayunis_run_usage_collections_total`; they contain no user, organization, thread, run, or model-ID labels.
 
 **Key files:**
 
@@ -22,3 +22,5 @@ Use cases emit domain events → `PrometheusMetricsListener` handles them → re
 - `AYUNIS_METRICS_USER` / `AYUNIS_METRICS_PASSWORD` — When both are set, the `/metrics` endpoint requires Basic Auth. When neither is set, the endpoint is open (with a warning log). Setting only one is treated as a misconfiguration — all requests are rejected until both are provided.
 
 **Cardinality note:** The `user_id` label is included on several metrics. This is acceptable for municipal deployments (hundreds of users) but should be revisited if user count grows significantly. See the comment in `metrics.constants.ts`.
+
+The temporary anonymization study uses `AnonymizationStudyMetricsListener` and `anonymization-study.metrics.ts` to record only global counters/gauges. Its only label is simulated hit/miss; no user, organization, thread, trace, fingerprint, tool name or per-request timestamp is exported. Existing unrelated identity-labelled metrics remain unchanged.

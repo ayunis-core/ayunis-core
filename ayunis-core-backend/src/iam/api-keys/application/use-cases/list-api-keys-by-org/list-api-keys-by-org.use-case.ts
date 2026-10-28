@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { UnexpectedApiKeyError } from '../../api-keys.errors';
+import { UnexpectedApiKeyError } from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class ListApiKeysByOrgUseCase {
@@ -16,13 +16,9 @@ export class ListApiKeysByOrgUseCase {
   ) {}
 
   async execute(): Promise<ApiKey[]> {
-    const orgId = this.contextService.get('orgId');
+    const orgId = getRequiredOrgId(this.contextService);
 
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('execute', { orgId });
+    this.logger.log({ orgId }, 'execute');
 
     try {
       return await this.apiKeysRepository.findByOrgId(orgId);
@@ -30,7 +26,7 @@ export class ListApiKeysByOrgUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to list API keys', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Failed to list API keys');
       throw new UnexpectedApiKeyError();
     }
   }

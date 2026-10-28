@@ -1,31 +1,33 @@
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RetrieveMcpResourceUseCase } from './retrieve-mcp-resource.use-case';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   McpUnauthenticatedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('RetrieveMcpResourceUseCase', () => {
+  let logger: LoggerMock;
   let useCase: RetrieveMcpResourceUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
   let contextService: jest.Mocked<ContextService>;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
@@ -53,6 +55,7 @@ describe('RetrieveMcpResourceUseCase', () => {
     });
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveMcpResourceUseCase,
@@ -82,9 +85,6 @@ describe('RetrieveMcpResourceUseCase', () => {
     repository = module.get(McpIntegrationsRepositoryPort);
     mcpClientService = module.get(McpClientService);
     contextService = module.get(ContextService);
-
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -115,11 +115,14 @@ describe('RetrieveMcpResourceUseCase', () => {
         undefined,
         mockUserId,
       );
-      expect(loggerLogSpy).toHaveBeenCalledWith('retrieveMcpResource', {
-        integrationId: mockIntegrationId,
-        resourceUri: mockResourceUri,
-        parameters: undefined,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          integrationId: mockIntegrationId,
+          url: mockResourceUri,
+          input: undefined,
+        },
+        'retrieveMcpResource',
+      );
     });
 
     it('passes parameters through to client service with userId', async () => {
@@ -222,11 +225,14 @@ describe('RetrieveMcpResourceUseCase', () => {
         ),
       ).rejects.toThrow(UnexpectedMcpError);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith('retrieveMcpResourceFailed', {
-        integrationId: mockIntegrationId,
-        resourceUri: mockResourceUri,
-        error: 'Network failure',
-      });
+      expect(logger.error).toHaveBeenCalledWith(
+        {
+          integrationId: mockIntegrationId,
+          url: mockResourceUri,
+          error: 'Network failure',
+        },
+        'retrieveMcpResourceFailed',
+      );
     });
   });
 });

@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   NotALanguageModelError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+} from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
@@ -22,12 +22,15 @@ export class UpdateTeamPermittedModelUseCase {
   async execute(
     command: UpdateTeamPermittedModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.log('execute', {
-      permittedModelId: command.permittedModelId,
-      orgId: command.orgId,
-      teamId: command.teamId,
-      anonymousOnly: command.anonymousOnly,
-    });
+    this.logger.log(
+      {
+        permittedModelId: command.permittedModelId,
+        orgId: command.orgId,
+        teamId: command.teamId,
+        anonymousOnly: command.anonymousOnly,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(command.orgId);
@@ -61,7 +64,7 @@ export class UpdateTeamPermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error updating team permitted model', error);
+      this.logger.error({ err: error }, 'Error updating team permitted model');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

@@ -19,6 +19,7 @@ import { redisConfig } from './redis.config';
 import { gotenbergConfig } from './gotenberg.config';
 import { retentionConfig } from './retention.config';
 import { urlConfig } from './url.config';
+import { ssoOidcConfig } from 'src/config/sso-oidc.config';
 
 /**
  * Config factories for every Nest entrypoint's ConfigModule.forRoot.
@@ -52,4 +53,5 @@ export const rootConfigs = [
   gotenbergConfig,
   retentionConfig,
   urlConfig,
+  ssoOidcConfig,
 ];

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -12,13 +12,14 @@ import { CreditUsageResponseDto } from './dto/credit-usage-response.dto';
 import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
 import { UsageStatsResponseDtoMapper } from './mappers/usage-stats-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './mappers/model-distribution-response-dto.mapper';
-import { ConfigService } from '@nestjs/config';
+import { GetUsageConfigUseCase } from 'src/domain/usage/application/use-cases/get-usage-config/get-usage-config.use-case';
+import { GetUsageConfigQuery } from 'src/domain/usage/application/use-cases/get-usage-config/get-usage-config.query';
 import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
 import { UsageUseCasesFacade } from './usage-use-cases.facade';
-import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
-import { UsageConstants } from '../../domain/value-objects/usage.constants';
+import { GetModelDistributionQuery } from 'src/domain/usage/application/use-cases/get-model-distribution/get-model-distribution.query';
+import { GetUsageStatsQuery } from 'src/domain/usage/application/use-cases/get-usage-stats/get-usage-stats.query';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -28,7 +29,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 export class SuperAdminUsageController {
   constructor(
     private readonly usageFacade: UsageUseCasesFacade,
-    private readonly configService: ConfigService,
+    private readonly getUsageConfigUseCase: GetUsageConfigUseCase,
     private readonly usageStatsMapper: UsageStatsResponseDtoMapper,
     private readonly modelDistributionMapper: ModelDistributionResponseDtoMapper,
   ) {}
@@ -39,12 +40,10 @@ export class SuperAdminUsageController {
   })
   @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
   @ApiResponse({ status: 200, type: UsageConfigResponseDto })
-  getUsageConfig(): UsageConfigResponseDto {
-    const isSelfHosted = this.configService.get<boolean>(
-      'app.isSelfHosted',
-      false,
-    );
-    return { isSelfHosted };
+  async getUsageConfig(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+  ): Promise<UsageConfigResponseDto> {
+    return this.getUsageConfigUseCase.execute(new GetUsageConfigQuery(orgId));
   }
 
   @Get(':orgId/credits')

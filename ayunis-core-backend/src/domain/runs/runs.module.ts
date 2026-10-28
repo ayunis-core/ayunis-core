@@ -4,36 +4,36 @@ import { ToolsModule } from 'src/domain/tools/tools.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
+import { ThreadAiContextController } from './presenters/http/thread-ai-context.controller';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
-import { ExecuteRunViaRuntimeUseCase } from './application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message/send-message.use-case';
+import { GetThreadAiContextUseCase } from './application/use-cases/get-thread-ai-context/get-thread-ai-context.use-case';
 import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
+import { ThreadAiContextResponseMapper } from './presenters/http/mappers/thread-ai-context-response.mapper';
 import { RunSsePresenter } from './presenters/http/sse/run-sse.presenter';
 import { SendMessageRequestValidator } from './presenters/http/validation/send-message-request.validator';
 import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from './application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
-import { RuntimeModelProviderDecorator } from './application/agent-runtime/runtime-model-provider.decorator';
-import { CompleteTurnSelector } from './application/agent-runtime/complete-turn-selector';
+import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
+import { RunAssemblyService } from './application/services/run-assembly.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
-import { StreamingInferenceService } from './application/services/streaming-inference.service';
-import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
-import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
-import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
-import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
-import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
+import { ThreadRunLock } from './application/services/thread-run-lock.service';
+import { RunTelemetryService } from './application/services/run-telemetry.service';
+import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
+import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
 
-import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
@@ -41,13 +41,15 @@ import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/a
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
-import { CreditLimitsModule } from 'src/iam/credit-limits/credit-limits.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
-import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
+import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
 
 @Module({
   imports: [
@@ -55,7 +57,6 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     ThreadsModule,
     MessagesModule,
     ToolsModule,
-    SubscriptionsModule,
     TrialsModule,
     McpModule,
     SourcesModule,
@@ -63,30 +64,37 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     ThreadPiiMasksModule,
     UsageModule,
     QuotasModule,
-    CreditLimitsModule,
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
     ArtifactsModule,
     LetterheadsModule,
-    TokenCounterModule,
+    WorkspacesModule,
+    KnowledgeBasesModule,
   ],
-  controllers: [RunsController],
+  controllers: [
+    RunsController,
+    ThreadAiContextController,
+    ThreadSourceCitationsController,
+  ],
   providers: [
     ExecuteRunUseCase,
-    ExecuteRunViaRuntimeUseCase,
+    GetThreadAiContextUseCase,
+    GetThreadSourceCitationUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
+    CreditGateHookFactory,
     UsageHookFactory,
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
-    CompleteTurnSelector,
     RuntimeHistoryMaterializer,
-    RuntimeModelProviderDecorator,
+    RunAssemblyService,
+    ModelCallObservabilityHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,
+    ThreadAiContextResponseMapper,
     RunSsePresenter,
     SendMessageRequestValidator,
     SystemPromptBuilderService,
@@ -95,17 +103,11 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     McpToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
-    StreamingInferenceService,
-    NonStreamingInferenceService,
-    CreditBudgetGuardService,
-    CreditLimitGuardService,
-    InferenceOrchestratorService,
-    InferenceUsageGuard,
+    ThreadRunLock,
+    RunTelemetryService,
+    EffectiveRunModelResolverService,
+    UnmaskedTermsService,
   ],
-  exports: [
-    ExecuteRunUseCase,
-    ExecuteRunAndSetTitleUseCase,
-    InferenceUsageGuard,
-  ],
+  exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
 export class RunsModule {}

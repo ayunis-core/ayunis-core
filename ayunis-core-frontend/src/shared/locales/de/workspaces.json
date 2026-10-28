@@ -1,0 +1,163 @@
+{
+  "page": {
+    "title": "Arbeitsbereiche",
+    "addWorkspace": "Arbeitsbereich hinzufügen",
+    "emptyTitle": "Noch keine Arbeitsbereiche",
+    "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
+    "skillCount_one": "{{count}} Fähigkeit",
+    "skillCount_other": "{{count}} Fähigkeiten",
+    "knowledgeBaseCount_one": "{{count}} Wissenssammlung",
+    "knowledgeBaseCount_other": "{{count}} Wissenssammlungen",
+    "lastEdited": "Bearbeitet {{date}}"
+  },
+  "card": {
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen"
+  },
+  "appearance": {
+    "iconLabel": "Symbol",
+    "colorLabel": "Farbe",
+    "customColor": "Eigene Farbe",
+    "previewPlaceholder": "Vorschau",
+    "icons": {
+      "folder": "Ordner",
+      "file": "Dokumente",
+      "files": "Unterlagen",
+      "filecheck": "Prüfung",
+      "clipboard": "Checkliste",
+      "archive": "Archiv",
+      "inbox": "Posteingang",
+      "mail": "Post",
+      "stamp": "Amtsstempel",
+      "idcard": "Ausweise",
+      "landmark": "Rathaus",
+      "building": "Gebäude",
+      "map": "Karte",
+      "mappin": "Standort",
+      "users": "Personen",
+      "usercheck": "Bürgerbüro",
+      "handshake": "Verträge",
+      "social": "Soziales",
+      "baby": "Kinderbetreuung",
+      "school": "Schule",
+      "library": "Bibliothek",
+      "book": "Satzungen",
+      "scale": "Recht",
+      "gavel": "Beschlüsse",
+      "shield": "Ordnungsamt",
+      "lock": "Datenschutz",
+      "key": "Zugänge",
+      "siren": "Einsatz",
+      "ambulance": "Rettungsdienst",
+      "flame": "Feuerwehr",
+      "package": "Beschaffung",
+      "store": "Gewerbe",
+      "briefcase": "Wirtschaft",
+      "truck": "Fuhrpark",
+      "wrench": "Bauhof",
+      "hammer": "Bau",
+      "cone": "Baustelle",
+      "bus": "Nahverkehr",
+      "bike": "Radverkehr",
+      "car": "Kfz-Zulassung",
+      "receipt": "Abrechnung",
+      "euro": "Finanzen",
+      "calculator": "Kalkulation",
+      "piggy": "Haushalt",
+      "chart": "Auswertung",
+      "trend": "Entwicklung",
+      "calendar": "Termine",
+      "clock": "Fristen",
+      "recycle": "Abfall",
+      "tree": "Grünflächen",
+      "leaf": "Umwelt",
+      "droplet": "Wasser",
+      "dog": "Hundesteuer",
+      "palette": "Kultur",
+      "music": "Veranstaltung",
+      "sport": "Sport",
+      "trophy": "Wettbewerb",
+      "vote": "Wahlen",
+      "server": "IT",
+      "idea": "Idee",
+      "megaphone": "Öffentlichkeit",
+      "presentation": "Sitzung",
+      "utensils": "Gastronomie",
+      "phone": "Bürgertelefon"
+    },
+    "colors": {
+      "violet": "Violett",
+      "blue": "Blau",
+      "teal": "Türkis",
+      "green": "Grün",
+      "amber": "Bernstein",
+      "rose": "Rosé"
+    }
+  },
+  "form": {
+    "nameLabel": "Woran arbeiten Sie?",
+    "namePlaceholder": "z. B. Bürgeranfragen",
+    "descriptionLabel": "Was möchten Sie erreichen?",
+    "descriptionPlaceholder": "Optionale Beschreibung",
+    "cancel": "Abbrechen"
+  },
+  "createDialog": {
+    "title": "Neuer Arbeitsbereich",
+    "submit": "Arbeitsbereich erstellen",
+    "submitting": "Wird erstellt …"
+  },
+  "actions": {
+    "more": "Weitere Aktionen für den Arbeitsbereich",
+    "edit": "Arbeitsbereich bearbeiten",
+    "delete": "Arbeitsbereich löschen"
+  },
+  "settingsDialog": {
+    "title": "Arbeitsbereichseinstellungen",
+    "submit": "Speichern",
+    "submitting": "Wird gespeichert …",
+    "open": "Einstellungen"
+  },
+  "deleteDialog": {
+    "rowTitle": "Arbeitsbereich löschen",
+    "rowDescription": "Der Arbeitsbereich und alle darin enthaltenen Chats werden gelöscht.",
+    "title": "Arbeitsbereich löschen",
+    "description": "„{{name}}“ und alle darin enthaltenen Chats werden unwiderruflich gelöscht.",
+    "confirmNameLabel": "Wenn Sie diesen Arbeitsbereich wirklich löschen möchten, geben Sie den Namen des Arbeitsbereichs „{{name}}“ ein.",
+    "confirmText": "Löschen",
+    "cancelText": "Abbrechen"
+  },
+  "picker": {
+    "empty": "Noch keine Arbeitsbereiche",
+    "noWorkspace": "Kein Arbeitsbereich",
+    "placeholder": "Arbeitsbereich auswählen",
+    "addToWorkspace": "Zu Arbeitsbereich hinzufügen",
+    "removeFromWorkspace": "Aus Arbeitsbereich entfernen",
+    "newWorkspace": "Neuer Arbeitsbereich"
+  },
+  "validation": {
+    "invalid": "Ungültiger Wert",
+    "name": {
+      "invalid": "Bitte geben Sie einen gültigen Namen ein",
+      "isNotEmpty": "Bitte geben Sie einen Namen ein",
+      "maxLength": "Der Name ist zu lang"
+    },
+    "description": {
+      "maxLength": "Die Beschreibung ist zu lang"
+    }
+  },
+  "toast": {
+    "createSuccess": "Arbeitsbereich erstellt",
+    "createError": "Der Arbeitsbereich konnte nicht erstellt werden",
+    "updateSuccess": "Arbeitsbereich gespeichert",
+    "updateError": "Der Arbeitsbereich konnte nicht gespeichert werden",
+    "deleteSuccess": "Arbeitsbereich gelöscht",
+    "deleteError": "Der Arbeitsbereich konnte nicht gelöscht werden",
+    "notFound": "Arbeitsbereich nicht gefunden",
+    "pinError": "Die Favoriten konnten nicht aktualisiert werden",
+    "reorderError": "Die Reihenfolge konnte nicht gespeichert werden",
+    "chatMoved": "Chat verschoben",
+    "chatRemoved": "Chat aus dem Arbeitsbereich entfernt",
+    "chatMoveError": "Der Chat konnte nicht verschoben werden",
+    "chatNotFound": "Chat nicht gefunden"
+  }
+}

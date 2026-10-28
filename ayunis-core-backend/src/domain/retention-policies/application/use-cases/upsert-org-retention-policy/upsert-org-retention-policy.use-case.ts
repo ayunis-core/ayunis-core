@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import {
   InvalidRetentionPeriodError,
   UnexpectedRetentionPolicyError,
-} from '../../retention-policies.errors';
+} from 'src/domain/retention-policies/application/retention-policies.errors';
 import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { isValidRetentionDays } from 'src/domain/retention-policies/domain/retention-period';
 import type { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-policy.command';
@@ -18,10 +18,13 @@ export class UpsertOrgRetentionPolicyUseCase {
   async execute(
     command: UpsertOrgRetentionPolicyCommand,
   ): Promise<OrgRetentionPolicy> {
-    this.logger.log('Upserting retention policy', {
-      orgId: command.orgId,
-      retentionDays: command.retentionDays,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+        retentionDays: command.retentionDays,
+      },
+      'Upserting retention policy',
+    );
 
     if (!isValidRetentionDays(command.retentionDays)) {
       throw new InvalidRetentionPeriodError(command.retentionDays, {
@@ -42,10 +45,13 @@ export class UpsertOrgRetentionPolicyUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to upsert retention policy', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to upsert retention policy',
+      );
 
       throw new UnexpectedRetentionPolicyError('upsert', {
         orgId: command.orgId,

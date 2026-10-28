@@ -1,9 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import type { BudgetTarget } from '../../utils/budget-alert-crossing';
-import { GetBudgetAlertTargetsForOrgUseCase } from '../get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
-import { ProcessBudgetAlertCrossingsUseCase } from '../process-budget-alert-crossings/process-budget-alert-crossings.use-case';
+import type { BudgetTarget } from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
+import { GetBudgetAlertTargetsForOrgUseCase } from 'src/iam/budget-alerts/application/use-cases/get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
+import { ProcessBudgetAlertCrossingsUseCase } from 'src/iam/budget-alerts/application/use-cases/process-budget-alert-crossings/process-budget-alert-crossings.use-case';
 import { EvaluateBudgetAlertsForOrgQuery } from './evaluate-budget-alerts-for-org.query';
 import { EvaluateBudgetAlertsForOrgUseCase } from './evaluate-budget-alerts-for-org.use-case';
 

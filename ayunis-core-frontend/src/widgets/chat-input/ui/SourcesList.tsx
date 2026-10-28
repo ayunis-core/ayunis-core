@@ -1,5 +1,9 @@
+import { useTranslation } from 'react-i18next';
+import { getSourceProcessingErrorKey } from '@/widgets/chat-input/lib/source-processing-error';
+
 // Types
 import type {
+  SourceProcessingErrorCode,
   FileSourceResponseDtoFileType,
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
@@ -43,6 +47,7 @@ interface Source {
   createdBy?: SourceResponseDtoCreatedBy;
   status?: SourceResponseDtoStatus;
   processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
 }
 
 interface SourcesListProps {
@@ -52,7 +57,6 @@ interface SourcesListProps {
   onRemove: (sourceId: string) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onRemoveIntegration?: (integrationId: string) => void;
-  onDownload?: (sourceId: string) => void;
 }
 
 function getSourceIcon(source: {
@@ -83,8 +87,8 @@ export function SourcesList({
   onRemove,
   onRemoveKnowledgeBase,
   onRemoveIntegration,
-  onDownload,
 }: Readonly<SourcesListProps>) {
+  const { t } = useTranslation('common');
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
   );
@@ -143,41 +147,42 @@ export function SourcesList({
         const badge = (
           <Badge
             key={source.id}
+            data-testid="chat-source"
+            data-source-id={source.id}
+            data-source-status={source.status}
+            tabIndex={isFailed ? 0 : undefined}
             variant="secondary"
             className={cn(
-              'flex items-center gap-1 cursor-pointer',
+              'flex items-center gap-1',
               source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
               isFailed && 'bg-destructive/10 text-destructive',
             )}
-            onClick={() =>
-              source.type === 'data' &&
-              source.status === SourceResponseDtoStatus.ready &&
-              onDownload?.(source.id)
-            }
           >
             {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
             {isFailed && <AlertCircle className="h-3 w-3" />}
             {!isProcessing && !isFailed && getSourceIcon(source)}
             <span>{source.name}</span>
             {!isProcessing && (
-              <div
+              <button
+                type="button"
+                data-testid="chat-source-remove"
+                aria-label={t('sources.removeFile', { name: source.name })}
                 className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(source.id);
-                }}
+                onClick={() => onRemove(source.id)}
               >
                 <XIcon className="h-3 w-3" />
-              </div>
+              </button>
             )}
           </Badge>
         );
 
-        if (isFailed && source.processingError) {
+        if (isFailed) {
           return (
             <Tooltip key={source.id}>
               <TooltipTrigger asChild>{badge}</TooltipTrigger>
-              <TooltipContent>{source.processingError}</TooltipContent>
+              <TooltipContent align="start">
+                {t(getSourceProcessingErrorKey(source.processingErrorCode))}
+              </TooltipContent>
             </Tooltip>
           );
         }

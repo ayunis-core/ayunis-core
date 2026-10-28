@@ -25,10 +25,79 @@ This guide covers deploying Ayunis Core to production and managing configuration
 >
 > **All deployed environments run this way** (AYC-589) — none of them build on
 > the host any more. Staging pulls `sha-<short-commit>` once `build-images.yml`
-> finishes for that commit; internal and production pull `vX.Y.Z`. To roll an
-> environment back, run the command above with an older `CORE_TAG` on the host.
-> The steps below still describe a from-source deployment, which is the path
-> for self-hosters building their own images.
+> finishes for that commit, using this repo's `scripts/deploy-core-images.sh`;
+> roll it back by running the command above with an older `CORE_TAG` on the
+> host. Internal and production pull `vX.Y.Z` and are deployed from the
+> `ayunis-core/ayunis-infra` repo (a release pings it, Renovate bumps the image
+> tag there, and the bump's merge deploys); roll those back by reverting the
+> bump in ayunis-infra. The steps below still describe a from-source
+> deployment, which is the path for self-hosters building their own images.
+
+Staging's deployment script pulls every required image before changing the
+running stack, then lets Compose recreate only services whose image or
+configuration changed. This keeps unchanged dependencies running and retains
+Redis-backed queue state. The application, code-execution, and anonymization
+services still have a brief interruption while their single containers are
+replaced, so active requests, executions, or analyses may be interrupted. This
+is not a zero-downtime rollout. Changes that retire services, modify project
+networks, or require every dependency to be recreated must use an explicitly
+planned maintenance deployment rather than the routine selective replacement
+path. Changing a dependency's image or configuration is also a maintenance
+operation: restart its dependent services so they reconnect to the replacement
+instead of relying on client-specific connection recovery.
+
+### Update page during the app restart
+
+While the `app` container restarts (about 13–18s on staging), the reverse proxy
+has no upstream for both the frontend and the API. Open tabs retry their API
+reads, but a page load or refresh in that window gets the proxy's bare 502.
+`deploy/maintenance/updating.html` replaces that with a self-contained page
+that reloads the same URL every 5 seconds until the app is back.
+
+- **Internal and production** run Caddy, configured in ayunis-infra
+  (`servers/<server>/edge/`). Their Caddyfile holds requests for up to 30s
+  while the app restarts (`lb_try_duration`) and serves a copy of this page via
+  `handle_errors` after that. Keep that copy in sync when this file changes.
+- **Staging and self-hosted nginx** use the setup below. The deploy keeps the
+  host checkout on the deployed commit, so nginx can serve the file from it
+  directly.
+
+Add this once per nginx host, at `server` level (outside the `location`
+blocks) in the block that proxies to the app:
+
+```nginx
+# Keep the original status: API clients retry on 502-504 and must not see 200.
+error_page 502 503 504 /__ayunis_updating.html;
+location = /__ayunis_updating.html {
+    internal;
+    root /home/ayunis/apps/ayunis-core/deploy/maintenance;
+    # Missing file (e.g. before a release ships it) falls back to the plain 502.
+    try_files /updating.html =502;
+    add_header Cache-Control "no-store" always;
+}
+```
+
+Do not add `proxy_intercept_errors on`: without it, nginx shows the page only
+when it cannot reach the app, and 5xx responses from a running app pass through
+unchanged.
+
+Point `proxy_pass` at `http://127.0.0.1:3000`, not `localhost:3000`.
+`localhost` resolves to both `::1` and `127.0.0.1`, which nginx treats as a
+group: after one failed attempt during the restart it stops trying both for
+10 seconds (`no live upstreams` in the error log), even once the app is
+listening again. A single address is never marked unavailable.
+
+nginx (`www-data`) must be able to pass through the home directory to read the
+page. Grant it traverse-only access, then check and reload:
+
+```bash
+sudo setfacl -m u:www-data:x /home/ayunis /home/ayunis/apps /home/ayunis/apps/ayunis-core /home/ayunis/apps/ayunis-core/deploy /home/ayunis/apps/ayunis-core/deploy/maintenance
+sudo -u www-data test -r /home/ayunis/apps/ayunis-core/deploy/maintenance/updating.html && echo readable
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Without the access, nginx logs `stat() ... failed (13: Permission denied)` and
+serves its plain 502 instead of the page.
 
 ### Prerequisites
 
@@ -433,6 +502,8 @@ Order a [Storage Box](https://www.hetzner.com/storage/storage-box/) and configur
 0 3 * * * BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
+Backups are always written to `BACKUP_DIR` on the host first and then synced, so they use local disk space even when `BACKUP_REMOTE` is set. `BACKUP_RETENTION` prunes only the local copies; the sync does not delete anything on the remote.
+
 **3. Verify backups are running:**
 
 ```bash
@@ -458,7 +529,7 @@ source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
 | Variable | Default | Description |
 | --- | --- | --- |
 | `BACKUP_DIR` | `/opt/ayunis/backups` | Local backup directory |
-| `BACKUP_RETENTION` | `30` | Days to keep old backups |
+| `BACKUP_RETENTION` | `5` | Days to keep local backups |
 | `BACKUP_REMOTE` | (none) | rsync target for off-site copies |
 
 ## Monitoring and Maintenance

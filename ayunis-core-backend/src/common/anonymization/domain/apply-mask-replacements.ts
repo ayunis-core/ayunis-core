@@ -13,7 +13,7 @@ export interface MaskReplacementResult {
  * Replaces each detected span with its `{{pii:CATEGORY_n}}` token, reusing
  * existing masks so the same (category, value) pair always yields the same
  * token across a thread. Detections must be non-overlapping (see
- * dropOverlappingResults in the engine adapter); replacing from end to start
+ * resolveDetectionOverlaps in the domain); replacing from end to start
  * preserves earlier offsets.
  */
 export function applyMaskReplacements(

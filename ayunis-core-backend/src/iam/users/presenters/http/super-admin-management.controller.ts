@@ -3,12 +3,12 @@ import {
   Get,
   Delete,
   Post,
-  Logger,
   Param,
   Body,
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,11 +22,11 @@ import {
   ApiConflictResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { FindSuperAdminsUseCase } from '../../application/use-cases/find-super-admins/find-super-admins.use-case';
-import { PromoteToSuperAdminUseCase } from '../../application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
-import { PromoteToSuperAdminCommand } from '../../application/use-cases/promote-to-super-admin/promote-to-super-admin.command';
-import { DemoteFromSuperAdminUseCase } from '../../application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
-import { DemoteFromSuperAdminCommand } from '../../application/use-cases/demote-from-super-admin/demote-from-super-admin.command';
+import { FindSuperAdminsUseCase } from 'src/iam/users/application/use-cases/find-super-admins/find-super-admins.use-case';
+import { PromoteToSuperAdminUseCase } from 'src/iam/users/application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
+import { PromoteToSuperAdminCommand } from 'src/iam/users/application/use-cases/promote-to-super-admin/promote-to-super-admin.command';
+import { DemoteFromSuperAdminUseCase } from 'src/iam/users/application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
+import { DemoteFromSuperAdminCommand } from 'src/iam/users/application/use-cases/demote-from-super-admin/demote-from-super-admin.command';
 import { SuperAdminUserResponseDtoMapper } from './mappers/super-admin-user-response-dto.mapper';
 import { SuperAdminUserResponseDto } from './dtos/super-admin-user-response.dto';
 import { PromoteToSuperAdminDto } from './dtos/promote-to-super-admin.dto';

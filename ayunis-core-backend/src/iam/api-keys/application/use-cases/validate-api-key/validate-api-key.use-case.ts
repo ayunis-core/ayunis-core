@@ -2,14 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
 import {
   ApiKeyExpiredError,
   ApiKeyNotFoundError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 
 @Injectable()
 export class ValidateApiKeyUseCase {
@@ -31,9 +31,12 @@ export class ValidateApiKeyUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to validate API key', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to validate API key',
+      );
       throw new UnexpectedApiKeyError();
     }
   }
@@ -67,7 +70,7 @@ export class ValidateApiKeyUseCase {
     }
     // Log apiKeyId server-side for forensics — never include in the public
     // payload (AYC-77 finding S4).
-    this.logger.warn('Rejected expired API key', { apiKeyId: apiKey.id });
+    this.logger.warn({ apiKeyId: apiKey.id }, 'Rejected expired API key');
     throw new ApiKeyExpiredError();
   }
 }

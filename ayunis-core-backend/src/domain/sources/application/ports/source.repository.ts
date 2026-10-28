@@ -1,10 +1,13 @@
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import type { UUID } from 'crypto';
-import type { TextSource } from '../../domain/sources/text-source.entity';
-import type { DataSource } from '../../domain/sources/data-source.entity';
-import type { Source } from '../../domain/source.entity';
-import type { TextSourceContentChunk } from '../../domain/source-content-chunk.entity';
-import type { SourceStatus } from '../../domain/source-status.enum';
-
+import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import type { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract findByIds(ids: UUID[]): Promise<Source[]>;
@@ -13,6 +16,17 @@ export abstract class SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource>;
+  /** Completes HTML processing and registers all PDF files atomically; only one delivery can win. */
+  abstract completeCrawlWithFileSources(
+    sourceId: UUID,
+    files: FileSource[],
+    maximumSources?: number,
+  ): Promise<FileSource[] | null>;
+  /** Writes content only while the existing source is processing, without recreating deleted rows. */
+  abstract saveProcessingTextSourceContent(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): Promise<boolean>;
   abstract findStaleProcessingSourceIds(
     staleBefore: Date,
     limit: number,
@@ -23,7 +37,10 @@ export abstract class SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingErrorCode: SourceProcessingErrorCode | null;
+    }>,
   ): Promise<boolean>;
   /**
    * Refreshes processingStartedAt so the stale-processing cron leaves a
@@ -45,18 +62,24 @@ export abstract class SourceRepository {
     startLine: number,
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null>;
-  abstract findContentChunksByIds(
-    chunkIds: UUID[],
-  ): Promise<
-    { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
+  abstract findCitationTarget(
+    chunkId: UUID,
+  ): Promise<SourceCitationTarget | null>;
+  abstract findContentChunksByIds(chunkIds: UUID[]): Promise<
+    {
+      chunk: TextSourceContentChunk;
+      sourceId: UUID;
+      sourceName: string;
+      sourceCreatedBy: SourceCreator;
+    }[]
   >;
   abstract delete(sourceId: UUID): Promise<void>;
   abstract deleteMany(sourceIds: UUID[]): Promise<void>;
   /**
    * Returns the subset of `candidateIds` that are (a) older than `olderThan`,
    * (b) not attached to a knowledge base, and (c) not referenced by any
-   * skill or agent assignment. Used by cross-module cleanup flows that
-   * need to confirm a source is truly orphaned before deleting it.
+   * skill. Used by cross-module cleanup flows that need to confirm a source
+   * is truly orphaned before deleting it.
    */
   abstract findUnreferencedIds(
     candidateIds: UUID[],

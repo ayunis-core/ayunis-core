@@ -2,18 +2,21 @@ import {
   artifactsControllerRevert,
   getArtifactsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
+  getArtifactsControllerFindByWorkspaceQueryKey,
 } from '@/shared/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UseRevertArtifactOptions {
   artifactId: string;
   threadId: string;
+  workspaceId?: string | null;
   onSuccess?: () => void;
 }
 
 export function useRevertArtifact({
   artifactId,
   threadId,
+  workspaceId,
   onSuccess,
 }: UseRevertArtifactOptions) {
   const queryClient = useQueryClient();
@@ -29,6 +32,11 @@ export function useRevertArtifact({
       void queryClient.invalidateQueries({
         queryKey: getArtifactsControllerFindByThreadQueryKey(threadId),
       });
+      if (workspaceId) {
+        void queryClient.invalidateQueries({
+          queryKey: getArtifactsControllerFindByWorkspaceQueryKey(workspaceId),
+        });
+      }
     },
   });
 

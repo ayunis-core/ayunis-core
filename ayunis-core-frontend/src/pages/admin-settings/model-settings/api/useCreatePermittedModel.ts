@@ -7,7 +7,7 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   type ModelWithConfigResponseDto,
 } from '@/shared/api';
-import type { Model } from '../model/openapi';
+import type { Model } from '@/pages/admin-settings/model-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -23,6 +23,7 @@ const CREATE_ERROR_MAP: Record<string, string> = {
   MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED:
     'models.createPermittedModel.multipleImageGenerationModelsNotAllowed',
   MODEL_NOT_FOUND: 'models.createPermittedModel.modelNotFound',
+  DUPLICATE_PERMITTED_MODEL: 'models.createPermittedModel.alreadyEnabled',
 };
 
 export function useCreatePermittedModel() {

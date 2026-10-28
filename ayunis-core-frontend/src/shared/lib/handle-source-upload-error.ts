@@ -16,7 +16,13 @@ export default function handleSourceUploadError(
   t: TFunction,
 ): void {
   try {
-    const { code } = extractErrorData(error);
+    const { code: responseCode, status } = extractErrorData(error);
+    // A proxy or the body-size limit can reject with a bare 413 before the
+    // backend's FILE_TOO_LARGE mapping runs.
+    const code =
+      status === 413 && responseCode === 'UNKNOWN_ERROR'
+        ? 'FILE_TOO_LARGE'
+        : responseCode;
     // Provider outages arrive as PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>
     // (AYC-538) — map the class onto the existing busy/timeout toasts.
     if (code.startsWith('PROVIDER_UNAVAILABLE')) {
@@ -42,6 +48,7 @@ export default function handleSourceUploadError(
         showError(t('sources.fileSourceTooManyPagesError'));
         break;
       case 'UNPROCESSABLE_DOCUMENT':
+      case 'UNPROCESSABLE_SPREADSHEET':
         showError(t('sources.fileSourceUnreadableError'));
         break;
       case 'SOURCE_LIMIT_EXCEEDED':
@@ -51,6 +58,7 @@ export default function handleSourceUploadError(
         showError(t('sources.noEmbeddingModelError'));
         break;
       case 'SERVICE_BUSY':
+      case 'STORAGE_UNAVAILABLE':
         showError(t('sources.fileSourceServiceBusyError'));
         break;
       case 'SERVICE_TIMEOUT':

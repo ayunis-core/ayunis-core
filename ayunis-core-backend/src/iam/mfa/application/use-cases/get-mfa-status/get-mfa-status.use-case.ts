@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { UnexpectedMfaError } from '../../mfa.errors';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 import { GetMfaStatusQuery } from './get-mfa-status.query';
 
 export interface MfaStatus {
@@ -21,7 +21,7 @@ export class GetMfaStatusUseCase {
   ) {}
 
   async execute(query: GetMfaStatusQuery): Promise<MfaStatus> {
-    this.logger.log('getMfaStatus', { userId: query.userId });
+    this.logger.log({ userId: query.userId }, 'getMfaStatus');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(query.userId);
@@ -39,7 +39,7 @@ export class GetMfaStatusUseCase {
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting MFA status', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error getting MFA status');
       throw new UnexpectedMfaError(error);
     }
   }

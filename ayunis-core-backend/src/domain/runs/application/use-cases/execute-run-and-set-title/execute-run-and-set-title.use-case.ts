@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
-import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
-import { ExecuteRunCommand } from '../execute-run/execute-run.command';
-import { FindThreadUseCase } from '../../../../threads/application/use-cases/find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
-import { GenerateAndSetThreadTitleUseCase } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
-import { GenerateAndSetThreadTitleCommand } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
+import { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
+import { GenerateAndSetThreadTitleCommand } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
 import {
   RunEvent,
   RunMasksEvent,
@@ -14,25 +14,28 @@ import {
   RunThreadEvent,
   RunErrorEvent,
   RunSessionEvent,
-} from '../../run-events';
+} from 'src/domain/runs/application/run-events';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   RunInput,
   RunUserInput,
 } from 'src/domain/runs/domain/run-input.entity';
-import { RunNoModelFoundError } from '../../runs.errors';
-import { Thread } from '../../../../threads/domain/thread.entity';
+import { RunNoModelFoundError } from 'src/domain/runs/application/runs.errors';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ApplicationError,
+  INTERNAL_SERVER_ERROR_MESSAGE,
+} from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { RunAnonymizationUnavailableError } from '../../runs.errors';
-import type { RunExecutionOutcome } from '../../run-execution-outcome';
+import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -53,7 +56,10 @@ export class ExecuteRunAndSetTitleUseCase {
       yield this.sessionEvent(command.threadId, true);
       yield* this.executeRun(command);
     } catch (error) {
-      this.logger.error('Error in executeRunAndSetTitle', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Error in executeRunAndSetTitle',
+      );
       // The SSE response was committed as 200 before the run started, so the
       // global exception filter never sees this failure — report it here or
       // provider outages produce no AppSignal incident at all (AYC-653).
@@ -115,20 +121,15 @@ export class ExecuteRunAndSetTitleUseCase {
   }
 
   private toErrorEvent(error: unknown, threadId: UUID): RunErrorEvent {
+    const clientError =
+      error instanceof ApplicationError ? error.toClientResponse() : undefined;
     return {
       type: 'error',
-      message:
-        error instanceof Error
-          ? error.message
-          : 'An error occurred while executing the run',
+      message: clientError?.message ?? INTERNAL_SERVER_ERROR_MESSAGE,
       threadId,
       timestamp: new Date().toISOString(),
-      code: error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR',
-      details: {
-        error: error instanceof Error ? error.toString() : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'Unknown error',
-        ...(error instanceof ApplicationError && error.metadata),
-      },
+      code: clientError?.code ?? 'EXECUTION_ERROR',
+      details: clientError?.metadata,
     };
   }
 
@@ -141,9 +142,11 @@ export class ExecuteRunAndSetTitleUseCase {
         type: 'masks',
         threadId,
         masks: item.masks.map((mask) => ({
+          id: mask.id,
           token: mask.token,
           value: mask.value,
           category: mask.category,
+          unmasked: mask.unmasked,
         })),
         timestamp: new Date().toISOString(),
       };
@@ -173,10 +176,10 @@ export class ExecuteRunAndSetTitleUseCase {
         ? await this.anonymizeText(firstUserMessage)
         : firstUserMessage;
 
-      this.logger.log('Generating thread title', {
-        threadId: command.threadId,
-        isAnonymous: thread.isAnonymous,
-      });
+      this.logger.log(
+        { threadId: command.threadId, isAnonymous: thread.isAnonymous },
+        'Generating thread title',
+      );
 
       const model = thread.model;
       if (!model) {
@@ -193,24 +196,27 @@ export class ExecuteRunAndSetTitleUseCase {
         }),
       );
 
-      if (title) {
-        return {
-          type: 'thread',
-          threadId: thread.id,
-          updateType: 'title_updated',
-          title: title,
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      return null;
+      return title ? this.titleUpdatedEvent(thread.id, title) : null;
     } catch (error) {
-      this.logger.warn('Error in generateTitle', {
-        threadId: command.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        {
+          threadId: command.threadId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error in generateTitle',
+      );
       return null;
     }
+  }
+
+  private titleUpdatedEvent(threadId: UUID, title: string): RunThreadEvent {
+    return {
+      type: 'thread',
+      threadId,
+      updateType: 'title_updated',
+      title,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   private extractUserMessage(input: RunInput): string | undefined {
@@ -234,11 +240,14 @@ export class ExecuteRunAndSetTitleUseCase {
       new AnonymizeTextForOrgCommand(text, orgId),
     );
     if (result.replacements.length > 0) {
-      this.logger.log('Anonymized text for title generation', {
-        originalLength: text.length,
-        anonymizedLength: result.anonymizedText.length,
-        replacementsCount: result.replacements.length,
-      });
+      this.logger.log(
+        {
+          originalLength: text.length,
+          anonymizedLength: result.anonymizedText.length,
+          replacementsCount: result.replacements.length,
+        },
+        'Anonymized text for title generation',
+      );
     }
     return result.anonymizedText;
   }

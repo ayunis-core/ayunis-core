@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { DeleteSkillTemplateUseCase } from './delete-skill-template.use-case';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
-import { SkillTemplateNotFoundError } from '../../skill-templates.errors';
+import { SkillTemplateNotFoundError } from 'src/domain/skill-templates/application/skill-templates.errors';
 
 describe('DeleteSkillTemplateUseCase', () => {
   let useCase: DeleteSkillTemplateUseCase;
@@ -31,9 +31,6 @@ describe('DeleteSkillTemplateUseCase', () => {
       DeleteSkillTemplateUseCase,
     );
     repository = module.get(SkillTemplateRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

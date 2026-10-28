@@ -2,8 +2,6 @@ import { queryOptions } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerFindOne,
   getKnowledgeBasesControllerFindOneQueryKey,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
   sharesControllerGetShares,
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
@@ -47,23 +45,26 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
-    if (!featureToggles.knowledgeBasesEnabled) {
-      throw redirect({ to: '/chat' });
-    }
-    const knowledgeBase = await queryClient.fetchQuery(
+    const knowledgeBase = await queryClient.query(
       knowledgeBaseQueryOptions(id),
     );
-    // Only query shares and user teams if the user owns the KB (not shared)
+    if (knowledgeBase.ownerType !== 'personal') {
+      if (!knowledgeBase.workspaceId)
+        throw redirect({ to: '/knowledge-bases' });
+      throw redirect({
+        to: '/workspaces/$workspaceId/knowledge-bases/$knowledgeBaseId',
+        params: {
+          workspaceId: knowledgeBase.workspaceId,
+          knowledgeBaseId: knowledgeBase.id,
+        },
+      });
+    }
     const shares = knowledgeBase.isShared
       ? []
-      : await queryClient.fetchQuery(sharesQueryOptions(id));
+      : await queryClient.query(sharesQueryOptions(id));
     const userTeams = knowledgeBase.isShared
       ? []
-      : await queryClient.fetchQuery(userTeamsQueryOptions());
+      : await queryClient.query(userTeamsQueryOptions());
     return { knowledgeBase, shares, userTeams };
   },
 });

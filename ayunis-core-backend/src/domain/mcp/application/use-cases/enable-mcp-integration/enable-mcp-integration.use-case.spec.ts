@@ -1,33 +1,36 @@
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { EnableMcpIntegrationUseCase } from './enable-mcp-integration.use-case';
 import { EnableMcpIntegrationCommand } from './enable-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpUnauthenticatedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('EnableMcpIntegrationUseCase', () => {
+  let logger: LoggerMock;
   let useCase: EnableMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let contextService: ContextService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = 'org-123' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnableMcpIntegrationUseCase,
@@ -57,8 +60,6 @@ describe('EnableMcpIntegrationUseCase', () => {
     contextService = module.get<ContextService>(ContextService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -107,9 +108,12 @@ describe('EnableMcpIntegrationUseCase', () => {
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
       expect(repository.save).toHaveBeenCalled();
-      expect(loggerLogSpy).toHaveBeenCalledWith('enableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'enableMcpIntegration',
+      );
     });
 
     it('should be idempotent - enabling already-enabled integration succeeds', async () => {
@@ -241,9 +245,9 @@ describe('EnableMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedMcpError,
       );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error enabling integration',
-        { error: unexpectedError },
       );
     });
 
@@ -259,7 +263,7 @@ describe('EnableMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
@@ -286,7 +290,7 @@ describe('EnableMcpIntegrationUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -313,9 +317,12 @@ describe('EnableMcpIntegrationUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('enableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'enableMcpIntegration',
+      );
     });
   });
 });

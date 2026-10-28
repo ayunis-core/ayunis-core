@@ -6,7 +6,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 
 describe('AddMessageToThreadUseCase', () => {

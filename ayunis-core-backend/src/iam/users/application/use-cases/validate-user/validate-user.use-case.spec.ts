@@ -1,28 +1,48 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ValidateUserUseCase } from './validate-user.use-case';
 import { ValidateUserQuery } from './validate-user.query';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
-import { User } from 'src/iam/users/domain/user.entity';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { aUser } from 'src/iam/users/application/testing/user.fixtures';
 import {
   UserNotFoundError,
   UserAuthenticationFailedError,
-} from '../../users.errors';
-import type { UUID } from 'crypto';
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
+import { ConfigService } from '@nestjs/config';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 
 describe('ValidateUserUseCase', () => {
   let useCase: ValidateUserUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockCompareHashUseCase: Partial<CompareHashUseCase>;
+  let mockConfigService: { get: jest.Mock };
+  let mockGetOrgAuthenticationPolicy: {
+    execute: jest.Mock;
+  };
 
   beforeAll(async () => {
     mockUsersRepository = {
       findOneByEmail: jest.fn(),
+      registerFailedLoginAttempt: jest.fn(),
     };
     mockCompareHashUseCase = {
       execute: jest.fn(),
+    };
+    mockConfigService = {
+      get: jest.fn((_key: string, defaultValue: unknown) => defaultValue),
+    };
+    mockGetOrgAuthenticationPolicy = {
+      execute: jest.fn().mockResolvedValue({ localPasswordLoginEnabled: true }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -30,6 +50,11 @@ describe('ValidateUserUseCase', () => {
         ValidateUserUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: CompareHashUseCase, useValue: mockCompareHashUseCase },
+        { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: GetOrgAuthenticationPolicyUseCase,
+          useValue: mockGetOrgAuthenticationPolicy,
+        },
       ],
     }).compile();
 
@@ -37,7 +62,15 @@ describe('ValidateUserUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    mockConfigService.get.mockImplementation(
+      (_key: string, defaultValue: unknown) => defaultValue,
+    );
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: true,
+    });
   });
+
+  afterEach(() => jest.useRealTimers());
 
   it('should be defined', () => {
     expect(useCase).toBeDefined();
@@ -45,16 +78,7 @@ describe('ValidateUserUseCase', () => {
 
   it('should validate user successfully', async () => {
     const query = new ValidateUserQuery('test@example.com', 'password123');
-    const mockUser = new User({
-      id: 'user-id' as UUID,
-      email: 'test@example.com',
-      emailVerified: false,
-      passwordHash: 'hashedPassword',
-      role: UserRole.USER,
-      orgId: 'org-id' as UUID,
-      name: 'Test User',
-      hasAcceptedMarketing: false,
-    });
+    const mockUser = aUser();
 
     jest
       .spyOn(mockUsersRepository, 'findOneByEmail')
@@ -68,6 +92,9 @@ describe('ValidateUserUseCase', () => {
       'test@example.com',
     );
     expect(mockCompareHashUseCase.execute).toHaveBeenCalled();
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
   });
 
   it('should throw UserNotFoundError if user not found', async () => {
@@ -78,26 +105,226 @@ describe('ValidateUserUseCase', () => {
     await expect(useCase.execute(query)).rejects.toThrow(UserNotFoundError);
   });
 
+  it('returns service unavailable when the user lookup cannot reach PostgreSQL', async () => {
+    const databaseError = Object.assign(
+      new Error('the database system is not yet accepting connections'),
+      { code: '57P03' },
+    );
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockRejectedValue(databaseError);
+
+    const error = await useCase
+      .execute(
+        new ValidateUserQuery('maria.muster@stadt.example', 'password123'),
+      )
+      .catch((cause: unknown) => cause);
+
+    expect(error).toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+    expect(error).toBeInstanceOf(ServiceUnavailableError);
+    if (!(error instanceof ServiceUnavailableError)) {
+      throw new Error('Expected ServiceUnavailableError');
+    }
+    const response = error.toHttpException();
+    expect(response.getStatus()).toBe(503);
+    expect(response.getResponse()).toEqual({
+      code: 'SERVICE_UNAVAILABLE',
+      message: 'Internal server error',
+    });
+  });
+
+  it('preserves a policy lookup service-unavailable error', async () => {
+    const serviceUnavailable = new ServiceUnavailableError(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockResolvedValue(aUser());
+    mockGetOrgAuthenticationPolicy.execute.mockRejectedValue(
+      serviceUnavailable,
+    );
+
+    await expect(
+      useCase.execute(new ValidateUserQuery('test@example.com', 'password')),
+    ).rejects.toBe(serviceUnavailable);
+  });
+
   it('should throw UserAuthenticationFailedError if password is invalid', async () => {
     const query = new ValidateUserQuery('test@example.com', 'wrongpassword');
-    const mockUser = new User({
-      id: 'user-id' as UUID,
-      email: 'test@example.com',
-      emailVerified: false,
-      passwordHash: 'hashedPassword',
-      role: UserRole.USER,
-      orgId: 'org-id' as UUID,
-      name: 'Test User',
-      hasAcceptedMarketing: false,
-    });
+    const mockUser = aUser();
 
     jest
       .spyOn(mockUsersRepository, 'findOneByEmail')
       .mockResolvedValue(mockUser);
     jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    jest
+      .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
+      .mockResolvedValue(1);
+
+    await expect(useCase.execute(query)).rejects.toMatchObject({
+      constructor: UserAuthenticationFailedError,
+      statusCode: 401,
+    });
+    expect(mockUsersRepository.registerFailedLoginAttempt).toHaveBeenCalled();
+  });
+
+  it('rejects SSO-only password attempts without recording a failure', async () => {
+    const user = aUser({ email: 'mitarbeiter@stadt.example' });
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    });
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toBeInstanceOf(UserAuthenticationFailedError);
+
+    expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenCalledWith(
+      new GetOrgAuthenticationPolicyQuery(user.orgId),
+    );
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('does not record a failure when SSO-only activation wins the race', async () => {
+    const user = aUser({ email: 'mitarbeiter@stadt.example' });
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    mockGetOrgAuthenticationPolicy.execute
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: true })
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: false });
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toBeInstanceOf(UserAuthenticationFailedError);
+
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenNthCalledWith(
+      2,
+      new GetOrgAuthenticationPolicyQuery(user.orgId, true),
+    );
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a hash comparison failure as an unexpected user error', async () => {
+    const query = new ValidateUserQuery('test@example.com', 'password123');
+    const mockUser = aUser();
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockResolvedValue(mockUser);
+    jest
+      .spyOn(mockCompareHashUseCase, 'execute')
+      .mockRejectedValue(new Error('Hash service unavailable'));
+
+    await expect(useCase.execute(query)).rejects.toThrow(UserUnexpectedError);
+  });
+
+  it('rejects local login for a federated-only user without comparing a hash', async () => {
+    const query = new ValidateUserQuery(
+      'maria.muster@stadt-koeln.de',
+      'password123',
+    );
+    const federatedUser = aUser({
+      email: 'maria.muster@stadt-koeln.de',
+      emailVerified: true,
+      passwordHash: null,
+      name: 'Maria Muster',
+    });
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockResolvedValue(federatedUser);
 
     await expect(useCase.execute(query)).rejects.toThrow(
       UserAuthenticationFailedError,
     );
+    expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('rejects a locked account without comparing or recording a password', async () => {
+    const user = aUser({
+      lockedAt: new Date('2026-08-24T10:00:00.000Z'),
+    });
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'password123')),
+    ).rejects.toMatchObject({
+      code: 'USER_ACCOUNT_LOCKED',
+      statusCode: 401,
+      message: 'Account locked. Contact your administrator.',
+    });
+
+    expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
+    expect(
+      mockUsersRepository.registerFailedLoginAttempt,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('records an invalid password using the configured threshold and window', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-24T10:00:00.000Z'));
+    const user = aUser();
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    jest
+      .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
+      .mockResolvedValue(6);
+    mockConfigService.get.mockImplementation((key: string) =>
+      key.endsWith('maxAttempts') ? 6 : 20,
+    );
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toMatchObject({
+      code: 'USER_ACCOUNT_LOCKED',
+      statusCode: 401,
+      message: 'Account locked. Contact your administrator.',
+    });
+
+    expect(mockUsersRepository.registerFailedLoginAttempt).toHaveBeenCalledWith(
+      user.id,
+      new Date('2026-08-24T10:00:00.000Z'),
+      new Date('2026-08-24T09:40:00.000Z'),
+      6,
+    );
+  });
+
+  it('surfaces a failed lockout write as an unexpected user error', async () => {
+    const user = aUser();
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    jest
+      .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
+      .mockRejectedValue(new Error('database unavailable'));
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toThrow(UserUnexpectedError);
+  });
+
+  it('keeps a concurrently deleted account response generic', async () => {
+    const user = aUser();
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    jest
+      .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
+      .mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toMatchObject({
+      code: 'USER_AUTHENTICATION_FAILED',
+      statusCode: 401,
+    });
   });
 });

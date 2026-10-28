@@ -5,10 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiExtraModels,
@@ -18,12 +19,15 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { CreateApiKeyUseCase } from '../../application/use-cases/create-api-key/create-api-key.use-case';
-import { CreateApiKeyCommand } from '../../application/use-cases/create-api-key/create-api-key.command';
-import { ListApiKeysByOrgUseCase } from '../../application/use-cases/list-api-keys-by-org/list-api-keys-by-org.use-case';
-import { RevokeApiKeyUseCase } from '../../application/use-cases/revoke-api-key/revoke-api-key.use-case';
-import { RevokeApiKeyCommand } from '../../application/use-cases/revoke-api-key/revoke-api-key.command';
+import { CreateApiKeyUseCase } from 'src/iam/api-keys/application/use-cases/create-api-key/create-api-key.use-case';
+import { CreateApiKeyCommand } from 'src/iam/api-keys/application/use-cases/create-api-key/create-api-key.command';
+import { ListApiKeysByOrgUseCase } from 'src/iam/api-keys/application/use-cases/list-api-keys-by-org/list-api-keys-by-org.use-case';
+import { RevokeApiKeyUseCase } from 'src/iam/api-keys/application/use-cases/revoke-api-key/revoke-api-key.use-case';
+import { RevokeApiKeyCommand } from 'src/iam/api-keys/application/use-cases/revoke-api-key/revoke-api-key.command';
+import { UpdateApiKeyUseCase } from 'src/iam/api-keys/application/use-cases/update-api-key/update-api-key.use-case';
+import { UpdateApiKeyCommand } from 'src/iam/api-keys/application/use-cases/update-api-key/update-api-key.command';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
+import { UpdateApiKeyDto } from './dtos/update-api-key.dto';
 import { ApiKeyResponseDto } from './dtos/api-key-response.dto';
 import { CreateApiKeyResponseDto } from './dtos/create-api-key-response.dto';
 import { ApiKeyDtoMapper } from './mappers/api-key-dto.mapper';
@@ -35,7 +39,12 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @ApiTags('api-keys')
 @Controller('api-keys')
-@ApiExtraModels(CreateApiKeyDto, ApiKeyResponseDto, CreateApiKeyResponseDto)
+@ApiExtraModels(
+  CreateApiKeyDto,
+  UpdateApiKeyDto,
+  ApiKeyResponseDto,
+  CreateApiKeyResponseDto,
+)
 export class ApiKeysController {
   private readonly logger = new Logger(ApiKeysController.name);
 
@@ -43,6 +52,7 @@ export class ApiKeysController {
     private readonly createApiKeyUseCase: CreateApiKeyUseCase,
     private readonly listApiKeysByOrgUseCase: ListApiKeysByOrgUseCase,
     private readonly revokeApiKeyUseCase: RevokeApiKeyUseCase,
+    private readonly updateApiKeyUseCase: UpdateApiKeyUseCase,
     private readonly apiKeyDtoMapper: ApiKeyDtoMapper,
   ) {}
 
@@ -87,10 +97,51 @@ export class ApiKeysController {
   async createApiKey(
     @Body() dto: CreateApiKeyDto,
   ): Promise<CreateApiKeyResponseDto> {
-    this.logger.log('Creating API key', { name: dto.name });
-    const command = new CreateApiKeyCommand(dto.name, dto.expiresAt ?? null);
+    this.logger.log({ name: dto.name }, 'Creating API key');
+    const command = new CreateApiKeyCommand(
+      dto.name,
+      dto.expiresAt ?? null,
+      dto.description ?? null,
+    );
     const { apiKey, secret } = await this.createApiKeyUseCase.execute(command);
     return this.apiKeyDtoMapper.toCreateDto(apiKey, secret);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id')
+  @RateLimit({ limit: 30, windowMs: 15 * 60 * 1000 })
+  @ApiOperation({
+    summary:
+      'Rename an active API key or change its description. The secret stays the same.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'API key successfully updated',
+    type: ApiKeyResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 401, description: 'User is not authenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'User is not authorized to edit API keys',
+  })
+  @ApiResponse({ status: 404, description: 'API key not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'The API key is revoked or expired and cannot be edited',
+  })
+  async updateApiKey(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: UpdateApiKeyDto,
+  ): Promise<ApiKeyResponseDto> {
+    this.logger.log({ id }, 'Updating API key');
+    const apiKey = await this.updateApiKeyUseCase.execute(
+      new UpdateApiKeyCommand(id, {
+        name: dto.name,
+        description: dto.description,
+      }),
+    );
+    return this.apiKeyDtoMapper.toDto(apiKey);
   }
 
   @Roles(UserRole.ADMIN)
@@ -106,7 +157,7 @@ export class ApiKeysController {
   })
   @ApiResponse({ status: 404, description: 'API key not found' })
   async revokeApiKey(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('Revoking API key', { id });
+    this.logger.log({ id }, 'Revoking API key');
     await this.revokeApiKeyUseCase.execute(new RevokeApiKeyCommand(id));
   }
 }

@@ -4,7 +4,7 @@ import { GetCurrentUserUseCase } from './get-current-user.use-case';
 import { GetCurrentUserCommand } from './get-current-user.command';
 import { JwtService } from '@nestjs/jwt';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { InvalidTokenError } from '../../authentication.errors';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';

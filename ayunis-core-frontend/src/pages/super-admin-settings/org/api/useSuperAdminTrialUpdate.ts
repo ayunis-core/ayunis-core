@@ -2,6 +2,7 @@ import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
   useSuperAdminTrialsControllerUpdateTrial,
 } from '@/shared/api';
+import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
 import type { SuperAdminTrialResponseDto } from '@/shared/api';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,10 +31,10 @@ export default function useSuperAdminTrialUpdate({
     resolver: zodResolver(
       z.object({
         maxMessages: z.coerce
-          .number()
+          .number<number>()
           .min(1, t('trial.updateErrorMaxMessagesRequired')),
         messagesSent: z.coerce
-          .number()
+          .number<number>()
           .min(0, t('trial.updateErrorMessagesSentRequired')),
       }),
     ),
@@ -86,6 +87,7 @@ export default function useSuperAdminTrialUpdate({
             queryKey:
               getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId),
           });
+          invalidateOrgLifecycleQueries(queryClient, orgId);
           void router.invalidate();
         },
       },

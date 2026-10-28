@@ -1,9 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
 
@@ -19,11 +22,12 @@ export class GetPresignedUrlUseCase {
 
   async execute(command: GetPresignedUrlCommand): Promise<PresignedUrl> {
     this.logger.debug(
-      `Generating presigned URL for object: ${command.objectName}`,
       {
         bucket: command.bucket,
         expiresIn: command.expiresIn,
+        fileName: command.objectName,
       },
+      'Generating presigned URL for object',
     );
 
     try {
@@ -53,7 +57,8 @@ export class GetPresignedUrlUseCase {
       );
 
       this.logger.debug(
-        `Successfully generated presigned URL for object: ${command.objectName}`,
+        { fileName: command.objectName },
+        'Successfully generated presigned URL for object',
       );
       return url;
     } catch (error) {
@@ -62,8 +67,8 @@ export class GetPresignedUrlUseCase {
       }
 
       this.logger.error(
-        `Failed to generate presigned URL for object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to generate presigned URL for object',
       );
       throw new DownloadFailedError();
     }

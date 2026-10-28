@@ -1,46 +1,40 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import {
+  GetAccessibleKnowledgeBaseContextsUseCase,
+  type AccessibleKnowledgeBaseContext,
+} from 'src/domain/knowledge-bases/application/use-cases/get-accessible-knowledge-base-contexts/get-accessible-knowledge-base-contexts.use-case';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { ListSkillKnowledgeBasesQuery } from './list-skill-knowledge-bases.query';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
-import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
-import { UnexpectedSkillError } from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { SkillAccessService } from '../../services/skill-access.service';
 
 @Injectable()
 export class ListSkillKnowledgeBasesUseCase {
   private readonly logger = new Logger(ListSkillKnowledgeBasesUseCase.name);
 
   constructor(
-    private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
-    private readonly skillAccessService: SkillAccessService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
+    private readonly getKnowledgeBaseContexts: GetAccessibleKnowledgeBaseContextsUseCase,
   ) {}
 
-  async execute(query: ListSkillKnowledgeBasesQuery): Promise<KnowledgeBase[]> {
-    this.logger.log('Listing knowledge bases for skill', {
-      skillId: query.skillId,
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(
+    query: ListSkillKnowledgeBasesQuery,
+  ): Promise<AccessibleKnowledgeBaseContext[]> {
+    this.logger.log(
+      { skillId: query.skillId },
+      'Listing skill knowledge bases',
+    );
+    const skill = await this.repository.findById(query.skillId);
+    if (!skill) throw new SkillNotFoundError(query.skillId);
+    await this.authorization.requireRead(skill);
+    return this.getKnowledgeBaseContexts.execute({
+      knowledgeBaseIds: skill.knowledgeBaseIds,
     });
-
-    try {
-      const skill = await this.skillAccessService.findAccessibleSkill(
-        query.skillId,
-      );
-
-      if (skill.knowledgeBaseIds.length === 0) {
-        return [];
-      }
-
-      return this.getKnowledgeBasesByIdsUseCase.execute(
-        new GetKnowledgeBasesByIdsQuery(skill.knowledgeBaseIds),
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Unexpected error listing skill knowledge bases', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillError(error);
-    }
   }
 }

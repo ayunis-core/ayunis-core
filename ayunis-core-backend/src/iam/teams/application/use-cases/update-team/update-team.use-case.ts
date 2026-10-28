@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { UpdateTeamCommand } from './update-team.command';
-import { TeamsRepository } from '../../ports/teams.repository';
-import { Team } from '../../../domain/team.entity';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { Team } from 'src/iam/teams/domain/team.entity';
 import {
   TeamInvalidInputError,
   TeamNameAlreadyExistsError,
   TeamNotFoundError,
   UnexpectedTeamError,
-} from '../../teams.errors';
+} from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateTeamUseCase {
@@ -22,18 +23,17 @@ export class UpdateTeamUseCase {
   ) {}
 
   async execute(command: UpdateTeamCommand): Promise<Team> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     const trimmedName = command.name.trim() || '';
 
-    this.logger.log('updateTeam', {
-      teamId: command.teamId,
-      name: trimmedName,
-    });
+    this.logger.log(
+      {
+        teamId: command.teamId,
+        name: trimmedName,
+      },
+      'updateTeam',
+    );
 
     if (!trimmedName) {
       this.logger.warn('Attempted to update team with empty name');
@@ -41,63 +41,70 @@ export class UpdateTeamUseCase {
     }
 
     try {
-      const team = await this.teamsRepository.findById(command.teamId);
-
-      if (team?.orgId !== orgId) {
-        this.logger.warn('Team not found or belongs to different org', {
-          teamId: command.teamId,
-          orgId,
-        });
-        throw new TeamNotFoundError(command.teamId);
-      }
-
-      // Only check for duplicates if the name is being changed
-      if (team.name !== trimmedName) {
-        const existingTeam = await this.teamsRepository.findByNameAndOrgId(
-          trimmedName,
-          orgId,
-        );
-
-        if (existingTeam && existingTeam.id !== command.teamId) {
-          this.logger.warn('Team with this name already exists', {
-            name: trimmedName,
-            orgId,
-          });
-          throw new TeamNameAlreadyExistsError(trimmedName);
-        }
-      }
-
-      this.logger.debug('Updating team', {
-        id: team.id,
-        oldName: team.name,
-        newName: trimmedName,
-      });
-
-      team.name = trimmedName;
-      if (command.modelOverrideEnabled !== undefined) {
-        team.modelOverrideEnabled = command.modelOverrideEnabled;
-      }
-      team.updatedAt = new Date();
-
-      const updatedTeam = await this.teamsRepository.update(team);
-
-      this.logger.debug('Team updated successfully', {
-        id: updatedTeam.id,
-        name: updatedTeam.name,
-      });
-
-      return updatedTeam;
+      return await this.updateTeam(command, trimmedName, orgId);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to update team', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        teamId: command.teamId,
-        name: command.name,
-        orgId,
-      });
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        {
+          err: error as Error,
+          teamId: command.teamId,
+          name: command.name,
+          orgId,
+        },
+        'Failed to update team',
+      );
       throw new UnexpectedTeamError(error);
     }
+  }
+
+  private async updateTeam(
+    command: UpdateTeamCommand,
+    name: string,
+    orgId: UUID,
+  ): Promise<Team> {
+    const team = await this.getTeam(command.teamId, orgId);
+    await this.assertNameAvailable(team, name, orgId);
+    this.logger.debug(
+      { id: team.id, name: { old: team.name, new: name } },
+      'Updating team',
+    );
+
+    team.name = name;
+    if (command.modelOverrideEnabled !== undefined) {
+      team.modelOverrideEnabled = command.modelOverrideEnabled;
+    }
+    team.updatedAt = new Date();
+
+    const updatedTeam = await this.teamsRepository.update(team);
+    this.logger.debug(
+      { id: updatedTeam.id, name: updatedTeam.name },
+      'Team updated successfully',
+    );
+    return updatedTeam;
+  }
+
+  private async getTeam(teamId: UUID, orgId: UUID): Promise<Team> {
+    const team = await this.teamsRepository.findById(teamId);
+    if (team?.orgId === orgId) return team;
+    this.logger.warn(
+      { teamId, orgId },
+      'Team not found or belongs to different org',
+    );
+    throw new TeamNotFoundError(teamId);
+  }
+
+  private async assertNameAvailable(
+    team: Team,
+    name: string,
+    orgId: UUID,
+  ): Promise<void> {
+    if (team.name === name) return;
+    const existingTeam = await this.teamsRepository.findByNameAndOrgId(
+      name,
+      orgId,
+    );
+    if (!existingTeam || existingTeam.id === team.id) return;
+    this.logger.warn({ name, orgId }, 'Team with this name already exists');
+    throw new TeamNameAlreadyExistsError(name);
   }
 }

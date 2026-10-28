@@ -1,0 +1,106 @@
+{
+  "page": {
+    "breadcrumb": "Workspaces",
+    "chatsTab": "Your chats",
+    "knowledgeTab": "Knowledge",
+    "skillsTab": "Skills",
+    "instructionsTab": "Instructions",
+    "artifactsTab": "Created content",
+    "emptyChatsTitle": "No chats yet",
+    "emptyChats": "Chats you add to this workspace will appear here.",
+    "noChatResults": "No chats found.",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "settings": "Settings",
+    "truncatedChats": "Showing the first {{count}} chats"
+  },
+  "detail": {
+    "save": "Save changes",
+    "skillKnowledge": "Knowledge bases",
+    "skillKnowledgeDescription": "Choose workspace knowledge bases this skill can use.",
+    "noWorkspaceKnowledge": "Create a knowledge base in this workspace first.",
+    "attach": "Attach",
+    "detach": "Detach",
+    "documents": "Documents",
+    "documentsDescription": "Upload and manage the documents in this workspace knowledge base.",
+    "noDocuments": "No documents have been uploaded yet."
+  },
+  "artifacts": {
+    "title": "Workspace artifacts",
+    "description": "Documents, diagrams, and spreadsheets created in chats in this workspace.",
+    "emptyTitle": "No content created yet",
+    "empty": "Content created in workspace chats will appear here.",
+    "loadError": {
+      "title": "Workspace artifacts could not be loaded",
+      "description": "Reload the page before opening workspace artifacts."
+    },
+    "untitled": "Untitled artifact",
+    "open": "Open",
+    "version": "Version {{version}}",
+    "type": {
+      "document": "Document",
+      "diagram": "Diagram",
+      "spreadsheet": "Spreadsheet"
+    }
+  },
+  "chat": {
+    "untitled": "Untitled chat",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "remove": "Remove from workspace"
+  },
+  "context": {
+    "loadError": {
+      "title": "Workspace context could not be loaded",
+      "description": "Reload the page before editing workspace knowledge, skills, or instructions."
+    },
+    "addDialog": {
+      "loading": "Loading items…",
+      "cancel": "Cancel"
+    },
+    "skills": {
+      "title": "Workspace skills",
+      "description": "Skills available for the assistant to activate when needed in workspace chats.",
+      "create": "Create skill",
+      "createDescription": "Create a skill owned by this workspace.",
+      "name": "Name",
+      "shortDescription": "Short description",
+      "instructions": "Instructions",
+      "emptyTitle": "No workspace skills",
+      "empty": "No skills have been created in this workspace yet.",
+      "delete": "Delete workspace skill",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activeTooltip": "Active skills are available for the assistant to activate when needed in workspace chats. Instructions and resources are loaded only on activation. Inactive skills cannot be activated.",
+      "pin": "Pin in workspace chats",
+      "unpin": "Unpin from workspace chats"
+    },
+    "knowledge": {
+      "title": "Knowledge bases",
+      "description": "Workspace-owned knowledge bases available to all workspace chats.",
+      "create": "Create knowledge base",
+      "createDescription": "Create a knowledge base owned by this workspace.",
+      "name": "Name",
+      "descriptionLabel": "Description",
+      "emptyTitle": "No workspace knowledge bases",
+      "empty": "No knowledge bases have been created in this workspace yet.",
+      "detach": "Delete workspace knowledge base",
+      "documentCount": "{{count}} documents",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activeTooltip": "Active knowledge bases are available to every chat in this workspace. Inactive knowledge bases are excluded from workspace chats."
+    },
+    "documents": {
+      "upload": "Upload file",
+      "remove": "Remove file"
+    },
+    "instructions": {
+      "title": "Workspace instructions",
+      "description": "Instructions that are added to every chat in this workspace.",
+      "placeholder": "Enter instructions that apply to every chat in this workspace.",
+      "save": "Save",
+      "saveSuccess": "Instructions were saved.",
+      "saveError": "Instructions could not be saved."
+    }
+  }
+}

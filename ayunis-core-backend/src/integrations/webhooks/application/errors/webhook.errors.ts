@@ -1,9 +1,5 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
 import type { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
 
 export enum WebhookErrorCode {
@@ -23,26 +19,6 @@ export abstract class WebhookError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    switch (this.statusCode) {
-      case 400:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new InternalServerErrorException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
   }
 }
 

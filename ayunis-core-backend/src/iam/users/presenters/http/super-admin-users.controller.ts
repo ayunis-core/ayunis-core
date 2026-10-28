@@ -3,12 +3,14 @@ import {
   Get,
   Delete,
   Post,
-  Logger,
   Param,
   Body,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
+  Patch,
   Query,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,18 +21,20 @@ import {
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 import { ApiUsersListQueries } from './decorators/api-users-list.decorator';
-import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { FindUserByIdUseCase } from '../../application/use-cases/find-user-by-id/find-user-by-id.use-case';
-import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
-import { SuperAdminTriggerPasswordResetUseCase } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
-import { SuperAdminTriggerPasswordResetCommand } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.command';
-import { TriggerSetInitialPasswordUseCase } from '../../application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
-import { TriggerSetInitialPasswordCommand } from '../../application/use-cases/trigger-set-initial-password/trigger-set-initial-password.command';
-import { CreateUserUseCase } from '../../application/use-cases/create-user/create-user.use-case';
-import { CreateUserCommand } from '../../application/use-cases/create-user/create-user.command';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { DeleteUserUseCase } from 'src/iam/users/application/use-cases/delete-user/delete-user.use-case';
+import { SuperAdminTriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
+import { SuperAdminTriggerPasswordResetCommand } from 'src/iam/users/application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.command';
+import { TriggerSetInitialPasswordUseCase } from 'src/iam/users/application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
+import { TriggerSetInitialPasswordCommand } from 'src/iam/users/application/use-cases/trigger-set-initial-password/trigger-set-initial-password.command';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
   UserResponseDto,
@@ -39,9 +43,11 @@ import {
 import { CreateUserDto } from './dtos/create-user.dto';
 import { TriggerPasswordResetResponseDto } from './dtos/trigger-password-reset-response.dto';
 import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
-import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { FindUserByIdQuery } from '../../application/use-cases/find-user-by-id/find-user-by-id.query';
-import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import { DeleteUserCommand } from 'src/iam/users/application/use-cases/delete-user/delete-user.command';
+import { UnlockUserAccountCommand } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.command';
+import { UnlockUserAccountUseCase } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.use-case';
 import { UUID } from 'crypto';
 import { randomBytes } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
@@ -53,6 +59,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 export class SuperAdminUsersController {
   private readonly logger = new Logger(SuperAdminUsersController.name);
 
+  // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
@@ -61,6 +68,7 @@ export class SuperAdminUsersController {
     private readonly superAdminTriggerPasswordResetUseCase: SuperAdminTriggerPasswordResetUseCase,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
+    private readonly unlockUserAccountUseCase: UnlockUserAccountUseCase,
   ) {}
 
   @Get(':orgId')
@@ -87,7 +95,15 @@ export class SuperAdminUsersController {
     @Param('orgId') orgId: UUID,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
-    this.logger.log('getUsersByOrgId', { orgId, ...queryParams });
+    this.logger.log(
+      {
+        orgId,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        hasSearch: queryParams.search !== undefined,
+      },
+      'getUsersByOrgId',
+    );
 
     const users = await this.findUsersByOrgIdUseCase.execute(
       new FindUsersByOrgIdQuery({
@@ -99,7 +115,7 @@ export class SuperAdminUsersController {
         },
       }),
     );
-    return this.userResponseDtoMapper.toPaginatedDto(users);
+    return this.userResponseDtoMapper.toPaginatedDto(users, true);
   }
 
   @Delete(':userId')
@@ -129,7 +145,7 @@ export class SuperAdminUsersController {
     description: 'Internal server error occurred while deleting user',
   })
   async deleteUser(@Param('userId') userId: UUID): Promise<void> {
-    this.logger.log('deleteUser', { userId });
+    this.logger.log({ userId }, 'deleteUser');
 
     // Get the user to retrieve their orgId for the delete command
     const user = await this.findUserByIdUseCase.execute(
@@ -141,6 +157,22 @@ export class SuperAdminUsersController {
         userId,
         orgId: user.orgId,
       }),
+    );
+  }
+
+  @Patch(':userId/unlock')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Unlock a user in any organization' })
+  @ApiParam({ name: 'userId', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'User account unlocked' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiUnauthorizedResponse({ description: 'Requester is not authenticated' })
+  @ApiForbiddenResponse({ description: 'Requester is not a super admin' })
+  async unlockUser(
+    @Param('userId', ParseUUIDPipe) userId: UUID,
+  ): Promise<void> {
+    await this.unlockUserAccountUseCase.execute(
+      new UnlockUserAccountCommand(userId),
     );
   }
 
@@ -175,7 +207,7 @@ export class SuperAdminUsersController {
   async triggerPasswordReset(
     @Param('userId') userId: UUID,
   ): Promise<TriggerPasswordResetResponseDto> {
-    this.logger.log('triggerPasswordReset', { userId });
+    this.logger.log({ userId }, 'triggerPasswordReset');
 
     const result = await this.superAdminTriggerPasswordResetUseCase.execute(
       new SuperAdminTriggerPasswordResetCommand(userId),
@@ -222,11 +254,15 @@ export class SuperAdminUsersController {
     @Param('orgId') orgId: UUID,
     @Body() createUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
-    this.logger.log('createUser', { orgId, email: createUserDto.email });
+    return this.createOrganizationUser(orgId, createUserDto);
+  }
 
-    // Generate a secure random password (32 bytes = 256 bits, base64 encoded)
+  private async createOrganizationUser(
+    orgId: UUID,
+    createUserDto: CreateUserDto,
+  ): Promise<UserResponseDto> {
+    this.logger.log({ orgId, email: createUserDto.email }, 'createUser');
     const randomPassword = randomBytes(32).toString('base64');
-
     const user = await this.createUserUseCase.execute(
       new CreateUserCommand({
         email: createUserDto.email,
@@ -245,6 +281,6 @@ export class SuperAdminUsersController {
       );
     }
 
-    return this.userResponseDtoMapper.toDto(user);
+    return this.userResponseDtoMapper.toDto(user, true);
   }
 }

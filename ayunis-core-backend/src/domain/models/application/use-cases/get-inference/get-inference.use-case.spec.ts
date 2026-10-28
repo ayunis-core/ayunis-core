@@ -1,45 +1,103 @@
+import { DEFAULT_RETRY_CONFIG } from '@ayunis/agent-runtime';
+import { ModelProviderError, normalizeProviderError } from '@ayunis/inference';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
 import {
   InferenceFailedError,
+  InferenceTokenLimitError,
   ModelRateLimitExceededError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
-import type { InferenceInput } from '../../ports/inference.handler';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
+import type { InferenceCall } from 'src/domain/models/application/services/inference-call.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 
 const model = {
   name: 'mistral-large-latest',
   provider: 'mistral',
 } as unknown as LanguageModel;
 
-function makeCommand(): GetInferenceCommand {
+function makeCommand(acceptTokenLimitCompletion = false): GetInferenceCommand {
   return new GetInferenceCommand({
     model,
     messages: [],
     tools: [],
     toolChoice: ModelToolChoice.AUTO,
     instructions: 'You are a helpful municipal assistant.',
+    acceptTokenLimitCompletion,
   });
 }
 
 function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
-  const registry = {
-    getHandler: () => ({ answer: () => Promise.reject(error) }),
-  };
+  const inferenceCallService = { complete: () => Promise.reject(error) };
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(registry as never, contextService as never);
+  return new GetInferenceUseCase(
+    inferenceCallService as never,
+    contextService as never,
+  );
+}
+
+function useCaseWithAttempts(...attempts: (InferenceResponse | Error)[]): {
+  useCase: GetInferenceUseCase;
+  answer: jest.Mock;
+} {
+  const answer = jest.fn();
+  for (const attempt of attempts) {
+    answer.mockImplementationOnce(() =>
+      attempt instanceof Error
+        ? Promise.reject(attempt)
+        : Promise.resolve(attempt),
+    );
+  }
+  const inferenceCallService = { complete: answer };
+  const contextService = {
+    get: () => '123e4567-e89b-12d3-a456-426614174000',
+  };
+  return {
+    useCase: new GetInferenceUseCase(
+      inferenceCallService as never,
+      contextService as never,
+    ),
+    answer,
+  };
+}
+
+function rateLimitError(retryAfterMs?: number): ModelProviderError {
+  return new ModelProviderError({
+    kind: 'rate_limit',
+    stage: 'stream_consumption',
+    upstreamStatus: 429,
+    ...(retryAfterMs !== undefined && { retryAfterMs }),
+    cause: Object.assign(new Error('sensitive provider response'), {
+      code: 'rate_limit_exceeded',
+      type: 'too_many_requests',
+    }),
+  });
+}
+
+function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
+  const inferenceCallService = { complete: () => Promise.resolve(response) };
+  const contextService = {
+    get: () => '123e4567-e89b-12d3-a456-426614174000',
+  };
+  return new GetInferenceUseCase(
+    inferenceCallService as never,
+    contextService as never,
+  );
 }
 
 describe('GetInferenceUseCase error mapping', () => {
@@ -88,6 +146,62 @@ describe('GetInferenceUseCase error mapping', () => {
     ).rejects.toBeInstanceOf(ProviderTimeoutError);
   });
 
+  it('classifies a portable rate limit retained only in provider diagnostics', async () => {
+    const rateLimit = new ModelProviderError({
+      kind: 'unknown',
+      stage: 'stream_consumption',
+      retryAfterMs: 8_538,
+      cause: Object.assign(new Error('sensitive provider response'), {
+        code: 'rate_limit_exceeded',
+        type: 'too_many_requests',
+      }),
+    });
+
+    jest.useFakeTimers();
+    const result = useCaseWithFailingHandler(rateLimit).execute(makeCommand());
+    const settled = expect(result).rejects.toBeInstanceOf(
+      ProviderRequestRejectedError,
+    );
+    await jest.runAllTimersAsync();
+    jest.useRealTimers();
+
+    await settled;
+    await expect(result).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_REJECTED_MISTRAL',
+      context: expect.objectContaining({
+        upstreamStatus: 429,
+        upstreamCode: 'rate_limit_exceeded',
+        upstreamType: 'too_many_requests',
+        retryAfterMs: 8_538,
+      }),
+    });
+  });
+
+  it.each([
+    ['Azure', { error: { type: 'service_unavailable_error' } }],
+    ['Azure', { error: { code: 'server_error', type: 'server_error' } }],
+    ['Bedrock', { error: { type: 'overloaded_error' } }],
+  ])(
+    'classifies a statusless %s server fault as ProviderServerError',
+    async (_provider, sdkFields) => {
+      const portable = normalizeProviderError(
+        Object.assign(new Error('sensitive provider response'), sdkFields),
+        { stage: 'stream_establishment' },
+      );
+
+      const result = useCaseWithFailingHandler(portable).execute(makeCommand());
+
+      await expect(result).rejects.toBeInstanceOf(ProviderServerError);
+      await expect(result).rejects.toMatchObject({
+        context: expect.objectContaining({
+          provider: 'mistral',
+          modelId: 'mistral-large-latest',
+          upstreamType: sdkFields.error.type,
+        }),
+      });
+    },
+  );
+
   it('keeps upstream 4xx responses as InferenceFailedError — potentially our bug', async () => {
     const upstream = Object.assign(new Error('invalid request'), {
       status: 422,
@@ -98,10 +212,128 @@ describe('GetInferenceUseCase error mapping', () => {
     ).rejects.toBeInstanceOf(InferenceFailedError);
   });
 
+  it('records bounded provider diagnostics that never reach the client', async () => {
+    const upstream = Object.assign(
+      new Error("Maximum context length exceeded by 'classified text'"),
+      {
+        status: 400,
+        code: 'context_length_exceeded',
+        type: 'invalid_request_error',
+        param: 'messages',
+        requestID: 'req_mistral_123',
+      },
+    );
+    const logger = createLoggerMock();
+
+    const result = useCaseWithFailingHandler(upstream).execute(makeCommand());
+
+    await expect(result).rejects.toMatchObject({
+      metadata: {
+        upstreamStatus: 400,
+        upstreamCode: 'context_length_exceeded',
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'messages',
+        upstreamRequestId: 'req_mistral_123',
+        upstreamReason: 'unknown_request_rejection',
+      },
+    });
+    await expect(result).rejects.not.toHaveProperty('metadata.upstreamMessage');
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        upstreamCode: 'context_length_exceeded',
+        upstreamParam: 'messages',
+        upstreamReason: 'unknown_request_rejection',
+        upstreamMessage: "Maximum context length exceeded by '…",
+      }),
+      'Provider inference failed',
+    );
+    await expect(
+      result.catch((error: InferenceFailedError) =>
+        JSON.stringify(error.toClientResponse()),
+      ),
+    ).resolves.not.toContain('classified text');
+  });
+
+  it('preserves portable request-rejection diagnostics for OpenAI-compatible mapping', async () => {
+    const rejection = new ModelProviderError({
+      kind: 'rejection',
+      stage: 'stream_establishment',
+      upstreamStatus: 400,
+      upstreamRequestId: 'req_portable_context_123',
+      rejectionReason: 'context_length_exceeded',
+      cause: Object.assign(new Error('maximum context length exceeded'), {
+        code: 'context_length_exceeded',
+        type: 'invalid_request_error',
+        param: 'messages',
+      }),
+    });
+
+    await expect(
+      useCaseWithFailingHandler(rejection).execute(makeCommand()),
+    ).rejects.toMatchObject({
+      metadata: {
+        upstreamStatus: 400,
+        upstreamCode: 'context_length_exceeded',
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'messages',
+        upstreamRequestId: 'req_portable_context_123',
+        upstreamReason: 'context_length_exceeded',
+      },
+    });
+  });
+
   it('maps unrecognized errors to InferenceFailedError', async () => {
     await expect(
       useCaseWithFailingHandler(new Error('boom')).execute(makeCommand()),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('rejects token-limited partial text by default', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('partial title')],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand()),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('returns token-limited partial text when the caller accepts it', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('partial answer')],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).resolves.toBe(response);
+  });
+
+  it('returns a text-only token-limit completion without visible text when the caller accepts it', async () => {
+    const response = new InferenceResponse([], {}, 'length');
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).resolves.toBe(response);
+  });
+
+  it('rejects token-limited tool calls even when token-limit completion is accepted', async () => {
+    const response = new InferenceResponse(
+      [
+        new ToolUseMessageContent('call-1', 'get_weather', {
+          city: 'Ber',
+        }),
+      ],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).rejects.toBeInstanceOf(InferenceTokenLimitError);
   });
 });
 
@@ -124,18 +356,16 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
         }),
       ],
     });
-    let received: InferenceInput | undefined;
-    const registry = {
-      getHandler: () => ({
-        answer: (input: InferenceInput) => {
-          received = input;
-          return Promise.resolve({ content: [] });
-        },
-      }),
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      complete: (call: InferenceCall) => {
+        received = call;
+        return Promise.resolve({ content: [] });
+      },
     };
     const contextService = { get: () => randomUUID() };
     const useCase = new GetInferenceUseCase(
-      registry as never,
+      inferenceCallService as never,
       contextService as never,
     );
 
@@ -154,5 +384,170 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
     expect(history.content[0]).toMatchObject({
       params: { name: 'x', date: null },
     });
+  });
+
+  it('forwards the caller-supplied call-terminal handler to the provider call', async () => {
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      complete: (call: InferenceCall) => {
+        received = call;
+        return Promise.resolve(new InferenceResponse([], {}));
+      },
+    };
+    const contextService = { get: () => randomUUID() };
+    const useCase = new GetInferenceUseCase(
+      inferenceCallService as never,
+      contextService as never,
+    );
+    const onCallTerminal = jest.fn();
+
+    await useCase.execute(
+      new GetInferenceCommand({
+        model,
+        messages: [],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+        onCallTerminal,
+      }),
+    );
+
+    expect(received?.onCallTerminal).toBe(onCallTerminal);
+  });
+});
+
+describe('GetInferenceUseCase completed-response accounting', () => {
+  it('awaits accounting before returning a successful completion', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('Rewritten instructions')],
+      {
+        inputTokens: 120,
+        outputTokens: 30,
+      },
+      'stop',
+    );
+    let releaseAccounting: (() => void) | undefined;
+    const persisted = new Promise<void>((resolve) => {
+      releaseAccounting = resolve;
+    });
+    const command = makeCommand();
+    command.onUsage = () => persisted;
+    let returned = false;
+    const result = useCaseWithResponse(response)
+      .execute(command)
+      .then((value) => {
+        returned = true;
+        return value;
+      });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(returned).toBe(false);
+    releaseAccounting?.();
+    await expect(result).resolves.toBe(response);
+  });
+
+  it('preserves accounting failures without classifying them as provider failures', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('Rewritten instructions')],
+      {
+        inputTokens: 120,
+        outputTokens: 30,
+      },
+    );
+    const failure = new Error('usage persistence unavailable');
+    const command = makeCommand();
+    command.onUsage = () => Promise.reject(failure);
+    await expect(useCaseWithResponse(response).execute(command)).rejects.toBe(
+      failure,
+    );
+  });
+
+  it('does not account a provider failure that returned no response', async () => {
+    const command = makeCommand();
+    const onUsage = jest.fn();
+    command.onUsage = onUsage;
+    await expect(
+      useCaseWithFailingHandler(new Error('provider failed')).execute(command),
+    ).rejects.toThrow(InferenceFailedError);
+    expect(onUsage).not.toHaveBeenCalled();
+  });
+});
+
+describe('GetInferenceUseCase caller-owned retries', () => {
+  const response = new InferenceResponse(
+    [new TextMessageContent('Generated prompt')],
+    { inputTokens: 10, outputTokens: 5 },
+    'stop',
+  );
+
+  beforeEach(() => {
+    createLoggerMock();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it.each([0, 1_000, 6_000])(
+    'surfaces a rate limit with retry-after %s without retrying or accounting',
+    async (retryAfterMs) => {
+      const { useCase, answer } = useCaseWithAttempts(
+        rateLimitError(retryAfterMs),
+        response,
+      );
+      const command = makeCommand();
+      const onUsage = jest.fn();
+      command.onUsage = onUsage;
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        context: { retryAfterMs },
+      });
+      await jest.runAllTimersAsync();
+      expect(answer).toHaveBeenCalledTimes(1);
+      expect(onUsage).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['above the wait cap', DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs + 1],
+    ['missing', undefined],
+  ])(
+    'does not retry when the advertised delay is %s',
+    async (_case, retryAfterMs) => {
+      const { useCase, answer } = useCaseWithAttempts(
+        rateLimitError(retryAfterMs),
+        response,
+      );
+
+      await expect(useCase.execute(makeCommand())).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
+      );
+      expect(answer).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
+    [
+      'an upstream server error',
+      new ModelProviderError({
+        kind: 'server',
+        stage: 'stream_consumption',
+        upstreamStatus: 503,
+        retryAfterMs: 1_000,
+        cause: new Error('service unavailable'),
+      }),
+      ProviderServerError,
+    ],
+    [
+      'a request rejection',
+      Object.assign(new Error('invalid request'), { status: 400 }),
+      InferenceFailedError,
+    ],
+  ])('does not retry %s', async (_case, error, expectedError) => {
+    const { useCase, answer } = useCaseWithAttempts(error, response);
+
+    await expect(useCase.execute(makeCommand())).rejects.toBeInstanceOf(
+      expectedError,
+    );
+    expect(answer).toHaveBeenCalledTimes(1);
   });
 });

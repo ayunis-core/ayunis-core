@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveSkillSourcesFromThreadsCommand } from './remove-skill-sources-from-threads.command';
 
 @Injectable()
@@ -11,10 +11,13 @@ export class RemoveSkillSourcesFromThreadsUseCase {
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(command: RemoveSkillSourcesFromThreadsCommand): Promise<void> {
-    this.logger.log('execute', {
-      skillId: command.skillId,
-      userCount: command.userIds.length,
-    });
+    this.logger.log(
+      {
+        skillId: command.skillId,
+        userCount: command.userIds.length,
+      },
+      'execute',
+    );
 
     if (command.userIds.length === 0) {
       return;

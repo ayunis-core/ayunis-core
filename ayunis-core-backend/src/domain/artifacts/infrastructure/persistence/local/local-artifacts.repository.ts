@@ -1,19 +1,26 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
-import { Transactional } from '@nestjs-cls/transactional';
+import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
-import { ArtifactsRepository } from '../../../application/ports/artifacts-repository.port';
-import { ArtifactVersionConflictError } from '../../../application/artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
+import {
+  ArtifactsByWorkspaceListOptions,
+  ArtifactsRepository,
+} from 'src/domain/artifacts/application/ports/artifacts-repository.port';
+import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
+import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
-import { isUniqueConstraintViolation } from './unique-constraint.util';
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
@@ -21,23 +28,46 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
 
   constructor(
     @InjectRepository(ArtifactRecord)
-    private readonly artifactRepo: Repository<ArtifactRecord>,
+    private readonly defaultArtifactRepo: Repository<ArtifactRecord>,
     @InjectRepository(DocumentArtifactRecord)
-    private readonly documentArtifactRepo: Repository<DocumentArtifactRecord>,
+    private readonly defaultDocumentArtifactRepo: Repository<DocumentArtifactRecord>,
     @InjectRepository(ArtifactVersionRecord)
-    private readonly versionRepo: Repository<ArtifactVersionRecord>,
+    private readonly defaultVersionRepo: Repository<ArtifactVersionRecord>,
     private readonly artifactMapper: ArtifactMapper,
     private readonly versionMapper: ArtifactVersionMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private get artifactRepo(): Repository<ArtifactRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ArtifactRecord) ?? this.defaultArtifactRepo;
+  }
+
+  private get documentArtifactRepo(): Repository<DocumentArtifactRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(DocumentArtifactRecord) ??
+      this.defaultDocumentArtifactRepo
+    );
+  }
+
+  private get versionRepo(): Repository<ArtifactVersionRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ArtifactVersionRecord) ?? this.defaultVersionRepo
+    );
+  }
+
   async create(artifact: Artifact): Promise<Artifact> {
-    this.logger.log('create', {
-      id: artifact.id,
-      title: artifact.title,
-      type: artifact.type,
-    });
+    this.logger.log(
+      {
+        id: artifact.id,
+        type: artifact.type,
+      },
+      'create',
+    );
     const record = this.artifactMapper.toRecord(artifact);
     const saved = await this.artifactRepo.save(record);
     return this.artifactMapper.toDomain(saved);
@@ -58,6 +88,46 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     return records.map((r) => this.artifactMapper.toDomain(r));
   }
 
+  async findByWorkspaceId(
+    workspaceId: UUID,
+    userId: UUID,
+    options: ArtifactsByWorkspaceListOptions,
+  ): Promise<Paginated<Artifact>> {
+    const queryBuilder = this.artifactRepo
+      .createQueryBuilder('artifact')
+      .innerJoin('artifact.thread', 'thread')
+      .where('artifact.userId = :userId', { userId })
+      .andWhere('thread.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('artifact.type IN (:...artifactTypes)', {
+        artifactTypes: Object.values(ArtifactType),
+      });
+
+    if (options.search) {
+      queryBuilder.andWhere('artifact.title ILIKE :search', {
+        search: `%${options.search}%`,
+      });
+    }
+    if (options.type) {
+      queryBuilder.andWhere('artifact.type = :artifactType', {
+        artifactType: options.type,
+      });
+    }
+
+    const [records, total] = await queryBuilder
+      .orderBy('artifact.updatedAt', 'DESC')
+      .addOrderBy('artifact.id', 'ASC')
+      .skip(options.offset)
+      .take(options.limit)
+      .getManyAndCount();
+
+    return new Paginated({
+      data: records.map((record) => this.artifactMapper.toDomain(record)),
+      limit: options.limit,
+      offset: options.offset,
+      total,
+    });
+  }
+
   async findByIdWithVersions(id: UUID, userId: UUID): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
       where: { id, userId },
@@ -68,10 +138,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async addVersion(version: ArtifactVersion): Promise<ArtifactVersion> {
-    this.logger.log('addVersion', {
-      artifactId: version.artifactId,
-      versionNumber: version.versionNumber,
-    });
+    this.logger.log(
+      {
+        artifactId: version.artifactId,
+        versionNumber: version.versionNumber,
+      },
+      'addVersion',
+    );
     const record = this.versionMapper.toRecord(version);
     const saved = await this.versionRepo.save(record);
     return this.versionMapper.toDomain(saved);
@@ -105,12 +178,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }): Promise<ArtifactVersion> {
     const { version, expectedCurrentVersionNumber, letterheadId } = params;
 
-    this.logger.log('addVersionAndUpdateArtifact', {
-      artifactId: version.artifactId,
-      versionNumber: version.versionNumber,
-      expectedCurrentVersionNumber,
-      shouldUpdateLetterhead: letterheadId !== undefined,
-    });
+    this.logVersionUpdate(params);
 
     try {
       const record = this.versionMapper.toRecord(version);
@@ -152,6 +220,22 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       }
       throw error;
     }
+  }
+
+  private logVersionUpdate(params: {
+    version: ArtifactVersion;
+    expectedCurrentVersionNumber: number;
+    letterheadId?: UUID | null;
+  }): void {
+    this.logger.log(
+      {
+        artifactId: params.version.artifactId,
+        versionNumber: params.version.versionNumber,
+        expectedCurrentVersionNumber: params.expectedCurrentVersionNumber,
+        shouldUpdateLetterhead: params.letterheadId !== undefined,
+      },
+      'addVersionAndUpdateArtifact',
+    );
   }
 
   async delete(id: UUID): Promise<void> {

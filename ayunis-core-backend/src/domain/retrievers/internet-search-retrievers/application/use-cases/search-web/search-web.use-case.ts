@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InternetSearchHandler } from '../../ports/internet-search.handler';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedInternetSearchError } from '../../internet-search.errors';
+import { UnexpectedInternetSearchError } from 'src/domain/retrievers/internet-search-retrievers/application/internet-search.errors';
 
 @Injectable()
 export class SearchWebUseCase {
@@ -13,7 +13,7 @@ export class SearchWebUseCase {
 
   async execute(command: SearchWebCommand): Promise<InternetSearchResult[]> {
     try {
-      this.logger.debug(`Searching web for: ${command.query}`);
+      this.logger.debug({ input: command.query }, 'Searching web');
 
       return this.internetSearchHandler.search(command.query);
     } catch (error) {
@@ -21,8 +21,8 @@ export class SearchWebUseCase {
         throw error;
       }
       this.logger.error(
-        `Unexpected error searching web for: ${command.query}`,
-        error,
+        { err: error as Error, input: command.query },
+        'Unexpected error searching web',
       );
       throw new UnexpectedInternetSearchError(error as Error);
     }

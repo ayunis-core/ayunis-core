@@ -4,12 +4,19 @@ import type { UUID } from 'crypto';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UsersRepository } from '../../ports/users.repository';
-import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { PasswordSetTokenService } from 'src/iam/users/application/services/password-set-token.service';
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
-import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
-import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
-import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import { SendPasswordResetEmailUseCase } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
+import { SendPasswordResetEmailCommand } from 'src/iam/users/application/use-cases/send-password-reset-email/send-password-reset-email.command';
+import {
+  UserInvalidInputError,
+  UserNotFoundError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class SuperAdminTriggerPasswordResetUseCase {
@@ -22,37 +29,64 @@ export class SuperAdminTriggerPasswordResetUseCase {
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
     private readonly configService: ConfigService,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   async execute(
     command: SuperAdminTriggerPasswordResetCommand,
   ): Promise<SuperAdminTriggerPasswordResetResult> {
-    this.logger.log('Triggering password reset email as super admin', {
-      userId: command.userId,
-    });
+    this.logger.log(
+      {
+        userId: command.userId,
+      },
+      'Triggering password reset email as super admin',
+    );
 
     try {
       const user = await this.usersRepository.findOneById(command.userId);
       if (!user) {
         throw new UserNotFoundError(command.userId);
       }
+      if (user.passwordHash === null) {
+        throw new UserInvalidInputError(
+          'Password reset is unavailable for users without a local password',
+        );
+      }
+      await this.assertLocalPasswordLoginEnabled(user);
 
       const resetUrl = await this.sendResetEmail(user);
 
-      this.logger.log('Email triggered for user', {
-        userId: command.userId,
-        email: user.email,
-      });
+      this.logger.log(
+        {
+          userId: command.userId,
+          email: user.email,
+        },
+        'Email triggered for user',
+      );
 
       return new SuperAdminTriggerPasswordResetResult(resetUrl);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error triggering email as super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error triggering email as super admin',
+      );
       throw new UserUnexpectedError(
         error instanceof Error ? error : new Error('Unknown error'),
         'super admin trigger password reset email',
+      );
+    }
+  }
+
+  private async assertLocalPasswordLoginEnabled(user: User): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(user.orgId),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new UserInvalidInputError(
+        'Password reset is unavailable while the organization requires SSO',
       );
     }
   }

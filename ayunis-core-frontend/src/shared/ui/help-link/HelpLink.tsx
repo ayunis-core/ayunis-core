@@ -44,7 +44,7 @@ export function HelpLink({
     <Button variant="outline" size="sm" asChild>
       <a href={url} target="_blank" rel="noopener noreferrer">
         <CircleHelp className="h-4 w-4" />
-        {label}
+        <span className="max-sm:sr-only">{label}</span>
       </a>
     </Button>
   );

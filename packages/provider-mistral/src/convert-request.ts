@@ -1,10 +1,9 @@
 import type {
+  ChatCompletionStreamRequestMessage,
+  ChatCompletionStreamRequestTool,
+  ChatCompletionStreamRequestToolChoice,
   ContentChunk,
-  Messages,
-  Tool,
   ToolCall,
-  ToolChoice as MistralToolChoice,
-  ToolChoiceEnum,
 } from '@mistralai/mistralai/models/components';
 
 import type {
@@ -17,7 +16,10 @@ import type {
 
 import { normalizeSchemaForMistral } from './normalize-schema';
 
-export const convertTool = (tool: ToolSchema, codec: ToolNameCodec): Tool => ({
+export const convertTool = (
+  tool: ToolSchema,
+  codec: ToolNameCodec,
+): Extract<ChatCompletionStreamRequestTool, { type: 'function' }> => ({
   type: 'function',
   function: {
     name: codec.encode(tool.name),
@@ -32,7 +34,7 @@ export const convertTool = (tool: ToolSchema, codec: ToolNameCodec): Tool => ({
 export const convertToolChoice = (
   toolChoice: ToolChoice,
   codec: ToolNameCodec,
-): MistralToolChoice | ToolChoiceEnum => {
+): ChatCompletionStreamRequestToolChoice => {
   if (toolChoice === 'auto') {
     return 'auto';
   }
@@ -57,8 +59,8 @@ export const convertMessages = (
   instructions: string,
   messages: readonly Message[],
   codec: ToolNameCodec,
-): Messages[] => {
-  const converted: Messages[] = [];
+): ChatCompletionStreamRequestMessage[] => {
+  const converted: ChatCompletionStreamRequestMessage[] = [];
   if (instructions) {
     converted.push({ role: 'system', content: instructions });
   }
@@ -89,7 +91,7 @@ export const convertMessages = (
  */
 const convertUser = (
   content: readonly MessageContent[],
-): Messages & { role: 'user' } => {
+): Extract<ChatCompletionStreamRequestMessage, { role: 'user' }> => {
   const hasImage = content.some((c) => c.type === 'image');
   if (!hasImage) {
     return { role: 'user', content: joinText(content) };
@@ -115,7 +117,7 @@ const convertUser = (
 const convertAssistant = (
   content: readonly MessageContent[],
   codec: ToolNameCodec,
-): Messages & { role: 'assistant' } => {
+): Extract<ChatCompletionStreamRequestMessage, { role: 'assistant' }> => {
   const toolCalls = content
     .filter((c): c is Extract<MessageContent, { type: 'tool_use' }> => {
       return c.type === 'tool_use';
@@ -129,7 +131,10 @@ const convertAssistant = (
       },
     }));
   const text = joinText(content);
-  const message: Messages & { role: 'assistant' } = {
+  const message: Extract<
+    ChatCompletionStreamRequestMessage,
+    { role: 'assistant' }
+  > = {
     role: 'assistant',
     content: text || undefined,
   };
@@ -139,7 +144,9 @@ const convertAssistant = (
   return message;
 };
 
-const convertToolResults = (content: readonly MessageContent[]): Messages[] =>
+const convertToolResults = (
+  content: readonly MessageContent[],
+): ChatCompletionStreamRequestMessage[] =>
   content
     .filter((c): c is Extract<MessageContent, { type: 'tool_result' }> => {
       return c.type === 'tool_result';

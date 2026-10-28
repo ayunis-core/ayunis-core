@@ -16,8 +16,8 @@ import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
-import { SubscriptionRequiredError } from '../authorization.errors';
-import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from '../decorators/usage-based-subscription.decorator';
+import { SubscriptionRequiredError } from 'src/iam/authorization/application/authorization.errors';
+import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from 'src/iam/authorization/application/decorators/usage-based-subscription.decorator';
 
 type RequestPrincipal = ActiveUser | ApiKeyPrincipal;
 
@@ -91,7 +91,8 @@ export class UsageBasedSubscriptionGuard implements CanActivate {
 
       if (!isUsageBased) {
         this.logger.warn(
-          `Access denied: org ${orgId} has no active usage-based subscription`,
+          { orgId },
+          'Access denied: org has no active usage-based subscription',
         );
         throw new SubscriptionRequiredError(SubscriptionType.USAGE_BASED);
       }
@@ -103,8 +104,8 @@ export class UsageBasedSubscriptionGuard implements CanActivate {
       }
 
       this.logger.error(
-        `Failed to check usage-based subscription for org ${orgId}`,
-        error instanceof Error ? error.stack : undefined,
+        { err: error as Error, orgId },
+        'Failed to check usage-based subscription',
       );
 
       return false;

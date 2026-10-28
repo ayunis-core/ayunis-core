@@ -1,10 +1,10 @@
 import { CreateEmbeddingModelCommand } from './create-embedding-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
@@ -16,10 +16,13 @@ export class CreateEmbeddingModelUseCase {
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: CreateEmbeddingModelCommand): Promise<EmbeddingModel> {
-    this.logger.log('Creating embedding model', {
-      name: command.name,
-      provider: command.provider,
-    });
+    this.logger.log(
+      {
+        name: command.name,
+        provider: command.provider,
+      },
+      'Creating embedding model',
+    );
 
     const existingModel = await this.modelsRepository.findOne({
       name: command.name,
@@ -27,10 +30,13 @@ export class CreateEmbeddingModelUseCase {
     });
 
     if (existingModel) {
-      this.logger.warn('Embedding model already exists', {
-        name: command.name,
-        provider: command.provider,
-      });
+      this.logger.warn(
+        {
+          name: command.name,
+          provider: command.provider,
+        },
+        'Embedding model already exists',
+      );
       throw new ModelAlreadyExistsError(command.name, command.provider);
     }
 

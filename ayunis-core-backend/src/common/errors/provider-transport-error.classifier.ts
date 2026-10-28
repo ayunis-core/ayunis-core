@@ -1,3 +1,5 @@
+import { ModelProviderError } from '@ayunis/inference';
+import { extractUpstreamStatus } from './extract-upstream-status.helper';
 import { ProviderFailureClass } from './provider.errors';
 
 export interface TransportFailure {
@@ -69,6 +71,19 @@ const MAX_CHAIN_NODES = 8;
 export function classifyTransportError(
   error: unknown,
 ): TransportFailure | undefined {
+  if (error instanceof ModelProviderError) {
+    if (error.kind !== 'connection' && error.kind !== 'timeout') {
+      return undefined;
+    }
+    return {
+      failureClass:
+        error.kind === 'timeout'
+          ? ProviderFailureClass.TIMEOUT
+          : ProviderFailureClass.CONNECTION,
+      code: error.transportCode,
+      host: error.host,
+    };
+  }
   const chain = collectChain(error);
   const match = classifyByCode(chain) ?? classifyByName(chain);
   if (!match) return undefined;
@@ -94,22 +109,20 @@ function collectChain(root: unknown): Record<string, unknown>[] {
 }
 
 /**
- * Pause before the single setup retry — long enough for a DNS hiccup or a
- * dropped TLS connection to clear, short enough not to matter for a user
- * already waiting on inference.
+ * Pause before a single setup retry — long enough for a DNS hiccup or a
+ * dropped TLS connection to clear, short enough not to matter to a waiting
+ * caller.
  */
 export const SETUP_RETRY_BACKOFF_MS = 500;
 
-/**
- * Transient connection failures worth exactly one retry during request
- * setup: before a provider has produced any output, resending the request is
- * idempotent. Timeouts are excluded — retrying them doubles an already-long
- * wait — as are stalls and aborts, which carry their own semantics.
- */
-export function isRetryableSetupFailure(error: unknown): boolean {
+/** Provider timeouts safe for one host-owned retry before any output. */
+export function isRetryableProviderTimeoutFailure(error: unknown): boolean {
+  const transportClass = classifyTransportError(error)?.failureClass;
+  const upstreamStatus = extractUpstreamStatus(error);
   return (
-    classifyTransportError(error)?.failureClass ===
-    ProviderFailureClass.CONNECTION
+    transportClass === ProviderFailureClass.TIMEOUT ||
+    upstreamStatus === 408 ||
+    upstreamStatus === 504
   );
 }
 

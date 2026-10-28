@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindUserByIdUseCase } from './find-user-by-id.use-case';
 import { FindUserByIdQuery } from './find-user-by-id.query';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
@@ -52,5 +52,20 @@ describe('FindUserByIdUseCase', () => {
 
     expect(result).toBe(mockUser);
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
+  });
+
+  it('returns service unavailable when PostgreSQL cannot load the user', async () => {
+    jest.spyOn(mockUsersRepository, 'findOneById').mockRejectedValue(
+      Object.assign(new Error('connection refused'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+
+    await expect(
+      useCase.execute(new FindUserByIdQuery('user-id' as UUID)),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
   });
 });

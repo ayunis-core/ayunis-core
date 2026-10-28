@@ -125,13 +125,29 @@ body {
   }
 }
 
+.skill-improve-shimmer {
+  background: linear-gradient(
+    100deg,
+    color-mix(in oklab, var(--brand) 45%, transparent) 30%,
+    var(--brand) 50%,
+    color-mix(in oklab, var(--brand) 45%, transparent) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: onboarding-shimmer 1.8s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .onboarding-aurora,
   .animate-onboarding-marquee,
   .onboarding-rise,
   .onboarding-fade,
   .onboarding-kenburns,
-  .onboarding-shimmer {
+  .onboarding-shimmer,
+  .skill-improve-shimmer {
     animation: none;
   }
   .onboarding-shimmer {

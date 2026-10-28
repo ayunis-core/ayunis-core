@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { GetCurrentUserCommand } from './get-current-user.command';
-import { ActiveUser } from '../../../domain/active-user.entity';
-import { InvalidTokenError } from '../../authentication.errors';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -33,7 +33,9 @@ export class GetCurrentUserUseCase {
     this.logger.log('getCurrentUser');
 
     try {
-      const payload = this.jwtService.verify<JwtPayload>(command.accessToken);
+      const payload = this.jwtService.verify<Partial<JwtPayload>>(
+        command.accessToken,
+      );
 
       if (
         !payload.sub ||
@@ -45,12 +47,15 @@ export class GetCurrentUserUseCase {
         throw new InvalidTokenError('Invalid token payload');
       }
 
-      this.logger.debug('Token verified successfully', {
-        userId: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        name: payload.name,
-      });
+      this.logger.debug(
+        {
+          userId: payload.sub,
+          email: payload.email,
+          role: payload.role,
+          name: payload.name,
+        },
+        'Token verified successfully',
+      );
 
       const user = await this.findUserByIdUseCase.execute(
         new FindUserByIdQuery(payload.sub),
@@ -69,7 +74,7 @@ export class GetCurrentUserUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Token verification failed', { error });
+      this.logger.error({ err: error as Error }, 'Token verification failed');
       throw new InvalidTokenError('Unable to verify access token');
     }
   }

@@ -1,27 +1,44 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateUserMessageUseCase } from './create-user-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import type { ImageUploadData } from './create-user-message.command';
 import { CreateUserMessageCommand } from './create-user-message.command';
+
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageContentInvalidError,
+  MessageCreationError,
+} from 'src/domain/messages/application/messages.errors';
+import { ImageNormalizerPort } from 'src/domain/messages/application/ports/image-normalizer.port';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { MAX_IMAGE_SIZE_BYTES } from 'src/domain/messages/application/utils/image-upload.policy';
+import type { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { randomUUID } from 'crypto';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserMessageCreatedEvent } from '../../events/user-message-created.event';
+import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
+
+const SIGNATURES = {
+  'image/jpeg': Buffer.from([0xff, 0xd8, 0xff]),
+  'image/png': Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+} as const;
+
+const imageBytes = (type: keyof typeof SIGNATURES, label: string) =>
+  Buffer.concat([SIGNATURES[type], Buffer.from(label)]);
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
   let mockMessagesRepository: Partial<MessagesRepository>;
-  let mockUploadObjectUseCase: Partial<UploadObjectUseCase>;
+  let mockUploadObjectUseCase: Partial<UploadOrgObjectUseCase>;
   let mockDeleteObjectUseCase: Partial<DeleteObjectUseCase>;
   let mockContextService: Partial<ContextService>;
   let mockEventEmitter: { emitAsync: jest.Mock };
+  let mockImageNormalizer: { normalize: jest.Mock };
 
   const mockOrgId = randomUUID();
 
@@ -46,14 +63,17 @@ describe('CreateUserMessageUseCase', () => {
       emitAsync: jest.fn().mockResolvedValue([]),
     };
 
+    mockImageNormalizer = { normalize: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateUserMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: ImageNormalizerPort, useValue: mockImageNormalizer },
       ],
     }).compile();
 
@@ -64,6 +84,9 @@ describe('CreateUserMessageUseCase', () => {
     (mockContextService.get as jest.Mock).mockReturnValue(mockOrgId);
     (mockUploadObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
     (mockDeleteObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
+    mockImageNormalizer.normalize.mockImplementation((image: unknown) =>
+      Promise.resolve(image),
+    );
   });
 
   it('should be defined', () => {
@@ -100,7 +123,7 @@ describe('CreateUserMessageUseCase', () => {
       const threadId = randomUUID();
       const text = 'Check this image';
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('fake-image-data'),
+        buffer: imageBytes('image/jpeg', 'fake-image-data'),
         contentType: 'image/jpeg',
         altText: 'alt text',
       };
@@ -121,6 +144,9 @@ describe('CreateUserMessageUseCase', () => {
 
       // Assert
       expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ orgId: mockOrgId }),
+      );
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(UserMessage),
       );
@@ -133,11 +159,11 @@ describe('CreateUserMessageUseCase', () => {
       const text = 'Multiple images';
       const pendingImages: ImageUploadData[] = [
         {
-          buffer: Buffer.from('image-1'),
+          buffer: imageBytes('image/jpeg', 'image-1'),
           contentType: 'image/jpeg',
         },
         {
-          buffer: Buffer.from('image-2'),
+          buffer: imageBytes('image/png', 'image-2'),
           contentType: 'image/png',
           altText: 'second image',
         },
@@ -184,7 +210,7 @@ describe('CreateUserMessageUseCase', () => {
       // Arrange
       const threadId = randomUUID();
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('fake-image'),
+        buffer: imageBytes('image/jpeg', 'fake-image'),
         contentType: 'image/jpeg',
       };
       const command = new CreateUserMessageCommand(threadId, 'Test', [
@@ -313,11 +339,14 @@ describe('CreateUserMessageUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating user message', {
-        threadId,
-        hasText: true,
-        imageCount: 0,
-      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+          hasText: true,
+          imageCount: 0,
+        },
+        'Creating user message',
+      );
     });
 
     it('should log correct information when creating message with images', async () => {
@@ -325,7 +354,7 @@ describe('CreateUserMessageUseCase', () => {
       const threadId = randomUUID();
       const text = 'With image';
       const pendingImage: ImageUploadData = {
-        buffer: Buffer.from('image'),
+        buffer: imageBytes('image/png', 'image'),
         contentType: 'image/png',
       };
       const command = new CreateUserMessageCommand(threadId, text, [
@@ -346,11 +375,89 @@ describe('CreateUserMessageUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating user message', {
-        threadId,
-        hasText: true,
-        imageCount: 1,
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+          hasText: true,
+          imageCount: 1,
+        },
+        'Creating user message',
+      );
+    });
+  });
+
+  describe('image normalization', () => {
+    const threadId = randomUUID();
+    const upload = (): ImageUploadData => ({
+      buffer: imageBytes('image/png', 'full-size-photo'),
+      contentType: 'image/png',
+      altText: 'photo',
+    });
+
+    it('stores the normalized bytes under the normalized content type', async () => {
+      const normalized = imageBytes('image/jpeg', 'downscaled');
+      mockImageNormalizer.normalize.mockResolvedValue({
+        buffer: normalized,
+        contentType: 'image/jpeg',
       });
+      (mockMessagesRepository.create as jest.Mock).mockImplementation(
+        (message: UserMessage) => Promise.resolve(message),
+      );
+
+      const result = await useCase.execute(
+        new CreateUserMessageCommand(threadId, undefined, [upload()]),
+      );
+
+      expect(mockImageNormalizer.normalize).toHaveBeenCalledWith({
+        buffer: upload().buffer,
+        contentType: 'image/png',
+      });
+      const stored = (mockUploadObjectUseCase.execute as jest.Mock).mock
+        .calls[0][0] as UploadOrgObjectCommand;
+      expect(stored.data).toBe(normalized);
+      expect(stored.objectName).toMatch(/\.jpg$/);
+      expect(result.content).toEqual([
+        expect.objectContaining({
+          contentType: 'image/jpeg',
+          altText: 'photo',
+        }),
+      ]);
+      expect(result.content[0]).toBeInstanceOf(ImageMessageContent);
+    });
+
+    it('rejects an image still above the stored-image ceiling without storing anything', async () => {
+      mockImageNormalizer.normalize.mockResolvedValue({
+        buffer: Buffer.alloc(MAX_IMAGE_SIZE_BYTES + 1),
+        contentType: 'image/webp',
+      });
+
+      await expect(
+        useCase.execute(
+          new CreateUserMessageCommand(threadId, undefined, [upload()]),
+        ),
+      ).rejects.toThrow(MessageContentInvalidError);
+      expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
+      expect(mockMessagesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('surfaces an undecodable image as the domain 400 without storing anything', async () => {
+      mockImageNormalizer.normalize.mockRejectedValue(
+        new MessageContentInvalidError('Image could not be processed'),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateUserMessageCommand(threadId, undefined, [
+            upload(),
+            upload(),
+          ]),
+        ),
+      ).rejects.toMatchObject({
+        code: 'MESSAGE_CONTENT_INVALID',
+        statusCode: 400,
+      });
+      expect(mockImageNormalizer.normalize).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });

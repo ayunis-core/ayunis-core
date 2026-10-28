@@ -1,10 +1,19 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { ApplicationError } from './base.error';
-import { extractUpstreamStatus } from './extract-upstream-status.helper';
+import {
+  extractProviderErrorDiagnostics,
+  hasRateLimitDiagnostics,
+  type ProviderErrorDiagnostics,
+} from './extract-provider-error-diagnostics.helper';
 import { classifyTransportError } from './provider-transport-error.classifier';
-import type { ProviderUnavailableError } from './provider.errors';
+import type {
+  ProviderErrorContext,
+  ProviderUnavailableError,
+} from './provider.errors';
 import {
   ProviderConnectionError,
   ProviderFailureClass,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from './provider.errors';
@@ -15,19 +24,24 @@ export interface ProviderFailureSource {
 }
 
 /**
- * Single integration point for outbound adapters: wraps transport failures
- * and upstream 5xx responses in the ProviderUnavailableError family.
+ * Single integration point for outbound adapters: wraps transport failures,
+ * upstream 5xx responses, and rate limits identified by HTTP 429 or known
+ * provider diagnostics in the ProviderUnavailableError family.
  *
  * Returns undefined for everything the caller should keep handling itself:
- * ApplicationError (already classified), upstream 4xx (potentially our bug —
- * must stay a distinct, first-occurrence-alerting incident), and errors that
- * are neither transport failures nor provider responses.
+ * ApplicationError (already classified), upstream 4xx other than rate limits
+ * (potentially our bug — must stay a distinct, first-occurrence-alerting
+ * incident), and errors that are neither transport failures nor provider
+ * responses.
  */
 export function wrapProviderFailure(
   error: unknown,
   source: ProviderFailureSource,
 ): ProviderUnavailableError | undefined {
   if (error instanceof ApplicationError) return undefined;
+  if (error instanceof ModelProviderError) {
+    return wrapPortableFailure(error, source);
+  }
 
   const transport = classifyTransportError(error);
   if (transport) {
@@ -44,13 +58,104 @@ export function wrapProviderFailure(
   return wrapByUpstreamStatus(error, source);
 }
 
+function wrapPortableFailure(
+  error: ModelProviderError,
+  source: ProviderFailureSource,
+): ProviderUnavailableError | undefined {
+  const diagnostics = extractProviderErrorDiagnostics(error);
+  const context = portableProviderContext(error, source, diagnostics);
+  if (error.kind === 'connection') {
+    return new ProviderConnectionError(context);
+  }
+  if (error.kind === 'timeout') {
+    return new ProviderTimeoutError(context);
+  }
+  if (error.kind === 'server') {
+    return new ProviderServerError(context);
+  }
+  if (error.kind === 'rate_limit' || hasRateLimitDiagnostics(diagnostics)) {
+    return new ProviderRequestRejectedError({
+      ...context,
+      upstreamStatus: context.upstreamStatus ?? 429,
+    });
+  }
+  return undefined;
+}
+
+function portableProviderContext(
+  error: ModelProviderError,
+  source: ProviderFailureSource,
+  diagnostics: ProviderErrorDiagnostics,
+): ProviderErrorContext {
+  return {
+    ...source,
+    failureStage: error.stage,
+    ...providerDiagnosticContext(diagnostics),
+    ...(error.timeoutSource && { timeoutSource: error.timeoutSource }),
+    ...(error.upstreamStatus !== undefined && {
+      upstreamStatus: error.upstreamStatus,
+    }),
+    ...(error.upstreamRequestId && {
+      upstreamRequestId: error.upstreamRequestId,
+    }),
+    ...(error.retryAfterMs !== undefined && {
+      retryAfterMs: error.retryAfterMs,
+    }),
+    ...(error.transportCode && { underlyingCode: error.transportCode }),
+    ...(error.host && { host: error.host }),
+  };
+}
+
+function providerDiagnosticContext(
+  diagnostics: ProviderErrorDiagnostics,
+): Pick<
+  ProviderErrorContext,
+  | 'upstreamCode'
+  | 'upstreamType'
+  | 'upstreamParam'
+  | 'upstreamReason'
+  | 'upstreamRequestId'
+> {
+  return {
+    ...(diagnostics.upstreamCode && {
+      upstreamCode: diagnostics.upstreamCode,
+    }),
+    ...(diagnostics.upstreamType && {
+      upstreamType: diagnostics.upstreamType,
+    }),
+    ...(diagnostics.upstreamParam && {
+      upstreamParam: diagnostics.upstreamParam,
+    }),
+    ...(diagnostics.upstreamReason && {
+      upstreamReason: diagnostics.upstreamReason,
+    }),
+    ...(diagnostics.upstreamRequestId && {
+      upstreamRequestId: diagnostics.upstreamRequestId,
+    }),
+  };
+}
+
 function wrapByUpstreamStatus(
   error: unknown,
   source: ProviderFailureSource,
 ): ProviderUnavailableError | undefined {
-  const status = extractUpstreamStatus(error);
+  const diagnostics = extractProviderErrorDiagnostics(error);
+  const status = diagnostics.upstreamStatus;
   if (status === undefined) return undefined;
-  const context = { ...source, upstreamStatus: status };
+  const context = {
+    ...source,
+    upstreamStatus: status,
+    ...(diagnostics.upstreamRequestId && {
+      upstreamRequestId: diagnostics.upstreamRequestId,
+    }),
+  };
+  if (status === 429) {
+    const retryAfterMs = diagnostics.upstreamRetryAfterMs;
+    return new ProviderRequestRejectedError(
+      { ...context, ...(retryAfterMs !== undefined && { retryAfterMs }) },
+      error,
+    );
+  }
   if (status === 504 || status === 408) {
     return new ProviderTimeoutError(context, error);
   }

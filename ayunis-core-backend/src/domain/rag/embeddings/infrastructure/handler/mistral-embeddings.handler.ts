@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EmbeddingsHandler } from '../../application/ports/embeddings.handler';
-import { Embedding } from '../../domain/embedding.entity';
+import { EmbeddingsHandler } from 'src/domain/rag/embeddings/application/ports/embeddings.handler';
+import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
 import { Mistral } from '@mistralai/mistralai';
 import { ConfigService } from '@nestjs/config';
-import { EmbeddingModel } from '../../domain/embedding-model.entity';
-import { EmbeddingsProvider } from '../../domain/embeddings-provider.enum';
-import { NoEmbeddingsReturnedError } from '../../application/embeddings.errors';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
+import { NoEmbeddingsReturnedError } from 'src/domain/rag/embeddings/application/embeddings.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 
@@ -18,12 +18,15 @@ const EMBEDDINGS_TIMEOUT_MS = 30_000;
 @Injectable()
 export class MistralEmbeddingsHandler extends EmbeddingsHandler {
   private readonly logger = new Logger(MistralEmbeddingsHandler.name);
+
   private readonly mistral: Mistral;
 
   constructor(private readonly configService: ConfigService) {
     super();
     this.mistral = new Mistral({
       apiKey: this.configService.get('embeddings.mistral.apiKey'),
+      server: 'eu',
+      serverURL: this.configService.get('embeddings.mistral.serverUrl'),
       timeoutMs: EMBEDDINGS_TIMEOUT_MS,
     });
   }
@@ -33,10 +36,7 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
   }
 
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
-    this.logger.log('embed', {
-      model: model.name,
-      input: input.length,
-    });
+    this.logger.log({ model: model.name, inputCount: input.length }, 'embed');
     const embeddingsBatchResponse = await retryWithBackoff({
       fn: () =>
         this.mistral.embeddings.create({
@@ -49,11 +49,8 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
         const isTransient = isTransientMistralError(error);
         if (isTransient) {
           this.logger.warn(
+            { err: error },
             'Retrying Mistral embeddings after transient error',
-            {
-              name: error.name,
-              message: error.message,
-            },
           );
         }
         return isTransient;
@@ -62,17 +59,19 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
 
     return embeddingsBatchResponse.data.map((data) => {
       if (!data.embedding) {
-        this.logger.error('No embedding returned from Mistral', {
-          data,
-        });
+        this.logger.error(
+          { model: model.name },
+          'No embedding returned from Mistral',
+        );
         throw new NoEmbeddingsReturnedError(EmbeddingsProvider.MISTRAL, {
           data,
         });
       }
       if (data.index === undefined) {
-        this.logger.error('No index returned from Mistral', {
-          data,
-        });
+        this.logger.error(
+          { model: model.name },
+          'No index returned from Mistral',
+        );
         throw new NoEmbeddingsReturnedError(EmbeddingsProvider.MISTRAL, {
           data,
         });

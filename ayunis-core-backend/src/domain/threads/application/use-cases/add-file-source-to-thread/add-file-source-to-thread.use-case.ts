@@ -3,13 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   detectFileType,
   getCanonicalMimeType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
+  isDocumentSourceFile,
   isSpreadsheetFile,
   isCSVFile,
   SUPPORTED_FILE_TYPES,
@@ -28,14 +25,15 @@ import {
   UnsupportedFileTypeError,
   UnsupportedSourceFileTypeError,
 } from 'src/domain/sources/application/sources.errors';
-import { Thread } from '../../../domain/thread.entity';
-import { UnexpecteThreadError } from '../../threads.errors';
-import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
-import { FindThreadUseCase } from '../find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../find-thread/find-thread.query';
-import { AddSourceToThreadUseCase } from '../add-source-to-thread/add-source-to-thread.use-case';
-import { AddSourceCommand } from '../add-source-to-thread/add-source.command';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
+import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
+import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class AddFileSourceToThreadUseCase {
@@ -52,10 +50,13 @@ export class AddFileSourceToThreadUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: AddFileSourceToThreadCommand): Promise<Source[]> {
-    this.logger.log('addFileSourceToThread', {
-      threadId: command.threadId,
-      fileName: command.file.originalname,
-    });
+    this.logger.log(
+      {
+        threadId: command.threadId,
+        fileName: command.file.originalname,
+      },
+      'addFileSourceToThread',
+    );
 
     const detectedType = detectFileType(
       command.file.mimetype,
@@ -72,11 +73,7 @@ export class AddFileSourceToThreadUseCase {
     // for concurrent adds.
     assertThreadHasSourceCapacity(thread.sourceAssignments ?? []);
 
-    if (
-      isDocumentFile(detectedType) ||
-      isPlainTextFile(detectedType) ||
-      isAudioFile(detectedType)
-    ) {
+    if (isDocumentSourceFile(detectedType)) {
       return this.addDocumentSource(thread, command.file, detectedType);
     }
     if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {
@@ -146,8 +143,7 @@ export class AddFileSourceToThreadUseCase {
       await this.attachSources(thread, sources);
     } catch (error) {
       try {
-        const orgId = this.contextService.get('orgId');
-        if (!orgId) throw new UnauthorizedAccessError();
+        const orgId = getRequiredOrgId(this.contextService);
         await this.deleteSourcesUseCase.execute(
           new DeleteSourcesCommand(
             sources.map((source) => source.id),
@@ -155,10 +151,13 @@ export class AddFileSourceToThreadUseCase {
           ),
         );
       } catch (cleanupError) {
-        this.logger.error('Failed to delete sources after attach failure', {
-          sourceIds: sources.map((source) => source.id),
-          error: cleanupError as Error,
-        });
+        this.logger.error(
+          {
+            sourceIds: sources.map((source) => source.id),
+            err: cleanupError as Error,
+          },
+          'Failed to delete sources after attach failure',
+        );
       }
       throw error;
     }

@@ -1,18 +1,19 @@
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedModelNotFoundError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { GetPermittedModelQuery } from './get-permitted-model.query';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedModelUseCase {
   private readonly logger = new Logger(GetPermittedModelUseCase.name);
+
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
@@ -20,26 +21,22 @@ export class GetPermittedModelUseCase {
 
   async execute(query: GetPermittedModelQuery): Promise<PermittedModel> {
     try {
-      this.logger.log('execute', {
-        query,
-      });
-      this.logger.debug('GetPermittedModelByIdQuery', {
-        query,
-      });
+      const metadata = {
+        orgId: query.orgId,
+        permittedModelId: query.permittedModelId,
+      };
+      this.logger.log(metadata, 'execute');
+      this.logger.debug(metadata, 'GetPermittedModelByIdQuery');
       const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
       const model = await this.permittedModelsRepository.findOne({
         id: query.permittedModelId,
       });
       const isFromOrg = orgId === model?.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isFromOrg && !isSuperAdmin) {
+      if (!isFromOrg && !isSuperAdmin(this.contextService)) {
         throw new UnauthorizedAccessError();
       }
       if (!model) {
-        this.logger.error('Permitted model not found', {
-          query,
-        });
+        this.logger.error(metadata, 'Permitted model not found');
         throw new PermittedModelNotFoundError(query.permittedModelId);
       }
       return model;
@@ -47,9 +44,12 @@ export class GetPermittedModelUseCase {
       if (error instanceof PermittedModelNotFoundError) {
         throw error;
       }
-      this.logger.error('Error getting permitted model', {
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      this.logger.error(
+        {
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Error getting permitted model',
+      );
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
         {

@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,7 +6,7 @@ import {
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
-import { GetAppAlertUseCase } from '../../application/use-cases/get-app-alert/get-app-alert.use-case';
+import { GetAppAlertUseCase } from 'src/iam/platform-config/application/use-cases/get-app-alert/get-app-alert.use-case';
 import { AppAlertResponseDto } from './dto/app-alert-response.dto';
 
 /**

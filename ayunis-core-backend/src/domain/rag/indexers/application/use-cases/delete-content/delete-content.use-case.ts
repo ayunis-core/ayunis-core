@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IndexRegistry } from '../../indexer.registry';
+import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { DeleteContentCommand } from './delete-content.command';
-import { UnexpectedIndexError } from '../../indexer.errors';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 
 @Injectable()
 export class DeleteContentUseCase {
   private readonly logger = new Logger(DeleteContentUseCase.name);
+
   constructor(private readonly indexRegistry: IndexRegistry) {}
 
   async execute(command: DeleteContentCommand): Promise<void> {
@@ -19,7 +20,7 @@ export class DeleteContentUseCase {
         await index.delete(command.documentId);
       }
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to delete content');
       throw new UnexpectedIndexError(error as Error);
     }
   }

@@ -1,7 +1,8 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 
 /**
  * Knowledge-base-specific implementation of share authorization.
@@ -22,10 +23,10 @@ export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizati
    * User must own the knowledge base to view its shares.
    */
   async canViewShares(knowledgeBaseId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canViewShares', { knowledgeBaseId, userId });
+    this.logger.log({ knowledgeBaseId, userId }, 'canViewShares');
 
     const kb = await this.knowledgeBaseRepository.findById(knowledgeBaseId);
-    return kb !== null && kb.userId === userId;
+    return kb instanceof PersonalKnowledgeBase && kb.userId === userId;
   }
 
   /**
@@ -33,10 +34,10 @@ export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizati
    * User must own the knowledge base to create shares for it.
    */
   async canCreateShare(knowledgeBaseId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canCreateShare', { knowledgeBaseId, userId });
+    this.logger.log({ knowledgeBaseId, userId }, 'canCreateShare');
 
     const kb = await this.knowledgeBaseRepository.findById(knowledgeBaseId);
-    return kb !== null && kb.userId === userId;
+    return kb instanceof PersonalKnowledgeBase && kb.userId === userId;
   }
 
   /**
@@ -44,7 +45,7 @@ export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizati
    * For knowledge base shares, this is handled at the share level by checking ownerId.
    */
   canDeleteShare(shareId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canDeleteShare', { shareId, userId });
+    this.logger.log({ shareId, userId }, 'canDeleteShare');
 
     return Promise.resolve(true);
   }

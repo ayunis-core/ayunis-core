@@ -7,4 +7,9 @@ export class OrgChatSettingsResponseDto {
     example: true,
   })
   internetSearchEnabled: boolean;
+  @ApiProperty({
+    description: 'Whether new chats start in anonymous mode',
+    example: false,
+  })
+  anonymousModeByDefault: boolean;
 }

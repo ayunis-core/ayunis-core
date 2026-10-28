@@ -1,16 +1,22 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { SearchWebUseCase } from './search-web.use-case';
 import { SearchWebCommand } from './search-web.command';
-import { InternetSearchHandler } from '../../ports/internet-search.handler';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 describe('SearchWebUseCase', () => {
+  let logger: LoggerMock;
   let useCase: SearchWebUseCase;
   let mockHandler: Partial<InternetSearchHandler>;
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     mockHandler = {
       search: jest.fn(),
     };
@@ -49,5 +55,9 @@ describe('SearchWebUseCase', () => {
 
     expect(result).toBe(expectedResults);
     expect(mockHandler.search).toHaveBeenCalledWith(command.query);
+    expect(logger.debug).toHaveBeenCalledWith(
+      { input: command.query },
+      'Searching web',
+    );
   });
 });

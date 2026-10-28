@@ -1,18 +1,30 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AcceptInviteUseCase } from './accept-invite.use-case';
 import { AcceptInviteCommand } from './accept-invite.command';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import {
   InviteJwtService,
   INVITE_TOKEN_TYPE,
-} from '../../services/invite-jwt.service';
+} from 'src/iam/invites/application/services/invite-jwt.service';
 import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { User } from 'src/iam/users/domain/user.entity';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
 
 describe('AcceptInviteUseCase', () => {
   let useCase: AcceptInviteUseCase;
@@ -21,9 +33,22 @@ describe('AcceptInviteUseCase', () => {
   let mockCreateUserUseCase: Partial<CreateUserUseCase>;
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
+  let mockPublishUserCreated: Partial<UserCreatedEventPublisher>;
+  let mockAcquireAllocationLock: Partial<AcquireSeatAllocationLockUseCase>;
+  let mockGetOrgAuthenticationPolicy: { execute: jest.Mock };
+  let mockAssignUserToTeams: { execute: jest.Mock };
 
   const inviteId = 'invite-id' as UUID;
   const orgId = 'org-id' as UUID;
+  const createdUser = new User({
+    email: 'user@example.com',
+    emailVerified: true,
+    passwordHash: 'password-hash',
+    orgId,
+    role: UserRole.USER,
+    name: 'Jane Doe',
+    hasAcceptedMarketing: false,
+  });
 
   beforeAll(async () => {
     mockInvitesRepository = {
@@ -33,9 +58,16 @@ describe('AcceptInviteUseCase', () => {
     mockInviteJwtService = {
       verifyInviteToken: jest.fn(),
     };
-    mockCreateUserUseCase = { execute: jest.fn() };
+    mockCreateUserUseCase = {
+      prepare: jest.fn().mockResolvedValue(createdUser),
+      createPreparedWithoutPublishing: jest.fn().mockResolvedValue(createdUser),
+    };
     mockIsValidPasswordUseCase = { execute: jest.fn() };
     mockFindUserByEmailUseCase = { execute: jest.fn() };
+    mockPublishUserCreated = { publish: jest.fn() };
+    mockAcquireAllocationLock = { execute: jest.fn() };
+    mockGetOrgAuthenticationPolicy = { execute: jest.fn() };
+    mockAssignUserToTeams = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -51,6 +83,22 @@ describe('AcceptInviteUseCase', () => {
           provide: FindUserByEmailUseCase,
           useValue: mockFindUserByEmailUseCase,
         },
+        {
+          provide: UserCreatedEventPublisher,
+          useValue: mockPublishUserCreated,
+        },
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: mockAcquireAllocationLock,
+        },
+        {
+          provide: GetOrgAuthenticationPolicyUseCase,
+          useValue: mockGetOrgAuthenticationPolicy,
+        },
+        {
+          provide: AssignUserToTeamsUseCase,
+          useValue: mockAssignUserToTeams,
+        },
       ],
     }).compile();
 
@@ -59,6 +107,13 @@ describe('AcceptInviteUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(mockInvitesRepository, 'accept').mockResolvedValue(true);
+    jest
+      .spyOn(mockAcquireAllocationLock, 'execute')
+      .mockResolvedValue(undefined);
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: true,
+    });
   });
 
   const acceptInviteWithRole = async (role: UserRole, department?: string) => {
@@ -93,17 +148,169 @@ describe('AcceptInviteUseCase', () => {
     async (role) => {
       await acceptInviteWithRole(role);
 
-      expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+      expect(mockCreateUserUseCase.prepare).toHaveBeenCalledWith(
         expect.objectContaining({ role }),
       );
+      expect(
+        mockCreateUserUseCase.createPreparedWithoutPublishing,
+      ).toHaveBeenCalledWith(createdUser);
+      expect(mockPublishUserCreated.publish).toHaveBeenCalledWith(createdUser);
     },
   );
+
+  it('assigns every invited team before publishing the created user', async () => {
+    const teamIds = [
+      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID,
+      'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' as UUID,
+    ];
+    const invite = new Invite({
+      id: inviteId,
+      email: 'member@example.com',
+      orgId,
+      role: UserRole.USER,
+      expiresAt: new Date(Date.now() + 86_400_000),
+      teamIds,
+    });
+    jest
+      .spyOn(mockInviteJwtService, 'verifyInviteToken')
+      .mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
+    jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
+    jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
+    jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
+
+    await useCase.execute(
+      new AcceptInviteCommand({
+        inviteToken: 'valid-token',
+        userName: 'Jane Doe',
+        password: 'securePass123',
+        hasAcceptedMarketing: false,
+      }),
+    );
+
+    expect(mockAssignUserToTeams.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: createdUser.id, orgId, teamIds }),
+    );
+    expect(
+      mockAssignUserToTeams.execute.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      jest.mocked(mockPublishUserCreated.publish!).mock.invocationCallOrder[0],
+    );
+  });
 
   it('passes department through to user creation', async () => {
     await acceptInviteWithRole(UserRole.USER, 'jugendamt');
 
-    expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+    expect(mockCreateUserUseCase.prepare).toHaveBeenCalledWith(
       expect.objectContaining({ department: 'jugendamt' }),
     );
+  });
+
+  it('prepares the user before acquiring the organization lock', async () => {
+    jest.spyOn(mockAcquireAllocationLock, 'execute').mockImplementation(() => {
+      expect(mockCreateUserUseCase.prepare).toHaveBeenCalled();
+      return Promise.resolve();
+    });
+
+    await acceptInviteWithRole(UserRole.USER);
+  });
+
+  it('locks the authentication policy before the seat allocation', async () => {
+    await acceptInviteWithRole(UserRole.USER);
+
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        orgId,
+        lockForSessionIssuance: true,
+      }),
+    );
+    expect(
+      mockGetOrgAuthenticationPolicy.execute.mock.invocationCallOrder.at(1)!,
+    ).toBeLessThan(
+      jest
+        .mocked(mockAcquireAllocationLock.execute!)
+        .mock.invocationCallOrder.at(0)!,
+    );
+  });
+
+  it('does not create a user when another request already accepted the invite', async () => {
+    jest.spyOn(mockInvitesRepository, 'accept').mockResolvedValue(false);
+
+    await expect(acceptInviteWithRole(UserRole.USER)).rejects.toMatchObject({
+      code: 'INVITE_ALREADY_ACCEPTED',
+    });
+    expect(
+      mockCreateUserUseCase.createPreparedWithoutPublishing,
+    ).not.toHaveBeenCalled();
+    expect(mockPublishUserCreated.publish).not.toHaveBeenCalled();
+  });
+
+  it('rejects when an account appears while invite acceptance waits for the organization lock', async () => {
+    jest.spyOn(mockAcquireAllocationLock, 'execute').mockImplementation(() => {
+      jest
+        .spyOn(mockFindUserByEmailUseCase, 'execute')
+        .mockResolvedValue(createdUser);
+      return Promise.resolve();
+    });
+
+    await expect(acceptInviteWithRole(UserRole.USER)).rejects.toMatchObject({
+      code: 'USER_ALREADY_EXISTS',
+    });
+    expect(mockInvitesRepository.accept).not.toHaveBeenCalled();
+    expect(
+      mockCreateUserUseCase.createPreparedWithoutPublishing,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('does not accept an invitation that expires while waiting for the organization lock', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-14T10:00:00.000Z'));
+    jest.spyOn(mockAcquireAllocationLock, 'execute').mockImplementation(() => {
+      jest.setSystemTime(new Date('2026-08-16T10:00:00.000Z'));
+      return Promise.resolve();
+    });
+
+    try {
+      await expect(acceptInviteWithRole(UserRole.USER)).rejects.toMatchObject({
+        code: 'INVITE_EXPIRED',
+      });
+      expect(mockInvitesRepository.accept).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('leaves the invite pending when the organization requires SSO', async () => {
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    });
+
+    await expect(acceptInviteWithRole(UserRole.USER)).rejects.toMatchObject({
+      code: 'LOCAL_PASSWORD_LOGIN_DISABLED',
+    });
+
+    expect(mockCreateUserUseCase.prepare).not.toHaveBeenCalled();
+    expect(mockInvitesRepository.accept).not.toHaveBeenCalled();
+  });
+
+  it('rechecks the authentication policy after acquiring the organization lock', async () => {
+    mockGetOrgAuthenticationPolicy.execute
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: true })
+      .mockResolvedValueOnce({ localPasswordLoginEnabled: false });
+
+    await expect(acceptInviteWithRole(UserRole.USER)).rejects.toMatchObject({
+      code: 'LOCAL_PASSWORD_LOGIN_DISABLED',
+    });
+
+    expect(mockGetOrgAuthenticationPolicy.execute).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        orgId,
+        lockForSessionIssuance: true,
+      }),
+    );
+    expect(mockInvitesRepository.accept).not.toHaveBeenCalled();
+    expect(
+      mockCreateUserUseCase.createPreparedWithoutPublishing,
+    ).not.toHaveBeenCalled();
   });
 });

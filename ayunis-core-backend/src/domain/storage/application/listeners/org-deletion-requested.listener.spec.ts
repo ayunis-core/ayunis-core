@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { StorageOrgDeletionRequestedListener } from './org-deletion-requested.listener';
-import { PurgeOrgStorageUseCase } from '../use-cases/purge-org-storage/purge-org-storage.use-case';
+import { PurgeOrgStorageUseCase } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.use-case';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import type { UUID } from 'crypto';
 
@@ -37,6 +37,16 @@ describe('StorageOrgDeletionRequestedListener', () => {
     expect(event.takeCleanupTasks()).toEqual([
       { label: 'purge org storage', run: expect.any(Function) },
     ]);
+  });
+
+  it('rejects incomplete file cleanup', async () => {
+    purgeOrgStorageUseCase.execute.mockResolvedValue({
+      deletedCount: 1,
+      failedCount: 1,
+    });
+    const event = new OrgDeletionRequestedEvent(orgId);
+    listener.handleOrgDeletionRequested(event);
+    await expect(event.takeCleanupTasks()[0].run()).rejects.toThrow();
   });
 
   it('purges the org storage when the deferred task runs', async () => {

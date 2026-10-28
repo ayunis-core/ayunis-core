@@ -29,10 +29,6 @@
     "updatedAt": "Updated",
     "actions": "Actions"
   },
-  "statuses": {
-    "active": "Active",
-    "inactive": "Inactive"
-  },
   "empty": {
     "title": "No organizations yet",
     "description": "Organizations you create will show up here."
@@ -42,6 +38,24 @@
     "error": "Failed to create organization. Please try again."
   },
   "search": {
-    "placeholder": "Search organizations..."
+    "placeholder": "Search by name or ID..."
+  },
+  "lifecycle": {
+    "label": "Lifecycle status",
+    "all": "All organisations",
+    "paying": "Paying",
+    "expired": "Expired",
+    "trial": "Trial",
+    "no-plan": "No plan",
+    "archived": "Archived"
+  },
+  "lifecycleSummary": {
+    "total_one": "{{count, number}} organisation",
+    "total_other": "{{count, number}} organisations",
+    "paying": "{{count, number}} paying",
+    "expired": "{{count, number}} expired",
+    "trial": "{{count, number}} on trial",
+    "no-plan": "{{count, number}} with no plan",
+    "archived": "{{count, number}} archived"
   }
 }

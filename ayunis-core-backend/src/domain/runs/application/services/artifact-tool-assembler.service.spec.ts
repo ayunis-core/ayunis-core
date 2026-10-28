@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
@@ -100,9 +99,6 @@ describe('ArtifactToolAssemblerService', () => {
     service = module.get<ArtifactToolAssemblerService>(
       ArtifactToolAssemblerService,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {

@@ -1,66 +1,59 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
-import { RemoveSourceFromSkillCommand } from './remove-source-from-skill.command';
+import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { RemoveSourceFromSkillCommand } from './remove-source-from-skill.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveSourceFromSkillUseCase {
   private readonly logger = new Logger(RemoveSourceFromSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly contextService: ContextService,
-    private readonly deleteSourceUseCase: DeleteSourceUseCase,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
+    private readonly context: ContextService,
+    private readonly deleteSource: DeleteSourceUseCase,
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: RemoveSourceFromSkillCommand): Promise<void> {
-    this.logger.log('Removing source from skill', {
-      skillId: command.skillId,
-      sourceId: command.sourceId,
-    });
-    try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId || !orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+    this.logger.log(command, 'Removing source from skill');
+    const skill = await this.repository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    const orgId = this.requireOrgId();
+    await this.removeSource(skill, command.sourceId, orgId);
+  }
 
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
+  private async removeSource(
+    skill: Skill,
+    sourceId: UUID,
+    orgId: UUID,
+  ): Promise<void> {
+    if (!skill.sourceIds.includes(sourceId)) return;
+    await this.deleteSource.execute(new DeleteSourceCommand(sourceId, orgId));
+    await this.repository.update(
+      skill.withUpdates({
+        sourceIds: skill.sourceIds.filter((id) => id !== sourceId),
+      }),
+      skill,
+    );
+  }
 
-      if (!skill.sourceIds.includes(command.sourceId)) {
-        return;
-      }
-
-      const updatedSkill = new Skill({
-        ...skill,
-        sourceIds: skill.sourceIds.filter((id) => id !== command.sourceId),
-      });
-
-      await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(command.sourceId, orgId),
-      );
-      await this.skillRepository.update(updatedSkill);
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-      this.logger.error('Error removing source from skill', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillError(error);
-    }
+  private requireOrgId(): UUID {
+    const orgId = getRequiredOrgId(this.context);
+    return orgId;
   }
 }

@@ -4,18 +4,18 @@ import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
-import { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';
-import { UpsertUserSystemPromptCommand } from '../upsert-user-system-prompt/upsert-user-system-prompt.command';
+import { UpsertUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
+import { UpsertUserSystemPromptCommand } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
+import { PersonalizedSystemPromptGenerationError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 /**
  * Synthetic thread ID used for one-shot inference calls that are not part of
@@ -45,17 +45,9 @@ export class GeneratePersonalizedSystemPromptUseCase {
   async execute(
     command: GeneratePersonalizedSystemPromptCommand,
   ): Promise<GeneratePersonalizedSystemPromptResult> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('execute', { userId });
+    this.logger.log({ userId }, 'execute');
 
     try {
       const permittedModel = await this.getDefaultModelUseCase.execute(
@@ -84,10 +76,13 @@ export class GeneratePersonalizedSystemPromptUseCase {
       return { systemPrompt, welcomeMessage };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to generate personalized system prompt', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          err: error as Error,
+        },
+        'Failed to generate personalized system prompt',
+      );
       throw new PersonalizedSystemPromptGenerationError(
         error instanceof Error ? error : undefined,
       );
@@ -153,9 +148,10 @@ export class GeneratePersonalizedSystemPromptUseCase {
         model,
       );
     } catch (error) {
-      this.logger.warn('Welcome message generation failed, using fallback', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error },
+        'Welcome message generation failed, using fallback',
+      );
       return '';
     }
   }

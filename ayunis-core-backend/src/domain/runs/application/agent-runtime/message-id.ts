@@ -4,9 +4,8 @@ import type { UUID } from 'crypto';
 /**
  * Deterministic message ids for one runtime turn, derived from the run id and
  * iteration. The streamed copy (event adapter) and the persisted copy (the
- * persistence hook) compute the id independently, so a message keeps the id the
- * live stream used after a reload — matching the legacy loop, where a single
- * message instance was both streamed and saved.
+ * persistence hook) compute the id independently, so a persisted message keeps
+ * the id that the live stream exposed before reload.
  */
 export function assistantMessageId(runId: string, iteration: number): UUID {
   return deterministicId(runId, iteration, 'assistant');

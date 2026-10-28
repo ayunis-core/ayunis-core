@@ -4,27 +4,50 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './Codeblock';
 import PiiMaskInline from './PiiMaskInline';
-import { rehypePiiMasks } from '../lib/rehype-pii-masks';
+import SourceCitationInline from './SourceCitationInline';
+import UrlReferenceInline from './UrlReferenceInline';
+import {
+  protectUrlReferences,
+  rehypeUrlReferences,
+} from '@/widgets/markdown/lib/rehype-url-references';
+import { rehypePiiMasks } from '@/widgets/markdown/lib/rehype-pii-masks';
+import { rehypeLegalMarkers } from '@/widgets/markdown/lib/rehype-legal-markers';
+import { rehypeSourceCitations } from '@/widgets/markdown/lib/rehype-source-citations';
+import { protectSourceCitationPipes } from '@/widgets/markdown/lib/protect-source-citation-pipes';
 
 // Module constants so react-markdown doesn't re-parse on every render.
 const REMARK_PLUGINS = [remarkGfm];
 const REHYPE_PLUGINS = [rehypePiiMasks];
+const LEGAL_REHYPE_PLUGINS = [rehypePiiMasks, rehypeLegalMarkers];
 
 interface MarkdownProps {
   children: string;
   className?: string;
+  renderLegalReferences?: boolean;
+  renderSourceCitations?: boolean;
+  renderUrlReferences?: boolean;
+  renderImages?: boolean;
 }
 
 interface SpanComponentProps {
   children?: ReactNode;
   // react-markdown delivers hast data attributes in kebab-case.
   'data-pii-token'?: string;
+  'data-source-citation'?: string;
+  'data-source-chunk-id'?: string;
+  'data-source-label'?: string;
 }
 
 interface CodeComponentProps {
   inline?: boolean;
   className?: string;
   children?: ReactNode;
+}
+
+interface ImageComponentProps {
+  src?: string;
+  alt?: string;
+  title?: string;
 }
 
 interface TableComponentProps {
@@ -34,21 +57,51 @@ interface TableComponentProps {
 interface AnchorComponentProps {
   href?: string;
   children?: ReactNode;
+  'data-legal-reference'?: string;
+  'data-url-reference'?: string;
+  title?: string;
 }
 
-function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
+function Markdown({
+  children,
+  className = '',
+  renderLegalReferences = false,
+  renderSourceCitations = false,
+  renderUrlReferences = false,
+  renderImages = true,
+}: Readonly<MarkdownProps>) {
+  const urls = protectUrlReferences(renderUrlReferences ? children : '');
+  const markdown = renderUrlReferences ? urls.markdown : children;
+  const prepared = renderSourceCitations
+    ? protectSourceCitationPipes(markdown)
+    : { markdown };
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={REMARK_PLUGINS}
-        rehypePlugins={REHYPE_PLUGINS}
+        rehypePlugins={resolveRehypePlugins(
+          renderLegalReferences,
+          renderSourceCitations,
+          prepared.separator,
+          urls.references,
+        )}
         components={{
           span: (props: SpanComponentProps) => {
             const token = props['data-pii-token'];
             if (typeof token === 'string') {
               return <PiiMaskInline token={token} />;
+            }
+            const isSourceCitation = props['data-source-citation'] === 'true';
+            const chunkId = props['data-source-chunk-id'];
+            const label = props['data-source-label'];
+            if (
+              isSourceCitation &&
+              typeof chunkId === 'string' &&
+              typeof label === 'string'
+            ) {
+              return <SourceCitationInline citation={{ chunkId, label }} />;
             }
             return <span>{props.children}</span>;
           },
@@ -95,6 +148,10 @@ function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
               </CodeBlock>
             );
           },
+          img: ({ src, alt, title }: ImageComponentProps) => {
+            if (!renderImages) return alt ? <span>{alt}</span> : null;
+            return <img src={src} alt={alt ?? ''} title={title} />;
+          },
           pre: ({ children }: TableComponentProps) => {
             return <div className="my-4">{children}</div>;
           },
@@ -111,17 +168,64 @@ function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
           td: ({ children }: TableComponentProps) => (
             <td className="px-2 py-2 text-foreground">{children}</td>
           ),
-          a: ({ href, children }: AnchorComponentProps) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({
+            href,
+            children,
+            'data-legal-reference': legalReference,
+            'data-url-reference': urlReference,
+            title,
+          }: AnchorComponentProps) => {
+            const isLegalReference = legalReference === 'true';
+            if (urlReference === 'true') {
+              return (
+                <UrlReferenceInline href={href}>{children}</UrlReferenceInline>
+              );
+            }
+            return (
+              <a
+                href={href}
+                title={title}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  isLegalReference
+                    ? 'bg-muted text-foreground px-1 py-0.5 rounded font-medium'
+                    : undefined
+                }
+                data-testid={isLegalReference ? 'legal-reference' : undefined}
+              >
+                {children}
+              </a>
+            );
+          },
         }}
       >
-        {children}
+        {prepared.markdown}
       </ReactMarkdown>
     </div>
   );
+}
+
+function resolveRehypePlugins(
+  renderLegalReferences: boolean,
+  renderSourceCitations: boolean,
+  separator?: string,
+  references: ReturnType<typeof protectUrlReferences>['references'] = new Map(),
+) {
+  const base = renderLegalReferences ? LEGAL_REHYPE_PLUGINS : REHYPE_PLUGINS;
+  const urlPlugin: [
+    typeof rehypeUrlReferences,
+    { references: typeof references },
+  ] = [rehypeUrlReferences, { references }];
+  const plugins = [...base];
+  if (renderSourceCitations) {
+    const sourcePlugin: [typeof rehypeSourceCitations, { separator?: string }] =
+      [rehypeSourceCitations, { separator }];
+    return references.size
+      ? [...plugins, sourcePlugin, urlPlugin]
+      : [...plugins, sourcePlugin];
+  }
+  return references.size ? [...plugins, urlPlugin] : plugins;
 }
 
 export default memo(Markdown);

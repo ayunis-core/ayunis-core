@@ -1,9 +1,12 @@
+import type { UseFormReturn } from 'react-hook-form';
+import type { InviteFormData } from '@/pages/admin-settings/users-settings/model/types';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { InviteCreateData } from '../model/openapi';
+import type { InviteCreateData } from '@/pages/admin-settings/users-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';
@@ -12,6 +15,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useInviteCreate(
   onInviteCreated?: (response: CreateInviteResponseDto) => void,
+  form?: UseFormReturn<InviteFormData>,
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -24,8 +28,15 @@ export function useInviteCreate(
       },
       onError: (error) => {
         try {
-          const { code } = extractErrorData(error);
+          const { code, errors } = extractErrorData(error);
+          if (code === 'VALIDATION_ERROR' && errors && form) {
+            setValidationErrors(form, errors, t, 'validation');
+            return;
+          }
           switch (code) {
+            case 'TEAM_NOT_FOUND':
+              showError(t('inviteCreate.teamNotFound'));
+              break;
             case 'USER_ALREADY_EXISTS':
               showError(t('inviteCreate.userAlreadyExists'));
               break;
@@ -37,6 +48,9 @@ export function useInviteCreate(
               break;
             case 'RATE_LIMIT_EXCEEDED':
               showError(t('inviteCreate.rateLimitExceeded'));
+              break;
+            case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+              showError(t('inviteCreate.multipleActiveSubscriptions'));
               break;
             default:
               showError(t('inviteCreate.error'));
@@ -59,6 +73,7 @@ export function useInviteCreate(
     const inviteData: InviteCreateData = {
       email: data.email,
       role: data.role,
+      teamIds: data.teamIds,
     };
 
     createInviteMutation.mutate({ data: inviteData });

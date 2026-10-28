@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { Model } from '../../domain/model.entity';
-import { EmbeddingModel } from '../../domain/models/embedding.model';
-import { ImageGenerationModel } from '../../domain/models/image-generation.model';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { PermittedModelScope } from '../../domain/value-objects/permitted-model-scope.enum';
-import type { PermittedModel } from '../../domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../ports/permitted-models.repository';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   ImageGenerationModelProviderNotSupportedError,
   MultipleEmbeddingModelsNotAllowedError,
   MultipleImageGenerationModelsNotAllowedError,
-} from '../models.errors';
+} from 'src/domain/models/application/models.errors';
 
 export const SUPPORTED_IMAGE_GENERATION_PROVIDERS: ModelProvider[] = [
   ModelProvider.AZURE,
@@ -33,7 +33,8 @@ export class ModelPolicyService {
   assertSupportedImageGenerationProvider(provider: ModelProvider): void {
     if (!SUPPORTED_IMAGE_GENERATION_PROVIDERS.includes(provider)) {
       this.logger.warn(
-        `Unsupported provider for image generation: ${provider}`,
+        { provider },
+        'Unsupported provider for image generation',
       );
       throw new ImageGenerationModelProviderNotSupportedError(provider);
     }
@@ -66,8 +67,8 @@ export class ModelPolicyService {
       newModelId: candidate.model.id,
     };
     this.logger.error(
-      'Attempt to create a second permitted embedding model for org',
       metadata,
+      'Attempt to create a second permitted embedding model for org',
     );
     throw new MultipleEmbeddingModelsNotAllowedError(metadata);
   }
@@ -92,8 +93,8 @@ export class ModelPolicyService {
       newModelId: candidate.model.id,
     };
     this.logger.error(
-      'Attempt to create a second permitted image-generation model for org',
       metadata,
+      'Attempt to create a second permitted image-generation model for org',
     );
     throw new MultipleImageGenerationModelsNotAllowedError(metadata);
   }

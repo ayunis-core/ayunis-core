@@ -1,9 +1,9 @@
-import { Logger } from '@nestjs/common';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { ModelMapper } from './model.mapper';
 import {
   ImageGenerationModelRecord,
   LanguageModelRecord,
-} from '../schema/model.record';
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -18,7 +18,7 @@ describe('ModelMapper', () => {
 
   beforeEach(() => {
     mapper = new ModelMapper();
-    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    warnSpy = createLoggerMock().warn;
   });
 
   afterEach(() => {
@@ -27,6 +27,7 @@ describe('ModelMapper', () => {
 
   const buildLanguageRecord = (
     tier: string | null | undefined,
+    hasProviderFault = false,
   ): LanguageModelRecord => {
     const record = new LanguageModelRecord();
     record.id = mockId;
@@ -37,7 +38,9 @@ describe('ModelMapper', () => {
     record.canUseTools = true;
     record.isReasoning = false;
     record.canVision = false;
+    record.contextWindowSize = 200_000;
     record.isArchived = false;
+    record.hasProviderFault = hasProviderFault;
     record.createdAt = new Date('2025-01-01T00:00:00Z');
     record.updatedAt = new Date('2025-01-02T00:00:00Z');
     record.tier = tier ?? null;
@@ -47,6 +50,8 @@ describe('ModelMapper', () => {
   const buildLanguageDomain = (
     tier?: ModelTier,
     description?: string,
+    hasProviderFault = false,
+    contextWindowSize = 200_000,
   ): LanguageModel => {
     return new LanguageModel({
       id: mockId,
@@ -62,6 +67,8 @@ describe('ModelMapper', () => {
       updatedAt: new Date('2025-01-02T00:00:00Z'),
       tier,
       description,
+      hasProviderFault,
+      contextWindowSize,
     });
   };
 
@@ -84,12 +91,12 @@ describe('ModelMapper', () => {
       expect((domain as LanguageModel).tier).toBeUndefined();
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        'Encountered unknown model tier value, ignoring',
         expect.objectContaining({
           value: 'platinum',
           modelId: mockId,
           modelName: 'gpt-4',
         }),
+        'Encountered unknown model tier value, ignoring',
       );
     });
 
@@ -100,6 +107,14 @@ describe('ModelMapper', () => {
 
       expect((domain as LanguageModel).tier).toBeUndefined();
       expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('reads the provider fault status from the record', () => {
+      const record = buildLanguageRecord(null, true);
+
+      const domain = mapper.toDomain(record);
+
+      expect((domain as LanguageModel).hasProviderFault).toBe(true);
     });
   });
 
@@ -119,6 +134,14 @@ describe('ModelMapper', () => {
       const record = mapper.toRecord(domain);
 
       expect((record as LanguageModelRecord).tier).toBeNull();
+    });
+
+    it('writes the provider fault status onto the record', () => {
+      const domain = buildLanguageDomain(undefined, undefined, true);
+
+      const record = mapper.toRecord(domain);
+
+      expect((record as LanguageModelRecord).hasProviderFault).toBe(true);
     });
   });
 
@@ -165,6 +188,21 @@ describe('ModelMapper', () => {
 
       expect(roundTripped.tier).toBeUndefined();
       expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('preserves a context window size through toRecord -> toDomain', () => {
+      const original = buildLanguageDomain(
+        undefined,
+        undefined,
+        false,
+        128_000,
+      );
+
+      const record = mapper.toRecord(original) as LanguageModelRecord;
+      expect(record).toHaveProperty('contextWindowSize', 128_000);
+
+      const roundTripped = mapper.toDomain(record) as LanguageModel;
+      expect(roundTripped).toHaveProperty('contextWindowSize', 128_000);
     });
 
     it('preserves a set description through toRecord -> toDomain', () => {

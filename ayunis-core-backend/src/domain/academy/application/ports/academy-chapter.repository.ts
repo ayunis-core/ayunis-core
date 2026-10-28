@@ -1,12 +1,10 @@
 import type { UUID } from 'crypto';
-import type { AcademyChapter } from '../../domain/academy-chapter.entity';
+import type { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 
 export abstract class AcademyChapterRepository {
   abstract findAllWithCourseModules(): Promise<AcademyChapter[]>;
-  abstract findAllWithQuizContent(): Promise<AcademyChapter[]>;
   abstract findOne(id: UUID): Promise<AcademyChapter | null>;
   abstract findAllIds(): Promise<UUID[]>;
-  abstract findQuizEnabledIds(): Promise<UUID[]>;
   abstract findMaxPosition(): Promise<number | null>;
   abstract create(chapter: AcademyChapter): Promise<AcademyChapter>;
   abstract update(chapter: AcademyChapter): Promise<AcademyChapter>;

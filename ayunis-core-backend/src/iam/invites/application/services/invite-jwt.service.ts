@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
-import { InvalidInviteTokenError } from '../invites.errors';
+import { InvalidInviteTokenError } from 'src/iam/invites/application/invites.errors';
 
 export const INVITE_TOKEN_TYPE = 'invite';
 
@@ -27,9 +27,12 @@ export class InviteJwtService {
   ) {}
 
   generateInviteToken(params: { inviteId: UUID }): string {
-    this.logger.log('generateInviteToken', {
-      inviteId: params.inviteId,
-    });
+    this.logger.log(
+      {
+        inviteId: params.inviteId,
+      },
+      'generateInviteToken',
+    );
 
     const payload: InviteJwtPayload = {
       inviteId: params.inviteId,
@@ -51,11 +54,14 @@ export class InviteJwtService {
       const payload = this.jwtService.verify<Partial<InviteJwtPayload>>(token);
       const inviteId = this.extractInviteId(payload);
 
-      this.logger.debug('Invite token verified successfully', { inviteId });
+      this.logger.debug({ inviteId }, 'Invite token verified successfully');
 
       return { inviteId, type: INVITE_TOKEN_TYPE };
     } catch (error: unknown) {
-      this.logger.error('Invite token verification failed', { error });
+      this.logger.error(
+        { err: error as Error },
+        'Invite token verification failed',
+      );
 
       if (error instanceof InvalidInviteTokenError) {
         throw error;

@@ -1,20 +1,21 @@
-import { Logger } from '@nestjs/common';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { GenerateImageUseCase } from './generate-image.use-case';
 import { GenerateImageCommand } from './generate-image.command';
-import type { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
+import type { ImageGenerationHandlerRegistry } from 'src/domain/models/application/registry/image-generation-handler.registry';
 import {
   ImageGenerationFailedError,
   ModelProviderNotSupportedError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../ports/image-generation.handler';
-import type { ImageGenerationHandler } from '../../ports/image-generation.handler';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import type { ImageGenerationHandler } from 'src/domain/models/application/ports/image-generation.handler';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 describe('GenerateImageUseCase', () => {
+  const logger = createLoggerMock();
   let useCase: GenerateImageUseCase;
   let registry: jest.Mocked<ImageGenerationHandlerRegistry>;
   let handler: jest.Mocked<ImageGenerationHandler>;
@@ -39,8 +40,8 @@ describe('GenerateImageUseCase', () => {
 
     useCase = new GenerateImageUseCase(registry);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {
@@ -65,6 +66,23 @@ describe('GenerateImageUseCase', () => {
       expect(registry.getHandler).toHaveBeenCalledWith(ModelProvider.AZURE);
       expect(handler.generate).toHaveBeenCalledWith(
         expect.any(ImageGenerationInput),
+      );
+    });
+
+    it('forwards an optional transparent background to the handler', async () => {
+      const command = new GenerateImageCommand({
+        model: mockModel,
+        prompt: 'navy lettering on a transparent background',
+        background: 'transparent',
+      });
+      handler.generate.mockResolvedValue(
+        new ImageGenerationResult(Buffer.from('fake-image'), 'image/png'),
+      );
+
+      await useCase.execute(command);
+
+      expect(handler.generate).toHaveBeenCalledWith(
+        expect.objectContaining({ background: 'transparent' }),
       );
     });
 

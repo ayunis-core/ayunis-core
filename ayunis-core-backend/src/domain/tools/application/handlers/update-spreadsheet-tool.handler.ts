@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { UpdateSpreadsheetTool } from '../../domain/tools/update-spreadsheet-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
 import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -67,7 +67,10 @@ export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
         });
       }
 
-      this.logger.error('Failed to execute update_spreadsheet tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute update_spreadsheet tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
@@ -8,7 +8,7 @@ import { DistributionMode } from 'src/domain/skill-templates/domain/distribution
 import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
-} from '../../skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -21,7 +21,7 @@ export class CreateSkillTemplateUseCase {
   ) {}
 
   async execute(command: CreateSkillTemplateCommand): Promise<SkillTemplate> {
-    this.logger.log('Creating skill template', { name: command.name });
+    this.logger.log({ name: command.name }, 'Creating skill template');
     try {
       const existing = await this.skillTemplateRepository.findByName(
         command.name,
@@ -53,9 +53,12 @@ export class CreateSkillTemplateUseCase {
         error instanceof InvalidSkillTemplateNameError
       )
         throw error;
-      this.logger.error('Error creating skill template', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating skill template',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
   }

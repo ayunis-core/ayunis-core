@@ -38,6 +38,11 @@
       "title": "Knowledge management",
       "description": "Create knowledge collections with your own documents and URLs — Ayunis Core uses this knowledge automatically for more precise answers."
     },
+    "workspaces": {
+      "title": "Workspaces",
+      "description": "A workspace groups your chats around one topic and can have its own instruction, its own knowledge and its own skills. These apply automatically in every chat in the workspace, on top of what you have set up personally. The more context a workspace holds, the more precise Ayunis Core answers in it.",
+      "helpLink": "Learn more about workspaces"
+    },
     "advanced": {
       "title": "Advanced features",
       "description": "Discover more features that make your daily work even more efficient."
@@ -154,6 +159,68 @@
       "action": "Add knowledge collection",
       "spotlightTitle": "Add knowledge collection",
       "spotlightDescription": "Use the plus icon to add knowledge collections to your chat. Ayunis Core then uses your own knowledge for more precise answers."
+    },
+    "createWorkspace": {
+      "title": "Create a workspace",
+      "description": "Set up a workspace for a topic you work on regularly. A fitting icon and colour let you recognise the workspace at a glance in the overview.",
+      "action": "Create workspace",
+      "spotlightTitle": "Create workspace",
+      "spotlightDescription": "Click here to create a new workspace. You set name, description, icon and colour directly in the dialog."
+    },
+    "selectWorkspaceInChat": {
+      "title": "Pick the workspace before you send",
+      "description": "Pick the matching workspace under the input field before you send your message. That way all conversations on a topic collect in one place.",
+      "action": "Pick workspace",
+      "spotlightTitle": "Pick a workspace",
+      "spotlightDescription": "Pick the workspace the new chat should belong to."
+    },
+    "startWorkspaceChat": {
+      "title": "Or start the chat in the workspace",
+      "description": "Instead of picking the workspace as you write, you can also start the chat in the workspace itself. The input field for that sits at the top of the page.",
+      "action": "Start chat",
+      "spotlightTitle": "Start a chat in the workspace",
+      "spotlightDescription": "Write your message right here. The chat is filed in the workspace."
+    },
+    "assignChatToWorkspace": {
+      "title": "Move an existing chat into a workspace",
+      "description": "Older chats can be filed later on as well. Open the menu on the chat in the sidebar and pick the workspace you want.",
+      "action": "Move chat",
+      "spotlightTitle": "Move chat",
+      "spotlightDescription": "Open this menu and choose “Add to workspace”.",
+      "unavailable": "Expand the sidebar to see your chats."
+    },
+    "firstChatForWorkspace": {
+      "spotlightTitle": "A chat first, then the workspace",
+      "spotlightDescription": "Start a chat here. Afterwards you can move it into a workspace from its menu in the sidebar."
+    },
+    "workspaceInstruction": {
+      "title": "Add an instruction for the workspace",
+      "description": "Write down once what should always apply here — tone, audience or formatting rules, for example. Ayunis Core then follows the instruction in every chat in the workspace, without you repeating it.",
+      "action": "Add instruction",
+      "spotlightTitle": "Add instruction",
+      "spotlightDescription": "Write here what should apply in every chat in this workspace, then save."
+    },
+    "workspaceKnowledge": {
+      "title": "Create a knowledge collection in the workspace",
+      "description": "Create knowledge collections right inside the workspace. Ayunis Core uses them there in every chat automatically. Your personal knowledge collections stay available as before.",
+      "action": "Create knowledge collection",
+      "spotlightTitle": "Create knowledge collection",
+      "spotlightDescription": "Click here to create a knowledge collection that belongs to this workspace. You can then upload your documents."
+    },
+    "workspaceSkill": {
+      "title": "Create a skill in the workspace",
+      "description": "Create skills right inside the workspace. Ayunis Core activates them there automatically whenever they fit your question. Your personal skills stay active as before.",
+      "action": "Create skill",
+      "spotlightTitle": "Create skill",
+      "spotlightDescription": "Click here to create a skill that belongs to this workspace."
+    },
+    "favoriteWorkspace": {
+      "title": "Add the workspace to your favourites",
+      "description": "You can mark any workspace as a favourite. Favourites appear with their icon in the sidebar, so you can reach the workspace from any page with a single click.",
+      "action": "Add to favourites",
+      "spotlightTitle": "Add to favourites",
+      "spotlightDescription": "Click the star to add the workspace to your favourites. It then appears in the sidebar.",
+      "unavailable": "All your workspaces are already pinned."
     },
     "customInstructions": {
       "title": "Set custom instructions",

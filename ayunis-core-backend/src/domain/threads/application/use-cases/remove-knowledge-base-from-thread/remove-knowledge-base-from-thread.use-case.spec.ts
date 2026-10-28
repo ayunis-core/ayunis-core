@@ -1,13 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { RemoveKnowledgeBaseFromThreadUseCase } from './remove-knowledge-base-from-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -17,6 +18,8 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
   let mockContextService: { get: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockKbId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockKbId2 = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -28,10 +31,9 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     };
 
     mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -44,9 +46,6 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
 
     useCase = module.get(RemoveKnowledgeBaseFromThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

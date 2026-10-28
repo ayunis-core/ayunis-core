@@ -11,6 +11,8 @@ describe('authenticationConfig', () => {
     process.env.JWT_SECRET = 'my-jwt-secret';
     process.env.COOKIE_SECRET = 'my-cookie-secret';
     delete process.env.COOKIE_SECURE;
+    delete process.env.AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS;
+    delete process.env.AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES;
   });
 
   afterAll(() => {
@@ -32,5 +34,22 @@ describe('authenticationConfig', () => {
 
   it('defaults cookie.secure to false when COOKIE_SECURE is unset', () => {
     expect(authenticationConfig().cookie.secure).toBe(false);
+  });
+
+  it('defaults account lockout to 10 failures within 15 minutes', () => {
+    expect(authenticationConfig().accountLockout).toEqual({
+      maxAttempts: 10,
+      windowMinutes: 15,
+    });
+  });
+
+  it('reads account lockout controls from the environment', () => {
+    process.env.AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS = '6';
+    process.env.AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES = '20';
+
+    expect(authenticationConfig().accountLockout).toEqual({
+      maxAttempts: 6,
+      windowMinutes: 20,
+    });
   });
 });

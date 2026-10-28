@@ -1,10 +1,13 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EntityManager } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { McpIntegrationsRepositoryPort } from '../../../application/ports/mcp-integrations.repository.port';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
 import { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
@@ -21,20 +24,52 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
 
   constructor(
     @InjectRepository(McpIntegrationRecord)
-    private readonly repository: Repository<McpIntegrationRecord>,
+    private readonly defaultRepository: Repository<McpIntegrationRecord>,
     @InjectRepository(McpIntegrationAuthRecord)
-    private readonly authRepository: Repository<McpIntegrationAuthRecord>,
+    private readonly defaultAuthRepository: Repository<McpIntegrationAuthRecord>,
     @InjectRepository(PredefinedMcpIntegrationRecord)
-    private readonly predefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
+    private readonly defaultPredefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
     @InjectRepository(MarketplaceMcpIntegrationRecord)
-    private readonly marketplaceRepository: Repository<MarketplaceMcpIntegrationRecord>,
+    private readonly defaultMarketplaceRepository: Repository<MarketplaceMcpIntegrationRecord>,
     private readonly mcpIntegrationMapper: McpIntegrationMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private get repository(): Repository<McpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(McpIntegrationRecord) ?? this.defaultRepository
+    );
+  }
+
+  private get authRepository(): Repository<McpIntegrationAuthRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(McpIntegrationAuthRecord) ??
+      this.defaultAuthRepository
+    );
+  }
+
+  private get predefinedRepository(): Repository<PredefinedMcpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(PredefinedMcpIntegrationRecord) ??
+      this.defaultPredefinedRepository
+    );
+  }
+
+  private get marketplaceRepository(): Repository<MarketplaceMcpIntegrationRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(MarketplaceMcpIntegrationRecord) ??
+      this.defaultMarketplaceRepository
+    );
+  }
+
   async save<T extends McpIntegration>(integration: T): Promise<T> {
-    this.logger.log('save', { integrationId: integration.id });
+    this.logger.log({ integrationId: integration.id }, 'save');
 
     const recordResult = this.mcpIntegrationMapper.toRecord(integration);
     if (recordResult instanceof Error) {
@@ -42,10 +77,6 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     }
     const record: McpIntegrationRecord = recordResult;
     const authRecord = record.auth;
-
-    if (!authRecord) {
-      throw new Error('Expected MCP integration auth record to be present');
-    }
 
     await this.repository.manager.transaction(async (manager) => {
       const integrationRepo = manager.getRepository(McpIntegrationRecord);
@@ -82,7 +113,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async findById(id: UUID): Promise<McpIntegration | null> {
-    this.logger.log('findById', { id });
+    this.logger.log({ id }, 'findById');
 
     const record = await this.repository.findOne({
       where: { id },
@@ -96,7 +127,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async findByIds(ids: UUID[]): Promise<McpIntegration[]> {
-    this.logger.log('findByIds', { count: ids.length });
+    this.logger.log({ count: ids.length }, 'findByIds');
 
     if (ids.length === 0) {
       return [];
@@ -113,7 +144,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     orgId: UUID,
     filter?: { enabled?: boolean },
   ): Promise<McpIntegration[]> {
-    this.logger.log('findAll', { orgId, filter });
+    this.logger.log({ orgId, filter }, 'findAll');
 
     const where: { orgId: UUID; enabled?: boolean } = { orgId };
     if (filter?.enabled !== undefined) {
@@ -132,7 +163,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     organizationId: UUID,
     slug: PredefinedMcpIntegrationSlug,
   ): Promise<McpIntegration | null> {
-    this.logger.log('findByOrgIdAndSlug', { organizationId, slug });
+    this.logger.log({ organizationId, slug }, 'findByOrgIdAndSlug');
 
     const record = await this.predefinedRepository.findOne({
       where: {
@@ -155,10 +186,13 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     orgId: UUID,
     marketplaceIdentifier: string,
   ): Promise<McpIntegration | null> {
-    this.logger.log('findByOrgIdAndMarketplaceIdentifier', {
-      orgId,
-      marketplaceIdentifier,
-    });
+    this.logger.log(
+      {
+        orgId,
+        marketplaceIdentifier,
+      },
+      'findByOrgIdAndMarketplaceIdentifier',
+    );
 
     const record = await this.marketplaceRepository.findOne({
       where: {
@@ -178,7 +212,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.log({ id }, 'delete');
 
     await this.repository.delete({ id });
   }

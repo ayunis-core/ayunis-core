@@ -10,7 +10,12 @@
       "expiresAt": "Expires {{date}}",
       "neverExpires": "Never expires",
       "revokedAt": "Revoked {{date}}",
-      "revokedBadge": "Revoked"
+      "revokedBadge": "Revoked",
+      "expiredAt": "Expired {{date}}",
+      "expiredBadge": "Expired",
+      "actionsAriaLabel": "Actions for {{name}}",
+      "noActiveKeys": "No active API keys. Revoked and expired keys are listed in the archive.",
+      "archiveTitle": "Archive ({{count}})"
     },
     "createDialog": {
       "title": "Create API Key",
@@ -19,6 +24,7 @@
       "namePlaceholder": "e.g., CI bot, Production server",
       "nameRequired": "Name is required",
       "nameTooLong": "Name must be less than 100 characters",
+      "descriptionLabel": "Description (optional)",
       "expiresAtLabel": "Expiration date",
       "expiresAtPlaceholder": "Pick a date",
       "expiresAtClear": "Clear expiration date",
@@ -27,6 +33,25 @@
       "cancel": "Cancel",
       "create": "Create Key",
       "creating": "Creating..."
+    },
+    "editDialog": {
+      "menuItem": "Edit",
+      "title": "Edit API key",
+      "description": "Change the name and description. The key itself stays the same, so applications do not need any changes.",
+      "nameLabel": "Name",
+      "nameRequired": "Name is required",
+      "nameTooLong": "Name must be less than 100 characters",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "What is the key used for? For example the application and the responsible department.",
+      "descriptionHelper": "Enter the responsible department rather than names of people. {{count}}/{{max}}",
+      "descriptionTooLong": "Description must be 500 characters or less",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "success": "API key updated",
+      "error": "Failed to update the API key",
+      "notEditable": "Revoked or expired API keys cannot be edited",
+      "notFound": "API key not found"
     },
     "revealDialog": {
       "title": "Your new API key",
@@ -55,6 +80,36 @@
       "error": "Failed to revoke API key",
       "notFound": "API key not found"
     },
+    "creditLimit": {
+      "title": "API key credit limit",
+      "description": "Set the monthly credit allowance for {{name}}.",
+      "manageAriaLabel": "Manage credit limit for {{name}}",
+      "usage": "{{used}} of {{limit}} credits used this month",
+      "unlimited": "No API key credit limit",
+      "creditsLabel": "Monthly credits",
+      "creditsHint": "Set 0 to pause paid-model usage. Remove the limit to make the key unlimited within the organization budget.",
+      "creditsRequired": "Enter a monthly credit limit",
+      "creditsMin": "The credit limit cannot be negative",
+      "save": "Save limit",
+      "set": "Set credit limit",
+      "edit": "Edit credit limit",
+      "remove": "Remove credit limit",
+      "cancel": "Cancel",
+      "setSuccess": "API key credit limit saved",
+      "setError": "Failed to save the API key credit limit",
+      "removeSuccess": "API key credit limit removed",
+      "removeError": "Failed to remove the API key credit limit",
+      "notFound": "API key not found",
+      "invalid": "Enter a valid credit limit",
+      "validation": {
+        "monthlyCredits": {
+          "isNumber": "Enter a valid credit limit",
+          "min": "The credit limit cannot be negative",
+          "invalid": "Enter a valid credit limit"
+        },
+        "invalid": "Invalid credit limit"
+      }
+    },
     "validation": {
       "name": {
         "isNotEmpty": "Name is required",
@@ -67,7 +122,12 @@
         "isDate": "Invalid expiration date",
         "invalid": "Invalid expiration date"
       },
-      "invalid": "Invalid input"
+      "invalid": "Invalid input",
+      "description": {
+        "isString": "Invalid description",
+        "maxLength": "Description must be 500 characters or less",
+        "invalid": "Invalid description"
+      }
     }
   }
 }

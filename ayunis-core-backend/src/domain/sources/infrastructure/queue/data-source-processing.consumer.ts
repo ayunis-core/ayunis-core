@@ -11,6 +11,8 @@ import {
   SpreadsheetParserPort,
 } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
+import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -18,13 +20,16 @@ import type { DataSourceFileKind } from 'src/domain/sources/domain/data-source-f
 import type {
   DataSourceProcessingJobData,
   DataSourceProcessingTarget,
-} from '../../application/ports/data-source-processing.port';
+} from 'src/domain/sources/application/ports/data-source-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
-} from '../../application/util/minio-processing-file.helpers';
+} from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DATA_SOURCE_PROCESSING_QUEUE, { concurrency: 2 })
 export class DataSourceProcessingConsumer extends WorkerHost {
@@ -37,59 +42,74 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
   ) {
     super();
   }
 
   async process(job: Job<DataSourceProcessingJobData>): Promise<void> {
+    this.logger.log(
+      {
+        fileName: job.data.fileName,
+        jobId: job.id,
+        targetCount: job.data.targets.length,
+      },
+      'Processing data source file',
+    );
+    await observeJob(job, () =>
+      this.contextService.run(() => this.processJob(job)),
+    );
+  }
+
+  private async processJob(
+    job: Job<DataSourceProcessingJobData>,
+  ): Promise<void> {
     const { orgId, userId, minioPath, fileName, kind, targets } = job.data;
+    this.validateAndSetContext(orgId, userId);
+    if (
+      !(await this.admitOrgProcessing.execute(
+        new AdmitOrgProcessingQuery(orgId),
+      ))
+    ) {
+      this.logger.warn({ jobId: job.id, orgId }, 'Organisation deleted');
+      return;
+    }
 
-    this.logger.log('Processing data source file', {
-      fileName,
-      targetCount: targets.length,
-      jobId: job.id,
-    });
-
-    // Set up CLS context so downstream use cases work
-    await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
-
-      try {
-        const pending = await this.loadPendingTargets(targets);
-        if (pending.length === 0) {
-          this.logger.warn('No pending sources left for job, skipping', {
-            jobId: job.id,
-          });
-          await this.cleanupMinioFile(minioPath);
-          return;
-        }
-
-        const fileBuffer = await this.downloadFile(minioPath);
-        const sheets = await this.parseFile(fileBuffer, kind);
-        await this.fillSources(pending, sheets);
+    try {
+      const pending = await this.loadPendingTargets(targets);
+      if (pending.length === 0) {
+        this.logger.warn(
+          { jobId: job.id },
+          'No pending sources left for job, skipping',
+        );
         await this.cleanupMinioFile(minioPath);
-
-        this.logger.log('Data source processing complete', {
-          fileName,
-          sources: pending.length,
-        });
-      } catch (error) {
-        this.logger.error('Data source processing failed', {
-          fileName,
-          error: error as Error,
-        });
-
-        const { final, rethrow } = classifyJobFailure(job, error);
-        if (final) {
-          await this.markPendingTargetsFailed(
-            targets,
-            error instanceof Error ? error.message : 'Unknown processing error',
-          );
-          await this.cleanupMinioFile(minioPath);
-        }
-        if (rethrow) throw rethrow;
+        return;
       }
-    });
+
+      const fileBuffer = await processingStage('data_source.download', () =>
+        this.downloadFile(minioPath),
+      );
+      const sheets = await processingStage('data_source.extraction', () =>
+        this.parseFile(fileBuffer, kind),
+      );
+      await this.fillSources(pending, sheets);
+      await this.cleanupMinioFile(minioPath);
+      this.logger.log(
+        { fileName, sources: pending.length },
+        'Data source processing complete',
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, fileName },
+        'Data source processing failed',
+      );
+      const { final, rethrow } = classifyJobFailure(job, error);
+      if (final) {
+        await this.markPendingTargetsFailed(targets, error);
+        await this.cleanupMinioFile(minioPath);
+      }
+      if (rethrow) throw rethrow;
+    }
   }
 
   private validateAndSetContext(
@@ -113,10 +133,13 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     for (const target of targets) {
       const source = await this.sourceRepository.findById(target.sourceId);
       if (source?.status !== SourceStatus.PROCESSING) {
-        this.logger.warn('Source missing or no longer processing, skipping', {
-          sourceId: target.sourceId,
-          found: !!source,
-        });
+        this.logger.warn(
+          {
+            sourceId: target.sourceId,
+            found: !!source,
+          },
+          'Source missing or no longer processing, skipping',
+        );
         continue;
       }
       if (!(source instanceof CSVDataSource)) {
@@ -131,9 +154,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         target.sourceId,
       );
       if (!alive) {
-        this.logger.warn('Source deleted mid-load, skipping', {
-          sourceId: target.sourceId,
-        });
+        this.logger.warn(
+          {
+            sourceId: target.sourceId,
+          },
+          'Source deleted mid-load, skipping',
+        );
         continue;
       }
       pending.push({ source, sheetName: target.sheetName });
@@ -170,7 +196,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         // check while the full parse still drops it — fail its source.
         await this.tryMarkSourceFailed(
           source.id,
-          `Sheet "${sheetName ?? ''}" contains no data`,
+          new EmptyFileDataError(sheetName ?? source.name),
         );
         continue;
       }
@@ -188,9 +214,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       { headers: parsed.headers, rows: parsed.rows },
     );
     if (!dataWritten) {
-      this.logger.warn('Source deleted mid-processing, skipping', {
-        sourceId,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+        },
+        'Source deleted mid-processing, skipping',
+      );
       return;
     }
 
@@ -202,38 +231,46 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     );
     if (!updated) {
       this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
+        'Conditional update to READY failed — source was deleted or status changed',
       );
     }
   }
 
   private async markPendingTargetsFailed(
     targets: DataSourceProcessingTarget[],
-    errorMessage: string,
+    error: unknown,
   ): Promise<void> {
     for (const target of targets) {
       const source = await this.sourceRepository.findById(target.sourceId);
       if (source?.status !== SourceStatus.PROCESSING) {
         continue;
       }
-      await this.tryMarkSourceFailed(target.sourceId, errorMessage);
+      await this.tryMarkSourceFailed(target.sourceId, error);
     }
   }
 
   private async tryMarkSourceFailed(
     sourceId: UUID,
-    errorMessage: string,
+    error: unknown,
   ): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
-        new MarkSourceFailedCommand({ sourceId, errorMessage }),
+        new MarkSourceFailedCommand({
+          sourceId,
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown processing error',
+          errorCode: classifySourceProcessingError(error),
+        }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as FAILED', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to mark source as FAILED',
+      );
     }
   }
 

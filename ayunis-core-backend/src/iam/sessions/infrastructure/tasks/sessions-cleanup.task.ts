@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.repository';
+import { checkIn } from '@appsignal/nodejs';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 
 /**
  * Nightly job that deletes expired refresh tokens. Runs at 5 AM. Deletes
@@ -12,6 +13,7 @@ import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.
 @Injectable()
 export class SessionsCleanupTask {
   private readonly logger = new Logger(SessionsCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -31,14 +33,16 @@ export class SessionsCleanupTask {
     this.logger.log('Starting scheduled sessions cleanup');
 
     try {
-      const deleted = await this.refreshTokensRepository.deleteExpired(
-        new Date(),
-      );
-      this.logger.log('Scheduled sessions cleanup completed', { deleted });
+      await checkIn.cron('sessions_cleanup', async () => {
+        const deleted = await this.refreshTokensRepository.deleteExpired(
+          new Date(),
+        );
+        this.logger.log({ deleted }, 'Scheduled sessions cleanup completed');
+      });
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled sessions cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
+import { checkIn } from '@appsignal/nodejs';
+import { SweepOrphanStorageUseCase } from 'src/domain/storage/application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 
 /**
  * Nightly job that purges object-storage blobs owned by orgs that no longer
@@ -11,6 +12,7 @@ import { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orp
 @Injectable()
 export class OrphanStorageSweepTask {
   private readonly logger = new Logger(OrphanStorageSweepTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -30,14 +32,20 @@ export class OrphanStorageSweepTask {
     this.logger.log('Starting scheduled orphan storage sweep');
 
     try {
-      const result = await this.sweepOrphanStorageUseCase.execute();
-      this.logger.log('Scheduled orphan storage sweep completed', {
-        ...result,
+      await checkIn.cron('orphan_storage_sweep', async () => {
+        const result = await this.sweepOrphanStorageUseCase.execute();
+        this.logger.log(
+          {
+            ...result,
+          },
+          'Scheduled orphan storage sweep completed',
+        );
       });
     } catch (error) {
-      this.logger.error('Scheduled orphan storage sweep failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Scheduled orphan storage sweep failed',
+      );
     } finally {
       this.isRunning = false;
     }

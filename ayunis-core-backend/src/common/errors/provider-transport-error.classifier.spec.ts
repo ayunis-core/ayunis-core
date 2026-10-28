@@ -1,6 +1,7 @@
+import { ModelProviderError } from '@ayunis/inference';
 import {
   classifyTransportError,
-  isRetryableSetupFailure,
+  isRetryableProviderTimeoutFailure,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
 
@@ -153,32 +154,84 @@ describe('classifyTransportError', () => {
     });
   });
 
-  describe('isRetryableSetupFailure', () => {
-    it.each(['EAI_AGAIN', 'ECONNRESET'])(
-      'treats %s as retryable during request setup',
-      (code) => {
-        expect(isRetryableSetupFailure(errorWithCode('boom', code))).toBe(true);
-      },
-    );
-
-    it('does not retry timeouts — that would double an already-long wait', () => {
+  describe('provider timeout failures', () => {
+    it('accepts classified timeout errors', () => {
       expect(
-        isRetryableSetupFailure(
-          errorWithCode('headers timeout', 'UND_ERR_HEADERS_TIMEOUT'),
+        isRetryableProviderTimeoutFailure(
+          errorWithCode('request timed out', 'ETIMEDOUT'),
+        ),
+      ).toBe(true);
+    });
+
+    it.each([408, 504])('accepts upstream timeout status %s', (status) => {
+      expect(
+        isRetryableProviderTimeoutFailure(
+          Object.assign(new Error('upstream timed out'), { status }),
+        ),
+      ).toBe(true);
+    });
+
+    it('rejects connection failures', () => {
+      expect(
+        isRetryableProviderTimeoutFailure(
+          errorWithCode('connection refused', 'ECONNREFUSED'),
         ),
       ).toBe(false);
     });
+  });
 
-    it('does not retry non-transport errors', () => {
-      expect(isRetryableSetupFailure(new Error('boom'))).toBe(false);
+  describe('portable provider failures', () => {
+    const portable = (
+      kind: ConstructorParameters<typeof ModelProviderError>[0]['kind'],
+    ) =>
+      new ModelProviderError({
+        kind,
+        stage: 'stream_establishment',
+        cause: new Error('raw provider failure'),
+      });
+
+    it('preserves canonical portable transport diagnostics', () => {
+      const error = new ModelProviderError({
+        kind: 'connection',
+        stage: 'stream_establishment',
+        transportCode: 'ENETRESET',
+        host: 'api.example.com',
+        cause: new Error('unclassified raw failure'),
+      });
+
+      expect(classifyTransportError(error)).toEqual({
+        failureClass: ProviderFailureClass.CONNECTION,
+        code: 'ENETRESET',
+        host: 'api.example.com',
+      });
     });
 
-    it('does not retry client aborts', () => {
-      expect(
-        isRetryableSetupFailure(
-          new DOMException('The operation was aborted', 'AbortError'),
-        ),
-      ).toBe(false);
+    it('classifies portable timeouts without inspecting SDK errors again', () => {
+      expect(isRetryableProviderTimeoutFailure(portable('timeout'))).toBe(true);
+    });
+
+    it('does not retry portable rejections, aborts, or unknown failures', () => {
+      for (const kind of ['rejection', 'abort', 'unknown'] as const) {
+        expect(isRetryableProviderTimeoutFailure(portable(kind))).toBe(false);
+      }
+    });
+
+    it('does not reinspect raw causes after portable classification', () => {
+      const cases = [
+        ['abort', 'ECONNRESET'],
+        ['rejection', 'ETIMEDOUT'],
+        ['unknown', 'ECONNREFUSED'],
+      ] as const;
+
+      for (const [kind, causeCode] of cases) {
+        const error = new ModelProviderError({
+          kind,
+          stage: 'stream_establishment',
+          cause: errorWithCode('racing raw failure', causeCode),
+        });
+        expect(classifyTransportError(error)).toBeUndefined();
+        expect(isRetryableProviderTimeoutFailure(error)).toBe(false);
+      }
     });
   });
 

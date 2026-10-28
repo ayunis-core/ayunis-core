@@ -1,3 +1,4 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { InstallSkillFromMarketplaceUseCase } from './install-skill-from-marketplace.use-case';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -6,11 +7,11 @@ import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
 } from 'src/domain/marketplace/application/marketplace.errors';
-import { MarketplaceInstallFailedError } from '../../skills.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { MarketplaceInstallFailedError } from 'src/domain/skills/application/skills.errors';
+
 import type { UUID } from 'crypto';
-import type { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
-import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';
+import type { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 
 describe('InstallSkillFromMarketplaceUseCase', () => {
   let useCase: InstallSkillFromMarketplaceUseCase;
@@ -29,7 +30,7 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
     });
   };
 
-  const installedSkill = new Skill({
+  const installedSkill = new PersonalSkill({
     name: 'Meeting Summarizer',
     shortDescription: 'Summarize meetings and extract action items',
     instructions:

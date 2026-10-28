@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { SetTeamDefaultModelCommand } from './set-team-default-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedModelError } from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 @Injectable()
 export class SetTeamDefaultModelUseCase {
@@ -18,11 +18,14 @@ export class SetTeamDefaultModelUseCase {
   async execute(
     command: SetTeamDefaultModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.log('execute', {
-      permittedModelId: command.permittedModelId,
-      orgId: command.orgId,
-      teamId: command.teamId,
-    });
+    this.logger.log(
+      {
+        permittedModelId: command.permittedModelId,
+        orgId: command.orgId,
+        teamId: command.teamId,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(command.orgId);
@@ -42,7 +45,7 @@ export class SetTeamDefaultModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error setting team default model', error);
+      this.logger.error({ err: error }, 'Error setting team default model');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

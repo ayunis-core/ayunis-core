@@ -1,3 +1,5 @@
+import { createServer, type Server, type Socket } from 'node:net';
+import type { AddressInfo } from 'node:net';
 import {
   AxiosError,
   type AxiosResponse,
@@ -6,7 +8,10 @@ import {
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
-import { toSlimTransportError } from './client';
+import anonymizeAxiosInstance, {
+  parseAnonymizeTimingMetadata,
+  toSlimTransportError,
+} from './client';
 
 const RAW_USER_TEXT = 'Max Mustermann, geboren am 01.02.1980, wohnhaft in Bonn';
 
@@ -40,6 +45,33 @@ function axiosServerFailure(): AxiosError {
     response,
   );
 }
+
+describe('parseAnonymizeTimingMetadata', () => {
+  it('turns service timing headers into numeric log attributes', () => {
+    const metadata = parseAnonymizeTimingMetadata(
+      {
+        'server-timing':
+          'queue;dur=12.25, model_load;dur=0.50, processing;dur=345.75',
+        'x-anonymize-cold-start': 'false',
+      },
+      360.25,
+    );
+
+    expect(metadata).toEqual({
+      requestDurationMs: 360.25,
+      queueDurationMs: 12.25,
+      modelLoadDurationMs: 0.5,
+      processingDurationMs: 345.75,
+      coldStart: false,
+    });
+  });
+
+  it('keeps total duration observable when service headers are absent', () => {
+    expect(parseAnonymizeTimingMetadata({}, 60000)).toEqual({
+      requestDurationMs: 60000,
+    });
+  });
+});
 
 describe('toSlimTransportError', () => {
   it('strips the request payload so raw user text can never reach logs', () => {
@@ -93,4 +125,55 @@ describe('toSlimTransportError', () => {
     expect(slim).toBeInstanceOf(Error);
     expect(slim.message).toBe('boom');
   });
+});
+
+const UVICORN_KEEP_ALIVE_MS = 5_000;
+const HTTP_RESPONSE =
+  'HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 14\r\n\r\n{"results":[]}';
+
+// Like uvicorn: answers without a Keep-Alive hint and drops a connection once
+// it has been idle for the keep-alive timeout.
+function startUvicornLikeServer(): Promise<{
+  server: Server;
+  sockets: Socket[];
+}> {
+  const sockets: Socket[] = [];
+  const server = createServer((socket) => {
+    sockets.push(socket);
+    let idle: NodeJS.Timeout | undefined;
+    socket.on('data', (chunk) => {
+      clearTimeout(idle);
+      if (!chunk.toString().includes('{"text":"x"}')) return;
+      socket.write(HTTP_RESPONSE);
+      idle = setTimeout(() => socket.destroy(), UVICORN_KEEP_ALIVE_MS);
+    });
+    socket.on('close', () => clearTimeout(idle));
+  });
+  return new Promise((resolve) =>
+    server.listen(0, '127.0.0.1', () => resolve({ server, sockets })),
+  );
+}
+
+describe('anonymize HTTP connection reuse', () => {
+  it('stops reusing an idle connection before the service closes it', async () => {
+    const { server, sockets } = await startUvicornLikeServer();
+    const { port } = server.address() as AddressInfo;
+    const analyze = () =>
+      anonymizeAxiosInstance({
+        url: `http://127.0.0.1:${port}/analyze`,
+        method: 'POST',
+        data: { text: 'x' },
+      });
+
+    try {
+      await analyze();
+      await new Promise((resolve) => setTimeout(resolve, 4_500));
+      await analyze();
+
+      expect(sockets).toHaveLength(2);
+    } finally {
+      sockets.forEach((socket) => socket.destroy());
+      await new Promise((resolve) => server.close(resolve));
+    }
+  }, 10_000);
 });

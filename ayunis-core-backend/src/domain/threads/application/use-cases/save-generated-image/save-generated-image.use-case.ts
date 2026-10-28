@@ -2,20 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import {
   contentTypeToExtension,
   isAllowedImageContentType,
 } from 'src/common/util/content-type.util';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
-import { GeneratedImage } from '../../../domain/generated-image.entity';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
+import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 import {
   GeneratedImageSaveFailedError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { SaveGeneratedImageCommand } from './save-generated-image.command';
 
 @Injectable()
@@ -24,19 +24,16 @@ export class SaveGeneratedImageUseCase {
 
   constructor(
     private readonly generatedImagesRepository: GeneratedImagesRepository,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
   async execute(command: SaveGeneratedImageCommand): Promise<{ id: UUID }> {
-    this.logger.log('execute', {
+    const logContext = {
       orgId: command.orgId,
       threadId: command.threadId,
-    });
-
-    // Validate at the boundary so that unsupported content types surface as
-    // a 400-class domain error instead of being wrapped as a 500 by the
-    // catch-all below (which is reserved for true infrastructure failures).
+    };
+    this.logger.log(logContext, 'execute');
     if (!isAllowedImageContentType(command.contentType)) {
       throw new UnsupportedImageContentTypeError(command.contentType);
     }
@@ -46,11 +43,7 @@ export class SaveGeneratedImageUseCase {
       const ext = contentTypeToExtension(command.contentType);
       const storageKey = `generated-images/${command.orgId}/${command.threadId}/${imageId}${ext}`;
 
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(storageKey, command.imageData, {
-          'content-type': command.contentType,
-        }),
-      );
+      await this.uploadImage(command, storageKey);
 
       const image = new GeneratedImage(
         imageId,
@@ -69,25 +62,33 @@ export class SaveGeneratedImageUseCase {
         throw dbError;
       }
 
-      this.logger.log('Generated image saved', {
-        imageId,
-        storageKey,
-      });
+      const savedLogContext = { imageId, fileName: storageKey };
+      this.logger.log(savedLogContext, 'Generated image saved');
 
       return { id: imageId };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to save generated image', {
-        orgId: command.orgId,
-        threadId: command.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to save generated image',
+      );
       throw new GeneratedImageSaveFailedError(
         error instanceof Error ? error : new Error('Unknown error'),
       );
     }
+  }
+
+  private async uploadImage(
+    command: SaveGeneratedImageCommand,
+    storageKey: string,
+  ): Promise<void> {
+    await this.uploadOrgObjectUseCase.execute(
+      new UploadOrgObjectCommand(command.orgId, storageKey, command.imageData, {
+        'content-type': command.contentType,
+      }),
+    );
   }
 
   private async cleanupUploadedObject(storageKey: string): Promise<void> {
@@ -95,17 +96,20 @@ export class SaveGeneratedImageUseCase {
       await this.deleteObjectUseCase.execute(
         new DeleteObjectCommand(storageKey),
       );
-      this.logger.log('Cleaned up orphaned blob after DB save failure', {
-        storageKey,
-      });
+      this.logger.log(
+        {
+          fileName: storageKey,
+        },
+        'Cleaned up orphaned blob after DB save failure',
+      );
     } catch (cleanupError) {
-      this.logger.error('Failed to clean up orphaned blob', {
-        storageKey,
-        error:
-          cleanupError instanceof Error
-            ? cleanupError.message
-            : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          fileName: storageKey,
+          err: cleanupError as Error,
+        },
+        'Failed to clean up orphaned blob',
+      );
     }
   }
 }

@@ -7,12 +7,12 @@ import {
   UserNotFoundError,
   UserUnauthorizedError,
 } from 'src/iam/users/application/users.errors';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
 import {
   MfaSelfResetNotAllowedError,
   UnexpectedMfaError,
-} from '../../mfa.errors';
+} from 'src/iam/mfa/application/mfa.errors';
 import { ResetUserMfaCommand } from './reset-user-mfa.command';
 
 /**
@@ -31,7 +31,7 @@ export class ResetUserMfaUseCase {
   ) {}
 
   async execute(command: ResetUserMfaCommand): Promise<void> {
-    this.logger.log('resetUserMfa', { targetUserId: command.targetUserId });
+    this.logger.log({ targetUserId: command.targetUserId }, 'resetUserMfa');
 
     const requesterId = this.contextService.get('userId');
     const requesterOrgId = this.contextService.get('orgId');
@@ -57,7 +57,7 @@ export class ResetUserMfaUseCase {
       await this.userTotpsRepository.deleteByUserId(command.targetUserId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error resetting user MFA', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error resetting user MFA');
       throw new UnexpectedMfaError(error);
     }
   }

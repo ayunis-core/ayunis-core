@@ -34,6 +34,18 @@ describe('anthropic client construction', () => {
       expect.objectContaining({ timeout: 45_000 }),
     );
   });
+
+  it('disables SDK retries when the streaming host passes maxRetries zero', () => {
+    anthropic({
+      apiKey: 'sk-ant-test',
+      model: 'claude-sonnet-4-5',
+      maxRetries: 0,
+    });
+
+    expect(anthropicCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ maxRetries: 0 }),
+    );
+  });
 });
 
 describe('bedrock client construction', () => {
@@ -62,6 +74,14 @@ describe('bedrock client construction', () => {
 
     expect(bedrockCtor).toHaveBeenCalledWith(
       expect.objectContaining({ timeout: 45_000 }),
+    );
+  });
+
+  it('disables SDK retries when the streaming host passes maxRetries zero', () => {
+    bedrock({ model: 'eu.anthropic.claude-sonnet-4-6', maxRetries: 0 });
+
+    expect(bedrockCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ maxRetries: 0 }),
     );
   });
 });

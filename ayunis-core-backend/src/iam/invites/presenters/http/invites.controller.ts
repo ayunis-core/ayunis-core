@@ -8,11 +8,12 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Logger,
   ParseUUIDPipe,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
+  ApiExtraModels,
   ApiOperation,
   ApiResponse,
   ApiParam,
@@ -20,7 +21,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { Invite } from '../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import {
   CurrentUser,
   UserProperty,
@@ -31,6 +32,7 @@ import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
 import {
   InviteDetailResponseDto,
+  InviteResponseDto,
   AcceptInviteResponseDto,
   PaginatedInvitesListResponseDto,
 } from './dtos/invite-response.dto';
@@ -39,22 +41,22 @@ import { CreateBulkInvitesResponseDto } from './dtos/create-bulk-invites-respons
 import { GetInvitesQueryParamsDto } from './dtos/get-invites-query-params.dto';
 
 // Import Use Cases
-import { CreateInviteUseCase } from '../../application/use-cases/create-invite/create-invite.use-case';
-import { CreateBulkInvitesUseCase } from '../../application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
-import { AcceptInviteUseCase } from '../../application/use-cases/accept-invite/accept-invite.use-case';
-import { DeleteInviteUseCase } from '../../application/use-cases/delete-invite/delete-invite.use-case';
-import { GetInvitesByOrgUseCase } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
-import { GetInviteByTokenUseCase } from '../../application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
-import { ResendExpiredInviteUseCase } from '../../application/use-cases/resend-expired-invite/resend-expired-invite.use-case';
+import { CreateInviteWithSeatReservationUseCase } from 'src/iam/invites/application/use-cases/create-invite-with-seat-reservation/create-invite-with-seat-reservation.use-case';
+import { CreateBulkInvitesUseCase } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
+import { AcceptInviteUseCase } from 'src/iam/invites/application/use-cases/accept-invite/accept-invite.use-case';
+import { DeleteInviteUseCase } from 'src/iam/invites/application/use-cases/delete-invite/delete-invite.use-case';
+import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
+import { GetInviteByTokenUseCase } from 'src/iam/invites/application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
+import { ResendExpiredInviteUseCase } from 'src/iam/invites/application/use-cases/resend-expired-invite/resend-expired-invite.use-case';
 
 // Import Commands and Queries
-import { CreateInviteCommand } from '../../application/use-cases/create-invite/create-invite.command';
-import { CreateBulkInvitesCommand } from '../../application/use-cases/create-bulk-invites/create-bulk-invites.command';
-import { AcceptInviteCommand } from '../../application/use-cases/accept-invite/accept-invite.command';
-import { DeleteInviteCommand } from '../../application/use-cases/delete-invite/delete-invite.command';
-import { GetInvitesByOrgQuery } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by-token/get-invite-by-token.query';
-import { ResendExpiredInviteCommand } from '../../application/use-cases/resend-expired-invite/resend-expired-invite.command';
+import { CreateInviteCommand } from 'src/iam/invites/application/use-cases/create-invite/create-invite.command';
+import { CreateBulkInvitesCommand } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.command';
+import { AcceptInviteCommand } from 'src/iam/invites/application/use-cases/accept-invite/accept-invite.command';
+import { DeleteInviteCommand } from 'src/iam/invites/application/use-cases/delete-invite/delete-invite.command';
+import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
+import { GetInviteByTokenQuery } from 'src/iam/invites/application/use-cases/get-invite-by-token/get-invite-by-token.query';
+import { ResendExpiredInviteCommand } from 'src/iam/invites/application/use-cases/resend-expired-invite/resend-expired-invite.command';
 
 // Import Mappers
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
@@ -62,21 +64,22 @@ import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SendInvitationEmailCommand } from '../../application/use-cases/send-invitation-email/send-invitation-email.command';
+import { SendInvitationEmailCommand } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.command';
 import { ConfigService } from '@nestjs/config';
-import { SendInvitationEmailUseCase } from '../../application/use-cases/send-invitation-email/send-invitation-email.use-case';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
 import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-invites-response.dto';
-import { DeleteAllPendingInvitesUseCase } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
-import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
+import { DeleteAllPendingInvitesUseCase } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
+import { DeleteAllPendingInvitesCommand } from 'src/iam/invites/application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
 
+@ApiExtraModels(InviteResponseDto)
 @ApiTags('invites')
 @Controller('invites')
 export class InvitesController {
   private readonly logger = new Logger(InvitesController.name);
 
   constructor(
-    private readonly createInviteUseCase: CreateInviteUseCase,
+    private readonly createInviteUseCase: CreateInviteWithSeatReservationUseCase,
     private readonly createBulkInvitesUseCase: CreateBulkInvitesUseCase,
     private readonly acceptInviteUseCase: AcceptInviteUseCase,
     private readonly deleteInviteUseCase: DeleteInviteUseCase,
@@ -90,6 +93,7 @@ export class InvitesController {
   ) {}
 
   @Post()
+  @Roles(UserRole.ADMIN)
   // Admins onboarding a whole organization can legitimately create many
   // invitations back-to-back. The previous limit of 10 per 15 minutes blocked
   // that flow (AYC-409). Keep an upper bound to deter abuse while allowing
@@ -114,18 +118,23 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() createInviteDto: CreateInviteDto,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log('create', {
-      userId,
-      email: createInviteDto.email,
-      orgId,
-      role: createInviteDto.role,
-    });
+    this.logger.log(
+      {
+        userId,
+        email: createInviteDto.email,
+        orgId,
+        role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
+      },
+      'create',
+    );
 
     const { invite, token } = await this.createInviteUseCase.execute(
       new CreateInviteCommand({
         email: createInviteDto.email,
         orgId,
         role: createInviteDto.role,
+        teamIds: createInviteDto.teamIds,
         userId,
       }),
     );
@@ -152,24 +161,33 @@ export class InvitesController {
 
     const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
     if (!hasEmailConfig) {
-      this.logger.debug('Email configuration not available, returning URL', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
+      this.logger.debug(
+        {
+          inviteId: invite.id,
+          email: invite.email,
+        },
+        'Email configuration not available, returning URL',
+      );
       return { url: inviteAcceptUrl };
     }
 
-    this.logger.debug('Sending invitation email', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+      },
+      'Sending invitation email',
+    );
     await this.sendInvitationEmailUseCase.execute(
       new SendInvitationEmailCommand(invite, inviteAcceptUrl),
     );
-    this.logger.debug('Invitation email sent successfully', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+      },
+      'Invitation email sent successfully',
+    );
     return { url: null };
   }
 
@@ -198,11 +216,14 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: CreateBulkInvitesDto,
   ): Promise<CreateBulkInvitesResponseDto> {
-    this.logger.log('createBulk', {
-      userId,
-      orgId,
-      inviteCount: dto.invites.length,
-    });
+    this.logger.log(
+      {
+        userId,
+        orgId,
+        inviteCount: dto.invites.length,
+      },
+      'createBulk',
+    );
 
     const result = await this.createBulkInvitesUseCase.execute(
       new CreateBulkInvitesCommand({
@@ -249,7 +270,7 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: GetInvitesQueryParamsDto,
   ): Promise<PaginatedInvitesListResponseDto> {
-    this.logger.log('getInvites', { userId, orgId, ...queryParams });
+    this.logInvitesQuery(userId, orgId, queryParams);
 
     const invites = await this.getInvitesByOrgUseCase.execute(
       new GetInvitesByOrgQuery({
@@ -265,6 +286,23 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toPaginatedDto(invites);
+  }
+
+  private logInvitesQuery(
+    userId: UUID,
+    orgId: UUID,
+    queryParams: GetInvitesQueryParamsDto,
+  ): void {
+    this.logger.log(
+      {
+        userId,
+        orgId,
+        hasSearch: queryParams.search !== undefined,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+      'getInvites',
+    );
   }
 
   @Public()
@@ -289,7 +327,7 @@ export class InvitesController {
   async getInviteByToken(
     @Param('token') token: string,
   ): Promise<InviteDetailResponseDto> {
-    this.logger.log('getInviteByToken', { hasToken: !!token });
+    this.logger.log({ hasToken: !!token }, 'getInviteByToken');
 
     const inviteWithOrg = await this.getInviteByTokenUseCase.execute(
       new GetInviteByTokenQuery(token),
@@ -319,9 +357,12 @@ export class InvitesController {
   async acceptInvite(
     @Body() acceptInviteDto: AcceptInviteDto,
   ): Promise<AcceptInviteResponseDto> {
-    this.logger.log('acceptInvite', {
-      hasToken: !!acceptInviteDto.inviteToken,
-    });
+    this.logger.log(
+      {
+        hasToken: !!acceptInviteDto.inviteToken,
+      },
+      'acceptInvite',
+    );
 
     const result = await this.acceptInviteUseCase.execute(
       new AcceptInviteCommand({
@@ -363,12 +404,13 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async resendExpiredInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log('resendExpiredInvite', { inviteId });
+    this.logger.log({ inviteId, orgId }, 'resendExpiredInvite');
 
     const { invite, token } = await this.resendExpiredInviteUseCase.execute(
-      new ResendExpiredInviteCommand(inviteId),
+      new ResendExpiredInviteCommand({ inviteId, orgId }),
     );
 
     return this.deliverInvite(invite, token);
@@ -394,7 +436,7 @@ export class InvitesController {
   async deleteAllPending(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<DeleteAllPendingInvitesResponseDto> {
-    this.logger.log('deleteAllPending', { orgId });
+    this.logger.log({ orgId }, 'deleteAllPending');
 
     const result = await this.deleteAllPendingInvitesUseCase.execute(
       new DeleteAllPendingInvitesCommand(orgId),
@@ -404,10 +446,11 @@ export class InvitesController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Delete an invite',
     description:
-      'Delete an invitation (only allowed by the user who created it)',
+      "Delete an invitation of the caller's organization (Admin only)",
   })
   @ApiParam({
     name: 'id',
@@ -422,15 +465,18 @@ export class InvitesController {
   @ApiResponse({ status: 404, description: 'Invite not found' })
   @ApiResponse({
     status: 403,
-    description: 'Unauthorized to delete this invite',
+    description: 'Unauthorized - Admin role required',
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteInvite(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteInvite', { inviteId });
+    this.logger.log({ inviteId, orgId }, 'deleteInvite');
 
-    await this.deleteInviteUseCase.execute(new DeleteInviteCommand(inviteId));
+    await this.deleteInviteUseCase.execute(
+      new DeleteInviteCommand({ inviteId, orgId }),
+    );
   }
 }

@@ -1,8 +1,6 @@
 import type { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
-import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerChangeSubscription,
-} from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerChangeSubscription } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -50,6 +48,12 @@ export default function useSuperAdminSubscriptionChange({
               case 'TOO_MANY_USED_SEATS':
                 showError(t('subscription.changeErrorTooManyUsedSeats'));
                 break;
+              case 'SUBSCRIPTION_ACCESS_OVERLAP':
+                showError(t('subscription.changeErrorAccessOverlap'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
               default:
                 showError(t('subscription.changeErrorUnexpected'));
             }
@@ -58,13 +62,7 @@ export default function useSuperAdminSubscriptionChange({
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });

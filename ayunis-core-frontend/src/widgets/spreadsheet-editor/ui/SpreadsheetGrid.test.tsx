@@ -1,13 +1,14 @@
 import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AfterEditEvent } from '@revolist/react-datagrid';
-import type { GridRow } from '../model/spreadsheet-grid-state';
+import type { GridRow } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
 import { SpreadsheetGrid } from './SpreadsheetGrid';
 
 const gridMock = vi.hoisted(() => ({
   props: undefined as
     | {
         source: unknown[];
+        columns: { name: string }[];
         onAfteredit: (event: CustomEvent<AfterEditEvent>) => void;
       }
     | undefined,
@@ -100,5 +101,32 @@ describe('SpreadsheetGrid', () => {
     expect(gridMock.props?.source).toEqual([
       expect.objectContaining(currentRows[0]),
     ]);
+  });
+
+  it('prefixes headers with position-based column letters', () => {
+    const noop = vi.fn();
+    const render1 = (columns: string[]) => (
+      <SpreadsheetGrid
+        columns={columns}
+        rows={[]}
+        displayValues={[]}
+        onRowsChange={noop}
+        onMoveColumn={noop}
+      />
+    );
+    const rendered = render(render1(['Budget', 'Q1']));
+    expect(gridMock.props?.columns.map((c) => c.name)).toEqual([
+      'A · Budget',
+      'B · Q1',
+    ]);
+
+    rendered.rerender(render1(['Q1', 'Budget']));
+    expect(gridMock.props?.columns.map((c) => c.name)).toEqual([
+      'A · Q1',
+      'B · Budget',
+    ]);
+
+    rendered.rerender(render1(Array.from({ length: 27 }, (_, i) => `c${i}`)));
+    expect(gridMock.props?.columns[26].name).toBe('AA · c26');
   });
 });

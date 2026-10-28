@@ -1,32 +1,58 @@
-import type { RunEvent, RunEventPayload } from '@ayunis/agent-runtime';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
+import {
+  DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS,
+  ModelProviderError,
+  RunContext,
+  run,
+  type Hook,
+  type ModelProvider,
+  type ProviderFailureFacts,
+  type RunEvent,
+  type RunEventPayload,
+} from '@ayunis/agent-runtime';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
 import {
   InferenceFailedError,
-  InferenceImageTooLargeError,
   InferenceStreamStalledError,
+  InferenceImageTooLargeError,
+  InferenceMalformedToolCallError,
 } from 'src/domain/models/application/models.errors';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
-} from '../runs.errors';
-import type { RunExecutionFailedError } from '../runs.errors';
+  RunUsageAccountingFailedError,
+  type RunExecutionFailedError,
+} from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
+import { RuntimeModelRegistry } from './runtime-model.registry';
+import { ModelCallObservabilityHookFactory } from './hooks/model-call-observability-hook.factory';
+import { UsageHookFactory } from './hooks/usage-hook.factory';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
+import {
+  ApiKeyCreditLimitExceededError,
+  TeamCreditLimitExceededError,
+  UserCreditLimitExceededError,
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -50,22 +76,92 @@ async function* eventsFrom(
 
 async function collect(
   events: AsyncIterable<RunEvent>,
+  logger = createLoggerMock(),
+  models?: RuntimeModelRegistry,
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
-  for await (const item of adaptRunEventsToStream(events, threadId)) {
+  for await (const item of adaptRunEventsToStream(
+    events,
+    threadId,
+    logger,
+    undefined,
+    models,
+  )) {
     items.push(item);
   }
   return items;
 }
 
+function runtimeModels(
+  runtimeProviderName = 'anthropic:claude-sonnet-4-5',
+  model = { name: 'claude-sonnet-4-5', provider: 'anthropic' } as LanguageModel,
+): RuntimeModelRegistry {
+  const registry = new RuntimeModelRegistry();
+  registry.register(
+    {
+      name: runtimeProviderName,
+      stream: () => {
+        throw new Error('Runtime provider is not called by adapter tests');
+      },
+    },
+    model,
+  );
+  return registry;
+}
+
 async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
-  const generator = adaptRunEventsToStream(events, threadId);
+  const generator = adaptRunEventsToStream(
+    events,
+    threadId,
+    createLoggerMock(),
+  );
   const items: RunStreamItem[] = [];
   for (;;) {
     const next = await generator.next();
     if (next.done) return { items, outcome: next.value };
     items.push(next.value);
   }
+}
+
+function collectRuntime(
+  provider: ModelProvider,
+  model: LanguageModel,
+  modelCallIdleTimeoutMs?: number,
+  hookFactories: Array<(models: RuntimeModelRegistry) => Hook> = [],
+): Promise<RunStreamItem[]> {
+  const context = RunContext.create();
+  const models = RuntimeModelRegistry.attach(context);
+  models.register(provider, model);
+  const observability = new ModelCallObservabilityHookFactory({
+    emitAsync: jest.fn().mockResolvedValue([]),
+  } as unknown as EventEmitter2).create({
+    userId: '223e4567-e89b-12d3-a456-426614174000',
+    orgId: '323e4567-e89b-12d3-a456-426614174000',
+    models,
+  });
+  return collect(
+    run({
+      instructions: 'Answer the user.',
+      model: provider,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello.' }] }],
+      context,
+      hooks: [observability, ...hookFactories.map((create) => create(models))],
+      retry: { maxRetries: 0 },
+      ...(modelCallIdleTimeoutMs !== undefined && {
+        modelCallIdleTimeoutMs,
+      }),
+    }),
+    createLoggerMock(),
+    models,
+  );
+}
+
+function usageHook(models: RuntimeModelRegistry): Hook {
+  return new UsageHookFactory({
+    collectCritical: jest.fn().mockResolvedValue(undefined),
+  } as unknown as CollectUsageAsyncService).create({
+    resolveModel: models.resolve,
+  });
 }
 
 describe('adaptRunEventsToStream', () => {
@@ -315,7 +411,390 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
-  it('surfaces a critical finalization failure over the preserved max outcome', async () => {
+  it('maps the usage hook through the specialized accounting error', async () => {
+    const logger = createLoggerMock();
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+          details: {
+            hookName: 'ayunis-usage',
+            phase: 'afterModelCall',
+            underlyingError: { code: 'PROVIDER_FAILED' },
+          },
+          providerFailure: { kind: 'server', stage: 'stream_consumption' },
+          modelCall: {
+            modelCallId: 'call-2',
+            runId: 'run-1',
+            turn: 2,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      logger,
+    );
+
+    const diagnostics = {
+      hookName: 'ayunis-usage',
+      phase: 'afterModelCall',
+      underlyingErrorCode: 'PROVIDER_FAILED',
+      modelCallId: 'call-2',
+      modelTurn: 2,
+      callSequence: 1,
+      trigger: 'initial',
+      provider: 'anthropic:claude-sonnet-4-5',
+      providerFailureKind: 'server',
+      providerFailureStage: 'stream_consumption',
+    };
+    await expect(result).rejects.toMatchObject<
+      Partial<RunExecutionFailedError>
+    >({
+      message: 'Run execution failed: Agent runtime failed',
+      metadata: diagnostics,
+    });
+    await expect(result).rejects.toBeInstanceOf(RunUsageAccountingFailedError);
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        execution_path: 'agent_runtime',
+        ...diagnostics,
+        message:
+          "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+      },
+      'Run usage accounting failed',
+    );
+  });
+
+  it('keeps the provider classification when usage accounting fails on top of a provider failure', async () => {
+    const logger = createLoggerMock();
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+          details: {
+            hookName: 'ayunis-usage',
+            phase: 'afterModelCall',
+            underlyingError: {
+              code: 'PROVIDER_FAILED',
+              message: `Model provider stream was idle for ${DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS}ms`,
+              details: {
+                providerFailure: {
+                  kind: 'timeout',
+                  stage: 'stream_consumption',
+                },
+              },
+            },
+          },
+          providerFailure: { kind: 'timeout', stage: 'stream_consumption' },
+          modelCall: {
+            modelCallId: 'call-3',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'mistral:mistral-large-4',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      logger,
+      runtimeModels('mistral:mistral-large-4', {
+        name: 'mistral-large-4',
+        provider: 'mistral',
+      } as LanguageModel),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'mistral',
+        modelId: 'mistral-large-4',
+        failureStage: 'stream_consumption',
+      }),
+      constructor: InferenceStreamStalledError,
+      cause: expect.objectContaining({
+        constructor: RunUsageAccountingFailedError,
+        metadata: expect.objectContaining({
+          modelTurn: 1,
+          modelCallId: 'call-3',
+        }),
+      }),
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        execution_path: 'agent_runtime',
+        hookName: 'ayunis-usage',
+        modelCallId: 'call-3',
+        providerFailureKind: 'timeout',
+        providerFailureStage: 'stream_consumption',
+      }),
+      'Run usage accounting failed',
+    );
+  });
+
+  it('reports a paid stream that stalled after visible output as INFERENCE_TIMEOUT through the real usage hook', async () => {
+    const provider: ModelProvider = {
+      name: 'mistral:mistral-large-4',
+      async *stream(request) {
+        yield { textDelta: 'Der Antrag' };
+        await new Promise<void>((resolve) => {
+          request.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+
+    const result = collectRuntime(
+      provider,
+      {
+        name: 'mistral-large-4',
+        provider: 'mistral',
+        consumesCredits: true,
+      } as LanguageModel,
+      10,
+      [usageHook],
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'mistral',
+        modelId: 'mistral-large-4',
+        failureStage: 'stream_consumption',
+      }),
+    });
+  });
+
+  it('keeps the accounting error when the provider failure cannot be classified without a model registry', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-usage' failed in afterModelCall: Paid model call completed without reporting usage",
+          details: { hookName: 'ayunis-usage', phase: 'afterModelCall' },
+          providerFailure: { kind: 'timeout', stage: 'stream_consumption' },
+          modelCall: {
+            modelCallId: 'call-3',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'mistral:mistral-large-4',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    await expect(result).rejects.toBeInstanceOf(RunUsageAccountingFailedError);
+  });
+
+  it.each([
+    [
+      'Model provider returned an empty response',
+      'model returned an empty response',
+    ],
+    ['Model provider returned no answer', 'model returned no answer'],
+    [
+      'Model provider exhausted the output token limit without an answer',
+      'model exhausted the output token limit without an answer',
+    ],
+    ['Model provider refused the response', 'model refused the response'],
+    [
+      'Model provider paused the response; continuation is not supported',
+      'model paused the response; continuation is not supported',
+    ],
+  ])(
+    'maps a terminal "%s" to a classified inference failure with model metadata',
+    async (runtimeMessage, reason) => {
+      const logger = createLoggerMock();
+      const result = collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'PROVIDER_FAILED',
+            message: runtimeMessage,
+            modelCall: {
+              modelCallId: 'call-4',
+              runId: 'run-1',
+              turn: 1,
+              callSequence: 4,
+              trigger: 'empty_recovery',
+              provider: 'bedrock:eu.anthropic.claude-opus-5-5',
+            },
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        logger,
+        runtimeModels('bedrock:eu.anthropic.claude-opus-5-5', {
+          name: 'claude-opus-5-5',
+          provider: 'bedrock',
+        } as LanguageModel),
+      );
+
+      await expect(result).rejects.toMatchObject({
+        code: 'INFERENCE_FAILED',
+        message: `Inference failed: ${reason}`,
+        metadata: {
+          provider: 'bedrock',
+          modelId: 'claude-opus-5-5',
+          modelCallId: 'call-4',
+          trigger: 'empty_recovery',
+          callSequence: 4,
+        },
+        constructor: InferenceFailedError,
+      });
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.anything(),
+        'Agent runtime failed',
+      );
+    },
+  );
+
+  it('classifies an empty terminal response from the real runtime', async () => {
+    const provider: ModelProvider = {
+      name: 'bedrock:eu.anthropic.claude-opus-5-5',
+      async *stream() {
+        yield { usage: { inputTokens: 900, outputTokens: 6_000 } };
+        yield { finishReason: null };
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'claude-opus-5-5',
+      provider: 'bedrock',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      message: 'Inference failed: model returned an empty response',
+      metadata: expect.objectContaining({
+        provider: 'bedrock',
+        modelId: 'claude-opus-5-5',
+        trigger: 'initial',
+      }),
+    });
+  });
+
+  it.each([
+    [
+      'length',
+      'output_limit',
+      'model exhausted the output token limit without an answer',
+    ],
+    ['refusal', 'refusal', 'model refused the response'],
+    [
+      'pause_turn',
+      'pause_turn',
+      'model paused the response; continuation is not supported',
+    ],
+  ] as const)(
+    'accounts a terminal %s before surfacing its classified failure',
+    async (finishReason, reason, message) => {
+      const collectCritical = jest.fn().mockResolvedValue(undefined);
+      const observed: string[] = [];
+      const model = {
+        name: 'claude-opus-5-5',
+        provider: 'bedrock',
+      } as LanguageModel;
+      const provider: ModelProvider = {
+        name: 'bedrock:eu.anthropic.claude-opus-5-5',
+        async *stream() {
+          yield {
+            usage: {
+              inputTokens: 2,
+              cacheReadInputTokens: 39915,
+              outputTokens: 32000,
+            },
+          };
+          yield { finishReason };
+        },
+      };
+      await expect(
+        collectRuntime(provider, model, undefined, [
+          (models) =>
+            new UsageHookFactory({
+              collectCritical,
+            } as unknown as CollectUsageAsyncService).create({
+              resolveModel: models.resolve,
+            }),
+          () => ({
+            name: 'record-outcome',
+            afterModelCall: (ctx) => {
+              expect(collectCritical).toHaveBeenCalledTimes(1);
+              if (ctx.outcome.type === 'rejected')
+                observed.push(ctx.outcome.reason);
+            },
+          }),
+        ]),
+      ).rejects.toMatchObject({
+        code: 'INFERENCE_FAILED',
+        message: `Inference failed: ${message}`,
+      });
+      expect(observed).toEqual([reason]);
+      expect(collectCritical).toHaveBeenCalledWith(
+        model,
+        39917,
+        32000,
+        expect.any(String),
+        'agent_runtime',
+      );
+    },
+  );
+
+  it('surfaces a critical hook failure with its execution path', async () => {
+    const logger = createLoggerMock();
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'HOOK_FAILED',
+          message:
+            "Hook 'ayunis-persistence' failed in afterModelTurn: database unavailable",
+          details: {
+            hookName: 'ayunis-persistence',
+            phase: 'afterModelTurn',
+            originalOutcome: 'accepted',
+            underlyingError: { code: 'USAGE_PERSISTENCE_FAILED' },
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      logger,
+    );
+
+    await expect(result).rejects.toMatchObject<
+      Partial<RunExecutionFailedError>
+    >({
+      code: 'RUN_EXECUTION_FAILED',
+      metadata: {
+        hookName: 'ayunis-persistence',
+        phase: 'afterModelTurn',
+        originalOutcome: 'accepted',
+        underlyingErrorCode: 'USAGE_PERSISTENCE_FAILED',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ execution_path: 'agent_runtime' }),
+      'Critical agent runtime hook failed',
+    );
+  });
+
+  it('surfaces a critical finalization failure with its execution path', async () => {
+    const logger = createLoggerMock();
     const result = collect(
       eventsFrom([
         {
@@ -345,6 +824,10 @@ describe('adaptRunEventsToStream', () => {
         originalOutcome: 'max_iterations',
       },
     });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ execution_path: 'agent_runtime' }),
+      'Critical agent runtime finalization hook failed',
+    );
   });
 
   it('preserves the max outcome for a best-effort finalization failure', async () => {
@@ -370,7 +853,37 @@ describe('adaptRunEventsToStream', () => {
     ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
   });
 
+  it.each([
+    ['CREDIT_BUDGET_EXCEEDED', CreditBudgetExceededError],
+    ['USER_CREDIT_LIMIT_EXCEEDED', UserCreditLimitExceededError],
+    ['TEAM_CREDIT_LIMIT_EXCEEDED', TeamCreditLimitExceededError],
+    ['API_KEY_CREDIT_LIMIT_EXCEEDED', ApiKeyCreditLimitExceededError],
+  ])('preserves %s through the runtime boundary', async (code, ErrorType) => {
+    const metadata = { creditsUsed: 105, limit: 100, modelTurn: 2 };
+
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code,
+            message: 'Monthly credit limit reached',
+            details: metadata,
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toMatchObject({
+      code,
+      metadata,
+      constructor: ErrorType,
+    });
+  });
+
   it('maps other error events to a client-safe run error', async () => {
+    const logger = createLoggerMock();
+    const details = { provider: 'test-provider', statusCode: 503 };
+
     await expect(
       collect(
         eventsFrom([
@@ -378,12 +891,380 @@ describe('adaptRunEventsToStream', () => {
             type: 'error',
             code: 'PROVIDER_FAILED',
             message: 'upstream exposed internal provider details',
+            details,
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
       ),
     ).rejects.toMatchObject<Partial<RunExecutionFailedError>>({
       message: 'Run execution failed: Agent runtime failed',
+      metadata: { runtimeErrorCode: 'PROVIDER_FAILED' },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        code: 'PROVIDER_FAILED',
+        message: 'upstream exposed internal provider details',
+        details,
+      },
+      'Agent runtime failed',
+    );
+  });
+
+  it.each([
+    [
+      'connection',
+      {
+        kind: 'connection' as const,
+        stage: 'stream_establishment' as const,
+        transportCode: 'ECONNREFUSED',
+        host: 'api.anthropic.com',
+      },
+      ProviderConnectionError,
+      'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
+    ],
+    [
+      'provider timeout',
+      {
+        kind: 'timeout' as const,
+        stage: 'stream_consumption' as const,
+        timeoutSource: 'whole_stream' as const,
+      },
+      ProviderTimeoutError,
+      'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+    ],
+    [
+      'server failure',
+      {
+        kind: 'server' as const,
+        stage: 'stream_establishment' as const,
+        upstreamStatus: 503,
+        upstreamRequestId: 'req_anthropic_503',
+      },
+      ProviderServerError,
+      'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
+    ],
+    [
+      'rate limit',
+      {
+        kind: 'rate_limit' as const,
+        stage: 'stream_establishment' as const,
+        upstreamStatus: 429,
+        upstreamRequestId: 'req_anthropic_429',
+        retryAfterMs: 12_000,
+      },
+      ProviderRequestRejectedError,
+      'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
+    ],
+  ])(
+    'maps a portable %s using actual backend model metadata',
+    async (_label, providerFailure, ErrorType, code) => {
+      const facts: ProviderFailureFacts = providerFailure;
+      const models = runtimeModels();
+      const result = collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'PROVIDER_FAILED',
+            message: 'Model provider request failed',
+            modelCall: {
+              modelCallId: 'call-1',
+              runId: 'run-1',
+              turn: 1,
+              callSequence: 1,
+              trigger: 'initial',
+              provider: 'anthropic:claude-sonnet-4-5',
+            },
+            providerFailure: facts,
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        models,
+      );
+
+      const error: unknown = await result.catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ErrorType);
+      expect(error).toMatchObject({
+        code,
+        metadata: expect.objectContaining({
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+          failureStage: facts.stage,
+          ...(facts.upstreamStatus !== undefined && {
+            upstreamStatus: facts.upstreamStatus,
+          }),
+          ...(facts.upstreamRequestId && {
+            upstreamRequestId: facts.upstreamRequestId,
+          }),
+          ...(facts.retryAfterMs !== undefined && {
+            retryAfterMs: facts.retryAfterMs,
+          }),
+        }),
+      });
+    },
+  );
+
+  it('classifies an Azure rate limit retained in the terminal provider cause', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.2',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'unknown',
+          stage: 'stream_consumption',
+          retryAfterMs: 4_500,
+          cause: Object.assign(new Error('sensitive Azure response'), {
+            code: 'rate_limit_exceeded',
+            type: 'too_many_requests',
+          }),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.2',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(error).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_REJECTED_AZURE',
+      metadata: expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.2',
+        failureStage: 'stream_consumption',
+        upstreamStatus: 429,
+        retryAfterMs: 4_500,
+        upstreamCode: 'rate_limit_exceeded',
+        upstreamType: 'too_many_requests',
+      }),
+    });
+    expect(JSON.stringify(error)).not.toContain('sensitive Azure response');
+  });
+
+  it('keeps safe diagnostics for an unknown terminal provider failure', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.2',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'unknown',
+          stage: 'stream_consumption',
+          cause: Object.assign(new Error('sensitive provider response'), {
+            code: 'unexpected_provider_condition',
+            type: 'upstream_error',
+            cause: Object.assign(new Error('nested transport response'), {
+              code: 'ERR_NESTED_TRANSPORT',
+            }),
+          }),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.2',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      code: 'INFERENCE_FAILED',
+      metadata: expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.2',
+        failureStage: 'stream_consumption',
+        upstreamCode: 'unexpected_provider_condition',
+        upstreamType: 'upstream_error',
+      }),
+    });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
+    expect((error as InferenceFailedError).toClientResponse()).toEqual({
+      code: 'INFERENCE_FAILED',
+      message: 'Internal server error',
+    });
+  });
+
+  it('keeps the upstream message out of the incident metadata of a portable rejection', async () => {
+    const provider: ModelProvider = {
+      name: 'azure:gpt-5.6-sol',
+      stream() {
+        throw new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          cause: Object.assign(
+            new Error("400 Invalid value for 'input[3]':\n  unsupported item"),
+            { status: 400, type: 'invalid_request_error', param: 'input' },
+          ),
+        });
+      },
+    };
+
+    const error: unknown = await collectRuntime(provider, {
+      name: 'gpt-5.6-sol',
+      provider: 'azure',
+    } as LanguageModel).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceFailedError);
+    expect(error).toMatchObject({
+      metadata: expect.objectContaining({
+        status: 400,
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'input',
+      }),
+    });
+    expect(error).not.toHaveProperty('metadata.upstreamMessage');
+    expect(
+      JSON.stringify((error as InferenceFailedError).toClientResponse()),
+    ).not.toContain('input[3]');
+  });
+
+  it('maps a full runtime idle stream timeout to INFERENCE_TIMEOUT', async () => {
+    const provider: ModelProvider = {
+      name: 'anthropic:claude-sonnet-4-5',
+      async *stream(request) {
+        yield {};
+        await new Promise<void>((resolve) => {
+          request.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+
+    const result = collectRuntime(
+      provider,
+      {
+        name: 'claude-sonnet-4-5',
+        provider: 'anthropic',
+      } as LanguageModel,
+      10,
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+      metadata: expect.objectContaining({
+        provider: 'anthropic',
+        modelId: 'claude-sonnet-4-5',
+        failureStage: 'stream_consumption',
+      }),
+      constructor: InferenceStreamStalledError,
+    });
+  });
+
+  it('preserves a runtime-owned idle stall as InferenceStreamStalledError', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'PROVIDER_FAILED',
+          message: `Model provider stream was idle for ${DEFAULT_MODEL_CALL_IDLE_TIMEOUT_MS}ms`,
+          modelCall: {
+            modelCallId: 'call-stalled',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+          providerFailure: {
+            kind: 'timeout',
+            stage: 'stream_consumption',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      runtimeModels(),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_TIMEOUT',
+      statusCode: 504,
+    });
+  });
+
+  it.each([
+    ['image_too_large', InferenceImageTooLargeError],
+    ['context_length_exceeded', RunContextBudgetExceededError],
+  ] as const)(
+    'maps portable %s without stored observability errors',
+    async (rejectionReason, errorClass) => {
+      await expect(
+        collectProviderFailure(
+          new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            rejectionReason,
+            cause: new Error('400 provider wording'),
+          }),
+        ),
+      ).rejects.toBeInstanceOf(errorClass);
+    },
+  );
+
+  it('keeps context-length wording without a provider reason in the inference-failed family', async () => {
+    await expect(
+      collectProviderFailure(
+        new ModelProviderError({
+          kind: 'rejection',
+          stage: 'stream_establishment',
+          upstreamStatus: 400,
+          cause: new Error('This model maximum context length is 32768 tokens'),
+        }),
+      ),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('keeps a rate limit mentioning tokens in the rate-limit family', async () => {
+    await expect(
+      collectProviderFailure(
+        new ModelProviderError({
+          kind: 'rate_limit',
+          stage: 'stream_establishment',
+          upstreamStatus: 429,
+          cause: new Error('Too many tokens per minute'),
+        }),
+      ),
+    ).rejects.toBeInstanceOf(ProviderRequestRejectedError);
+  });
+
+  it('keeps an ordinary portable rejection in the inference-failed incident family', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'PROVIDER_FAILED',
+          message: 'Model provider request failed',
+          modelCall: {
+            modelCallId: 'call-rejected',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          },
+          providerFailure: {
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            upstreamRequestId: 'req_anthropic_400',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      runtimeModels(),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_FAILED',
+      metadata: expect.objectContaining({
+        provider: 'anthropic',
+        modelId: 'claude-sonnet-4-5',
+        status: 400,
+        upstreamRequestId: 'req_anthropic_400',
+      }),
     });
   });
 
@@ -406,7 +1287,6 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         underlyingCode: 'ECONNREFUSED',
-        causeMessage: 'connect ECONNREFUSED',
       },
     ],
     [
@@ -418,6 +1298,8 @@ describe('adaptRunEventsToStream', () => {
           provider: 'anthropic',
           modelId: 'claude-3-7-sonnet',
           underlyingCode: 'ETIMEDOUT',
+          failureStage: 'stream_establishment',
+          timeoutSource: 'response_start',
         },
       },
       ProviderTimeoutError,
@@ -426,6 +1308,8 @@ describe('adaptRunEventsToStream', () => {
         provider: 'anthropic',
         modelId: 'claude-3-7-sonnet',
         underlyingCode: 'ETIMEDOUT',
+        failureStage: 'stream_establishment',
+        timeoutSource: 'response_start',
       },
     ],
     [
@@ -448,37 +1332,25 @@ describe('adaptRunEventsToStream', () => {
       },
     ],
     [
-      'oversized image error',
-      'INFERENCE_IMAGE_TOO_LARGE',
+      'provider request rejection',
+      'PROVIDER_UNAVAILABLE_REJECTED_ANTHROPIC',
       {
-        type: 'inference_image_too_large',
-        context: { status: 400 },
+        type: 'provider_rejected',
+        context: {
+          provider: 'anthropic',
+          modelId: 'claude-3-7-sonnet',
+          upstreamStatus: 429,
+          retryAfterMs: 30_000,
+        },
       },
-      InferenceImageTooLargeError,
-      400,
-      { status: 400 },
-    ],
-    [
-      'stalled stream error',
-      'INFERENCE_TIMEOUT',
+      ProviderRequestRejectedError,
+      502,
       {
-        type: 'inference_stream_stalled',
-        context: { idleMs: 45_000 },
+        provider: 'anthropic',
+        modelId: 'claude-3-7-sonnet',
+        upstreamStatus: 429,
+        retryAfterMs: 30_000,
       },
-      InferenceStreamStalledError,
-      504,
-      undefined,
-    ],
-    [
-      'generic inference error',
-      'INFERENCE_FAILED',
-      {
-        type: 'inference_failed',
-        context: { reason: 'Provider inference failed', status: 429 },
-      },
-      InferenceFailedError,
-      500,
-      { status: 429 },
     ],
   ])(
     'reconstructs a classified %s',
@@ -501,12 +1373,115 @@ describe('adaptRunEventsToStream', () => {
     },
   );
 
-  it('maps a malformed tool call to the inference-failed error', async () => {
-    // Truncated/unparseable tool-call arguments must surface as one clear
-    // inference failure — matching the legacy loop — instead of a generic
-    // runtime error (AYC-646).
-    await expect(
-      collect(
+  describe('malformed tool calls', () => {
+    const malformedEvent = (
+      reason: string,
+      modelCall?: Extract<RunEventPayload, { type: 'error' }>['modelCall'],
+    ): RunEventPayload => ({
+      type: 'error',
+      code: 'MALFORMED_TOOL_CALL',
+      message:
+        'Model emitted a tool call whose arguments did not arrive intact',
+      details: { toolNames: ['create_document'], reason },
+      ...(modelCall ? { modelCall } : {}),
+    });
+
+    it('maps a tool call cut off at the output token limit to a client-visible 400 with the cause', async () => {
+      // A retry of the same request cannot succeed and there is no server
+      // defect, so the failure stays out of AppSignal error incidents and is
+      // observable through the `Model call rejected` warn log (AYC-1315).
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('token_limit_reached', {
+            modelCallId: 'call-truncated',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'anthropic:claude-sonnet-4-5',
+          }),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        runtimeModels(),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        code: 'INFERENCE_MALFORMED_TOOL_CALL',
+        statusCode: 400,
+        message:
+          "Inference failed: model's tool call was cut off at the output token limit",
+        metadata: {
+          malformedReason: 'token_limit_reached',
+          toolNames: ['create_document'],
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+        },
+      });
+      expect(
+        (error as InferenceMalformedToolCallError).toClientResponse(),
+      ).toEqual({
+        code: 'INFERENCE_MALFORMED_TOOL_CALL',
+        message:
+          "Inference failed: model's tool call was cut off at the output token limit",
+        metadata: {
+          malformedReason: 'token_limit_reached',
+          toolNames: ['create_document'],
+          provider: 'anthropic',
+          modelId: 'claude-sonnet-4-5',
+        },
+      });
+    });
+
+    it('names unparseable arguments as the cause without provider metadata when the model call is unknown', async () => {
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('unparseable_arguments'),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        statusCode: 400,
+        message:
+          'Inference failed: model emitted unparseable tool call arguments',
+        metadata: {
+          malformedReason: 'unparseable_arguments',
+          toolNames: ['create_document'],
+        },
+      });
+      expect(error).not.toHaveProperty('metadata.provider');
+      expect(error).not.toHaveProperty('metadata.modelId');
+    });
+
+    it('omits provider metadata when the model call names an unregistered provider', async () => {
+      const error: unknown = await collect(
+        eventsFrom([
+          malformedEvent('tool_disabled_fallback', {
+            modelCallId: 'call-fallback',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 4,
+            trigger: 'fallback',
+            provider: 'azure:unknown-model',
+          }),
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+        createLoggerMock(),
+        runtimeModels(),
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+      expect(error).toMatchObject({
+        metadata: { malformedReason: 'tool_disabled_fallback' },
+      });
+      expect(error).not.toHaveProperty('metadata.provider');
+    });
+
+    it('keeps tool names only and never the arguments in the error metadata', async () => {
+      const error: unknown = await collect(
         eventsFrom([
           {
             type: 'error',
@@ -516,12 +1491,15 @@ describe('adaptRunEventsToStream', () => {
             details: {
               toolNames: ['create_document'],
               reason: 'unparseable_arguments',
+              argumentsJson: '{"title":"Haushaltsplan"',
             },
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
-      ),
-    ).rejects.toBeInstanceOf(InferenceFailedError);
+      ).catch((caught: unknown) => caught);
+
+      expect(JSON.stringify(error)).not.toContain('Haushaltsplan');
+    });
   });
 
   it('maps a repeatedly failing tool to the transcript-preserving run error', async () => {
@@ -587,6 +1565,49 @@ describe('adaptRunEventsToStream', () => {
     });
   });
 
+  it('rebuilds a thread-mask failure while preserving the client error code', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'ANONYMIZATION_UNAVAILABLE',
+          message: 'Anonymization is unavailable',
+          details: {
+            hostError: {
+              type: 'thread_pii_mask_failure',
+              context: {
+                code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+                stage: 'new_masks_persistence',
+                textLength: 24,
+                newMaskCount: 1,
+                databaseCode: '23505',
+                causeType: 'QueryFailedError',
+              },
+            },
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    const error: unknown = await result.catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: {
+        code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+        metadata: {
+          stage: 'new_masks_persistence',
+          textLength: 24,
+          newMaskCount: 1,
+          databaseCode: '23505',
+          causeType: 'QueryFailedError',
+        },
+      },
+    });
+  });
+
   it('maps an oversized latest turn to a context-budget error', async () => {
     await expect(
       collect(
@@ -602,3 +1623,34 @@ describe('adaptRunEventsToStream', () => {
     ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
   });
 });
+
+function collectProviderFailure(error: ModelProviderError) {
+  const provider: ModelProvider = {
+    name: 'anthropic:claude-sonnet-4-5',
+    async *stream() {
+      yield await Promise.reject(error);
+    },
+  };
+  const context = RunContext.create();
+  const models = RuntimeModelRegistry.attach(context);
+  models.register(provider, {
+    name: 'claude-sonnet-4-5',
+    provider: 'anthropic',
+  } as LanguageModel);
+  return collect(
+    run({
+      instructions: 'Assist a municipal clerk.',
+      model: provider,
+      messages: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Inspect this request.' }],
+        },
+      ],
+      context,
+      retry: { maxRetries: 0 },
+    }),
+    createLoggerMock(),
+    models,
+  );
+}

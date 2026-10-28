@@ -1,10 +1,9 @@
 /**
- * SDK-level retry count for transient provider failures, passed to every
- * `@ayunis` provider. Set explicitly (rather than relying on the provider
- * default) to preserve the pre-runtime handlers' 3-retry behavior as a
- * deliberate choice.
+ * Provider SDKs must not retry internally: one host call is one upstream
+ * call. Agent runs delegate retry, backoff, cancellation, and idle-timeout
+ * ownership to @ayunis/agent-runtime; every other caller owns its retries.
  */
-export const INFERENCE_MAX_RETRIES = 3;
+export const PROVIDER_SDK_MAX_RETRIES = 0;
 
 /**
  * Output-token budget for the Claude handlers — both the direct Anthropic API

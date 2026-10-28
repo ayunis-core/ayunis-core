@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
+  DocumentNotInKnowledgeBaseError,
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-  DocumentNotInKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
+import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-knowledge-base.command';
 
 @Injectable()
@@ -18,53 +19,43 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
   );
 
   constructor(
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly deleteSourceUseCase: DeleteSourceUseCase,
+    private readonly repository: KnowledgeBaseRepository,
+    private readonly writeAccess: KnowledgeBaseWriteAccessService,
+    private readonly deleteSource: DeleteSourceUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   @Transactional()
   async execute(
     command: RemoveDocumentFromKnowledgeBaseCommand,
   ): Promise<void> {
-    this.logger.log('Removing document from knowledge base', {
-      knowledgeBaseId: command.knowledgeBaseId,
-      documentId: command.documentId,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: command.knowledgeBaseId,
+        documentId: command.documentId,
+      },
+      'Removing document from knowledge base',
+    );
+    const knowledgeBase = await this.repository.findById(
+      command.knowledgeBaseId,
+    );
+    if (!knowledgeBase) {
+      throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
+    }
+    await this.writeAccess.requireWrite(knowledgeBase);
 
-    try {
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
-        command.knowledgeBaseId,
-      );
-      if (knowledgeBase?.userId !== command.userId) {
-        throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-      }
-
-      const source =
-        await this.knowledgeBaseRepository.findSourceByIdAndKnowledgeBaseId(
-          command.documentId,
-          command.knowledgeBaseId,
-        );
-      if (!source) {
-        throw new DocumentNotInKnowledgeBaseError(
-          command.documentId,
-          command.knowledgeBaseId,
-        );
-      }
-
-      await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(command.documentId, knowledgeBase.orgId),
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error removing document from knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError(
-        'Error removing document from knowledge base',
-        { error: error as Error },
+    const source = await this.repository.findSourceByIdAndKnowledgeBaseId(
+      command.documentId,
+      knowledgeBase.id,
+    );
+    if (!source) {
+      throw new DocumentNotInKnowledgeBaseError(
+        command.documentId,
+        knowledgeBase.id,
       );
     }
+    await this.deleteSource.execute(
+      new DeleteSourceCommand(command.documentId, knowledgeBase.orgId),
+    );
   }
 }

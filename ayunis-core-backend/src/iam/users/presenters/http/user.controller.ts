@@ -7,10 +7,10 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  Logger,
   UnauthorizedException,
   Post,
   Query,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,34 +26,37 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { UserProperty } from 'src/iam/authentication/application/decorators/current-user.decorator';
+import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { UUID } from 'crypto';
-import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
-import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
-import { UpdateUserRoleUseCase } from '../../application/use-cases/update-user-role/update-user-role.use-case';
-import { UpdateUserRoleCommand } from '../../application/use-cases/update-user-role/update-user-role.command';
-import { UpdateUserNameUseCase } from '../../application/use-cases/update-user-name/update-user-name.use-case';
-import { UpdateUserNameCommand } from '../../application/use-cases/update-user-name/update-user-name.command';
-import { UpdatePasswordUseCase } from '../../application/use-cases/update-password/update-password.use-case';
-import { UpdatePasswordCommand } from '../../application/use-cases/update-password/update-password.command';
-import { ConfirmEmailUseCase } from '../../application/use-cases/confirm-email/confirm-email.use-case';
-import { ConfirmEmailCommand } from '../../application/use-cases/confirm-email/confirm-email.command';
-import { ResendEmailConfirmationUseCase } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
-import { ResendEmailConfirmationCommand } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
-import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { DeleteUserUseCase } from 'src/iam/users/application/use-cases/delete-user/delete-user.use-case';
+import { DeleteUserCommand } from 'src/iam/users/application/use-cases/delete-user/delete-user.command';
+import { UpdateUserRoleUseCase } from 'src/iam/users/application/use-cases/update-user-role/update-user-role.use-case';
+import { UpdateUserRoleCommand } from 'src/iam/users/application/use-cases/update-user-role/update-user-role.command';
+import { UpdateUserNameUseCase } from 'src/iam/users/application/use-cases/update-user-name/update-user-name.use-case';
+import { UpdateUserNameCommand } from 'src/iam/users/application/use-cases/update-user-name/update-user-name.command';
+import { UpdatePasswordUseCase } from 'src/iam/users/application/use-cases/update-password/update-password.use-case';
+import { UpdatePasswordCommand } from 'src/iam/users/application/use-cases/update-password/update-password.command';
+import { ConfirmEmailUseCase } from 'src/iam/users/application/use-cases/confirm-email/confirm-email.use-case';
+import { ConfirmEmailCommand } from 'src/iam/users/application/use-cases/confirm-email/confirm-email.command';
+import { ResendEmailConfirmationUseCase } from 'src/iam/users/application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
+import { ResendEmailConfirmationCommand } from 'src/iam/users/application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
+import { UserResponseDtoMapper } from 'src/iam/users/presenters/http/mappers/user-response-dto.mapper';
 import {
   UserResponseDto,
   PaginatedUsersListResponseDto,
-} from './dtos/user-response.dto';
-import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
-import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
-import { UpdateUserNameDto } from './dtos/update-user-name.dto';
-import { UpdatePasswordDto } from './dtos/update-password.dto';
-import { ConfirmEmailDto } from './dtos/confirm-email.dto';
-import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto';
+} from 'src/iam/users/presenters/http/dtos/user-response.dto';
+import { GetUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-users-query-params.dto';
+import { UpdateUserRoleDto } from 'src/iam/users/presenters/http/dtos/update-user-role.dto';
+import { UpdateUserNameDto } from 'src/iam/users/presenters/http/dtos/update-user-name.dto';
+import { UpdatePasswordDto } from 'src/iam/users/presenters/http/dtos/update-password.dto';
+import { ConfirmEmailDto } from 'src/iam/users/presenters/http/dtos/confirm-email.dto';
+import { ResendEmailConfirmationDto } from 'src/iam/users/presenters/http/dtos/resend-email-confirmation.dto';
+import { ContextService } from 'src/common/context/services/context.service';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { UserRole } from '../../domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 
@@ -71,6 +74,7 @@ export class UserController {
     private readonly confirmEmailUseCase: ConfirmEmailUseCase,
     private readonly resendEmailConfirmationUseCase: ResendEmailConfirmationUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
+    private readonly contextService: ContextService,
   ) {}
 
   @Get('')
@@ -111,15 +115,33 @@ export class UserController {
   })
   async getUsersInOrganization(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @CurrentUser(UserProperty.FULL_USER) currentUser: ActiveUser,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
-    this.logger.log('getUsersInOrganization', { orgId, ...queryParams });
+    this.logUsersQuery(orgId, queryParams);
 
     const users = await this.findUsersByOrgIdUseCase.execute(
       this.buildFindUsersQuery(orgId, queryParams),
     );
 
-    return this.userResponseDtoMapper.toPaginatedDto(users);
+    const includeLockStatus =
+      currentUser.role === UserRole.ADMIN || isSuperAdmin(this.contextService);
+    return this.userResponseDtoMapper.toPaginatedDto(users, includeLockStatus);
+  }
+
+  private logUsersQuery(
+    orgId: UUID,
+    queryParams: GetUsersQueryParamsDto,
+  ): void {
+    this.logger.log(
+      {
+        orgId,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        hasSearch: queryParams.search !== undefined,
+      },
+      'getUsersInOrganization',
+    );
   }
 
   private buildFindUsersQuery(
@@ -129,6 +151,7 @@ export class UserController {
     return new FindUsersByOrgIdQuery({
       orgId,
       search: queryParams.search,
+      includeTeams: true,
       pagination: {
         limit: queryParams.limit,
         offset: queryParams.offset,
@@ -176,7 +199,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
     const newRole = updateUserRoleDto.role;
-    this.logger.log('updateUserRole', { userId, newRole });
+    this.logger.log({ userId, newRole }, 'updateUserRole');
 
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot update your own role');
@@ -221,9 +244,12 @@ export class UserController {
     @Body() updateUserNameDto: UpdateUserNameDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
-    this.logger.log('updateUserName', {
-      newName: updateUserNameDto.name,
-    });
+    this.logger.log(
+      {
+        name: updateUserNameDto.name,
+      },
+      'updateUserName',
+    );
 
     const updatedUser = await this.updateUserNameUseCase.execute(
       new UpdateUserNameCommand(currentUserId, updateUserNameDto.name),
@@ -260,9 +286,12 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<void> {
-    this.logger.log('updatePassword', {
-      userId: currentUserId,
-    });
+    this.logger.log(
+      {
+        userId: currentUserId,
+      },
+      'updatePassword',
+    );
 
     await this.updatePasswordUseCase.execute(
       new UpdatePasswordCommand(
@@ -300,7 +329,7 @@ export class UserController {
     description: 'Internal server error occurred while confirming email',
   })
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto): Promise<void> {
-    this.logger.log('confirmEmail', { hasToken: !!confirmEmailDto.token });
+    this.logger.log({ hasToken: !!confirmEmailDto.token }, 'confirmEmail');
 
     await this.confirmEmailUseCase.execute(
       new ConfirmEmailCommand(confirmEmailDto.token),
@@ -338,9 +367,12 @@ export class UserController {
   async resendEmailConfirmation(
     @Body() resendEmailConfirmationDto: ResendEmailConfirmationDto,
   ): Promise<void> {
-    this.logger.log('resendEmailConfirmation', {
-      email: resendEmailConfirmationDto.email,
-    });
+    this.logger.log(
+      {
+        email: resendEmailConfirmationDto.email,
+      },
+      'resendEmailConfirmation',
+    );
 
     await this.resendEmailConfirmationUseCase.execute(
       new ResendEmailConfirmationCommand(resendEmailConfirmationDto.email),
@@ -379,7 +411,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteUser', { userId });
+    this.logger.log({ userId }, 'deleteUser');
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot delete yourself');
     }

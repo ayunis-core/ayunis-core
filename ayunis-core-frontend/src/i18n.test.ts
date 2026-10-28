@@ -1,0 +1,64 @@
+import { describe, it, expect, afterAll } from 'vitest';
+import * as z from 'zod';
+import i18n from './i18n';
+
+// Validators without an explicit message fall back to zod's built-in copy.
+// i18n.ts configures zod's locale so those defaults follow the active
+// language; without that wiring they surface in English in a German UI.
+const maxMessage = () =>
+  z.string().max(2).safeParse('abc').error?.issues[0]?.message ?? '';
+
+describe('zod locale follows the active language', () => {
+  afterAll(async () => {
+    await i18n.changeLanguage('de');
+  });
+
+  // Deliberately does not switch the language first: this asserts the locale
+  // is already configured once i18n.ts has loaded.
+  it('is configured for the fallback language on load', () => {
+    expect(maxMessage()).toBe('Zu groß: erwartet, dass string <=2 Zeichen hat');
+  });
+
+  it('switches the defaults when the language changes', async () => {
+    await i18n.changeLanguage('en');
+    expect(maxMessage()).toBe(
+      'Too big: expected string to have <=2 characters',
+    );
+  });
+});
+
+describe('language preference persistence', () => {
+  it('stores the selected language for the next page load', async () => {
+    await i18n.changeLanguage('en');
+
+    expect(window.localStorage.getItem('ayunis-language')).toBe('en');
+  });
+});
+
+describe('bulk invite success pluralization', () => {
+  afterAll(async () => {
+    await i18n.changeLanguage('de');
+  });
+
+  it('uses the singular German form for one invitation', async () => {
+    await i18n.changeLanguage('de');
+
+    expect(
+      i18n.t('bulkInvite.allSuccess', {
+        ns: 'admin-settings-users',
+        count: 1,
+      }),
+    ).toBe('1 Einladung erfolgreich erstellt!');
+  });
+
+  it('uses the plural German form for multiple invitations', async () => {
+    await i18n.changeLanguage('de');
+
+    expect(
+      i18n.t('bulkInvite.allSuccess', {
+        ns: 'admin-settings-users',
+        count: 3,
+      }),
+    ).toBe('Alle 3 Einladungen erfolgreich erstellt!');
+  });
+});

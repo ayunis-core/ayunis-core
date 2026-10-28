@@ -1,0 +1,193 @@
+import type { APIRequestContext } from "@playwright/test";
+import { generatedApi } from "../clients/api/generated-api";
+
+export interface ProjectContextFixture {
+  workspace: { id: string; name: string };
+  personalSkill: { id: string; name: string };
+  personalKnowledgeBase: { id: string; name: string };
+  skill: { id: string; name: string };
+  knowledgeBase: { id: string; name: string };
+  instruction: string;
+  workspaceDocument: { id: string; name: string } | null;
+  workspaceDocumentName: string;
+}
+
+interface ProjectContextOptions {
+  attach?: boolean;
+  includeDocuments?: boolean;
+}
+
+export function createPersonalThread(
+  api: APIRequestContext,
+): Promise<{ id: string }> {
+  return createContextThread(api);
+}
+
+export function createProjectThread(
+  api: APIRequestContext,
+  workspaceId: string,
+): Promise<{ id: string }> {
+  return createContextThread(api, workspaceId);
+}
+
+async function createContextThread(
+  api: APIRequestContext,
+  workspaceId?: string,
+): Promise<{ id: string }> {
+  const model =
+    await generatedApi.modelsDefaultsControllerGetEffectiveDefaultModel({
+      api,
+    });
+  const permittedLanguageModel = model.permittedLanguageModel;
+  if (!permittedLanguageModel) {
+    throw new Error(
+      "No default language model configured for project context test",
+    );
+  }
+  return generatedApi.threadsControllerCreate(
+    { workspaceId, modelId: permittedLanguageModel.id },
+    { api },
+  );
+}
+
+export async function createProjectContextFixture(
+  api: APIRequestContext,
+  suffix: string,
+  options: ProjectContextOptions = {},
+): Promise<ProjectContextFixture> {
+  const workspace = await generatedApi.workspacesControllerCreate(
+    {
+      name: `Projekt ${suffix}`,
+      description: "Projektkontext für Bauanträge und Satzungen",
+      icon: "building-2",
+    },
+    { api },
+  );
+  const personalSkill = await generatedApi.skillsControllerCreate(
+    {
+      ownerType: "personal",
+      name: `Bauanträge prüfen ${suffix}`,
+      shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
+      instructions:
+        "Prüfe Bauanträge anhand der Projektvorgaben und nenne offene Punkte.",
+      isActive: true,
+    },
+    { api },
+  );
+  const personalKnowledgeBase =
+    await generatedApi.knowledgeBasesControllerCreate(
+      {
+        ownerType: "personal",
+        name: `Bauordnung Wissen ${suffix}`,
+        description: "Lokale Bauordnung und Stellplatzsatzung für das Projekt",
+      },
+      { api },
+    );
+  let skill: { id: string; name: string } = personalSkill;
+  let knowledgeBase: { id: string; name: string } = personalKnowledgeBase;
+  const instruction = `Antworte für ${suffix} mit kurzer Prüfung, Risiko und nächstem Schritt.`;
+  const workspaceDocumentName = `Stellplatzsatzung ${suffix}.txt`;
+
+  let workspaceDocument: { id: string; name: string } | null = null;
+
+  if (options.attach) {
+    if (options.includeDocuments && (await permitFirstEmbeddingModel(api))) {
+      workspaceDocument = await uploadProjectContextDocument(api, {
+        workspaceId: workspace.id,
+        workspaceDocumentName,
+      });
+    }
+    skill = await generatedApi.skillsControllerCreate(
+      {
+        ownerType: "workspace",
+        workspaceId: workspace.id,
+        name: personalSkill.name,
+        shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
+        instructions:
+          "Prüfe Bauanträge anhand der Projektvorgaben und nenne offene Punkte.",
+      },
+      { api },
+    );
+    knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+      {
+        ownerType: "workspace",
+        workspaceId: workspace.id,
+        name: knowledgeBase.name,
+        description: "Lokale Bauordnung für das Projekt",
+      },
+      { api },
+    );
+    await generatedApi.workspaceContextControllerUpdateInstruction(
+      workspace.id,
+      { instruction },
+      { api },
+    );
+  }
+
+  return {
+    workspace,
+    personalSkill,
+    personalKnowledgeBase,
+    skill,
+    knowledgeBase,
+    instruction,
+    workspaceDocument,
+    workspaceDocumentName,
+  };
+}
+
+async function permitFirstEmbeddingModel(
+  api: APIRequestContext,
+): Promise<boolean> {
+  const models = await generatedApi.modelsControllerGetAvailableEmbeddingModels(
+    {
+      api,
+    },
+  );
+  const model = models[0];
+  if (!model) return false;
+  if (model.permittedModelId) return true;
+  await generatedApi.modelsControllerCreatePermittedModel(
+    { modelId: model.modelId },
+    { api },
+  );
+  return true;
+}
+
+async function uploadProjectContextDocument(
+  api: APIRequestContext,
+  context: {
+    workspaceId: string;
+    workspaceDocumentName: string;
+  },
+): Promise<{ id: string; name: string }> {
+  return uploadTextFile(
+    api,
+    `/api/workspaces/${context.workspaceId}/context/documents`,
+    context.workspaceDocumentName,
+    "Je Wohneinheit ist mindestens ein Stellplatz nachzuweisen.",
+  );
+}
+
+async function uploadTextFile(
+  api: APIRequestContext,
+  path: string,
+  name: string,
+  content: string,
+): Promise<{ id: string; name: string }> {
+  const response = await api.post(path, {
+    multipart: {
+      file: {
+        name,
+        mimeType: "text/plain",
+        buffer: Buffer.from(content),
+      },
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(
+      `POST ${path} failed (HTTP ${response.status()}): ${await response.text()}`,
+    );
+  }
+  return response.json() as Promise<{ id: string; name: string }>;
+}

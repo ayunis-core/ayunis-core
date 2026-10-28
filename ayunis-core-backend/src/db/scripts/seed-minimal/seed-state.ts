@@ -1,6 +1,7 @@
 import type { SeedRunner } from 'src/db/scripts/utils/seed-runner';
 import type { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import type { AcademyChapterRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter.record';
 import type { SeededModels } from './seed-types';
 import { minimalFixture } from 'src/db/fixtures/minimal.fixture';
 
@@ -16,6 +17,7 @@ export class SeedState {
   readonly fixture = minimalFixture;
 
   private modelsValue?: SeededModels;
+  private academyChapterRecords?: AcademyChapterRecord[];
   private readonly orgRecords = new Map<string, OrgRecord>();
   private readonly adminRecords = new Map<string, UserRecord>();
 
@@ -26,6 +28,13 @@ export class SeedState {
   }
   getModels(): SeededModels {
     return required(this.modelsValue, 'models');
+  }
+
+  setAcademyChapters(records: AcademyChapterRecord[]): void {
+    this.academyChapterRecords = records;
+  }
+  getAcademyChapters(): AcademyChapterRecord[] {
+    return required(this.academyChapterRecords, 'academy chapters');
   }
 
   setOrg(key: string, record: OrgRecord): void {

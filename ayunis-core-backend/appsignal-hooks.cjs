@@ -62,28 +62,6 @@ function isCrawlerRequest(request) {
 }
 
 /**
- * Identifies the listening stream the MCP SDK's StreamableHTTPClientTransport
- * opens in the background on connect. The client adapter opens one connection
- * per operation and always closes it, and close() unconditionally aborts that
- * still-open stream — so undici reports an AbortError on a request the
- * application deliberately cancelled and never consumed, after the operation
- * already succeeded (AYC-555).
- *
- * The listening stream is the only outbound GET sending exactly
- * `text/event-stream`; MCP JSON-RPC calls are POSTs sending
- * `application/json, text/event-stream`, so genuine connectivity and auth
- * failures stay fully instrumented. That "only" holds today because MCP is the
- * sole SSE client — a second one would silently widen this predicate, which is
- * why it is registered as a stopgap rather than a permanent scoping rule.
- */
-function isMcpEventStreamRequest(request) {
-  return (
-    request.method === 'GET' &&
-    headerValue(request.headers, 'accept') === 'text/event-stream'
-  );
-}
-
-/**
  * The key AppSignal's agent matches `ignoreErrors` against.
  *
  * OpenTelemetry derives it as `code` when truthy, falling back to `name`
@@ -133,16 +111,27 @@ const SUPPRESSIONS = [
     match: isCrawlerRequest,
   },
   {
-    id: 'mcp-listening-stream',
-    lever: 'ignoreRequestHook',
-    ticket: 'AYC-555',
-    stopgapFor: 'AYC-571',
+    id: 'marketplace-unavailable',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-720',
     reason:
-      'The MCP SDK opens a background SSE GET on connect and close() aborts ' +
-      'it, so undici records an AbortError after the operation already ' +
-      'succeeded. This covers for per-operation connect/close — remove it ' +
-      'once connections are reused.',
-    match: isMcpEventStreamRequest,
+      'Marketplace fetch failures are an expected external-dependency outcome ' +
+      'surfaced to the user as an actionable 503 and retained as a structured ' +
+      'warning. A single occurrence is not actionable operational signal, so ' +
+      'the deliberate protocol error must not open a first-occurrence incident.',
+    exceptionType: 'MARKETPLACE_UNAVAILABLE',
+  },
+  {
+    id: 'runtime-model-idle-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1064',
+    reason:
+      'The agent runtime raises this internal signal to abort a model stream ' +
+      'that emitted no further data before its idle deadline. The runtime ' +
+      'retries it before visible output and reports terminal stalls as INFERENCE_TIMEOUT ' +
+      'or PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw signal is a duplicate ' +
+      '(incident #659).',
+    exceptionType: 'MODEL_CALL_IDLE_TIMEOUT',
   },
   {
     id: 'abort-signal-cancellation',
@@ -152,7 +141,7 @@ const SUPPRESSIONS = [
       'The DOMException Node mints for AbortController.abort() (name ' +
       'AbortError, numeric code 20, so exceptionType "20"). An abort is ' +
       'always a cancellation we or an SDK issued deliberately — MCP ' +
-      'transport close after a completed operation, SDK request timeouts, ' +
+      'transport teardown after going idle, SDK request timeouts, ' +
       'stream watchdogs, client disconnects — never itself the failure. ' +
       'Real timeouts surface as classified application errors ' +
       '(MCP_CONNECTION_TIMEOUT, INFERENCE_TIMEOUT, PROVIDER_UNAVAILABLE_*), ' +
@@ -182,6 +171,28 @@ const SUPPRESSIONS = [
     exceptionType: 'UND_ERR_HEADERS_TIMEOUT',
   },
   {
+    id: 'transport-body-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-948',
+    reason:
+      'Response body stalled. Classified as PROVIDER_UNAVAILABLE_TIMEOUT_* ' +
+      'at provider boundaries; the raw undici exception duplicates the ' +
+      'classified failure (incident #489). Classified timeout reporting remains enabled.',
+    exceptionType: 'UND_ERR_BODY_TIMEOUT',
+  },
+  {
+    id: 'transport-connect-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1212',
+    reason:
+      "TCP connect exceeded undici's 10s deadline. Provider boundaries " +
+      'retry it and classify a terminal failure as ' +
+      'PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw span exception fires on every ' +
+      'attempt, including ones a retry recovered (incidents #692, #693). ' +
+      'Unclassified egress still reports its own wrapper error.',
+    exceptionType: 'UND_ERR_CONNECT_TIMEOUT',
+  },
+  {
     id: 'transport-dns-again',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',
@@ -200,6 +211,17 @@ const SUPPRESSIONS = [
       'PROVIDER_UNAVAILABLE_CONNECTION_* with one setup retry; the raw span ' +
       'exception is a duplicate (incident #387).',
     exceptionType: 'ECONNRESET',
+  },
+  {
+    id: 'transport-socket-closed',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-997',
+    reason:
+      'Undici reports a peer closing an outbound provider socket as ' +
+      'UND_ERR_SOCKET. Provider boundaries classify the failure as ' +
+      'PROVIDER_UNAVAILABLE_CONNECTION_*; the raw instrumentation exception ' +
+      'is a duplicate (incident #626).',
+    exceptionType: 'UND_ERR_SOCKET',
   },
   {
     id: 'transport-connection-aborted',
@@ -224,6 +246,18 @@ const SUPPRESSIONS = [
       'exception is a duplicate. The latency root cause is tracked in ' +
       'AYC-662 via the classified incident.',
     exceptionType: 'ETIMEDOUT',
+  },
+  {
+    id: 'transport-socket-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-767',
+    reason:
+      'Idle-socket deadline raised by the keep-alive agent the OpenAI SDK ' +
+      'ships (agentkeepalive lib/agent.js, message "Socket timeout"). The ' +
+      'SDK retries it, and where it still fails a request the taxonomy ' +
+      'classifies it as PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw http span ' +
+      'exception on the inference span is a duplicate (incident #333).',
+    exceptionType: 'ERR_SOCKET_TIMEOUT',
   },
   {
     id: 'transport-broken-pipe',
@@ -269,6 +303,16 @@ const SUPPRESSIONS = [
       'records it and no Nest filter ever sees it. An oversized client body ' +
       'is a 413, not a defect of ours.',
     exceptionType: 'PayloadTooLargeError',
+  },
+  {
+    id: 'malformed-json-body',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-1226',
+    reason:
+      'Malformed client JSON is an expected HTTP 400. Only parser errors ' +
+      'tagged MALFORMED_JSON_BODY are ignored; unrelated SyntaxErrors ' +
+      'remain reportable.',
+    exceptionType: 'MALFORMED_JSON_BODY',
   },
   {
     id: 'nestjs-core-instrumentation',
@@ -345,7 +389,6 @@ function headerValue(headers, name) {
 module.exports = {
   SUPPRESSIONS,
   isCrawlerRequest,
-  isMcpEventStreamRequest,
   shouldIgnoreRequest,
   exceptionTypeOf,
   ignoredErrorTypes,

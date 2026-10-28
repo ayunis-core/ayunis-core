@@ -7,24 +7,62 @@ description: Start, stop, and manage the local dev stack (Docker infra, backend,
 
 ## Starting the Stack
 
-The `./dev` script manages the full local development stack. It works from any checkout — worktree or main repo.
+The `./dev` script manages the local development stack. It works from any checkout — worktree or main repo.
+
+By default, `./dev up` omits the slow anonymisation service. Use this for routine backend, frontend, migration, and QA work:
 
 ```bash
-# Start everything (requires a slot number on first run)
+# Requires a slot number on first run
 ./dev up --slot 2
 
 # Subsequent runs remember the slot
 ./dev up
 ```
 
+Before starting the stack, decide whether the task actually exercises anonymisation. Only include the service when the task tests or changes anonymisation behavior:
+
+```bash
+./dev up --slot 2 --with-anonymisation
+```
+
 ### What `./dev up` does
 
-1. Starts Docker infrastructure (postgres, minio, mailcatcher, code-execution, anonymize)
+1. Starts Docker infrastructure (postgres, minio, mailcatcher, code-execution, redis, gotenberg, plus anonymize only when `--with-anonymisation` is set)
 2. Generates `.env.dev` with localhost connection config for the slot
 3. Runs database migrations
 4. Starts the backend natively (`nest start --watch`)
 5. Starts the frontend natively (`vite`)
 6. Waits for the backend health check, prints port summary, returns
+
+## Local Backend Environment Overrides
+
+Put personal or task-specific backend settings in
+`ayunis-core-backend/.env.local`. This is the generic local override mechanism
+for feature flags, temporary API keys, service endpoints, and any other backend
+environment variable:
+
+```dotenv
+FEATURE_<NAME>_ENABLED=true
+```
+
+The file is gitignored, is not rewritten by `./dev`, and has the highest
+precedence: `.env.local` overrides Infisical or other injected process values,
+the generated `.env.dev`, and `.env`.
+
+Do not prefix `./dev up` with an environment variable; the detached backend does
+not reliably inherit the invoking shell's environment. Do not edit `.env.dev`,
+because `./dev up` regenerates it, and do not change a source-code default for a
+local configuration need.
+
+The backend reads environment configuration at process startup. Restart after
+adding, changing, or removing an override:
+
+```bash
+./dev down
+./dev up
+```
+
+Remove task-specific entries from `.env.local` when they are no longer needed.
 
 ## Port Reference
 
@@ -56,7 +94,7 @@ The backend runs `nest start --watch` — it auto-reloads on code changes. If it
 ```bash
 ./dev logs backend    # Check what went wrong
 ./dev down
-./dev up              # Slot is remembered
+./dev up              # Slot is remembered; add --with-anonymisation only if needed
 ```
 
 ## Stopping

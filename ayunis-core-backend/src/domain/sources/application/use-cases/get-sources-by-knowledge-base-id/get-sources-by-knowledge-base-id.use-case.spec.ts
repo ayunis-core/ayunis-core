@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetSourcesByKnowledgeBaseIdUseCase } from './get-sources-by-knowledge-base-id.use-case';
 import { GetSourcesByKnowledgeBaseIdQuery } from './get-sources-by-knowledge-base-id.query';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { randomUUID } from 'crypto';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 
 describe('GetSourcesByKnowledgeBaseIdUseCase', () => {

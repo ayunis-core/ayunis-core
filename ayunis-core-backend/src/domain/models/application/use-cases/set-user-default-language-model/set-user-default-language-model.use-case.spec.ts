@@ -1,18 +1,19 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { PermittedModelNotFoundError } from '../../models.errors';
+import { PermittedModelNotFoundError } from 'src/domain/models/application/models.errors';
 import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
 import { SetUserDefaultLanguageModelUseCase } from './set-user-default-language-model.use-case';
 
 describe('SetUserDefaultLanguageModelUseCase', () => {
+  const logger = createLoggerMock();
   const userId = randomUUID();
   const otherUserId = randomUUID();
   const orgId = randomUUID();
@@ -34,6 +35,7 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: false,
+        contextWindowSize: 128_000,
         isArchived: false,
       }),
       orgId,
@@ -73,9 +75,9 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
 
     useCase = module.get(SetUserDefaultLanguageModelUseCase);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.debug.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

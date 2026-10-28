@@ -1,9 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createAuthorization } from '@/features/permissions';
+import { MeResponseDtoRole } from '@/shared/api';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/')({
   beforeLoad: ({ context: { user } }) => {
-    const isAdmin = user.role === 'admin';
-    if (!isAdmin) {
+    const authorization = createAuthorization(user.role);
+    if (!authorization.hasRole(MeResponseDtoRole.admin)) {
       throw redirect({ to: '/' });
     }
 

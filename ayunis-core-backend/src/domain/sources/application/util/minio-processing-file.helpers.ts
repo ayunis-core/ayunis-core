@@ -1,5 +1,5 @@
-import * as path from 'path';
 import type { Logger } from '@nestjs/common';
+import * as path from 'path';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -45,9 +45,12 @@ export async function cleanupMinioProcessingFile(
   try {
     await deleteObjectUseCase.execute(new DeleteObjectCommand(minioPath));
   } catch (err) {
-    logger.warn('Failed to clean up MinIO processing file', {
-      minioPath,
-      error: err as Error,
-    });
+    logger.warn(
+      {
+        fileName: minioPath,
+        err: err as Error,
+      },
+      'Failed to clean up MinIO processing file',
+    );
   }
 }

@@ -1,15 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { CreateSkillTemplateUseCase } from './create-skill-template.use-case';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
-import { DuplicateSkillTemplateNameError } from '../../skill-templates.errors';
+import { DuplicateSkillTemplateNameError } from 'src/domain/skill-templates/application/skill-templates.errors';
 
 describe('CreateSkillTemplateUseCase', () => {
   let useCase: CreateSkillTemplateUseCase;
@@ -32,9 +32,6 @@ describe('CreateSkillTemplateUseCase', () => {
       CreateSkillTemplateUseCase,
     );
     repository = module.get(SkillTemplateRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

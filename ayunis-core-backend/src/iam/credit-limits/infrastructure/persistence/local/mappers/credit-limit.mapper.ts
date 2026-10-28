@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
-import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
 import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
+import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
+  ApiKeyCreditLimitRecord,
   CreditLimitRecord,
-  UserCreditLimitRecord,
+  DefaultUserCreditLimitRecord,
   TeamCreditLimitRecord,
-} from '../schema/credit-limit.record';
+  UserCreditLimitRecord,
+} from 'src/iam/credit-limits/infrastructure/persistence/local/schema/credit-limit.record';
 
 @Injectable()
 export class CreditLimitMapper {
@@ -27,6 +31,12 @@ export class CreditLimitMapper {
     }
     if (record instanceof TeamCreditLimitRecord) {
       return this.toTeamDomain(record);
+    }
+    if (record instanceof ApiKeyCreditLimitRecord) {
+      return this.toApiKeyDomain(record);
+    }
+    if (record instanceof DefaultUserCreditLimitRecord) {
+      return this.toDefaultUserDomain(record);
     }
     throw new Error(`Unknown credit limit record subtype for id ${record.id}`);
   }
@@ -52,6 +62,29 @@ export class CreditLimitMapper {
       updatedAt: record.updatedAt,
     });
   }
+
+  toApiKeyDomain(record: ApiKeyCreditLimitRecord): ApiKeyCreditLimit {
+    return new ApiKeyCreditLimit({
+      id: record.id,
+      orgId: record.orgId,
+      apiKeyId: record.apiKeyId as UUID,
+      monthlyCredits: record.monthlyCredits,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  toDefaultUserDomain(
+    record: DefaultUserCreditLimitRecord,
+  ): DefaultUserCreditLimit {
+    return new DefaultUserCreditLimit({
+      id: record.id,
+      orgId: record.orgId,
+      monthlyCredits: record.monthlyCredits,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
 }
 
 function toTargetRecord(limit: CreditLimit): CreditLimitRecord {
@@ -60,6 +93,14 @@ function toTargetRecord(limit: CreditLimit): CreditLimitRecord {
   }
   if (limit instanceof TeamCreditLimit) {
     return Object.assign(new TeamCreditLimitRecord(), { teamId: limit.teamId });
+  }
+  if (limit instanceof ApiKeyCreditLimit) {
+    return Object.assign(new ApiKeyCreditLimitRecord(), {
+      apiKeyId: limit.apiKeyId,
+    });
+  }
+  if (limit instanceof DefaultUserCreditLimit) {
+    return new DefaultUserCreditLimitRecord();
   }
 
   throw new Error(`Unknown credit limit subtype for id ${limit.id}`);

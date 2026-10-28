@@ -63,3 +63,9 @@ export class UnexpectedCrawlDomainGrantError extends ApplicationError {
     );
   }
 }
+
+export class UnexpectedCrawlDomainAccessError extends UnexpectedCrawlDomainGrantError {
+  constructor(error: Error) {
+    super('assert', { error });
+  }
+}

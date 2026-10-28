@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
-import { InvalidEmailConfirmationTokenError } from '../users.errors';
+import { InvalidEmailConfirmationTokenError } from 'src/iam/users/application/users.errors';
 
 export const EMAIL_CONFIRMATION_TOKEN_TYPE = 'email_confirmation';
 
@@ -32,10 +32,13 @@ export class EmailConfirmationJwtService {
     userId: UUID;
     email: string;
   }): string {
-    this.logger.log('generateEmailConfirmationToken', {
-      userId: params.userId,
-      email: params.email,
-    });
+    this.logger.log(
+      {
+        userId: params.userId,
+        email: params.email,
+      },
+      'generateEmailConfirmationToken',
+    );
 
     const payload: EmailConfirmationJwtPayload = {
       userId: params.userId,
@@ -66,10 +69,13 @@ export class EmailConfirmationJwtService {
         throw new InvalidEmailConfirmationTokenError('Invalid token payload');
       }
 
-      this.logger.debug('Email confirmation token verified successfully', {
-        userId: payload.userId,
-        email: payload.email,
-      });
+      this.logger.debug(
+        {
+          userId: payload.userId,
+          email: payload.email,
+        },
+        'Email confirmation token verified successfully',
+      );
 
       return {
         userId: payload.userId,
@@ -77,9 +83,12 @@ export class EmailConfirmationJwtService {
         type: EMAIL_CONFIRMATION_TOKEN_TYPE,
       };
     } catch (error: unknown) {
-      this.logger.error('Email confirmation token verification failed', {
-        error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Email confirmation token verification failed',
+      );
 
       if (error instanceof InvalidEmailConfirmationTokenError) {
         throw error;

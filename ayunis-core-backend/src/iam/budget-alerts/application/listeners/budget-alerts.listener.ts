@@ -5,7 +5,7 @@ import type { UUID } from 'crypto';
 
 import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 
-import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
+import { BudgetAlertEvaluator } from 'src/iam/budget-alerts/application/services/budget-alert-evaluator.service';
 
 const EVALUATION_COOLDOWN_MS = 10 * 60 * 1000;
 
@@ -39,6 +39,7 @@ interface CooldownState {
 @Injectable()
 export class BudgetAlertsListener implements OnModuleDestroy {
   private readonly logger = new Logger(BudgetAlertsListener.name);
+
   private readonly cooldowns = new Map<UUID, CooldownState>();
 
   constructor(private readonly budgetAlertEvaluator: BudgetAlertEvaluator) {}
@@ -65,9 +66,12 @@ export class BudgetAlertsListener implements OnModuleDestroy {
     }
 
     this.startCooldown(orgId);
-    this.logger.debug('Evaluating budget alerts after token consumption', {
-      orgId,
-    });
+    this.logger.debug(
+      {
+        orgId,
+      },
+      'Evaluating budget alerts after token consumption',
+    );
     await this.budgetAlertEvaluator.evaluate(orgId);
   }
 

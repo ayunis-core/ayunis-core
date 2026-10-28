@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { Invite } from '../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface InvitesPagination {
@@ -28,11 +28,9 @@ export abstract class InvitesRepository {
     email: string,
     orgId: UUID,
   ): Promise<Invite | null>;
-  abstract findByEmailsAndOrg(
-    emails: string[],
-    orgId: string,
-  ): Promise<Invite[]>;
-  abstract accept(id: UUID): Promise<void>;
+  abstract findByEmails(emails: string[]): Promise<Invite[]>;
+  abstract accept(id: UUID): Promise<boolean>;
   abstract delete(id: UUID): Promise<void>;
+  abstract deletePendingByIdAndOrg(id: UUID, orgId: UUID): Promise<boolean>;
   abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
 }

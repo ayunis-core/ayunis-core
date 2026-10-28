@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
 import { RequestTimeoutError } from '@mistralai/mistralai/models/errors';
 import { MistralEmbeddingsHandler } from './mistral-embeddings.handler';
-import { EmbeddingModel } from '../../domain/embedding-model.entity';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
@@ -60,6 +60,34 @@ describe('MistralEmbeddingsHandler', () => {
   it('bounds each embeddings attempt with a 30s timeout', () => {
     expect(Mistral).toHaveBeenCalledWith(
       expect.objectContaining({ timeoutMs: 30_000 }),
+    );
+  });
+
+  it('targets the EU server', () => {
+    expect(Mistral).toHaveBeenCalledWith(
+      expect.objectContaining({ server: 'eu' }),
+    );
+  });
+
+  it('passes the configured server URL override to the client', async () => {
+    (Mistral as unknown as jest.Mock).mockClear();
+    await Test.createTestingModule({
+      providers: [
+        MistralEmbeddingsHandler,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string) =>
+              key === 'embeddings.mistral.serverUrl'
+                ? 'https://mistral.example'
+                : 'mistral-api-key',
+          },
+        },
+      ],
+    }).compile();
+
+    expect(Mistral).toHaveBeenCalledWith(
+      expect.objectContaining({ serverURL: 'https://mistral.example' }),
     );
   });
 

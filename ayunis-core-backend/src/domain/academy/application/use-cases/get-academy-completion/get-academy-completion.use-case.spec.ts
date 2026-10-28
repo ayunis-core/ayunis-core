@@ -1,12 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GetAcademyCompletionUseCase } from './get-academy-completion.use-case';
 import { GetAcademyCompletionQuery } from './get-academy-completion.query';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 
 describe('GetAcademyCompletionUseCase', () => {
   let useCase: GetAcademyCompletionUseCase;
@@ -27,8 +26,6 @@ describe('GetAcademyCompletionUseCase', () => {
 
     useCase = module.get(GetAcademyCompletionUseCase);
     completionRepository = module.get(AcademyCompletionRepository);
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

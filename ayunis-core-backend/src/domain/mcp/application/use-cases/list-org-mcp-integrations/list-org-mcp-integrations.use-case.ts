@@ -1,9 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 
 /**
  * Use case for listing all MCP integrations belonging to the user's organization.
@@ -41,9 +41,12 @@ export class ListOrgMcpIntegrationsUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error listing integrations', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing integrations',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

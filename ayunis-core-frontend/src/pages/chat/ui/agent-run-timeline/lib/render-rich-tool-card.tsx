@@ -1,3 +1,4 @@
+import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
@@ -5,8 +6,11 @@ import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
+import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallMarketplaceSkillWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
+import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 import { renderArtifactToolWidget } from '@/pages/chat/ui/chat-widgets/renderArtifactToolWidget';
+import { generatedImageIdFromToolResult } from './generated-image-id';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -32,6 +36,8 @@ export function renderRichToolCard({
   index,
 }: RenderRichToolCardOptions): ReactNode {
   switch (toolUse.name) {
+    case 'create_file':
+      return <CreateFileWidget content={toolUse} isStreaming={isStreaming} />;
     case 'send_email':
       return <SendEmailWidget content={toolUse} isStreaming={isStreaming} />;
     case 'create_calendar_event':
@@ -42,20 +48,44 @@ export function renderRichToolCard({
         />
       );
     case 'create_skill':
-      return <CreateSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <CreateSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'edit_skill':
-      return <EditSkillWidget content={toolUse} isStreaming={isStreaming} />;
+      return (
+        <EditSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
+    case 'install_marketplace_skill':
+      return (
+        <InstallMarketplaceSkillWidget
+          content={toolUse}
+          isStreaming={isStreaming}
+          threadId={threadId}
+        />
+      );
     case 'bar_chart':
       return <BarChartWidget content={toolUse} isStreaming={isStreaming} />;
     case 'line_chart':
       return <LineChartWidget content={toolUse} isStreaming={isStreaming} />;
     case 'pie_chart':
       return <PieChartWidget content={toolUse} isStreaming={isStreaming} />;
+    case 'map':
+      return (
+        <LazyGeoJsonMapWidget content={toolUse} isStreaming={isStreaming} />
+      );
     case 'generate_image':
       return (
         <GenerateImageWidget
           content={toolUse}
-          imageId={result}
+          imageId={generatedImageIdFromToolResult(result)}
           threadId={threadId}
           isStreaming={isStreaming}
         />
@@ -63,6 +93,7 @@ export function renderRichToolCard({
     default: {
       const artifact = renderArtifactToolWidget({
         content: toolUse,
+        result,
         index,
         isStreaming,
         threadId: threadId ?? '',

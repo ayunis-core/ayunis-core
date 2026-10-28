@@ -1,3 +1,6 @@
+import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
+import type { PdfLink } from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
 import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
@@ -14,9 +17,14 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { observeJob, processingStage } from './job-telemetry';
+
+const PAGE_SEPARATOR = '\n\n';
 
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
@@ -28,64 +36,76 @@ export class UrlCrawlConsumer extends WorkerHost {
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
+    private readonly pdfSources: CrawledPdfSourcesService,
+    private readonly heartbeat: SourceProcessingHeartbeatService,
   ) {
     super();
   }
 
   async process(job: Job<UrlCrawlJobData>): Promise<void> {
+    this.logger.log(
+      {
+        jobId: job.id,
+        sourceId: job.data.sourceId,
+        url: job.data.rootUrl,
+      },
+      'Crawling URL source',
+    );
+    await observeJob(job, () =>
+      this.contextService.run(() =>
+        this.heartbeat.run(job.data.sourceId, () => this.processCrawl(job)),
+      ),
+    );
+  }
+
+  private async processCrawl(job: Job<UrlCrawlJobData>): Promise<void> {
     const { sourceId, orgId, userId, rootUrl, maxDepth } = job.data;
+    this.validateAndSetContext(orgId, userId);
+    if (
+      !(await this.admitOrgProcessing.execute(
+        new AdmitOrgProcessingQuery(orgId),
+      ))
+    ) {
+      this.logger.warn({ jobId: job.id, orgId }, 'Organisation deleted');
+      return;
+    }
 
-    this.logger.log('Crawling URL source', {
-      sourceId,
-      rootUrl,
-      jobId: job.id,
-    });
+    try {
+      if (!(await this.loadSourceOrSkip(sourceId))) return;
 
-    // Set up CLS context so downstream use cases (embeddings, etc.) work.
-    await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
+      const { text, chunks, title, pageCount, pdfLinks } =
+        await this.crawlAndBuild(rootUrl, orgId, maxDepth);
+      // Re-read before persisting to observe deletion or a terminal status change.
+      const source = await this.reloadIfStillProcessing(sourceId);
+      if (!source) return;
 
-      try {
-        const source = await this.loadSourceOrSkip(sourceId);
-        if (!source) return;
-
-        const { text, chunks, title, pageCount } = await this.crawlAndBuild(
-          rootUrl,
-          orgId,
-          maxDepth,
-        );
-
-        // Guard: re-check the source still exists and is PROCESSING before
-        // writing content. Prevents resurrection of deleted sources.
-        if (!(await this.isSourceStillProcessing(sourceId))) return;
-
-        if (title) source.name = title;
-        await this.sourceRepository.saveTextSource(source, { text, chunks });
-        await this.helper.index(sourceId, orgId, chunks);
-        await this.markSourceReady(sourceId);
-
-        this.logger.log('URL crawl complete', {
-          sourceId,
-          pages: pageCount,
-          chunks: chunks.length,
-        });
-      } catch (error) {
-        this.logger.error('URL crawl failed', {
-          sourceId,
-          error: error as Error,
-        });
-
-        const { final, rethrow } = classifyJobFailure(job, error);
-        if (final) {
-          await this.helper.markFailed(
-            sourceId,
-            error instanceof Error ? error.message : 'Unknown crawl error',
-          );
-          await this.helper.cleanupIndex(sourceId);
-        }
-        if (rethrow) throw rethrow;
+      if (title) source.name = title;
+      if (
+        !(await this.sourceRepository.saveProcessingTextSourceContent(source, {
+          text,
+          chunks,
+        }))
+      )
+        return;
+      await processingStage('url_crawl.indexing', () =>
+        this.helper.index(sourceId, orgId, chunks),
+      );
+      await this.pdfSources.process(source, pdfLinks, orgId);
+      this.logger.log(
+        { chunks: chunks.length, pages: pageCount, sourceId },
+        'URL crawl complete',
+      );
+    } catch (error) {
+      this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
+      if (!(await this.reloadIfStillProcessing(sourceId))) return;
+      const { final, rethrow } = classifyJobFailure(job, error);
+      if (final) {
+        await this.helper.markFailed(sourceId, error);
+        await this.helper.cleanupIndex(sourceId);
       }
-    });
+      if (rethrow) throw rethrow;
+    }
   }
 
   private validateAndSetContext(
@@ -101,7 +121,7 @@ export class UrlCrawlConsumer extends WorkerHost {
   private async loadSourceOrSkip(sourceId: UUID): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (!source) {
-      this.logger.warn('Source not found, skipping', { sourceId });
+      this.logger.warn({ sourceId }, 'Source not found, skipping');
       return null;
     }
     if (!(source instanceof TextSource)) {
@@ -109,9 +129,15 @@ export class UrlCrawlConsumer extends WorkerHost {
     }
 
     // Reset processingStartedAt on every attempt so the stale-cleanup cron
-    // doesn't race with BullMQ retries on long-running jobs.
-    source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
+    // doesn't race with BullMQ retries on long-running jobs. UPDATE-only: a
+    // full save() would write this possibly stale copy over concurrent
+    // changes to the row, such as the collection assignment.
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      return null;
+    }
 
     return source;
   }
@@ -126,67 +152,117 @@ export class UrlCrawlConsumer extends WorkerHost {
     chunks: TextSourceContentChunk[];
     title: string;
     pageCount: number;
+    pdfLinks: PdfLink[];
   }> {
-    const crawl: UrlCrawlResult = await this.crawlUrlUseCase.execute(
-      new CrawlUrlCommand(rootUrl, orgId, maxDepth),
+    const crawl: UrlCrawlResult = await processingStage(
+      'url_crawl.download_extraction',
+      () =>
+        this.crawlUrlUseCase.execute(
+          new CrawlUrlCommand(rootUrl, orgId, maxDepth),
+        ),
     );
 
     const chunks: TextSourceContentChunk[] = [];
     const texts: string[] = [];
+    let lineOffset = 0;
+    let charOffset = 0;
     for (const page of crawl.pages) {
+      if (texts.length > 0) {
+        lineOffset += this.countNewlines(PAGE_SEPARATOR);
+        charOffset += PAGE_SEPARATOR.length;
+      }
       texts.push(page.content);
-      chunks.push(...this.chunkPage(page.url, page.content));
+      chunks.push(
+        ...this.chunkPage(page.url, page.content, lineOffset, charOffset),
+      );
+      lineOffset += this.countNewlines(page.content);
+      charOffset += page.content.length;
     }
 
     return {
-      text: texts.join('\n\n'),
+      text: texts.join(PAGE_SEPARATOR),
       chunks,
       title: crawl.rootPage.websiteTitle,
       pageCount: crawl.pages.length,
+      pdfLinks: crawl.pdfLinks,
     };
   }
 
-  private chunkPage(url: string, content: string): TextSourceContentChunk[] {
-    const split = this.splitTextUseCase.execute(
-      new SplitTextCommand(content, SplitterType.RECURSIVE, {
-        chunkSize: 2000,
-        chunkOverlap: 200,
-      }),
+  private chunkPage(
+    url: string,
+    content: string,
+    lineOffset: number,
+    charOffset: number,
+  ): TextSourceContentChunk[] {
+    const split = processingStage('url_crawl.splitting', () =>
+      this.splitTextUseCase.execute(
+        new SplitTextCommand(content, SplitterType.RECURSIVE, {
+          chunkSize: 2000,
+          chunkOverlap: 200,
+        }),
+      ),
     );
     return split.chunks.map(
       (chunk) =>
         new TextSourceContentChunk({
           content: chunk.text,
-          meta: { url, ...chunk.metadata },
+          meta: {
+            url,
+            ...chunk.metadata,
+            ...this.offsetMetadata(chunk.metadata, lineOffset, charOffset),
+          },
         }),
     );
   }
 
-  private async isSourceStillProcessing(sourceId: UUID): Promise<boolean> {
-    const source = await this.sourceRepository.findById(sourceId);
-    if (source?.status !== SourceStatus.PROCESSING) {
-      this.logger.warn('Source deleted or status changed mid-crawl', {
-        sourceId,
-        found: !!source,
-      });
-      return false;
-    }
-    return true;
+  private offsetMetadata(
+    metadata: Record<string, unknown>,
+    lineOffset: number,
+    charOffset: number,
+  ): Record<string, number> {
+    const shifted: Record<string, number> = {};
+    this.shiftNumber(metadata, shifted, 'startLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'endLine', lineOffset);
+    this.shiftNumber(metadata, shifted, 'startCharOffset', charOffset);
+    this.shiftNumber(metadata, shifted, 'endCharOffset', charOffset);
+    return shifted;
   }
 
-  private async markSourceReady(sourceId: UUID): Promise<void> {
-    const updated = await this.sourceRepository.updateStatusConditionally(
-      sourceId,
-      SourceStatus.PROCESSING,
-      SourceStatus.READY,
-      { processingError: null },
-    );
-    if (!updated) {
-      this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
-        { sourceId },
-      );
-      await this.helper.cleanupIndex(sourceId);
+  private shiftNumber(
+    source: Record<string, unknown>,
+    target: Record<string, number>,
+    key: string,
+    offset: number,
+  ): void {
+    const value = source[key];
+    if (typeof value === 'number') target[key] = value + offset;
+  }
+
+  private countNewlines(text: string): number {
+    let count = 0;
+    for (let index = 0; index < text.length; index++) {
+      if (text.charCodeAt(index) === 10) count++;
     }
+    return count;
+  }
+
+  private async reloadIfStillProcessing(
+    sourceId: UUID,
+  ): Promise<TextSource | null> {
+    const source = await this.sourceRepository.findById(sourceId);
+    if (
+      !(source instanceof TextSource) ||
+      source.status !== SourceStatus.PROCESSING
+    ) {
+      this.logger.warn(
+        {
+          sourceId,
+          found: !!source,
+        },
+        'Source deleted or status changed mid-crawl',
+      );
+      return null;
+    }
+    return source;
   }
 }

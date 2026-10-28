@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
 import {
   DuplicateCategoryError,
   InvalidPatternError,
   UnexpectedAnonymizationSettingsError,
-} from '../../anonymization-settings.errors';
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import type {
   UpdatePiiWhitelistCommand,
   UpdatePiiWhitelistEntryInput,
@@ -23,10 +23,13 @@ export class UpdatePiiWhitelistUseCase {
   async execute(
     command: UpdatePiiWhitelistCommand,
   ): Promise<AnonymizationWhitelistEntry[]> {
-    this.logger.debug('Updating PII whitelist', {
-      orgId: command.orgId,
-      entryCount: command.entries.length,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+        entryCount: command.entries.length,
+      },
+      'Updating PII whitelist',
+    );
 
     try {
       this.validateEntries(command.entries);
@@ -37,10 +40,13 @@ export class UpdatePiiWhitelistUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to update PII whitelist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to update PII whitelist',
+      );
 
       throw new UnexpectedAnonymizationSettingsError('update', {
         orgId: command.orgId,

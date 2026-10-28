@@ -4,7 +4,7 @@ import {
   UserUsageTableWidget,
   DEFAULT_PAGE_SIZE,
 } from '@/widgets/user-usage-table';
-import type { UsageOverviewHooks } from '../model/types';
+import type { UsageOverviewHooks } from '@/widgets/usage-overview/model/types';
 
 interface UserUsageSectionProps {
   useUserUsage: UsageOverviewHooks['useUserUsage'];
@@ -42,14 +42,16 @@ export function UserUsageSection({
       : undefined;
 
   return (
-    <UserUsageTableWidget
-      users={userUsageResponse?.data ?? []}
-      total={userUsageResponse?.pagination.total ?? 0}
-      currentPage={currentPage}
-      onPageChange={setCurrentPage}
-      isLoading={isLoading}
-      error={error}
-      description={description}
-    />
+    <section data-testid="individual-usage-section">
+      <UserUsageTableWidget
+        users={userUsageResponse?.data ?? []}
+        total={userUsageResponse?.pagination.total ?? 0}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        isLoading={isLoading}
+        error={error}
+        description={description}
+      />
+    </section>
   );
 }

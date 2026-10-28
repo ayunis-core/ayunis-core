@@ -6,9 +6,10 @@ import { UsageRepository } from 'src/domain/usage/application/ports/usage.reposi
 import { UsageMapper } from './mappers/usage.mapper';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UsageRecord, UserRecord])],
+  imports: [TypeOrmModule.forFeature([UsageRecord, UserRecord, ApiKeyRecord])],
   providers: [
     LocalUsageRepository,
     UsageMapper,

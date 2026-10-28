@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
-} from '../../ip-allowlist.errors';
+} from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import {
   EmptyCidrsError,
   InvalidCidrError,
-} from '../../../domain/ip-allowlist.errors';
+} from 'src/iam/ip-allowlist/domain/ip-allowlist.errors';
 import type { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
-import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
-import { isIpInCidrs } from '../../../domain/cidr.util';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
+import { isIpInCidrs } from 'src/iam/ip-allowlist/domain/cidr.util';
 
 @Injectable()
 export class UpdateIpAllowlistUseCase {
@@ -25,10 +25,13 @@ export class UpdateIpAllowlistUseCase {
   ) {}
 
   async execute(command: UpdateIpAllowlistCommand): Promise<IpAllowlist> {
-    this.logger.debug('Updating IP allowlist', {
-      orgId: command.orgId,
-      cidrCount: command.cidrs.length,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+        cidrCount: command.cidrs.length,
+      },
+      'Updating IP allowlist',
+    );
 
     try {
       // Validate CIDRs before lockout check so malformed input
@@ -63,10 +66,13 @@ export class UpdateIpAllowlistUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to update IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to update IP allowlist',
+      );
 
       throw new UnexpectedIpAllowlistError('update', {
         orgId: command.orgId,

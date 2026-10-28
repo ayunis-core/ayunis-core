@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
-import { PurgeOrgStorageUseCase } from '../use-cases/purge-org-storage/purge-org-storage.use-case';
-import { PurgeOrgStorageCommand } from '../use-cases/purge-org-storage/purge-org-storage.command';
+import { PurgeOrgStorageUseCase } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.use-case';
+import { PurgeOrgStorageCommand } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.command';
 
 /**
  * Registers the purge of an organization's object-storage (MinIO) blobs when
@@ -23,9 +23,11 @@ export class StorageOrgDeletionRequestedListener {
   @OnEvent(OrgDeletionRequestedEvent.EVENT_NAME)
   handleOrgDeletionRequested(event: OrgDeletionRequestedEvent): void {
     event.deferCleanup('purge org storage', async () => {
-      await this.purgeOrgStorageUseCase.execute(
+      const result = await this.purgeOrgStorageUseCase.execute(
         new PurgeOrgStorageCommand(event.orgId),
       );
+      if (result.failedCount > 0)
+        throw new Error('Organisation storage cleanup is incomplete');
     });
   }
 }

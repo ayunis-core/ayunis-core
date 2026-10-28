@@ -7,4 +7,10 @@ export class UsageConfigResponseDto {
     example: true,
   })
   isSelfHosted: boolean;
+
+  @ApiProperty({
+    description: 'Whether individual usage is hidden for this organisation',
+    default: false,
+  })
+  hideIndividualUsage: boolean;
 }

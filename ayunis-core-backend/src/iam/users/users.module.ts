@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { UsersExportRepository } from './application/ports/users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
@@ -6,10 +7,10 @@ import { LocalUsersExportRepository } from './infrastructure/repositories/local/
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { PasswordSetTokenRecord } from './infrastructure/repositories/local/schema/password-set-token.record';
-import { Repository } from 'typeorm';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { HashingModule } from '../hashing/hashing.module';
-import { JwtConfigModule } from '../authentication/jwt.module';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { HashingModule } from 'src/iam/hashing/hashing.module';
+import { JwtConfigModule } from 'src/iam/authentication/jwt.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
@@ -50,10 +51,10 @@ import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-ema
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
-import { InvitesModule } from '../invites/invites.module';
-import { OrgsModule } from '../orgs/orgs.module';
-import { SessionsModule } from '../sessions/sessions.module';
-import { PermissionsModule } from '../permissions/permissions.module';
+import { InvitesModule } from 'src/iam/invites/invites.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
@@ -64,9 +65,27 @@ import { GetOrgAdminsUseCase } from './application/use-cases/get-org-admins/get-
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 import { ExportUsersUseCase } from './application/use-cases/export-users/export-users.use-case';
+import { SuperAdminFindAllUsersUseCase } from './application/use-cases/super-admin-find-all-users/super-admin-find-all-users.use-case';
+import { SuperAdminUserListItemResponseDtoMapper } from './presenters/http/mappers/super-admin-user-list-item-response-dto.mapper';
+import { SuperAdminUserListController } from './presenters/http/super-admin-user-list.controller';
+import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/create-federated-user/create-federated-user.use-case';
+import { UserCountsRepository } from 'src/iam/users/application/ports/user-counts.repository';
+import { LocalUserCountsRepository } from 'src/iam/users/infrastructure/repositories/local/local-user-counts.repository';
+import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
+import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
+import { UnlockUserAccountUseCase } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.use-case';
+import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/admin-user-account-lock.controller';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
+import { VerifyUserEmailUseCase } from 'src/iam/users/application/use-cases/verify-user-email/verify-user-email.use-case';
+import { HasPasswordlessUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/has-passwordless-users-by-org-id/has-passwordless-users-by-org-id.use-case';
+import { UserUpdatedEventPublisher } from 'src/iam/users/application/services/user-updated-event-publisher.service';
+import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.use-case';
 
 @Module({
   imports: [
+    forwardRef(() => TeamsApplicationModule),
     TypeOrmModule.forFeature([UserRecord, PasswordSetTokenRecord]),
     InvitesModule,
     OrgsModule,
@@ -76,27 +95,34 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     EmailsModule,
     EmailTemplatesModule,
     JwtConfigModule,
+    SsoConnectionPolicyModule,
   ],
   controllers: [
     UserController,
     UserPasswordResetController,
     AdminUserController,
     SuperAdminUsersController,
+    SuperAdminUserListController,
     SuperAdminUserExportsController,
     SuperAdminManagementController,
+    AdminUserAccountLockController,
   ],
   providers: [
     {
       provide: UsersRepository,
-      useFactory: (userRepository: Repository<UserRecord>) => {
+      useFactory: (txHost: TransactionHost<TransactionalAdapterTypeOrm>) => {
         // FUTURE: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
-        return new LocalUsersRepository(userRepository);
+        return new LocalUsersRepository(txHost);
       },
-      inject: [getRepositoryToken(UserRecord)],
+      inject: [TransactionHost],
     },
     {
       provide: UsersExportRepository,
       useClass: LocalUsersExportRepository,
+    },
+    {
+      provide: UserCountsRepository,
+      useClass: LocalUserCountsRepository,
     },
     // Use cases
     FindUserByIdUseCase,
@@ -107,6 +133,11 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
+    CountUsersByOrgIdUseCase,
+    FindUsersByEmailsUseCase,
+    UserCreatedEventPublisher,
+    UserUpdatedEventPublisher,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -136,16 +167,28 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
     ExportUsersUseCase,
+    SuperAdminFindAllUsersUseCase,
+    AuthorizeUserLoginUseCase,
+    UnlockUserAccountUseCase,
+    VerifyUserEmailUseCase,
+    HasPasswordlessUsersByOrgIdUseCase,
+    HasUsersOutsideOrgWithEmailDomainsUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
     UserResponseDtoMapper,
     SuperAdminUserResponseDtoMapper,
+    SuperAdminUserListItemResponseDtoMapper,
   ],
   exports: [
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
+    CountUsersByOrgIdUseCase,
+    FindUsersByEmailsUseCase,
+    UserCreatedEventPublisher,
+    UserUpdatedEventPublisher,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
@@ -156,6 +199,10 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
     GetOrgAdminsUseCase,
+    AuthorizeUserLoginUseCase,
+    VerifyUserEmailUseCase,
+    HasPasswordlessUsersByOrgIdUseCase,
+    HasUsersOutsideOrgWithEmailDomainsUseCase,
     UsersRepository, // Export repository for seeding
   ],
 })

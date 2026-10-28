@@ -1,18 +1,18 @@
 import {
   Injectable,
-  Logger,
   Optional,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedMcpError } from '../../mcp.errors';
-import { McpOAuthUserTokenRepositoryPort } from '../../ports/mcp-oauth-user-token.repository.port';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 
 /**
  * An enabled integration paired with whether the current user has satisfied
@@ -84,9 +84,12 @@ export class ListAvailableMcpIntegrationsUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error listing available integrations', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing available integrations',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

@@ -1,9 +1,5 @@
 {
   "models": {
-    "teamHint": {
-      "title": "Team-specific model restrictions",
-      "description": "You can restrict which models are available to specific teams in the <teamsLink>Teams settings</teamsLink>."
-    },
     "loading": "Loading models...",
     "loadErrorTitle": "Unable to load model data",
     "loadErrorDescription": "Model data could not be loaded right now. Please refresh and try again.",
@@ -15,6 +11,8 @@
     "languageModelsDescription": "Models for text generation and conversation.",
     "embeddingModelsDescription": "Models for document analysis and search.",
     "imageGenerationModelsDescription": "Models for image generation and visual creation.",
+    "imageGenerationModelsHint": "Image models are used automatically for image generation and do not appear in the chat model selector. Once a model is enabled here, users can generate images and the model is used automatically, without having to select it manually. Only one image generation model can be active at a time.",
+    "hintTriggerLabel": "More information about {{label}}",
     "noLanguageModels": "No language models available.",
     "noEmbeddingModels": "No embedding models available.",
     "noImageGenerationModels": "No image generation models available.",
@@ -52,6 +50,7 @@
       "multipleEmbeddingModelsNotAllowed": "Only one embedding model can be created per organization.",
       "multipleImageGenerationModelsNotAllowed": "Only one image-generation model per organization is allowed.",
       "modelNotFound": "The model not found.",
+      "alreadyEnabled": "This model is already enabled.",
       "error": "An error occurred while creating the permitted model."
     },
     "updatePermittedModel": {
@@ -80,5 +79,28 @@
       "success": "Organization default model updated.",
       "error": "Unable to update the organization default model."
     }
+  },
+  "tabs": {
+    "organization": "Organization",
+    "teams": "Teams"
+  },
+  "teams": {
+    "title": "Policies for teams",
+    "search": "Search teams…",
+    "name": "Team",
+    "policy": "Model policy",
+    "custom": "Custom policy",
+    "inherited": "Inherited from organization",
+    "configure": "Configure",
+    "empty": "No teams yet. Create teams in Teams settings.",
+    "noMatches": "No teams match your search.",
+    "loading": "Loading teams…",
+    "loadError": "Unable to load teams. Please refresh and try again."
+  },
+  "teamPolicy": {
+    "title": "Models for {{team}}",
+    "overrideTitle": "Custom model policy",
+    "overrideDescription": "Select the models this team can use. An empty custom policy grants no language or image-generation models through this team. Embedding models remain organization-wide.",
+    "overrideLabel": "Use custom model policy"
   }
 }

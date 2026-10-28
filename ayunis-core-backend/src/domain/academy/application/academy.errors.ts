@@ -1,15 +1,13 @@
+import type { UUID } from 'crypto';
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum AcademyErrorCode {
   CHAPTER_NOT_FOUND = 'CHAPTER_NOT_FOUND',
   COURSE_MODULE_NOT_FOUND = 'COURSE_MODULE_NOT_FOUND',
-  QUIZ_QUESTION_NOT_FOUND = 'QUIZ_QUESTION_NOT_FOUND',
   INVALID_REORDER = 'INVALID_REORDER',
-  INVALID_QUIZ_QUESTION = 'INVALID_QUIZ_QUESTION',
-  QUIZ_NOT_AVAILABLE = 'QUIZ_NOT_AVAILABLE',
-  INVALID_QUIZ_SUBMISSION = 'INVALID_QUIZ_SUBMISSION',
   COMPLETION_NOT_FOUND = 'COMPLETION_NOT_FOUND',
+  MODULES_BELOW_MINIMUM_TIME = 'MODULES_BELOW_MINIMUM_TIME',
   UNEXPECTED_ACADEMY_ERROR = 'UNEXPECTED_ACADEMY_ERROR',
 }
 
@@ -46,17 +44,6 @@ export class CourseModuleNotFoundError extends AcademyError {
   }
 }
 
-export class QuizQuestionNotFoundError extends AcademyError {
-  constructor(quizQuestionId: string, metadata?: ErrorMetadata) {
-    super(
-      `Academy quiz question with ID ${quizQuestionId} not found`,
-      AcademyErrorCode.QUIZ_QUESTION_NOT_FOUND,
-      404,
-      metadata,
-    );
-  }
-}
-
 export class InvalidReorderError extends AcademyError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -68,29 +55,6 @@ export class InvalidReorderError extends AcademyError {
   }
 }
 
-export class InvalidQuizQuestionError extends AcademyError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(reason, AcademyErrorCode.INVALID_QUIZ_QUESTION, 400, metadata);
-  }
-}
-
-export class QuizNotAvailableError extends AcademyError {
-  constructor(chapterId: string, metadata?: ErrorMetadata) {
-    super(
-      `No quiz is available for chapter ${chapterId}`,
-      AcademyErrorCode.QUIZ_NOT_AVAILABLE,
-      400,
-      metadata,
-    );
-  }
-}
-
-export class InvalidQuizSubmissionError extends AcademyError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(reason, AcademyErrorCode.INVALID_QUIZ_SUBMISSION, 400, metadata);
-  }
-}
-
 export class AcademyCompletionNotFoundError extends AcademyError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -98,6 +62,17 @@ export class AcademyCompletionNotFoundError extends AcademyError {
       AcademyErrorCode.COMPLETION_NOT_FOUND,
       404,
       metadata,
+    );
+  }
+}
+
+export class ChapterModulesBelowMinimumTimeError extends AcademyError {
+  constructor(courseModuleIds: UUID[], minimumSeconds: number) {
+    super(
+      `${courseModuleIds.length} video page(s) have not been open for ${minimumSeconds} seconds yet`,
+      AcademyErrorCode.MODULES_BELOW_MINIMUM_TIME,
+      409,
+      { courseModuleIds, minimumSeconds },
     );
   }
 }

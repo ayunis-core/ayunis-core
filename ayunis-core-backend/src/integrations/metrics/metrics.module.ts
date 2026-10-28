@@ -1,3 +1,5 @@
+import { anonymizationStudyMetricProviders } from './anonymization-study.metrics';
+import { AnonymizationStudyMetricsListener } from './listeners/anonymization-study-metrics.listener';
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import {
   PrometheusModule,
@@ -7,6 +9,10 @@ import {
 import {
   METRICS_PATH,
   AYUNIS_TOKENS_TOTAL,
+  AYUNIS_RUNS_TOTAL,
+  AYUNIS_RUN_DURATION_SECONDS,
+  AYUNIS_RUN_TOOL_CALLS_TOTAL,
+  AYUNIS_RUN_USAGE_COLLECTIONS_TOTAL,
   AYUNIS_INFERENCE_DURATION_SECONDS,
   AYUNIS_INFERENCE_ERRORS_TOTAL,
   AYUNIS_MESSAGES_TOTAL,
@@ -24,6 +30,8 @@ import {
   LABEL_ROLE,
   LABEL_ERROR_TYPE,
   LABEL_STREAMING,
+  LABEL_EXECUTION_PATH,
+  LABEL_OUTCOME,
   LABEL_TOOL_NAME,
   LABEL_DEPARTMENT,
   LABEL_MARKETPLACE_TYPE,
@@ -46,17 +54,53 @@ const tokensCounter = makeCounterProvider({
   ],
 });
 
+const runsCounter = makeCounterProvider({
+  name: AYUNIS_RUNS_TOTAL,
+  help: 'Total terminal runs by execution path and outcome',
+  labelNames: [LABEL_EXECUTION_PATH, LABEL_OUTCOME],
+});
+
+const runDurationHistogram = makeHistogramProvider({
+  name: AYUNIS_RUN_DURATION_SECONDS,
+  help: 'End-to-end run duration in seconds',
+  labelNames: [LABEL_EXECUTION_PATH, LABEL_OUTCOME],
+  buckets: [0.5, 1, 2, 5, 10, 30, 60, 120, 300],
+});
+
+const runToolCallsCounter = makeCounterProvider({
+  name: AYUNIS_RUN_TOOL_CALLS_TOTAL,
+  help: 'Settled run tool calls by execution path and outcome',
+  labelNames: [LABEL_EXECUTION_PATH, LABEL_OUTCOME],
+});
+
+const runUsageCollectionsCounter = makeCounterProvider({
+  name: AYUNIS_RUN_USAGE_COLLECTIONS_TOTAL,
+  help: 'Settled run usage persistence attempts by execution path and outcome',
+  labelNames: [LABEL_EXECUTION_PATH, LABEL_OUTCOME],
+});
+
 const inferenceDurationHistogram = makeHistogramProvider({
   name: AYUNIS_INFERENCE_DURATION_SECONDS,
   help: 'Duration of LLM inference calls in seconds',
-  labelNames: [LABEL_MODEL, LABEL_PROVIDER, LABEL_STREAMING],
+  labelNames: [
+    LABEL_MODEL,
+    LABEL_PROVIDER,
+    LABEL_STREAMING,
+    LABEL_EXECUTION_PATH,
+  ],
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120],
 });
 
 const inferenceErrorsCounter = makeCounterProvider({
   name: AYUNIS_INFERENCE_ERRORS_TOTAL,
   help: 'Total number of LLM inference errors',
-  labelNames: [LABEL_MODEL, LABEL_PROVIDER, LABEL_ERROR_TYPE, LABEL_STREAMING],
+  labelNames: [
+    LABEL_MODEL,
+    LABEL_PROVIDER,
+    LABEL_ERROR_TYPE,
+    LABEL_STREAMING,
+    LABEL_EXECUTION_PATH,
+  ],
 });
 
 const messagesCounter = makeCounterProvider({
@@ -102,7 +146,12 @@ const marketplaceInstallsCounter = makeCounterProvider({
 });
 
 const metricProviders = [
+  ...anonymizationStudyMetricProviders,
   tokensCounter,
+  runsCounter,
+  runDurationHistogram,
+  runToolCallsCounter,
+  runUsageCollectionsCounter,
   inferenceDurationHistogram,
   inferenceErrorsCounter,
   messagesCounter,
@@ -121,7 +170,11 @@ const metricProviders = [
       controller: MetricsController,
     }),
   ],
-  providers: [...metricProviders, PrometheusMetricsListener],
+  providers: [
+    ...metricProviders,
+    PrometheusMetricsListener,
+    AnonymizationStudyMetricsListener,
+  ],
 })
 export class MetricsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,13 +1,15 @@
+import { AssertCachedOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-cached-org-active/assert-cached-org-active.use-case';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { Request } from 'express';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { JWT_SECRET } from '../tokens/jwt-secret.token';
+import { JWT_SECRET } from 'src/iam/authentication/application/tokens/jwt-secret.token';
+import { getAccessTokenCookieName } from 'src/common/util/cookie.util';
 
 interface JwtPayload {
   sub: UUID;
@@ -18,6 +20,7 @@ interface JwtPayload {
   orgId: UUID;
   name: string;
   type?: string;
+  orgSessionVersion?: number;
 }
 
 @Injectable()
@@ -27,18 +30,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     @Inject(JWT_SECRET) secret: string,
+    private readonly assertOrgActive: AssertCachedOrgActiveUseCase,
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        const cookieName = configService.get<string>(
-          'auth.cookie.accessTokenName',
-          'access_token',
-        );
+        const cookieName = getAccessTokenCookieName(configService);
 
         const token = req.cookies[cookieName] as string;
 
         if (!token) {
-          this.logger.debug(`No JWT token found in cookie: ${cookieName}`);
+          this.logger.debug({ cookieName }, 'No JWT token found in cookie');
         }
 
         return token;
@@ -48,7 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): ActiveUser | null {
+  async validate(payload: JwtPayload): Promise<ActiveUser | null> {
     // Special-purpose tokens (e.g. MFA pending) share the same secret and
     // carry a `type` claim; they must never authenticate as a session.
     if (payload.type !== undefined) {
@@ -65,6 +66,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null;
     }
 
+    await this.assertOrgActive.execute({
+      orgId: payload.orgId,
+      sessionVersion: payload.orgSessionVersion ?? 0,
+    });
     return new ActiveUser({
       id: payload.sub,
       email: payload.email,

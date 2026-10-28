@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MarketplaceClient } from '../../ports/marketplace-client.port';
+import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
 import { GetMarketplaceSkillQuery } from './get-marketplace-skill.query';
 import { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
-} from '../../marketplace.errors';
+} from 'src/domain/marketplace/application/marketplace.errors';
 
 @Injectable()
 export class GetMarketplaceSkillUseCase {
@@ -15,7 +15,7 @@ export class GetMarketplaceSkillUseCase {
   constructor(private readonly marketplaceClient: MarketplaceClient) {}
 
   async execute(query: GetMarketplaceSkillQuery): Promise<SkillResponseDto> {
-    this.logger.log('execute', { identifier: query.identifier });
+    this.logger.log({ identifier: query.identifier }, 'execute');
 
     try {
       const skill = await this.marketplaceClient.getSkillByIdentifier(
@@ -31,10 +31,13 @@ export class GetMarketplaceSkillUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to fetch marketplace skill', {
-        identifier: query.identifier,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          identifier: query.identifier,
+          err: error as Error,
+        },
+        'Failed to fetch marketplace skill',
+      );
       throw new MarketplaceUnavailableError();
     }
   }

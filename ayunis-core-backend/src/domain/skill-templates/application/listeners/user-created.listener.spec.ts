@@ -1,5 +1,5 @@
 import { SkillTemplateUserCreatedListener } from './user-created.listener';
-import type { SkillTemplateInstallationService } from '../services/skill-template-installation.service';
+import type { SkillTemplateInstallationService } from 'src/domain/skill-templates/application/services/skill-template-installation.service';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';

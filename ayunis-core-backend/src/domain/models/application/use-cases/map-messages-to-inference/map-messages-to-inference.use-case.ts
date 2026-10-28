@@ -2,9 +2,10 @@ import type { Message as InferenceMessage } from '@ayunis/inference';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
-import { toInferenceMessages } from '../../mappers/message.mapper';
-import { UnexpectedModelError } from '../../models.errors';
+import { pairToolResults } from 'src/domain/models/application/helpers/pair-tool-results.helper';
+import { stripReplayedToolNulls } from 'src/domain/models/application/helpers/strip-replayed-tool-nulls.helper';
+import { toInferenceMessages } from 'src/domain/models/application/mappers/message.mapper';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { MapMessagesToInferenceCommand } from './map-messages-to-inference.command';
 
 /**
@@ -23,14 +24,29 @@ export class MapMessagesToInferenceUseCase {
   async execute(
     command: MapMessagesToInferenceCommand,
   ): Promise<InferenceMessage[]> {
-    this.logger.log('Mapping thread messages to inference', {
-      count: command.messages.length,
-    });
-    const messages = stripReplayedToolNulls(command.messages, command.tools);
-    return toInferenceMessages(
-      messages,
-      command.orgId,
-      this.imageContentService,
+    this.logger.log(
+      {
+        count: command.messages.length,
+      },
+      'Mapping thread messages to inference',
     );
+    const messages = stripReplayedToolNulls(command.messages, command.tools);
+    const paired = pairToolResults(
+      await toInferenceMessages(
+        messages,
+        command.orgId,
+        this.imageContentService,
+      ),
+    );
+    if (paired.placeholderCount > 0 || paired.droppedResultCount > 0) {
+      this.logger.warn(
+        {
+          placeholderCount: paired.placeholderCount,
+          droppedResultCount: paired.droppedResultCount,
+        },
+        'Repaired unpaired tool results in thread history',
+      );
+    }
+    return paired.messages;
   }
 }

@@ -2,10 +2,10 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetTextSourceByIdUseCase } from './get-text-source-by-id.use-case';
 import { GetTextSourceByIdQuery } from './get-text-source-by-id.query';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { randomUUID } from 'crypto';
-import { SourceNotFoundError } from '../../sources.errors';
+import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
 
 describe('GetSourceByIdUseCase', () => {
   let useCase: GetTextSourceByIdUseCase;

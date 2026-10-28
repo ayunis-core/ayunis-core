@@ -1,8 +1,8 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SystemRolesGuard } from './system-roles.guard';
-import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
+import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -81,9 +81,7 @@ describe('SystemRolesGuard', () => {
   });
 
   it('should log a warning with audit context when the system role is rejected', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: customer,
@@ -95,9 +93,8 @@ describe('SystemRolesGuard', () => {
 
     guard.canActivate(context);
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    const [message, meta] = warnSpy.mock.calls[0];
-    expect(message).toMatch(/role/i);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    const [meta, message] = logger.warn.mock.calls[0];
     expect(meta).toEqual(
       expect.objectContaining({
         userId: customer.id,
@@ -109,14 +106,11 @@ describe('SystemRolesGuard', () => {
         clientIp: '203.0.113.9',
       }),
     );
-
-    warnSpy.mockRestore();
+    expect(message).toMatch(/role/i);
   });
 
   it('should log a warning when no authenticated user is present', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: undefined,
@@ -126,8 +120,6 @@ describe('SystemRolesGuard', () => {
     const result = guard.canActivate(context);
 
     expect(result).toBe(false);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-
-    warnSpy.mockRestore();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 });

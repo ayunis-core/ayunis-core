@@ -65,7 +65,7 @@ export class UnexpectedSessionsError extends SessionsError {
       SessionsErrorCode.UNEXPECTED_SESSIONS_ERROR,
       500,
       {
-        error: error instanceof Error ? error.message : String(error),
+        error,
         ...metadata,
       },
     );

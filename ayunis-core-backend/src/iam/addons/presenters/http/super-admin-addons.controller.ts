@@ -4,10 +4,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseEnumPipe,
   Post,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,13 +23,13 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { AddonType } from '../../domain/value-objects/addon-type.enum';
-import { ListOrgAddonsUseCase } from '../../application/use-cases/list-org-addons/list-org-addons.use-case';
-import { ListOrgAddonsQuery } from '../../application/use-cases/list-org-addons/list-org-addons.query';
-import { ActivateAddonUseCase } from '../../application/use-cases/activate-addon/activate-addon.use-case';
-import { ActivateAddonCommand } from '../../application/use-cases/activate-addon/activate-addon.command';
-import { DeactivateAddonUseCase } from '../../application/use-cases/deactivate-addon/deactivate-addon.use-case';
-import { DeactivateAddonCommand } from '../../application/use-cases/deactivate-addon/deactivate-addon.command';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
+import { ListOrgAddonsUseCase } from 'src/iam/addons/application/use-cases/list-org-addons/list-org-addons.use-case';
+import { ListOrgAddonsQuery } from 'src/iam/addons/application/use-cases/list-org-addons/list-org-addons.query';
+import { ActivateAddonUseCase } from 'src/iam/addons/application/use-cases/activate-addon/activate-addon.use-case';
+import { ActivateAddonCommand } from 'src/iam/addons/application/use-cases/activate-addon/activate-addon.command';
+import { DeactivateAddonUseCase } from 'src/iam/addons/application/use-cases/deactivate-addon/deactivate-addon.use-case';
+import { DeactivateAddonCommand } from 'src/iam/addons/application/use-cases/deactivate-addon/deactivate-addon.command';
 import { AddonStatusResponseDto } from './dto/addon-status-response.dto';
 
 @ApiTags('Super Admin Addons')
@@ -52,7 +52,7 @@ export class SuperAdminAddonsController {
   @ApiResponse({ status: HttpStatus.OK, type: [AddonStatusResponseDto] })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async list(@Param('orgId') orgId: UUID): Promise<AddonStatusResponseDto[]> {
-    this.logger.log('list', { orgId });
+    this.logger.log({ orgId }, 'list');
 
     const statuses = await this.listOrgAddonsUseCase.execute(
       new ListOrgAddonsQuery(orgId),
@@ -72,7 +72,7 @@ export class SuperAdminAddonsController {
     @Param('type', new ParseEnumPipe(AddonType)) type: AddonType,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log('activate', { orgId, type });
+    this.logger.log({ orgId, type }, 'activate');
 
     await this.activateAddonUseCase.execute(
       new ActivateAddonCommand(orgId, type, userId),
@@ -94,7 +94,7 @@ export class SuperAdminAddonsController {
     @Param('type', new ParseEnumPipe(AddonType)) type: AddonType,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log('deactivate', { orgId, type });
+    this.logger.log({ orgId, type }, 'deactivate');
 
     await this.deactivateAddonUseCase.execute(
       new DeactivateAddonCommand(orgId, type, userId),

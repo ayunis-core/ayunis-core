@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UserDefaultModelRecord } from '../schema/user-default-model.record';
+import { UserDefaultModelRecord } from 'src/domain/models/infrastructure/persistence/local-user-default-models/schema/user-default-model.record';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
-import { PermittedModelMapper } from '../../local-permitted-models/mappers/permitted-model.mapper';
+import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 
 @Injectable()
 export class UserDefaultModelMapper {
@@ -11,7 +11,14 @@ export class UserDefaultModelMapper {
   constructor(private readonly permittedModelMapper: PermittedModelMapper) {}
 
   toDomain(entity: UserDefaultModelRecord): PermittedModel {
-    this.logger.log('toDomain', { entity });
+    this.logger.log(
+      {
+        userDefaultModelId: entity.id,
+        userId: entity.userId,
+        permittedModelId: entity.model.id,
+      },
+      'toDomain',
+    );
     return this.permittedModelMapper.toDomain(entity.model);
   }
 

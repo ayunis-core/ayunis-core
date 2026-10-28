@@ -5,38 +5,19 @@ import {
   getTeamsControllerGetTeamQueryKey,
   teamsControllerListTeamMembers,
   getTeamsControllerListTeamMembersQueryKey,
-  teamPermittedModelsControllerListTeamPermittedModels,
-  getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
-  usageControllerGetCreditUsage,
-  getUsageControllerGetCreditUsageQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export const Route = createFileRoute(
   '/_authenticated/admin-settings/teams/$id',
 )({
   component: RouteComponent,
-  loader: async ({ context: { user, queryClient }, params: { id } }) => {
-    // Both feed admin-only tabs behind admin-only endpoints; prefetching them
-    // for a manager who reached this page via a teams permission only 403s.
-    if (user.role === 'admin') {
-      void queryClient.prefetchQuery({
-        queryKey:
-          getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),
-        queryFn: () => teamPermittedModelsControllerListTeamPermittedModels(id),
-      });
-
-      void queryClient.prefetchQuery({
-        queryKey: getUsageControllerGetCreditUsageQueryKey(),
-        queryFn: () => usageControllerGetCreditUsage(),
-      });
-    }
-
+  loader: async ({ context: { queryClient }, params: { id } }) => {
     const [team, membersResponse] = await Promise.all([
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getTeamsControllerGetTeamQueryKey(id),
         queryFn: () => teamsControllerGetTeam(id),
       }),
-      queryClient.fetchQuery({
+      queryClient.query({
         queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
           limit: 50,
           offset: 0,

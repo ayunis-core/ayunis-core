@@ -10,8 +10,8 @@ import {
   ItemTitle,
   ItemDescription,
 } from '@ayunis/ui/components/item';
-import { useDeleteTeam } from '../api/useDeleteTeam';
-import type { Team } from '../model/types';
+import { useDeleteTeam } from '@/pages/admin-settings/teams-settings/api/useDeleteTeam';
+import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 import { PermissionGate } from '@/features/permissions';
 
 interface TeamsListProps {

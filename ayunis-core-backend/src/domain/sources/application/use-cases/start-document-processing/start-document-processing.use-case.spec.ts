@@ -6,7 +6,7 @@ import { StartDocumentProcessingCommand } from './start-document-processing.comm
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
@@ -16,12 +16,17 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import {
+  StorageUnavailableError,
+  UploadFailedError,
+} from 'src/domain/storage/application/storage.errors';
 
 describe('StartDocumentProcessingUseCase', () => {
   let useCase: StartDocumentProcessingUseCase;
   let mockCreateProcessingSourceUseCase: jest.Mocked<CreateProcessingSourceUseCase>;
   let mockMarkSourceFailedUseCase: jest.Mocked<MarkSourceFailedUseCase>;
-  let mockUploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let mockUploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
   let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
   let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
   let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
@@ -54,7 +59,7 @@ describe('StartDocumentProcessingUseCase', () => {
 
     mockUploadObjectUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<UploadObjectUseCase>;
+    } as unknown as jest.Mocked<UploadOrgObjectUseCase>;
 
     mockDeleteObjectUseCase = {
       execute: jest.fn(),
@@ -95,7 +100,7 @@ describe('StartDocumentProcessingUseCase', () => {
           provide: MarkSourceFailedUseCase,
           useValue: mockMarkSourceFailedUseCase,
         },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: UploadOrgObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         {
           provide: EnqueueDocumentProcessingUseCase,
@@ -135,6 +140,7 @@ describe('StartDocumentProcessingUseCase', () => {
     // File uploaded to MinIO with correct path
     expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
     const uploadCall = mockUploadObjectUseCase.execute.mock.calls[0][0];
+    expect(uploadCall.orgId).toBe(orgId);
     expect(uploadCall.objectName).toContain(`${orgId}/processing/`);
     expect(uploadCall.objectName).toContain('Protokoll_M_rz_2025.pdf');
 
@@ -151,9 +157,7 @@ describe('StartDocumentProcessingUseCase', () => {
   });
 
   it('should mark source as FAILED when MinIO upload fails', async () => {
-    mockUploadObjectUseCase.execute.mockRejectedValue(
-      new Error('MinIO connection refused'),
-    );
+    mockUploadObjectUseCase.execute.mockRejectedValue(new UploadFailedError());
 
     const command = new StartDocumentProcessingCommand({
       fileData: Buffer.from('fake pdf content'),
@@ -167,11 +171,35 @@ describe('StartDocumentProcessingUseCase', () => {
     expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         errorMessage: 'Failed to upload file to storage',
+        errorCode: SourceProcessingErrorCode.PROCESSING_FAILED,
       }),
     );
 
     // MinIO file should NOT be cleaned up (upload failed, nothing to clean)
     expect(mockDeleteObjectUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('marks the source unavailable, not failed, when object storage is down', async () => {
+    const storageOutage = new StorageUnavailableError({
+      diagnostics: { upstreamCode: 'ECONNREFUSED' },
+    });
+    mockUploadObjectUseCase.execute.mockRejectedValue(storageOutage);
+
+    await expect(
+      useCase.execute(
+        new StartDocumentProcessingCommand({
+          fileData: Buffer.from('fake pdf content'),
+          fileName: 'Protokoll.pdf',
+          fileType: 'application/pdf',
+        }),
+      ),
+    ).rejects.toBe(storageOutage);
+
+    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: SourceProcessingErrorCode.PROCESSING_UNAVAILABLE,
+      }),
+    );
   });
 
   it('should mark source as FAILED and clean up MinIO when enqueue fails', async () => {

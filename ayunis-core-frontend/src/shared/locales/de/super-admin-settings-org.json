@@ -15,8 +15,10 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "roleManager": "Manager",
+    "status": "Status",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
+    "openOrganization": "Organisation öffnen",
     "delete": "Löschen"
   },
   "empty": {
@@ -29,11 +31,11 @@
     "cancelled": "gekündigt",
     "reactivate": "Wiederherstellen",
     "reactivateSubscription": "Abonnement wiederherstellen",
-    "reactivateSubscriptionDescription": "Das Abonnement wird wiederhergestellt und läuft wie gewohnt weiter.",
-    "reactivateAnytime": "Sie können das Abonnement jederzeit wiederherstellen.",
+    "reactivateSubscriptionDescription": "Das Abonnement wird für die verbleibende Laufzeit reaktiviert, sofern dies noch möglich ist.",
+    "reactivateAnytime": "Eine Reaktivierung ist abhängig von der verbleibenden Laufzeit möglich.",
     "cancel": "Kündigen",
     "cancelSubscription": "Abonnement abbrechen",
-    "cancelSubscriptionDescription": "Sind Sie sicher, dass Sie dieses Abonnement abbrechen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "cancelSubscriptionDescription": "Dieses Abonnement kündigen? Der Zugriff endet gemäß den Kündigungsregeln, spätestens jedoch am vereinbarten Enddatum.",
     "confirmCancel": "Abonnement kündigen",
     "cancelCancel": "Abbrechen",
     "nextRenewalDate": "Nächste Rechnung am {{date}}",
@@ -56,6 +58,8 @@
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "uncancelError": "Ein unerwarteter Fehler ist aufgetreten",
+    "uncancelErrorAccessOverlap": "Die Reaktivierung würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden.",
+    "multipleActiveSubscriptions": "Mehrere Abonnements sind derzeit für diese Organisation wirksam. Beheben Sie zuerst die Überschneidung in der Abo-Historie.",
     "edit": "Bearbeiten",
     "startsAtLabel": "Startdatum",
     "startsAtPlaceholder": "Startdatum auswählen",
@@ -67,6 +71,7 @@
     "updateStartDateSuccess": "Startdatum erfolgreich aktualisiert",
     "updateStartDateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "updateStartDateErrorSubscriptionAlreadyCancelled": "Gekündigte Abonnements können nicht bearbeitet werden",
+    "updateStartDateErrorAccessOverlap": "Das neue Startdatum würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden.",
     "updateStartDateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "scheduled": "Geplant",
     "scheduledDescription": "Dieses Abonnement startet am {{date}}.",
@@ -81,7 +86,66 @@
     "changeSuccess": "Abonnement erfolgreich geändert",
     "changeErrorSubscriptionNotFound": "Kein aktives Abonnement zum Ändern vorhanden",
     "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
-    "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
+    "changeErrorAccessOverlap": "Das neue Abonnement würde sich mit dem Zugriffszeitraum eines anderen Abonnements überschneiden. Passen Sie das Startdatum an oder beenden Sie zuerst das andere Abonnement.",
+    "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "createErrorEndDate": "Das Enddatum muss nach dem Startdatum liegen (ohne Startdatum nach dem aktuellen Zeitpunkt).",
+    "endsAt": "Zugriff endet am {{date}}"
+  },
+  "subscriptionHistory": {
+    "title": "Abo-Verlauf",
+    "description": "Alle Abonnements dieser Organisation, einschließlich älterer und gekündigter Einträge.",
+    "latest": "Aktuell",
+    "notCancelled": "—",
+    "noAccessEnd": "Unbefristet",
+    "multipleActive": "{{count}} Abonnements sind derzeit für diese Organisation wirksam. Diese Ansicht zeigt alle, statt eines stillschweigend auszuwählen.",
+    "status": {
+      "ACTIVE": "Aktiv",
+      "SCHEDULED": "Geplant",
+      "CANCELLED": "Gekündigt",
+      "HISTORICAL": "Historisch"
+    },
+    "types": {
+      "SEAT_BASED": "Platzbasiert",
+      "USAGE_BASED": "Nutzungsbasiert"
+    },
+    "columns": {
+      "type": "Typ",
+      "status": "Status",
+      "createdAt": "Erstellt",
+      "startsAt": "Start",
+      "cancelledAt": "Gekündigt",
+      "endsAt": "Zugriff endet",
+      "details": "Details"
+    },
+    "details": {
+      "seats": "{{count}} Plätze",
+      "credits": "{{count}} monatliche Credits",
+      "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Überschneidung beheben",
+    "title": "Abo-Überschneidung beheben",
+    "description": "Wählen Sie das maßgebliche Abonnement und dokumentieren Sie den Grund der Korrektur.",
+    "authoritative": "Maßgebliches Abonnement",
+    "authoritativePlaceholder": "Verbleibendes Abonnement auswählen",
+    "subscriptionLabel": "{{type}}, startet am {{date}}",
+    "subscriptionLabelStarted": "{{type}}, gestartet am {{date}}",
+    "automaticAccessEnd": "Der Zugriff aller anderen Abonnements endet automatisch, sobald er sich erstmals mit dem maßgeblichen Abonnement überschneidet.",
+    "reason": "Korrekturgrund",
+    "reasonPlaceholder": "Vertragswechsel oder Supportfall angeben",
+    "cancel": "Abbrechen",
+    "confirm": "Korrektur anwenden",
+    "resolving": "Wird angewendet...",
+    "success": "Abo-Überschneidung behoben",
+    "invalidCorrection": "Die Korrektur behebt die aktuelle Überschneidung nicht. Aktualisieren Sie die Seite und prüfen Sie das ausgewählte Abonnement.",
+    "unauthorized": "Sie sind nicht berechtigt, den Abo-Zugriff zu korrigieren.",
+    "error": "Die Abo-Überschneidung konnte nicht behoben werden.",
+    "validation": {
+      "required": "Dieses Feld ist erforderlich",
+      "maxLength": "Verwenden Sie höchstens 500 Zeichen",
+      "invalid": "Prüfen Sie das ausgewählte Abonnement und den Grund"
+    }
   },
   "licenseSeats": {
     "title": "Lizenzplätze",
@@ -151,17 +215,22 @@
     "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt.",
     "startsAtLabel": "Startdatum",
     "startsAtPlaceholder": "Startet sofort",
-    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen."
+    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen.",
+    "endsAtLabel": "Enddatum",
+    "endsAtPlaceholder": "Enddatum wählen",
+    "endsAtDescription": "Leer lassen, wenn das Abonnement unbefristet läuft. Der Zugriff endet zu Beginn des gewählten Tages.",
+    "endsAtClear": "Enddatum entfernen",
+    "startsAtClear": "Startdatum entfernen"
   },
   "changeSubscriptionDialog": {
     "title": "Abonnement ändern",
-    "description": "Ändern Sie den Abonnement-Typ oder die Daten. Dabei wird das aktuelle Abonnement beendet und ein neues erstellt — der Typ kann nicht direkt geändert werden.",
+    "description": "Ersetzen Sie das aktuelle Abonnement durch ein neues. Der Zugriff des aktuellen Abonnements endet, sobald das neue beginnt.",
     "changeButton": "Abonnement ändern",
     "continue": "Weiter",
     "changing": "Wird geändert...",
     "warningTitle": "Dieses Abonnement ändern?",
-    "warningDescription": "Dabei wird das aktuelle Abonnement beendet und ein neues mit den eingegebenen Daten erstellt. Wählen Sie, wie mit dem aktuellen Abonnement verfahren werden soll. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "confirmCancel": "Aktuelles kündigen & neues erstellen",
+    "warningDescription": "Wählen Sie, ob das aktuelle Abonnement im Verlauf erhalten oder gelöscht werden soll. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmCancel": "Aktuellen Zugriff beenden & neues erstellen",
     "confirmDelete": "Aktuelles löschen & neues erstellen",
     "back": "Zurück"
   },
@@ -188,7 +257,8 @@
   },
   "deleteUser": {
     "success": "Benutzer erfolgreich gelöscht",
-    "error": "Benutzer konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    "error": "Benutzer konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden."
   },
   "confirmDelete": {
     "title": "Benutzer löschen",
@@ -208,6 +278,7 @@
     "copyButton": "Kopieren",
     "copiedButton": "Kopiert",
     "copied": "Link in Zwischenablage kopiert",
+    "copyError": "Link konnte nicht kopiert werden",
     "close": "Schließen"
   },
   "confirmPasswordReset": {
@@ -273,7 +344,109 @@
     "models": "Modelle",
     "usage": "Nutzung",
     "crawlDomains": "Crawl-Domains",
-    "addons": "Add-ons"
+    "addons": "Add-ons",
+    "sso": "SSO"
+  },
+  "sso": {
+    "title": "Single Sign-on",
+    "description": "Verbinden Sie diese Organisation mit ihrer verifizierten Zitadel-Broker-Organisation.",
+    "emailDomains": "Verifizierte E-Mail-Domains",
+    "zitadelOrgId": "Zitadel-Organisations-ID",
+    "domainVerified": "Ich habe die Inhaberschaft aller Domains verifiziert und die Zitadel-Einrichtung abgeschlossen.",
+    "mappingLocked": "Sie können verifizierte Domains bei aktivem SSO hinzufügen. Bestehende Domains und die Zitadel-Organisation sind gesperrt. Speichern Sie Änderungen am Identitätsanbieter separat, bevor Sie Domains hinzufügen.",
+    "loadError": "Die SSO-Verbindung konnte nicht geladen werden.",
+    "cancel": "Abbrechen",
+    "status": {
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "notConfigured": "Nicht konfiguriert"
+    },
+    "configure": {
+      "save": "Verbindung speichern",
+      "success": "SSO-Verbindung und Identitätsanbieter gespeichert."
+    },
+    "idp": {
+      "zitadelIdpId": "Zitadel-Identitätsanbieter-ID",
+      "notConfigured": "Nicht konfiguriert — Benutzer sehen die Broker-Anmeldung"
+    },
+    "domains": {
+      "add": "Domain hinzufügen",
+      "remove": "Domain entfernen"
+    },
+    "access": {
+      "title": "Zugriff und Bereitstellung",
+      "description": "Steuern Sie Anmeldung und JIT-Benutzeranlage unabhängig. Einladungen bleiben verfügbar."
+    },
+    "jit": {
+      "label": "JIT-Bereitstellung",
+      "description": "Beim ersten gültigen kommunalen SSO-Login einen Ayunis-Benutzer erstellen.",
+      "success": "JIT-Bereitstellung aktualisiert."
+    },
+    "passwordLogin": {
+      "requireSsoLabel": "SSO für diese Organisation verpflichtend machen",
+      "requireSsoDescription": "Wenn aktiviert, können sich Benutzer nur über das konfigurierte Organisations-SSO anmelden.",
+      "confirmTitle": "SSO für alle Benutzer verpflichtend machen?",
+      "confirmDescription": "Bestätigen Sie, dass der Kunde SSO erfolgreich getestet hat und die aktive Zuordnung vollständig ist.",
+      "passwordImpact": "Passwort-Anmeldung und Passwort-Zurücksetzung sind für diese Organisation nicht mehr verfügbar.",
+      "sessionImpact": "Bestehende Passwort-Sitzungen können nicht mehr verlängert werden; bereits ausgestellte Zugriffe bleiben bis zum Ablauf gültig.",
+      "domainImpact": "Benutzer außerhalb der konfigurierten Domains können sich nicht mit einem Passwort anmelden.",
+      "confirm": "Ich habe Domains und Identitätsanbieter geprüft, und der Kunde hat SSO erfolgreich getestet.",
+      "confirmButton": "SSO verpflichtend machen",
+      "requireSsoSuccess": "SSO ist jetzt für diese Organisation verpflichtend.",
+      "restoreSuccess": "Lokale Passwort-Anmeldung wiederhergestellt."
+    },
+    "enable": {
+      "button": "SSO aktivieren",
+      "title": "Diese SSO-Verbindung aktivieren?",
+      "description": "Prüfen Sie die genaue Routing-Zuordnung, die aktiviert wird.",
+      "confirm": "Ich habe die Domains sowie die Zitadel-Organisations- und Identitätsanbieterzuordnung geprüft.",
+      "confirmButton": "SSO aktivieren",
+      "success": "SSO aktiviert."
+    },
+    "disable": {
+      "button": "SSO deaktivieren",
+      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar.",
+      "requiresPasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren."
+    },
+    "validation": {
+      "emailDomains": {
+        "required": "Geben Sie mindestens eine verifizierte E-Mail-Domain ein.",
+        "arrayMinSize": "Geben Sie mindestens eine verifizierte E-Mail-Domain ein.",
+        "arrayMaxSize": "Sie können bis zu 50 E-Mail-Domains konfigurieren.",
+        "arrayUnique": "Jede E-Mail-Domain darf nur einmal eingegeben werden.",
+        "matches": "Geben Sie gültige E-Mail-Domains ein.",
+        "invalid": "Geben Sie gültige E-Mail-Domains ein."
+      },
+      "zitadelOrgId": {
+        "required": "Geben Sie die Zitadel-Organisations-ID ein.",
+        "isNotEmpty": "Geben Sie die Zitadel-Organisations-ID ein.",
+        "maxLength": "Die Zitadel-Organisations-ID ist zu lang.",
+        "matches": "Die Zitadel-Organisations-ID darf keine Leerzeichen enthalten.",
+        "invalid": "Geben Sie eine gültige Zitadel-Organisations-ID ein."
+      },
+      "zitadelIdpId": {
+        "required": "Geben Sie die Zitadel-Identitätsanbieter-ID ein.",
+        "isNotEmpty": "Geben Sie die Zitadel-Identitätsanbieter-ID ein.",
+        "maxLength": "Die Zitadel-Identitätsanbieter-ID ist zu lang.",
+        "matches": "Die Zitadel-Identitätsanbieter-ID darf keine Leerzeichen enthalten.",
+        "invalid": "Geben Sie eine gültige Zitadel-Identitätsanbieter-ID ein."
+      },
+      "domainVerified": {
+        "required": "Bestätigen Sie Domain-Inhaberschaft und Zitadel-Einrichtung."
+      },
+      "invalid": "Prüfen Sie die eingegebene SSO-Verbindung."
+    },
+    "errors": {
+      "conflict": "Eine dieser Domains oder die Zitadel-Organisation ist bereits einer anderen Organisation zugeordnet.",
+      "domainAccountConflict": "Konten mit diesen E-Mail-Domains gehören zu einer anderen Core-Organisation. Klären Sie deren Organisationszugehörigkeit, bevor Sie SSO vorschreiben oder diese Domains hinzufügen.",
+      "mustDisable": "Deaktivieren Sie SSO, bevor Sie die Routing-Zuordnung ändern.",
+      "changed": "Die Verbindung wurde während der Prüfung geändert. Laden Sie neu und versuchen Sie es erneut.",
+      "notFound": "Für diese Organisation ist keine SSO-Verbindung vorhanden.",
+      "invalid": "Die SSO-Verbindung ist unvollständig oder ungültig.",
+      "mustRestorePasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren.",
+      "passwordlessUsersExist": "SSO kann nicht deaktiviert werden, da mindestens ein Benutzer kein Passwort hat. Legen Sie Passwörter fest oder lassen Sie SSO aktiviert.",
+      "unexpected": "Die SSO-Verbindung konnte nicht aktualisiert werden."
+    }
   },
   "addons": {
     "title": "Add-ons",
@@ -333,7 +506,25 @@
   },
   "orgDetails": {
     "name": "Name",
-    "id": "ID"
+    "id": "ID",
+    "rename": {
+      "edit": "Umbenennen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "success": "Organisation umbenannt",
+      "error": "Organisation konnte nicht umbenannt werden",
+      "errorNotFound": "Diese Organisation existiert nicht mehr",
+      "errorRejected": "Die Organisation konnte nicht umbenannt werden. Bitte prüfen Sie den Namen."
+    },
+    "validation": {
+      "name": {
+        "isNotEmpty": "Name ist erforderlich",
+        "isString": "Name muss ein Text sein",
+        "invalid": "Ungültiger Name"
+      },
+      "invalid": "Ungültige Eingabe"
+    },
+    "title": "Organisationsdetails"
   },
   "trial": {
     "title": "Trial-Informationen",
@@ -369,8 +560,13 @@
     "updateError": "Modell konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "deleteSuccess": "Modell erfolgreich gelöscht",
     "deleteError": "Modell konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "referencedByUsage": "Das Modell hat historische Nutzungsdaten und kann nicht gelöscht werden. Archivieren Sie es stattdessen.",
+    "stillPermitted": "Das Modell ist noch für Organisationen freigegeben. Entfernen Sie zuerst alle Modellfreigaben.",
     "alreadyExists": "Ein Modell mit dieser Kennung existiert bereits.",
     "notFound": "Modell nicht gefunden. Es wurde möglicherweise gelöscht.",
+    "invalid": "Einige Modelldaten sind ungültig. Bitte überprüfen Sie Ihre Eingaben.",
+    "providerNotSupported": "Dieser Anbieter wird für dieses Modell nicht unterstützt.",
+    "imageGenerationProviderNotSupported": "Dieser Anbieter unterstützt keine Bilderzeugungsmodelle.",
     "tabs": {
       "active": "Aktiv",
       "archived": "Archiviert"
@@ -398,6 +594,7 @@
       "noImageGenerationModelsEmpty": "Es wurden noch keine Bilderzeugungsmodelle zum Katalog hinzugefügt.",
       "noImageGenerationModelsArchived": "Keine Bilderzeugungsmodelle wurden archiviert.",
       "archivedBadge": "Archiviert",
+      "providerFaultBadge": "Provider-Störung",
       "streamingBadge": "Streaming",
       "toolsBadge": "Tools",
       "visionBadge": "Vision",
@@ -419,7 +616,10 @@
         "provider": "Anbieter",
         "providerPlaceholder": "Anbieter auswählen",
         "displayName": "Anzeigename",
+        "contextWindowSize": "Kontextfenstergröße",
+        "contextWindowSizePlaceholder": "z. B. 128000",
         "archived": "Archiviert",
+        "providerFault": "Bekannte Störung beim Upstream-Provider",
         "cancel": "Abbrechen",
         "create": "Anlegen",
         "creating": "Wird angelegt …",
@@ -442,7 +642,57 @@
         "embeddingDisplayNamePlaceholder": "z. B. Text Embedding 3 Small",
         "imageGenerationNamePlaceholder": "z. B. gpt-image-1",
         "imageGenerationDisplayNamePlaceholder": "z. B. GPT Image 1"
+      },
+      "validation": {
+        "contextWindowSize": {
+          "required": "Die Kontextfenstergröße ist erforderlich",
+          "isInt": "Die Kontextfenstergröße muss eine ganze Zahl sein",
+          "min": "Die Kontextfenstergröße muss mindestens 1 betragen",
+          "invalid": "Geben Sie eine gültige Kontextfenstergröße ein"
+        },
+        "invalid": "Überprüfen Sie die eingegebenen Modelldaten"
       }
     }
+  },
+  "lifecycle": {
+    "archiveButton": "Archivieren",
+    "restoreButton": "Wiederherstellen",
+    "deleteButton": "Löschen",
+    "archive": "Organisation archivieren",
+    "restore": "Organisation wiederherstellen",
+    "delete": "Organisation löschen",
+    "archiveTitle": "Organisation archivieren?",
+    "restoreTitle": "Organisation wiederherstellen?",
+    "archiveDescription": "Alle Daten bleiben erhalten. Mitglieder werden abgemeldet und können sich erst nach der Wiederherstellung wieder anmelden.",
+    "restoreDescription": "Mitglieder können sich wieder anmelden. Vorherige Sitzungen bleiben ungültig.",
+    "deleteTitle": "Organisation endgültig löschen?",
+    "deleteDescription": "<name/>, alle Mitglieder, Daten und gespeicherten Dateien werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "typeName": "Zum Bestätigen <name/> eingeben",
+    "cancel": "Abbrechen",
+    "archivedSuccess": "Organisation archiviert",
+    "restoredSuccess": "Organisation wiederhergestellt",
+    "deletedSuccess": "Organisation gelöscht",
+    "errorNotFound": "Organisation existiert nicht mehr",
+    "confirmationMismatch": "Der Name muss exakt übereinstimmen",
+    "cleanupIncomplete": "Die Organisation wurde gelöscht, aber einige Dateien oder Verarbeitungsdaten konnten nicht entfernt werden. Bitte den Support kontaktieren.",
+    "errorUnauthorized": "Super-Admin-Rechte sind erforderlich",
+    "error": "Organisation konnte nicht aktualisiert werden",
+    "processingActive": "Die Dokumentverarbeitung läuft noch. Die Organisation wurde nicht gelöscht. Versuchen Sie es nach Abschluss erneut.",
+    "managementTitle": "Organisation verwalten",
+    "deleteActionDescription": "Diese Organisation, ihre Mitglieder, Daten und gespeicherten Dateien endgültig entfernen. Dies kann nicht rückgängig gemacht werden."
+  },
+  "usageVisibility": {
+    "title": "Nutzungsdaten",
+    "label": "Verbrauch einzelner Benutzer ausblenden",
+    "success": "Verbrauchssichtbarkeit aktualisiert",
+    "error": "Verbrauchssichtbarkeit konnte nicht aktualisiert werden",
+    "notFound": "Organisation nicht gefunden",
+    "description": "Bei aktiviertem Schalter wird die Tabelle „Benutzerverbrauch“ für Admins dieser Organisation ausgeblendet und der Verbrauch einzelner Benutzer ist für sie nicht mehr abrufbar."
+  },
+  "validation": {
+    "endsAt": {
+      "isDateString": "Bitte ein gültiges Enddatum eingeben."
+    },
+    "invalid": "Bitte den Wert prüfen."
   }
 }

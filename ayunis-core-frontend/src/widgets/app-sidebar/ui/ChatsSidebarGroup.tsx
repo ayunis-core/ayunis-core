@@ -1,42 +1,63 @@
-import {
-  MoreHorizontal,
-  MessageCircle,
-  Loader2,
-  Trash,
-  ChevronDown,
-  Search,
-  Pencil,
-} from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
 import {
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
-  SidebarGroupContent,
 } from '@ayunis/ui/components/sidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@ayunis/ui/components/dropdown-menu';
-import { useThreads } from '../api';
-import { useDeleteThread } from '@/features/useDeleteThread';
-import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
+import { useThreads } from '@/widgets/app-sidebar/api';
+import { useDeleteThread } from '@/features/thread-run';
+import { useFavorites } from '@/features/favorites';
 import { Button } from '@ayunis/ui/components/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@ayunis/ui/components/collapsible';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
+import { TOUR_TARGET, findAssignTourThread } from '@/widgets/onboarding';
+import { ChatSidebarItem } from './ChatSidebarItem';
+import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
+
+function ChatsSearchLink() {
+  return (
+    <Link to="/chats" className="text-muted-foreground">
+      <Search className="size-4" />
+    </Link>
+  );
+}
+
+function LoadingChats() {
+  const { t } = useTranslation('common');
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton className="text-sidebar-foreground/70">
+          <Loader2 className="size-4 animate-spin" />
+          <span>{t('sidebar.loadingChats')}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+function EmptyChats() {
+  const { t } = useTranslation('common');
+  return (
+    <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6">
+      <div className="text-center space-y-2">
+        <div className="text-sm text-foreground">
+          {t('sidebar.emptyChatsTitle')}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {t('sidebar.emptyChatsDescription')}
+        </div>
+        <Button asChild className="mt-2">
+          <Link to="/chat">{t('sidebar.newChat')}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
@@ -46,20 +67,22 @@ export function ChatsSidebarGroup() {
   const params = useParams({ strict: false });
   const navigate = useNavigate();
 
-  const [isOpen, setOpen] = useChatsSidebarOpen();
+  const { favorites, isLoading: areFavoritesLoading } = useFavorites();
+  const isPending = isLoading || areFavoritesLoading;
+  const pinnedThreadIds = new Set(
+    favorites
+      .filter((item) => item.referenceType === 'thread')
+      .map((item) => item.referenceId),
+  );
+  const otherThreads = threads.filter(
+    (thread) => !pinnedThreadIds.has(thread.id),
+  );
+  const assignTourThreadId = findAssignTourThread(threads, favorites)?.id;
 
-  // Rename dialog state
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [threadToRename, setThreadToRename] = useState<{
     id: string;
     title: string | null;
   } | null>(null);
-
-  const handleRenameClick = (threadId: string, currentTitle: string | null) => {
-    setThreadToRename({ id: threadId, title: currentTitle });
-    // Delay to allow dropdown menu to fully close first
-    setTimeout(() => setRenameDialogOpen(true), 0);
-  };
 
   const handleDeleteClick = (threadId: string) => {
     confirm({
@@ -69,13 +92,8 @@ export function ChatsSidebarGroup() {
       cancelText: t('sidebar.deleteChatCancel'),
       variant: 'destructive',
       onConfirm: () => {
-        // Check if the user is currently viewing the chat being deleted
-        const currentThreadId = params.threadId;
-        const isCurrentChat = currentThreadId === threadId;
-
+        const isCurrentChat = params.threadId === threadId;
         deleteChat(threadId);
-
-        // If the user is on the chat being deleted, redirect to /chat
         if (isCurrentChat) {
           void navigate({ to: '/chat' });
         }
@@ -83,191 +101,52 @@ export function ChatsSidebarGroup() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
-      >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="text-sidebar-foreground/70">
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>{t('sidebar.loadingChats')}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  }
-
-  if (threads.length === 0) {
-    return (
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
-      >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6">
-                <div className="text-center space-y-2">
-                  <div className="text-sm text-foreground">
-                    {t('sidebar.emptyChatsTitle')}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t('sidebar.emptyChatsDescription')}
-                  </div>
-                  <Button
-                    className="mt-2"
-                    onClick={() => void navigate({ to: '/chat' })}
-                  >
-                    {t('sidebar.newChat')}
-                  </Button>
-                </div>
-              </div>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  }
-
   return (
     <>
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setOpen}
-        className="group/collapsible"
+      <SidebarCollapsibleGroup
+        label={t('sidebar.chats')}
+        storageKey="sidebar_chats_open"
+        action={<ChatsSearchLink />}
+        testId="sidebar-chats"
       >
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center justify-between w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="text-muted-foreground"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {threads.map((thread) => (
-                  <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton
-                      asChild
-                      isActive={params.threadId === thread.id}
-                    >
-                      <Link
-                        to={'/chats/$threadId'}
-                        params={{ threadId: thread.id }}
-                      >
-                        <MessageCircle />
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate">
-                            {thread.title ?? t('sidebar.untitled')}
-                          </span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        data-testid="dropdown-menu-trigger"
-                        asChild
-                      >
-                        <SidebarMenuAction showOnHover>
-                          <MoreHorizontal />
-                          <span className="sr-only">{t('sidebar.more')}</span>
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        className="rounded-lg"
-                        side="bottom"
-                        align="end"
-                        data-testid="chat-dropdown"
-                      >
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleRenameClick(thread.id, thread.title ?? null)
-                          }
-                          data-testid="rename"
-                        >
-                          <Pencil />
-                          <span>{t('sidebar.renameChat')}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => handleDeleteClick(thread.id)}
-                          data-testid="delete"
-                        >
-                          <Trash />
-                          <span>{t('sidebar.deleteChat')}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </SidebarMenuItem>
-                ))}
-                {hasMore && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link to="/chats" className="text-muted-foreground">
-                        <span>{t('sidebar.showMore')}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
+        {isPending ? <LoadingChats /> : null}
+        {!isPending && threads.length === 0 ? <EmptyChats /> : null}
+        {!isPending && threads.length > 0 ? (
+          <SidebarMenu>
+            {otherThreads.map((thread) => (
+              <ChatSidebarItem
+                key={thread.id}
+                thread={thread}
+                isPinned={pinnedThreadIds.has(thread.id)}
+                onRename={(threadId, title) =>
+                  setThreadToRename({ id: threadId, title })
+                }
+                onDelete={handleDeleteClick}
+                tourTarget={
+                  thread.id === assignTourThreadId
+                    ? TOUR_TARGET.assignChatToWorkspace
+                    : undefined
+                }
+              />
+            ))}
+            {hasMore && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/chats" className="text-muted-foreground">
+                    <span>{t('sidebar.showMore')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        ) : null}
+      </SidebarCollapsibleGroup>
 
       {threadToRename && (
         <RenameThreadDialog
-          open={renameDialogOpen}
+          open
           onOpenChange={(open) => {
-            setRenameDialogOpen(open);
-            if (!open) {
-              setThreadToRename(null);
-            }
+            if (!open) setThreadToRename(null);
           }}
           threadId={threadToRename.id}
           currentTitle={threadToRename.title}

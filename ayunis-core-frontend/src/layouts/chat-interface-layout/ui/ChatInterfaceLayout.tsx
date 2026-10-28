@@ -52,7 +52,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
 
   const chatPane = (
     <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl pb-4 ${className}`}
+      className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-t-xl pb-2 sm:pb-4 ${className}`}
     >
       <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
         <div
@@ -71,7 +71,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[800px] flex-shrink-0 sticky bottom-0 z-10 bg-background">
+      <div className="sticky bottom-0 z-10 mx-auto w-full min-w-0 max-w-[800px] flex-shrink-0 bg-background">
         {chatInput}
       </div>
     </div>

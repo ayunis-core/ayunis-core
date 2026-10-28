@@ -1,3 +1,4 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { Observable, Subject } from 'rxjs';
 import { ExecuteOpenAIChatCompletionUseCase } from './execute-openai-chat-completion.use-case';
@@ -5,27 +6,36 @@ import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-comple
 import type { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import type { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
-import { OpenAIRequestMapper } from '../../mappers/openai-request.mapper';
-import { OpenAIResponseMapper } from '../../mappers/openai-response.mapper';
-import { OpenAIStreamMapper } from '../../mappers/openai-stream.mapper';
-import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
-import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import { OpenAIRequestMapper } from 'src/domain/openai-compat/application/mappers/openai-request.mapper';
+import { OpenAIResponseMapper } from 'src/domain/openai-compat/application/mappers/openai-response.mapper';
+import { OpenAIStreamMapper } from 'src/domain/openai-compat/application/mappers/openai-stream.mapper';
+import { StreamInferenceResponseChunk } from 'src/domain/models/application/models/stream-inference-response-chunk';
+import { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
-import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import {
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
+import type { OpenAIFileContentService } from 'src/domain/openai-compat/application/services/openai-file-content.service';
+import { ProviderErrorReason } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 
 describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let useCase: ExecuteOpenAIChatCompletionUseCase;
   let getPermittedLanguageModelsUseCase: jest.Mocked<GetPermittedLanguageModelsUseCase>;
   let getInferenceUseCase: jest.Mocked<GetInferenceUseCase>;
   let streamInferenceUseCase: jest.Mocked<StreamInferenceUseCase>;
-  let inferenceUsageGuard: jest.Mocked<InferenceUsageGuard>;
+  let inferenceAdmissionGuard: jest.Mocked<InferenceAdmissionGuard>;
+  let collectUsageAsyncService: jest.Mocked<CollectUsageAsyncService>;
+  let fileContentService: jest.Mocked<OpenAIFileContentService>;
 
   const orgId = randomUUID();
   const apiKeyId = randomUUID();
@@ -38,8 +48,11 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
     canUseTools: true,
     isReasoning: false,
     canVision: false,
+    contextWindowSize: 128_000,
     isArchived: false,
     tier: ModelTier.MEDIUM,
+    inputTokenCost: 2,
+    outputTokenCost: 8,
   });
 
   const permitted = new PermittedLanguageModel({
@@ -76,16 +89,26 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<StreamInferenceUseCase>;
 
-    inferenceUsageGuard = {
+    inferenceAdmissionGuard = {
       preflight: jest.fn().mockResolvedValue(undefined),
-      collectUsage: jest.fn(),
-    } as unknown as jest.Mocked<InferenceUsageGuard>;
+      ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<InferenceAdmissionGuard>;
+    collectUsageAsyncService = {
+      collect: jest.fn(),
+      collectCritical: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CollectUsageAsyncService>;
+
+    fileContentService = {
+      expand: jest.fn().mockImplementation(async (request) => request),
+    } as unknown as jest.Mocked<OpenAIFileContentService>;
 
     useCase = new ExecuteOpenAIChatCompletionUseCase(
       getPermittedLanguageModelsUseCase,
       getInferenceUseCase,
       streamInferenceUseCase,
-      inferenceUsageGuard,
+      inferenceAdmissionGuard,
+      collectUsageAsyncService,
+      fileContentService,
       new OpenAIRequestMapper(),
       new OpenAIResponseMapper(),
       new OpenAIStreamMapper(),
@@ -93,14 +116,18 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
   });
 
   describe('executeNonStreaming', () => {
-    it('returns an OpenAI-shaped response and records usage', async () => {
-      getInferenceUseCase.execute.mockResolvedValue(
-        new InferenceResponse([new TextMessageContent('Hi there!')], {
+    it('returns an OpenAI-shaped response and critically records usage', async () => {
+      getInferenceUseCase.execute.mockImplementation(async (command) => {
+        await command.onCallTerminal?.({
+          outcome: 'completed',
+          usage: { inputTokens: 10, outputTokens: 5 },
+        });
+        return new InferenceResponse([new TextMessageContent('Hi there!')], {
           inputTokens: 10,
           outputTokens: 5,
           totalTokens: 15,
-        }),
-      );
+        });
+      });
 
       const result = await useCase.executeNonStreaming(baseCommand());
 
@@ -112,11 +139,198 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         completion_tokens: 5,
         total_tokens: 15,
       });
-      expect(inferenceUsageGuard.preflight).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
+      expect(inferenceAdmissionGuard.preflight).toHaveBeenCalledTimes(1);
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledWith(principal, model);
+      expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledTimes(1);
+      expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledWith(
         model,
-        { inputTokens: 10, outputTokens: 5 },
+        10,
+        5,
         expect.any(String),
+      );
+      expect(collectUsageAsyncService.collect).not.toHaveBeenCalled();
+    });
+
+    it('fails a paid non-streaming call that reports no usage', async () => {
+      getInferenceUseCase.execute.mockImplementation(async (command) => {
+        await command.onCallTerminal?.({ outcome: 'completed' });
+        return new InferenceResponse([new TextMessageContent('answer')], {});
+      });
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_USAGE_ACCOUNTING_FAILED',
+      });
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
+    });
+
+    it('reports a failed critical usage write as an accounting failure', async () => {
+      collectUsageAsyncService.collectCritical.mockRejectedValue(
+        new Error('connection terminated'),
+      );
+      getInferenceUseCase.execute.mockImplementation(async (command) => {
+        await command.onCallTerminal?.({
+          outcome: 'completed',
+          usage: { inputTokens: 3, outputTokens: 1 },
+        });
+        return new InferenceResponse([new TextMessageContent('answer')], {});
+      });
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_USAGE_ACCOUNTING_FAILED',
+      });
+    });
+
+    it('gates immediately before the direct inference call', async () => {
+      const order: string[] = [];
+      inferenceAdmissionGuard.preflight.mockImplementation(async () => {
+        order.push('preflight');
+      });
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockImplementation(
+        async () => {
+          order.push('gate');
+        },
+      );
+      getInferenceUseCase.execute.mockImplementation(async () => {
+        order.push('inference');
+        return new InferenceResponse([new TextMessageContent('answer')], {});
+      });
+
+      await useCase.executeNonStreaming(baseCommand());
+
+      expect(order).toEqual(['preflight', 'gate', 'inference']);
+    });
+
+    it('does not call inference when the call-boundary gate rejects', async () => {
+      const rejected = new QuotaExceededError(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+        100,
+        3600_000,
+        60,
+      );
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockRejectedValue(
+        rejected,
+      );
+
+      await expect(useCase.executeNonStreaming(baseCommand())).rejects.toBe(
+        rejected,
+      );
+      expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
+    });
+
+    it('passes extracted inline file text to inference', async () => {
+      fileContentService.expand.mockResolvedValueOnce({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: '[Document: budget.pdf]\nCouncil budget\n[End document]',
+              },
+              { type: 'text', text: 'Summarize it.' },
+            ],
+          },
+        ],
+      });
+      getInferenceUseCase.execute.mockResolvedValue(
+        new InferenceResponse([new TextMessageContent('Summary')], {}),
+      );
+      const command = baseCommand({
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'file',
+                file: {
+                  filename: 'budget.pdf',
+                  file_data: Buffer.from('%PDF budget').toString('base64'),
+                },
+              },
+              { type: 'text', text: 'Summarize it.' },
+            ],
+          },
+        ],
+      });
+
+      await useCase.executeNonStreaming(command);
+
+      const inferenceCommand = getInferenceUseCase.execute.mock.calls[0][0];
+      expect(
+        (inferenceCommand.messages[0].content[0] as TextMessageContent).text,
+      ).toContain('Council budget');
+    });
+
+    it('returns token-limited partial text as a length completion', async () => {
+      const response = new InferenceResponse(
+        [new TextMessageContent('Partial answer')],
+        {},
+        'length',
+      );
+      getInferenceUseCase.execute.mockResolvedValue(response);
+
+      const result = await useCase.executeNonStreaming(baseCommand());
+
+      expect(result.choices[0]).toMatchObject({
+        message: { content: 'Partial answer' },
+        finish_reason: 'length',
+      });
+      expect(getInferenceUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ acceptTokenLimitCompletion: true }),
+      );
+    });
+
+    it('classifies a token-limited tool call as an expected client response', async () => {
+      getInferenceUseCase.execute.mockRejectedValue(
+        new InferenceTokenLimitError({ toolNames: ['get_weather'] }),
+      );
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_TOKEN_LIMIT',
+        statusCode: 422,
+      });
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
+    });
+
+    it('classifies a provider context-length rejection as an invalid OpenAI request', async () => {
+      getInferenceUseCase.execute.mockRejectedValue(
+        new InferenceFailedError('Provider inference failed', {
+          upstreamStatus: 400,
+          upstreamReason: ProviderErrorReason.CONTEXT_LENGTH_EXCEEDED,
+        }),
+      );
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_INVALID_REQUEST',
+        statusCode: 400,
+        message: "Request exceeds the model's context length",
+      });
+    });
+
+    it('keeps unclassified provider rejections as inference failures', async () => {
+      const upstream = new InferenceFailedError('Provider inference failed', {
+        upstreamStatus: 400,
+        upstreamReason: ProviderErrorReason.UNKNOWN_REQUEST_REJECTION,
+      });
+      getInferenceUseCase.execute.mockRejectedValue(upstream);
+
+      await expect(useCase.executeNonStreaming(baseCommand())).rejects.toBe(
+        upstream,
       );
     });
 
@@ -126,12 +340,12 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       await expect(useCase.executeNonStreaming(baseCommand())).rejects.toThrow(
         OpenAIModelNotFoundError,
       );
-      expect(inferenceUsageGuard.preflight).not.toHaveBeenCalled();
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(inferenceAdmissionGuard.preflight).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
     });
 
-    it('propagates preflight failure and does not call collectUsage', async () => {
-      inferenceUsageGuard.preflight.mockRejectedValue(
+    it('propagates preflight failure and does not record usage', async () => {
+      inferenceAdmissionGuard.preflight.mockRejectedValue(
         new QuotaExceededError(
           QuotaType.FAIR_USE_MESSAGES_MEDIUM,
           100,
@@ -144,85 +358,241 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         QuotaExceededError,
       );
       expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
     });
   });
 
   describe('executeStreaming', () => {
-    function chunkWithUsage(
-      input: number,
-      output: number,
-    ): StreamInferenceResponseChunk {
-      return new StreamInferenceResponseChunk({
-        thinkingDelta: null,
-        textContentDelta: null,
-        toolCallsDelta: [],
-        usage: { inputTokens: input, outputTokens: output },
+    it('passes extracted inline file text to streaming inference', async () => {
+      fileContentService.expand.mockResolvedValueOnce({
+        model: 'gpt-4o',
+        stream: true,
+        messages: [
+          {
+            role: 'user',
+            content: '[Document: plan.pdf]\nMobility plan\n[End document]',
+          },
+        ],
       });
-    }
-
-    it('sums usage across chunks via finalize', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
 
-      const result$ = await useCase.executeStreaming(
-        baseCommand({ stream: true }),
-      );
-      const collected: unknown[] = [];
-      const sub = result$.subscribe({
-        next: (c) => collected.push(c),
-      });
+      await useCase.executeStreaming(baseCommand({ stream: true }));
 
-      subject.next(StreamInferenceResponseChunk.text('Hello'));
-      subject.next(chunkWithUsage(10, 0));
-      subject.next(StreamInferenceResponseChunk.text(' world'));
-      subject.next(chunkWithUsage(5, 8));
+      const inferenceInput = streamInferenceUseCase.execute.mock.calls[0][0];
+      expect(
+        (inferenceInput.messages[0].content[0] as TextMessageContent).text,
+      ).toContain('Mobility plan');
       subject.complete();
-      sub.unsubscribe();
-
-      expect(collected.length).toBeGreaterThan(0);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
-        model,
-        { inputTokens: 15, outputTokens: 8 },
-        expect.any(String),
-      );
     });
 
-    it('records partial usage when the client disconnects mid-stream (unsubscribe)', async () => {
+    it('classifies a provider tool-schema rejection as an invalid OpenAI request', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
 
       const result$ = await useCase.executeStreaming(
         baseCommand({ stream: true }),
       );
-      const sub = result$.subscribe();
-
-      subject.next(chunkWithUsage(7, 3));
-      // Simulate client disconnect — finalize must fire.
-      sub.unsubscribe();
-
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledTimes(1);
-      expect(inferenceUsageGuard.collectUsage).toHaveBeenCalledWith(
-        model,
-        { inputTokens: 7, outputTokens: 3 },
-        expect.any(String),
+      const result = new Promise<never>((_resolve, reject) => {
+        result$.subscribe({ error: reject });
+      });
+      subject.error(
+        new InferenceFailedError('Provider inference failed', {
+          upstreamStatus: 400,
+          upstreamReason: ProviderErrorReason.INVALID_TOOL_SCHEMA,
+          upstreamParam: 'tools[14].function.parameters',
+        }),
       );
+
+      await expect(result).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_INVALID_REQUEST',
+        statusCode: 400,
+        message: "Invalid tool schema at 'tools[14].function.parameters'",
+      });
     });
 
-    it('does not record usage when the stream produced no token counts', async () => {
+    it('opens the stream on an invisible first provider chunk so later failures stay in-band', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
-
       const result$ = await useCase.executeStreaming(
         baseCommand({ stream: true }),
       );
-      const sub = result$.subscribe();
-      subject.next(StreamInferenceResponseChunk.text('partial'));
-      subject.complete();
-      sub.unsubscribe();
+      const visible: unknown[] = [];
+      result$.subscribe((chunk) => visible.push(chunk));
 
-      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
+      subject.next(
+        new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          textContentDelta: null,
+          toolCallsDelta: [],
+          usage: { inputTokens: 4, outputTokens: 1 },
+        }),
+      );
+      subject.next(StreamInferenceResponseChunk.text('recovered'));
+
+      expect(visible).toEqual([
+        expect.objectContaining({
+          choices: [expect.objectContaining({ delta: { role: 'assistant' } })],
+        }),
+        expect.objectContaining({
+          choices: [
+            expect.objectContaining({ delta: { content: 'recovered' } }),
+          ],
+        }),
+      ]);
+      subject.complete();
+    });
+
+    it('gates once before dispatching the single provider call', async () => {
+      const order: string[] = [];
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockImplementation(
+        async () => {
+          order.push('gate');
+        },
+      );
+      streamInferenceUseCase.execute.mockImplementation(() => {
+        order.push('dispatch');
+        return new Subject<StreamInferenceResponseChunk>().asObservable();
+      });
+
+      await useCase.executeStreaming(baseCommand({ stream: true }));
+
+      expect(order).toEqual(['gate', 'dispatch']);
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledWith(principal, model);
+    });
+
+    it('rejects the initial streaming gate before dispatching the SSE source', async () => {
+      const rejected = new QuotaExceededError(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+        100,
+        3600_000,
+        60,
+      );
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockRejectedValue(
+        rejected,
+      );
+
+      await expect(
+        useCase.executeStreaming(baseCommand({ stream: true })),
+      ).rejects.toMatchObject({ statusCode: 429 });
+      expect(streamInferenceUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it.each(['completed', 'failed', 'aborted'] as const)(
+      'critically records usage for a %s call',
+      async (outcome) => {
+        const subject = new Subject<StreamInferenceResponseChunk>();
+        streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+        await useCase.executeStreaming(baseCommand({ stream: true }));
+        const onCallTerminal =
+          streamInferenceUseCase.execute.mock.calls[0][0].onCallTerminal;
+        await onCallTerminal?.({
+          outcome,
+          usage: { inputTokens: 15, outputTokens: 8 },
+        });
+
+        expect(collectUsageAsyncService.collectCritical).toHaveBeenCalledWith(
+          model,
+          15,
+          8,
+          expect.stringMatching(/^[0-9a-f-]{36}$/),
+        );
+        subject.complete();
+      },
+    );
+
+    it('awaits critical usage persistence before resolving the terminal callback', async () => {
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+      let release!: () => void;
+      const persistence = new Promise<void>((resolve) => (release = resolve));
+      collectUsageAsyncService.collectCritical.mockReturnValue(persistence);
+
+      await useCase.executeStreaming(baseCommand({ stream: true }));
+      const onCallTerminal =
+        streamInferenceUseCase.execute.mock.calls[0][0].onCallTerminal;
+      let settled = false;
+      const terminal = Promise.resolve(
+        onCallTerminal?.({
+          outcome: 'completed',
+          usage: { inputTokens: 9, outputTokens: 4 },
+        }),
+      ).then(() => (settled = true));
+      await Promise.resolve();
+      expect(settled).toBe(false);
+
+      release();
+      await terminal;
+      expect(settled).toBe(true);
+      subject.complete();
+    });
+
+    it.each(['completed', 'failed', 'aborted'] as const)(
+      'fails a consumed paid %s call without usage',
+      async (outcome) => {
+        const logger = createLoggerMock();
+        const subject = new Subject<StreamInferenceResponseChunk>();
+        streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+        await useCase.executeStreaming(baseCommand({ stream: true }));
+        const onCallTerminal =
+          streamInferenceUseCase.execute.mock.calls[0][0].onCallTerminal;
+
+        await expect(onCallTerminal?.({ outcome })).rejects.toMatchObject({
+          code: 'OPENAI_COMPAT_USAGE_ACCOUNTING_FAILED',
+        });
+        expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
+        expect(logger.error).toHaveBeenCalledTimes(1);
+        expect(logger.error).toHaveBeenCalledWith(
+          {
+            requestId: expect.any(String),
+            outcome,
+            modelId: model.id,
+            modelName: model.name,
+            provider: model.provider,
+            reason: 'usage_missing',
+          },
+          'Paid provider call terminated without usage data',
+        );
+        subject.complete();
+      },
+    );
+
+    it('allows a free model to complete without provider usage', async () => {
+      const logger = createLoggerMock();
+      const freeModel = new LanguageModel({
+        name: 'open-source-free',
+        provider: ModelProvider.OLLAMA,
+        displayName: 'Open Source Free',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: false,
+        contextWindowSize: 128_000,
+        isArchived: false,
+        tier: ModelTier.LOW,
+      });
+      getPermittedLanguageModelsUseCase.execute.mockResolvedValue([
+        new PermittedLanguageModel({ model: freeModel, orgId }),
+      ]);
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+      await useCase.executeStreaming(
+        baseCommand({ model: freeModel.name, stream: true }),
+      );
+      const onCallTerminal =
+        streamInferenceUseCase.execute.mock.calls[0][0].onCallTerminal;
+
+      await expect(
+        onCallTerminal?.({ outcome: 'completed' }),
+      ).resolves.toBeUndefined();
+      expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
+      subject.complete();
     });
 
     it('forwards the orgId from principal into StreamInferenceInput', async () => {

@@ -2,21 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { sha256Hex } from 'src/common/util/sha256.util';
-import { RotateSessionCommand } from './rotate-session.command';
-import { RefreshTokensRepository } from '../../ports/refresh-tokens.repository';
-import { RefreshTokenFactory } from '../../services/refresh-token.factory';
+import { RotateSessionCommand } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.command';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
+import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import {
-  RefreshTokenExpiredError,
-  RefreshTokenNotFoundError,
   RefreshTokenReuseError,
   UnexpectedSessionsError,
-} from '../../sessions.errors';
+} from 'src/iam/sessions/application/sessions.errors';
 
 export interface RotateSessionResult {
   userId: UUID;
   refreshToken: string;
+  authenticationMethod: SessionAuthenticationMethod;
 }
 
 @Injectable()
@@ -31,33 +30,19 @@ export class RotateSessionUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSessionsError)
   async execute(command: RotateSessionCommand): Promise<RotateSessionResult> {
-    const current = await this.refreshTokensRepository.findByTokenHash(
-      sha256Hex(command.refreshToken),
-    );
-
-    if (!current) {
-      throw new RefreshTokenNotFoundError();
-    }
-    if (current.isRevoked()) {
-      // Presenting a revoked token means the family is compromised.
-      await this.refreshTokensRepository.revokeFamily(current.familyId);
-      this.logger.warn('Refresh token reuse detected (revoked token)', {
-        userId: current.userId,
-        familyId: current.familyId,
-      });
-      throw new RefreshTokenReuseError();
-    }
-    if (current.isExpired()) {
-      throw new RefreshTokenExpiredError();
-    }
-
-    return this.rotate(current);
+    return this.rotate(command.current);
   }
 
   private async rotate(current: RefreshToken): Promise<RotateSessionResult> {
     const { token: successor, plaintext } = this.refreshTokenFactory.create({
       userId: current.userId,
       familyId: current.familyId,
+      authenticationMethod: current.authenticationMethod,
+      zitadelSessionId: current.zitadelSessionId,
+      familyExpiresAt:
+        current.authenticationMethod === SessionAuthenticationMethod.SSO
+          ? (current.familyExpiresAt ?? current.expiresAt)
+          : undefined,
     });
 
     const won = await this.refreshTokensRepository.markUsedAndInsertSuccessor(
@@ -65,7 +50,11 @@ export class RotateSessionUseCase {
       successor,
     );
     if (won) {
-      return { userId: current.userId, refreshToken: plaintext };
+      return {
+        userId: current.userId,
+        refreshToken: plaintext,
+        authenticationMethod: current.authenticationMethod,
+      };
     }
 
     // Lost the atomic rotation: either a concurrent request already rotated
@@ -77,14 +66,20 @@ export class RotateSessionUseCase {
     );
     if (withinGrace) {
       await this.refreshTokensRepository.insert(successor);
-      return { userId: current.userId, refreshToken: plaintext };
+      return {
+        userId: current.userId,
+        refreshToken: plaintext,
+        authenticationMethod: current.authenticationMethod,
+      };
     }
 
-    await this.refreshTokensRepository.revokeFamily(current.familyId);
-    this.logger.warn('Refresh token reuse detected (post-grace replay)', {
-      userId: current.userId,
-      familyId: current.familyId,
-    });
+    this.logger.warn(
+      {
+        userId: current.userId,
+        familyId: current.familyId,
+      },
+      'Refresh token reuse detected (post-grace replay)',
+    );
     throw new RefreshTokenReuseError();
   }
 

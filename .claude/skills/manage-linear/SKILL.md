@@ -94,16 +94,16 @@ For anything the CLI doesn't cover: `linear api '<query>' [--variable key=value]
 
 ### Per-team state names
 
-State names are NOT uniform across teams. **Do not hardcode `"In Progress"` or
-`"Done"`** — look up the team's actual state before updating. Confirmed
+State names are NOT uniform across teams. **Do not hardcode `"In Progress"`,
+`"Merged"`, or `"Done"`** — look up the team's actual state before updating. Confirmed
 divergences:
 
-| Team | Started state    | Closed state |
-|------|------------------|--------------|
-| AYC  | `In Development` | `Done`       |
+| Team | Started state    | Release-pending state | Closed state |
+|------|------------------|-----------------------|--------------|
+| AYC  | `In Development` | `Merged`              | `Done`       |
 
-(Other teams default to the standard `In Progress` / `Done` until a divergence is
-observed and added here.)
+(Other teams default to the standard `In Progress` / `Done`; look up whether a
+release-pending state exists before moving a merged code ticket.)
 
 To enumerate any team's states yourself:
 
@@ -118,5 +118,6 @@ linear api 'query($key: String!){ team(id: $key){ states { nodes { name type } }
 - **Use `--json`** on `issue view` when you need structured data to process.
 - **Issue IDs** look like `AYC-4` (team key + number).
 - **Ask before creating/updating/deleting** — treat writes with care.
+- **For code-backed issues, merge is not completion.** The Git integration should move the issue to the team's release-pending state after merge (`Merged` for AYC). Only the release process may move it to `Done` after a production release contains the change. Before reopening an unexpectedly completed issue, inspect its state history and linked release; restore it only when completion preceded the containing release.
 - **Subtasks** should always be created with `--state Backlog`, not `Triage` — the parent has already been triaged.
-- **Create sub-issues upfront when a ticket enumerates iterations.** If the parent ticket spells out "iter 1 / iter 2 / iter 3" or numbered phases, propose creating one sub-issue per iteration during planning, *before* implementation starts. Update each sub-issue's state as work progresses (`In Progress` → `Done`) rather than reconstructing the mapping after the fact.
+- **Create sub-issues upfront when a ticket enumerates iterations.** If the parent ticket spells out "iter 1 / iter 2 / iter 3" or numbered phases, propose creating one sub-issue per iteration during planning, *before* implementation starts. Progress each sub-issue through the team's workflow; code-backed subtasks follow the same release-pending/`Done` lifecycle as their parent.

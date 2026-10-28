@@ -14,7 +14,7 @@ import {
 } from '@/widgets/charts/lib/ChartUtils';
 
 // UI
-import { PieChart, Pie, Cell } from 'recharts';
+import { PieChart, Pie } from 'recharts';
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -40,8 +40,13 @@ export default function PieChartWidget({
 }>) {
   const params = content.params as ChartParams;
 
-  const chartData = useMemo<TransformedPieDataPoint[]>(() => {
-    return transformPieChartData(params.data ?? []);
+  const chartData = useMemo(() => {
+    return transformPieChartData(params.data ?? []).map(
+      (entry: TransformedPieDataPoint) => ({
+        ...entry,
+        fill: colorVar(entry.slug),
+      }),
+    );
   }, [params.data]);
 
   const hasData = chartData.length > 0;
@@ -69,20 +74,12 @@ export default function PieChartWidget({
           cy="50%"
           labelLine={false}
           label={({ name, percent }) =>
-            `${name}: ${(percent * 100).toFixed(0)}%`
+            `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
           }
           outerRadius={100}
           innerRadius={80}
           dataKey="value"
-        >
-          {chartData.map((entry) => (
-            <Cell
-              key={entry.slug}
-              name={entry.name}
-              fill={colorVar(entry.slug)}
-            />
-          ))}
-        </Pie>
+        />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent nameKey="slug" />} />
       </PieChart>

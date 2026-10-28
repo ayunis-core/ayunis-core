@@ -82,6 +82,16 @@ export class SubscriptionResponseDto {
   startsAt: Date;
 
   @ApiProperty({
+    description:
+      'Exclusive date when this subscription stops controlling product access',
+    example: '2026-08-01T00:00:00Z',
+    type: String,
+    format: 'date-time',
+    nullable: true,
+  })
+  endsAt: Date | null;
+
+  @ApiProperty({
     description: 'Organization ID associated with the subscription',
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',
@@ -137,10 +147,14 @@ export class SubscriptionResponseDto {
   availableSeats?: number | null;
 
   @ApiProperty({
-    description: 'Date of the next renewal',
+    description:
+      'Next renewal before the access end, or null when no renewal remains',
+    type: String,
+    format: 'date-time',
+    nullable: true,
     example: '2024-01-01T10:00:00Z',
   })
-  nextRenewalDate: Date;
+  nextRenewalDate: Date | null;
 
   @ApiProperty({
     description: 'Billing information',

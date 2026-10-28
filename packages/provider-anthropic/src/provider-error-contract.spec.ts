@@ -1,0 +1,390 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  ModelProviderError,
+  type ProviderChunk,
+  type ProviderRequest,
+} from '@ayunis/inference';
+
+import { anthropic } from './anthropic-provider';
+import { asApiPromise } from './test-helpers';
+
+const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
+
+vi.mock('@anthropic-ai/sdk', () => {
+  class FakeAnthropic {
+    messages = {
+      create: (...args: unknown[]) => asApiPromise(createMock(...args)),
+    };
+  }
+  return { default: FakeAnthropic };
+});
+
+const request = (signal?: AbortSignal): ProviderRequest => ({
+  instructions: '',
+  messages: [],
+  tools: [],
+  ...(signal ? { signal } : {}),
+});
+
+const textEvent = (text: string) => ({
+  type: 'content_block_delta',
+  index: 0,
+  delta: { type: 'text_delta', text },
+});
+
+const done = (): IteratorResult<unknown> => ({ done: true, value: undefined });
+const value = (item: unknown): IteratorResult<unknown> => ({
+  done: false,
+  value: item,
+});
+
+function scriptedStream(
+  steps: readonly (IteratorResult<unknown> | Error)[],
+  onReturn = vi.fn(),
+): AsyncIterable<unknown> {
+  let index = 0;
+  return {
+    [Symbol.asyncIterator]() {
+      return {
+        async next() {
+          const step = steps[index++] ?? done();
+          if (step instanceof Error) throw step;
+          return step;
+        },
+        async return() {
+          onReturn();
+          return done();
+        },
+      };
+    },
+  };
+}
+
+async function drain(
+  stream: AsyncIterable<ProviderChunk>,
+): Promise<ProviderChunk[]> {
+  const chunks: ProviderChunk[] = [];
+  for await (const item of stream) chunks.push(item);
+  return chunks;
+}
+
+const rejectOnAbort = (
+  signal?: AbortSignal,
+): Promise<IteratorResult<unknown>> =>
+  new Promise((_resolve, reject) => {
+    signal?.addEventListener(
+      'abort',
+      () => reject(new DOMException('aborted', 'AbortError')),
+      { once: true },
+    );
+  });
+
+beforeEach(() => {
+  createMock.mockReset();
+});
+
+describe('Anthropic provider error contract', () => {
+  it('normalizes stream setup failures and preserves safe provider facts', async () => {
+    const cause = Object.assign(new Error('overloaded'), {
+      status: 529,
+      request_id: 'req_safe-456',
+      headers: { 'retry-after-ms': '250' },
+    });
+    createMock.mockRejectedValueOnce(cause);
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'server',
+      stage: 'stream_establishment',
+      upstreamStatus: 529,
+      upstreamRequestId: 'req_safe-456',
+      retryAfterMs: 250,
+      cause,
+    });
+  });
+
+  it('marks a prompt over the context window as a context-length rejection', async () => {
+    const cause = Object.assign(
+      new Error(
+        '400 {"type":"error","error":{"type":"invalid_request_error","message":"prompt is too long: 210950 tokens > 200000 maximum"}}',
+      ),
+      {
+        status: 400,
+        error: {
+          type: 'error',
+          error: {
+            type: 'invalid_request_error',
+            message: 'prompt is too long: 210950 tokens > 200000 maximum',
+          },
+        },
+      },
+    );
+    createMock.mockRejectedValueOnce(cause);
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'context_length_exceeded',
+      contextOverflowTokens: 10_950,
+      upstreamStatus: 400,
+    });
+  });
+
+  it('marks an image over the size limit as an image-too-large rejection', async () => {
+    const message =
+      'messages.10.content.1.image.source.base64: image exceeds 5 MB maximum: 9052272 bytes > 5242880 bytes';
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error(`400 ${message}`), {
+        status: 400,
+        error: {
+          type: 'error',
+          error: { type: 'invalid_request_error', message },
+        },
+      }),
+    );
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'image_too_large',
+    });
+  });
+
+  it('leaves other invalid requests without a rejection reason', async () => {
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error('400 messages: roles must alternate'), {
+        status: 400,
+      }),
+    );
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+    const failure = await drain(provider.stream(request())).catch(
+      (error: unknown) => error,
+    );
+
+    expect(failure).toMatchObject({ kind: 'rejection' });
+    expect(failure).not.toHaveProperty('rejectionReason', expect.anything());
+  });
+
+  it('marks SDK setup timeouts as response-start timeouts', async () => {
+    const cause = Object.assign(new Error('timed out'), {
+      name: 'APIConnectionTimeoutError',
+    });
+    createMock.mockRejectedValueOnce(cause);
+
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'timeout',
+      stage: 'stream_establishment',
+      timeoutSource: 'response_start',
+      cause,
+    });
+  });
+
+  it('normalizes a post-chunk transport failure', async () => {
+    const cause = Object.assign(new Error('connection lost'), {
+      code: 'ECONNRESET',
+    });
+    createMock.mockResolvedValueOnce(
+      scriptedStream([value(textEvent('partial')), cause]),
+    );
+    const iterator = anthropic({ apiKey: 'test', model: 'claude-test' })
+      .stream(request())
+      [Symbol.asyncIterator]();
+
+    await expect(iterator.next()).resolves.toEqual({
+      done: false,
+      value: { textDelta: 'partial' },
+    });
+    await expect(iterator.next()).rejects.toMatchObject({
+      kind: 'connection',
+      stage: 'stream_consumption',
+      cause,
+    });
+  });
+
+  it('preserves a mid-stream error event over a rejecting body cleanup', async () => {
+    const cleanupError = new Error('cleanup failed');
+    const onReturn = vi.fn(() => {
+      throw cleanupError;
+    });
+    createMock.mockResolvedValueOnce(
+      scriptedStream(
+        [
+          value(textEvent('partial')),
+          value({
+            type: 'error',
+            error: { type: 'overloaded_error', message: 'Overloaded' },
+          }),
+          value(textEvent('unread')),
+          value(textEvent('unread')),
+        ],
+        onReturn,
+      ),
+    );
+    const iterator = anthropic({ apiKey: 'test', model: 'claude-test' })
+      .stream(request())
+      [Symbol.asyncIterator]();
+
+    await iterator.next();
+    await expect(iterator.next()).rejects.toMatchObject({
+      stage: 'stream_consumption',
+    });
+    expect(onReturn).toHaveBeenCalledOnce();
+  });
+
+  it('cancels the response body when the consumer stops reading early', async () => {
+    const onReturn = vi.fn();
+    createMock.mockResolvedValueOnce(
+      scriptedStream(
+        [value(textEvent('first')), value(textEvent('second'))],
+        onReturn,
+      ),
+    );
+
+    for await (const chunk of anthropic({
+      apiKey: 'test',
+      model: 'claude-test',
+    }).stream(request())) {
+      expect(chunk).toEqual({ textDelta: 'first' });
+      break;
+    }
+
+    expect(onReturn).toHaveBeenCalledOnce();
+  });
+
+  it('keeps local request conversion failures raw and does not open a stream', async () => {
+    const localRequest: ProviderRequest = {
+      instructions: '',
+      messages: [
+        {
+          role: 'assistant',
+          content: [{ type: 'thinking', thinking: 'unsigned' }],
+        },
+      ],
+      tools: [],
+    };
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    await expect(drain(provider.stream(localRequest))).rejects.toEqual(
+      new Error(
+        'Cannot build an Anthropic request: all messages converted to empty content',
+      ),
+    );
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('preserves a raw chunk conversion failure over rejecting body cleanup', async () => {
+    const cleanupError = new Error('cleanup failed');
+    const onReturn = vi.fn(() => {
+      throw cleanupError;
+    });
+    createMock.mockResolvedValueOnce(
+      scriptedStream(
+        [
+          value({ type: 'message_start' }),
+          value(textEvent('unread')),
+          value(textEvent('unread')),
+        ],
+        onReturn,
+      ),
+    );
+
+    const failure = drain(
+      anthropic({ apiKey: 'test', model: 'claude-test' }).stream(request()),
+    );
+
+    await expect(failure).rejects.toBeInstanceOf(TypeError);
+    expect(onReturn).toHaveBeenCalledOnce();
+  });
+
+  it('passes abort through stream setup and reports the setup abort', async () => {
+    const controller = new AbortController();
+    createMock.mockImplementationOnce(
+      (_params: unknown, options?: { signal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener(
+            'abort',
+            () => reject(new DOMException('aborted', 'AbortError')),
+            { once: true },
+          );
+        }),
+    );
+    const pending = drain(
+      anthropic({ apiKey: 'test', model: 'claude-test' }).stream(
+        request(controller.signal),
+      ),
+    );
+
+    controller.abort();
+
+    await expect(pending).rejects.toMatchObject({
+      kind: 'abort',
+      stage: 'stream_establishment',
+    });
+    expect(createMock.mock.calls[0]?.[1]).toEqual({
+      signal: controller.signal,
+    });
+  });
+
+  it('passes abort through active consumption', async () => {
+    const controller = new AbortController();
+    const onReturn = vi.fn();
+    const onNext = vi.fn();
+    createMock.mockImplementationOnce(
+      (_params: unknown, options?: { signal?: AbortSignal }) => ({
+        [Symbol.asyncIterator]() {
+          return {
+            next: () => {
+              onNext();
+              return rejectOnAbort(options?.signal);
+            },
+            return: async () => {
+              onReturn();
+              return done();
+            },
+          };
+        },
+      }),
+    );
+    const pending = anthropic({ apiKey: 'test', model: 'claude-test' })
+      .stream(request(controller.signal))
+      [Symbol.asyncIterator]()
+      .next();
+
+    await vi.waitFor(() => expect(onNext).toHaveBeenCalledOnce());
+    controller.abort();
+
+    await expect(pending).rejects.toMatchObject({
+      kind: 'abort',
+      stage: 'stream_consumption',
+    });
+  });
+
+  it('opens one SDK stream for one invocation when maxRetries is zero', async () => {
+    createMock.mockResolvedValueOnce(scriptedStream([]));
+    const provider = anthropic({
+      apiKey: 'test',
+      model: 'claude-test',
+      maxRetries: 0,
+    });
+
+    await drain(provider.stream(request()));
+
+    expect(createMock).toHaveBeenCalledOnce();
+  });
+
+  it('surfaces normalized failures as ModelProviderError instances', async () => {
+    createMock.mockRejectedValueOnce(new Error('unknown SDK failure'));
+    const provider = anthropic({ apiKey: 'test', model: 'claude-test' });
+
+    const result = drain(provider.stream(request()));
+
+    await expect(result).rejects.toBeInstanceOf(ModelProviderError);
+  });
+});

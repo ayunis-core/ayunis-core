@@ -2,9 +2,9 @@ import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { FindUnreferencedSourceIdsUseCase } from './find-unreferenced-source-ids.use-case';
 import { FindUnreferencedSourceIdsQuery } from './find-unreferenced-source-ids.query';
-import type { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
-import { UnexpectedSourceError } from '../../sources.errors';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 describe('FindUnreferencedSourceIdsUseCase', () => {
   let useCase: FindUnreferencedSourceIdsUseCase;

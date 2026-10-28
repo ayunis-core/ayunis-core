@@ -14,6 +14,7 @@ import {
 export interface BreadcrumbEntry {
   label: string;
   href?: string;
+  search?: Record<string, unknown>;
 }
 
 interface ContentAreaHeaderProps {
@@ -28,7 +29,7 @@ export default function ContentAreaHeader({
   badge,
 }: Readonly<ContentAreaHeaderProps>) {
   return (
-    <header className="flex min-h-9 w-full items-center justify-between gap-4">
+    <header className="flex min-h-9 w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch max-sm:gap-2">
       <div className="flex min-w-0 flex-1 items-center gap-2 lg:pl-2">
         <div className="flex items-center gap-2 lg:hidden">
           <SidebarTrigger />
@@ -51,7 +52,9 @@ export default function ContentAreaHeader({
                       </>
                     ) : (
                       <BreadcrumbLink asChild>
-                        <Link to={crumb.href}>{crumb.label}</Link>
+                        <Link to={crumb.href} search={crumb.search as never}>
+                          {crumb.label}
+                        </Link>
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>
@@ -63,7 +66,9 @@ export default function ContentAreaHeader({
         </Breadcrumb>
       </div>
       {action && (
-        <div className="flex shrink-0 items-center gap-2">{action}</div>
+        <div className="content-area-header-actions flex min-w-0 shrink-0 flex-wrap items-center gap-2 empty:hidden max-sm:w-full max-sm:justify-end">
+          {action}
+        </div>
       )}
     </header>
   );

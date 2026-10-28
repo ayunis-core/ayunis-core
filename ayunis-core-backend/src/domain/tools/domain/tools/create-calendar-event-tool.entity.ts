@@ -1,6 +1,6 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
 const createCalendarEventParameters = {
@@ -35,7 +35,7 @@ type CreateCalendarEventParameters = FromSchema<
   typeof createCalendarEventParameters
 >;
 
-export class CreateCalendarEventTool extends DisplayableTool {
+export class CreateCalendarEventTool extends Tool {
   constructor() {
     super({
       name: ToolType.CREATE_CALENDAR_EVENT,

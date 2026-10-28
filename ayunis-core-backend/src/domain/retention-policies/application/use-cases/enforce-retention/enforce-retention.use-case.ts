@@ -9,7 +9,7 @@ import {
   type ExpiredThreadRef,
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { FindExpiredThreadRefsByOrgQuery } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.query';
-import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import type { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import type {
   EnforceRetentionResult,
@@ -45,10 +45,13 @@ export class EnforceRetentionUseCase {
     const policies = await this.retentionPoliciesRepository.findAllEnabled();
     const now = new Date();
 
-    this.logger.log('Starting retention enforcement', {
-      enabledOrgs: policies.length,
-      dryRun,
-    });
+    this.logger.log(
+      {
+        enabledOrgs: policies.length,
+        dryRun,
+      },
+      'Starting retention enforcement',
+    );
 
     const perOrg: OrgRetentionResult[] = [];
     for (const policy of policies) {
@@ -62,12 +65,15 @@ export class EnforceRetentionUseCase {
       dryRun,
       perOrg,
     };
-    this.logger.log('Retention enforcement complete', {
-      orgsProcessed: result.orgsProcessed,
-      totalDeleted: result.totalDeleted,
-      totalFailed: result.totalFailed,
-      dryRun,
-    });
+    this.logger.log(
+      {
+        orgsProcessed: result.orgsProcessed,
+        totalDeleted: result.totalDeleted,
+        totalFailed: result.totalFailed,
+        dryRun,
+      },
+      'Retention enforcement complete',
+    );
     return result;
   }
 
@@ -95,12 +101,12 @@ export class EnforceRetentionUseCase {
     result.capReached = await this.drainExpiredThreads(policy, cutoff, result);
     if (result.capReached) {
       this.logger.warn(
-        'Retention batch cap reached; expired threads may remain for org',
         { maxBatches: MAX_BATCHES_PER_ORG, ...result },
+        'Retention batch cap reached; expired threads may remain for org',
       );
     }
 
-    this.logger.log('Retention enforced for org', { cutoff, ...result });
+    this.logger.log({ cutoff, ...result }, 'Retention enforced for org');
     return result;
   }
 
@@ -179,11 +185,14 @@ export class EnforceRetentionUseCase {
       } catch (error) {
         result.failed += 1;
         advance += 1;
-        this.logger.warn('Failed to delete expired thread', {
-          orgId,
-          threadId: ref.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.warn(
+          {
+            orgId,
+            threadId: ref.id,
+            err: error as Error,
+          },
+          'Failed to delete expired thread',
+        );
       }
     }
     return advance;

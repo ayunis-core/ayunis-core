@@ -1,12 +1,12 @@
 import {
   Controller,
   Get,
-  Logger,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
   Res,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
@@ -16,8 +16,8 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { DownloadMessageImageUseCase } from '../../application/use-cases/download-message-image/download-message-image.use-case';
-import { DownloadMessageImageQuery } from '../../application/use-cases/download-message-image/download-message-image.query';
+import { DownloadMessageImageUseCase } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.use-case';
+import { DownloadMessageImageQuery } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.query';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -45,7 +45,7 @@ export class MessageImagesController {
     @Param('index', ParseIntPipe) index: number,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.log('download', { threadId, messageId, index });
+    this.logger.log({ threadId, messageId, index }, 'download');
 
     const download = await this.downloadMessageImageUseCase.execute(
       new DownloadMessageImageQuery(threadId, messageId, index, userId),

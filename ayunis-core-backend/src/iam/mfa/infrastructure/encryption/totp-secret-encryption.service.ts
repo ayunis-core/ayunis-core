@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-encryption.port';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
 
 /**
  * Encrypts TOTP secrets at rest using AES-256-GCM.
@@ -13,6 +13,7 @@ import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-en
 @Injectable()
 export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
   private readonly logger = new Logger(TotpSecretEncryptionService.name);
+
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16;
   private readonly authTagLength = 16;
@@ -58,10 +59,13 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
       const combined = Buffer.concat([iv, encrypted, authTag]);
       return Promise.resolve(combined.toString('base64'));
     } catch (error) {
-      this.logger.error('Failed to encrypt TOTP secret', {
-        error: error as Error,
-      });
-      throw new Error('Failed to encrypt TOTP secret');
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to encrypt TOTP secret',
+      );
+      throw new Error('Failed to encrypt TOTP secret', { cause: error });
     }
   }
 
@@ -91,10 +95,13 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
 
       return Promise.resolve(decrypted.toString('utf8'));
     } catch (error) {
-      this.logger.error('Failed to decrypt TOTP secret', {
-        error: error as Error,
-      });
-      throw new Error('Failed to decrypt TOTP secret');
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to decrypt TOTP secret',
+      );
+      throw new Error('Failed to decrypt TOTP secret', { cause: error });
     }
   }
 }

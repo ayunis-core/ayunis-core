@@ -1,10 +1,12 @@
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { DeleteTeamCommand } from './delete-team.command';
-import { TeamNotFoundError } from '../../teams.errors';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Transactional } from '@nestjs-cls/transactional';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteTeamUseCase {
@@ -16,27 +18,27 @@ export class DeleteTeamUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(command: DeleteTeamCommand): Promise<void> {
-    const orgId = this.contextService.get('orgId');
+    const orgId = getRequiredOrgId(this.contextService, command.orgId);
 
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('execute', { teamId: command.teamId, orgId });
+    this.logger.log({ teamId: command.teamId, orgId }, 'execute');
 
     const team = await this.teamsRepository.findById(command.teamId);
     if (!team) {
-      this.logger.error('Team not found', { teamId: command.teamId });
+      this.logger.error({ teamId: command.teamId }, 'Team not found');
       throw new TeamNotFoundError(command.teamId);
     }
 
     if (team.orgId !== orgId) {
-      this.logger.error('Team does not belong to organization', {
-        teamId: command.teamId,
-        teamOrgId: team.orgId,
-        requestOrgId: orgId,
-      });
+      this.logger.error(
+        {
+          teamId: command.teamId,
+          teamOrgId: team.orgId,
+          requestOrgId: orgId,
+        },
+        'Team does not belong to organization',
+      );
       throw new TeamNotFoundError(command.teamId);
     }
 
@@ -46,6 +48,6 @@ export class DeleteTeamUseCase {
 
     await this.teamsRepository.delete(command.teamId);
 
-    this.logger.debug('Team deleted successfully', { teamId: command.teamId });
+    this.logger.debug({ teamId: command.teamId }, 'Team deleted successfully');
   }
 }

@@ -1,31 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
+  FileSource,
   TextSource,
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { KnowledgeBaseResponseDto } from '../dto/knowledge-base-response.dto';
-import type { KnowledgeBaseDocumentResponseDto } from '../dto/knowledge-base-document-response.dto';
+import type { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
+import type { KnowledgeBaseDocumentResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-document-response.dto';
 
 @Injectable()
 export class KnowledgeBaseDtoMapper {
-  toDto(entity: KnowledgeBase, isShared?: boolean): KnowledgeBaseResponseDto {
+  toDto(
+    entity: KnowledgeBase,
+    context: {
+      isActive: boolean;
+      isShared?: boolean;
+      documentCount: number;
+    },
+  ): KnowledgeBaseResponseDto {
     const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
+      ownerType:
+        entity instanceof PersonalKnowledgeBase ? 'personal' : 'workspace',
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      isActive: context.isActive,
+      documentCount: context.documentCount,
     };
-    if (isShared !== undefined) {
-      dto.isShared = isShared;
+    if (!(entity instanceof PersonalKnowledgeBase)) {
+      dto.workspaceId = entity.workspaceId;
+    }
+    if (context.isShared !== undefined) {
+      dto.isShared = context.isShared;
     }
     return dto;
-  }
-
-  toDtoArray(entities: KnowledgeBase[]): KnowledgeBaseResponseDto[] {
-    return entities.map((entity) => this.toDto(entity));
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {
@@ -47,8 +59,11 @@ export class KnowledgeBaseDtoMapper {
       dto.textType = source.textType;
     }
 
-    if (source instanceof UrlSource) {
-      dto.url = source.url;
+    if (
+      source instanceof UrlSource ||
+      (source instanceof FileSource && source.url)
+    ) {
+      dto.url = source.url ?? undefined;
     }
 
     return dto;

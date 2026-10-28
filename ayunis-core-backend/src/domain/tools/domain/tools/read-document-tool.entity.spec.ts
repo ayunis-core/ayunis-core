@@ -1,5 +1,5 @@
 import { ReadDocumentTool } from './read-document-tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 describe('ReadDocumentTool', () => {
   let tool: ReadDocumentTool;
@@ -28,6 +28,25 @@ describe('ReadDocumentTool', () => {
       const result = tool.validateParams(params);
 
       expect(result.artifact_id).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('should accept a paginated line request', () => {
+      const result = tool.validateParams({
+        artifact_id: '550e8400-e29b-41d4-a716-446655440000',
+        startLine: 201,
+        numLines: 50,
+      });
+
+      expect(result).toMatchObject({ startLine: 201, numLines: 50 });
+    });
+
+    it('should reject requests for more than 200 lines', () => {
+      expect(() =>
+        tool.validateParams({
+          artifact_id: '550e8400-e29b-41d4-a716-446655440000',
+          numLines: 201,
+        }),
+      ).toThrow(/must be <= 200/);
     });
 
     it('should reject parameters missing artifact_id', () => {

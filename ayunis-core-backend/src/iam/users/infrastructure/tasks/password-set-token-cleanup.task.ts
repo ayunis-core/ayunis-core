@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PasswordSetTokensRepository } from '../../application/ports/password-set-tokens.repository';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
 
 /**
  * Nightly job that deletes expired or already-used password-set tokens. Runs at
@@ -10,6 +10,7 @@ import { PasswordSetTokensRepository } from '../../application/ports/password-se
 @Injectable()
 export class PasswordSetTokenCleanupTask {
   private readonly logger = new Logger(PasswordSetTokenCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -31,13 +32,16 @@ export class PasswordSetTokenCleanupTask {
     try {
       const deleted =
         await this.passwordSetTokensRepository.deleteExpiredOrUsed(new Date());
-      this.logger.log('Scheduled password-set-token cleanup completed', {
-        deleted,
-      });
+      this.logger.log(
+        {
+          deleted,
+        },
+        'Scheduled password-set-token cleanup completed',
+      );
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled password-set-token cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

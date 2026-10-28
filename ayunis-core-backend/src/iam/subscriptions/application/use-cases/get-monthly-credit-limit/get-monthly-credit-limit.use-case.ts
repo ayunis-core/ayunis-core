@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { isActive } from '../../util/is-active';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Returns the monthly credit limit for an organization's active usage-based
@@ -30,9 +30,12 @@ export class GetMonthlyCreditLimitUseCase {
         .find(isUsageBased);
 
       if (!usageSubscription) {
-        this.logger.debug('No active usage-based subscription found', {
-          orgId: query.orgId,
-        });
+        this.logger.debug(
+          {
+            orgId: query.orgId,
+          },
+          'No active usage-based subscription found',
+        );
         return { monthlyCredits: null, startsAt: null };
       }
 
@@ -42,7 +45,10 @@ export class GetMonthlyCreditLimitUseCase {
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit limit', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to get monthly credit limit',
+      );
       throw new UnexpectedSubscriptionError((error as Error).message, {
         orgId: query.orgId,
       });

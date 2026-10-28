@@ -12,9 +12,9 @@ import type {
   StepStatus,
   ToolTimelineStep,
   RichToolRunBlock,
-} from '../model/types';
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
 import {
-  getArtifactMutationFamily,
+  getArtifactToolFamily,
   getArtifactToolTarget,
   isRichTool,
 } from './tool-classification';
@@ -242,16 +242,13 @@ function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
 }
 
 /**
- * Repeated mutations of the same artifact (e.g. six edit_document calls in a
- * row) share one rich-tool block, so the chat shows a single widget with the
- * latest state instead of one widget per call (AYC-476). The backward search
- * deliberately skips ALL activity blocks — thinking as well as ordinary tool
- * calls like read_document that the model interleaves with its edits — because
- * stopping at them would re-split the widget in the common read/edit loop.
- * Only non-activity blocks end the search: assistant prose (and another
- * artifact's widget) legitimately separates widgets.
+ * Repeated operations on the same artifact (e.g. an edit/read/edit loop) share
+ * one rich-tool block, so the chat shows a single widget with the latest state
+ * instead of one widget per call (AYC-476). The backward search deliberately
+ * skips activity blocks because thinking and unrelated tool calls should not
+ * re-split that widget. Assistant prose and another artifact's widget do.
  *
- * A mutation call whose arguments are still streaming has no parseable
+ * An artifact call whose arguments are still streaming has no parseable
  * artifact_id yet, so it merges optimistically into a preceding block of the
  * same family. Once the arguments parse, the next grouping pass re-evaluates:
  * the common same-artifact case stays merged, a different artifact splits out
@@ -284,7 +281,7 @@ function getMergeCriteria(
   const target = getArtifactToolTarget(toolUse);
   if (target) return target;
   if (toolUse.stream?.status !== 'streaming') return null;
-  const family = getArtifactMutationFamily(toolUse.name);
+  const family = getArtifactToolFamily(toolUse.name);
   return family ? { family, artifactId: null } : null;
 }
 

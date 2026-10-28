@@ -4,10 +4,10 @@ import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-c
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import type { AnonymizationResult } from 'src/common/anonymization/application/ports/anonymization.port';
-import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
-import { UnexpectedAnonymizationSettingsError } from '../../anonymization-settings.errors';
-import { GetGlobalPiiWhitelistUseCase } from '../get-global-pii-whitelist/get-global-pii-whitelist.use-case';
-import { toWhitelistEntry } from '../../../domain/global-word-whitelist-entry';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
+import { UnexpectedAnonymizationSettingsError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
+import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
 import type { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
 
 /**
@@ -28,7 +28,7 @@ export class AnonymizeTextForOrgUseCase {
   async execute(
     command: AnonymizeTextForOrgCommand,
   ): Promise<AnonymizationResult> {
-    this.logger.debug('Anonymizing text for org', { orgId: command.orgId });
+    this.logger.debug({ orgId: command.orgId }, 'Anonymizing text for org');
 
     try {
       const entries = await this.repository.findByOrgId(command.orgId);
@@ -46,10 +46,13 @@ export class AnonymizeTextForOrgUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to anonymize text for org', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to anonymize text for org',
+      );
 
       throw new UnexpectedAnonymizationSettingsError('anonymize', {
         orgId: command.orgId,

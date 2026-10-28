@@ -8,11 +8,9 @@ import {
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
   getTeamsControllerListMyTeamsQueryKey,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateSkillShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { SkillPage } from '@/pages/skill';
 import { z } from 'zod';
 
@@ -54,24 +52,17 @@ export const Route = createFileRoute('/_authenticated/skills/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
-    if (!featureToggles.skillsEnabled) {
-      throw redirect({ to: '/chat' });
-    }
-    const skill = await queryClient.fetchQuery(skillQueryOptions(id));
-    const isEmbeddingModelEnabled = await queryClient.fetchQuery(
+    const skill = await queryClient.query(skillQueryOptions(id));
+    const isEmbeddingModelEnabled = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
     // Only query shares and user teams if the user owns the skill (not shared)
     const shares = skill.isShared
       ? []
-      : await queryClient.fetchQuery(sharesQueryOptions(id));
+      : await queryClient.query(sharesQueryOptions(id));
     const userTeams = skill.isShared
       ? []
-      : await queryClient.fetchQuery(userTeamsQueryOptions());
+      : await queryClient.query(userTeamsQueryOptions());
     return { skill, isEmbeddingModelEnabled, shares, userTeams };
   },
 });

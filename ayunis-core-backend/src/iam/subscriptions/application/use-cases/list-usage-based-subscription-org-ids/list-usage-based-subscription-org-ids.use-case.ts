@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Lists the ids of all orgs holding an active usage-based subscription — the
@@ -27,8 +27,8 @@ export class ListUsageBasedSubscriptionOrgIdsUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(
+        { err: error as Error },
         'Failed to list orgs with usage-based subscriptions',
-        error,
       );
       throw new UnexpectedSubscriptionError((error as Error).message);
     }

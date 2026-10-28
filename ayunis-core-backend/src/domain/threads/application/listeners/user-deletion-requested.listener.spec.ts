@@ -1,9 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { ThreadsUserDeletionRequestedListener } from './user-deletion-requested.listener';
-import { ThreadsRepository } from '../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 
@@ -33,8 +33,6 @@ describe('ThreadsUserDeletionRequestedListener', () => {
     }).compile();
 
     listener = module.get(ThreadsUserDeletionRequestedListener);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

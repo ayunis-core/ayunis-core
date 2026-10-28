@@ -1,11 +1,17 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
-import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { OrgUnauthorizedError } from '../../orgs.errors';
+import {
+  getUserContext,
+  isSuperAdmin,
+} from 'src/common/context/required-context';
+import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SuperAdminOrgList } from 'src/iam/orgs/application/models/super-admin-org-list';
+import type { SuperAdminOrgOverview } from 'src/iam/orgs/application/models/super-admin-org-overview';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
@@ -16,29 +22,49 @@ export class SuperAdminGetAllOrgsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
-    this.logger.log('superAdminGetAllOrgs', {
-      limit: query.limit,
-      offset: query.offset,
-      search: query.search,
-    });
-
-    const systemRole = this.contextService.get('systemRole');
-    if (systemRole !== SystemRole.SUPER_ADMIN) {
-      this.logger.warn('Non-super admin attempted to list all orgs', {
-        systemRole,
-      });
-      throw new OrgUnauthorizedError('Super admin privileges required');
-    }
-
-    return this.orgsRepository.findAllForSuperAdmin(
+  @HandleUnexpectedErrors(UnexpectedOrgError)
+  async execute(query: SuperAdminGetAllOrgsQuery): Promise<SuperAdminOrgList> {
+    this.logger.log(
       {
         limit: query.limit,
         offset: query.offset,
+        text: query.search,
       },
-      {
-        search: query.search,
-      },
+      'superAdminGetAllOrgs',
     );
+
+    if (!isSuperAdmin(this.contextService)) {
+      this.logger.warn(
+        {
+          systemRole: getUserContext(this.contextService)?.systemRole,
+        },
+        'Non-super admin attempted to list all orgs',
+      );
+      throw new OrgUnauthorizedError('Super admin privileges required');
+    }
+
+    const [page, lifecycleCounts] = await Promise.all([
+      this.orgsRepository.findAllForSuperAdmin(
+        { limit: query.limit, offset: query.offset },
+        { search: query.search, lifecycle: query.lifecycle },
+      ),
+      this.orgsRepository.countByLifecycleStatus(query.search),
+    ]);
+
+    const statuses = await this.orgsRepository.findLifecycleStatuses(
+      page.data.map((org) => org.id),
+    );
+    return {
+      page: new Paginated<SuperAdminOrgOverview>({
+        data: page.data.map((org) => ({
+          org,
+          lifecycleStatus: statuses.get(org.id) ?? 'no-plan',
+        })),
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      }),
+      lifecycleCounts,
+    };
   }
 }

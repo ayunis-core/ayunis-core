@@ -10,9 +10,9 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { AddonType } from '../../domain/value-objects/addon-type.enum';
-import { ListOrgAddonsUseCase } from '../../application/use-cases/list-org-addons/list-org-addons.use-case';
-import { ListOrgAddonsQuery } from '../../application/use-cases/list-org-addons/list-org-addons.query';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
+import { ListOrgAddonsUseCase } from 'src/iam/addons/application/use-cases/list-org-addons/list-org-addons.use-case';
+import { ListOrgAddonsQuery } from 'src/iam/addons/application/use-cases/list-org-addons/list-org-addons.query';
 import { AddonStatusResponseDto } from './dto/addon-status-response.dto';
 
 @ApiTags('Addons')
@@ -32,7 +32,7 @@ export class AddonsController {
   async list(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<AddonStatusResponseDto[]> {
-    this.logger.log('list', { orgId });
+    this.logger.log({ orgId }, 'list');
 
     const statuses = await this.listOrgAddonsUseCase.execute(
       new ListOrgAddonsQuery(orgId),

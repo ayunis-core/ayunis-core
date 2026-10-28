@@ -1,13 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateDocumentToolHandler } from './update-document-tool.handler';
 import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
-import { UpdateDocumentTool } from '../../domain/tools/update-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
 
 describe('UpdateDocumentToolHandler', () => {
@@ -34,9 +33,6 @@ describe('UpdateDocumentToolHandler', () => {
     }).compile();
 
     handler = module.get<UpdateDocumentToolHandler>(UpdateDocumentToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

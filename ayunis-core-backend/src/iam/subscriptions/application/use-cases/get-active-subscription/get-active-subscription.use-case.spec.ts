@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { GetActiveSubscriptionUseCase } from './get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -20,7 +19,7 @@ import {
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
   UnauthorizedSubscriptionAccessError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -102,11 +101,6 @@ describe('GetActiveSubscriptionUseCase', () => {
     getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -115,6 +109,7 @@ describe('GetActiveSubscriptionUseCase', () => {
 
   function setupSuperAdminContext(): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.USER;
       if (key === 'orgId') return randomUUID();
@@ -124,6 +119,7 @@ describe('GetActiveSubscriptionUseCase', () => {
 
   function setupOrgAdminContext(contextOrgId: UUID): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return contextOrgId;
@@ -153,6 +149,7 @@ describe('GetActiveSubscriptionUseCase', () => {
   describe('authorization', () => {
     it('should throw UnauthorizedSubscriptionAccessError when user is not super admin or org admin', async () => {
       contextService.get.mockImplementation(((key: string) => {
+        if (key === 'userId') return requestingUserId;
         if (key === 'systemRole') return SystemRole.CUSTOMER;
         if (key === 'role') return UserRole.USER;
         if (key === 'orgId') return orgId;
@@ -202,6 +199,36 @@ describe('GetActiveSubscriptionUseCase', () => {
   });
 
   describe('seat-based subscription', () => {
+    it('runs seat queries sequentially on the transactional connection', async () => {
+      setupSuperAdminContext();
+      subscriptionRepository.findByOrgId.mockResolvedValue([
+        createSeatBasedSubscription(orgId),
+      ]);
+      let resolveInvites!: (value: Paginated<never>) => void;
+      getInvitesByOrgUseCase.execute.mockReturnValue(
+        new Promise((resolve) => {
+          resolveInvites = resolve;
+        }),
+      );
+      findUsersByOrgIdUseCase.execute.mockResolvedValue(
+        new Paginated({ data: [], limit: 1000, offset: 0, total: 2 }),
+      );
+
+      const result = useCase.execute(
+        new GetActiveSubscriptionQuery({ orgId, requestingUserId }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(getInvitesByOrgUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(findUsersByOrgIdUseCase.execute).not.toHaveBeenCalled();
+
+      resolveInvites(
+        new Paginated({ data: [], limit: 1000, offset: 0, total: 1 }),
+      );
+      await expect(result).resolves.toMatchObject({ availableSeats: 7 });
+      expect(findUsersByOrgIdUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+
     it('should return subscription with computed available seats', async () => {
       setupSuperAdminContext();
       const subscription = createSeatBasedSubscription(orgId, {

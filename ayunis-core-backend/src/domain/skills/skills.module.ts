@@ -1,25 +1,29 @@
+import { ActivateWorkspaceSkillByNameUseCase } from './application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SourcesModule } from '../sources/sources.module';
-import { McpModule } from '../mcp/mcp.module';
-import { MarketplaceModule } from '../marketplace/marketplace.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { McpModule } from 'src/domain/mcp/mcp.module';
+import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { LocalSkillRepositoryModule } from './infrastructure/persistence/local/local-skill-repository.module';
 import { LocalSkillRepository } from './infrastructure/persistence/local/local-skill.repository';
 import { SkillRepository } from './application/ports/skill.repository';
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
 import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
-import { McpIntegrationRecord } from '../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from '../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
-import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
 // Use Cases
 import { CreateSkillUseCase } from './application/use-cases/create-skill/create-skill.use-case';
 import { UpdateSkillUseCase } from './application/use-cases/update-skill/update-skill.use-case';
 import { DeleteSkillUseCase } from './application/use-cases/delete-skill/delete-skill.use-case';
 import { FindOneSkillUseCase } from './application/use-cases/find-one-skill/find-one-skill.use-case';
-import { FindAllSkillsUseCase } from './application/use-cases/find-all-skills/find-all-skills.use-case';
-import { ToggleSkillActiveUseCase } from './application/use-cases/toggle-skill-active/toggle-skill-active.use-case';
-import { ToggleSkillPinnedUseCase } from './application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
+import { FindInstalledMarketplaceSkillUseCase } from './application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.use-case';
+import { ListAccessibleSkillsUseCase } from './application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
+import { SetSkillActivationUseCase } from './application/use-cases/set-skill-activation/set-skill-activation.use-case';
+import { SetSkillPinUseCase } from './application/use-cases/set-skill-pin/set-skill-pin.use-case';
 import { FindActiveSkillsUseCase } from './application/use-cases/find-active-skills/find-active-skills.use-case';
 import { AddSourceToSkillUseCase } from './application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import { AddFileSourceToSkillUseCase } from './application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
@@ -35,26 +39,37 @@ import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-na
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from './application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
+import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from './application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
+import { GetSkillsByIdsUseCase } from './application/use-cases/get-skills-by-ids/get-skills-by-ids.use-case';
 
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
-import { SkillAccessService } from './application/services/skill-access.service';
+import { FindActivatableSkillUseCase } from './application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
+import { SkillAuthorizationService } from './application/services/skill-authorization.service';
+import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { SkillActivationService } from './application/services/skill-activation.service';
 import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
+import { SkillTextModelResolver } from './application/services/skill-text-model-resolver.service';
+import { ImproveSkillTextUseCase } from './application/use-cases/improve-skill-text/improve-skill-text.use-case';
+import { UsageModule } from 'src/domain/usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
+import { ModelsModule } from 'src/domain/models/models.module';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { UserCreatedListener } from './application/listeners/user-created.listener';
+import { SkillsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
 
 // Strategies
 import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
-import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
-import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
+import { getShareAuthStrategyToken } from 'src/domain/shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
 // Shares
-import { SharesModule } from '../shares/shares.module';
+import { SharesModule } from 'src/domain/shares/shares.module';
 
-import { ThreadsModule } from '../threads/threads.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { UsersModule } from 'src/iam/users/users.module';
 
 // Presenters
@@ -63,8 +78,8 @@ import { SkillSourcesController } from './presenters/http/skill-sources.controll
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
 import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
-import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
-import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
+import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
 @Module({
   imports: [
@@ -82,25 +97,37 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     UsersModule,
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
+    forwardRef(() => WorkspacesModule),
+    PermissionsModule,
+    forwardRef(() => ModelsModule),
+    QuotasModule,
+    UsageModule,
+    TrialsModule,
   ],
   providers: [
+    ActivateWorkspaceSkillByNameUseCase,
+    GetWorkspaceSkillsUseCase,
     {
       provide: SkillRepository,
       useClass: LocalSkillRepository,
     },
     // Services
-    SkillAccessService,
+    SkillAuthorizationService,
+    FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,
+    SkillTextModelResolver,
+    ImproveSkillTextUseCase,
 
     // Use Cases
     CreateSkillUseCase,
     UpdateSkillUseCase,
     DeleteSkillUseCase,
     FindOneSkillUseCase,
-    FindAllSkillsUseCase,
-    ToggleSkillActiveUseCase,
-    ToggleSkillPinnedUseCase,
+    FindInstalledMarketplaceSkillUseCase,
+    ListAccessibleSkillsUseCase,
+    SetSkillActivationUseCase,
+    SetSkillPinUseCase,
     FindActiveSkillsUseCase,
     AddSourceToSkillUseCase,
     AddFileSourceToSkillUseCase,
@@ -116,6 +143,8 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     InstallSkillFromMarketplaceUseCase,
     CreateSkillWithUniqueNameUseCase,
     CheckKnowledgeBaseSkillShareAccessUseCase,
+    FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
+    GetSkillsByIdsUseCase,
 
     // Services
     MarketplaceSkillInstallationService,
@@ -123,6 +152,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     // Listeners
     ShareDeletedListener,
     UserCreatedListener,
+    SkillsWorkspaceDeletionRequestedListener,
 
     // Strategies
     SkillShareAuthorizationStrategy,
@@ -143,17 +173,18 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     SkillKnowledgeBasesController,
   ],
   exports: [
+    ActivateWorkspaceSkillByNameUseCase,
+    GetWorkspaceSkillsUseCase,
     SkillRepository,
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,
-    AddSourceToSkillUseCase,
     FindSkillByNameUseCase,
-    SkillAccessService,
     SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),
     CreateSkillWithUniqueNameUseCase,
     CheckKnowledgeBaseSkillShareAccessUseCase,
+    FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
   ],
 })
 export class SkillsModule {}

@@ -1,9 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { FindAllSkillTemplatesUseCase } from './find-all-skill-templates.use-case';
 import { FindAllSkillTemplatesQuery } from './find-all-skill-templates.query';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 
@@ -27,9 +27,6 @@ describe('FindAllSkillTemplatesUseCase', () => {
       FindAllSkillTemplatesUseCase,
     );
     repository = module.get(SkillTemplateRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

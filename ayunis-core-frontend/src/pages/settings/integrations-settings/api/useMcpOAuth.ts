@@ -7,6 +7,7 @@ import {
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import handleMcpOAuthAuthorizeError from '@/pages/settings/integrations-settings/lib/handle-mcp-oauth-authorize-error';
 
 export function useAuthorizeMcpOAuth() {
   const { t } = useTranslation('settings');
@@ -15,18 +16,7 @@ export function useAuthorizeMcpOAuth() {
     onSuccess: ({ authorizationUrl }) => {
       window.location.assign(authorizationUrl);
     },
-    onError: (error) => {
-      try {
-        const { code } = extractErrorData(error);
-        if (code === 'MCP_INTEGRATION_NOT_FOUND') {
-          showError(t('integrations.oauth.notFound'));
-          return;
-        }
-        showError(t('integrations.oauth.connectError'));
-      } catch {
-        showError(t('integrations.oauth.connectError'));
-      }
-    },
+    onError: (error) => handleMcpOAuthAuthorizeError(error, t),
   });
 }
 
@@ -34,7 +24,7 @@ export function useDisconnectMcpOAuth() {
   const { t } = useTranslation('settings');
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: mcpIntegrationsControllerDisconnectOAuth,
+    mutationFn: (id: string) => mcpIntegrationsControllerDisconnectOAuth(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),

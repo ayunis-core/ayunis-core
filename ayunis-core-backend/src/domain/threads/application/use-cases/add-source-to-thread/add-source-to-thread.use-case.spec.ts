@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
@@ -12,7 +12,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { AddSourceToThreadUseCase } from './add-source-to-thread.use-case';
 import { AddSourceCommand } from './add-source.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
@@ -21,7 +21,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import {
   SourceAdditionError,
   SourceAlreadyAssignedError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 
 class ConcreteSource extends Source {
   constructor(params: { id?: UUID; name: string }) {
@@ -64,9 +64,6 @@ describe('AddSourceToThreadUseCase', () => {
 
     useCase = module.get<AddSourceToThreadUseCase>(AddSourceToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

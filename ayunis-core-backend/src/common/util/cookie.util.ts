@@ -38,15 +38,19 @@ function buildCookieOptions(configService: ConfigService): CookieOptions {
 
 function getCookieNames(configService: ConfigService): CookieNames {
   return {
-    accessTokenName: configService.get<string>(
-      'auth.cookie.accessTokenName',
-      'access_token',
-    ),
+    accessTokenName: getAccessTokenCookieName(configService),
     refreshTokenName: configService.get<string>(
       'auth.cookie.refreshTokenName',
       'refresh_token',
     ),
   };
+}
+
+export function getAccessTokenCookieName(configService: ConfigService): string {
+  return configService.get<string>(
+    'auth.cookie.accessTokenName',
+    'access_token',
+  );
 }
 
 export function setCookies(
@@ -58,14 +62,17 @@ export function setCookies(
   const baseOptions = buildCookieOptions(configService);
   const { accessTokenName, refreshTokenName } = getCookieNames(configService);
 
-  logger.debug('Setting cookies with options:', {
-    accessTokenName,
-    domain: baseOptions.domain ?? 'undefined (browser default)',
-    secure: baseOptions.secure,
-    sameSite: baseOptions.sameSite,
-    httpOnly: baseOptions.httpOnly,
-    includeRefreshToken,
-  });
+  logger.debug(
+    {
+      accessTokenName,
+      domain: baseOptions.domain ?? 'undefined (browser default)',
+      secure: baseOptions.secure,
+      sameSite: baseOptions.sameSite,
+      httpOnly: baseOptions.httpOnly,
+      includeRefreshToken,
+    },
+    'Setting cookies with options',
+  );
 
   response.cookie(accessTokenName, tokens.access_token, {
     ...baseOptions,

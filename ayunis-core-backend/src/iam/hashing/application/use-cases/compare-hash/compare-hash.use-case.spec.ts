@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CompareHashUseCase } from './compare-hash.use-case';
 import { CompareHashCommand } from './compare-hash.command';
-import { HashingHandler } from '../../ports/hashing.handler';
-import { ComparisonFailedError } from '../../hashing.errors';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
+import { ComparisonFailedError } from 'src/iam/hashing/application/hashing.errors';
 
 describe('CompareHashUseCase', () => {
   let useCase: CompareHashUseCase;

@@ -1,20 +1,21 @@
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { QueryKnowledgeBaseUseCase } from './query-knowledge-base.use-case';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import type { UUID } from 'crypto';
 
@@ -24,7 +25,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   let mockFindChunks: jest.Mocked<FindContentChunksByIdsUseCase>;
   let mockSearchContent: jest.Mocked<SearchContentUseCase>;
   let mockContextService: Partial<ContextService>;
-  let mockAccessService: jest.Mocked<KnowledgeBaseAccessService>;
+  let mockFindKnowledgeBaseForThread: jest.Mocked<FindKnowledgeBaseForThreadUseCase>;
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -36,13 +37,26 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockKbRepo = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findAllOwnedByUserId: jest.fn(),
+      findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourcesByKnowledgeBaseIds: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      activate: jest.fn(),
+      deactivate: jest.fn(),
+      isActive: jest.fn(),
+      getActiveIds: jest.fn(),
+      activateForWorkspace: jest.fn(),
+      deactivateForWorkspace: jest.fn(),
+      getWorkspaceStates: jest.fn(),
+      findActiveAccessible: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     mockFindChunks = {
@@ -54,12 +68,9 @@ describe('QueryKnowledgeBaseUseCase', () => {
       executeMulti: jest.fn(),
     } as unknown as jest.Mocked<SearchContentUseCase>;
 
-    mockAccessService = {
-      findAccessibleKnowledgeBase: jest.fn(),
-      findOneAccessible: jest.fn(),
-      resolveIsShared: jest.fn(),
-      findAllAccessible: jest.fn(),
-    } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
+    mockFindKnowledgeBaseForThread = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindKnowledgeBaseForThreadUseCase>;
 
     mockContextService = {
       get: jest.fn().mockReturnValue(orgId),
@@ -73,8 +84,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
         { provide: SearchContentUseCase, useValue: mockSearchContent },
         { provide: ContextService, useValue: mockContextService },
         {
-          provide: KnowledgeBaseAccessService,
-          useValue: mockAccessService,
+          provide: FindKnowledgeBaseForThreadUseCase,
+          useValue: mockFindKnowledgeBaseForThread,
         },
       ],
     }).compile();
@@ -83,7 +94,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should return matching chunks with source provenance', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,
@@ -108,11 +119,16 @@ describe('QueryKnowledgeBaseUseCase', () => {
       relatedChunkId: chunkId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
     mockFindChunks.execute.mockResolvedValue([
-      { chunk, sourceId, sourceName: 'Haushaltssatzung_2025.pdf' },
+      {
+        chunk,
+        sourceId,
+        sourceName: 'Haushaltssatzung_2025.pdf',
+        sourceCreatedBy: SourceCreator.USER,
+      },
     ]);
 
     const query = new QueryKnowledgeBaseQuery({
@@ -140,7 +156,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should fetch chunks by ID instead of loading full sources', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,
@@ -165,11 +181,16 @@ describe('QueryKnowledgeBaseUseCase', () => {
       relatedChunkId: chunkId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
     mockFindChunks.execute.mockResolvedValue([
-      { chunk, sourceId, sourceName: 'Bebauungsplan_42.pdf' },
+      {
+        chunk,
+        sourceId,
+        sourceName: 'Bebauungsplan_42.pdf',
+        sourceCreatedBy: SourceCreator.USER,
+      },
     ]);
 
     const query = new QueryKnowledgeBaseQuery({
@@ -185,14 +206,14 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should return empty results when knowledge base has no documents', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Leere Wissenssammlung',
       orgId,
       userId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
@@ -208,7 +229,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
-    mockAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(kbId),
     );
 
@@ -224,7 +245,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB is not owned or shared', async () => {
-    mockAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(kbId),
     );
 
@@ -241,14 +262,14 @@ describe('QueryKnowledgeBaseUseCase', () => {
 
   it('should allow querying a shared knowledge base', async () => {
     const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
-    const sharedKb = new KnowledgeBase({
+    const sharedKb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Geteilte Wissenssammlung',
       orgId,
       userId: otherUserId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(sharedKb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(sharedKb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
@@ -260,21 +281,22 @@ describe('QueryKnowledgeBaseUseCase', () => {
     const results = await useCase.execute(query);
 
     expect(results).toEqual([]);
-    expect(mockAccessService.findAccessibleKnowledgeBase).toHaveBeenCalledWith(
-      kbId,
-    );
+    expect(mockFindKnowledgeBaseForThread.execute).toHaveBeenCalledWith({
+      knowledgeBaseId: kbId,
+      threadId: undefined,
+    });
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB belongs to another org', async () => {
     const otherOrgId = '77777777-7777-7777-7777-777777777777' as UUID;
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Fremde Organisation Wissenssammlung',
       orgId: otherOrgId,
       userId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
 
     const query = new QueryKnowledgeBaseQuery({
       knowledgeBaseId: kbId,
@@ -288,7 +310,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should skip index entries where chunk is not found in DB', async () => {
-    const kb = new KnowledgeBase({
+    const kb = new PersonalKnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
       orgId,
@@ -307,7 +329,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
       relatedChunkId: chunkId,
     });
 
-    mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
+    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
     // Chunk not found in DB
@@ -325,7 +347,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   });
 
   it('should wrap unexpected errors in UnexpectedKnowledgeBaseError', async () => {
-    mockAccessService.findAccessibleKnowledgeBase.mockRejectedValue(
+    mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new Error('database connection lost'),
     );
 

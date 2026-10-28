@@ -1,587 +1,382 @@
-import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { RunAnonymizationUnavailableError } from '../runs.errors';
-import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { randomUUID } from 'crypto';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
-import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
-import type { ContextService } from 'src/common/context/services/context.service';
-import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import { ToolResultCollectorService } from './tool-result-collector.service';
-import { randomUUID } from 'crypto';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import { MAX_ANONYMOUS_TOOL_RESULT_LENGTH } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 
-// --- Helpers ---
+const orgId = randomUUID();
+const userId = randomUUID();
 
-class MockTool extends Tool {
-  constructor(name: string, type: ToolType) {
+class BackendTestTool extends Tool {
+  constructor(
+    name: string,
+    private readonly pii = false,
+  ) {
     super({
       name,
-      description: 'mock',
-      parameters: {},
-      type,
+      description: 'Retrieve municipal information',
+      parameters: { type: 'object' },
+      type: ToolType.HTTP,
     });
   }
-  validateParams(params: Record<string, any>): any {
+
+  validateParams(params: Record<string, unknown>): Record<string, unknown> {
     return params;
   }
+
   get returnsPii(): boolean {
-    return false;
+    return this.pii;
   }
 }
 
-function makeToolUseContent(
+function toolUse(
   id: string,
   name: string,
-  params: Record<string, any> = {},
+  params: Record<string, unknown> = {},
 ): ToolUseMessageContent {
   return Object.assign(Object.create(ToolUseMessageContent.prototype), {
     id,
     name,
     params,
     type: MessageContentType.TOOL_USE,
-  });
+  }) as ToolUseMessageContent;
 }
 
-function makeThread(toolUseContents: ToolUseMessageContent[]): Thread {
-  const msg = {
-    content: toolUseContents,
-  } as AssistantMessage;
+function threadWith(...contents: ToolUseMessageContent[]): Thread {
+  const message = { content: contents } as AssistantMessage;
   return {
     id: randomUUID(),
-    getLastMessage: () => msg,
+    getLastMessage: () => message,
   } as unknown as Thread;
 }
 
-describe('ToolResultCollectorService', () => {
-  let service: ToolResultCollectorService;
-  let executeToolUseCase: jest.Mocked<ExecuteToolUseCase>;
-  let checkToolCapabilitiesUseCase: jest.Mocked<CheckToolCapabilitiesUseCase>;
-  let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
-  let contextService: jest.Mocked<ContextService>;
+function mcpTool(
+  upstreamName: string,
+  integrationName: string,
+): McpIntegrationTool {
+  return new McpIntegrationTool(
+    new McpTool(
+      upstreamName,
+      'Upstream tool',
+      { type: 'object' },
+      randomUUID(),
+    ),
+    false,
+    integrationName,
+    null,
+  );
+}
 
-  const orgId = randomUUID();
-  const threadId = randomUUID();
-  const toolUseId = randomUUID();
+function chartParams(): Record<string, unknown> {
+  return {
+    chartTitle: 'Municipal budget',
+    xAxis: ['2025', '2026'],
+    yAxis: [{ label: 'Budget', values: [42, 48] }],
+    insight: 'The proposed budget increases in 2026.',
+  };
+}
+
+describe('ToolResultCollectorService', () => {
+  let executeTool: jest.Mock;
+  let anonymize: jest.Mock;
+  let emitAsync: jest.Mock;
+  let service: ToolResultCollectorService;
 
   beforeEach(() => {
-    executeToolUseCase = {
-      execute: jest.fn().mockResolvedValue('executed'),
-    } as unknown as jest.Mocked<ExecuteToolUseCase>;
-
-    checkToolCapabilitiesUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<CheckToolCapabilitiesUseCase>;
-
-    anonymizeTextForThreadUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextForThreadUseCase>;
-
-    contextService = {
-      get: jest.fn().mockReturnValue(randomUUID()),
-    } as unknown as jest.Mocked<ContextService>;
-
-    const mockEventEmitter = {
-      emitAsync: jest.fn().mockResolvedValue([]),
-    };
-
+    executeTool = jest.fn().mockResolvedValue('backend result');
+    anonymize = jest.fn();
+    emitAsync = jest.fn().mockResolvedValue([]);
     service = new ToolResultCollectorService(
-      executeToolUseCase,
-      checkToolCapabilitiesUseCase,
-      anonymizeTextForThreadUseCase,
-      contextService,
-      mockEventEmitter as never,
+      { execute: executeTool } as unknown as ExecuteToolUseCase,
+      { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
+      { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
+      { emitAsync } as never,
     );
   });
 
-  describe('collectToolResults — hybrid tools', () => {
-    it('should call handleDisplayableTool and NOT executeBackendTool for displayable-only tool', async () => {
-      const tool = new MockTool('send_email', ToolType.SEND_EMAIL);
-      const toolUse = makeToolUseContent('tu-1', 'send_email');
-      const thread = makeThread([toolUse]);
+  it('acknowledges a chart without backend execution', async () => {
+    const chart = new BarChartTool();
+    const thread = threadWith(toolUse('chart-1', chart.name, chartParams()));
 
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
+    const result = await collect(service, thread, [chart]);
 
-      const { contents: results } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(results).toHaveLength(1);
-      expect(results[0].result).toBe('Tool has been displayed successfully');
-      expect(executeToolUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should call executeBackendTool and NOT handleDisplayableTool for executable-only tool', async () => {
-      const tool = new MockTool('http_tool', ToolType.HTTP);
-      const toolUse = makeToolUseContent('tu-2', 'http_tool', { url: 'x' });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: false,
-        isExecutable: true,
-      });
-
-      executeToolUseCase.execute.mockResolvedValue('backend result');
-
-      const { contents: results } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(results).toHaveLength(1);
-      expect(results[0].result).toBe('backend result');
-      expect(executeToolUseCase.execute).toHaveBeenCalledTimes(1);
-    });
-
-    it('should call executeBackendTool first then return displayable result for hybrid tool', async () => {
-      const tool = new MockTool('create_document', ToolType.CREATE_DOCUMENT);
-      const toolUse = makeToolUseContent('tu-3', 'create_document', {
-        title: 'Doc',
-        content: '<p>hi</p>',
-      });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: true,
-      });
-
-      executeToolUseCase.execute.mockResolvedValue('artifact created');
-
-      const { contents: results } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      // Side effect: executeBackendTool was called
-      expect(executeToolUseCase.execute).toHaveBeenCalledTimes(1);
-      // But the result returned to LLM is the displayable result
-      expect(results).toHaveLength(1);
-      expect(results[0].result).toBe('Tool has been displayed successfully');
-    });
-
-    it('should return execution error to LLM when hybrid tool execution fails', async () => {
-      const tool = new MockTool('create_document', ToolType.CREATE_DOCUMENT);
-      const toolUse = makeToolUseContent('tu-5', 'create_document', {
-        title: 'Doc',
-        content: '<p>hi</p>',
-      });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: true,
-      });
-
-      executeToolUseCase.execute.mockRejectedValue(
-        new Error('DB constraint violation'),
-      );
-
-      const { contents: results } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(results).toHaveLength(1);
-      expect(results[0].result).toBe(
-        "The tool didn't provide any result due to an unknown error",
-      );
-      expect(results[0].result).not.toBe(
-        'Tool has been displayed successfully',
-      );
-    });
+    expect(result.contents[0].result).toBe(
+      'Tool has been displayed successfully',
+    );
+    expect(executeTool).not.toHaveBeenCalled();
   });
 
-  describe('display-only param validation (AYC-675)', () => {
-    class InvalidParamsTool extends MockTool {
-      validateParams(): never {
-        throw new Error(
-          "Invalid parameters: parameter 'start' must be a valid ISO 8601 date-time",
-        );
-      }
-    }
+  it('executes a backend tool once and exposes its result', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
 
-    it('should return an error result and succeeded=false when display-only params are invalid', async () => {
-      const tool = new InvalidParamsTool(
-        'create_calendar_event',
-        ToolType.CREATE_CALENDAR_EVENT,
-      );
-      const toolUse = makeToolUseContent('tu-6', 'create_calendar_event', {
-        start: 'not-a-date',
-      });
-      const thread = makeThread([toolUse]);
+    const result = await collect(service, thread, [backendTool]);
 
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      const { contents, outcomes } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(contents).toHaveLength(1);
-      expect(contents[0].result).toBe(
-        "The tool didn't provide any result due to the following error in tool usage: Invalid parameters: parameter 'start' must be a valid ISO 8601 date-time",
-      );
-      expect(outcomes[0].succeeded).toBe(false);
-      expect(executeToolUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should not re-validate hybrid tool params after a successful execution', async () => {
-      // The handler already validated the null-stripped input; re-checking
-      // the raw params could reject a call whose side effect just succeeded.
-      const tool = new InvalidParamsTool(
-        'create_document',
-        ToolType.CREATE_DOCUMENT,
-      );
-      const toolUse = makeToolUseContent('tu-9', 'create_document', {
-        letterhead_id: null,
-      });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: true,
-      });
-      executeToolUseCase.execute.mockResolvedValue('artifact created');
-
-      const { contents, outcomes } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(contents[0].result).toBe('Tool has been displayed successfully');
-      expect(outcomes[0].succeeded).toBe(true);
-    });
-
-    it('should strip disallowed nulls before validating display-only params', async () => {
-      const tool = new MockTool('bar_chart', ToolType.BAR_CHART);
-      tool.parameters = {
-        type: 'object',
-        properties: { insight: { type: 'string' } },
-      } as never;
-      const validateSpy = jest.spyOn(tool, 'validateParams');
-      const toolUse = makeToolUseContent('tu-10', 'bar_chart', {
-        insight: null,
-      });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(validateSpy).toHaveBeenCalledWith({});
-    });
-
-    it('should pass a frontend-supplied result through without validating', async () => {
-      const tool = new InvalidParamsTool(
-        'create_calendar_event',
-        ToolType.CREATE_CALENDAR_EVENT,
-      );
-      const toolUse = makeToolUseContent('tu-7', 'create_calendar_event', {
-        start: 'not-a-date',
-      });
-      const thread = makeThread([toolUse]);
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      const { contents, outcomes } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: {
-          toolId: 'tu-7',
-          toolName: 'create_calendar_event',
-          result: 'User downloaded the event',
-        },
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(contents[0].result).toBe('User downloaded the event');
-      expect(outcomes[0].succeeded).toBe(true);
-    });
+    expect(result.contents[0].result).toBe('backend result');
+    expect(executeTool).toHaveBeenCalledTimes(1);
   });
 
-  describe('exitLoopAfterAgentResponse', () => {
-    it('should return false when response contains a hybrid displayable+executable tool', () => {
-      const tool = new MockTool('create_document', ToolType.CREATE_DOCUMENT);
-      const toolUseContent = makeToolUseContent('tu-4', 'create_document');
+  it('exposes backend tool results up to 200,000 characters', async () => {
+    const toolResult = 'x'.repeat(200_000);
+    executeTool.mockResolvedValue(toolResult);
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
 
-      const message = {
-        content: [toolUseContent],
-      } as unknown as AssistantMessage;
+    const result = await collect(service, thread, [backendTool]);
 
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: true,
-      });
-
-      const result = service.exitLoopAfterAgentResponse(message, [tool]);
-
-      // Hybrid tools need backend execution, so the loop must continue
-      expect(result).toBe(false);
-    });
-
-    it('should return true when response contains a display-only tool', () => {
-      const tool = new MockTool('chart_tool', ToolType.ACTIVATE_SKILL);
-      const toolUseContent = makeToolUseContent('tu-5', 'chart_tool');
-
-      const message = {
-        content: [toolUseContent],
-      } as unknown as AssistantMessage;
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      const result = service.exitLoopAfterAgentResponse(message, [tool]);
-
-      expect(result).toBe(true);
-    });
-
-    it('should return false when the display-only tool call has invalid params (AYC-675)', () => {
-      const tool = new MockTool(
-        'create_calendar_event',
-        ToolType.CREATE_CALENDAR_EVENT,
-      );
-      jest.spyOn(tool, 'validateParams').mockImplementation(() => {
-        throw new Error('Invalid parameters');
-      });
-      const toolUseContent = makeToolUseContent(
-        'tu-8',
-        'create_calendar_event',
-      );
-
-      const message = {
-        content: [toolUseContent],
-      } as unknown as AssistantMessage;
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      // The loop must continue so the model receives the validation error
-      // and can retry with corrected params.
-      const result = service.exitLoopAfterAgentResponse(message, [tool]);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when one of several display-only calls is invalid (AYC-675)', () => {
-      const validTool = new MockTool('bar_chart', ToolType.BAR_CHART);
-      const invalidTool = new MockTool(
-        'create_calendar_event',
-        ToolType.CREATE_CALENDAR_EVENT,
-      );
-      jest.spyOn(invalidTool, 'validateParams').mockImplementation(() => {
-        throw new Error('Invalid parameters');
-      });
-
-      const message = {
-        content: [
-          makeToolUseContent('tu-9', 'bar_chart'),
-          makeToolUseContent('tu-10', 'create_calendar_event'),
-        ],
-      } as unknown as AssistantMessage;
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: true,
-        isExecutable: false,
-      });
-
-      // A valid sibling must not end the turn while an invalid display call
-      // still needs a retry.
-      const result = service.exitLoopAfterAgentResponse(message, [
-        validTool,
-        invalidTool,
-      ]);
-
-      expect(result).toBe(false);
-    });
+    expect(result.contents[0].result).toBe(toolResult);
   });
 
-  describe('anonymous mode tool result anonymization failure', () => {
-    it('should throw RunAnonymizationUnavailableError when anonymize service is unavailable for PII-returning tool', async () => {
-      const toolName = 'search_citizens_database';
-      const tool = {
-        name: toolName,
-        type: 'search',
-        returnsPii: true,
-      } as unknown as Tool;
+  it('retains the first 200,000 characters of oversized backend tool results', async () => {
+    const retainedResult = 'x'.repeat(200_000);
+    executeTool.mockResolvedValue(`${retainedResult}discarded`);
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
 
-      const toolUseContent = Object.assign(
-        Object.create(ToolUseMessageContent.prototype),
-        { id: toolUseId, name: toolName, params: { query: 'Mustermann' } },
-      );
+    const result = await collect(service, thread, [backendTool]);
+    const toolResult = result.contents[0].result;
 
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: false,
-        isExecutable: true,
-      });
+    expect(toolResult.startsWith(retainedResult)).toBe(true);
+    expect(toolResult.endsWith('[result truncated]')).toBe(true);
+    expect(toolResult).not.toContain('discarded');
+  });
 
-      executeToolUseCase.execute.mockResolvedValue(
-        'Max Mustermann, Hauptstraße 42, 80331 München, Tel: 089-12345678',
-      );
+  it('resolves a legacy upstream MCP tool name when one integration provides it', async () => {
+    const outline = mcpTool('search_documents', 'Outline');
+    const thread = threadWith(toolUse('legacy-1', 'search_documents'));
 
-      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
-        new AnonymizationFailedError('Connection refused'),
-      );
+    const result = await collect(service, thread, [
+      new CreateDocumentTool(),
+      outline,
+    ]);
 
-      const thread = {
-        id: threadId,
-        getLastMessage: jest.fn().mockReturnValue({
-          content: [toolUseContent],
-        }),
-      } as unknown as Thread;
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(executeTool.mock.calls[0][0].tool).toBe(outline);
+    expect(result.contents[0].result).toBe('backend result');
+  });
 
-      await expect(
-        service.collectToolResults({
-          thread,
-          tools: [tool],
-          input: null,
-          orgId,
-          isAnonymous: true,
-        }),
-      ).rejects.toThrow(RunAnonymizationUnavailableError);
+  it('prefers the built-in over an MCP tool with the same upstream name', async () => {
+    const builtIn = new CreateDocumentTool();
+    const thread = threadWith(
+      toolUse('builtin-1', builtIn.name, {
+        title: 'Notes',
+        content: '<p>Notes</p>',
+      }),
+    );
+
+    await collect(service, thread, [
+      builtIn,
+      mcpTool('create_document', 'Outline'),
+    ]);
+
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(executeTool.mock.calls[0][0].tool).toBe(builtIn);
+  });
+
+  it('executes a hybrid artifact once and exposes the acknowledgement', async () => {
+    const document = new CreateDocumentTool();
+    const thread = threadWith(
+      toolUse('document-1', document.name, {
+        title: 'Budget report',
+        content: '<p>Budget details</p>',
+      }),
+    );
+
+    const result = await collect(service, thread, [document]);
+
+    expect(result.contents[0].result).toBe(
+      'Tool has been displayed successfully',
+    );
+    expect(executeTool).toHaveBeenCalledTimes(1);
+  });
+
+  it('settles every sibling in a mixed terminal and backend batch', async () => {
+    const email = new SendEmailTool();
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(
+      toolUse('email-1', email.name, {
+        subject: 'Budget review',
+        body: 'Please review the budget.',
+        to: 'budget@example.org',
+      }),
+      toolUse('search-1', backendTool.name),
+    );
+
+    const result = await collect(service, thread, [email, backendTool]);
+
+    expect(result.contents).toHaveLength(2);
+    expect(executeTool).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an invalid terminal widget retryable', async () => {
+    const calendar = new CreateCalendarEventTool();
+    const call = toolUse('calendar-1', calendar.name, {
+      title: 'Budget review',
+      description: 'Review the budget',
+      location: 'Berlin',
+      start: 'not-a-date',
+      end: '2026-01-31T15:30:00Z',
     });
+    const thread = threadWith(call);
 
-    it('should return anonymized text and the mask dictionary for PII-returning tools', async () => {
-      const toolName = 'search_citizens_database';
-      const tool = {
-        name: toolName,
-        type: 'search',
-        returnsPii: true,
-      } as unknown as Tool;
+    const result = await collect(service, thread, [calendar]);
 
-      const toolUseContent = Object.assign(
-        Object.create(ToolUseMessageContent.prototype),
-        { id: toolUseId, name: toolName, params: { query: 'Mustermann' } },
-      );
+    expect(result.contents[0].result).toMatch(/'start' must be a valid/);
+  });
 
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: false,
-        isExecutable: true,
-      });
+  it('accepts an explicit client result without revalidating historical input', async () => {
+    const calendar = new CreateCalendarEventTool();
+    const thread = threadWith(
+      toolUse('calendar-1', calendar.name, { start: 'historically-invalid' }),
+    );
+    const input = new RunToolResultInput(
+      'calendar-1',
+      calendar.name,
+      'Calendar event downloaded',
+    );
 
-      executeToolUseCase.execute.mockResolvedValue(
-        'Max Mustermann, Hauptstraße 42',
-      );
+    const result = await collect(service, thread, [calendar], input);
 
-      const mask = {
-        token: '{{pii:PERSON_NAME_1}}',
-        value: 'Max Mustermann',
-        category: 'person_name',
-      };
-      anonymizeTextForThreadUseCase.execute.mockResolvedValue({
-        originalText: 'Max Mustermann, Hauptstraße 42',
-        anonymizedText: '{{pii:PERSON_NAME_1}}, {{pii:LOCATION_1}}',
-        replacements: [],
-        newMasks: [],
-        masks: [mask],
-      } as never);
+    expect(result.contents[0].result).toBe('Calendar event downloaded');
+  });
 
-      const thread = {
-        id: threadId,
-        getLastMessage: jest.fn().mockReturnValue({
-          content: [toolUseContent],
-        }),
-      } as unknown as Thread;
+  it('anonymizes PII returned by a backend tool', async () => {
+    const backendTool = new BackendTestTool('resident_lookup', true);
+    executeTool.mockResolvedValue('Jane Doe');
+    anonymize.mockResolvedValue({
+      anonymizedText: '{{pii:PERSON_1}}',
+      masks: [{ id: randomUUID() }],
+    });
+    const thread = threadWith(toolUse('lookup-1', backendTool.name));
 
-      const { contents, piiMasks } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
+    const result = await collect(
+      service,
+      thread,
+      [backendTool],
+      undefined,
+      true,
+    );
+
+    expect(result.contents[0].result).toBe('{{pii:PERSON_1}}');
+    expect(result.piiMasks).toHaveLength(1);
+  });
+
+  it('propagates a thread deleted during PII masking so the run can abort', async () => {
+    const backendTool = new BackendTestTool('resident_lookup', true);
+    executeTool.mockResolvedValue('Jane Doe');
+    const threadMissing = new ThreadPiiMaskThreadMissingError(randomUUID());
+    anonymize.mockRejectedValue(threadMissing);
+    const thread = threadWith(toolUse('lookup-1', backendTool.name));
+
+    await expect(
+      collect(service, thread, [backendTool], undefined, true),
+    ).rejects.toBe(threadMissing);
+  });
+
+  it('limits PII tool output before anonymization', async () => {
+    const retainedResult = 'x'.repeat(MAX_ANONYMOUS_TOOL_RESULT_LENGTH);
+    const backendTool = new BackendTestTool('resident_lookup', true);
+    executeTool.mockResolvedValue(`${retainedResult}discarded`);
+    anonymize.mockResolvedValue({
+      anonymizedText: 'anonymized result',
+      masks: [],
+    });
+    const thread = threadWith(toolUse('lookup-1', backendTool.name));
+
+    const result = await collect(
+      service,
+      thread,
+      [backendTool],
+      undefined,
+      true,
+    );
+    const command = anonymize.mock.calls[0][0] as AnonymizeTextForThreadCommand;
+
+    expect(command.text).toBe(retainedResult);
+    expect(result.contents[0].result).toBe(
+      'anonymized result\n[result truncated]',
+    );
+  });
+
+  it('records a successful agent-runtime tool outcome', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+
+    await collect(service, thread, [backendTool]);
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('agent_runtime', 'success'),
+    );
+  });
+
+  it('records a failed agent-runtime tool outcome', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+    executeTool.mockRejectedValue(new Error('Municipal search unavailable'));
+
+    await collect(service, thread, [backendTool]);
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('agent_runtime', 'error'),
+    );
+  });
+
+  it('emits usage for each known tool call', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+
+    await collect(service, thread, [backendTool]);
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      ToolUsedEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId,
         orgId,
-        isAnonymous: true,
-      });
-
-      expect(contents[0].result).toBe(
-        '{{pii:PERSON_NAME_1}}, {{pii:LOCATION_1}}',
-      );
-      expect(piiMasks).toEqual([mask]);
-    });
-
-    it('should not anonymize tool results when anonymous mode is disabled', async () => {
-      const toolName = 'search_citizens_database';
-      const tool = {
-        name: toolName,
-        type: 'search',
-        returnsPii: true,
-      } as unknown as Tool;
-
-      const toolUseContent = Object.assign(
-        Object.create(ToolUseMessageContent.prototype),
-        { id: toolUseId, name: toolName, params: { query: 'Mustermann' } },
-      );
-
-      checkToolCapabilitiesUseCase.execute.mockReturnValue({
-        isDisplayable: false,
-        isExecutable: true,
-      });
-
-      const rawResult = 'Max Mustermann, Hauptstraße 42, 80331 München';
-      executeToolUseCase.execute.mockResolvedValue(rawResult);
-
-      const thread = {
-        id: threadId,
-        getLastMessage: jest.fn().mockReturnValue({
-          content: [toolUseContent],
-        }),
-      } as unknown as Thread;
-
-      const { contents: results } = await service.collectToolResults({
-        thread,
-        tools: [tool],
-        input: null,
-        orgId,
-        isAnonymous: false,
-      });
-
-      expect(results).toHaveLength(1);
-      expect(results[0]).toBeInstanceOf(ToolResultMessageContent);
-      expect(results[0].result).toBe(rawResult);
-      expect(anonymizeTextForThreadUseCase.execute).not.toHaveBeenCalled();
-    });
+        toolName: backendTool.name,
+      }),
+    );
   });
 });
+
+async function collect(
+  service: ToolResultCollectorService,
+  thread: Thread,
+  tools: Tool[],
+  input: RunToolResultInput = new RunToolResultInput(
+    'client-result',
+    'external_widget',
+    'Client-provided result',
+  ),
+  isAnonymous = false,
+  executionPath: RunExecutionPath = 'agent_runtime',
+) {
+  return service.collectToolResults({
+    thread,
+    tools,
+    input,
+    orgId,
+    isAnonymous,
+    executionPath,
+  });
+}

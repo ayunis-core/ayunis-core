@@ -34,6 +34,12 @@ elif [[ "$*" == 'images --filter reference=ghcr.io/ayunis-core/ayunis-core-* --f
     "ghcr.io/ayunis-core/ayunis-core-python-sandbox:${CORE_TAG}"
 elif [[ "$*" == 'compose pull app code-execution anonymize' ]]; then
   exit "${FAKE_COMPOSE_PULL_EXIT:-0}"
+elif [[ "$*" == 'compose up -d --no-build --wait --wait-timeout 180 code-execution anonymize' ]]; then
+  exit "${FAKE_DEPS_UP_EXIT:-0}"
+elif [[ "$*" == 'compose up -d --no-build' ]]; then
+  exit "${FAKE_COMPOSE_UP_EXIT:-0}"
+elif [[ "$*" == 'compose ps app --format json' ]]; then
+  printf '%s\n' '{"Status":"Up 1 second (healthy)"}'
 elif [[ "$1" == 'pull' ]]; then
   exit "${FAKE_SANDBOX_PULL_EXIT:-0}"
 fi
@@ -48,7 +54,13 @@ EOF
 
 cat > "$FAKE_BIN/timeout" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
 printf 'timeout %s\n' "$*" >> "$FAKE_DOCKER_LOG"
+if [[ "${FAKE_HEALTH_EXIT:-0}" -ne 0 ]]; then
+  exit "$FAKE_HEALTH_EXIT"
+fi
+shift
+"$@"
 EOF
 
 chmod +x "$FAKE_BIN/docker" "$FAKE_BIN/df" "$FAKE_BIN/timeout"
@@ -65,8 +77,8 @@ assert_log_order() {
   local after="$2"
   local before_line
   local after_line
-  before_line=$(grep -nF "$before" "$DOCKER_LOG" | head -1 | cut -d: -f1)
-  after_line=$(grep -nF "$after" "$DOCKER_LOG" | head -1 | cut -d: -f1)
+  before_line=$(grep -nF "$before" "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+  after_line=$(grep -nF "$after" "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
   if [[ -z "$before_line" || -z "$after_line" || "$before_line" -ge "$after_line" ]]; then
     fail "Expected '$before' before '$after'."
   fi
@@ -81,7 +93,10 @@ run_deploy() {
     FAKE_COMPOSE_FILE_LOG="$COMPOSE_FILE_LOG" \
     FAKE_FREE_GB="${FAKE_FREE_GB:-20}" \
     FAKE_COMPOSE_PULL_EXIT="${FAKE_COMPOSE_PULL_EXIT:-0}" \
+    FAKE_COMPOSE_UP_EXIT="${FAKE_COMPOSE_UP_EXIT:-0}" \
+    FAKE_DEPS_UP_EXIT="${FAKE_DEPS_UP_EXIT:-0}" \
     FAKE_SANDBOX_PULL_EXIT="${FAKE_SANDBOX_PULL_EXIT:-0}" \
+    FAKE_HEALTH_EXIT="${FAKE_HEALTH_EXIT:-0}" \
     bash "$DEPLOY_SCRIPT"
 }
 
@@ -89,9 +104,16 @@ run_deploy() {
 COMPOSE_FILE=unexpected-compose.yml run_deploy
 
 assert_log_order 'builder prune -af' 'compose pull app code-execution anonymize'
-assert_log_order 'compose pull app code-execution anonymize' 'compose down'
-assert_log_order 'compose down' 'compose up -d --no-build'
+assert_log_order 'compose pull app code-execution anonymize' 'compose up -d --no-build'
 assert_log_order 'compose up -d --no-build' 'timeout 120 bash -c'
+deps_up_line=$(grep -nFx 'compose up -d --no-build --wait --wait-timeout 180 code-execution anonymize' "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+stack_up_line=$(grep -nFx 'compose up -d --no-build' "$DOCKER_LOG" | head -1 | cut -d: -f1 || true)
+if [[ -z "$deps_up_line" || -z "$stack_up_line" || "$deps_up_line" -ge "$stack_up_line" ]]; then
+  fail "Expected app dependencies to be healthy before the app container is replaced."
+fi
+if grep -Fq 'compose down' "$DOCKER_LOG"; then
+  fail "Expected successful deploys to leave unchanged services running."
+fi
 if [[ "$(cat "$COMPOSE_FILE_LOG")" != 'docker-compose.yml:compose.release.yml' ]]; then
   fail "Expected the deploy script to force the release compose files."
 fi
@@ -110,7 +132,7 @@ fi
 : > "$DOCKER_LOG"
 PRUNE_BUILD_CACHE=false run_deploy
 if grep -Fq 'builder prune -af' "$DOCKER_LOG"; then
-  fail "Expected staging to preserve the host build cache."
+  fail "Expected disabled build-cache pruning to preserve the cache."
 fi
 
 : > "$DOCKER_LOG"
@@ -121,8 +143,8 @@ set -e
 if [[ $status -eq 0 || "$output" != *'only 5G free, need 9G'* ]]; then
   fail "Expected low disk space to abort with a clear error."
 fi
-if grep -Eq '^compose (pull|down)' "$DOCKER_LOG"; then
-  fail "Expected low disk space to abort before pull and shutdown."
+if grep -Eq '^compose (pull|down|up)' "$DOCKER_LOG"; then
+  fail "Expected low disk space to abort before pull and replacement."
 fi
 
 : > "$DOCKER_LOG"
@@ -133,7 +155,7 @@ set -e
 if [[ $status -eq 0 || "$output" != *'image pull failed'* ]]; then
   fail "Expected a failed compose pull to abort the deploy."
 fi
-if grep -Fq 'compose down' "$DOCKER_LOG"; then
+if grep -Eq '^compose (down|up)' "$DOCKER_LOG"; then
   fail "Expected a failed compose pull to preserve the running containers."
 fi
 if ! grep -F 'rmi ' "$DOCKER_LOG" | tr ' ' '\n' | grep -Fxq 'ghcr.io/ayunis-core/ayunis-core-app:v1.2.3'; then
@@ -148,15 +170,55 @@ set -e
 if [[ $status -eq 0 || "$output" != *'sandbox image pull failed'* ]]; then
   fail "Expected a failed sandbox pull to abort the deploy."
 fi
-if grep -Fq 'compose down' "$DOCKER_LOG"; then
+if grep -Eq '^compose (down|up)' "$DOCKER_LOG"; then
   fail "Expected a failed sandbox pull to preserve the running containers."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_COMPOSE_UP_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected a failed compose replacement to abort the deploy."
+fi
+if grep -Fq 'timeout 120 bash -c' "$DOCKER_LOG"; then
+  fail "Expected a failed compose replacement to abort before the health check."
+fi
+if grep -F 'rmi ' "$DOCKER_LOG" | grep -Fq 'ghcr.io/ayunis-core/ayunis-core-python-sandbox:v-old'; then
+  fail "Expected a failed compose replacement to preserve the old sandbox image."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_DEPS_UP_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected unhealthy app dependencies to abort the deploy."
+fi
+if grep -Fxq 'compose up -d --no-build' "$DOCKER_LOG"; then
+  fail "Expected unhealthy app dependencies to keep the running app container."
+fi
+
+: > "$DOCKER_LOG"
+set +e
+FAKE_HEALTH_EXIT=1 run_deploy >/dev/null 2>&1
+status=$?
+set -e
+if [[ $status -eq 0 ]]; then
+  fail "Expected a failed application health check to abort the deploy."
+fi
+if grep -Fxq 'compose ps' "$DOCKER_LOG"; then
+  fail "Expected a failed application health check to abort before reporting success."
+fi
+if grep -F 'rmi ' "$DOCKER_LOG" | grep -Fq 'ghcr.io/ayunis-core/ayunis-core-python-sandbox:v-old'; then
+  fail "Expected a failed application health check to preserve the old sandbox image."
 fi
 
 workflow_expectations=(
   'deploy-staging.yml:1'
-  'deploy-internal-manual.yml:1'
-  'deploy-production-manual.yml:1'
-  'release-please.yml:2'
+  'release-please.yml:0'
 )
 
 for expectation in "${workflow_expectations[@]}"; do
@@ -172,38 +234,20 @@ for expectation in "${workflow_expectations[@]}"; do
   fi
 done
 
-if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq "printf '%s\n' \"\$DEPLOY_SCRIPT\" | MIN_FREE_GB=6 PRUNE_BUILD_CACHE=true bash" \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml"; then
-  fail "Expected the internal manual workflow to execute the workflow commit's shared script."
+if ! grep -Fq 'MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash scripts/deploy-core-images.sh' \
+  "$REPO_DIR/.github/workflows/deploy-staging.yml"; then
+  fail "Expected staging to reclaim the obsolete host build cache before its disk check."
 fi
-if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq 'git checkout -f --detach "origin/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml"; then
-  fail "Expected the internal manual workflow to use explicit tag and remote branch refs."
+if grep -Fq 'deploy-internal:' "$REPO_DIR/.github/workflows/release-please.yml" \
+  || grep -Fq 'INTERNAL_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
+  fail "Expected releases to leave Internal deployment to ayunis-infra."
 fi
-if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq "printf '%s\n' \"\$DEPLOY_SCRIPT\" | MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash" \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml"; then
-  fail "Expected the production manual workflow to execute the workflow commit's shared script."
+if grep -Fq 'deploy-production:' "$REPO_DIR/.github/workflows/release-please.yml" \
+  || grep -Fq 'PRODUCTION_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
+  fail "Expected releases to leave Production deployment to ayunis-infra."
 fi
-if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
-  || ! grep -Fq 'git checkout -f --detach "origin/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-production-manual.yml"; then
-  fail "Expected the production manual workflow to use explicit tag and remote branch refs."
-fi
-release_tag_checkouts=$(grep -Fc 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/release-please.yml" || true)
-if [[ "$release_tag_checkouts" -ne 2 ]]; then
-  fail "Expected both automated release deploys to use explicit tag refs."
+if [[ -e "$REPO_DIR/.github/workflows/deploy-production-manual.yml" ]]; then
+  fail "Expected Production deployment to live only in ayunis-infra."
 fi
 if ! grep -Fq 'bash scripts/deploy-core-images.test.sh' \
   "$REPO_DIR/.github/workflows/deploy-script-tests.yml" 2>/dev/null; then

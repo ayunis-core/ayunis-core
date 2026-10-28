@@ -6,11 +6,11 @@ import type { TFunction } from 'i18next';
 import { Plug } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import { useMarketplaceControllerGetIntegration } from '../api/useFetchMarketplaceIntegration';
-import { useInstallIntegrationFromMarketplace } from '../api/useInstallIntegrationFromMarketplace';
+import { useMarketplaceControllerGetIntegration } from '@/pages/install/api/useFetchMarketplaceIntegration';
+import { useInstallIntegrationFromMarketplace } from '@/pages/install/api/useInstallIntegrationFromMarketplace';
 import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
-import type { MarketplaceIntegrationResponseDto } from '../api/useFetchMarketplaceIntegration';
+import type { MarketplaceIntegrationResponseDto } from '@/pages/install/api/useFetchMarketplaceIntegration';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -41,8 +41,9 @@ import {
 } from '@/shared/lib/mcp-oauth';
 import { useMcpOAuthClientMetadata } from '@/features/mcp-oauth';
 import { AcceptanceCheckboxField } from './AcceptanceCheckboxField';
-import type { InstallIntegrationFormFields } from '../model/types';
-import { buildMarketplaceIntegrationPayload } from '../lib/build-marketplace-integration-payload';
+import type { InstallIntegrationFormFields } from '@/pages/install/model/types';
+import { buildMarketplaceIntegrationPayload } from '@/pages/install/lib/build-marketplace-integration-payload';
+import { CopyButton } from '@/shared/ui/copy-button';
 
 interface InstallIntegrationPageProps {
   readonly integrationIdentifier: string | undefined;
@@ -403,7 +404,16 @@ function MarketplaceOAuthFields({
       )}
       <div>
         <p className="text-sm font-medium">{t('oauth.callbackUri')}</p>
-        <code className="break-all text-xs">{callbackUri}</code>
+        <div className="mt-1 flex items-center gap-2">
+          <code className="rounded bg-muted px-1.5 py-0.5 break-all text-xs">
+            {callbackUri}
+          </code>
+          <CopyButton
+            value={callbackUri}
+            label={t('oauth.callbackUri')}
+            testId="install-callback-uri-copy"
+          />
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {t('oauth.callbackUriDescription')}
         </p>

@@ -3,10 +3,14 @@ import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
+import { reportProviderUnavailableMetric } from 'src/common/errors/report-provider-unavailable-metric.helper';
+import { isFinalAttempt, recordJobFailure } from './job-telemetry';
 
 /**
  * Standard retry/retention options shared by the source processing queues:
  * 3 attempts with exponential backoff, bounded completed/failed retention.
+ * Failed jobs also expire after 7 days; a count cap alone keeps rare
+ * failures in Bull Board indefinitely.
  */
 export const STANDARD_JOB_OPTIONS: JobsOptions = {
   attempts: 3,
@@ -15,16 +19,8 @@ export const STANDARD_JOB_OPTIONS: JobsOptions = {
     delay: 5000,
   },
   removeOnComplete: 100,
-  removeOnFail: 200,
+  removeOnFail: { age: 7 * 24 * 60 * 60, count: 200 },
 };
-
-/**
- * True when no BullMQ retry will follow this attempt. When opts.attempts is
- * unset, BullMQ runs the job exactly once, so the first attempt is final.
- */
-export function isFinalAttempt(job: Job): boolean {
-  return job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
-}
 
 /**
  * Failure of a job attempt that BullMQ will retry. The AppSignal agent is
@@ -135,13 +131,16 @@ export function classifyJobFailure(
   const expected = isExpectedFailure(error);
 
   if (shouldScheduleRetry(job, error, expected)) {
+    recordJobFailure(job, false);
     return { final: false, rethrow: new JobRetryScheduledError(error) };
   }
+  recordJobFailure(job, true);
   if (expected) {
     return { final: true, rethrow: null };
   }
   // AppSignal needs an Error to report; a bare throwable would be dropped.
   const rethrow = error instanceof Error ? error : new Error(String(error));
+  reportProviderUnavailableMetric(rethrow);
   // Settling before the last attempt only sticks when BullMQ also stops
   // scheduling — rename so the remaining attempts never run.
   if (!isFinalAttempt(job) && rethrow.name !== 'UnrecoverableError') {
@@ -177,22 +176,25 @@ export async function cancelQueueJob(
   try {
     const job = await queue.getJob(sourceId);
     if (!job) {
-      logger.debug('No job found to cancel', { sourceId });
+      logger.debug({ sourceId }, 'No job found to cancel');
       return;
     }
 
     const state = await job.getState();
     if (state === 'active') {
-      logger.debug('Job is active, skipping removal', { sourceId });
+      logger.debug({ sourceId }, 'Job is active, skipping removal');
       return;
     }
 
     await job.remove();
-    logger.log('Cancelled queued job', { sourceId, state });
+    logger.log({ sourceId, state }, 'Cancelled queued job');
   } catch (err) {
-    logger.warn('Best-effort job cancellation failed', {
-      sourceId,
-      error: err as Error,
-    });
+    logger.warn(
+      {
+        sourceId,
+        err: err as Error,
+      },
+      'Best-effort job cancellation failed',
+    );
   }
 }

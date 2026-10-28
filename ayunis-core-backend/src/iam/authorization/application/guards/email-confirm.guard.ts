@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { EmailNotVerifiedError } from '../authorization.errors';
+import { EmailNotVerifiedError } from 'src/iam/authorization/application/authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { Reflector } from '@nestjs/core';
 
@@ -25,8 +25,9 @@ export class EmailConfirmGuard implements CanActivate {
       return true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const user: ActiveUser = context.switchToHttp().getRequest().user;
+    const user = context
+      .switchToHttp()
+      .getRequest<{ user?: ActiveUser }>().user;
     if (!user) {
       this.logger.warn('User not found in request context');
       return false;

@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { CleanupSourceProcessingCommand } from '../cleanup-source-processing/cleanup-source-processing.command';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class DeleteSourceUseCase {
 
   @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
-    this.logger.debug(`Deleting source: ${command.sourceId}`);
+    this.logger.debug({ sourceId: command.sourceId }, 'Deleting source');
     try {
       const source = await this.sourceRepository.findById(command.sourceId);
 
@@ -41,15 +41,19 @@ export class DeleteSourceUseCase {
       await this.sourceRepository.delete(command.sourceId);
 
       this.logger.debug(
-        `Successfully deleted source and indexed content: ${command.sourceId}`,
+        { sourceId: command.sourceId },
+        'Successfully deleted source and indexed content',
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error deleting source',
+      );
       throw new UnexpectedSourceError('Error deleting source', {
         error: error as Error,
       });

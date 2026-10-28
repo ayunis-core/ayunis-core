@@ -3,8 +3,8 @@ import type { UUID } from 'crypto';
 
 import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 
-import { EvaluateBudgetAlertsForOrgQuery } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.query';
-import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
+import { EvaluateBudgetAlertsForOrgQuery } from 'src/iam/budget-alerts/application/use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.query';
+import { EvaluateBudgetAlertsForOrgUseCase } from 'src/iam/budget-alerts/application/use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
 
 /**
  * Single entrypoint for running a budget-alert evaluation. Serializes runs
@@ -16,6 +16,7 @@ import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-
 @Injectable()
 export class BudgetAlertEvaluator {
   private readonly logger = new Logger(BudgetAlertEvaluator.name);
+
   private readonly inFlight = new Map<UUID, Promise<void>>();
 
   constructor(
@@ -38,7 +39,7 @@ export class BudgetAlertEvaluator {
 
   private async evaluateOrg(orgId: UUID): Promise<void> {
     try {
-      this.logger.debug('Evaluating budget alerts', { orgId });
+      this.logger.debug({ orgId }, 'Evaluating budget alerts');
 
       await this.orgContextRunner.runForOrg(orgId, () =>
         this.evaluateBudgetAlertsForOrgUseCase.execute(
@@ -46,10 +47,10 @@ export class BudgetAlertEvaluator {
         ),
       );
     } catch (error) {
-      this.logger.error('Failed to evaluate budget alerts', {
-        orgId,
-        stack: error instanceof Error ? error.stack : String(error),
-      });
+      this.logger.error(
+        { err: error as Error, orgId },
+        'Failed to evaluate budget alerts',
+      );
     }
   }
 }

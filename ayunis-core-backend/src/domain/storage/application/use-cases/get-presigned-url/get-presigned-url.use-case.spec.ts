@@ -3,11 +3,14 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { GetPresignedUrlUseCase } from './get-presigned-url.use-case';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 
 describe('GetPresignedUrlUseCase', () => {
   let useCase: GetPresignedUrlUseCase;
@@ -82,9 +85,10 @@ describe('GetPresignedUrlUseCase', () => {
       jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(false);
 
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ObjectNotFoundError,
-      );
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'OBJECT_NOT_FOUND',
+        statusCode: 404,
+      });
       expect(mockObjectStorage.exists).toHaveBeenCalled();
       expect(mockObjectStorage.getPresignedUrl).not.toHaveBeenCalled();
     });
@@ -197,9 +201,10 @@ describe('GetPresignedUrlUseCase', () => {
         .mockRejectedValue(new Error('Exists check failed'));
 
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        DownloadFailedError,
-      );
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'DOWNLOAD_FAILED',
+        statusCode: 500,
+      });
       expect(mockObjectStorage.getPresignedUrl).not.toHaveBeenCalled();
     });
 

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GenerateAndSetThreadTitleCommand } from './generate-and-set-thread-title.command';
-import { UpdateThreadTitleUseCase } from '../update-thread-title/update-thread-title.use-case';
-import { UpdateThreadTitleCommand } from '../update-thread-title/update-thread-title.command';
+import { UpdateThreadTitleUseCase } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.use-case';
+import { UpdateThreadTitleCommand } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.command';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -10,7 +10,7 @@ import {
   EmptyTitleResponseError,
   InvalidTitleResponseTypeError,
   TitleGenerationError,
-} from '../../thread-title.errors';
+} from 'src/domain/threads/application/thread-title.errors';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 
 @Injectable()
@@ -25,84 +25,74 @@ export class GenerateAndSetThreadTitleUseCase {
   async execute(
     command: GenerateAndSetThreadTitleCommand,
   ): Promise<string | null> {
-    this.logger.log('generateAndSetTitle', { threadId: command.thread.id });
+    this.logger.log({ threadId: command.thread.id }, 'generateAndSetTitle');
 
     try {
-      // Prompt for title generation
-      const prompt = `Based on the following user message, generate a short, concise title (maximum 50 characters):
+      return await this.generateTitle(command);
+    } catch (error) {
+      const logContext = {
+        threadId: command.thread.id,
+        err: this.toTitleGenerationError(command.thread.id, error),
+      };
+      this.logger.error(logContext, 'Failed to generate title');
+      return null;
+    }
+  }
+
+  private async generateTitle(
+    command: GenerateAndSetThreadTitleCommand,
+  ): Promise<string> {
+    const prompt = `Based on the following user message, generate a short, concise title (maximum 50 characters):
       
       "${command.message}"
       
       Title:`;
-      const userMessage = new UserMessage({
-        threadId: command.thread.id,
-        content: [new TextMessageContent(prompt)],
-      });
-
-      const response = await this.triggerInferenceUseCase.execute(
-        new GetInferenceCommand({
-          model: command.model,
-          messages: [userMessage],
-          tools: [],
-          toolChoice: ModelToolChoice.AUTO,
-        }),
-      );
-
-      // Validate response content
-      if (!response.content.length) {
-        throw new EmptyTitleResponseError(command.thread.id);
-      }
-
-      const firstContent = response.content.find(
-        (content) => content instanceof TextMessageContent,
-      );
-      if (!firstContent) {
-        throw new InvalidTitleResponseTypeError(
-          command.thread.id,
-          response.content
-            .map((content) => content.constructor.name)
-            .join(', '),
-        );
-      }
-
-      // Remove extra spaces and <think>...</think> blocks
-      let title = firstContent.text
-        .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
-        .trim();
-
-      // Strip markdown formatting
-      title = this.stripMarkdownFormatting(title);
-
-      if (!title) {
-        throw new EmptyTitleResponseError(command.thread.id);
-      }
-
-      // Update thread with new title
-      await this.updateThreadTitleUseCase.execute(
-        new UpdateThreadTitleCommand({
-          threadId: command.thread.id,
-          title,
-        }),
-      );
-      return title;
-    } catch (error) {
-      // Log the error with appropriate context
-      let logError = error as Error;
-      if (
-        !(error instanceof EmptyTitleResponseError) &&
-        !(error instanceof InvalidTitleResponseTypeError)
-      ) {
-        logError = new TitleGenerationError(command.thread.id, error as Error);
-      }
-
-      this.logger.error('Failed to generate title', {
-        threadId: command.thread.id,
-        error: logError instanceof Error ? logError.message : 'Unknown error',
-      });
-
-      // Don't throw error - just log it
-      return null;
+    const userMessage = new UserMessage({
+      threadId: command.thread.id,
+      content: [new TextMessageContent(prompt)],
+    });
+    const response = await this.triggerInferenceUseCase.execute(
+      new GetInferenceCommand({
+        model: command.model,
+        messages: [userMessage],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+      }),
+    );
+    if (!response.content.length) {
+      throw new EmptyTitleResponseError(command.thread.id);
     }
+    const firstContent = response.content.find(
+      (content) => content instanceof TextMessageContent,
+    );
+    if (!firstContent) {
+      throw new InvalidTitleResponseTypeError(
+        command.thread.id,
+        response.content.map((content) => content.constructor.name).join(', '),
+      );
+    }
+    const title = this.stripMarkdownFormatting(
+      firstContent.text
+        .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
+        .trim(),
+    );
+    if (!title) {
+      throw new EmptyTitleResponseError(command.thread.id);
+    }
+    await this.updateThreadTitleUseCase.execute(
+      new UpdateThreadTitleCommand({ threadId: command.thread.id, title }),
+    );
+    return title;
+  }
+
+  private toTitleGenerationError(threadId: string, error: unknown): Error {
+    if (
+      error instanceof EmptyTitleResponseError ||
+      error instanceof InvalidTitleResponseTypeError
+    ) {
+      return error;
+    }
+    return new TitleGenerationError(threadId, error as Error);
   }
 
   /**
@@ -125,9 +115,9 @@ export class GenerateAndSetThreadTitleUseCase {
         // Remove headers: # text
         .replace(/^#{1,6}\s+/gm, '')
         // Remove links: [text](url) -> text
-        .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+        .replace(/\[([^\]\r\n]{1,500})\]\([^)\r\n]{1,2000}\)/g, '$1')
         // Remove quotes
-        .replace(/["""]/g, '')
+        .replace(/"/g, '')
         // Clean up any extra whitespace
         .replace(/\s+/g, ' ')
         .trim()

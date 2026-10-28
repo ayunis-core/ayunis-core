@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
-import { RemoveOrgCreditLimitsUseCase } from '../use-cases/remove-org-credit-limits/remove-org-credit-limits.use-case';
-import { RemoveOrgCreditLimitsCommand } from '../use-cases/remove-org-credit-limits/remove-org-credit-limits.command';
+import { RemoveOrgCreditLimitsUseCase } from 'src/iam/credit-limits/application/use-cases/remove-org-credit-limits/remove-org-credit-limits.use-case';
+import { RemoveOrgCreditLimitsCommand } from 'src/iam/credit-limits/application/use-cases/remove-org-credit-limits/remove-org-credit-limits.command';
 
 /**
  * When an org cancels its usage-based subscription, its credit limits no longer
@@ -27,9 +27,12 @@ export class SubscriptionCancelledListener {
       return;
     }
 
-    this.logger.log('Clearing credit limits after usage-based cancellation', {
-      orgId: event.orgId,
-    });
+    this.logger.log(
+      {
+        orgId: event.orgId,
+      },
+      'Clearing credit limits after usage-based cancellation',
+    );
 
     await this.removeOrgCreditLimitsUseCase.execute(
       new RemoveOrgCreditLimitsCommand(event.orgId),

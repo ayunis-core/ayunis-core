@@ -1,12 +1,12 @@
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { McpIntegration } from '../../domain/mcp-integration.entity';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
-import type { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+} from 'src/domain/mcp/application/mcp.errors';
+import type { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 import type { McpCapabilityCacheService } from './mcp-capability-cache.service';
 
 interface McpOperationErrorContext {
@@ -37,17 +37,17 @@ export async function handleMcpOperationError({
     );
   }
   if ((error as { status?: number }).status === 401) {
-    logger.warn(`Authentication failed for MCP operation: ${operation}`, {
-      integrationId: integration.id,
-    });
+    logger.warn(
+      { integrationId: integration.id, operation },
+      'Authentication failed for MCP operation',
+    );
     integration.updateConnectionStatus('error', 'Authentication failed');
     throw new McpAuthenticationError('Invalid authentication credentials');
   }
-  logger.error('Failed to execute MCP operation', {
-    error: error as Error,
-    integrationId: integration.id,
-    operation,
-  });
+  logger.error(
+    { err: error as Error, integrationId: integration.id, operation },
+    'Failed to execute MCP operation',
+  );
   throw error;
 }
 

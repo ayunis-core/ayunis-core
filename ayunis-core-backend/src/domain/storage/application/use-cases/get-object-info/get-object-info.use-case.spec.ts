@@ -3,10 +3,13 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { GetObjectInfoUseCase } from './get-object-info.use-case';
 import { GetObjectInfoCommand } from './get-object-info.command';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 
 describe('GetObjectInfoUseCase', () => {
   let useCase: GetObjectInfoUseCase;

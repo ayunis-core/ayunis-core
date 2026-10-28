@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 
 export class UserCreditLimitItemDto {
@@ -10,6 +10,27 @@ export class UserCreditLimitItemDto {
 
   @ApiProperty({ example: 'jane.doe@example.com' })
   email: string;
+
+  @ApiProperty({
+    description: 'Configured monthly credit limit',
+    example: 5000,
+  })
+  monthlyCredits: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Credits consumed in the current calendar month; omitted when individual usage is hidden',
+    example: 1240,
+  })
+  creditsUsed?: number;
+}
+
+export class ApiKeyCreditLimitItemDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440003' })
+  apiKeyId: UUID;
+
+  @ApiProperty({ example: 'Finance export' })
+  name: string;
 
   @ApiProperty({
     description: 'Configured monthly credit limit',
@@ -43,4 +64,16 @@ export class TeamCreditLimitItemDto {
     example: 8300,
   })
   creditsUsed: number;
+}
+
+export class UserCreditUsageItemDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440001' })
+  userId: UUID;
+
+  @ApiPropertyOptional({
+    description:
+      'Credits consumed in the current calendar month; omitted when individual usage is hidden',
+    example: 1240,
+  })
+  creditsUsed?: number;
 }

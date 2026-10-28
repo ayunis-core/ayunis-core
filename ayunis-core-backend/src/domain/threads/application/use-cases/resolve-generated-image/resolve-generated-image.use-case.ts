@@ -3,12 +3,12 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPresignedUrlUseCase } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import { GetPresignedUrlCommand } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.command';
 import { contentTypeToExtension } from 'src/common/util/content-type.util';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import {
   ThreadNotFoundError,
   GeneratedImageNotFoundError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { ResolveGeneratedImageQuery } from './resolve-generated-image.query';
 
 const PRESIGNED_URL_EXPIRY_SECONDS = 3600;
@@ -31,10 +31,11 @@ export class ResolveGeneratedImageUseCase {
   async execute(
     query: ResolveGeneratedImageQuery,
   ): Promise<ResolveGeneratedImageResult> {
-    this.logger.log('execute', {
+    const logContext = {
       threadId: query.threadId,
       imageId: query.imageId,
-    });
+    };
+    this.logger.log(logContext, 'execute');
 
     try {
       const thread = await this.threadsRepository.findOne(
@@ -77,11 +78,10 @@ export class ResolveGeneratedImageUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to resolve generated image', {
-        threadId: query.threadId,
-        imageId: query.imageId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to resolve generated image',
+      );
       throw error;
     }
   }

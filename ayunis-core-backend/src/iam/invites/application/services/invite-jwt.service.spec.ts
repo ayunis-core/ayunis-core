@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { InviteJwtService, INVITE_TOKEN_TYPE } from './invite-jwt.service';
-import { InvalidInviteTokenError } from '../invites.errors';
+import { InvalidInviteTokenError } from 'src/iam/invites/application/invites.errors';
 
 describe('InviteJwtService', () => {
   let service: InviteJwtService;
@@ -29,11 +28,6 @@ describe('InviteJwtService', () => {
     service = module.get(InviteJwtService);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

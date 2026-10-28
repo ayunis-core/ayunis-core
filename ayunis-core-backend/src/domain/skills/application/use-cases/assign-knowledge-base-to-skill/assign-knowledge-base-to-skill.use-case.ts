@@ -1,75 +1,80 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { Transactional } from '@nestjs-cls/transactional';
-import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
-import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
-import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
-import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { FindKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.query';
+import { FindKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
-  SkillNotFoundError,
-  SkillKnowledgeBaseNotFoundError,
   SkillKnowledgeBaseAlreadyAssignedError,
+  SkillKnowledgeBaseNotFoundError,
+  SkillNotFoundError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+} from 'src/domain/skills/application/skills.errors';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 
 @Injectable()
 export class AssignKnowledgeBaseToSkillUseCase {
   private readonly logger = new Logger(AssignKnowledgeBaseToSkillUseCase.name);
 
   constructor(
-    @Inject(SkillRepository)
-    private readonly skillRepository: SkillRepository,
-    private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
+    private readonly findKnowledgeBase: FindKnowledgeBaseUseCase,
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: AssignKnowledgeBaseToSkillCommand): Promise<Skill> {
-    this.logger.log('Assigning knowledge base to skill', {
-      skillId: command.skillId,
-      knowledgeBaseId: command.knowledgeBaseId,
+    this.logger.log(command, 'Assigning knowledge base to skill');
+    const skill = await this.repository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    await this.assertKnowledgeBaseCanBeAssigned(skill, command.knowledgeBaseId);
+    if (skill.knowledgeBaseIds.includes(command.knowledgeBaseId)) {
+      throw new SkillKnowledgeBaseAlreadyAssignedError(command.knowledgeBaseId);
+    }
+    const updated = skill.withUpdates({
+      knowledgeBaseIds: [...skill.knowledgeBaseIds, command.knowledgeBaseId],
+      updatedAt: new Date(),
     });
+    return this.repository.update(updated, skill);
+  }
 
+  private async assertKnowledgeBaseCanBeAssigned(
+    skill: Skill,
+    knowledgeBaseId: UUID,
+  ): Promise<void> {
+    const knowledgeBase =
+      await this.findAccessibleKnowledgeBase(knowledgeBaseId);
+    const compatible =
+      skill instanceof WorkspaceSkill
+        ? knowledgeBase instanceof WorkspaceKnowledgeBase &&
+          knowledgeBase.workspaceId === skill.workspaceId
+        : knowledgeBase instanceof PersonalKnowledgeBase;
+    if (!compatible) throw new SkillKnowledgeBaseNotFoundError(knowledgeBaseId);
+  }
+
+  private async findAccessibleKnowledgeBase(
+    knowledgeBaseId: UUID,
+  ): Promise<KnowledgeBase> {
     try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId || !orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
-
-      const knowledgeBases = await this.getKnowledgeBasesByIdsUseCase.execute(
-        new GetKnowledgeBasesByIdsQuery([command.knowledgeBaseId]),
+      const { knowledgeBase } = await this.findKnowledgeBase.execute(
+        new FindKnowledgeBaseQuery(knowledgeBaseId),
       );
-      if (knowledgeBases.length === 0) {
-        throw new SkillKnowledgeBaseNotFoundError(command.knowledgeBaseId);
-      }
-
-      if (skill.knowledgeBaseIds.includes(command.knowledgeBaseId)) {
-        throw new SkillKnowledgeBaseAlreadyAssignedError(
-          command.knowledgeBaseId,
-        );
-      }
-
-      const updatedSkill = new Skill({
-        ...skill,
-        knowledgeBaseIds: [...skill.knowledgeBaseIds, command.knowledgeBaseId],
-      });
-
-      return await this.skillRepository.update(updatedSkill);
+      return knowledgeBase;
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Unexpected error assigning knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillError(error);
+      if (error instanceof KnowledgeBaseNotFoundError) {
+        throw new SkillKnowledgeBaseNotFoundError(knowledgeBaseId);
+      }
+      throw error;
     }
   }
 }

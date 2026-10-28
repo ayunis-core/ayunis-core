@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';
 
 /**
@@ -14,7 +14,7 @@ export class FindAllUserIdsByTeamIdUseCase {
   constructor(private readonly teamMembersRepository: TeamMembersRepository) {}
 
   async execute(query: FindAllUserIdsByTeamIdQuery): Promise<UUID[]> {
-    this.logger.log('execute', { teamId: query.teamId });
+    this.logger.log({ teamId: query.teamId }, 'execute');
 
     return this.teamMembersRepository.findAllUserIdsByTeamId(query.teamId);
   }

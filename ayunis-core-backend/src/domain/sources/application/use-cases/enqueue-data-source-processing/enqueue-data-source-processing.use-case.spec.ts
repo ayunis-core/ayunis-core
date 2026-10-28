@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto';
 import { EnqueueDataSourceProcessingUseCase } from './enqueue-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingCommand } from './enqueue-data-source-processing.command';
-import type { DataSourceProcessingPort } from '../../ports/data-source-processing.port';
+import type { DataSourceProcessingPort } from 'src/domain/sources/application/ports/data-source-processing.port';
 import {
   EmptyFileDataError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 
 describe('EnqueueDataSourceProcessingUseCase', () => {
   const orgId = randomUUID();

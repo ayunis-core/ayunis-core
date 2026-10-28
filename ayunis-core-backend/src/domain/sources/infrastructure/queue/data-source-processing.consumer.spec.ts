@@ -1,16 +1,16 @@
 import { randomUUID } from 'crypto';
 import type { Job } from 'bullmq';
 import { DataSourceProcessingConsumer } from './data-source-processing.consumer';
-import type { DataSourceProcessingJobData } from '../../application/ports/data-source-processing.port';
-import type { SourceRepository } from '../../application/ports/source.repository';
-import { createMockSourceRepository } from '../../application/testing/source.fixtures';
-import type { SpreadsheetParserPort } from '../../application/ports/spreadsheet-parser.port';
-import type { MarkSourceFailedUseCase } from '../../application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import type { DataSourceProcessingJobData } from 'src/domain/sources/application/ports/data-source-processing.port';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
+import type { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { CSVDataSource } from '../../domain/sources/data-source.entity';
-import { SourceStatus } from '../../domain/source-status.enum';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 async function* fileStream(): AsyncGenerator<Buffer> {
   yield Buffer.from('file-bytes');
@@ -25,6 +25,7 @@ describe('DataSourceProcessingConsumer', () => {
   let markSourceFailed: jest.Mocked<MarkSourceFailedUseCase>;
   let downloadObject: jest.Mocked<DownloadObjectUseCase>;
   let deleteObject: jest.Mocked<DeleteObjectUseCase>;
+  let admitOrgProcessing: { execute: jest.Mock };
   let consumer: DataSourceProcessingConsumer;
 
   function processingSource(name: string): CSVDataSource {
@@ -72,6 +73,9 @@ describe('DataSourceProcessingConsumer', () => {
     deleteObject = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteObjectUseCase>;
+    admitOrgProcessing = {
+      execute: jest.fn().mockResolvedValue(true),
+    };
     const contextService = {
       run: jest.fn((fn: () => Promise<void>) => fn()),
       set: jest.fn(),
@@ -84,7 +88,17 @@ describe('DataSourceProcessingConsumer', () => {
       sourceRepository,
       parser,
       markSourceFailed,
+      admitOrgProcessing as never,
     );
+  });
+
+  it('skips work when deletion wins before processing admission', async () => {
+    admitOrgProcessing.execute.mockResolvedValue(false);
+
+    await consumer.process(jobFor({}));
+
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+    expect(downloadObject.execute).not.toHaveBeenCalled();
   });
 
   it('fills each source with its sheet data and flips it to READY', async () => {

@@ -3,8 +3,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillRepository } from '../../ports/skill.repository';
-import { UnexpectedSkillError } from '../../skills.errors';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-skill-share-access.query';
 
 /**
@@ -28,9 +28,12 @@ export class CheckKnowledgeBaseSkillShareAccessUseCase {
   async execute(
     query: CheckKnowledgeBaseSkillShareAccessQuery,
   ): Promise<boolean> {
-    this.logger.log('checkKnowledgeBaseSkillShareAccess', {
-      knowledgeBaseId: query.knowledgeBaseId,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: query.knowledgeBaseId,
+      },
+      'checkKnowledgeBaseSkillShareAccess',
+    );
 
     const ownerSkills =
       await this.skillRepository.findSkillsByKnowledgeBaseAndOwners(

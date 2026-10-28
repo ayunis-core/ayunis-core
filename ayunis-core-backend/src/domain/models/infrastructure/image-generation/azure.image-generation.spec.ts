@@ -1,13 +1,14 @@
-import { Logger } from '@nestjs/common';
+import sharp from 'sharp';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { AzureImageGenerationHandler } from './azure.image-generation';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../application/ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../application/models.errors';
-import { ImageGenerationModel } from '../../domain/models/image-generation.model';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+} from 'src/domain/models/application/ports/image-generation.handler';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { APIError, AzureOpenAI } from 'openai';
 
 // Mock the AzureOpenAI class
@@ -25,7 +26,16 @@ jest.mock('openai', () => {
 
 const mockAzureOpenAICtor = jest.mocked(AzureOpenAI);
 
+function createReferenceImage(format: 'png' | 'jpeg' = 'png') {
+  return sharp({
+    create: { width: 8, height: 6, channels: 3, background: '#ffffff' },
+  })
+    .toFormat(format)
+    .toBuffer();
+}
+
 describe('AzureImageGenerationHandler', () => {
+  const logger = createLoggerMock();
   let handler: AzureImageGenerationHandler;
   let configService: jest.Mocked<ConfigService>;
 
@@ -43,8 +53,8 @@ describe('AzureImageGenerationHandler', () => {
 
     handler = new AzureImageGenerationHandler(configService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
 
     mockImagesGenerate.mockReset();
     mockImagesEdit.mockReset();
@@ -59,14 +69,17 @@ describe('AzureImageGenerationHandler', () => {
       prompt: string;
       size: string;
       quality: string;
+      background: 'transparent';
+      model: ImageGenerationModel;
       referenceImages: Array<{ data: Buffer; contentType: string }>;
     }> = {},
   ): ImageGenerationInput =>
     new ImageGenerationInput({
-      model: mockModel,
+      model: overrides.model ?? mockModel,
       prompt: overrides.prompt ?? 'a beautiful sunset',
       size: overrides.size,
       quality: overrides.quality,
+      background: overrides.background,
       referenceImages: overrides.referenceImages,
     });
 
@@ -111,7 +124,7 @@ describe('AzureImageGenerationHandler', () => {
           },
         },
         'content policy violation',
-        {},
+        new Headers(),
       );
 
       mockImagesGenerate.mockRejectedValue(apiError);
@@ -129,7 +142,7 @@ describe('AzureImageGenerationHandler', () => {
         500,
         { error: { message: 'server error', code: 'server_error' } },
         'server error',
-        {},
+        new Headers(),
       );
 
       mockImagesGenerate.mockRejectedValue(apiError);
@@ -256,8 +269,14 @@ describe('AzureImageGenerationHandler', () => {
         createInput({
           prompt: 'Recreate this coat of arms as a clean vector graphic',
           referenceImages: [
-            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
-            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
+            {
+              data: await createReferenceImage('jpeg'),
+              contentType: 'image/jpeg',
+            },
           ],
         }),
       );
@@ -283,7 +302,7 @@ describe('AzureImageGenerationHandler', () => {
       expect(result.imageData).toEqual(Buffer.from(fakeB64, 'base64'));
     });
 
-    it('should wrap reference buffers as files matching their content type', async () => {
+    it('should wrap normalized JPEG references with a matching filename and MIME type', async () => {
       const fakeB64 = Buffer.from('edited-image-data').toString('base64');
       mockImagesEdit.mockResolvedValue({
         data: [{ b64_json: fakeB64 }],
@@ -292,7 +311,10 @@ describe('AzureImageGenerationHandler', () => {
       await handler.generate(
         createInput({
           referenceImages: [
-            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+            {
+              data: await createReferenceImage('jpeg'),
+              contentType: 'image/jpeg',
+            },
           ],
         }),
       );
@@ -333,7 +355,10 @@ describe('AzureImageGenerationHandler', () => {
             model,
             prompt: 'a beautiful sunset',
             referenceImages: [
-              { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+              {
+                data: await createReferenceImage(),
+                contentType: 'image/png',
+              },
             ],
           }),
         );
@@ -360,6 +385,126 @@ describe('AzureImageGenerationHandler', () => {
 
       expect(mockImagesEdit).not.toHaveBeenCalled();
       expect(mockImagesGenerate).toHaveBeenCalledTimes(1);
+    });
+
+    it('omits background when transparency is not requested', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(createInput());
+
+      expect(mockImagesGenerate).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBeUndefined();
+    });
+
+    it.each(['gpt-image-2', 'gpt-image-2.5-flare'])(
+      'sends background transparent when generating with %s',
+      async (modelName) => {
+        const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+        mockImagesGenerate.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+        const model = new ImageGenerationModel({
+          name: modelName,
+          provider: ModelProvider.AZURE,
+          displayName: modelName,
+          isArchived: false,
+        });
+
+        const result = await handler.generate(
+          createInput({ model, background: 'transparent' }),
+        );
+
+        expect(mockImagesGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({ background: 'transparent' }),
+        );
+        expect(mockImagesGenerate.mock.calls[0][0]).not.toHaveProperty(
+          'output_format',
+        );
+        expect(result.transparencyApplied).toBe(true);
+      },
+    );
+
+    it.each(['gpt-image-2', 'gpt-image-2.5-flare'])(
+      'sends background transparent when editing with %s',
+      async (modelName) => {
+        const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+        mockImagesEdit.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+        const model = new ImageGenerationModel({
+          name: modelName,
+          provider: ModelProvider.AZURE,
+          displayName: modelName,
+          isArchived: false,
+        });
+
+        const result = await handler.generate(
+          createInput({
+            model,
+            background: 'transparent',
+            referenceImages: [
+              {
+                data: await createReferenceImage(),
+                contentType: 'image/png',
+              },
+            ],
+          }),
+        );
+
+        expect(mockImagesGenerate).not.toHaveBeenCalled();
+        expect(mockImagesEdit).toHaveBeenCalledWith(
+          expect.objectContaining({ background: 'transparent' }),
+        );
+        expect(mockImagesEdit.mock.calls[0][0]).not.toHaveProperty(
+          'output_format',
+        );
+        expect(result.transparencyApplied).toBe(true);
+      },
+    );
+
+    it('drops background for a model that does not support transparency', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(
+        createInput({ background: 'transparent' }),
+      );
+
+      expect(mockImagesGenerate).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBe(false);
+    });
+
+    it('drops background on edit for a model that does not support transparency', async () => {
+      const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+      mockImagesEdit.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(
+        createInput({
+          background: 'transparent',
+          referenceImages: [
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
+          ],
+        }),
+      );
+
+      expect(mockImagesEdit).toHaveBeenCalledWith(
+        expect.not.objectContaining({ background: expect.anything() }),
+      );
+      expect(result.transparencyApplied).toBe(false);
     });
 
     it('should leave usage undefined when Azure omits it (e.g. DALL-E)', async () => {
@@ -419,7 +564,10 @@ describe('AzureImageGenerationHandler', () => {
       await handler.generate(
         createInput({
           referenceImages: [
-            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            {
+              data: await createReferenceImage(),
+              contentType: 'image/png',
+            },
           ],
         }),
       );

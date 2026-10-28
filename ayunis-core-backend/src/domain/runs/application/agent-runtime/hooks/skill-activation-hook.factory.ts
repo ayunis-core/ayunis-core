@@ -1,14 +1,17 @@
+import type { Skill } from 'src/domain/skills/domain/skill';
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { BackendToolAdapter } from '../backend-tool.adapter';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
+import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
+import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 export interface SkillActivationHookParams {
   threadId: UUID;
@@ -34,12 +37,14 @@ export class SkillActivationHookFactory {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
+    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
   ) {}
 
   create(params: SkillActivationHookParams): Hook {
     const activateSkill = ToolType.ACTIVATE_SKILL as string;
     return {
       name: 'ayunis-skill-activation',
+      inheritToChildRuns: false,
       afterToolCall: async (ctx) => {
         if (ctx.isError || ctx.toolCall.name !== activateSkill) {
           return;
@@ -47,12 +52,18 @@ export class SkillActivationHookFactory {
         const { thread } = await this.findThreadUseCase.execute(
           new FindThreadQuery(params.threadId),
         );
+        const workspaceContext = thread.workspaceId
+          ? await this.buildWorkspaceRunContextUseCase.execute(
+              new BuildWorkspaceRunContextQuery(thread.workspaceId),
+            )
+          : undefined;
         const { tools, instructions } =
           await this.toolAssemblyService.buildRunContext(
             thread,
             params.activeSkills,
             params.canUseTools,
             params.isAnonymous,
+            workspaceContext,
           );
         params.integrations.replaceTools(tools);
         ctx.setTools(this.backendToolAdapter.toRuntimeTools(tools));

@@ -15,7 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { ExportUsersUseCase } from '../../application/use-cases/export-users/export-users.use-case';
+import { ExportUsersUseCase } from 'src/iam/users/application/use-cases/export-users/export-users.use-case';
 
 @ApiTags('Super Admin Users')
 @Controller('super-admin/users/export')

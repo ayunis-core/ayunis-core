@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { HasActiveSubscriptionResult } from './has-active-subscription.result';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { ConfigService } from '@nestjs/config';
-import { isActive } from '../../util/is-active';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -26,9 +26,12 @@ export class HasActiveSubscriptionUseCase {
       return { hasActiveSubscription: true, subscriptionType: null };
     }
 
-    this.logger.log('Checking active subscription', {
-      orgId: query.orgId,
-    });
+    this.logger.log(
+      {
+        orgId: query.orgId,
+      },
+      'Checking active subscription',
+    );
 
     try {
       this.logger.debug('Finding subscription');
@@ -36,9 +39,12 @@ export class HasActiveSubscriptionUseCase {
         query.orgId,
       );
       if (subscriptions.length === 0) {
-        this.logger.debug('No subscription found for organization', {
-          orgId: query.orgId,
-        });
+        this.logger.debug(
+          {
+            orgId: query.orgId,
+          },
+          'No subscription found for organization',
+        );
         return { hasActiveSubscription: false, subscriptionType: null };
       }
 
@@ -56,10 +62,10 @@ export class HasActiveSubscriptionUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Checking active subscription failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: query.orgId },
+        'Checking active subscription failed',
+      );
       throw error;
     }
   }

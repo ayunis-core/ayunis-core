@@ -13,10 +13,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
-import { Badge } from '@ayunis/ui/components/badge';
 import { PiiText } from '@/widgets/markdown';
-import type { TimelineStep, StepStatus } from '../model/types';
-import { getToolActionLabel } from '../lib/get-tool-action-label';
+import type {
+  TimelineStep,
+  StepStatus,
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
+import { getToolActionLabel } from '@/pages/chat/ui/agent-run-timeline/lib/get-tool-action-label';
 
 interface AgentRunTimelineRowProps {
   step: TimelineStep;
@@ -55,8 +57,19 @@ export default function AgentRunTimelineRow({
       )}
     </div>
   );
+  const hint = step.kind === 'tool' && step.status === 'error' && (
+    <p className="ml-6 mb-1 text-xs text-muted-foreground">
+      {t('chat.timeline.invalidToolCallHint')}
+    </p>
+  );
 
-  if (!hasDetails) return header;
+  if (!hasDetails)
+    return (
+      <>
+        {header}
+        {hint}
+      </>
+    );
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -68,6 +81,7 @@ export default function AgentRunTimelineRow({
           {header}
         </button>
       </CollapsibleTrigger>
+      {hint}
       <CollapsibleContent>
         <div className="ml-6 mb-1 flex flex-col gap-2">{details}</div>
       </CollapsibleContent>
@@ -179,16 +193,9 @@ function getStepView(
           </div>
         )}
         {hasResult && (
-          <Badge
-            variant="outline"
-            className="font-normal whitespace-normal text-left"
-          >
-            <div className="max-h-32 w-full overflow-y-auto">
-              <span className="text-xs text-muted-foreground whitespace-pre-wrap">
-                <PiiText>{step.result ?? ''}</PiiText>
-              </span>
-            </div>
-          </Badge>
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+            <PiiText>{step.result ?? ''}</PiiText>
+          </div>
         )}
       </>
     ),

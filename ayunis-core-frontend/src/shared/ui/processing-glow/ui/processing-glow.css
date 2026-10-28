@@ -1,0 +1,155 @@
+/* Brand: #6055A6 — smooth orbit glow, shared by the chat input and skill fields */
+
+.processing-glow {
+  --processing-glow-brand-rgb: 96, 85, 166;
+  --processing-glow-brand-light-rgb: 125, 115, 184;
+  --processing-glow-ring: 2px;
+  --processing-glow-radius: 0.75rem;
+  --processing-glow-content-radius: calc(
+    var(--processing-glow-radius) - var(--processing-glow-ring)
+  );
+  --processing-glow-surface: var(--background);
+  position: relative;
+  border-radius: var(--processing-glow-radius);
+  /* Reserve ring space always — toggling --active must not change layout width */
+  padding: var(--processing-glow-ring);
+  box-sizing: border-box;
+}
+
+@keyframes processing-glow-orbit {
+  from {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
+  }
+}
+
+@keyframes processing-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes processing-glow-halo {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+.processing-glow--active {
+  isolation: isolate;
+}
+
+.processing-glow__light {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.processing-glow__spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220%;
+  height: 220%;
+  transform: translate3d(-50%, -50%, 0);
+  transform-origin: center center;
+  will-change: transform;
+  animation: processing-glow-orbit 5.2s linear infinite;
+}
+
+.processing-glow__arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 270deg,
+    rgba(var(--processing-glow-brand-rgb), 0.55) 0deg,
+    rgba(var(--processing-glow-brand-light-rgb), 0.36) 14deg,
+    rgba(var(--processing-glow-brand-light-rgb), 0.14) 26deg,
+    transparent 40deg,
+    transparent 360deg
+  );
+  animation: processing-glow-breathe 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.processing-glow__bloom {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 270deg,
+    rgba(var(--processing-glow-brand-rgb), 0.2) 0deg,
+    rgba(var(--processing-glow-brand-light-rgb), 0.11) 18deg,
+    transparent 36deg,
+    transparent 360deg
+  );
+  filter: blur(8px);
+  animation: processing-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.processing-glow__content {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--processing-glow-content-radius);
+}
+
+.processing-glow--active .processing-glow__content {
+  background-color: var(--processing-glow-surface);
+  box-shadow: 0 0 0 var(--processing-glow-ring)
+    rgba(var(--processing-glow-brand-rgb), 0.2);
+}
+
+.processing-glow--active .processing-glow__content::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(var(--processing-glow-brand-rgb), 0.14);
+  opacity: 0.55;
+  animation: processing-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.processing-glow--active .processing-glow__content :is(input, textarea) {
+  border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .processing-glow__spinner {
+    animation: none;
+    transform: translate3d(-50%, -50%, 0);
+  }
+
+  .processing-glow__arc,
+  .processing-glow__bloom,
+  .processing-glow--active .processing-glow__content::after {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .processing-glow--active .processing-glow__content {
+    box-shadow: 0 0 0 var(--processing-glow-ring)
+      rgba(var(--processing-glow-brand-rgb), 0.32);
+  }
+
+  .processing-glow--active .processing-glow__content::after {
+    opacity: 0;
+  }
+}

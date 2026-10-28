@@ -1,8 +1,13 @@
-import { Injectable, Logger, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { mappedError } from './openai-error-helpers';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
+import { OpenAIUsageAccountingFailedError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import {
+  envelope,
+  mappedError,
+  retryAfterHeaders,
+} from './openai-error-helpers';
 import type { MappedOpenAIError } from './openai-error.types';
-import { envelope } from './openai-error-helpers';
 
 @Injectable()
 export class OpenAIErrorMapper {
@@ -15,7 +20,7 @@ export class OpenAIErrorMapper {
    */
   toEnvelope(error: unknown): MappedOpenAIError {
     if (error instanceof ApplicationError) {
-      return mappedError(error.statusCode, error.message, error.code);
+      return fromApplicationError(error);
     }
     if (error instanceof HttpException) {
       const status = error.getStatus();
@@ -52,7 +57,7 @@ export class OpenAIErrorMapper {
     }
     // Log structurally — never include the raw error object, which can
     // echo prompt fragments from upstream SDKs (AYC-92 redaction sweep).
-    this.logger.error('Unhandled error in OpenAI-compat path', { status });
+    this.logger.error({ status }, 'Unhandled error in OpenAI-compat path');
     return {
       status: 500,
       body: envelope({
@@ -61,6 +66,32 @@ export class OpenAIErrorMapper {
       }),
     };
   }
+}
+
+function fromApplicationError(error: ApplicationError): MappedOpenAIError {
+  const clientResponse = error.toClientResponse();
+  const mapped = mappedError(
+    error.statusCode,
+    clientResponse.message,
+    clientResponse.code,
+  );
+  const headers = retryHeaders(error);
+  return headers ? { ...mapped, headers } : mapped;
+}
+
+function retryHeaders(
+  error: ApplicationError,
+): Record<string, string> | undefined {
+  if (error instanceof OpenAIUsageAccountingFailedError) {
+    return { 'x-should-retry': 'false' };
+  }
+  const retryAfterMs =
+    error instanceof ProviderUnavailableError
+      ? error.context.retryAfterMs
+      : undefined;
+  return retryAfterMs === undefined
+    ? undefined
+    : retryAfterHeaders(retryAfterMs);
 }
 
 /**

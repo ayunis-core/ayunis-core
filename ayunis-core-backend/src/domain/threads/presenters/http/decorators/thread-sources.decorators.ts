@@ -17,7 +17,7 @@ import {
   CSVDataSourceResponseDto,
   FileSourceResponseDto,
   UrlSourceResponseDto,
-} from '../dto/get-thread-response.dto/source-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/source-response.dto';
 
 export function ApiThreadIdParam() {
   return ApiParam({
@@ -79,34 +79,5 @@ export function ApiFileSourceUpload() {
     ApiConsumes('multipart/form-data'),
     ApiThreadIdParam(),
     ApiOperation({ summary: 'Add a file source to a thread' }),
-  );
-}
-
-export function ApiSourceCsvDownload() {
-  return applyDecorators(
-    ApiResponse({
-      status: 409,
-      description: 'Source is still processing and has no data yet',
-    }),
-    ApiResponse({
-      status: 400,
-      description: 'Source is not a CSV data source',
-    }),
-    ApiResponse({ status: 404, description: 'Thread or source not found' }),
-    ApiResponse({
-      status: 200,
-      description: 'Returns the source as a CSV file',
-      content: {
-        'text/csv': {
-          schema: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-    }),
-    ApiSourceIdParam('The UUID of the source to download'),
-    ApiThreadIdParam(),
-    ApiOperation({ summary: 'Download a data source as CSV' }),
   );
 }

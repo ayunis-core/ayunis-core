@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import type { ExpiredThreadRef } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import type { ExpiredThreadRef } from 'src/domain/threads/application/ports/threads.repository';
 import type { FindExpiredThreadRefsByOrgQuery } from './find-expired-thread-refs-by-org.query';
 
 // Re-exported so other modules consume this type through the use-case surface
@@ -23,12 +23,15 @@ export class FindExpiredThreadRefsByOrgUseCase {
   async execute(
     query: FindExpiredThreadRefsByOrgQuery,
   ): Promise<ExpiredThreadRef[]> {
-    this.logger.debug('findExpiredThreadRefsByOrg', {
-      orgId: query.orgId,
-      activeBefore: query.activeBefore,
-      limit: query.limit,
-      offset: query.offset,
-    });
+    this.logger.debug(
+      {
+        orgId: query.orgId,
+        activeBefore: query.activeBefore,
+        limit: query.limit,
+        offset: query.offset,
+      },
+      'findExpiredThreadRefsByOrg',
+    );
     return this.threadsRepository.findExpiredThreadRefsByOrg({
       orgId: query.orgId,
       activeBefore: query.activeBefore,

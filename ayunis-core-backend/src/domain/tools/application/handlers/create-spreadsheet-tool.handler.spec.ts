@@ -1,15 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateSpreadsheetToolHandler } from './create-spreadsheet-tool.handler';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
-import { CreateSpreadsheetTool } from '../../domain/tools/create-spreadsheet-tool.entity';
+import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { SpreadsheetArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('CreateSpreadsheetToolHandler', () => {
   let handler: CreateSpreadsheetToolHandler;
@@ -38,9 +37,6 @@ describe('CreateSpreadsheetToolHandler', () => {
     handler = module.get<CreateSpreadsheetToolHandler>(
       CreateSpreadsheetToolHandler,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

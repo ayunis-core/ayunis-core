@@ -2,23 +2,25 @@ import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
+import { buildMinioProcessingPath } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.command';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { EnqueueDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.command';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
+import { classifySourceProcessingError } from 'src/domain/sources/application/services/classify-source-processing-error';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
 @Injectable()
@@ -28,7 +30,7 @@ export class StartDocumentProcessingUseCase {
   constructor(
     private readonly createProcessingSourceUseCase: CreateProcessingSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
@@ -37,19 +39,14 @@ export class StartDocumentProcessingUseCase {
   ) {}
 
   async execute(command: StartDocumentProcessingCommand): Promise<FileSource> {
-    this.logger.log('Starting async document processing', {
-      fileName: command.fileName,
-    });
+    const { fileName } = command;
+    this.logger.log({ fileName }, 'Starting async document processing');
 
     try {
       const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new Error('orgId is required');
-      }
+      if (!orgId) throw new Error('orgId is required');
       const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new Error('userId is required');
-      }
+      if (!userId) throw new Error('userId is required');
 
       // Indexing resolves the org's embedding model only inside the worker,
       // after the (expensive) OCR step — reject here so an unprovisioned org
@@ -75,13 +72,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
 
-      // Upload and enqueue both happen outside the transaction
+      // Upload holds no transaction; enqueue takes its own short lifecycle lock.
       const minioPath = buildMinioProcessingPath(
         orgId,
         savedSource.id,
         command.fileName,
       );
-      await this.uploadFileOrFail(savedSource, minioPath, command);
+      await this.uploadFileOrFail(savedSource, minioPath, command, orgId);
       await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
 
       return savedSource;
@@ -89,9 +86,12 @@ export class StartDocumentProcessingUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error starting document processing', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error starting document processing',
+      );
       throw new UnexpectedSourceError('Error starting document processing', {
         error: error as Error,
       });
@@ -102,15 +102,17 @@ export class StartDocumentProcessingUseCase {
     source: FileSource,
     minioPath: string,
     command: StartDocumentProcessingCommand,
+    orgId: UUID,
   ): Promise<void> {
     try {
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(minioPath, command.fileData),
+      await this.uploadOrgObjectUseCase.execute(
+        new UploadOrgObjectCommand(orgId, minioPath, command.fileData),
       );
     } catch (error) {
       await this.tryMarkSourceFailed(
         source,
         'Failed to upload file to storage',
+        classifySourceProcessingError(error),
       );
       throw error;
     }
@@ -135,10 +137,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
     } catch (error) {
-      this.logger.error('Failed to enqueue document processing job', {
-        sourceId: source.id,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceId: source.id,
+          err: error as Error,
+        },
+        'Failed to enqueue document processing job',
+      );
       await this.tryMarkSourceFailed(
         source,
         'Failed to enqueue processing job',
@@ -154,29 +159,37 @@ export class StartDocumentProcessingUseCase {
         new DeleteObjectCommand(minioPath),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up MinIO processing file', {
-        minioPath,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          fileName: minioPath,
+          err: err as Error,
+        },
+        'Failed to clean up MinIO processing file',
+      );
     }
   }
 
   private async tryMarkSourceFailed(
     source: FileSource,
     errorMessage: string,
+    errorCode?: SourceProcessingErrorCode,
   ): Promise<void> {
     try {
       await this.markSourceFailedUseCase.execute(
         new MarkSourceFailedCommand({
           sourceId: source.id,
           errorMessage,
+          errorCode,
         }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as FAILED', {
-        sourceId: source.id,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId: source.id,
+          err: err as Error,
+        },
+        'Failed to mark source as FAILED',
+      );
     }
   }
 }

@@ -1,5 +1,5 @@
 import { Model } from 'src/domain/models/domain/model.entity';
-import { ModelWithConfigResponseDto } from '../dto/model-with-config-response.dto';
+import { ModelWithConfigResponseDto } from 'src/domain/models/presenters/http/dto/model-with-config-response.dto';
 import { Injectable } from '@nestjs/common';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -13,6 +13,7 @@ export class ModelWithConfigResponseDtoMapper {
         isReasoning: false,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: undefined,
         tier: undefined,
         description: undefined,
       };
@@ -22,6 +23,7 @@ export class ModelWithConfigResponseDtoMapper {
       isReasoning: model.isReasoning,
       canUseTools: model.canUseTools,
       canVision: model.canVision,
+      contextWindowSize: model.contextWindowSize,
       tier: model.tier,
       description: model.description,
     };

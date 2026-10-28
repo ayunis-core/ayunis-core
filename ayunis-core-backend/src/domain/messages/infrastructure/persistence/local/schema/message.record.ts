@@ -55,9 +55,9 @@ type MessageContentData =
   | ImageMessageContentData;
 
 @Entity({ name: 'messages' })
+@Index(['threadId', 'createdAt'])
 export class MessageRecord extends BaseRecord {
   @Column()
-  @Index()
   threadId: UUID;
 
   @ManyToOne(() => ThreadRecord, (thread) => thread.messages, {

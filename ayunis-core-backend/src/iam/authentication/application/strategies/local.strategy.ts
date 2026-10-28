@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ValidateUserUseCase } from 'src/iam/users/application/use-cases/validate-user/validate-user.use-case';
 import { ValidateUserQuery } from 'src/iam/users/application/use-cases/validate-user/validate-user.query';
 import { Strategy } from 'passport-local';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   UserAuthenticationFailedError,
   UserNotFoundError,
@@ -22,9 +22,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       const user = await this.validateUserUseCase.execute(
         new ValidateUserQuery(username, password),
       );
-      this.logger.debug('LocalStrategy - user', {
-        user,
-      });
+      this.logger.debug(
+        {
+          userId: user.id,
+        },
+        'LocalStrategy - user',
+      );
       return new ActiveUser({
         id: user.id,
         email: user.email,
@@ -39,10 +42,13 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         error instanceof UserNotFoundError ||
         error instanceof UserAuthenticationFailedError
       ) {
-        this.logger.warn('Invalid credentials', {
-          error,
-          username,
-        });
+        this.logger.warn(
+          {
+            err: error as Error,
+            email: username,
+          },
+          'Invalid credentials',
+        );
         return null;
       }
       throw error;

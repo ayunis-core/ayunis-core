@@ -1,14 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APIError, AzureOpenAI, toFile } from 'openai';
-import type { ImageEditParams, ImagesResponse } from 'openai/resources/images';
+import type {
+  ImageEditParamsNonStreaming,
+  ImagesResponse,
+} from 'openai/resources/images';
+import sharp from 'sharp';
 import { contentTypeToExtension } from 'src/common/util/content-type.util';
 import {
   ImageGenerationHandler,
   ImageGenerationInput,
   ImageGenerationResult,
-} from '../../application/ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../application/models.errors';
+  type ReferenceImage,
+} from 'src/domain/models/application/ports/image-generation.handler';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
+
+const MAX_REFERENCE_JPEG_PIXELS = 64_000_000;
+const MAX_NORMALIZED_JPEG_BYTES = 10 * 1024 * 1024;
 
 const VALID_SIZES = ['1024x1024', '1024x1536', '1536x1024', 'auto'] as const;
 type ImageSize = (typeof VALID_SIZES)[number];
@@ -28,6 +36,30 @@ const SIZE_ALIASES: Record<string, ImageSize> = {
 // inputs at high fidelity. Exact match on purpose: an unlisted model merely
 // misses the fidelity boost, while a wrongly sent param fails the request.
 const INPUT_FIDELITY_MODELS = new Set(['gpt-image-1', 'gpt-image-1.5']);
+
+// Exact match: a model that rejects `background` fails the whole request,
+// while an unlisted model simply keeps the API's default background.
+// Verified for these Azure deployments, which return a PNG alpha channel.
+const TRANSPARENT_BACKGROUND_MODELS = new Set([
+  'gpt-image-2',
+  'gpt-image-2.5-flare',
+]);
+
+function resolveTransparentBackground(
+  modelName: string,
+  background: string | undefined,
+): {
+  apiBackground?: 'transparent';
+  transparencyApplied?: boolean;
+} {
+  if (background !== 'transparent') {
+    return {};
+  }
+  if (TRANSPARENT_BACKGROUND_MODELS.has(modelName)) {
+    return { apiBackground: 'transparent', transparencyApplied: true };
+  }
+  return { transparencyApplied: false };
+}
 
 const VALID_QUALITIES = ['low', 'medium', 'high', 'auto'] as const;
 type ImageQuality = (typeof VALID_QUALITIES)[number];
@@ -49,6 +81,7 @@ function isValidQuality(value: string): value is ImageQuality {
 @Injectable()
 export class AzureImageGenerationHandler extends ImageGenerationHandler {
   private readonly logger = new Logger(AzureImageGenerationHandler.name);
+
   // Keyed by deployment: the SDK only prefixes /deployments/{name} when the
   // client is constructed with `deployment` — for images.edit the body is
   // multipart FormData by the time buildRequest looks for a model name, so a
@@ -98,27 +131,35 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   }
 
   async generate(input: ImageGenerationInput): Promise<ImageGenerationResult> {
-    this.logger.log('Generating image', {
-      model: input.model.name,
-      size: input.size,
-      quality: input.quality,
-      referenceImageCount: input.referenceImages?.length ?? 0,
-    });
+    this.logger.log(
+      {
+        model: input.model.name,
+        size: input.size,
+        quality: input.quality,
+        referenceImageCount: input.referenceImages?.length ?? 0,
+      },
+      'Generating image',
+    );
 
     const { size, quality } = this.validateParams(input);
+    const { apiBackground, transparencyApplied } = resolveTransparentBackground(
+      input.model.name,
+      input.background,
+    );
     const client = this.getClient(input.model.name);
 
     try {
       const response = input.referenceImages?.length
-        ? await this.requestEdit(client, input, size, quality)
+        ? await this.requestEdit(client, input, size, quality, apiBackground)
         : await client.images.generate({
             model: input.model.name,
             prompt: input.prompt,
             size,
             quality,
             n: 1,
+            ...(apiBackground ? { background: apiBackground } : {}),
           });
-      return this.buildResult(response, input.model.name);
+      return this.buildResult(response, input.model.name, transparencyApplied);
     } catch (error) {
       this.handleGenerationError(error, input.model.name);
     }
@@ -129,39 +170,75 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     input: ImageGenerationInput,
     size: ImageSize,
     quality: ImageQuality,
+    apiBackground?: 'transparent',
   ): Promise<ImagesResponse> {
-    const image = await Promise.all(
-      (input.referenceImages ?? []).map((reference, index) =>
-        toFile(
-          reference.data,
-          `reference-${index}${contentTypeToExtension(reference.contentType)}`,
-          { type: reference.contentType },
-        ),
-      ),
+    const image = await this.prepareReferenceImages(
+      input.referenceImages ?? [],
     );
-    const params: ImageEditParams = {
+    const params: ImageEditParamsNonStreaming = {
       model: input.model.name,
       prompt: input.prompt,
       image,
       size,
       quality,
       n: 1,
+      ...(apiBackground ? { background: apiBackground } : {}),
     };
     // Without this, INPUT_FIDELITY_MODELS drop the fine detail (logos,
-    // scans) the references exist to preserve. The SDK's v4 typings predate
-    // the param but serialize every body key, so it reaches the API.
+    // scans) the references exist to preserve.
     if (INPUT_FIDELITY_MODELS.has(input.model.name)) {
-      return client.images.edit({
-        ...params,
-        input_fidelity: 'high',
-      } as ImageEditParams);
+      return client.images.edit({ ...params, input_fidelity: 'high' });
     }
     return client.images.edit(params);
+  }
+
+  private async prepareReferenceImages(references: ReferenceImage[]) {
+    const files = [];
+    for (const [index, reference] of references.entries()) {
+      // iPhone HDR photos can be MPO JPEGs with an auxiliary gain-map image.
+      // Azure rejects that container; encode only its oriented primary image.
+      const data =
+        reference.contentType === 'image/jpeg'
+          ? await this.normalizeJpeg(reference.data)
+          : reference.data;
+      files.push(
+        await toFile(
+          data,
+          `reference-${index}${contentTypeToExtension(reference.contentType)}`,
+          {
+            type: reference.contentType,
+          },
+        ),
+      );
+    }
+    return files;
+  }
+
+  private async normalizeJpeg(data: Buffer): Promise<Buffer> {
+    const { width = 0, height = 0 } = await sharp(data).metadata();
+    if (width * height > MAX_REFERENCE_JPEG_PIXELS) {
+      throw new ImageGenerationFailedError(
+        'Reference photos must not exceed 64 megapixels. Please upload a smaller photo.',
+      );
+    }
+    const normalized = await sharp(data, {
+      limitInputPixels: MAX_REFERENCE_JPEG_PIXELS,
+    })
+      .rotate()
+      .jpeg({ quality: 95 })
+      .toBuffer();
+    if (normalized.length > MAX_NORMALIZED_JPEG_BYTES) {
+      throw new ImageGenerationFailedError(
+        'The normalized reference photo exceeds 10 MiB. Please upload a smaller photo.',
+      );
+    }
+    return normalized;
   }
 
   private buildResult(
     response: ImagesResponse,
     modelName: string,
+    transparencyApplied?: boolean,
   ): ImageGenerationResult {
     const imageData = response.data?.[0];
     if (!imageData?.b64_json) {
@@ -180,19 +257,23 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
         }
       : undefined;
 
-    this.logger.log('Image generated successfully', {
-      model: modelName,
-      sizeBytes: imageBuffer.length,
-      inputTokens: usage?.inputTokens,
-      outputTokens: usage?.outputTokens,
-      totalTokens: usage?.totalTokens,
-    });
+    this.logger.log(
+      {
+        model: modelName,
+        sizeBytes: imageBuffer.length,
+        inputTokens: usage?.inputTokens,
+        outputTokens: usage?.outputTokens,
+        totalTokens: usage?.totalTokens,
+      },
+      'Image generated successfully',
+    );
 
     return new ImageGenerationResult(
       imageBuffer,
       'image/png',
       imageData.revised_prompt,
       usage,
+      transparencyApplied,
     );
   }
 
@@ -203,12 +284,15 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
 
     if (error instanceof APIError) {
       const errorCode = String(error.code ?? '');
-      this.logger.error('Azure OpenAI API error during image generation', {
-        status: String(error.status ?? ''),
-        code: errorCode,
-        message: error.message,
-        model: modelName,
-      });
+      this.logger.error(
+        {
+          status: String(error.status ?? ''),
+          code: errorCode,
+          message: error.message,
+          model: modelName,
+        },
+        'Azure OpenAI API error during image generation',
+      );
 
       if (errorCode === 'content_policy_violation') {
         throw new ImageGenerationFailedError(
@@ -221,10 +305,13 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       );
     }
 
-    this.logger.error('Unexpected error during image generation', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      model: modelName,
-    });
+    this.logger.error(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        model: modelName,
+      },
+      'Unexpected error during image generation',
+    );
 
     throw new ImageGenerationFailedError(
       'An unexpected error occurred while generating the image. Please try again later.',

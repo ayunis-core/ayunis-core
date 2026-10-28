@@ -1,5 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { McpOAuthRequestStage } from 'src/domain/mcp/application/util/mcp-oauth-response-observer.helper';
 
 export enum McpErrorCode {
   MCP_UNAUTHENTICATED = 'MCP_UNAUTHENTICATED',
@@ -10,6 +11,9 @@ export enum McpErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_CONNECTION_TIMEOUT = 'MCP_CONNECTION_TIMEOUT',
   MCP_CONNECTION_FAILED = 'MCP_CONNECTION_FAILED',
+  MCP_OAUTH_SERVER_UNREACHABLE = 'MCP_OAUTH_SERVER_UNREACHABLE',
+  MCP_OAUTH_INVALID_RESPONSE = 'MCP_OAUTH_INVALID_RESPONSE',
+  MCP_TOOL_TIMEOUT = 'MCP_TOOL_TIMEOUT',
   MCP_AUTHENTICATION_FAILED = 'MCP_AUTHENTICATION_FAILED',
   MCP_VALIDATION_FAILED = 'MCP_VALIDATION_FAILED',
   MCP_TOOL_EXECUTION_FAILED = 'MCP_TOOL_EXECUTION_FAILED',
@@ -156,13 +160,46 @@ function redactServerUrl(serverUrl: string): string {
  * `cause` only.
  */
 export class McpConnectionTimeoutError extends McpError {
-  constructor(serverUrl: string, timeoutMs: number, cause?: unknown) {
+  constructor(
+    serverUrl: string,
+    timeoutMs: number,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
     super(
       `The MCP server at ${redactServerUrl(serverUrl)} did not respond ` +
         `within ${Math.round(timeoutMs / 1000)}s. Please verify the server ` +
         `is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_TIMEOUT,
       504,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+/**
+ * A tool call on an already-connected MCP server that outlived its budget —
+ * typically a slow upstream behind the server, not an outage (AYC-1120).
+ * Kept apart from McpConnectionTimeoutError so it is still reported, but
+ * under its own incident instead of masking real outages. The message is
+ * handed to the LLM as the tool result.
+ */
+export class McpToolTimeoutError extends McpError {
+  constructor(
+    serverUrl: string,
+    timeoutMs: number,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `The tool call to the MCP server at ${redactServerUrl(serverUrl)} ` +
+        `did not finish within ${Math.round(timeoutMs / 1000)}s.`,
+      McpErrorCode.MCP_TOOL_TIMEOUT,
+      504,
+      metadata,
     );
     if (cause !== undefined) {
       this.cause = cause;
@@ -178,12 +215,77 @@ export class McpConnectionTimeoutError extends McpError {
  * suppressed (AYC-616).
  */
 export class McpConnectionFailedError extends McpError {
-  constructor(serverUrl: string, cause?: unknown) {
+  constructor(serverUrl: string, cause?: unknown, metadata?: ErrorMetadata) {
     super(
       `The MCP server at ${redactServerUrl(serverUrl)} could not be ` +
         `reached. Please verify the server is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_FAILED,
       502,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+export type McpOAuthStage = 'discovery' | 'authorization' | 'token exchange';
+
+function serverOrigin(serverUrl: string): string {
+  try {
+    return new URL(serverUrl).origin;
+  } catch {
+    return serverUrl;
+  }
+}
+
+/**
+ * Transport failure while talking to an MCP server or its authorization
+ * server during a per-user OAuth flow (AYC-1234). The message is shown to
+ * the user, so it carries only the configured server origin: discovery and
+ * token endpoints live on other hosts and may embed secrets in their paths.
+ */
+export class McpOAuthServerUnreachableError extends McpError {
+  constructor(
+    serverUrl: string,
+    stage: McpOAuthStage,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `The MCP server at ${serverOrigin(serverUrl)} could not be reached ` +
+        `during OAuth ${stage}. Please verify the server is running and ` +
+        `accessible, then try again.`,
+      McpErrorCode.MCP_OAUTH_SERVER_UNREACHABLE,
+      502,
+      metadata,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+/**
+ * An OAuth endpoint answered with something other than JSON — typically an
+ * HTML login, proxy or error page (AYC-1155). Like the unreachable error, the
+ * user-facing message names only the configured server origin.
+ */
+export class McpOAuthInvalidResponseError extends McpError {
+  constructor(
+    serverUrl: string,
+    stage: McpOAuthRequestStage,
+    cause?: unknown,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `OAuth ${stage} for the MCP server at ${serverOrigin(serverUrl)} ` +
+        `returned a response that is not valid JSON. The OAuth endpoint is ` +
+        `likely misconfigured or served a login or error page. Please verify ` +
+        `the server's OAuth configuration, then try again.`,
+      McpErrorCode.MCP_OAUTH_INVALID_RESPONSE,
+      502,
+      metadata,
     );
     if (cause !== undefined) {
       this.cause = cause;

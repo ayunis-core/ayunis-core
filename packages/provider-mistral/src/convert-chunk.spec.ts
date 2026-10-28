@@ -1,4 +1,8 @@
-import type { CompletionEvent } from '@mistralai/mistralai/models/components';
+import {
+  CompletionEvent$inboundSchema,
+  ReferenceChunk$inboundSchema,
+  type CompletionEvent,
+} from '@mistralai/mistralai/models/components';
 import { describe, expect, it } from 'vitest';
 
 import { ToolNameCodec } from '@ayunis/inference';
@@ -37,6 +41,40 @@ describe('convertChunk', () => {
         }),
       ),
     ).toEqual({ textDelta: 'Hello' });
+  });
+
+  it('accepts streamed reference blocks with string-valued reference_ids', () => {
+    const parsed = CompletionEvent$inboundSchema.parse({
+      data: JSON.stringify({
+        id: 'chatcmpl-reference',
+        model: 'mistral-large-latest',
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: [
+                {
+                  type: 'reference',
+                  reference_ids: ['source-7f3b1a'],
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      }),
+    });
+
+    expect(convertChunk(parsed)).toBeNull();
+  });
+
+  it('rejects non-scalar reference_ids', () => {
+    expect(() =>
+      ReferenceChunk$inboundSchema.parse({
+        type: 'reference',
+        reference_ids: [{ source: 'municipal-website' }],
+      }),
+    ).toThrow();
   });
 
   it('converts tool_call deltas, carrying id, name and arguments', () => {

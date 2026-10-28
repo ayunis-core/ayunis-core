@@ -7,6 +7,7 @@ export class ApiKey {
 
   public id: UUID;
   public name: string;
+  public description: string | null;
   public prefix: string;
   public hash: string;
   public expiresAt: Date | null;
@@ -19,6 +20,7 @@ export class ApiKey {
   constructor(params: {
     id?: UUID;
     name: string;
+    description?: string | null;
     prefix: string;
     hash: string;
     expiresAt?: Date | null;
@@ -30,6 +32,7 @@ export class ApiKey {
   }) {
     this.id = params.id ?? randomUUID();
     this.name = params.name;
+    this.description = params.description ?? null;
     this.prefix = params.prefix;
     this.hash = params.hash;
     this.expiresAt = params.expiresAt ?? null;

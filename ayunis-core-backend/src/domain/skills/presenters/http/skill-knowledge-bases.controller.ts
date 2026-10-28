@@ -5,35 +5,31 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { AssignKnowledgeBaseToSkillUseCase } from '../../application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.use-case';
-import { UnassignKnowledgeBaseFromSkillUseCase } from '../../application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.use-case';
-import { ListSkillKnowledgeBasesUseCase } from '../../application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
+import { AssignKnowledgeBaseToSkillUseCase } from 'src/domain/skills/application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.use-case';
+import { UnassignKnowledgeBaseFromSkillUseCase } from 'src/domain/skills/application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.use-case';
+import { ListSkillKnowledgeBasesUseCase } from 'src/domain/skills/application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 
-import { AssignKnowledgeBaseToSkillCommand } from '../../application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.command';
-import { UnassignKnowledgeBaseFromSkillCommand } from '../../application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.command';
-import { ListSkillKnowledgeBasesQuery } from '../../application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.query';
+import { AssignKnowledgeBaseToSkillCommand } from 'src/domain/skills/application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.command';
+import { UnassignKnowledgeBaseFromSkillCommand } from 'src/domain/skills/application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.command';
+import { ListSkillKnowledgeBasesQuery } from 'src/domain/skills/application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.query';
 
-import { SkillAccessService } from '../../application/services/skill-access.service';
-import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
+import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
+import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 import { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
-@RequireFeature(FeatureFlag.Skills)
-@RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('skills')
 export class SkillKnowledgeBasesController {
   private readonly logger = new Logger(SkillKnowledgeBasesController.name);
@@ -44,8 +40,7 @@ export class SkillKnowledgeBasesController {
     private readonly listSkillKnowledgeBasesUseCase: ListSkillKnowledgeBasesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
-    private readonly skillAccessService: SkillAccessService,
-    private readonly skillCreatorNameService: SkillCreatorNameService,
+    private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -78,18 +73,13 @@ export class SkillKnowledgeBasesController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('assignKnowledgeBase', { skillId, knowledgeBaseId });
+    this.logger.log({ skillId, knowledgeBaseId }, 'assignKnowledgeBase');
 
-    const skill = await this.assignKnowledgeBaseToSkillUseCase.execute(
+    await this.assignKnowledgeBaseToSkillUseCase.execute(
       new AssignKnowledgeBaseToSkillCommand(skillId, knowledgeBaseId),
     );
 
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
-
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.toSkillDto(skillId);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -120,17 +110,19 @@ export class SkillKnowledgeBasesController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('unassignKnowledgeBase', { skillId, knowledgeBaseId });
+    this.logger.log({ skillId, knowledgeBaseId }, 'unassignKnowledgeBase');
 
-    const skill = await this.unassignKnowledgeBaseFromSkillUseCase.execute(
+    await this.unassignKnowledgeBaseFromSkillUseCase.execute(
       new UnassignKnowledgeBaseFromSkillCommand(skillId, knowledgeBaseId),
     );
 
-    const context = await this.skillAccessService.resolveUserContext(skillId);
-    const creatorName = context.isShared
-      ? await this.skillCreatorNameService.resolveOne(skill.userId)
-      : null;
+    return this.toSkillDto(skillId);
+  }
 
+  private async toSkillDto(skillId: UUID): Promise<SkillResponseDto> {
+    const { skill, creatorName, ...context } = await this.findSkill.execute(
+      new FindOneSkillQuery(skillId),
+    );
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
@@ -151,12 +143,19 @@ export class SkillKnowledgeBasesController {
   async listSkillKnowledgeBases(
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
   ): Promise<KnowledgeBaseResponseDto[]> {
-    this.logger.log('listSkillKnowledgeBases', { skillId });
+    this.logger.log({ skillId }, 'listSkillKnowledgeBases');
 
-    const knowledgeBases = await this.listSkillKnowledgeBasesUseCase.execute(
+    const contexts = await this.listSkillKnowledgeBasesUseCase.execute(
       new ListSkillKnowledgeBasesQuery(skillId),
     );
 
-    return this.knowledgeBaseDtoMapper.toDtoArray(knowledgeBases);
+    return contexts.map(
+      ({ knowledgeBase, isActive, isShared, documentCount }) =>
+        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+          isActive,
+          isShared,
+          documentCount,
+        }),
+    );
   }
 }

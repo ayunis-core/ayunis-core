@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -9,16 +9,18 @@ import { Transactional } from '@nestjs-cls/transactional';
 import {
   RemainingShareScope,
   ShareDeletedEvent,
-} from '../../events/share-deleted.event';
+} from 'src/domain/shares/application/events/share-deleted.event';
 import { Share } from 'src/domain/shares/domain/share.entity';
 import {
   OrgShareScope,
   TeamShareScope,
 } from 'src/domain/shares/domain/share-scope.entity';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class DeleteShareUseCase {
-  private logger = new Logger(DeleteShareUseCase.name);
+  private readonly logger = new Logger(DeleteShareUseCase.name);
+
   constructor(
     private readonly repository: SharesRepository,
     private readonly contextService: ContextService,
@@ -28,10 +30,7 @@ export class DeleteShareUseCase {
   @Transactional()
   async execute(id: UUID): Promise<void> {
     try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+      const { userId, orgId } = getRequiredUserContext(this.contextService);
 
       const share = await this.repository.findById(id);
       if (!share) {
@@ -53,11 +52,6 @@ export class DeleteShareUseCase {
         this.toRemainingScope(s),
       );
 
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
       this.eventEmitter
         .emitAsync(
           ShareDeletedEvent.EVENT_NAME,
@@ -70,14 +64,15 @@ export class DeleteShareUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error(`Failed to emit ${ShareDeletedEvent.EVENT_NAME}`, {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
+          this.logger.error(
+            { err: err as Error },
+            'Failed to emit share deletion event',
+          );
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error(error);
-      throw new Error('Unexpected error occurred');
+      this.logger.error({ err: error as Error }, 'Failed to delete share');
+      throw new Error('Unexpected error occurred', { cause: error });
     }
   }
 

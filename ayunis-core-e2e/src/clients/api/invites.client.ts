@@ -1,0 +1,75 @@
+import type { APIRequestContext, APIResponse } from "@playwright/test";
+import { config } from "../../config";
+import type { AcceptInviteDto } from "../generated/ayunisCoreAPI.schemas";
+import {
+  CreateBulkInviteItemDtoRole,
+  CreateInviteDtoRole,
+} from "../generated/ayunisCoreAPI.schemas";
+import { generatedApi } from "./generated-api";
+
+export async function inviteUser(
+  api: APIRequestContext,
+  email: string,
+  role: CreateInviteDtoRole = CreateInviteDtoRole.user,
+): Promise<void> {
+  await generatedApi.invitesControllerCreate({ email, role }, { api });
+}
+
+export function requestInvite(
+  api: APIRequestContext,
+  email: string,
+  role: CreateInviteDtoRole = CreateInviteDtoRole.user,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/invites`, {
+    data: { email, role },
+  });
+}
+
+export async function acceptInvite(
+  api: APIRequestContext,
+  input: AcceptInviteDto,
+): Promise<void> {
+  await generatedApi.invitesControllerAcceptInvite(input, { api });
+}
+
+export async function bulkInviteUser(
+  api: APIRequestContext,
+  email: string,
+  teamNames: string[],
+): Promise<void> {
+  await generatedApi.invitesControllerCreateBulk(
+    {
+      invites: [{ email, role: CreateBulkInviteItemDtoRole.user, teamNames }],
+    },
+    { api },
+  );
+}
+
+export async function bulkInviteUserAsSuperAdmin(
+  api: APIRequestContext,
+  orgId: string,
+  email: string,
+  teamNames: string[],
+): Promise<void> {
+  await generatedApi.superAdminInvitesControllerCreateBulk(
+    orgId,
+    {
+      invites: [{ email, role: CreateBulkInviteItemDtoRole.user, teamNames }],
+    },
+    { api },
+  );
+}
+
+export function requestDeleteInvite(
+  api: APIRequestContext,
+  inviteId: string,
+): Promise<APIResponse> {
+  return api.delete(`${config.apiURL}/api/invites/${inviteId}`);
+}
+
+export function requestResendInvite(
+  api: APIRequestContext,
+  inviteId: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/invites/${inviteId}/resend`);
+}

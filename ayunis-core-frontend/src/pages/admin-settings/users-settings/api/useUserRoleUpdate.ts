@@ -5,7 +5,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { UserRole } from '../model/openapi';
+import type { UserRole } from '@/pages/admin-settings/users-settings/model/openapi';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -26,10 +26,11 @@ export function useUserRoleUpdate(options?: UseUserRoleUpdateOptions) {
     mutation: {
       onSuccess: async () => {
         showSuccess(t('userRoleUpdate.success'));
-        // The users list is loaded via the route loader's fetchQuery, and the
-        // global staleTime (5m) means router.invalidate() alone re-runs the
-        // loader but gets the cached (stale) list. Invalidate the query first so
-        // the loader refetches and the Role column updates without a refresh.
+        // The users list is loaded via the route loader's queryClient.query,
+        // and the global staleTime (5m) means router.invalidate() alone re-runs
+        // the loader but gets the cached (stale) list. Invalidate the query
+        // first so the loader refetches and the Role column updates without a
+        // refresh.
         await queryClient.invalidateQueries({
           queryKey: getUserControllerGetUsersInOrganizationQueryKey(),
         });

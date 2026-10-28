@@ -3,9 +3,9 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import {
   CONFIGURABLE_ROLES,
   DEFAULT_ROLE_PERMISSIONS,
-} from '../../../domain/default-role-permissions.constants';
-import { RolePermissionsRepository } from '../../ports/role-permissions.repository';
-import { UnexpectedPermissionError } from '../../permissions.errors';
+} from 'src/iam/permissions/domain/default-role-permissions.constants';
+import { RolePermissionsRepository } from 'src/iam/permissions/application/ports/role-permissions.repository';
+import { UnexpectedPermissionError } from 'src/iam/permissions/application/permissions.errors';
 import { SeedDefaultRolePermissionsCommand } from './seed-default-role-permissions.command';
 
 /**
@@ -25,9 +25,12 @@ export class SeedDefaultRolePermissionsUseCase {
 
   @HandleUnexpectedErrors(UnexpectedPermissionError)
   async execute(command: SeedDefaultRolePermissionsCommand): Promise<void> {
-    this.logger.log('Seeding default role permissions', {
-      orgId: command.orgId,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+      },
+      'Seeding default role permissions',
+    );
 
     await this.rolePermissionsRepository.setForRoles(
       command.orgId,

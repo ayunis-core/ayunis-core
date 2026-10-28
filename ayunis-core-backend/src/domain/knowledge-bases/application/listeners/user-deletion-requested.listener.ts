@@ -5,21 +5,15 @@ import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/use
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
+import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
+import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 
 /**
- * Cleans up in-flight source processing for a user's knowledge bases when the
- * user is being deleted.
- *
- * The rows need no handling here: `knowledge_bases.userId`,
- * `sources.knowledgeBaseId` and the RAG parent/child chunks all cascade on
- * user deletion (see the CascadeUserDeletionRelations,
- * AddOrgCascadeToConversationKbMcpData and AddParentChunksSourceFk
- * migrations). What the cascade cannot do is cancel queued processing jobs and
- * remove `<orgId>/processing/<sourceId>/` MinIO blobs — so this listener
- * resolves the processing sources while the rows still exist and defers that
- * cleanup; the users module runs it after the row delete succeeds. Failures
- * are logged, never thrown, so cleanup issues never block deletion.
+ * Snapshots sources owned through a user's personal and workspace knowledge
+ * bases before the database cascade removes them. Processing cleanup and index
+ * deletion are deferred until the user row has been deleted successfully.
+ * Failures are logged and never block user deletion.
  */
 @Injectable()
 export class KnowledgeBasesUserDeletionRequestedListener {
@@ -30,6 +24,7 @@ export class KnowledgeBasesUserDeletionRequestedListener {
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
+    private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
   ) {}
 
   @OnEvent(UserDeletionRequestedEvent.EVENT_NAME)
@@ -37,59 +32,63 @@ export class KnowledgeBasesUserDeletionRequestedListener {
     event: UserDeletionRequestedEvent,
   ): Promise<void> {
     try {
-      const knowledgeBases = await this.knowledgeBaseRepository.findAllByUserId(
-        event.userId,
-      );
+      const knowledgeBases =
+        await this.knowledgeBaseRepository.findAllOwnedByUserId(event.userId);
 
       if (knowledgeBases.length === 0) {
         return;
       }
 
-      const sourceIds = await this.collectProcessingSourceIds(
-        knowledgeBases.map((kb) => kb.id),
-      );
-
-      if (sourceIds.length === 0) {
+      const sources =
+        await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseIds(
+          knowledgeBases.map((knowledgeBase) => knowledgeBase.id),
+        );
+      if (sources.length === 0) {
         return;
       }
 
-      this.logger.log('Deferring source processing cleanup for deleted user', {
-        userId: event.userId,
-        knowledgeBaseCount: knowledgeBases.length,
-        sourceCount: sourceIds.length,
-      });
+      const sourceIds = sources.map((source) => source.id);
+      const processingSourceIds = sources
+        .filter((source) => source.status === SourceStatus.PROCESSING)
+        .map((source) => source.id);
 
-      event.deferCleanup('cleanup knowledge base source processing', () =>
-        this.cleanupSourceProcessingUseCase.execute(
-          new CleanupSourceProcessingCommand(sourceIds, event.orgId),
-        ),
-      );
-    } catch (error) {
-      this.logger.error(
-        'Failed to resolve knowledge base sources for deleted user',
+      this.logger.log(
         {
           userId: event.userId,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          knowledgeBaseCount: knowledgeBases.length,
+          sourceCount: sourceIds.length,
         },
+        'Deferring knowledge base source cleanup for deleted user',
+      );
+
+      this.deferSourceCleanup(event, sourceIds, processingSourceIds);
+    } catch (error) {
+      this.logger.error(
+        {
+          userId: event.userId,
+          err: error as Error,
+        },
+        'Failed to resolve knowledge base sources for deleted user',
       );
     }
   }
 
-  private async collectProcessingSourceIds(
-    knowledgeBaseIds: UUID[],
-  ): Promise<UUID[]> {
-    const sourceIds: UUID[] = [];
-    for (const knowledgeBaseId of knowledgeBaseIds) {
-      const sources =
-        await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(
-          knowledgeBaseId,
-        );
-      sourceIds.push(
-        ...sources
-          .filter((source) => source.status === SourceStatus.PROCESSING)
-          .map((source) => source.id),
+  private deferSourceCleanup(
+    event: UserDeletionRequestedEvent,
+    sourceIds: UUID[],
+    processingSourceIds: UUID[],
+  ): void {
+    if (processingSourceIds.length > 0) {
+      event.deferCleanup('cleanup knowledge base source processing', () =>
+        this.cleanupSourceProcessingUseCase.execute(
+          new CleanupSourceProcessingCommand(processingSourceIds, event.orgId),
+        ),
       );
     }
-    return sourceIds;
+    event.deferCleanup('delete knowledge base source indexes', () =>
+      this.deleteSourcesUseCase.execute(
+        new DeleteSourcesCommand(sourceIds, event.orgId),
+      ),
+    );
   }
 }

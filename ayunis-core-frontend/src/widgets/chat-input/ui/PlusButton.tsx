@@ -18,19 +18,20 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
 import { useRef } from 'react';
-import { useKnowledgeBases } from '../api/useKnowledgeBases';
+import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
 import {
   separateFilesByType,
   createFileListFromFiles,
-} from '../utils/fileHandlers';
+  keepFilesWithinSizeLimit,
+  ACCEPTED_FILE_PICKER_TYPES,
+} from '@/widgets/chat-input/utils/fileHandlers';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
 
 interface PlusButtonProps {
@@ -57,13 +58,12 @@ export default function PlusButton({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
-  const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
   const {
     knowledgeBases,
     isLoading: isLoadingKBs,
     error: kbsError,
   } = useKnowledgeBases({
-    enabled: !!onKnowledgeBaseSelect && knowledgeBasesEnabled,
+    enabled: !!onKnowledgeBaseSelect,
   });
 
   // Single entry point for all uploads. Splits the selection by type and routes
@@ -79,7 +79,8 @@ export default function PlusButton({
       if (isFileSourceDisabled) {
         hasSkippedFiles = true;
       } else {
-        onFileUpload(regularFiles);
+        const validFiles = keepFilesWithinSizeLimit(regularFiles, t);
+        if (validFiles.length > 0) onFileUpload(validFiles);
       }
     }
 
@@ -129,7 +130,7 @@ export default function PlusButton({
               <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {onKnowledgeBaseSelect && knowledgeBasesEnabled && (
+          {onKnowledgeBaseSelect && (
             <DropdownMenuGroup>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -198,7 +199,7 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.mp3,.m4a,.wav,.webm"
+        accept={ACCEPTED_FILE_PICKER_TYPES}
         onChange={(e) => handleFileChange(e.target.files)}
         ref={fileInputRef}
       />

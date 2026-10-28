@@ -1,9 +1,9 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { formatAjvErrors } from 'src/common/validators/tool-params.validator';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
-import { ToolExecutionFailedError } from '../../application/tools.errors';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 const generateImageToolParameters = {
   type: 'object' as const,
@@ -30,6 +30,12 @@ const generateImageToolParameters = {
       description:
         "Refs of images the user uploaded in this conversation, to pass to the image model as visual references. Every uploaded image is preceded by a '[image ref: …]' label in the conversation; copy the ref exactly. Use whenever the request is based on an uploaded image (recreate, redraw, restyle, or closely reproduce it) — the image model then sees the original, which preserves detail far better than any text description. Still write a prompt describing the desired output.",
     },
+    background: {
+      type: 'string' as const,
+      enum: ['transparent'] as const,
+      description:
+        'Set only when the user has explicitly asked for a transparent background. If a transparent background would fit, for example lettering or a logo, ask first and leave this unset until the user confirms. Omit it for every other request.',
+    },
     reference_generated_image_ids: {
       type: 'array' as const,
       items: {
@@ -54,9 +60,9 @@ export class GenerateImageTool extends Tool {
     super({
       name: ToolType.GENERATE_IMAGE,
       description:
-        'Generate an image from a text description, optionally using images from the conversation as visual references. Returns a unique image ID that references the generated image.',
+        'Generate an image from a text description, optionally using images from the conversation as visual references. Returns a unique image ID that references the generated image. Set background to transparent only after the user explicitly asks for a transparent background.',
       descriptionLong:
-        "Use when the user asks you to create, draw, design, or generate an image, illustration, diagram, or visual content. When the request is based on an image the user uploaded, pass the ref from its '[image ref: …]' label in reference_uploaded_image_ids so the image model sees the original instead of a text description. When refining an image generated earlier, pass its ID in reference_generated_image_ids. The tool returns an image ID; you do not need to display the image yourself as it will be rendered automatically.",
+        "Use when the user asks you to create, draw, design, or generate an image, illustration, diagram, or visual content. When the request is based on an image the user uploaded, pass the ref from its '[image ref: …]' label in reference_uploaded_image_ids so the image model sees the original instead of a text description. When refining an image generated earlier, pass its ID in reference_generated_image_ids. Set background to transparent only when the user has explicitly asked for a transparent background, such as lettering or a logo to place on other material. If a transparent background would fit but the user has not confirmed it, ask first and leave background unset. The tool returns an image ID; you do not need to display the image yourself as it will be rendered automatically.",
       parameters: generateImageToolParameters,
       type: ToolType.GENERATE_IMAGE,
     });

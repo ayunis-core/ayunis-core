@@ -1,11 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { UpdateArtifactUseCase } from './update-artifact.use-case';
 import { UpdateArtifactCommand } from './update-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactContentTooLargeError,
   ArtifactExpectedVersionMismatchError,
@@ -14,7 +14,7 @@ import {
   InvalidSpreadsheetContentError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import {
   DocumentArtifact,
   SpreadsheetArtifact,
@@ -32,6 +32,8 @@ describe('UpdateArtifactUseCase', () => {
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -49,10 +51,9 @@ describe('UpdateArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockFindLetterheadUseCase = {
@@ -74,9 +75,6 @@ describe('UpdateArtifactUseCase', () => {
     useCase = module.get<UpdateArtifactUseCase>(UpdateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {

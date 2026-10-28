@@ -9,7 +9,7 @@ import {
 } from '@ayunis/ui/components/form';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { useResetPassword } from '../api/useResetPassword';
+import { useResetPassword } from '@/pages/auth/reset-password/api/useResetPassword';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 
@@ -55,6 +55,8 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
                 <FormLabel>{t(`${prefix}.password`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
+                    data-testid="reset-new-password"
+                    autoComplete="new-password"
                     placeholder={t(`${prefix}.passwordPlaceholder`)}
                     {...field}
                   />
@@ -71,6 +73,8 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
                 <FormLabel>{t(`${prefix}.confirmPassword`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
+                    data-testid="reset-confirm-password"
+                    autoComplete="new-password"
                     placeholder={t(`${prefix}.confirmPasswordPlaceholder`)}
                     {...field}
                   />
@@ -79,7 +83,12 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="reset-submit"
+          >
             {isLoading ? t(`${prefix}.resetting`) : t(`${prefix}.submitButton`)}
           </Button>
         </form>

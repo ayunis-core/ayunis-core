@@ -1,4 +1,5 @@
 import type { RunEventPayload, ToolCallSummary } from '../contracts/event';
+import type { ToolCallOutcome } from '../contracts/hook';
 import { AgentRuntimeError } from '../contracts/errors';
 import type { ToolResultContent, ToolUseContent } from '../contracts/message';
 import type {
@@ -10,12 +11,13 @@ import { drainEmits } from './event-queue';
 import type { RunState } from './run-state';
 import { isAborted } from './run-state';
 
-export const MAX_TOOL_RESULT_LENGTH = 20_000;
-const DISPLAY_ACK = 'Tool has been displayed successfully';
+export const MAX_TOOL_RESULT_LENGTH = 200_000;
+const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 interface ToolOutcome {
   result: string;
   isError: boolean;
+  aborted?: true;
   fatalError?: AgentRuntimeError;
 }
 
@@ -47,35 +49,94 @@ export async function* executeToolCalls(
       name: call.name,
       input: call.input,
     };
-    let toolCall = requested;
-    let outcome: ToolOutcome;
-    if (fatalError || isAborted(state)) {
-      outcome = abortedOutcome();
-    } else {
-      toolCall = await state.hookRunner.beforeToolCall({
-        iteration,
-        toolCall: requested,
-        findTool: (name) => findTool(state, name),
-      });
-      yield* drainEmits(state);
-      outcome = isAborted(state)
-        ? abortedOutcome()
-        : await runTool(state, findTool(state, toolCall.name), toolCall);
-    }
+    const { toolCall, outcome, hookOutcome } = yield* resolveToolCall(
+      state,
+      iteration,
+      requested,
+      fatalError !== undefined,
+    );
     fatalError ??= outcome.fatalError;
-    await state.hookRunner.afterToolCall({
+    const result = await finalizeToolCall({
+      state,
       iteration,
       toolCall,
-      result: outcome.result,
-      isError: outcome.isError,
+      outcome,
+      hookOutcome,
       isLastToolCall: callIndex === calls.length - 1,
     });
     yield* drainEmits(state);
-    const result = buildToolResult(toolCall, outcome);
     results.push(result);
     yield result;
   }
   return { results, ...(fatalError ? { fatalError } : {}) };
+}
+
+interface ResolvedToolCall {
+  toolCall: ToolCallSummary;
+  outcome: ToolOutcome;
+  hookOutcome: ToolCallOutcome;
+}
+
+async function* resolveToolCall(
+  state: RunState,
+  iteration: number,
+  requested: ToolCallSummary,
+  skip: boolean,
+): AsyncGenerator<RunEventPayload, ResolvedToolCall> {
+  if (skip || isAborted(state)) {
+    return {
+      toolCall: requested,
+      outcome: abortedOutcome(),
+      hookOutcome: 'aborted',
+    };
+  }
+  const toolCall = await state.hookRunner.beforeToolCall({
+    iteration,
+    toolCall: requested,
+    findTool: (name) => findTool(state, name),
+  });
+  yield* drainEmits(state);
+  if (isAborted(state)) {
+    return { toolCall, outcome: abortedOutcome(), hookOutcome: 'aborted' };
+  }
+  const outcome = await runTool(
+    state,
+    findTool(state, toolCall.name),
+    toolCall,
+  );
+  return {
+    toolCall,
+    outcome,
+    hookOutcome: toolCallOutcome(outcome),
+  };
+}
+
+const toolCallOutcome = (outcome: ToolOutcome): ToolCallOutcome => {
+  if (outcome.aborted) return 'aborted';
+  return outcome.isError ? 'error' : 'success';
+};
+
+interface FinalizeToolCallParams {
+  state: RunState;
+  iteration: number;
+  toolCall: ToolCallSummary;
+  outcome: ToolOutcome;
+  hookOutcome: ToolCallOutcome;
+  isLastToolCall: boolean;
+}
+
+async function finalizeToolCall(
+  params: FinalizeToolCallParams,
+): Promise<Extract<RunEventPayload, { type: 'tool_result' }>> {
+  await params.state.hookRunner.afterToolCall({
+    iteration: params.iteration,
+    toolCall: params.toolCall,
+    result: params.outcome.result,
+    isError: params.outcome.isError,
+    outcome: params.hookOutcome,
+    isLastToolCall: params.isLastToolCall,
+  });
+  return buildToolResult(params.toolCall, params.outcome);
 }
 
 const buildToolResult = (
@@ -115,24 +176,21 @@ const runTool = async (
   }
   if (!tool.execute) {
     return {
-      result: DISPLAY_ACK,
+      result: EXTERNAL_TOOL_RESULT,
       isError: false,
     };
   }
+  const context = buildToolContext(state, call.id);
   try {
-    const value = await tool.execute(
-      call.input,
-      buildToolContext(state, call.id),
-    );
+    const value = await tool.execute(call.input, context);
     return normalizeToolOutput(value);
   } catch (error) {
-    return failedOutcome(error);
+    return failedOutcome(error, context.signal);
   }
 };
 
-// For display-only tools this is the only check before the input reaches the
-// client render (AYC-675); for executable tools it is a guard that skips
-// execute entirely.
+// For externally handled tools this is the final host-side validation seam;
+// for executable tools it is a guard that skips execute entirely.
 const validateToolInput = (
   tool: Tool,
   input: Record<string, unknown>,
@@ -152,14 +210,29 @@ const normalizeToolOutput = (output: ToolExecutionOutput): ToolOutcome => {
   return { result: clampResult(output.result), isError: output.isError };
 };
 
-const failedOutcome = (error: unknown): ToolOutcome => {
+const failedOutcome = (error: unknown, signal?: AbortSignal): ToolOutcome => {
+  const message =
+    error instanceof Error ? error.message : 'Tool execution failed';
+  if (signalCausedFailure(error, signal)) {
+    return { result: message, isError: true, aborted: true };
+  }
   if (error instanceof AgentRuntimeError) {
     return { result: error.message, isError: true, fatalError: error };
   }
-  const message =
-    error instanceof Error ? error.message : 'Tool execution failed';
   return { result: message, isError: true };
 };
+
+const signalCausedFailure = (
+  error: unknown,
+  signal: AbortSignal | undefined,
+): boolean =>
+  Boolean(
+    signal?.aborted &&
+    (error === signal.reason ||
+      (typeof error === 'object' &&
+        error !== null &&
+        (error as { name?: unknown }).name === 'AbortError')),
+  );
 
 const buildToolContext = (
   state: RunState,
@@ -168,11 +241,17 @@ const buildToolContext = (
   return {
     context: state.context,
     toolCallId,
-    signal: state.signal,
+    toolNames: state.tools.map(({ name }) => name),
+    signal: toolSignal(state),
     emit: (event) => state.emits.push(event),
     runChild: state.runChild,
   };
 };
+
+const toolSignal = (state: RunState): AbortSignal =>
+  state.signal
+    ? AbortSignal.any([state.signal, state.consumerSignal])
+    : state.consumerSignal;
 
 const clampResult = (result: string): string => {
   if (result.length <= MAX_TOOL_RESULT_LENGTH) {

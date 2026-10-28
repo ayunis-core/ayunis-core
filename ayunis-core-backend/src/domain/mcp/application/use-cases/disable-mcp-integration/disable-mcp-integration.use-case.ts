@@ -1,13 +1,13 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { DisableMcpIntegrationCommand } from './disable-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class DisableMcpIntegrationUseCase {
   async execute(
     command: DisableMcpIntegrationCommand,
   ): Promise<McpIntegration> {
-    this.logger.log('disableMcpIntegration', { id: command.integrationId });
+    this.logger.log({ id: command.integrationId }, 'disableMcpIntegration');
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -52,9 +52,12 @@ export class DisableMcpIntegrationUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error disabling integration', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error disabling integration',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

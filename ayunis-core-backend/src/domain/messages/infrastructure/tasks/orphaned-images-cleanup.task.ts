@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
+import { CleanupOrphanedImagesUseCase } from 'src/domain/messages/application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
 
 /**
  * Scheduled task that runs daily to clean up orphaned images from storage.
@@ -10,6 +10,7 @@ import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanu
 @Injectable()
 export class OrphanedImagesCleanupTask {
   private readonly logger = new Logger(OrphanedImagesCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -33,21 +34,28 @@ export class OrphanedImagesCleanupTask {
     try {
       const result = await this.cleanupOrphanedImagesUseCase.execute();
 
-      this.logger.log('Scheduled cleanup completed', {
-        scanned: result.scannedCount,
-        deleted: result.deletedCount,
-        failed: result.failedCount,
-      });
+      this.logger.log(
+        {
+          scanned: result.scannedCount,
+          deleted: result.deletedCount,
+          failed: result.failedCount,
+        },
+        'Scheduled cleanup completed',
+      );
 
       if (result.failedCount > 0) {
-        this.logger.warn('Some images failed to delete', {
-          errors: result.errors,
-        });
+        this.logger.warn(
+          { errors: result.errors },
+          'Some images failed to delete',
+        );
       }
     } catch (error) {
-      this.logger.error('Scheduled cleanup failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Scheduled cleanup failed',
+      );
     } finally {
       this.isRunning = false;
     }

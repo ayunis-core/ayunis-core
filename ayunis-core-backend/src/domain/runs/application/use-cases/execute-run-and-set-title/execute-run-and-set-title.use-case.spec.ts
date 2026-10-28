@@ -1,7 +1,7 @@
 import { randomUUID, type UUID } from 'crypto';
 import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
-import type { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
+import type { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
@@ -13,7 +13,7 @@ import type {
   RunErrorEvent,
   RunMasksEvent,
   RunMessageEvent,
-} from '../../run-events';
+} from 'src/domain/runs/application/run-events';
 import { RunPiiMasksUpdate } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
@@ -128,9 +128,11 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       const masksEvent = events[masksIndex] as RunMasksEvent;
       expect(masksEvent.masks).toEqual([
         {
+          id: mask.id,
           token: '{{pii:PERSON_NAME_1}}',
           value: 'Max Mustermann',
           category: PiiCategory.PERSON_NAME,
+          unmasked: false,
         },
       ]);
 
@@ -288,6 +290,26 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       expect(events[events.length - 1]).toEqual(
         expect.objectContaining({ type: 'session', streaming: false }),
       );
+    });
+
+    it('does not expose server-error details in an SSE event', async () => {
+      executeRunUseCase.execute.mockRejectedValue(
+        new ProviderTimeoutError(
+          { provider: 'openai', host: 'internal.provider.example' },
+          new Error('socket timed out with apiKey=secret'),
+        ),
+      );
+
+      const events = await drain(useCase.execute(command()));
+      const errorEvent = events.find(
+        (event): event is RunErrorEvent => event.type === 'error',
+      );
+
+      expect(errorEvent).toMatchObject({
+        code: 'PROVIDER_UNAVAILABLE_TIMEOUT_OPENAI',
+        message: 'Internal server error',
+      });
+      expect(errorEvent?.details).toBeUndefined();
     });
 
     // The SSE response is committed as 200 before the run executes, so the

@@ -1,0 +1,112 @@
+import { createHash } from 'crypto';
+import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
+import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
+import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
+import { createMockOrgSsoConnectionsRepository } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
+import {
+  anEnabledSsoConnection,
+  SSO_TEST_ORG_ID,
+} from 'src/iam/sso/application/testing/sso-login.fixtures';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
+
+describe(StartOrgSsoLoginUseCase.name, () => {
+  it('stores only hashed state and encrypted secrets before redirecting', async () => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findByOrgId.mockResolvedValue(anEnabledSsoConnection());
+    const transactions = {
+      save: jest.fn().mockImplementation(async (transaction) => transaction),
+      consume: jest.fn(),
+      deleteExpired: jest.fn(),
+    };
+    const broker = {
+      createAuthorizationRequest: jest.fn().mockResolvedValue({
+        authorizationUrl: 'https://sso.ayunis.de/oauth/v2/authorize',
+        state: 'oauth-state',
+        nonce: 'oidc-nonce',
+        codeVerifier: 'pkce-verifier',
+      }),
+      validateCallback: jest.fn(),
+    };
+    const encryption = {
+      encrypt: jest.fn((value: string) => `encrypted:${value}`),
+      decrypt: jest.fn(),
+    };
+    const useCase = new StartOrgSsoLoginUseCase(
+      repository,
+      new SsoAuthorizationTransactionService(transactions, broker, encryption),
+    );
+
+    const result = await useCase.execute(
+      new StartOrgSsoLoginCommand(SSO_TEST_ORG_ID),
+    );
+    expect(result).toEqual({
+      authorizationUrl: 'https://sso.ayunis.de/oauth/v2/authorize',
+      browserBinding: expect.any(String),
+    });
+    expect(transactions.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orgId: SSO_TEST_ORG_ID,
+        stateHash: createHash('sha256').update('oauth-state').digest('hex'),
+        browserBindingHash: createHash('sha256')
+          .update(result.browserBinding)
+          .digest('hex'),
+        postLoginPath: '/sso/success',
+        encryptedCodeVerifier: 'encrypted:pkce-verifier',
+        encryptedNonce: 'encrypted:oidc-nonce',
+        purpose: SsoLoginPurpose.LOGIN,
+        linkUserId: null,
+      }),
+    );
+    expect(JSON.stringify(transactions.save.mock.calls)).not.toContain(
+      'oauth-state',
+    );
+    expect(JSON.stringify(transactions.save.mock.calls)).not.toContain(
+      result.browserBinding,
+    );
+  });
+
+  it.each([
+    ['missing', null],
+    ['disabled', anEnabledSsoConnection({ enabled: false })],
+    ['unmapped', anEnabledSsoConnection({ zitadelOrgId: null })],
+  ])('refuses a %s connection', async (_case, connection) => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findByOrgId.mockResolvedValue(connection);
+    const useCase = new StartOrgSsoLoginUseCase(
+      repository,
+      new SsoAuthorizationTransactionService(
+        { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },
+        { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+        { encrypt: jest.fn(), decrypt: jest.fn() },
+      ),
+    );
+
+    await expect(
+      useCase.execute(new StartOrgSsoLoginCommand(SSO_TEST_ORG_ID)),
+    ).rejects.toMatchObject({ code: 'SSO_CONNECTION_NOT_AVAILABLE' });
+  });
+
+  it('returns service unavailable when the connection lookup cannot reach PostgreSQL', async () => {
+    const repository = createMockOrgSsoConnectionsRepository();
+    repository.findByOrgId.mockRejectedValue(
+      Object.assign(new Error('not yet accepting connections'), {
+        code: '57P03',
+      }),
+    );
+    const useCase = new StartOrgSsoLoginUseCase(
+      repository,
+      new SsoAuthorizationTransactionService(
+        { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },
+        { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+        { encrypt: jest.fn(), decrypt: jest.fn() },
+      ),
+    );
+
+    await expect(
+      useCase.execute(new StartOrgSsoLoginCommand(SSO_TEST_ORG_ID)),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+});

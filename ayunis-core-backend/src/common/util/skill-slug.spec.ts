@@ -6,6 +6,7 @@ import {
   SlugCollisionError,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
 } from './skill-slug';
 
 describe('skill-slug', () => {
@@ -57,6 +58,11 @@ describe('skill-slug', () => {
   });
 
   describe('buildSkillSlug', () => {
+    it('should prefix workspace skill names with workspace__', () => {
+      expect(buildSkillSlug(WORKSPACE_PREFIX, 'Budget Analysis')).toBe(
+        'workspace__budget-analysis',
+      );
+    });
     it('should prefix with system__', () => {
       expect(buildSkillSlug(SYSTEM_PREFIX, 'Data Privacy')).toBe(
         'system__data-privacy',
@@ -71,6 +77,18 @@ describe('skill-slug', () => {
   });
 
   describe('parseSkillSlug', () => {
+    it('should split workspace__ prefix correctly', () => {
+      expect(parseSkillSlug('workspace__budget-analysis')).toEqual({
+        prefix: WORKSPACE_PREFIX,
+        slug: 'budget-analysis',
+      });
+    });
+
+    it('should reject an empty workspace slug', () => {
+      expect(() => parseSkillSlug('workspace__')).toThrow(
+        'Invalid skill slug: empty slug after prefix',
+      );
+    });
     it('should split system__ prefix correctly', () => {
       const result = parseSkillSlug('system__data-privacy');
       expect(result).toEqual({ prefix: 'system', slug: 'data-privacy' });
@@ -104,6 +122,15 @@ describe('skill-slug', () => {
   });
 
   describe('buildSlugMap', () => {
+    it('keeps same-named personal and workspace skills distinct', () => {
+      const map = buildSlugMap([
+        { name: 'Budget Analysis', prefix: USER_PREFIX },
+        { name: 'Budget Analysis', prefix: WORKSPACE_PREFIX },
+      ]);
+      expect(map.size).toBe(2);
+      expect(map.get('user__budget-analysis')).toBe('Budget Analysis');
+      expect(map.get('workspace__budget-analysis')).toBe('Budget Analysis');
+    });
     it('should build a map from slug to original name', () => {
       const map = buildSlugMap([
         { name: 'Data Privacy', prefix: SYSTEM_PREFIX },

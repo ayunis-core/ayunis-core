@@ -22,6 +22,7 @@ import {
 } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
+import { Textarea } from '@ayunis/ui/components/textarea';
 import { Calendar } from '@ayunis/ui/components/calendar';
 import {
   Popover,
@@ -30,11 +31,11 @@ import {
 } from '@ayunis/ui/components/popover';
 import { cn } from '@ayunis/ui/lib/cn';
 import { formatDate } from '@/shared/lib/format-date';
-import { useCreateApiKey } from '../api/useCreateApiKey';
+import { useCreateApiKey } from '@/pages/admin-settings/api-keys-settings/api/useCreateApiKey';
 import {
   createApiKeyFormSchema,
   type CreateApiKeyFormValues,
-} from '../model/createApiKeyFormSchema';
+} from '@/pages/admin-settings/api-keys-settings/model/createApiKeyFormSchema';
 import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreateApiKeyDialogProps {
@@ -69,6 +70,7 @@ export function CreateApiKeyDialog({
     resolver: zodResolver(createApiKeyFormSchema(t)),
     defaultValues: {
       name: '',
+      description: '',
       expiresAt: undefined,
     },
   });
@@ -88,7 +90,7 @@ export function CreateApiKeyDialog({
     const expiresAt = data.expiresAt
       ? toEndOfLocalDay(data.expiresAt).toISOString()
       : undefined;
-    createApiKey({ name: data.name, expiresAt });
+    createApiKey({ name: data.name, description: data.description, expiresAt });
   };
 
   return (
@@ -112,6 +114,27 @@ export function CreateApiKeyDialog({
                     <FormControl>
                       <Input
                         placeholder={t('apiKeys.createDialog.namePlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t('apiKeys.createDialog.descriptionLabel')}
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={3}
+                        placeholder={t(
+                          'apiKeys.editDialog.descriptionPlaceholder',
+                        )}
                         {...field}
                       />
                     </FormControl>

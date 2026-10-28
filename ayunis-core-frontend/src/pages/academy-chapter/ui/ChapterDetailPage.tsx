@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { toLoomEmbedUrl } from '../lib/toLoomEmbedUrl';
+import { ModuleVideo } from './ModuleVideo';
 
 interface ChapterDetailPageProps {
   chapter: AcademyChapterResponseDto;
@@ -40,15 +40,11 @@ export default function ChapterDetailPage({
     });
   };
 
-  const finishChapter = () => {
-    if (chapter.quizEnabled) {
-      void navigate({
-        to: '/academy/$chapterId/quiz',
-        params: { chapterId: chapter.id },
-      });
-      return;
-    }
-    void navigate({ to: '/academy' });
+  const openConfirmation = () => {
+    void navigate({
+      to: '/academy/$chapterId/complete',
+      params: { chapterId: chapter.id },
+    });
   };
 
   const header = (
@@ -86,13 +82,12 @@ export default function ChapterDetailPage({
                       title={t('detail.noModules.title')}
                       description={t('detail.noModules.description')}
                     />
-                    {/* Without modules the quiz has no other entry point, and
-                        an unreachable quiz blocks whole-academy completion. */}
-                    {chapter.quizEnabled && (
-                      <Button onClick={finishChapter}>
-                        {t('detail.startQuiz')}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={openConfirmation}
+                      data-testid="academy-chapter-complete-action"
+                    >
+                      {t('detail.openConfirmation')}
+                    </Button>
                   </div>
                 ) : (
                   <Button onClick={() => goToModule(0)}>
@@ -140,16 +135,7 @@ export default function ChapterDetailPage({
     <div className="mx-auto flex max-w-[1200px] flex-col gap-6 lg:flex-row lg:items-start">
       {/* Main column: video capped so the page stays scannable, plus text/nav */}
       <div className="min-w-0 flex-1 space-y-4">
-        <div className="aspect-video overflow-hidden rounded-lg border bg-muted">
-          <iframe
-            key={currentModule.id}
-            src={toLoomEmbedUrl(currentModule.loomUrl)}
-            title={currentModule.title}
-            className="h-full w-full"
-            allowFullScreen
-            allow="autoplay; fullscreen; picture-in-picture"
-          />
-        </div>
+        <ModuleVideo courseModule={currentModule} />
 
         <div>
           <h2 className="text-lg font-semibold">{currentModule.title}</h2>
@@ -169,12 +155,18 @@ export default function ChapterDetailPage({
             {t('detail.previous')}
           </Button>
           {isLast ? (
-            <Button onClick={finishChapter}>
-              {chapter.quizEnabled ? t('detail.startQuiz') : t('detail.finish')}
+            <Button
+              onClick={openConfirmation}
+              data-testid="academy-chapter-complete-action"
+            >
+              {t('detail.openConfirmation')}
               <Check className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => goToModule(currentIndex + 1)}>
+            <Button
+              onClick={() => goToModule(currentIndex + 1)}
+              data-testid="academy-module-next"
+            >
               {t('detail.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>

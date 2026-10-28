@@ -1,7 +1,7 @@
+import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
-import { Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -11,14 +11,14 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
-} from '../runs.errors';
+} from 'src/domain/runs/application/runs.errors';
 import { assistantMessageId, toolResultMessageId } from './message-id';
 import {
   toBackendAssistantMessage,
@@ -26,13 +26,21 @@ import {
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
-import { reconstructRuntimeModelError } from './runtime-model-error';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
-import type { RunExecutionOutcome } from '../run-execution-outcome';
+import {
+  reconstructRuntimeAnonymizationError,
+  reconstructRuntimeModelError,
+} from './runtime-model-error';
+import type { RuntimeModelRegistry } from './runtime-model.registry';
+import {
+  mapPortableProviderError,
+  mapProviderFailureBehindHook,
+} from './provider-failure.mapper';
+import { mapMalformedToolCallError } from './malformed-tool-call-error.helper';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import { mapRuntimeHookError } from './runtime-hook-error';
+import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
+import { mapUsageAccountingError } from './usage-accounting-error.mapper';
 
-const logger = new Logger('RunEventStreamAdapter');
-
-/** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
   id: UUID;
   text: string;
@@ -40,25 +48,13 @@ interface StreamingTurn {
   toolCalls: Map<number, ToolCallSnapshot>;
 }
 
-/**
- * Folds the runtime's fine-grained `RunEvent` stream into the coarse
- * `RunStreamItem`s the runs SSE presenter already knows how to serialize:
- *
- * - text and thinking deltas plus runtime-owned tool-call snapshots become a growing
- *   `AssistantMessage` re-yielded per tick;
- * - `assistant_message` yields the authoritative message (tool_use + provider
- *   metadata) under the same id as the streamed one;
- * - `tool_result_message` yields the backend tool-result message;
- * - `custom` mask events become `RunPiiMasksUpdate` (yielded before the message
- *   carrying the tokens, as the client expects);
- * - `error` is captured and thrown only once the stream drains, so the
- *   runtime's `runEnd` hooks still fire before the error surfaces as an SSE
- *   error frame (matching the legacy loop's throw-then-cleanup order).
- */
+/** Delays mapped errors until runtime terminal hooks have completed. */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
+  logger: Logger,
   integrations?: RuntimeToolIntegrationRegistry,
+  models?: RuntimeModelRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
   let pendingError: ApplicationError | null = null;
@@ -75,6 +71,8 @@ export async function* adaptRunEventsToStream(
       event,
       threadId,
       assistant.lastCompletedIteration(),
+      logger,
+      models,
     );
     if (side instanceof ApplicationError) {
       pendingError = side;
@@ -101,7 +99,6 @@ function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
     : undefined;
 }
 
-/** Maps the assistant-turn events (deltas + the authoritative message). */
 class AssistantTurnAccumulator {
   private turn: StreamingTurn | null = null;
   private turnIndex = 0;
@@ -154,21 +151,18 @@ class AssistantTurnAccumulator {
     return this.turn;
   }
 
-  /**
-   * The iteration of the most recently completed assistant turn — the one a
-   * following `tool_result_message` belongs to (tools always follow their
-   * assistant turn, so `turnIndex` has already advanced past it).
-   */
+  /** Tool results follow the assistant turn after its index has advanced. */
   lastCompletedIteration(): number {
     return Math.max(0, this.turnIndex - 1);
   }
 }
 
-/** Maps the non-assistant events, or an ApplicationError to throw on drain. */
 function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
+  logger: Logger,
+  models?: RuntimeModelRegistry,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
@@ -183,28 +177,31 @@ function toSideStreamItem(
       : null;
   }
   if (event.type === 'error') {
-    return mapRunError(event);
+    return mapRunError(event, logger, models);
   }
   if (event.type === 'finalization_error') {
-    return mapFinalizationError(event);
+    return mapFinalizationError(event, logger);
   }
   return null;
 }
 
 function mapFinalizationError(
   event: Extract<RunEvent, { type: 'finalization_error' }>,
+  logger: Logger,
 ): ApplicationError | null {
   const context = {
+    execution_path: 'agent_runtime',
     hookName: event.hookName,
     phase: 'runEnd',
     originalOutcome: event.outcome,
-    runtimeMessage: event.message,
+    critical: event.critical,
+    message: event.message,
   };
   if (!event.critical) {
-    logger.warn('Best-effort agent runtime finalization hook failed', context);
+    logger.warn(context, 'Best-effort agent runtime finalization hook failed');
     return null;
   }
-  logger.error('Critical agent runtime finalization hook failed', context);
+  logger.error(context, 'Critical agent runtime finalization hook failed');
   return new RunExecutionFailedError('Agent runtime finalization failed', {
     hookName: event.hookName,
     phase: 'runEnd',
@@ -279,14 +276,6 @@ const RUN_ERROR_MAPPERS = new Map<
     },
   ],
   [
-    'MALFORMED_TOOL_CALL',
-    (event) =>
-      new InferenceFailedError(
-        'model emitted a tool call whose arguments did not arrive intact',
-        event.details,
-      ),
-  ],
-  [
     'TOOL_REPEATEDLY_FAILING',
     (event) => {
       const toolName = event.details?.toolName;
@@ -300,29 +289,53 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapRunError(event: RunErrorEvent): ApplicationError {
+function mapRunError(
+  event: RunErrorEvent,
+  logger: Logger,
+  models?: RuntimeModelRegistry,
+): ApplicationError {
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
-    // Checked before the generic reconstruction: the run error keeps the
-    // user-facing code and localized message, while the classified provider
-    // failure serialized into details rides on `cause` so AppSignal groups
-    // under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
     return new RunAnonymizationUnavailableError(
       undefined,
-      reconstructRuntimeModelError(event.details),
+      reconstructRuntimeAnonymizationError(event.details),
     );
   }
+  const policyError = mapCreditPolicyError(event);
+  if (policyError) return policyError;
+  const accountingError = mapUsageAccountingError(event, logger);
+  if (accountingError) {
+    const providerError = mapProviderFailureBehindHook(event, models);
+    if (!providerError) return accountingError;
+    // The accounting failure is what made the call terminal; the transcript
+    // policy reads it from here.
+    providerError.cause = accountingError;
+    return providerError;
+  }
+  const hookFailure = mapRuntimeHookError(event, logger);
+  if (hookFailure) return hookFailure;
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;
   }
+  const portableProviderError = mapPortableProviderError(event, models);
+  if (portableProviderError) {
+    return portableProviderError;
+  }
+  const malformedToolCall = mapMalformedToolCallError(event, models);
+  if (malformedToolCall) return malformedToolCall;
   const mapper = RUN_ERROR_MAPPERS.get(event.code);
   if (mapper) {
     return mapper(event);
   }
-  logger.error('Agent runtime failed', {
-    code: event.code,
-    runtimeMessage: event.message,
-    details: event.details,
+  logger.error(
+    {
+      code: event.code,
+      message: event.message,
+      details: event.details,
+    },
+    'Agent runtime failed',
+  );
+  return new RunExecutionFailedError('Agent runtime failed', {
+    runtimeErrorCode: event.code,
   });
-  return new RunExecutionFailedError('Agent runtime failed');
 }

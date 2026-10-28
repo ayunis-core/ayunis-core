@@ -1,17 +1,18 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { Thread } from '../../../domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
 import {
   NoModelProvidedError,
   ThreadCreationError,
   UnexpecteThreadError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -21,6 +22,7 @@ export class CreateThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
+    private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -34,11 +36,19 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
+    // Throws WorkspaceNotFoundError for an id the caller does not own.
+    if (command.workspaceId) {
+      await this.workspaceReadAccess.execute({
+        workspaceId: command.workspaceId,
+      });
+    }
+
     try {
       const thread = new Thread({
         userId,
         model,
         isAnonymous,
+        workspaceId: command.workspaceId,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
@@ -46,10 +56,13 @@ export class CreateThreadUseCase {
         ...createdThread,
       });
     } catch (error) {
-      this.logger.error('Failed to create thread', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          err: error as Error,
+        },
+        'Failed to create thread',
+      );
       throw new ThreadCreationError(error as Error, userId);
     }
   }

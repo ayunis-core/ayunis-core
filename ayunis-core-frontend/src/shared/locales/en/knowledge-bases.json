@@ -100,11 +100,20 @@
   },
   "create": {
     "success": "Knowledge base created successfully!",
-    "error": "Failed to create knowledge base. Please try again."
+    "error": "Failed to create knowledge base. Please try again.",
+    "validationError": "Please check the knowledge base details and try again."
   },
   "delete": {
     "success": "Knowledge base deleted successfully!",
     "error": "Failed to delete knowledge base. Please try again.",
+    "notFound": "Knowledge base not found. It may have been deleted."
+  },
+  "activation": {
+    "activeLabel": "Active",
+    "inactiveLabel": "Inactive",
+    "tooltip": "Active knowledge bases are available to AI chats. Inactive knowledge bases are not used until they are activated again.",
+    "success": "Knowledge base status updated.",
+    "error": "Failed to update the knowledge base status.",
     "notFound": "Knowledge base not found. It may have been deleted."
   },
   "detail": {
@@ -139,9 +148,9 @@
     },
     "documents": {
       "title": "Documents",
-      "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX.",
+      "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG and audio.",
       "upload": "Upload",
-      "empty": "No documents uploaded yet. Upload a PDF or DOCX file to get started.",
+      "empty": "No documents uploaded yet. Upload a PDF, DOCX or ODT file to get started.",
       "uploadSuccess": "Document uploaded successfully!",
       "uploadAccepted": "Document uploaded — processing in the background...",
       "uploadError": "Failed to upload document. Please try again.",
@@ -166,6 +175,7 @@
       "retryUpload": "Remove and re-upload",
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",
+      "removeNotFound": "The document was already removed from this knowledge base.",
       "urlDialogCancel": "Cancel"
     }
   },

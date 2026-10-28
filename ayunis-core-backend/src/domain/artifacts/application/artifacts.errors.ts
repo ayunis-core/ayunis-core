@@ -19,6 +19,7 @@ export enum ArtifactErrorCode {
   ARTIFACT_LETTERHEAD_NOT_SUPPORTED = 'ARTIFACT_LETTERHEAD_NOT_SUPPORTED',
   ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
   ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
+  ARTIFACT_EXPORT_TIMEOUT = 'ARTIFACT_EXPORT_TIMEOUT',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
@@ -159,6 +160,17 @@ export class InvalidSpreadsheetContentError extends ArtifactError {
       400,
       metadata,
     );
+  }
+}
+
+export class ArtifactExportTimeoutError extends ArtifactError {
+  constructor(cause: Error) {
+    super(
+      'Artifact export timed out',
+      ArtifactErrorCode.ARTIFACT_EXPORT_TIMEOUT,
+      504,
+    );
+    this.cause = cause;
   }
 }
 

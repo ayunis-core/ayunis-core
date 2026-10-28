@@ -9,5 +9,6 @@ export function useThreadArtifacts(threadId: string) {
     artifacts: query.data ?? [],
     isLoading: query.isLoading,
     error: query.error,
+    refetch: query.refetch,
   };
 }

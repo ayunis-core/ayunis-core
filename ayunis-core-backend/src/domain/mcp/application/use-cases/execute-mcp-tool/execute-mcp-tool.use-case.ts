@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
-import { McpToolCall } from '../../ports/mcp-client.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpToolCall } from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { isMcpConnectivityOutage, UnexpectedMcpError } from '../../mcp.errors';
+import {
+  isMcpConnectivityOutage,
+  McpToolTimeoutError,
+  UnexpectedMcpError,
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 
 /**
  * Result of tool execution
@@ -29,9 +33,7 @@ export class ExecuteMcpToolUseCase {
 
   async execute(command: ExecuteMcpToolCommand): Promise<ToolExecutionResult> {
     const startTime = Date.now();
-    this.logger.log(
-      `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=started`,
-    );
+    this.logStarted(command);
 
     try {
       const integration = await this.validateIntegrationAccess.validate(
@@ -52,9 +54,11 @@ export class ExecuteMcpToolUseCase {
           userId,
         );
 
-        const duration = Date.now() - startTime;
-        this.logger.log(
-          `[MCP] operation=execute_tool integration=${command.integrationId} name="${integration.name}" tool="${command.toolName}" status=${result.isError ? 'tool_error' : 'success'} duration=${duration}ms`,
+        this.logCompleted(
+          command,
+          integration.name,
+          result.isError,
+          Date.now() - startTime,
         );
 
         return {
@@ -75,6 +79,36 @@ export class ExecuteMcpToolUseCase {
     }
   }
 
+  private logStarted(command: ExecuteMcpToolCommand): void {
+    this.logger.log(
+      {
+        operation: 'execute_tool',
+        integration: { id: command.integrationId },
+        tool: { name: command.toolName },
+        status: 'started',
+      },
+      '[MCP] operation=execute_tool',
+    );
+  }
+
+  private logCompleted(
+    command: ExecuteMcpToolCommand,
+    integrationName: string,
+    isError: boolean,
+    durationMs: number,
+  ): void {
+    this.logger.log(
+      {
+        operation: 'execute_tool',
+        integration: { id: command.integrationId, name: integrationName },
+        tool: { name: command.toolName },
+        status: isError ? 'tool_error' : 'success',
+        durationMs,
+      },
+      '[MCP] operation=execute_tool',
+    );
+  }
+
   private rethrowExecutionError(
     error: unknown,
     command: ExecuteMcpToolCommand,
@@ -84,14 +118,29 @@ export class ExecuteMcpToolUseCase {
 
     if (error instanceof ApplicationError) {
       this.logger.warn(
-        `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=error error="${error.message}" duration=${duration}ms`,
+        {
+          operation: 'execute_tool',
+          integration: { id: command.integrationId },
+          tool: { name: command.toolName },
+          status: 'error',
+          error: error.message,
+          durationMs: duration,
+        },
+        '[MCP] operation=execute_tool',
       );
       throw error;
     }
 
     this.logger.error(
-      `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=unexpected_error error="${(error as Error).message}" duration=${duration}ms`,
-      { error: error as Error },
+      {
+        err: error as Error,
+        operation: 'execute_tool',
+        integration: { id: command.integrationId },
+        tool: { name: command.toolName },
+        status: 'unexpected_error',
+        durationMs: duration,
+      },
+      '[MCP] operation=execute_tool',
     );
     throw new UnexpectedMcpError(
       'Unexpected error occurred during tool execution',
@@ -103,7 +152,8 @@ export class ExecuteMcpToolUseCase {
    * LLM. This soft-return is the only place classified MCP outages surface
    * during a run, and their raw transport duplicates are suppressed
    * AppSignal-side (AYC-616) — so the classified failure must be reported
-   * here or connection outages become invisible. Tool-level failures (bad
+   * here or connection outages become invisible. Tool timeouts are reported
+   * too, under their own incident type (AYC-1120). Tool-level failures (bad
    * params, server-side tool bugs) stay unreported: they are the
    * integration's expected outcome, not ours.
    */
@@ -117,10 +167,21 @@ export class ExecuteMcpToolUseCase {
     const errorMsg = (toolError as Error).message || 'Tool execution failed';
 
     this.logger.warn(
-      `[MCP] operation=execute_tool integration=${command.integrationId} name="${integrationName}" tool="${command.toolName}" status=error error="${errorMsg}" duration=${duration}ms`,
+      {
+        operation: 'execute_tool',
+        integration: { id: command.integrationId, name: integrationName },
+        tool: { name: command.toolName },
+        status: 'error',
+        error: errorMsg,
+        durationMs: duration,
+      },
+      '[MCP] operation=execute_tool',
     );
 
-    if (isMcpConnectivityOutage(toolError)) {
+    if (
+      isMcpConnectivityOutage(toolError) ||
+      toolError instanceof McpToolTimeoutError
+    ) {
       reportUnexpectedError(toolError);
     }
 

@@ -1,10 +1,11 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedLanguageModel,
@@ -17,13 +18,15 @@ import {
   ModelErrorCode,
   PermittedEmbeddingModelNotFoundForOrgError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { GetPermittedEmbeddingModelQuery } from './get-permitted-embedding-model.query';
 import { GetPermittedEmbeddingModelUseCase } from './get-permitted-embedding-model.use-case';
 
 describe('GetPermittedEmbeddingModelUseCase', () => {
+  const logger = createLoggerMock();
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
+  const userId = randomUUID();
 
   let useCase: GetPermittedEmbeddingModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
@@ -67,8 +70,8 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
 
     useCase = module.get(GetPermittedEmbeddingModelUseCase);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {
@@ -94,7 +97,9 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
   it('allows super admins to query other organizations', async () => {
     const permittedModel = buildEmbeddingPermittedModel();
     (contextService.get as jest.Mock).mockImplementation((key?: string) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
+      if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       return undefined;
     });
@@ -151,6 +156,7 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
         canUseTools: true,
         isReasoning: false,
         canVision: false,
+        contextWindowSize: 128_000,
         isArchived: false,
       }),
       orgId,

@@ -2,10 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   SplitterHandler,
   SplitterInput,
-} from '../../application/ports/splitter.handler';
-import { SplitResult, TextChunk } from '../../domain/split-result.entity';
-import { SplitterProcessingError } from '../../application/splitter.errors';
-import { SplitterType } from '../../domain/splitter-type.enum';
+} from 'src/domain/rag/splitters/application/ports/splitter.handler';
+import {
+  SplitResult,
+  TextChunk,
+} from 'src/domain/rag/splitters/domain/split-result.entity';
+import { SplitterProcessingError } from 'src/domain/rag/splitters/application/splitter.errors';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import {
   ChunkAssembler,
   PositionedChunk,
@@ -41,18 +44,23 @@ interface RecursiveSplitContext {
 export class RecursiveSplitterHandler extends SplitterHandler {
   private readonly logger = new Logger(RecursiveSplitterHandler.name);
 
+  constructor() {
+    super();
+  }
+
   isAvailable(): boolean {
     return true;
   }
 
   processText(input: SplitterInput): SplitResult {
     try {
-      this.logger.debug(`Processing text with Recursive Text Splitter`);
+      this.logger.debug('Processing text with Recursive Text Splitter');
 
       const config = this.resolveAndValidateConfig(input);
 
       this.logger.debug(
-        `Chunk size: ${config.chunkSize}, Chunk overlap: ${config.chunkOverlap}`,
+        { chunkSize: config.chunkSize, chunkOverlap: config.chunkOverlap },
+        'Resolved recursive text splitter configuration',
       );
 
       const rawChunks = this.ensureChunkSizeLimit(
@@ -73,8 +81,8 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       });
     } catch (error) {
       this.logger.error(
-        `Recursive Text Splitter processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
+        { err: error as Error },
+        'Recursive Text Splitter processing failed',
       );
       throw new SplitterProcessingError(
         `Failed to process text with Recursive Text Splitter`,

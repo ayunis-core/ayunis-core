@@ -1,12 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateCourseModuleUseCase } from './update-course-module.use-case';
 import { UpdateCourseModuleCommand } from './update-course-module.command';
-import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
-import { CourseModuleNotFoundError } from '../../academy.errors';
+import { CourseModuleNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 describe('UpdateCourseModuleUseCase', () => {
   let useCase: UpdateCourseModuleUseCase;
@@ -30,9 +29,6 @@ describe('UpdateCourseModuleUseCase', () => {
 
     useCase = module.get<UpdateCourseModuleUseCase>(UpdateCourseModuleUseCase);
     courseModuleRepository = module.get(AcademyCourseModuleRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

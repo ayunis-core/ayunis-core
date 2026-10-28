@@ -1,14 +1,13 @@
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { SaveGeneratedImageUseCase } from './save-generated-image.use-case';
 import { SaveGeneratedImageCommand } from './save-generated-image.command';
-import type { GeneratedImagesRepository } from '../../ports/generated-images.repository';
-import type { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import type { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
+import type { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import {
   GeneratedImageSaveFailedError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 
 // Stable UUID for deterministic tests
 const FIXED_UUID = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -20,7 +19,7 @@ jest.mock('crypto', () => ({
 describe('SaveGeneratedImageUseCase', () => {
   let useCase: SaveGeneratedImageUseCase;
   let generatedImagesRepository: jest.Mocked<GeneratedImagesRepository>;
-  let uploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let uploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
   let deleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -35,7 +34,7 @@ describe('SaveGeneratedImageUseCase', () => {
 
     uploadObjectUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<UploadObjectUseCase>;
+    } as unknown as jest.Mocked<UploadOrgObjectUseCase>;
 
     deleteObjectUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
@@ -46,9 +45,6 @@ describe('SaveGeneratedImageUseCase', () => {
       uploadObjectUseCase,
       deleteObjectUseCase,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -80,6 +76,7 @@ describe('SaveGeneratedImageUseCase', () => {
 
       expect(uploadObjectUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
+          orgId: mockOrgId,
           objectName: `generated-images/${mockOrgId}/${mockThreadId}/${FIXED_UUID}.png`,
         }),
       );

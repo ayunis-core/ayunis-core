@@ -12,7 +12,7 @@ import { useLocation } from '@tanstack/react-router';
 import {
   OnboardingTourContext,
   type TourRequest,
-} from '../model/onboardingTourContext';
+} from '@/widgets/onboarding/model/onboardingTourContext';
 
 const TourRenderer = lazy(() => import('./TourRenderer'));
 
@@ -25,6 +25,7 @@ export function OnboardingTourProvider({
   const endTour = useCallback(() => setRequest(null), []);
 
   const isTourActive = request !== null;
+  const activeTarget = request?.target ?? null;
 
   const { pathname } = useLocation();
   const [isReturnActive, setIsReturnActive] = useState(false);
@@ -44,8 +45,14 @@ export function OnboardingTourProvider({
   }, [pathname]);
 
   const value = useMemo(
-    () => ({ launchTour, isTourActive, isReturnActive, armReturn }),
-    [launchTour, isTourActive, isReturnActive, armReturn],
+    () => ({
+      launchTour,
+      isTourActive,
+      activeTarget,
+      isReturnActive,
+      armReturn,
+    }),
+    [launchTour, isTourActive, activeTarget, isReturnActive, armReturn],
   );
 
   return (

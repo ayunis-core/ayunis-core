@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class RemoveKnowledgeBaseFromThreadUseCase {
@@ -17,16 +17,16 @@ export class RemoveKnowledgeBaseFromThreadUseCase {
   ) {}
 
   async execute(command: RemoveKnowledgeBaseFromThreadCommand): Promise<void> {
-    this.logger.log('execute', {
-      threadId: command.threadId,
-      knowledgeBaseId: command.knowledgeBaseId,
-      originSkillId: command.originSkillId,
-    });
+    this.logger.log(
+      {
+        threadId: command.threadId,
+        knowledgeBaseId: command.knowledgeBaseId,
+        originSkillId: command.originSkillId,
+      },
+      'execute',
+    );
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       command.threadId,

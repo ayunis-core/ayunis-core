@@ -1,8 +1,8 @@
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { ArtifactsRepository } from '../ports/artifacts-repository.port';
-import type { ArtifactVersion } from '../../domain/artifact-version.entity';
-import { ArtifactVersionConflictError } from '../artifacts.errors';
+import type { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
+import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
 
 const MAX_VERSION_RETRIES = 3;
 
@@ -34,10 +34,14 @@ export async function addVersionWithRetry(params: {
         error instanceof ArtifactVersionConflictError &&
         attempt < MAX_VERSION_RETRIES
       ) {
-        logger.warn(`Version conflict on attempt ${attempt}, retrying`, {
-          artifactId,
-          versionNumber: updateParams.version.versionNumber,
-        });
+        logger.warn(
+          {
+            artifactId,
+            versionNumber: updateParams.version.versionNumber,
+            attempt,
+          },
+          'Version conflict, retrying',
+        );
         continue;
       }
 

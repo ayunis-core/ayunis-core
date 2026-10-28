@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { BudgetAlertNotificationRepository } from '../../ports/budget-alert-notification.repository';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 
 /**
  * Only the current period is ever read for dedup; older markers are kept
@@ -28,9 +28,12 @@ export class CleanupBudgetAlertNotificationsUseCase {
     );
     const deleted = await this.notificationRepository.deleteBefore(cutoff);
     if (deleted > 0) {
-      this.logger.log('Purged expired budget alert notifications', {
-        deleted,
-      });
+      this.logger.log(
+        {
+          deleted,
+        },
+        'Purged expired budget alert notifications',
+      );
     }
     return deleted;
   }

@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command';
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
-import { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
+import { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { UnexpectedChatSettingsError } from 'src/domain/chat-settings/application/chat-settings.errors';
+import { getRequiredOrgId } from 'src/common/context/required-context';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class UpsertOrgChatSettingsUseCase {
@@ -16,36 +16,12 @@ export class UpsertOrgChatSettingsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedChatSettingsError)
   async execute(
     command: UpsertOrgChatSettingsCommand,
   ): Promise<OrgChatSettings> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-    this.logger.log('execute', { orgId });
-
-    try {
-      const orgChatSettings = new OrgChatSettings({
-        orgId,
-        internetSearchEnabled: command.internetSearchEnabled,
-      });
-
-      const result =
-        await this.orgChatSettingsRepository.upsert(orgChatSettings);
-
-      this.logger.debug('Org chat settings upserted', {
-        orgId,
-        id: result.id,
-      });
-
-      return result;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to upsert org chat settings', {
-        error: error as Error,
-      });
-      throw new UnexpectedChatSettingsError(error as Error);
-    }
+    const orgId = getRequiredOrgId(this.contextService);
+    this.logger.log({ orgId }, 'Upserting org chat settings');
+    return this.orgChatSettingsRepository.upsert(orgId, command.settings);
   }
 }

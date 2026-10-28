@@ -84,6 +84,17 @@ describe('validateEnv', () => {
       ).toThrow(/URL_RETRIEVER_MAX_DOWNLOAD_BYTES/);
     });
 
+    it.each([
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '0'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '1.5'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '1e2'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '0x10'],
+      ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', '0'],
+      ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', 'not-a-number'],
+    ])('rejects invalid %s values', (key, value) => {
+      expect(() => validateEnv(baseEnv({ [key]: value }))).toThrow(key);
+    });
+
     it('accepts a valid integer var', () => {
       expect(() =>
         validateEnv(baseEnv({ URL_RETRIEVER_MAX_DOWNLOAD_BYTES: '1048576' })),
@@ -102,10 +113,141 @@ describe('validateEnv', () => {
       ).toThrow(/INTERNET_SEARCH_PROVIDER/);
     });
 
-    it('rejects a non-boolean feature flag', () => {
+    it('accepts a leftover retired feature flag', () => {
       expect(() =>
-        validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'yes' })),
-      ).toThrow(/FEATURE_SKILLS_ENABLED/);
+        validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'false' })),
+      ).not.toThrow();
+    });
+
+    it('rejects a non-boolean webhook disable flag', () => {
+      expect(() =>
+        validateEnv(baseEnv({ DISABLE_ORG_EVENTS_WEBHOOKS: 'yes' })),
+      ).toThrow(/DISABLE_ORG_EVENTS_WEBHOOKS/);
+    });
+
+    it('rejects a non-boolean mock inference flag', () => {
+      expect(() => validateEnv(baseEnv({ MOCK_INFERENCE: '1' }))).toThrow(
+        /MOCK_INFERENCE/,
+      );
+    });
+
+    it('accepts a complete SSO OIDC relying-party configuration', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('rejects a non-positive SSO reauthentication window', () => {
+      expect(() =>
+        validateEnv(baseEnv({ SSO_REAUTH_MAX_AGE_SECONDS: '0' })),
+      ).toThrow(/SSO_REAUTH_MAX_AGE_SECONDS/);
+    });
+
+    it('rejects an invalid SSO transaction encryption key', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'too-short',
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY/);
+    });
+
+    it('rejects a partial SSO OIDC relying-party configuration', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_CLIENT_SECRET/);
+    });
+
+    it('rejects a malformed SSO OIDC URL without reporting an HTTPS violation', () => {
+      let message = '';
+      try {
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'not-a-url',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        );
+      } catch (error) {
+        message = error instanceof Error ? error.message : '';
+      }
+
+      expect(message).toMatch(/SSO_OIDC_ISSUER.*URL/);
+      expect(message).not.toContain(
+        'SSO_OIDC_ISSUER must use HTTPS except for local development',
+      );
+    });
+
+    it('accepts loopback HTTP for local SSO testing', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'http://localhost:8080',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'http://localhost:3000/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('rejects insecure non-loopback SSO URLs', () => {
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- invalid input under test
+      const insecureIssuer = 'http://sso.ayunis.de';
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: insecureIssuer,
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_ISSUER must use HTTPS/);
+    });
+
+    it('rejects non-HTTP SSO URLs', () => {
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- invalid input under test
+      const nonHttpIssuer = 'ftp://sso.ayunis.de';
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: nonHttpIssuer,
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_ISSUER must use HTTPS/);
     });
   });
 

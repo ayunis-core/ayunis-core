@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUpdateLanguageModel } from '../api/useUpdateLanguageModel';
-import type { LanguageModelFormData } from '../model/types';
-import { normalizeLanguageModelFormData } from '../lib/normalizeLanguageModelFormData';
+import { useUpdateLanguageModel } from '@/pages/super-admin-settings/models-catalog/api/useUpdateLanguageModel';
+import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import { normalizeLanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/lib/normalizeLanguageModelFormData';
 import type {
   LanguageModelResponseDto,
   UpdateLanguageModelRequestDtoProvider,
@@ -13,7 +13,9 @@ import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
 import { LanguageModelTierField } from './LanguageModelTierField';
 import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
+import { LanguageModelContextWindowSizeField } from './LanguageModelContextWindowSizeField';
 import { ModelPricingFields } from './ModelPricingFields';
+import { ModelCheckboxField } from './ModelCheckboxField';
 
 interface EditLanguageModelDialogProps {
   model: LanguageModelResponseDto | null;
@@ -27,10 +29,6 @@ export function EditLanguageModelDialog({
   onOpenChange,
 }: Readonly<EditLanguageModelDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
-  const { updateLanguageModel, isUpdating } = useUpdateLanguageModel(() => {
-    onOpenChange(false);
-  });
-
   const form = useForm<LanguageModelFormData>({
     defaultValues: {
       name: '',
@@ -39,12 +37,21 @@ export function EditLanguageModelDialog({
       canStream: false,
       canUseTools: false,
       canVision: false,
+      contextWindowSize: undefined,
       isReasoning: false,
       isArchived: false,
+      hasProviderFault: false,
       tier: undefined,
       description: '',
     },
   });
+
+  const { updateLanguageModel, isUpdating } = useUpdateLanguageModel(
+    form,
+    () => {
+      onOpenChange(false);
+    },
+  );
 
   // Reset form when model changes or dialog opens
   useEffect(() => {
@@ -56,8 +63,10 @@ export function EditLanguageModelDialog({
         canStream: model.canStream,
         canUseTools: model.canUseTools,
         canVision: model.canVision,
+        contextWindowSize: model.contextWindowSize,
         isReasoning: model.isReasoning,
         isArchived: model.isArchived,
+        hasProviderFault: model.hasProviderFault,
         inputTokenCost: model.inputTokenCost,
         outputTokenCost: model.outputTokenCost,
         tier: model.tier,
@@ -89,6 +98,14 @@ export function EditLanguageModelDialog({
     >
       <LanguageModelTierField form={form} disabled={isUpdating} />
       <LanguageModelDescriptionField form={form} disabled={isUpdating} />
+      <LanguageModelContextWindowSizeField form={form} disabled={isUpdating} />
+      <ModelCheckboxField
+        control={form.control}
+        name="hasProviderFault"
+        label={t('models.catalog.dialog.providerFault')}
+        disabled={isUpdating}
+        testId="model-catalog-provider-fault"
+      />
       <LanguageModelCapabilityFields form={form} disabled={isUpdating} />
       <ModelPricingFields form={form} disabled={isUpdating} />
     </ModelFormDialog>

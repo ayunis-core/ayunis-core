@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import {
   InvalidDateRangeError,
   UnexpectedUsageError,
-} from '../../usage.errors';
+} from 'src/domain/usage/application/usage.errors';
 import {
   validateOptionalDateRange,
   processModelDistribution,
-} from '../../usage.utils';
+} from 'src/domain/usage/application/usage.utils';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -27,13 +27,16 @@ export class GetModelDistributionUseCase {
       throw new InvalidDateRangeError('Max models must be greater than 0');
     }
 
-    this.logger.log('Getting model distribution', {
-      organizationId: query.organizationId,
-      maxModels: query.maxModels,
-      modelId: query.modelId,
-      startDate: query.startDate?.toISOString(),
-      endDate: query.endDate?.toISOString(),
-    });
+    this.logger.log(
+      {
+        organizationId: query.organizationId,
+        maxModels: query.maxModels,
+        modelId: query.modelId,
+        startDate: query.startDate?.toISOString(),
+        endDate: query.endDate?.toISOString(),
+      },
+      'Getting model distribution',
+    );
 
     try {
       const modelDistribution = await this.usageRepository.getModelDistribution(
@@ -49,7 +52,10 @@ export class GetModelDistributionUseCase {
       return processModelDistribution(modelDistribution, query.maxModels);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get model distribution', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get model distribution',
+      );
       throw new UnexpectedUsageError(error as Error, {
         organizationId: query.organizationId,
         maxModels: query.maxModels,

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
 import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
-import { UnexpectedMfaError } from '../../mfa.errors';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 import { GetOrgMfaRequirementQuery } from './get-org-mfa-requirement.query';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class GetOrgMfaRequirementUseCase {
   ) {}
 
   async execute(query: GetOrgMfaRequirementQuery): Promise<OrgMfaRequirement> {
-    this.logger.log('getOrgMfaRequirement', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'getOrgMfaRequirement');
 
     try {
       const requirement = await this.orgMfaRequirementsRepository.findByOrgId(
@@ -26,9 +26,12 @@ export class GetOrgMfaRequirementUseCase {
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting org MFA requirement', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error getting org MFA requirement',
+      );
       throw new UnexpectedMfaError(error);
     }
   }

@@ -1,10 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { FindArtifactsByThreadUseCase } from './find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from './find-artifacts-by-thread.query';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 
@@ -13,6 +14,8 @@ describe('FindArtifactsByThreadUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
@@ -27,10 +30,9 @@ describe('FindArtifactsByThreadUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const module: TestingModule = await Test.createTestingModule({

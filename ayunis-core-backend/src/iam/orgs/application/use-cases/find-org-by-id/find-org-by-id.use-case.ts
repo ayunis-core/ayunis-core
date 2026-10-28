@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgError, OrgNotFoundError } from '../../orgs.errors';
+import {
+  OrgError,
+  OrgNotFoundError,
+} from 'src/iam/orgs/application/orgs.errors';
 
 @Injectable()
 export class FindOrgByIdUseCase {
@@ -11,20 +14,23 @@ export class FindOrgByIdUseCase {
   constructor(private readonly orgsRepository: OrgsRepository) {}
 
   async execute(query: FindOrgByIdQuery): Promise<Org> {
-    this.logger.log('findById', { id: query.id });
+    this.logger.log({ id: query.id }, 'findById');
     try {
       const org = await this.orgsRepository.findById(query.id);
-      this.logger.debug('Organization found', { id: query.id });
+      this.logger.debug({ id: query.id }, 'Organization found');
       return org;
     } catch (error) {
       if (error instanceof OrgError) {
         // Error already logged and properly formatted, just rethrow
         throw error;
       }
-      this.logger.error('Failed to find organization by ID', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        id: query.id,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          id: query.id,
+        },
+        'Failed to find organization by ID',
+      );
       throw new OrgNotFoundError(query.id);
     }
   }

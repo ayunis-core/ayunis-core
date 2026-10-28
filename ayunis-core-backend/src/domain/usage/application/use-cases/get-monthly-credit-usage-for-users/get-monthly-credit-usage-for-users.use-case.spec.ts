@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import { UsageRepository } from '../../ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import { GetMonthlyCreditUsageForUsersUseCase } from './get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForUsersQuery } from './get-monthly-credit-usage-for-users.query';
 

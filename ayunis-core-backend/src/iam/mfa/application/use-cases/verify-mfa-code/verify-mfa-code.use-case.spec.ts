@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { VerifyMfaCodeUseCase } from './verify-mfa-code.use-case';
 import { VerifyMfaCodeCommand } from './verify-mfa-code.command';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
-import { TotpPort } from '../../ports/totp.port';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
@@ -14,7 +14,7 @@ import {
   InvalidMfaCodeError,
   MfaLockedError,
   MfaNotEnabledError,
-} from '../../mfa.errors';
+} from 'src/iam/mfa/application/mfa.errors';
 
 describe('VerifyMfaCodeUseCase', () => {
   const userId = 'user-id-123' as UUID;

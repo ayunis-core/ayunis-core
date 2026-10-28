@@ -1,6 +1,8 @@
+import { ModelProviderError } from '@ayunis/inference';
 import { ApplicationError } from './base.error';
 import {
   ProviderConnectionError,
+  ProviderRequestRejectedError,
   ProviderServerError,
   ProviderTimeoutError,
 } from './provider.errors';
@@ -41,13 +43,17 @@ describe('wrapProviderFailure', () => {
     );
   });
 
-  it('wraps upstream 5xx responses as ProviderServerError with the status', () => {
+  it('wraps upstream 5xx responses with safe provider diagnostics', () => {
     const error = Object.assign(new Error('service unavailable'), {
       status: 503,
+      requestID: 'req_azure_503',
     });
     const wrapped = wrapProviderFailure(error, source);
     expect(wrapped).toBeInstanceOf(ProviderServerError);
-    expect(wrapped?.context.upstreamStatus).toBe(503);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 503,
+      upstreamRequestId: 'req_azure_503',
+    });
   });
 
   it('wraps upstream 504 and 408 as ProviderTimeoutError', () => {
@@ -65,7 +71,47 @@ describe('wrapProviderFailure', () => {
     );
   });
 
-  it('leaves upstream 4xx alone — our-bug responses must stay distinct', () => {
+  it('wraps upstream 429 responses as provider request rejections', () => {
+    const error = Object.assign(new Error('rate limit exceeded'), {
+      status: 429,
+      requestID: 'req_azure_429',
+      headers: { 'retry-after': '7' },
+    });
+    const wrapped = wrapProviderFailure(error, source);
+
+    expect(wrapped).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 429,
+      upstreamRequestId: 'req_azure_429',
+      retryAfterMs: 7_000,
+    });
+  });
+
+  it('recognizes a portable rate limit retained only in safe diagnostics', () => {
+    const error = new ModelProviderError({
+      kind: 'unknown',
+      stage: 'stream_consumption',
+      retryAfterMs: 10_517,
+      cause: Object.assign(new Error('sensitive Azure response'), {
+        code: 'rate_limit_exceeded',
+        type: 'too_many_requests',
+        requestID: 'req_azure_diagnostic_rate_limit',
+      }),
+    });
+    const wrapped = wrapProviderFailure(error, source);
+
+    expect(wrapped).toBeInstanceOf(ProviderRequestRejectedError);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 429,
+      upstreamCode: 'rate_limit_exceeded',
+      upstreamType: 'too_many_requests',
+      upstreamRequestId: 'req_azure_diagnostic_rate_limit',
+      retryAfterMs: 10_517,
+    });
+    expect(JSON.stringify(wrapped)).not.toContain('sensitive Azure response');
+  });
+
+  it('leaves other upstream 4xx alone — our-bug responses must stay distinct', () => {
     const error = Object.assign(new Error('bad request'), { status: 400 });
     expect(wrapProviderFailure(error, source)).toBeUndefined();
   });
@@ -73,6 +119,55 @@ describe('wrapProviderFailure', () => {
   it('leaves unrecognized errors alone', () => {
     expect(wrapProviderFailure(new Error('boom'), source)).toBeUndefined();
   });
+
+  it.each([
+    ['connection', ProviderConnectionError],
+    ['timeout', ProviderTimeoutError],
+    ['server', ProviderServerError],
+    ['rate_limit', ProviderRequestRejectedError],
+  ] as const)(
+    'maps portable %s failures using the backend provider identity',
+    (kind, expectedError) => {
+      const wrapped = wrapProviderFailure(
+        new ModelProviderError({
+          kind,
+          stage: 'stream_establishment',
+          upstreamStatus: kind === 'rate_limit' ? 429 : undefined,
+          upstreamRequestId: 'req_portable_123',
+          retryAfterMs: kind === 'rate_limit' ? 2_000 : undefined,
+          transportCode: kind === 'connection' ? 'ENETRESET' : undefined,
+          host: kind === 'connection' ? 'api.example.com' : undefined,
+          cause: new Error('raw provider failure with resident data'),
+        }),
+        { provider: 'scaleway', modelId: 'llama-3.3-70b' },
+      );
+
+      expect(wrapped).toBeInstanceOf(expectedError);
+      expect(wrapped?.context).toMatchObject({
+        provider: 'scaleway',
+        modelId: 'llama-3.3-70b',
+        upstreamRequestId: 'req_portable_123',
+        ...(kind === 'connection' && {
+          underlyingCode: 'ENETRESET',
+          host: 'api.example.com',
+        }),
+      });
+      expect(JSON.stringify(wrapped?.metadata)).not.toContain('resident data');
+    },
+  );
+
+  it.each(['rejection', 'abort', 'unknown'] as const)(
+    'leaves portable %s failures to the application boundary',
+    (kind) => {
+      const error = new ModelProviderError({
+        kind,
+        stage: 'stream_establishment',
+        cause: new Error('provider failure'),
+      });
+
+      expect(wrapProviderFailure(error, source)).toBeUndefined();
+    },
+  );
 
   it('prefers the transport classification over an attached upstream status', () => {
     // An SDK error can carry both a transport code and a synthesized status;

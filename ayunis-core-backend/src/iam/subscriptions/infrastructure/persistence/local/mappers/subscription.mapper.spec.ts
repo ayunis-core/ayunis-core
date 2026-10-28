@@ -4,12 +4,12 @@ import { SubscriptionBillingInfoMapper } from './subscription-billing-info.mappe
 import {
   SeatBasedSubscriptionRecord,
   UsageBasedSubscriptionRecord,
-} from '../schema/subscription.record';
+} from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
-import { SubscriptionBillingInfoRecord } from '../schema/subscription-billing-info.record';
+import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { InvalidSubscriptionDataError } from 'src/iam/subscriptions/application/subscription.errors';
 
 function createBillingInfoRecord(): SubscriptionBillingInfoRecord {
@@ -70,7 +70,7 @@ describe('SubscriptionMapper', () => {
       expect(domain).toBeInstanceOf(SeatBasedSubscription);
       const seatBased = domain as SeatBasedSubscription;
       expect(seatBased.noOfSeats).toBe(10);
-      expect(seatBased.pricePerSeat).toBe(9.99);
+      expect(seatBased.pricePerSeat).toBeCloseTo(9.99, 10);
       expect(seatBased.renewalCycle).toBe(RenewalCycle.MONTHLY);
     });
 
@@ -138,8 +138,45 @@ describe('SubscriptionMapper', () => {
     });
   });
 
+  it.each(['seat', 'usage'])(
+    'persists a fixed end independently of the shortened cancellation end (%s)',
+    (type) => {
+      const billingInfo = new SubscriptionBillingInfo({
+        companyName: 'Musterstadt',
+        street: 'Hauptstrasse',
+        houseNumber: '1',
+        postalCode: '12345',
+        city: 'Musterstadt',
+        country: 'DE',
+      });
+      const subscription =
+        type === 'seat'
+          ? new SeatBasedSubscription({
+              orgId: randomUUID(),
+              noOfSeats: 5,
+              pricePerSeat: 10,
+              renewalCycle: RenewalCycle.MONTHLY,
+              renewalCycleAnchor: new Date(),
+              billingInfo,
+            })
+          : new UsageBasedSubscription({
+              orgId: randomUUID(),
+              monthlyCredits: 1000,
+              billingInfo,
+            });
+      const originalEndsAt = new Date('2027-02-01T00:00:00Z');
+      const endsAt = new Date('2027-01-01T00:00:00Z');
+      Object.assign(subscription, { originalEndsAt, endsAt });
+      expect(mapper.toDomain(mapper.toRecord(subscription))).toMatchObject({
+        originalEndsAt,
+        endsAt,
+      });
+    },
+  );
+
   describe('round-trip', () => {
     it('should preserve all seat-based fields through domain → record → domain', () => {
+      const endsAt = new Date('2026-08-01T00:00:00.000Z');
       const original = new SeatBasedSubscription({
         orgId: randomUUID(),
         noOfSeats: 25,
@@ -147,6 +184,7 @@ describe('SubscriptionMapper', () => {
         renewalCycle: RenewalCycle.YEARLY,
         renewalCycleAnchor: new Date('2025-06-15'),
         startsAt: new Date('2025-06-15'),
+        endsAt,
         billingInfo: new SubscriptionBillingInfo({
           companyName: 'Stadt Beispielburg',
           street: 'Rathausplatz',
@@ -167,6 +205,7 @@ describe('SubscriptionMapper', () => {
       expect(restored.renewalCycle).toBe(original.renewalCycle);
       expect(restored.renewalCycleAnchor).toEqual(original.renewalCycleAnchor);
       expect(restored.startsAt).toEqual(original.startsAt);
+      expect(restored.endsAt).toEqual(endsAt);
     });
 
     it('should preserve all usage-based fields through domain → record → domain', () => {

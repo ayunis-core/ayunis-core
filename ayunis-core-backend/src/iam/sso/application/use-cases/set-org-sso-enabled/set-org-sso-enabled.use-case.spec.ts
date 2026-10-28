@@ -1,0 +1,216 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
+import {
+  TEST_ORG_ID,
+  anOrgSsoConnection,
+  anOrgSsoConnectionDomainState,
+  createMockOrgSsoConnectionsRepository,
+} from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
+import {
+  InvalidSsoConfigurationError,
+  SsoConnectionChangedError,
+  SsoConnectionNotFoundError,
+  SsoMustRemainEnabledError,
+  SsoPasswordlessUsersExistError,
+} from 'src/iam/sso/application/sso.errors';
+import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
+import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
+
+describe(SetOrgSsoEnabledUseCase.name, () => {
+  let repository: ReturnType<typeof createMockOrgSsoConnectionsRepository>;
+  let useCase: SetOrgSsoEnabledUseCase;
+  const hasPasswordlessUsers = { execute: jest.fn() };
+
+  beforeEach(() => {
+    repository = createMockOrgSsoConnectionsRepository();
+    hasPasswordlessUsers.execute.mockReset().mockResolvedValue(false);
+    useCase = new SetOrgSsoEnabledUseCase(
+      repository,
+      hasPasswordlessUsers as never,
+    );
+  });
+
+  it('rejects an organization without an SSO connection', async () => {
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+    ).rejects.toBeInstanceOf(SsoConnectionNotFoundError);
+  });
+
+  it.each([true, false])('sets enabled to %s', async (enabled) => {
+    const existing = anOrgSsoConnection({ enabled: !enabled });
+    repository.findByOrgId.mockResolvedValue(existing);
+
+    const result = await useCase.execute(
+      new SetOrgSsoEnabledCommand(TEST_ORG_ID, enabled),
+    );
+
+    expect(result.enabled).toBe(enabled);
+    expect(repository.setEnabled).toHaveBeenCalledWith(existing, enabled);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('does not disable SSO while local password login is disabled', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({
+        enabled: true,
+        localPasswordLoginEnabled: false,
+      }),
+    );
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false)),
+    ).rejects.toBeInstanceOf(SsoMustRemainEnabledError);
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('does not disable SSO while an organization has passwordless users', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: true, localPasswordLoginEnabled: true }),
+    );
+    hasPasswordlessUsers.execute.mockResolvedValue(true);
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false)),
+    ).rejects.toBeInstanceOf(SsoPasswordlessUsersExistError);
+
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('locks SSO state before checking whether disablement strands users', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: true, localPasswordLoginEnabled: true }),
+    );
+
+    await useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, false));
+
+    expect(repository.acquireMutationLock).toHaveBeenCalledWith(TEST_ORG_ID);
+    expect(
+      repository.acquireMutationLock.mock.invocationCallOrder[0],
+    ).toBeLessThan(hasPasswordlessUsers.execute.mock.invocationCallOrder[0]);
+  });
+
+  it('does not query password capability when enabling SSO', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ enabled: false }),
+    );
+
+    await useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true));
+
+    expect(hasPasswordlessUsers.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects enablement without a Zitadel organization mapping', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({ zitadelOrgId: null }),
+    );
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+    ).rejects.toBeInstanceOf(InvalidSsoConfigurationError);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'rejects enablement without canonical email domains (currently enabled: %s)',
+    async (enabled) => {
+      repository.findByOrgIdWithDomainState.mockResolvedValue(
+        anOrgSsoConnectionDomainState(anOrgSsoConnection({ enabled }), false),
+      );
+
+      await expect(
+        useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+      ).rejects.toMatchObject({
+        constructor: InvalidSsoConfigurationError,
+        metadata: { field: 'emailDomains' },
+      });
+      expect(repository.setEnabled).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not write when the requested state is already set', async () => {
+    const existing = anOrgSsoConnection({ enabled: true });
+    repository.findByOrgId.mockResolvedValue(existing);
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+    ).resolves.toBe(existing);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('enables the exact mapping reviewed by the operator', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgId.mockResolvedValue(existing);
+
+    await useCase.execute(
+      new SetOrgSsoEnabledCommand(
+        TEST_ORG_ID,
+        true,
+        new ReviewedSsoMapping(
+          existing.emailDomains.map(({ emailDomain }) => emailDomain),
+          existing.zitadelOrgId!,
+        ),
+      ),
+    );
+
+    expect(repository.setEnabled).toHaveBeenCalledWith(existing, true);
+  });
+
+  it('rejects enablement when the reviewed mapping is stale', async () => {
+    repository.findByOrgId.mockResolvedValue(anOrgSsoConnection());
+
+    await expect(
+      useCase.execute(
+        new SetOrgSsoEnabledCommand(
+          TEST_ORG_ID,
+          true,
+          new ReviewedSsoMapping(['old.stadt.example'], 'old-zitadel-org'),
+        ),
+      ),
+    ).rejects.toBeInstanceOf(SsoConnectionChangedError);
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('reports an invalid reviewed domain as configuration input', async () => {
+    repository.findByOrgId.mockResolvedValue(anOrgSsoConnection());
+
+    await expect(
+      useCase.execute(
+        new SetOrgSsoEnabledCommand(
+          TEST_ORG_ID,
+          true,
+          new ReviewedSsoMapping(['not-a-domain'], 'zitadel-org-1'),
+        ),
+      ),
+    ).rejects.toBeInstanceOf(InvalidSsoConfigurationError);
+  });
+
+  it('reports a concurrently removed connection as not found', async () => {
+    repository.findByOrgId
+      .mockResolvedValueOnce(anOrgSsoConnection())
+      .mockResolvedValueOnce(null);
+    repository.setEnabled.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+    ).rejects.toBeInstanceOf(SsoConnectionNotFoundError);
+  });
+
+  it('rejects enablement when the mapping changes concurrently', async () => {
+    repository.findByOrgId
+      .mockResolvedValueOnce(anOrgSsoConnection())
+      .mockResolvedValueOnce(
+        anOrgSsoConnection({ emailDomain: 'changed.example' }),
+      );
+    repository.setEnabled.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+    ).rejects.toBeInstanceOf(SsoConnectionChangedError);
+  });
+});

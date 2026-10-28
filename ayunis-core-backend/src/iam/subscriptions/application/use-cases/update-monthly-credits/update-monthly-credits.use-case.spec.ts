@@ -1,17 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { UpdateMonthlyCreditsUseCase } from './update-monthly-credits.use-case';
 import { UpdateMonthlyCreditsCommand } from './update-monthly-credits.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
   InvalidSubscriptionDataError,
   InvalidSubscriptionTypeError,
   SubscriptionNotFoundError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -19,7 +17,6 @@ import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-s
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
-import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();
@@ -61,14 +58,9 @@ function createSeatBasedSubscription(): SeatBasedSubscription {
   });
 }
 
-function activeResult(subscription: Subscription) {
-  return { subscription, availableSeats: null, nextRenewalDate: new Date() };
-}
-
 describe('UpdateMonthlyCreditsUseCase', () => {
   let useCase: UpdateMonthlyCreditsUseCase;
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
-  let getActiveSubscriptionUseCase: jest.Mocked<GetActiveSubscriptionUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   beforeAll(async () => {
@@ -77,11 +69,7 @@ describe('UpdateMonthlyCreditsUseCase', () => {
         UpdateMonthlyCreditsUseCase,
         {
           provide: SubscriptionRepository,
-          useValue: { update: jest.fn() },
-        },
-        {
-          provide: GetActiveSubscriptionUseCase,
-          useValue: { execute: jest.fn() },
+          useValue: { update: jest.fn(), findByOrgId: jest.fn() },
         },
         {
           provide: EventEmitter2,
@@ -96,17 +84,12 @@ describe('UpdateMonthlyCreditsUseCase', () => {
 
     useCase = module.get(UpdateMonthlyCreditsUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
-    getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   beforeEach(() => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return mockOrgId;
@@ -120,9 +103,7 @@ describe('UpdateMonthlyCreditsUseCase', () => {
 
   it('updates the monthly credits of a usage-based subscription', async () => {
     const subscription = createUsageBasedSubscription(1000);
-    getActiveSubscriptionUseCase.execute.mockResolvedValue(
-      activeResult(subscription),
-    );
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.update.mockResolvedValue(subscription);
 
     await useCase.execute(
@@ -137,11 +118,32 @@ describe('UpdateMonthlyCreditsUseCase', () => {
     expect(subscriptionRepository.update).toHaveBeenCalledWith(subscription);
   });
 
+  it('updates a subscription that has not started yet', async () => {
+    const scheduled = new UsageBasedSubscription({
+      orgId: mockOrgId,
+      monthlyCredits: 1000,
+      startsAt: new Date('2099-01-01T00:00:00.000Z'),
+      cancelledAt: null,
+      billingInfo: createBillingInfo(),
+    });
+    subscriptionRepository.findByOrgId.mockResolvedValue([scheduled]);
+    subscriptionRepository.update.mockResolvedValue(scheduled);
+
+    await useCase.execute(
+      new UpdateMonthlyCreditsCommand({
+        orgId: mockOrgId,
+        requestingUserId: mockUserId,
+        monthlyCredits: 5000,
+      }),
+    );
+
+    expect(scheduled.monthlyCredits).toBe(5000);
+    expect(subscriptionRepository.update).toHaveBeenCalledWith(scheduled);
+  });
+
   it('allows setting credits to 0', async () => {
     const subscription = createUsageBasedSubscription(1000);
-    getActiveSubscriptionUseCase.execute.mockResolvedValue(
-      activeResult(subscription),
-    );
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     subscriptionRepository.update.mockResolvedValue(subscription);
 
     await useCase.execute(
@@ -170,9 +172,7 @@ describe('UpdateMonthlyCreditsUseCase', () => {
   });
 
   it('throws SubscriptionNotFoundError when no active subscription exists', async () => {
-    getActiveSubscriptionUseCase.execute.mockRejectedValue(
-      new SubscriptionNotFoundError(mockOrgId),
-    );
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
     await expect(
       useCase.execute(
@@ -187,9 +187,9 @@ describe('UpdateMonthlyCreditsUseCase', () => {
   });
 
   it('throws InvalidSubscriptionTypeError for seat-based subscriptions', async () => {
-    getActiveSubscriptionUseCase.execute.mockResolvedValue(
-      activeResult(createSeatBasedSubscription()),
-    );
+    subscriptionRepository.findByOrgId.mockResolvedValue([
+      createSeatBasedSubscription(),
+    ]);
 
     await expect(
       useCase.execute(

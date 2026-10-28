@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllUserIdsByTeamIdUseCase } from './find-all-user-ids-by-team-id.use-case';
-import { TeamMembersRepository } from '../../ports/team-members.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';
 import { randomUUID } from 'crypto';
 

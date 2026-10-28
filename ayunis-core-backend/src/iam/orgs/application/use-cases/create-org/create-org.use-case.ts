@@ -1,13 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgCreationFailedError, UnexpectedOrgError } from '../../orgs.errors';
+import {
+  OrgCreationFailedError,
+  UnexpectedOrgError,
+} from 'src/iam/orgs/application/orgs.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { OrgCreatedEvent } from '../../events/org-created.event';
+import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
 import { SeedDefaultRolePermissionsUseCase } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 import { SeedDefaultRolePermissionsCommand } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.command';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class CreateOrgUseCase {
@@ -18,9 +22,10 @@ export class CreateOrgUseCase {
     private readonly eventEmitter: EventEmitter2,
     private readonly seedDefaultRolePermissionsUseCase: SeedDefaultRolePermissionsUseCase,
   ) {}
+  @Transactional()
   @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: CreateOrgCommand): Promise<Org> {
-    this.logger.log('create', { name: command.name });
+    this.logger.log({ name: command.name }, 'create');
 
     if (!command.name || command.name.trim() === '') {
       this.logger.warn('Attempted to create organization with empty name');
@@ -29,10 +34,13 @@ export class CreateOrgUseCase {
 
     const org = new Org({ name: command.name });
     const createdOrg = await this.orgsRepository.create(org);
-    this.logger.debug('Organization created successfully', {
-      id: createdOrg.id,
-      name: createdOrg.name,
-    });
+    this.logger.debug(
+      {
+        id: createdOrg.id,
+        name: createdOrg.name,
+      },
+      'Organization created successfully',
+    );
 
     await this.seedDefaultRolePermissionsUseCase.execute(
       new SeedDefaultRolePermissionsCommand(createdOrg.id),
@@ -44,10 +52,13 @@ export class CreateOrgUseCase {
         new OrgCreatedEvent(createdOrg.id, createdOrg),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit OrgCreatedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          orgId: createdOrg.id,
-        });
+        this.logger.error(
+          {
+            err: err as Error,
+            orgId: createdOrg.id,
+          },
+          'Failed to emit OrgCreatedEvent',
+        );
       });
 
     return createdOrg;

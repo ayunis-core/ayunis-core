@@ -10,6 +10,7 @@ import {
   WidthType,
   TableLayoutType,
   UnderlineType,
+  ShadingType,
   convertMillimetersToTwip,
   Packer,
   type IParagraphOptions,
@@ -19,7 +20,9 @@ import type { HTMLElement, TextNode } from 'node-html-parser';
 import { parse, NodeType } from 'node-html-parser';
 
 import { buildDocument } from './docx-document-config';
+import { cellFrame, cellSpans } from './docx-table-styles';
 import { parseAlignment, parseSpacing } from './paragraph-style-parser';
+import { parseRunColors } from './run-color-parser';
 
 /** Inline formatting context accumulated while walking the tree. */
 interface InlineContext {
@@ -28,6 +31,9 @@ interface InlineContext {
   underline?: boolean;
   strike?: boolean;
   code?: boolean;
+  highlight?: boolean;
+  color?: string;
+  shading?: string;
   link?: string;
 }
 
@@ -57,19 +63,7 @@ const INLINE_FORMAT_BY_TAG: Record<string, Partial<InlineContext>> = {
   del: { strike: true },
   strike: { strike: true },
   code: { code: true },
-};
-
-const TABLE_BORDER = {
-  style: BorderStyle.SINGLE,
-  size: 1,
-  color: 'CCCCCC',
-};
-
-const TABLE_BORDERS = {
-  top: TABLE_BORDER,
-  bottom: TABLE_BORDER,
-  left: TABLE_BORDER,
-  right: TABLE_BORDER,
+  mark: { highlight: true },
 };
 
 // A4 portrait usable width = 210mm page − 2×25mm margins (see docx-document-config.ts).
@@ -80,7 +74,8 @@ const TABLE_USABLE_WIDTH_TWIPS = convertMillimetersToTwip(210 - 2 * 25);
  *
  * Supported elements (matching the TipTap editor config):
  * - Headings: h1–h6, paragraphs with text-align
- * - Inline: strong/b, em/i, u, s/del/strike, code, a[href]
+ * - Inline: strong/b, em/i, u, s/del/strike, code, mark, a[href], and
+ *   inline color / background-color styles
  * - Lists: ul, ol (including nested)
  * - Blockquotes, code blocks (pre > code), tables, hr
  */
@@ -183,7 +178,12 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
       const text = (child as unknown as TextNode).text.trim();
       if (text) {
         result.push(
-          new Paragraph({ ...blockquoteStyle, children: [new TextRun(text)] }),
+          new Paragraph({
+            ...blockquoteStyle,
+            alignment: parseAlignment(node),
+            spacing: parseSpacing(node),
+            children: [new TextRun(text)],
+          }),
         );
       }
     } else if (child.nodeType === NodeType.ELEMENT_NODE) {
@@ -192,8 +192,8 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
         result.push(
           new Paragraph({
             ...blockquoteStyle,
-            alignment: parseAlignment(child),
-            spacing: parseSpacing(child),
+            alignment: parseAlignment(child) ?? parseAlignment(node),
+            spacing: mergeSpacing(node, child),
             children: collectInlineRuns(child, {}),
           }),
         );
@@ -222,14 +222,21 @@ function convertCodeBlock(node: HTMLElement): Paragraph {
   });
 }
 
-// ---------------------------------------------------------------------------
 // Lists
-// ---------------------------------------------------------------------------
 
 function listProps(ordered: boolean, level: number): IParagraphOptions {
   return ordered
     ? { numbering: { reference: 'ordered-list', level } }
     : { bullet: { level } };
+}
+
+function mergeSpacing(parent: HTMLElement, child: HTMLElement) {
+  const parentSpacing = parseSpacing(parent);
+  const childSpacing = parseSpacing(child);
+
+  if (!parentSpacing) return childSpacing;
+  if (!childSpacing) return parentSpacing;
+  return { ...parentSpacing, ...childSpacing };
 }
 
 function convertList(
@@ -252,37 +259,63 @@ function convertListItem(
   level: number,
   out: Paragraph[],
 ): void {
-  for (const child of li.childNodes as HTMLElement[]) {
-    const childTag = child.tagName ? child.tagName.toLowerCase() : undefined;
-
-    if (childTag === 'ul' || childTag === 'ol') {
-      out.push(...convertList(child, childTag === 'ol', level + 1));
-    } else if (childTag === 'p') {
+  let inlineNodes: HTMLElement['childNodes'] = [];
+  let paragraphCount = 0;
+  const nextParagraphProps = (): IParagraphOptions =>
+    paragraphCount++ === 0
+      ? listProps(ordered, level)
+      : { indent: { left: 720 * (level + 1) } };
+  const flushInlineNodes = () => {
+    if (
+      inlineNodes.some(
+        (node) => node.text.trim() || node.nodeType === NodeType.ELEMENT_NODE,
+      )
+    ) {
       out.push(
-        new Paragraph({
-          children: collectInlineRuns(child, {}),
-          alignment: parseAlignment(child),
-          spacing: parseSpacing(child),
-          ...listProps(ordered, level),
-        }),
+        buildListParagraph(
+          li,
+          { childNodes: inlineNodes },
+          nextParagraphProps(),
+        ),
       );
-    } else if (child.nodeType === NodeType.TEXT_NODE) {
-      const text = (child as unknown as TextNode).text.trim();
-      if (text) {
-        out.push(
-          new Paragraph({
-            children: [new TextRun(text)],
-            ...listProps(ordered, level),
-          }),
-        );
-      }
+    }
+    inlineNodes = [];
+  };
+
+  for (const child of li.childNodes as HTMLElement[]) {
+    const tag =
+      child.nodeType === NodeType.ELEMENT_NODE
+        ? child.tagName.toLowerCase()
+        : '';
+    if (tag === 'ul' || tag === 'ol') {
+      flushInlineNodes();
+      out.push(...convertList(child, tag === 'ol', level + 1));
+    } else if (tag === 'p' || tag in HEADING_MAP) {
+      flushInlineNodes();
+      out.push(buildListParagraph(li, child, nextParagraphProps(), child));
+    } else {
+      inlineNodes.push(child);
     }
   }
+  flushInlineNodes();
 }
 
-// ---------------------------------------------------------------------------
+function buildListParagraph(
+  li: HTMLElement,
+  content: Pick<HTMLElement, 'childNodes'>,
+  props: IParagraphOptions,
+  block?: HTMLElement,
+): Paragraph {
+  return new Paragraph({
+    children: collectInlineRuns(content, {}),
+    heading: block ? HEADING_MAP[block.tagName.toLowerCase()] : undefined,
+    alignment: (block && parseAlignment(block)) ?? parseAlignment(li),
+    spacing: block ? mergeSpacing(li, block) : parseSpacing(li),
+    ...props,
+  });
+}
+
 // Tables
-// ---------------------------------------------------------------------------
 
 function convertTable(node: HTMLElement): Table {
   const rowElements = node.querySelectorAll(
@@ -290,8 +323,9 @@ function convertTable(node: HTMLElement): Table {
   );
   const columnCount = Math.max(1, countTableColumns(rowElements));
   const columnWidths = buildEqualColumnWidths(columnCount);
+  const isLayout = !node.querySelector('th');
   const rows = rowElements
-    .map(convertTableRow)
+    .map((tr) => convertTableRow(tr, isLayout))
     .filter((r): r is TableRow => r !== null);
 
   if (rows.length === 0) {
@@ -337,21 +371,24 @@ function buildEqualColumnWidths(columnCount: number): number[] {
   return Array.from({ length: columnCount }, () => width);
 }
 
-function convertTableRow(tr: HTMLElement): TableRow | null {
+function convertTableRow(tr: HTMLElement, isLayout: boolean): TableRow | null {
   const cellElements = tr.querySelectorAll(':scope > td, :scope > th');
   if (cellElements.length === 0) return null;
 
   const isHeader = cellElements[0].tagName.toLowerCase() === 'th';
-  const cells = cellElements.map((cell) => convertTableCell(cell, isHeader));
+  const cells = cellElements.map((cell) =>
+    convertTableCell(cell, isHeader, isLayout),
+  );
 
   return new TableRow({ children: cells });
 }
 
-function convertTableCell(cell: HTMLElement, isHeader: boolean): TableCell {
+function convertTableCell(
+  cell: HTMLElement,
+  isHeader: boolean,
+  isLayout: boolean,
+): TableCell {
   const runs = collectInlineRuns(cell, { bold: isHeader || undefined });
-
-  const columnSpan = parseSpan(cell.getAttribute('colspan'));
-  const rowSpan = parseSpan(cell.getAttribute('rowspan'));
 
   // TipTap wraps cell content in a nested <p> that carries the paragraph
   // styles; fall back to the cell itself when there is no inner paragraph.
@@ -362,27 +399,20 @@ function convertTableCell(cell: HTMLElement, isHeader: boolean): TableCell {
       new Paragraph({
         children: runs,
         alignment: parseAlignment(styleNode) ?? parseAlignment(cell),
-        spacing: parseSpacing(styleNode) ?? parseSpacing(cell),
+        spacing: mergeSpacing(cell, styleNode),
       }),
     ],
-    borders: TABLE_BORDERS,
+    ...cellFrame(isLayout),
     shading: isHeader ? { fill: 'F5F5F5' } : undefined,
     width: { size: 0, type: WidthType.AUTO },
-    ...(columnSpan && columnSpan > 1 && { columnSpan }),
-    ...(rowSpan && rowSpan > 1 && { rowSpan }),
+    ...cellSpans(cell),
   });
 }
 
-function parseSpan(attr: string | undefined): number | undefined {
-  return attr ? parseInt(attr, 10) : undefined;
-}
-
-// ---------------------------------------------------------------------------
 // Inline-level conversion
-// ---------------------------------------------------------------------------
 
 function collectInlineRuns(
-  node: HTMLElement,
+  node: Pick<HTMLElement, 'childNodes'>,
   ctx: InlineContext,
 ): InlineChild[] {
   const runs: InlineChild[] = [];
@@ -450,7 +480,7 @@ function buildInlineContext(
     return { ...ctx, link: node.getAttribute('href') ?? undefined };
   }
 
-  return { ...ctx, ...INLINE_FORMAT_BY_TAG[tag] };
+  return { ...ctx, ...INLINE_FORMAT_BY_TAG[tag], ...parseRunColors(node) };
 }
 
 function formatFromContext(ctx: InlineContext): Partial<IRunOptions> {
@@ -460,5 +490,10 @@ function formatFromContext(ctx: InlineContext): Partial<IRunOptions> {
     ...(ctx.underline && { underline: { type: UnderlineType.SINGLE } }),
     ...(ctx.strike && { strike: true }),
     ...(ctx.code && { font: 'Courier New', size: 20 }),
+    ...(ctx.highlight && { highlight: 'yellow' }),
+    ...(ctx.color && { color: ctx.color }),
+    ...(ctx.shading && {
+      shading: { type: ShadingType.CLEAR, fill: ctx.shading },
+    }),
   };
 }

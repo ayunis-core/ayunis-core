@@ -3,9 +3,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { OpenAIUnexpectedError } from '../../openai-compat.errors';
-import { OpenAIModelMapper } from '../../mappers/openai-model.mapper';
-import type { OpenAIModelListResponse } from '../../types/openai-model.types';
+import { OpenAIUnexpectedError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import { OpenAIModelMapper } from 'src/domain/openai-compat/application/mappers/openai-model.mapper';
+import type { OpenAIModelListResponse } from 'src/domain/openai-compat/application/types/openai-model.types';
 import { ListOpenAIModelsQuery } from './list-openai-models.query';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class ListOpenAIModelsUseCase {
   async execute(
     query: ListOpenAIModelsQuery,
   ): Promise<OpenAIModelListResponse> {
-    this.logger.log('Listing OpenAI-compatible models', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'Listing OpenAI-compatible models');
 
     try {
       const permitted = await this.getPermittedLanguageModelsUseCase.execute(
@@ -40,9 +40,12 @@ export class ListOpenAIModelsUseCase {
       return this.modelMapper.toListResponse([...byName.values()]);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error listing OpenAI-compatible models', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error listing OpenAI-compatible models',
+      );
       throw new OpenAIUnexpectedError(error);
     }
   }

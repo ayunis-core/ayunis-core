@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 export function useDeleteSkill() {
   const { t } = useTranslation('skill');
@@ -18,7 +19,7 @@ export function useDeleteSkill() {
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
-          queryKey: getSkillsControllerFindAllQueryKey(),
+          queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
         });
         void router.invalidate();
         showSuccess(t('delete.success'));

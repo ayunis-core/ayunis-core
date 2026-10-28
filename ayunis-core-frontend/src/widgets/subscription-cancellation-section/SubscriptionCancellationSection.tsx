@@ -58,6 +58,25 @@ export default function SubscriptionCancellationSection({
 
   // eslint-disable-next-line eqeqeq -- intentional loose equality to catch both null and undefined from the API
   const isCancelled = subscription.cancelledAt != null;
+  if (
+    !isCancelled &&
+    subscription.endsAt &&
+    new Date(subscription.endsAt) <= new Date()
+  ) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {t('subscription.title')}
+            <Badge variant="outline">
+              {t('subscriptionHistory.status.HISTORICAL')}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>{activeContent}</CardContent>
+      </Card>
+    );
+  }
   const statusBadge = renderStatusBadge?.(subscription) ?? (
     <DefaultStatusBadge isCancelled={isCancelled} t={t} />
   );
@@ -138,9 +157,12 @@ export default function SubscriptionCancellationSection({
       <CardContent className="space-y-4">
         {activeContent ?? (
           <p className="text-sm text-muted-foreground">
-            {t('subscription.nextRenewalDate', {
-              date: new Date(subscription.nextRenewalDate).toLocaleDateString(),
-            })}
+            {subscription.nextRenewalDate &&
+              t('subscription.nextRenewalDate', {
+                date: new Date(
+                  subscription.nextRenewalDate,
+                ).toLocaleDateString(),
+              })}
           </p>
         )}
       </CardContent>

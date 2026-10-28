@@ -21,13 +21,15 @@ config({ path: '.env.dev', quiet: true });
 config({ path: '.env', quiet: true });
 
 const pushApiKey = process.env.APPSIGNAL_PUSH_API_KEY;
-// APPSIGNAL_APP_ENV lets staging hosts (which run with NODE_ENV=production
-// for migrations/logger/CORS behavior) report into a separate AppSignal
-// environment. Must be resolved here: the explicit `environment` option
-// below overrides AppSignal's own APPSIGNAL_APP_ENV handling.
-const environment =
-  process.env.APPSIGNAL_APP_ENV ?? process.env.NODE_ENV ?? 'development';
-const revision = process.env.APP_REVISION ?? readPackageVersion();
+// Each deployment names its AppSignal environment explicitly. There is no
+// NODE_ENV fallback: every image runs with NODE_ENV=production, so a fallback
+// let any local run of an image that holds the push key report as production.
+// Must be resolved here: the explicit `environment` option below overrides
+// AppSignal's own APPSIGNAL_APP_ENV handling.
+const environment = process.env.APPSIGNAL_APP_ENV;
+// `||`, not `??`: images built without the APP_REVISION build arg (local
+// compose) carry it as an empty string, which must fall back too.
+const revision = process.env.APP_REVISION || readPackageVersion();
 
 function readPackageVersion() {
   try {
@@ -43,7 +45,7 @@ function readPackageVersion() {
 // Never report from local development, even when a push API key is present in
 // the local .env — dev noise (e.g. crons failing against stopped local
 // services) pollutes the shared app and buries production signals.
-if (pushApiKey && environment !== 'development') {
+if (pushApiKey && environment && environment !== 'development') {
   new Appsignal({
     active: true,
     name: process.env.APPSIGNAL_APP_NAME ?? 'ayunis-core',
@@ -73,6 +75,10 @@ if (pushApiKey && environment !== 'development') {
   });
 
   console.warn(`✅ AppSignal initialized for environment: ${environment}`);
+} else if (pushApiKey && !environment) {
+  console.warn(
+    '⚠️  AppSignal disabled - APPSIGNAL_APP_ENV is not set, so APPSIGNAL_PUSH_API_KEY is ignored',
+  );
 } else if (pushApiKey) {
   console.warn(
     '⚠️  AppSignal disabled in development - APPSIGNAL_PUSH_API_KEY ignored',

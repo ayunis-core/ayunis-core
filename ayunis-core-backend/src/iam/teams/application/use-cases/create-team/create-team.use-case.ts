@@ -1,15 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { CreateTeamCommand } from './create-team.command';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import {
   TeamInvalidInputError,
   TeamNameAlreadyExistsError,
   UnexpectedTeamError,
-} from '../../teams.errors';
+} from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateTeamUseCase {
@@ -21,15 +22,11 @@ export class CreateTeamUseCase {
   ) {}
 
   async execute(command: CreateTeamCommand): Promise<Team> {
-    const orgId = this.contextService.get('orgId');
-
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     const trimmedName = command.name.trim() || '';
 
-    this.logger.log('createTeam', { name: trimmedName, orgId });
+    this.logger.log({ name: trimmedName, orgId }, 'createTeam');
 
     if (!trimmedName) {
       this.logger.warn('Attempted to create team with empty name');
@@ -37,38 +34,35 @@ export class CreateTeamUseCase {
     }
 
     try {
-      const existingTeam = await this.teamsRepository.findByNameAndOrgId(
-        trimmedName,
-        orgId,
-      );
-
-      if (existingTeam) {
-        this.logger.warn('Team with this name already exists', {
-          name: trimmedName,
-          orgId,
-        });
-        throw new TeamNameAlreadyExistsError(trimmedName);
-      }
-
-      this.logger.debug('Creating new team', { name: trimmedName, orgId });
-      const team = new Team({ name: trimmedName, orgId });
-      const createdTeam = await this.teamsRepository.create(team);
-      this.logger.debug('Team created successfully', {
-        id: createdTeam.id,
-        name: createdTeam.name,
-      });
-
-      return createdTeam;
+      return await this.createTeam(trimmedName, orgId);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to create team', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        name: command.name,
-        orgId,
-      });
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        { err: error as Error, name: command.name, orgId },
+        'Failed to create team',
+      );
       throw new UnexpectedTeamError(error);
     }
+  }
+
+  private async createTeam(name: string, orgId: UUID): Promise<Team> {
+    const existingTeam = await this.teamsRepository.findByNameAndOrgId(
+      name,
+      orgId,
+    );
+    if (existingTeam) {
+      this.logger.warn({ name, orgId }, 'Team with this name already exists');
+      throw new TeamNameAlreadyExistsError(name);
+    }
+
+    this.logger.debug({ name, orgId }, 'Creating new team');
+    const createdTeam = await this.teamsRepository.create(
+      new Team({ name, orgId }),
+    );
+    this.logger.debug(
+      { id: createdTeam.id, name: createdTeam.name },
+      'Team created successfully',
+    );
+    return createdTeam;
   }
 }

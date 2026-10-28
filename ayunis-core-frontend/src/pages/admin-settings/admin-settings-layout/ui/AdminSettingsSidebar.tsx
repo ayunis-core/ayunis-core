@@ -2,6 +2,7 @@ import {
   User,
   Users,
   Brain,
+  Coins,
   Plug,
   BarChart3,
   Shield,
@@ -18,21 +19,22 @@ import {
   SettingsSidebarWidget,
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
-import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import { useIsAcademyAddonActive } from '@/features/academy';
-import { useAuthenticationControllerMe } from '@/shared/api';
+import { useHasCreditBudget } from '@/features/credit-limits';
+import { MeResponseDtoRole } from '@/shared/api';
 import {
-  useMyPermissions,
   allowedSettingsSections,
+  useAuthorization,
 } from '@/features/permissions';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
-  const isLetterheadsEnabled = useIsLetterheadsEnabled();
   const academyAddonActive = useIsAcademyAddonActive();
-  const { data: me } = useAuthenticationControllerMe();
-  const { permissions } = useMyPermissions();
-  const allowedSections = allowedSettingsSections(me?.role, permissions);
+  const authorization = useAuthorization();
+  const hasCreditBudget = useHasCreditBudget(
+    authorization.hasRole(MeResponseDtoRole.admin),
+  );
+  const allowedSections = allowedSettingsSections(authorization);
   const canSee = (to: string) =>
     allowedSections.some((path) => to.startsWith(path));
 
@@ -70,6 +72,15 @@ export function AdminSettingsSidebar() {
           icon: <Brain />,
           label: t('layout.models'),
         },
+        ...(hasCreditBudget
+          ? [
+              {
+                to: '/admin-settings/credit-limits' as const,
+                icon: <Coins />,
+                label: t('layout.creditLimits'),
+              },
+            ]
+          : []),
         {
           to: '/admin-settings/integrations',
           icon: <Plug />,
@@ -80,15 +91,11 @@ export function AdminSettingsSidebar() {
           icon: <MessageSquareText />,
           label: t('layout.instructions'),
         },
-        ...(isLetterheadsEnabled
-          ? [
-              {
-                to: '/admin-settings/letterheads' as const,
-                icon: <FileText />,
-                label: t('layout.letterheads'),
-              },
-            ]
-          : []),
+        {
+          to: '/admin-settings/letterheads',
+          icon: <FileText />,
+          label: t('layout.letterheads'),
+        },
       ],
     },
     {

@@ -8,10 +8,12 @@ export class UpdateLanguageModelCommand {
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
+  hasProviderFault?: boolean;
   canStream: boolean;
   canUseTools: boolean;
   isReasoning: boolean;
   canVision: boolean;
+  contextWindowSize: number;
   inputTokenCost?: number;
   outputTokenCost?: number;
   tier?: ModelTier;
@@ -23,10 +25,12 @@ export class UpdateLanguageModelCommand {
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
+    hasProviderFault?: boolean;
     canStream: boolean;
     canUseTools: boolean;
     isReasoning: boolean;
     canVision: boolean;
+    contextWindowSize: number;
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
@@ -37,10 +41,12 @@ export class UpdateLanguageModelCommand {
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
+    this.hasProviderFault = params.hasProviderFault;
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.contextWindowSize = params.contextWindowSize;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, IsNull } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { EntityManager, Repository, IsNull } from 'typeorm';
 import { UUID } from 'crypto';
 import {
   InvitesRepository,
@@ -8,35 +9,48 @@ import {
   InvitesFilters,
 } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { InviteRecord } from './schema/invite.record';
-import { InviteMapper } from './mappers/invite.mapper';
+import { InviteRecord } from 'src/iam/invites/infrastructure/persistence/local/schema/invite.record';
+import { InviteMapper } from 'src/iam/invites/infrastructure/persistence/local/mappers/invite.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { exactEmail } from 'src/common/db/exact-email.operator';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
   private readonly logger = new Logger(LocalInvitesRepository.name);
 
   constructor(
-    @InjectRepository(InviteRecord)
-    private readonly inviteRepository: Repository<InviteRecord>,
     private readonly inviteMapper: InviteMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
+  // Outside an active transaction txHost.tx resolves to the adapter's fallback
+  // instance (dataSource.manager), so this is safe without a null check.
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get invites(): Repository<InviteRecord> {
+    return this.getManager().getRepository(InviteRecord);
+  }
+
   async create(invite: Invite): Promise<void> {
-    this.logger.log('create', {
-      inviteId: invite.id,
-      email: invite.email,
-      orgId: invite.orgId,
-      role: invite.role,
-      inviterId: invite.inviterId,
-    });
+    this.logger.log(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+        orgId: invite.orgId,
+        role: invite.role,
+        inviterId: invite.inviterId,
+      },
+      'create',
+    );
     const entity = this.inviteMapper.toEntity(invite);
-    await this.inviteRepository.save(entity);
-    this.logger.debug('Invite created successfully', { inviteId: invite.id });
+    await this.invites.save(entity);
+    this.logger.debug({ inviteId: invite.id }, 'Invite created successfully');
   }
 
   async createMany(invites: Invite[]): Promise<void> {
-    this.logger.log('createMany', { inviteCount: invites.length });
+    this.logger.log({ inviteCount: invites.length }, 'createMany');
 
     if (invites.length === 0) {
       return;
@@ -45,19 +59,25 @@ export class LocalInvitesRepository implements InvitesRepository {
     const entities = invites.map((invite) =>
       this.inviteMapper.toEntity(invite),
     );
-    await this.inviteRepository.save(entities);
+    await this.invites.save(entities);
 
-    this.logger.debug('Invites created successfully', {
-      inviteCount: invites.length,
-    });
+    this.logger.debug(
+      {
+        inviteCount: invites.length,
+      },
+      'Invites created successfully',
+    );
   }
 
   async findOne(id: UUID): Promise<Invite | null> {
-    this.logger.log('findOne', { id });
-    const entity = await this.inviteRepository.findOne({ where: { id } });
+    this.logger.log({ id }, 'findOne');
+    const entity = await this.invites.findOne({
+      where: { id },
+      relations: { inviteTeams: true },
+    });
 
     if (!entity) {
-      this.logger.debug('Invite not found', { id });
+      this.logger.debug({ id }, 'Invite not found');
       return null;
     }
 
@@ -69,17 +89,25 @@ export class LocalInvitesRepository implements InvitesRepository {
     pagination: InvitesPagination,
     filters?: InvitesFilters,
   ): Promise<Paginated<Invite>> {
-    this.logger.log('findByOrgIdPaginated', {
-      orgId,
-      limit: pagination.limit,
-      offset: pagination.offset,
-      search: filters?.search,
-    });
+    this.logger.log(
+      {
+        orgId,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        input: filters?.search,
+      },
+      'findByOrgIdPaginated',
+    );
 
-    const queryBuilder = this.inviteRepository
+    const queryBuilder = this.invites
       .createQueryBuilder('invite')
+      .leftJoinAndSelect('invite.inviteTeams', 'inviteTeam')
+      .leftJoinAndSelect('inviteTeam.team', 'team', 'team.orgId = :orgId', {
+        orgId,
+      })
       .where('invite.orgId = :orgId', { orgId })
-      .orderBy('invite.createdAt', 'DESC');
+      .orderBy('invite.createdAt', 'DESC')
+      .addOrderBy('invite.id', 'DESC');
 
     if (filters?.onlyPending) {
       queryBuilder.andWhere('invite.acceptedAt IS NULL');
@@ -109,17 +137,18 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async findOneByEmail(email: string): Promise<Invite | null> {
-    this.logger.log('findOneByEmail', { email });
+    this.logger.log({ email }, 'findOneByEmail');
     // Match the single invite row for this email regardless of acceptance
     // state. invites.email is globally unique, so there is at most one row.
     // Deletion paths (delete-user, delete-invite-by-email) rely on this to
     // clean up already-accepted invites; filtering on acceptedAt would leave
     // them orphaned and block re-inviting the same email (AYC-299).
-    const entity = await this.inviteRepository.findOne({
-      where: { email: ILike(email) },
+    const entity = await this.invites.findOne({
+      where: { email: exactEmail(email) },
+      relations: { inviteTeams: true },
     });
     if (!entity) {
-      this.logger.debug('Invite not found by email', { email });
+      this.logger.debug({ email }, 'Invite not found by email');
       return null;
     }
     return this.inviteMapper.toDomain(entity);
@@ -129,72 +158,94 @@ export class LocalInvitesRepository implements InvitesRepository {
     email: string,
     orgId: UUID,
   ): Promise<Invite | null> {
-    this.logger.log('findOneByEmailAndOrg', { email, orgId });
-    const entity = await this.inviteRepository.findOne({
-      where: { email: ILike(email), orgId, acceptedAt: IsNull() },
+    this.logger.log({ email, orgId }, 'findOneByEmailAndOrg');
+    const entity = await this.invites.findOne({
+      where: { email: exactEmail(email), orgId, acceptedAt: IsNull() },
+      relations: { inviteTeams: true },
     });
     if (!entity) {
-      this.logger.debug('Invite not found by email and org', { email, orgId });
+      this.logger.debug({ email, orgId }, 'Invite not found by email and org');
       return null;
     }
     return this.inviteMapper.toDomain(entity);
   }
 
-  async findByEmailsAndOrg(emails: string[], orgId: string): Promise<Invite[]> {
-    this.logger.log('findByEmailsAndOrg', { emailCount: emails.length, orgId });
+  async findByEmails(emails: string[]): Promise<Invite[]> {
+    this.logger.log({ emailCount: emails.length }, 'findByEmails');
 
     if (emails.length === 0) {
       return [];
     }
 
-    // Convert emails to lowercase for case-insensitive comparison
+    // invites.email carries a GLOBAL unique constraint, so at most one invite
+    // row can exist per email across all orgs. Look invites up globally,
+    // case-insensitively, and regardless of organization or acceptance status:
+    // a pending invite in another org or an orphaned accepted invite is
+    // invisible to an org-scoped lookup yet still makes the batch insert fail
+    // with a DB unique violation, surfacing as a generic 500 instead of a
+    // clear validation error (AYC-735).
     const lowerEmails = emails.map((e) => e.toLowerCase());
 
-    const entities = await this.inviteRepository
+    const entities = await this.invites
       .createQueryBuilder('invite')
-      .where('invite.orgId = :orgId', { orgId })
-      .andWhere('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
-      .andWhere('invite.acceptedAt IS NULL') // Only pending invites
+      .where('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
       .getMany();
 
-    this.logger.debug('Found invites by emails and org', {
-      orgId,
-      requestedCount: emails.length,
-      foundCount: entities.length,
-    });
+    this.logger.debug(
+      {
+        requestedCount: emails.length,
+        foundCount: entities.length,
+      },
+      'Found invites by emails',
+    );
 
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
-  async accept(id: UUID): Promise<void> {
-    this.logger.log('accept', { id });
+  async accept(id: UUID): Promise<boolean> {
+    this.logger.log({ id }, 'accept');
 
-    await this.inviteRepository.update(id, {
-      acceptedAt: new Date(),
-    });
+    const result = await this.invites.update(
+      { id, acceptedAt: IsNull() },
+      { acceptedAt: new Date() },
+    );
 
-    this.logger.debug('Invite accepted successfully', { id });
+    this.logger.debug({ id }, 'Invite accepted successfully');
+    return result.affected === 1;
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
-    await this.inviteRepository.delete(id);
-    this.logger.debug('Invite deleted successfully', { id });
+    this.logger.log({ id }, 'delete');
+    await this.invites.delete(id);
+    this.logger.debug({ id }, 'Invite deleted successfully');
+  }
+
+  async deletePendingByIdAndOrg(id: UUID, orgId: UUID): Promise<boolean> {
+    this.logger.log({ id, orgId }, 'deletePendingByIdAndOrg');
+    const result = await this.invites.delete({
+      id,
+      orgId,
+      acceptedAt: IsNull(),
+    });
+    return (result.affected ?? 0) > 0;
   }
 
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
-    this.logger.log('deleteAllPendingByOrg', { orgId });
+    this.logger.log({ orgId }, 'deleteAllPendingByOrg');
 
-    const result = await this.inviteRepository.delete({
+    const result = await this.invites.delete({
       orgId,
       acceptedAt: IsNull(), // Only delete pending invites (not accepted)
     });
 
     const deletedCount = result.affected ?? 0;
-    this.logger.debug('Pending invites deleted', {
-      orgId,
-      count: deletedCount,
-    });
+    this.logger.debug(
+      {
+        orgId,
+        count: deletedCount,
+      },
+      'Pending invites deleted',
+    );
     return deletedCount;
   }
 }

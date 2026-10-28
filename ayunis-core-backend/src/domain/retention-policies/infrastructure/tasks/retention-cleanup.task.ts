@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-retention/enforce-retention.use-case';
+import { checkIn } from '@appsignal/nodejs';
+import { EnforceRetentionUseCase } from 'src/domain/retention-policies/application/use-cases/enforce-retention/enforce-retention.use-case';
 
 /**
  * Nightly job that deletes conversation data past each org's retention window.
@@ -10,6 +11,7 @@ import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-ret
 @Injectable()
 export class RetentionCleanupTask {
   private readonly logger = new Logger(RetentionCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -29,17 +31,22 @@ export class RetentionCleanupTask {
     this.logger.log('Starting scheduled retention cleanup');
 
     try {
-      const result = await this.enforceRetentionUseCase.execute();
-      this.logger.log('Scheduled retention cleanup completed', {
-        orgsProcessed: result.orgsProcessed,
-        totalDeleted: result.totalDeleted,
-        totalFailed: result.totalFailed,
-        dryRun: result.dryRun,
+      await checkIn.cron('retention_cleanup', async () => {
+        const result = await this.enforceRetentionUseCase.execute();
+        this.logger.log(
+          {
+            orgsProcessed: result.orgsProcessed,
+            totalDeleted: result.totalDeleted,
+            totalFailed: result.totalFailed,
+            dryRun: result.dryRun,
+          },
+          'Scheduled retention cleanup completed',
+        );
       });
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled retention cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

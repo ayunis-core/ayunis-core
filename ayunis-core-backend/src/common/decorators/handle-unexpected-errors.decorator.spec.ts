@@ -1,10 +1,16 @@
-import { HttpException, Logger } from '@nestjs/common';
-import { ApplicationError } from '../errors/base.error';
+import { Logger } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { HandleUnexpectedErrors } from './handle-unexpected-errors.decorator';
 
 class ExampleApplicationError extends ApplicationError {
-  constructor() {
-    super('Expected failure', 'EXPECTED_FAILURE', 400);
+  constructor(error?: Error) {
+    super(
+      'Expected failure',
+      'EXPECTED_FAILURE',
+      400,
+      error ? { error } : undefined,
+    );
   }
 }
 
@@ -46,6 +52,24 @@ class ExampleUseCaseWithDependency {
   }
 }
 
+class DatabaseReadingUseCase {
+  @HandleUnexpectedErrors(ExampleUnexpectedError, {
+    databaseUnavailable: true,
+  })
+  async execute(error: Error): Promise<never> {
+    throw error;
+  }
+}
+
+class DatabaseOrchestratingUseCase {
+  @HandleUnexpectedErrors(ExampleUnexpectedError, {
+    databaseUnavailable: 'includingExpectedErrors',
+  })
+  async execute(error: Error): Promise<never> {
+    throw error;
+  }
+}
+
 describe('HandleUnexpectedErrors', () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -75,8 +99,8 @@ describe('HandleUnexpectedErrors', () => {
     ).rejects.toBeInstanceOf(ExampleUnexpectedError);
 
     expect(errorSpy).toHaveBeenCalledWith(
+      { err: expect.any(Error) },
       'Unexpected use-case error',
-      expect.any(String),
     );
   });
 
@@ -90,6 +114,72 @@ describe('HandleUnexpectedErrors', () => {
     await expect(useCase.execute()).rejects.toMatchObject({
       constructor: ExampleUnexpectedError,
       message: 'Rejected as string',
+    });
+  });
+
+  it('maps opted-in PostgreSQL outages to service unavailable', async () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const databaseError = Object.assign(
+      new Error('the database system is in recovery mode'),
+      { code: '57P03' },
+    );
+
+    await expect(
+      new DatabaseReadingUseCase().execute(databaseError),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+      cause: databaseError,
+    });
+  });
+
+  it('keeps unrelated failures on the module-specific error path', async () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    await expect(
+      new DatabaseReadingUseCase().execute(new Error('programming bug')),
+    ).rejects.toBeInstanceOf(ExampleUnexpectedError);
+  });
+
+  it('maps a nested module error that carries the PostgreSQL cause', async () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const databaseError = Object.assign(new Error('connection refused'), {
+      code: 'ECONNREFUSED',
+    });
+
+    await expect(
+      new DatabaseReadingUseCase().execute(
+        new ExampleUnexpectedError(databaseError),
+      ),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+
+  it('preserves a typed non-database error with a connection failure', async () => {
+    const connectionError = Object.assign(new Error('connection refused'), {
+      code: 'ECONNREFUSED',
+    });
+    const expectedError = new ExampleApplicationError(connectionError);
+
+    await expect(
+      new DatabaseReadingUseCase().execute(expectedError),
+    ).rejects.toBe(expectedError);
+  });
+
+  it('maps a nested persistence error at an orchestrating boundary', async () => {
+    const databaseError = Object.assign(new Error('connection refused'), {
+      code: 'ECONNREFUSED',
+    });
+
+    await expect(
+      new DatabaseOrchestratingUseCase().execute(
+        new ExampleApplicationError(databaseError),
+      ),
+    ).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
     });
   });
 });

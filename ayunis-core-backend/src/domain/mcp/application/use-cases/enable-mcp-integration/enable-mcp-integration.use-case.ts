@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EnableMcpIntegrationCommand } from './enable-mcp-integration.command';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
+import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/services/validate-integration-access.service';
 
 @Injectable()
 export class EnableMcpIntegrationUseCase {
@@ -16,7 +16,7 @@ export class EnableMcpIntegrationUseCase {
   ) {}
 
   async execute(command: EnableMcpIntegrationCommand): Promise<McpIntegration> {
-    this.logger.log('enableMcpIntegration', { id: command.integrationId });
+    this.logger.log({ id: command.integrationId }, 'enableMcpIntegration');
 
     try {
       const integration = await this.validateIntegrationAccess.validate(
@@ -31,9 +31,12 @@ export class EnableMcpIntegrationUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error enabling integration', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error enabling integration',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

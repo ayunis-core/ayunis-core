@@ -31,6 +31,11 @@ export function getToolActionLabel(
   const name = toolUse.name;
 
   switch (name) {
+    case 'create_file':
+      return {
+        verb: t('chat.timeline.actions.create_file'),
+        target: asString(params.filename),
+      };
     case 'create_document':
       return {
         verb: t('chat.timeline.actions.create_document'),
@@ -78,6 +83,11 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.chart'),
         target: asString(params.title),
       };
+    case 'map':
+      return {
+        verb: t('chat.timeline.actions.map'),
+        target: asString(params.title),
+      };
     case 'generate_image':
       return {
         verb: t('chat.timeline.actions.generate_image'),
@@ -102,6 +112,11 @@ export function getToolActionLabel(
       return {
         verb: t('chat.timeline.actions.edit_skill'),
         target: asString(params.name),
+      };
+    case 'install_marketplace_skill':
+      return {
+        verb: t('chat.timeline.actions.install_marketplace_skill'),
+        target: asString(params.name) ?? asString(params.identifier),
       };
     case 'activate_skill':
       return {

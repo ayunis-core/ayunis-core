@@ -1,5 +1,5 @@
 import { GetOrgChatSettingsUseCase } from './get-org-chat-settings.use-case';
-import type { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
+import type { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -47,6 +47,7 @@ describe('GetOrgChatSettingsUseCase', () => {
     expect(result).toBeInstanceOf(OrgChatSettings);
     expect(result.orgId).toBe(orgId);
     expect(result.internetSearchEnabled).toBe(true);
+    expect(result).toHaveProperty('anonymousModeByDefault', false);
   });
 
   it('should get the orgId from the context service', async () => {

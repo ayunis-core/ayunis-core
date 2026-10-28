@@ -1,6 +1,6 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -10,14 +10,17 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ModelProviderInfoRegistry } from 'src/domain/models/application/registry/model-provider-info.registry';
+import { ModelConfigurationService } from 'src/domain/models/application/services/model-configuration.service';
 import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.query';
 import { GetConfiguredModelsByTypeUseCase } from './get-configured-models-by-type.use-case';
 
 describe('GetConfiguredModelsByTypeUseCase', () => {
+  const logger = createLoggerMock();
   let useCase: GetConfiguredModelsByTypeUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let configService: jest.Mocked<ConfigService>;
@@ -69,6 +72,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetConfiguredModelsByTypeUseCase,
+        ModelConfigurationService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: ContextService, useValue: mockContextService },
@@ -89,13 +93,13 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       if (key === 'userId') return 'test-user-id';
       if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.ADMIN;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    logger.log.mockImplementation();
+    logger.debug.mockImplementation();
+    logger.warn.mockImplementation();
   });
 
   afterEach(() => {
@@ -117,6 +121,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const imageModel = new ImageGenerationModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -157,6 +162,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([embeddingModel, languageModel]);
@@ -189,6 +195,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([imageModel, languageModel]);
@@ -214,6 +221,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const archivedModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -225,6 +233,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: true,
       canUseTools: false,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([activeModel, archivedModel]);
@@ -250,6 +259,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
     const modelWithoutKey = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
@@ -261,6 +271,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
 
     modelsRepository.findAll.mockResolvedValue([modelWithKey, modelWithoutKey]);
@@ -276,14 +287,51 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     expect(result).toStrictEqual([modelWithKey]);
   });
 
+  it('allows a super admin who is not an organisation admin', async () => {
+    const query = new GetConfiguredModelsByTypeQuery(
+      mockOrgId,
+      ModelType.LANGUAGE,
+    );
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'role') return UserRole.USER;
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return null;
+    });
+    modelsRepository.findAll.mockResolvedValue([]);
+
+    await expect(useCase.execute(query)).resolves.toEqual([]);
+  });
+
+  it('rejects an api key even when systemRole is super admin', async () => {
+    const query = new GetConfiguredModelsByTypeQuery(
+      mockOrgId,
+      ModelType.LANGUAGE,
+    );
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'apiKeyId') return 'api-key-id';
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return undefined;
+    });
+
+    await expect(useCase.execute(query)).rejects.toThrow(
+      UnauthorizedAccessError,
+    );
+    expect(modelsRepository.findAll).not.toHaveBeenCalled();
+  });
+
   it('rejects non-admin callers', async () => {
     const query = new GetConfiguredModelsByTypeQuery(
       mockOrgId,
       ModelType.LANGUAGE,
     );
     mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.USER;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 

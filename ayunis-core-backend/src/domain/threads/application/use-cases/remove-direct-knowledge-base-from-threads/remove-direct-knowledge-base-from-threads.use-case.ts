@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RemoveDirectKnowledgeBaseFromThreadsCommand } from './remove-direct-knowledge-base-from-threads.command';
 
 @Injectable()
@@ -13,10 +13,13 @@ export class RemoveDirectKnowledgeBaseFromThreadsUseCase {
   async execute(
     command: RemoveDirectKnowledgeBaseFromThreadsCommand,
   ): Promise<void> {
-    this.logger.log('execute', {
-      knowledgeBaseId: command.knowledgeBaseId,
-      userCount: command.userIds.length,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: command.knowledgeBaseId,
+        userCount: command.userIds.length,
+      },
+      'execute',
+    );
 
     if (command.userIds.length === 0) {
       return;

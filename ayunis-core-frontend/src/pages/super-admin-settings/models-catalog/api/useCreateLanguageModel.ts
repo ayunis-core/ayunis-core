@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { UseFormReturn } from 'react-hook-form';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSuperAdminLanguageCatalogModelsControllerCreateLanguageModel,
@@ -11,7 +12,13 @@ import {
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-export function useCreateLanguageModel(onSuccess?: () => void) {
+import { resolveModelErrorToastKey } from '@/pages/super-admin-settings/models-catalog/lib/resolveModelErrorToastKey';
+import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
+export function useCreateLanguageModel(
+  form: UseFormReturn<LanguageModelFormData>,
+  onSuccess?: () => void,
+) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -40,13 +47,14 @@ export function useCreateLanguageModel(onSuccess?: () => void) {
           onSuccess?.();
         },
         onError: (error: unknown) => {
-          console.error('Create language model failed:', error);
           try {
-            const { code } = extractErrorData(error);
-            if (code === 'MODEL_ALREADY_EXISTS') {
-              showError(t('models.alreadyExists'));
+            const { code, errors } = extractErrorData(error);
+            if (code === 'VALIDATION_ERROR' && errors?.length) {
+              setValidationErrors(form, errors, t, 'models.catalog.validation');
             } else {
-              showError(t('models.createError'));
+              showError(
+                t(resolveModelErrorToastKey(code, 'models.createError')),
+              );
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)

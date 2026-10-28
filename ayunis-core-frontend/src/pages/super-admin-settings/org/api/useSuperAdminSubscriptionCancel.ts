@@ -1,7 +1,5 @@
-import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerCancelSubscription,
-} from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerCancelSubscription } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,10 +19,15 @@ export default function useSuperAdminSubscriptionCancel(orgId: string) {
         onError: (error) => {
           try {
             const { code } = extractErrorData(error);
-            if (code === 'SUBSCRIPTION_NOT_FOUND') {
-              showError(t('subscription.cancelErrorSubscriptionNotFound'));
-            } else {
-              showError(t('subscription.cancelError'));
+            switch (code) {
+              case 'SUBSCRIPTION_NOT_FOUND':
+                showError(t('subscription.cancelErrorSubscriptionNotFound'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
+              default:
+                showError(t('subscription.cancelError'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)
@@ -32,13 +35,7 @@ export default function useSuperAdminSubscriptionCancel(orgId: string) {
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });

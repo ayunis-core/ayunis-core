@@ -1,0 +1,106 @@
+{
+  "page": {
+    "breadcrumb": "Arbeitsbereiche",
+    "chatsTab": "Ihre Chats",
+    "knowledgeTab": "Wissen",
+    "skillsTab": "Fähigkeiten",
+    "instructionsTab": "Anweisungen",
+    "artifactsTab": "Erstellte Inhalte",
+    "emptyChatsTitle": "Noch keine Chats",
+    "emptyChats": "Chats, die Sie diesem Arbeitsbereich hinzufügen, erscheinen hier.",
+    "noChatResults": "Keine Chats gefunden.",
+    "pin": "Anheften",
+    "unpin": "Nicht mehr anheften",
+    "settings": "Einstellungen",
+    "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
+  },
+  "detail": {
+    "save": "Änderungen speichern",
+    "skillKnowledge": "Wissenssammlungen",
+    "skillKnowledgeDescription": "Wählen Sie die Wissenssammlungen des Arbeitsbereichs, die diese Fähigkeit verwenden darf.",
+    "noWorkspaceKnowledge": "Erstellen Sie zuerst eine Wissenssammlung in diesem Arbeitsbereich.",
+    "attach": "Hinzufügen",
+    "detach": "Entfernen",
+    "documents": "Dokumente",
+    "documentsDescription": "Dokumente dieser Wissenssammlung des Arbeitsbereichs hochladen und verwalten.",
+    "noDocuments": "Noch keine Dokumente hochgeladen."
+  },
+  "artifacts": {
+    "title": "Artefakte des Arbeitsbereichs",
+    "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Arbeitsbereich.",
+    "emptyTitle": "Noch keine Inhalte erstellt",
+    "empty": "Inhalte aus Chats des Arbeitsbereichs erscheinen hier.",
+    "loadError": {
+      "title": "Artefakte des Arbeitsbereichs konnten nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Artefakte des Arbeitsbereichs öffnen."
+    },
+    "untitled": "Unbenanntes Artefakt",
+    "open": "Öffnen",
+    "version": "Version {{version}}",
+    "type": {
+      "document": "Dokument",
+      "diagram": "Diagramm",
+      "spreadsheet": "Tabelle"
+    }
+  },
+  "chat": {
+    "untitled": "Unbenannter Chat",
+    "pin": "Anheften",
+    "unpin": "Nicht mehr anheften",
+    "remove": "Aus Arbeitsbereich entfernen"
+  },
+  "context": {
+    "loadError": {
+      "title": "Kontext des Arbeitsbereichs konnte nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Wissen, Fähigkeiten oder Anweisungen des Arbeitsbereichs bearbeiten."
+    },
+    "addDialog": {
+      "loading": "Einträge werden geladen …",
+      "cancel": "Abbrechen"
+    },
+    "skills": {
+      "title": "Fähigkeiten des Arbeitsbereichs",
+      "description": "Fähigkeiten, die der Assistent bei Bedarf in Chats dieses Arbeitsbereichs aktivieren kann.",
+      "create": "Fähigkeit hinzufügen",
+      "createDescription": "Erstellen Sie eine Fähigkeit, die diesem Arbeitsbereich gehört.",
+      "name": "Name",
+      "shortDescription": "Kurzbeschreibung",
+      "instructions": "Anweisungen",
+      "emptyTitle": "Keine Fähigkeiten im Arbeitsbereich",
+      "empty": "Für diesen Arbeitsbereich wurden noch keine Fähigkeiten erstellt.",
+      "delete": "Fähigkeit des Arbeitsbereichs löschen",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "activeTooltip": "Aktive Fähigkeiten können vom Assistenten bei Bedarf in Chats dieses Arbeitsbereichs aktiviert werden. Anweisungen und Ressourcen werden erst bei der Aktivierung geladen. Inaktive Fähigkeiten können nicht aktiviert werden.",
+      "pin": "In Chats des Arbeitsbereichs anheften",
+      "unpin": "Aus Chats des Arbeitsbereichs lösen"
+    },
+    "knowledge": {
+      "title": "Wissenssammlungen",
+      "description": "Eigene Wissenssammlungen für alle Chats dieses Arbeitsbereichs.",
+      "create": "Wissenssammlung hinzufügen",
+      "createDescription": "Erstellen Sie eine Wissenssammlung, die diesem Arbeitsbereich gehört.",
+      "name": "Name",
+      "descriptionLabel": "Beschreibung",
+      "emptyTitle": "Keine Wissenssammlungen im Arbeitsbereich",
+      "empty": "Für diesen Arbeitsbereich wurden noch keine Wissenssammlungen erstellt.",
+      "detach": "Wissenssammlung des Arbeitsbereichs löschen",
+      "documentCount": "{{count}} Dokumente",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "activeTooltip": "Aktive Wissenssammlungen sind in jedem Chat dieses Arbeitsbereichs verfügbar. Inaktive Wissenssammlungen werden in Chats des Arbeitsbereichs nicht verwendet."
+    },
+    "documents": {
+      "upload": "Datei hochladen",
+      "remove": "Datei entfernen"
+    },
+    "instructions": {
+      "title": "Anweisungen",
+      "description": "Anweisungen, die jedem Chat in diesem Arbeitsbereich hinzugefügt werden.",
+      "placeholder": "Geben Sie Anweisungen ein, die für alle Chats in diesem Arbeitsbereich gelten.",
+      "save": "Speichern",
+      "saveSuccess": "Anweisungen wurden gespeichert.",
+      "saveError": "Anweisungen konnten nicht gespeichert werden."
+    }
+  }
+}

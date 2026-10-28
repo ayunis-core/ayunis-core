@@ -17,11 +17,12 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import { Table, TableHeader } from '@ayunis/ui/components/table';
-import { useInviteDelete } from '../api/useInviteDelete';
-import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
-import { useInviteResend } from '../api/useInviteResend';
-import type { Invite } from '../model/openapi';
+import { useInviteDelete } from '@/pages/admin-settings/users-settings/api/useInviteDelete';
+import { useDeleteAllInvites } from '@/pages/admin-settings/users-settings/api/useDeleteAllInvites';
+import { useInviteResend } from '@/pages/admin-settings/users-settings/api/useInviteResend';
+import type { Invite } from '@/pages/admin-settings/users-settings/model/openapi';
 import type { InviteResponseDtoRole } from '@/shared/api';
+import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 
@@ -116,6 +117,7 @@ export default function InvitesSection({
               <TableRow>
                 <TableHead>{t('users.email')}</TableHead>
                 <TableHead>{t('users.role')}</TableHead>
+                <TableHead>{t('users.teams')}</TableHead>
                 <TableHead>{t('users.status')}</TableHead>
                 <TableHead>{t('users.sentDate')}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -124,25 +126,21 @@ export default function InvitesSection({
             <TableBody>
               {invites.map((invite) => (
                 <TableRow key={invite.id}>
-                  <TableCell className="font-medium">{invite.email}</TableCell>
+                  <TableCell
+                    className="font-medium max-w-48 truncate"
+                    title={invite.email}
+                  >
+                    {invite.email}
+                  </TableCell>
                   <TableCell>{roleLabels[invite.role]}</TableCell>
+                  <TableCell
+                    className="max-w-56 whitespace-normal"
+                    data-testid={`invite-teams-${invite.id}`}
+                  >
+                    {invite.teams?.map((team) => team.name).join(', ')}
+                  </TableCell>
                   <TableCell>
-                    {(() => {
-                      const statusColorMap: Record<string, string> = {
-                        pending: 'bg-yellow-100 text-yellow-800',
-                        accepted: 'bg-green-100 text-green-800',
-                      };
-                      const statusColor =
-                        statusColorMap[invite.status] ??
-                        'bg-red-100 text-red-800';
-                      return (
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
-                        >
-                          {t(`users.${invite.status}`)}
-                        </span>
-                      );
-                    })()}
+                    <InviteStatusBadge status={invite.status} />
                   </TableCell>
                   <TableCell>
                     {new Date(invite.sentDate).toLocaleDateString()}

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
@@ -11,14 +10,33 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 import { RolePermission } from 'src/iam/permissions/domain/role-permission.entity';
 import { RolePermissionRecord } from './schema/role-permission.record';
 import { RolePermissionMapper } from './mappers/role-permission.mapper';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalRolePermissionsRepository extends RolePermissionsRepository {
   constructor(
-    @InjectRepository(RolePermissionRecord)
-    private readonly repository: Repository<RolePermissionRecord>,
+    private readonly dataSource: DataSource,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get repository(): Repository<RolePermissionRecord> {
+    return this.getManager().getRepository(RolePermissionRecord);
+  }
+
+  private runInTransaction<T>(
+    work: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    if (this.txHost.isTransactionActive()) {
+      return work(this.txHost.tx);
+    }
+    return this.dataSource.transaction(work);
   }
 
   async findByOrgId(orgId: UUID): Promise<RolePermission[]> {
@@ -56,7 +74,7 @@ export class LocalRolePermissionsRepository extends RolePermissionsRepository {
       ),
     );
 
-    await this.repository.manager.transaction(async (manager) => {
+    await this.runInTransaction(async (manager) => {
       await manager.delete(RolePermissionRecord, { orgId, role: In(roles) });
       if (records.length > 0) {
         await manager.save(records);

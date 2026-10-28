@@ -13,7 +13,7 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.use-case';
 import { IsAddonActiveQuery } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.query';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
-import { REQUIRE_ADDON_KEY } from '../decorators/addon.decorator';
+import { REQUIRE_ADDON_KEY } from 'src/iam/authorization/application/decorators/addon.decorator';
 
 interface RequestWithUser extends Request {
   user?: ActiveUser | ApiKeyPrincipal;
@@ -52,9 +52,10 @@ export class AddonGuard implements CanActivate {
       if (isPublic) {
         return true;
       }
-      this.logger.warn('No principal found on request when checking addon', {
-        requiredAddon,
-      });
+      this.logger.warn(
+        { requiredAddon },
+        'No principal found on request when checking addon',
+      );
       return false;
     }
 
@@ -63,18 +64,24 @@ export class AddonGuard implements CanActivate {
         new IsAddonActiveQuery(orgId, requiredAddon),
       );
       if (!isActive) {
-        this.logger.warn('Access denied: required addon not active', {
-          orgId,
-          requiredAddon,
-        });
+        this.logger.warn(
+          {
+            orgId,
+            requiredAddon,
+          },
+          'Access denied: required addon not active',
+        );
       }
       return isActive;
     } catch (error) {
-      this.logger.error('Error checking addon', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId,
-        requiredAddon,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId,
+          requiredAddon,
+        },
+        'Error checking addon',
+      );
       return false;
     }
   }

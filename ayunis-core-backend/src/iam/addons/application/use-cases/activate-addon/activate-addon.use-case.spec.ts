@@ -2,11 +2,11 @@ import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ActivateAddonUseCase } from './activate-addon.use-case';
 import { ActivateAddonCommand } from './activate-addon.command';
-import type { OrgAddonRepository } from '../../ports/org-addon.repository';
+import type { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
 import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
-import { AddonActivatedEvent } from '../../events/addon-activated.event';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 const SUPER_ADMIN_ID = '99999999-9999-9999-9999-999999999999' as UUID;

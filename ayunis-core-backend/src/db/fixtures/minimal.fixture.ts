@@ -15,6 +15,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    contextWindowSize: 200_000,
     inputTokenCost: 3,
     outputTokenCost: 15,
   },
@@ -28,6 +29,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    contextWindowSize: 200_000,
     inputTokenCost: 3,
     outputTokenCost: 15,
   },
@@ -41,6 +43,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    contextWindowSize: 400_000,
     inputTokenCost: 3,
     outputTokenCost: 15,
   },
@@ -54,6 +57,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    contextWindowSize: 128_000,
     inputTokenCost: 2.5,
     outputTokenCost: 10,
   },
@@ -67,6 +71,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
     inputTokenCost: 2,
     outputTokenCost: 6,
   },
@@ -80,6 +85,7 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    contextWindowSize: 1_048_576,
     inputTokenCost: 1.25,
     outputTokenCost: 10,
   },
@@ -130,9 +136,115 @@ export const minimalFixture = {
           country: 'Germany',
         },
       },
-      members: [],
+      members: [
+        {
+          email: 'shared-skill-viewer@demo.local',
+          name: 'Shared Skill Viewer',
+          consumedCredits: 0,
+        },
+      ],
       teams: [],
       memberships: {},
+      skills: [
+        {
+          name: 'Bürgerfreundlich formulieren',
+          shortDescription:
+            'Schreibt Antworten klar, verbindlich und in einfacher Sprache.',
+          instructions:
+            'Formuliere immer bürgernah, vermeide Amtsdeutsch und schließe mit einem konkreten nächsten Schritt.',
+        },
+        {
+          name: 'Einsatzlage strukturieren',
+          shortDescription:
+            'Ordnet Feuerwehr-Informationen nach Lage, Maßnahmen und offenen Punkten.',
+          instructions:
+            'Strukturiere Einsatzinformationen in Lage, Risiken, Maßnahmen, Zuständigkeiten und offene Rückfragen.',
+        },
+        {
+          name: 'Geteiltes Bürgerwissen',
+          shortDescription:
+            'Stellt eine geteilte Wissensbasis für Organisationsmitglieder bereit.',
+          instructions:
+            'Nutze die verknüpfte Wissensbasis, wenn du Fragen zu Bürgerdiensten beantwortest.',
+        },
+      ],
+      knowledgeBases: [
+        {
+          name: 'Bürgerbüro Wissensbasis',
+          description:
+            'Demo-Unterlagen zu Öffnungszeiten, Meldebescheinigung und Standardantworten.',
+          documents: [
+            {
+              name: 'Bürgerbüro FAQ.txt',
+              text: 'Das Bürgerbüro ist montags bis freitags von 08:00 bis 12:00 Uhr geöffnet. Für Meldebescheinigungen wird ein gültiger Ausweis benötigt. Termine können online oder telefonisch vereinbart werden.',
+            },
+          ],
+        },
+        {
+          name: 'Feuerwehr Einsatzwissen',
+          description:
+            'Demo-Unterlagen zu Fahrzeugen, Alarmstufen und Einsatznotizen.',
+          documents: [
+            {
+              name: 'Fahrzeugübersicht.txt',
+              text: 'Die Feuerwehr verfügt über ein HLF 20, eine Drehleiter und einen Einsatzleitwagen. Bei Alarmstufe 2 wird zusätzlich die Nachbarwehr informiert.',
+            },
+          ],
+        },
+        {
+          name: 'Geteiltes Bürgerwissen',
+          description:
+            'Manuelle Testdaten für den Zugriff auf eine Wissensbasis über einen geteilten Skill.',
+          documents: [
+            {
+              name: 'Geteiltes Bürgerwissen FAQ.txt',
+              text: 'Diese Wissensbasis ist über den Skill Geteiltes Bürgerwissen für andere Organisationsmitglieder lesbar.',
+            },
+          ],
+        },
+      ],
+      sharedSkillKnowledgeBases: [
+        {
+          skillName: 'Geteiltes Bürgerwissen',
+          knowledgeBaseName: 'Geteiltes Bürgerwissen',
+        },
+      ],
+      // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,
+      // both list views and the manual ordering without clicking anything.
+      workspaces: [
+        {
+          name: 'Bürgeranfragen',
+          description:
+            'Anfragen von Bürgerinnen und Bürgern bündeln und beantworten',
+          instruction:
+            'Antworte im Namen der Stadtverwaltung. Sei freundlich, präzise und nenne benötigte Unterlagen ausdrücklich.',
+          icon: 'usercheck',
+          color: 'violet',
+          skillNames: ['Bürgerfreundlich formulieren'],
+          knowledgeBaseNames: ['Bürgerbüro Wissensbasis'],
+          pinned: true,
+        },
+        {
+          name: 'Feuerwehr',
+          description: 'Einsätze, Fahrzeuge und Ausrüstung',
+          instruction:
+            'Fasse einsatzbezogene Informationen sachlich zusammen und markiere unbestätigte Angaben deutlich.',
+          icon: 'flame',
+          color: 'rose',
+          skillNames: ['Einsatzlage strukturieren'],
+          knowledgeBaseNames: ['Feuerwehr Einsatzwissen'],
+          pinned: true,
+        },
+        {
+          name: 'Gebühren & Finanzen',
+          instruction:
+            'Erkläre Gebühren nachvollziehbar und weise auf mögliche Satzungsgrundlagen hin.',
+          icon: 'euro',
+          color: '#2c7a4b',
+          skillNames: ['Bürgerfreundlich formulieren'],
+          pinned: false,
+        },
+      ],
     },
     {
       key: 'usage',
@@ -199,6 +311,34 @@ export const minimalFixture = {
         Engineering: 5000,
         'Project-X': 4000,
       },
+      // Only this org gets the add-on. Demo Org stays without it so the two
+      // logins cover both the academy and the "org cannot take the
+      // completion at all" paths.
+      academyAddon: true,
+      // The admin is left without a completion on purpose so the Academy
+      // chapter-confirmation journey can be exercised live.
+      academyCompletions: [
+        {
+          email: 'anna@usage.local',
+          completedDaysAgo: 10,
+          expectedState: 'valid',
+        },
+        {
+          email: 'ben@usage.local',
+          completedDaysAgo: 340,
+          expectedState: 'expiring soon — 1-month pop-up',
+        },
+        {
+          email: 'carla@usage.local',
+          completedDaysAgo: 361,
+          expectedState: 'expiring soon — final-week countdown banner',
+        },
+        {
+          email: 'dan@usage.local',
+          completedDaysAgo: 400,
+          expectedState: 'expired — chat gated in annual mode',
+        },
+      ],
     },
   ],
 
@@ -245,6 +385,44 @@ export const minimalFixture = {
       modelKey: 'imageGenerationModel',
       isDefault: true,
       anonymousOnly: false,
+    },
+  ],
+
+  // Academy content is platform-wide, not per-org. Two chapters keep the
+  // completion journey short while still proving that every chapter must be
+  // confirmed before Core unlocks.
+  academyChapters: [
+    {
+      title: 'KI-Grundlagen',
+      description:
+        'Wie große Sprachmodelle arbeiten, wo ihre Grenzen liegen und was das für die Verwaltungsarbeit bedeutet.',
+      position: 1,
+      modules: [
+        {
+          title: 'Was ein Sprachmodell tut',
+          description:
+            'Eine kurze Einführung in Tokens, Kontext und Wahrscheinlichkeiten.',
+          loomUrl:
+            'https://www.loom.com/share/1e8d673f95e64c989f60a6885891777d',
+          position: 1,
+        },
+      ],
+    },
+    {
+      title: 'Verantwortungsvoller Einsatz',
+      description:
+        'Wie KI-Ergebnisse geprüft und personenbezogene Daten geschützt werden.',
+      position: 2,
+      modules: [
+        {
+          title: 'Verantwortung bleibt beim Menschen',
+          description:
+            'KI-Ausgaben kritisch prüfen und nur geeignete Daten verwenden.',
+          loomUrl:
+            'https://www.loom.com/share/1e8d673f95e64c989f60a6885891777d',
+          position: 1,
+        },
+      ],
     },
   ],
 } as const satisfies SeedFixture;

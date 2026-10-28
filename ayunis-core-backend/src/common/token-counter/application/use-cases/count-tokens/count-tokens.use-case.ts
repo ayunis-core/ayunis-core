@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TokenCounterRegistry } from '../../token-counter.registry';
+import { TokenCounterRegistry } from 'src/common/token-counter/application/token-counter.registry';
 import { CountTokensCommand } from './count-tokens.command';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class CountTokensUseCase {
   constructor(private readonly registry: TokenCounterRegistry) {}
 
   execute(command: CountTokensCommand): number {
-    this.logger.debug('execute', { textLength: command.text.length });
+    this.logger.debug({ textLength: command.text.length }, 'execute');
 
     const handler = command.counterType
       ? this.registry.getHandler(command.counterType)

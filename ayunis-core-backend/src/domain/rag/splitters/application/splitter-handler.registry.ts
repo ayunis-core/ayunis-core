@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SplitterHandler } from './ports/splitter.handler';
-import { SplitterType } from '../domain/splitter-type.enum';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import {
   NoSplitterProviderAvailableError,
   SplitterProviderNotFoundError,
@@ -9,6 +9,7 @@ import {
 @Injectable()
 export class SplitterHandlerRegistry {
   private readonly logger = new Logger(SplitterHandlerRegistry.name);
+
   private readonly handlers = new Map<SplitterType, SplitterHandler>();
 
   registerHandler(type: SplitterType, handler: SplitterHandler): void {
@@ -16,7 +17,7 @@ export class SplitterHandlerRegistry {
   }
 
   getHandler(type: SplitterType): SplitterHandler {
-    this.logger.debug('getHandler', { type });
+    this.logger.debug({ type }, 'getHandler');
     const handler = this.handlers.get(type);
 
     if (!handler) {

@@ -50,6 +50,6 @@ describe('windowMsToHours / windowHoursToMs round-trip', () => {
   });
 
   it('round-trips the lower validator bound', () => {
-    expect(windowMsToHours(windowHoursToMs(0.01))).toBe(0.01);
+    expect(windowMsToHours(windowHoursToMs(0.01))).toBeCloseTo(0.01, 10);
   });
 });

@@ -1,46 +1,61 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
+import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { KnowledgeBaseContext } from 'src/domain/knowledge-bases/application/models/knowledge-base-context';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindKnowledgeBaseUseCase {
   private readonly logger = new Logger(FindKnowledgeBaseUseCase.name);
 
   constructor(
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly repository: KnowledgeBaseRepository,
+    private readonly readAccess: KnowledgeBaseReadAccessService,
+    private readonly context: ContextService,
   ) {}
 
-  async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBase> {
-    this.logger.log('Finding knowledge base', {
-      id: query.id,
-      userId: query.userId,
-    });
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
+  async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBaseContext> {
+    this.logger.log({ id: query.id }, 'Finding knowledge base');
+    const knowledgeBase = await this.repository.findById(query.id);
+    if (!knowledgeBase) throw new KnowledgeBaseNotFoundError(query.id);
+    await this.readAccess.requireRead(knowledgeBase);
+    const [isActive, counts] = await Promise.all([
+      this.isActive(knowledgeBase),
+      this.repository.countSourcesByKnowledgeBaseIds([knowledgeBase.id]),
+    ]);
+    return {
+      knowledgeBase,
+      isShared: this.isShared(knowledgeBase),
+      isActive,
+      documentCount: counts.get(knowledgeBase.id) ?? 0,
+    };
+  }
 
-    try {
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
-        query.id,
-      );
-      if (knowledgeBase?.userId !== query.userId) {
-        throw new KnowledgeBaseNotFoundError(query.id);
-      }
+  private isShared(knowledgeBase: KnowledgeBase): boolean {
+    if (!(knowledgeBase instanceof PersonalKnowledgeBase)) return false;
+    const { userId } = getRequiredUserContext(this.context);
+    return knowledgeBase.userId !== userId;
+  }
 
-      return knowledgeBase;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error finding knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError('Error finding knowledge base', {
-        error: error as Error,
-      });
+  private async isActive(knowledgeBase: KnowledgeBase): Promise<boolean> {
+    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+      const { userId } = getRequiredUserContext(this.context);
+      return this.repository.isActive(knowledgeBase.id, userId);
     }
+    const states = await this.repository.getWorkspaceStates(
+      [knowledgeBase.id],
+      knowledgeBase.workspaceId,
+    );
+    return states.get(knowledgeBase.id)?.isActive ?? false;
   }
 }

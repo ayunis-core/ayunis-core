@@ -1,25 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import type { Thread } from '../../../domain/thread.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   GeneratedImageNotFoundError,
   MessageImageNotFoundError,
   ThreadNotFoundError,
   UnexpecteThreadError,
   UnsupportedImageContentTypeError,
-} from '../../threads.errors';
-import { ThreadsRepository } from '../../ports/threads.repository';
-import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+} from 'src/domain/threads/application/threads.errors';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import {
   DownloadReferenceImagesQuery,
   UploadedImageRef,
 } from './download-reference-images.query';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 export interface ReferenceImageDownload {
   data: Buffer;
@@ -49,16 +49,16 @@ export class DownloadReferenceImagesUseCase {
   async execute(
     query: DownloadReferenceImagesQuery,
   ): Promise<ReferenceImageDownload[]> {
-    this.logger.log('Downloading reference images', {
-      threadId: query.threadId,
-      uploadedImageCount: query.uploadedImageRefs.length,
-      generatedImageCount: query.generatedImageIds.length,
-    });
+    this.logger.log(
+      {
+        threadId: query.threadId,
+        uploadedImageCount: query.uploadedImageRefs.length,
+        generatedImageCount: query.generatedImageIds.length,
+      },
+      'Downloading reference images',
+    );
 
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
 
     const thread = await this.threadsRepository.findOne(
       query.threadId,
@@ -153,10 +153,13 @@ export class DownloadReferenceImagesUseCase {
     if (data.length <= MAX_REFERENCE_IMAGE_BYTES) {
       return true;
     }
-    this.logger.warn('Skipping oversized reference image', {
-      objectName,
-      sizeBytes: data.length,
-    });
+    this.logger.warn(
+      {
+        fileName: objectName,
+        sizeBytes: data.length,
+      },
+      'Skipping oversized reference image',
+    );
     return false;
   }
 }

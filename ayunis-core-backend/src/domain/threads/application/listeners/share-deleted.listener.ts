@@ -3,12 +3,12 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
-import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
-import { RemoveSkillSourcesFromThreadsCommand } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.command';
-import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from '../use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
-import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from '../use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
-import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
-import { RemoveDirectKnowledgeBaseFromThreadsCommand } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.command';
+import { RemoveSkillSourcesFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import { RemoveSkillSourcesFromThreadsCommand } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.command';
+import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
+import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
+import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
+import { RemoveDirectKnowledgeBaseFromThreadsCommand } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.command';
 @Injectable()
 export class ShareDeletedListener {
   private readonly logger = new Logger(ShareDeletedListener.name);
@@ -35,12 +35,12 @@ export class ShareDeletedListener {
     event: ShareDeletedEvent,
   ): Promise<void> {
     this.logger.log(
-      'Cleaning up thread assignments after skill share deletion',
       {
         skillId: event.entityId,
         ownerId: event.ownerId,
         remainingScopeCount: event.remainingScopes.length,
       },
+      'Cleaning up thread assignments after skill share deletion',
     );
 
     const lostAccessUserIds =
@@ -65,12 +65,12 @@ export class ShareDeletedListener {
     event: ShareDeletedEvent,
   ): Promise<void> {
     this.logger.log(
-      'Cleaning up direct thread KB assignments after KB share deletion',
       {
         knowledgeBaseId: event.entityId,
         ownerId: event.ownerId,
         remainingScopeCount: event.remainingScopes.length,
       },
+      'Cleaning up direct thread KB assignments after KB share deletion',
     );
 
     const lostAccessUserIds =

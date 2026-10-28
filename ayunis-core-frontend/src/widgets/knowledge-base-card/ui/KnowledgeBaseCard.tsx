@@ -60,8 +60,12 @@ const ACCEPTED_EXTENSIONS = [
   '.pdf',
   '.docx',
   '.pptx',
+  '.odt',
+  '.odp',
   '.txt',
   '.md',
+  '.eml',
+  '.msg',
   '.csv',
   '.xlsx',
   '.xls',
@@ -99,6 +103,7 @@ export default function KnowledgeBaseCard({
   return (
     <Card
       ref={cardRef}
+      data-testid="additional-documents-card"
       className={cn(
         'relative',
         isDragging && 'outline-2 outline-dashed outline-primary',
@@ -214,7 +219,7 @@ function SourceItem({
     now - new Date(source.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Item>
+    <Item data-testid={`source-item-${source.id}`}>
       <ItemMedia variant="icon">
         <SourceItemIcon
           isProcessing={isProcessing}

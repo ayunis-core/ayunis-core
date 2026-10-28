@@ -1,47 +1,56 @@
 ---
 name: worktree
-description: Create and manage git worktrees for isolated working directories. Use when starting a new task that needs its own branch and directory.
+description: Name, create, and remove git worktrees for isolated working directories. Use when starting a new task that needs its own branch and directory, or when naming or cleaning up a worktree.
 ---
 
 # Git Worktree Management
 
 ## When to Use
 
-At the start of a task, the user will tell you which environment to work in. This skill covers creating and removing worktrees — for starting the dev stack, see the `dev-environment` skill.
+At the start of a task, the user will tell you which environment to work in. This skill covers naming, creating, and removing worktrees — for starting the dev stack, see the `dev-environment` skill.
+
+This skill does not prescribe a worktree tool. Use whichever one the environment provides; the naming, location, and setup below apply regardless.
+
+## Naming Convention
+
+Every worktree gets one name, used for both its directory and its base branch:
+
+```text
+<ticket-id>-<slug>
+```
+
+- `<ticket-id>` is the lowercase Linear ID (`ayc-1050`). Unticketed maintenance uses `ayc-000`.
+- `<slug>` is 2–4 lowercase kebab-case words describing the work (`provider-factories`, `minio-image`).
+- QA worktrees for a PR append `-qa` (`ayc-1050-qa`); use `pr-<number>-qa` when the PR has no ticket.
+
+Examples: `ayc-1050-provider-factories`, `ayc-000-minio-image`, `ayc-703-qa`.
+
+Location: `<repo parent>/.worktrees/<repo name>/<name>`, e.g. `~/dev/ayunis/.worktrees/ayunis-core/ayc-1050-provider-factories`.
+
+Never use a Graphite-generated branch name (`08-21-feat_workspaces_…`) or a free-form slug without a ticket ID as the directory name. When the work is on an existing branch, the directory still gets the convention name; if your tool derives the directory from the branch name, create the worktree under the convention name and check out the existing branch inside it.
 
 ## Creating a Worktree
 
-The user gives you a **task ID** and optionally a **branch name** (if the branch already exists).
+The user gives you a **task ID** and optionally an **existing branch** to work on.
+
+1. Create the worktree at the conventional location. For new work, create its base branch with the same `<ticket-id>-<slug>` name from `main`.
+2. Ensure it is set up. Your tool may already do some of this through hooks — check the result and do only what is missing:
+
+- The gitignored files listed in `.worktreeinclude` (secret `.env` files) must exist. Worktrunk, Claude Code, and Codex copy them on creation; if your tool did not, copy them from the main checkout.
 
 ```bash
-TASK_ID="AYC-123"  # from user
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORKTREE_DIR="$(dirname "$REPO_ROOT")/ayunis-core-wt-${TASK_ID,,}"
+cd "$WORKTREE_DIR"
 
-# New branch from HEAD:
-git worktree add "$WORKTREE_DIR" -b "feat/${TASK_ID,,}/work" HEAD
+# Track the base branch in Graphite — REQUIRED before any `gt create`, which
+# otherwise fails with "Cannot perform this operation on untracked branch".
+gt track --parent main
 
-# OR existing branch:
-git worktree add "$WORKTREE_DIR" "$BRANCH"
-
-# Track the new branch in Graphite — REQUIRED before any `gt create`.
-# `git worktree add -b` produces a branch Graphite doesn't know about, so the
-# first `gt create` fails with "Cannot perform this operation on untracked
-# branch". Track it as a child of main:
-cd "$WORKTREE_DIR" && gt track --parent main
-
-# Symlink secret .env files (gitignored, not in the new worktree)
-ln -sf "$REPO_ROOT/ayunis-core-backend/.env" "$WORKTREE_DIR/ayunis-core-backend/.env"
-ln -sf "$REPO_ROOT/ayunis-core-frontend/.env" "$WORKTREE_DIR/ayunis-core-frontend/.env"
-
-# Install dependencies — ayunis-core is a pnpm workspace
-# (pnpm-workspace.yaml + pnpm-lock.yaml at repo root, packageManager pinned to pnpm).
-# Never `npm install` inside a sub-project — that creates a stray package-lock.json
-# and resolves the wrong tree.
-cd "$WORKTREE_DIR" && pnpm install
+# ayunis-core is a pnpm workspace. Never `npm install` inside a sub-project —
+# that creates a stray package-lock.json and resolves the wrong tree.
+pnpm install
 
 # Build the workspace packages so @ayunis/* types resolve (see below).
-cd "$WORKTREE_DIR" && pnpm run build:deps
+pnpm run build:deps
 ```
 
 ## Build @ayunis/* deps before trusting a full typecheck
@@ -68,7 +77,7 @@ pnpm exec tsc --noEmit                       # now TS2307 noise is gone; real er
 
 ## Empty Base Branch Gotcha
 
-The worktree branch `feat/<task>/work` is the **base** — Graphite stacks are
+The worktree's `<ticket-id>-<slug>` branch is the **base** — Graphite stacks are
 built on top of it (see the `git-workflow` skill). Following git-workflow,
 the first commit goes on a `gt create` child branch, leaving the worktree
 base intentionally empty.
@@ -77,7 +86,7 @@ That's fine until you push. `gt submit --stack` refuses to submit an empty
 base branch:
 
 ```text
-WARNING: This branch does not introduce any changes: ▸ feat/<task>/work
+WARNING: This branch does not introduce any changes: ▸ <ticket-id>-<slug>
 Nothing to submit!
 ```
 
@@ -107,15 +116,6 @@ cd "$WORKTREE_DIR"
 
 Only tear down when the user asks you to, or when they explicitly say the task is complete. Worktrees persist across agent sessions.
 
-```bash
-# First stop the dev stack if running (see dev-environment skill)
-cd "$WORKTREE_DIR" && ./dev down
-
-# Remove the worktree (from the main repo)
-cd "$REPO_ROOT"
-git worktree remove "$WORKTREE_DIR"
-```
-
-## Branch Naming
-
-Worktree branches follow the pattern `feat/${TASK_ID,,}/work` (e.g., `feat/ayc-123/work`). This is the base branch that Graphite stacks are built on top of — see the `git-workflow` skill.
+1. Stop the worktree's dev stack if running: `cd "$WORKTREE_DIR" && ./dev down` (see `dev-environment`).
+2. Confirm no uncommitted or unpushed work would be lost.
+3. Remove the worktree with the same tool that manages it, from the main checkout. Never force-remove unless the user authorized discarding its contents.

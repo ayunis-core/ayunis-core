@@ -1,13 +1,13 @@
 import { RetrieveMcpResourceUseCase } from 'src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.use-case';
-import { McpIntegrationResource } from '../../domain/tools/mcp-integration-resource.entity';
+import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { RetrieveMcpResourceCommand } from 'src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.command';
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { parseCSV } from 'src/common/util/csv';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
@@ -34,7 +34,7 @@ export class McpIntegrationResourceHandler implements ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     const validatedInput = tool.validateParams(input);
     try {
       const { content, mimeType } =
@@ -67,7 +67,7 @@ export class McpIntegrationResourceHandler implements ToolExecutionHandler {
       return JSON.stringify(content);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('error', error);
+      this.logger.error({ err: error }, 'error');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message:

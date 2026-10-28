@@ -10,7 +10,7 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const superAdmins = await queryClient.fetchQuery({
+    const superAdmins = await queryClient.query({
       queryKey: getSuperAdminManagementControllerListSuperAdminsQueryKey(),
       queryFn: () => superAdminManagementControllerListSuperAdmins(),
     });

@@ -1,14 +1,12 @@
 # Multi-stage build for production deployment (pnpm workspaces)
 
 # ---- Stage 1: Build — install workspace, build FE + BE, create prod bundle ----
-# Pinned back to node 24 to bisect the production outbound-connection stalls
-# that started with the node 26 bump (AYC-423). Revert to 26 once exonerated
-# or once the stall mechanism is identified and mitigated.
-FROM node:24.16.0-alpine AS build
+# Node 26 re-attempt after the AYC-423 rollback (AYC-1009). Smoke-tested
+# locally, not load-soaked: roll back here if provider streams stall again.
+FROM node:26.12.1-alpine AS build
 
 # pnpm via corepack (version pinned by root package.json "packageManager").
-# Installed explicitly (node:26-alpine dropped the bundled corepack; harmless
-# on node:24, and keeps this line stable across the 24↔26 A/B).
+# Installed explicitly: node:26-alpine no longer bundles corepack.
 RUN npm install -g corepack@latest && corepack enable
 # Native build deps for bcrypt (node-pre-gyp builds from source on musl/alpine)
 RUN apk add --no-cache python3 make g++ gcc
@@ -32,7 +30,15 @@ RUN pnpm install --frozen-lockfile
 # No .env is consulted: environment-specific frontend values are injected at
 # runtime via the backend's GET /config.js, so the same image serves every
 # environment.
-RUN pnpm --filter core-frontend-tanstack run build
+#
+# APP_REVISION (the git sha in CI, see build-images.yml) is inlined into the
+# frontend bundle so AppSignal reports carry the revision its sourcemaps were
+# uploaded under, and exported as ENV below so the backend reports the same
+# one. The maps themselves (vite build.sourcemap: 'hidden') are deleted —
+# they must not be publicly served; CI uploads them to AppSignal instead.
+ARG APP_REVISION
+RUN VITE_APP_REVISION=$APP_REVISION pnpm --filter core-frontend-tanstack run build
+RUN find ayunis-core-frontend/dist -name '*.map' -delete
 RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
 # Build the workspace packages the backend depends on (@ayunis/inference,
 # @ayunis/provider-anthropic, @ayunis/provider-openai, @ayunis/agent-runtime)
@@ -51,7 +57,7 @@ RUN pnpm --filter core-backend run build
 RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 
 # ---- Stage 2: Production runtime ----
-FROM node:24.16.0-alpine AS production
+FROM node:26.12.1-alpine AS production
 
 # Chromium for Puppeteer PDF export
 RUN apk add --no-cache chromium
@@ -75,12 +81,20 @@ COPY --from=build /usr/src/app/ayunis-core-backend/appsignal-hooks.cjs ./appsign
 RUN mkdir -p uploads
 
 ENV NODE_ENV=production
+# Same revision the frontend bundle was built with (empty outside CI, where
+# appsignal.cjs falls back to the backend package version).
+ARG APP_REVISION
+ENV APP_REVISION=$APP_REVISION
 # Heap sized well below the container limit so allocations outside the V8 heap
 # (Chromium, file buffers) have room. Deliberately no
 # --heapsnapshot-near-heap-limit: a snapshot persists prompts, PII and
 # credentials unencrypted in the container layer — the same disclosure
 # appsignal.cjs refuses for chat content. Snapshot on staging instead.
 ENV NODE_OPTIONS="--max-old-space-size=6144"
+# Sharp holds one libuv thread per image for the whole resize. With the default
+# pool of 4 and four admitted uploads, bcrypt logins and DNS lookups for new
+# outbound connections would queue behind them.
+ENV UV_THREADPOOL_SIZE=8
 # PORT is set via environment variable at runtime, defaults to 3000 in app code
 # Port exposure is handled by docker-compose port mapping
 

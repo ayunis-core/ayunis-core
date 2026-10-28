@@ -14,8 +14,8 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { MoreVertical, Loader2 } from 'lucide-react';
-import type { McpIntegration } from '../model/types';
-import { getIntegrationTypeLabel } from '../lib/helpers';
+import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
+import { getIntegrationTypeLabel } from '@/pages/admin-settings/integrations-settings/lib/helpers';
 import {
   Item,
   ItemActions,
@@ -50,7 +50,7 @@ export function IntegrationCard({
   const requiresUserConfig = integration.userAuthorizationRequired === true;
 
   return (
-    <Item variant="outline">
+    <Item variant="outline" data-testid={`integration-card-${integration.id}`}>
       <ItemContent>
         <ItemTitle>
           {integration.name}
@@ -84,13 +84,20 @@ export function IntegrationCard({
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="integration-actions"
+            >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">{t('integrations.card.openMenu')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(integration)}>
+            <DropdownMenuItem
+              onClick={() => onEdit(integration)}
+              data-testid="integration-edit-action"
+            >
               {t('integrations.card.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem

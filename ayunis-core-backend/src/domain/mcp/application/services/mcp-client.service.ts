@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import {
   McpClientPort,
@@ -8,31 +8,27 @@ import {
   McpPrompt,
   McpToolCall,
   McpToolResult,
-} from '../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
-import { McpIntegration } from '../../domain/mcp-integration.entity';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+  McpRequestOptions,
+} from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   ConfigField,
   isSystemFixedField,
-} from '../../domain/value-objects/integration-config-schema';
-import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
-import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+} from 'src/domain/mcp/application/mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
 import { handleMcpOperationError } from './mcp-operation-error';
 
-/**
- * Service for executing MCP operations with authentication.
- * Leverages the polymorphic authentication design of integration entities.
- * Handles credential decryption and connection configuration.
- */
 @Injectable()
 export class McpClientService {
   private readonly logger = new Logger(McpClientService.name);
@@ -47,16 +43,14 @@ export class McpClientService {
     private readonly capabilityCache?: McpCapabilityCacheService,
   ) {}
 
-  /**
-   * Builds MCP connection configuration from integration entity.
-   * Schema-configured integrations resolve organization and user fields.
-   * Other integrations delegate header generation to their auth entity.
-   *
-   * @param integration The MCP integration entity
-   * @param userId Optional user ID for per-user config resolution
-   * @returns Connection configuration for MCP client
-   * @throws McpAuthenticationError if authentication configuration fails
-   */
+  invalidateConnections(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<void> {
+    return this.mcpClient.invalidateConnections(
+      this.buildConnectionScope(integration, userId),
+    );
+  }
 
   async buildConnectionConfig(
     integration: McpIntegration,
@@ -65,13 +59,9 @@ export class McpClientService {
     if (integration instanceof SchemaConfiguredMcpIntegration) {
       return this.buildSchemaConfiguredConnectionConfig(integration, userId);
     }
-    return this.buildAuthConnectionConfig(integration);
+    return this.buildAuthConnectionConfig(integration, userId);
   }
 
-  /**
-   * Builds connection config for schema-configured integrations by resolving
-   * config schema fields to HTTP headers, with optional user-level overrides.
-   */
   private async buildSchemaConfiguredConnectionConfig(
     integration: SchemaConfiguredMcpIntegration,
     userId?: UUID,
@@ -92,10 +82,13 @@ export class McpClientService {
       if (error instanceof McpAuthenticationError) {
         throw error;
       }
-      this.logger.error('Failed to build schema-configured connection config', {
-        error: error as Error,
-        integrationId: integration.id,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          integrationId: integration.id,
+        },
+        'Failed to build schema-configured connection config',
+      );
       throw new McpAuthenticationError('Authentication configuration failed');
     }
   }
@@ -154,6 +147,7 @@ export class McpClientService {
     return {
       serverUrl: integration.serverUrl,
       headers,
+      connectionScope: this.buildConnectionScope(integration, userId),
       oauth:
         integration.configSchema.oauth && userId
           ? {
@@ -213,21 +207,40 @@ export class McpClientService {
 
   private async buildAuthConnectionConfig(
     integration: McpIntegration,
+    userId?: UUID,
   ): Promise<McpConnectionConfig> {
     try {
       const headers = await this.buildAuthHeaders(integration);
-      return { serverUrl: integration.serverUrl, headers };
+      return {
+        serverUrl: integration.serverUrl,
+        headers,
+        connectionScope: this.buildConnectionScope(integration, userId),
+      };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         throw error;
       }
 
-      this.logger.error('Failed to build connection config', {
-        error: error as Error,
-        integrationId: integration.id,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          integrationId: integration.id,
+        },
+        'Failed to build connection config',
+      );
       throw new McpAuthenticationError('Authentication configuration failed');
     }
+  }
+
+  private buildConnectionScope(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): McpConnectionConfig['connectionScope'] {
+    return {
+      orgId: integration.orgId,
+      integrationId: integration.id,
+      ...(userId ? { userId } : {}),
+    };
   }
 
   private async buildAuthHeaders(
@@ -251,9 +264,12 @@ export class McpClientService {
           ? `Bearer ${decryptedToken}`
           : decryptedToken;
 
-      this.logger.log('Built connection config for bearer authentication', {
-        integrationId: integration.id,
-      });
+      this.logger.log(
+        {
+          integrationId: integration.id,
+        },
+        'Built connection config for bearer authentication',
+      );
     } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
       if (!auth.secret) {
         throw new McpAuthenticationError('Header secret not configured');
@@ -283,21 +299,15 @@ export class McpClientService {
     return headers;
   }
 
-  /**
-   * Lists all tools available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available tools
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listTools(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpTool[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listTools(config);
+      return await this.mcpClient.listTools(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(error, integration, 'listTools', userId);
@@ -305,21 +315,15 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Lists all resources available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available resources
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listResources(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpResource[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listResources(config);
+      return await this.mcpClient.listResources(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(
@@ -342,11 +346,12 @@ export class McpClientService {
   async listResourceTemplates(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpResource[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listResourceTemplates(config);
+      return await this.mcpClient.listResourceTemplates(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(
@@ -369,11 +374,12 @@ export class McpClientService {
   async listPrompts(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpPrompt[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listPrompts(config);
+      return await this.mcpClient.listPrompts(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(
@@ -473,13 +479,6 @@ export class McpClientService {
     );
   }
 
-  /**
-   * Handles errors from MCP operations, with special handling for 401 responses.
-   *
-   * @param error The error that occurred
-   * @param integration The integration entity (for updating status)
-   * @param operation The operation name (for logging)
-   */
   private async handleOperationError(
     error: unknown,
     integration: McpIntegration,

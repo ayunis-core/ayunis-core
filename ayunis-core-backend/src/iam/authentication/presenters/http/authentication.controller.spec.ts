@@ -1,25 +1,25 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
-import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
-import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
-import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
+import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
+import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
+import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import type { Request, Response } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { ActiveUser } from '../../domain/active-user.entity';
-import { AuthTokens } from '../../domain/auth-tokens.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { RATE_LIMIT_KEY } from 'src/common/decorators/rate-limit.decorator';
+import { DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS } from 'src/config/authentication.config';
 import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
-import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
-import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
-import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -27,9 +27,7 @@ describe('AuthenticationController', () => {
   let mockRefreshTokenUseCase: Partial<RefreshTokenUseCase>;
   let mockRegisterUserUseCase: Partial<RegisterUserUseCase>;
   let mockGetCurrentUserUseCase: Partial<GetCurrentUserUseCase>;
-  let mockCheckMfaLoginRequirementUseCase: { execute: jest.Mock };
-  let mockMfaPendingJwtService: { generate: jest.Mock };
-  let mockRevokeSessionFamilyUseCase: { execute: jest.Mock };
+  let mockStartAuthenticatedSessionUseCase: { execute: jest.Mock };
   let mockConfigService: Partial<ConfigService>;
   let mockJwtService: Partial<JwtService>;
 
@@ -46,14 +44,8 @@ describe('AuthenticationController', () => {
     mockGetCurrentUserUseCase = {
       execute: jest.fn(),
     };
-    mockCheckMfaLoginRequirementUseCase = {
+    mockStartAuthenticatedSessionUseCase = {
       execute: jest.fn(),
-    };
-    mockMfaPendingJwtService = {
-      generate: jest.fn(),
-    };
-    mockRevokeSessionFamilyUseCase = {
-      execute: jest.fn().mockResolvedValue(undefined),
     };
     mockConfigService = {
       get: jest.fn(),
@@ -70,16 +62,8 @@ describe('AuthenticationController', () => {
         { provide: RegisterUserUseCase, useValue: mockRegisterUserUseCase },
         { provide: GetCurrentUserUseCase, useValue: mockGetCurrentUserUseCase },
         {
-          provide: CheckMfaLoginRequirementUseCase,
-          useValue: mockCheckMfaLoginRequirementUseCase,
-        },
-        {
-          provide: MfaPendingJwtService,
-          useValue: mockMfaPendingJwtService,
-        },
-        {
-          provide: RevokeSessionFamilyUseCase,
-          useValue: mockRevokeSessionFamilyUseCase,
+          provide: StartAuthenticatedSessionUseCase,
+          useValue: mockStartAuthenticatedSessionUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: JwtService, useValue: mockJwtService },
@@ -117,8 +101,17 @@ describe('AuthenticationController', () => {
         RateLimitOptions | undefined;
 
       expect(options).toBeDefined();
-      expect(options?.limit).toBe(10);
+      expect(options?.limit).toBe(20);
       expect(options?.windowMs).toBe(15 * 60 * 1000);
+    });
+
+    it('should allow more login attempts than the account lockout threshold so the lockout error is not masked by a 429', () => {
+      const options = Reflect.getMetadata(RATE_LIMIT_KEY, controller.login) as
+        RateLimitOptions | undefined;
+
+      expect(options?.limit).toBeGreaterThan(
+        DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS,
+      );
     });
   });
 
@@ -150,12 +143,20 @@ describe('AuthenticationController', () => {
     });
 
     it('issues session cookies when no MFA is required', async () => {
-      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('none');
       const tokens = new AuthTokens('access', 'refresh');
-      jest.spyOn(mockLoginUseCase, 'execute').mockResolvedValue(tokens);
+      mockStartAuthenticatedSessionUseCase.execute.mockResolvedValue({
+        status: 'authenticated',
+        tokens,
+      });
 
       await controller.login(mockRequest as Request, mockResponse as Response);
 
+      expect(mockStartAuthenticatedSessionUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+          brokerMfaSatisfied: false,
+        }),
+      );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
         'access',
@@ -174,12 +175,14 @@ describe('AuthenticationController', () => {
     });
 
     it('sets only the MFA pending cookie when the user must verify', async () => {
-      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('verify');
-      mockMfaPendingJwtService.generate.mockReturnValue('pending-token');
+      mockStartAuthenticatedSessionUseCase.execute.mockResolvedValue({
+        status: 'mfa_required',
+        mfaPendingToken: 'pending-token',
+        enrollmentRequired: false,
+      });
 
       await controller.login(mockRequest as Request, mockResponse as Response);
 
-      expect(mockLoginUseCase.execute).not.toHaveBeenCalled();
       expect(mockResponse.cookie).toHaveBeenCalledTimes(1);
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'mfa_pending_token',
@@ -194,16 +197,15 @@ describe('AuthenticationController', () => {
     });
 
     it('signals forced enrollment when the org requires MFA', async () => {
-      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('enroll');
-      mockMfaPendingJwtService.generate.mockReturnValue('pending-token');
+      mockStartAuthenticatedSessionUseCase.execute.mockResolvedValue({
+        status: 'mfa_required',
+        mfaPendingToken: 'pending-token',
+        enrollmentRequired: true,
+      });
 
       await controller.login(mockRequest as Request, mockResponse as Response);
 
       expect(mockLoginUseCase.execute).not.toHaveBeenCalled();
-      expect(mockMfaPendingJwtService.generate).toHaveBeenCalledWith({
-        userId: activeUser.id,
-        enrollmentRequired: true,
-      });
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
         mfaRequired: true,

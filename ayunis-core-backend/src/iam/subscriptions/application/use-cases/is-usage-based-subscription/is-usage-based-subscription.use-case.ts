@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IsUsageBasedSubscriptionQuery } from './is-usage-based-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { isActive } from '../../util/is-active';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
 import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 
 /**
  * Returns true iff the organization has an active usage-based subscription.
@@ -27,7 +27,10 @@ export class IsUsageBasedSubscriptionUseCase {
       return subscriptions.filter(isActive).some(isUsageBased);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to determine subscription type', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to determine subscription type',
+      );
       throw new UnexpectedSubscriptionError((error as Error).message, {
         orgId: query.orgId,
       });

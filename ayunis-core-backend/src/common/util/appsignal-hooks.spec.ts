@@ -2,7 +2,14 @@
 // the app boots; require() mirrors how it is consumed there.
 import createHttpError from 'http-errors';
 import { errors as undiciErrors } from 'undici';
-import { JobRetryScheduledError } from '../../domain/sources/infrastructure/queue/bullmq-job.helpers';
+import { JobRetryScheduledError } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
+import { MarketplaceUnavailableError } from 'src/domain/marketplace/application/marketplace.errors';
+import {
+  ProviderConnectionError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import { tagMalformedJsonBody } from 'src/common/middleware/json-body-parser.middleware';
 
 type UndiciRequest = {
   method?: string;
@@ -24,7 +31,6 @@ type Suppression = {
 const hooks = require('../../../appsignal-hooks.cjs') as {
   SUPPRESSIONS: Suppression[];
   isCrawlerRequest: (request: UndiciRequest) => boolean;
-  isMcpEventStreamRequest: (request: UndiciRequest) => boolean;
   shouldIgnoreRequest: (request: UndiciRequest) => boolean;
   exceptionTypeOf: (error: unknown) => string | undefined;
   ignoredErrorTypes: string[];
@@ -35,7 +41,6 @@ const hooks = require('../../../appsignal-hooks.cjs') as {
 const {
   SUPPRESSIONS,
   isCrawlerRequest,
-  isMcpEventStreamRequest,
   shouldIgnoreRequest,
   exceptionTypeOf,
   ignoredErrorTypes,
@@ -99,61 +104,6 @@ describe('isCrawlerRequest', () => {
   });
 });
 
-describe('isMcpEventStreamRequest', () => {
-  it('matches the MCP SDK listening stream', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'text/event-stream'],
-      }),
-    ).toBe(true);
-  });
-
-  it('matches undici v5 string headers', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: 'Accept: text/event-stream\r\n',
-      }),
-    ).toBe(true);
-  });
-
-  // The JSON-RPC POST sends `application/json, text/event-stream` — genuine
-  // connectivity and auth failures surface there and must keep reporting.
-  it('does not match the MCP JSON-RPC POST', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'POST',
-        headers: ['accept', 'application/json, text/event-stream'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match a GET that merely accepts event streams among others', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'application/json, text/event-stream'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match a plain GET', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'application/json'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match when the method is absent', () => {
-    expect(
-      isMcpEventStreamRequest({ headers: ['accept', 'text/event-stream'] }),
-    ).toBe(false);
-  });
-});
-
 describe('shouldIgnoreRequest', () => {
   it('ignores crawler requests', () => {
     expect(
@@ -161,13 +111,13 @@ describe('shouldIgnoreRequest', () => {
     ).toBe(true);
   });
 
-  it('ignores the MCP listening stream', () => {
+  it('instruments MCP listening streams', () => {
     expect(
       shouldIgnoreRequest({
         method: 'GET',
         headers: ['accept', 'text/event-stream'],
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('instruments provider requests', () => {
@@ -207,20 +157,38 @@ describe('exceptionTypeOf', () => {
   });
 });
 
+// Built the way body-parser's read.js fails a body JSON.parse rejected.
+function createMalformedJsonError(): Error {
+  return createHttpError(
+    400,
+    new SyntaxError('Unexpected non-whitespace character after JSON'),
+    { body: '{"a":1}}', type: 'entity.parse.failed' },
+  );
+}
+
 // A real instance of each error an `ignoreErrors` entry claims to suppress.
 // Keyed by suppression id so an entry cannot be added without one.
 const ERROR_SAMPLES: Record<string, () => Error> = {
+  // IdleTimeoutError is runtime-internal; its package test pins this shape.
+  'runtime-model-idle-timeout': () =>
+    Object.assign(new Error('Model provider stream was idle'), {
+      code: 'MODEL_CALL_IDLE_TIMEOUT',
+    }),
   // The exact object Node mints for AbortController.abort(): name
   // 'AbortError', numeric code 20 — exceptionType stringifies to '20'.
   'abort-signal-cancellation': () =>
     new DOMException('This operation was aborted', 'AbortError'),
   'bullmq-retry-scheduled': () =>
     new JobRetryScheduledError(new Error('upstream failed')),
+  'marketplace-unavailable': () => new MarketplaceUnavailableError(),
   'oversized-request-body': () =>
     createHttpError(413, 'request entity too large', {
       type: 'entity.too.large',
     }),
+  'malformed-json-body': () => tagMalformedJsonBody(createMalformedJsonError()),
   'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
+  'transport-body-timeout': () => new undiciErrors.BodyTimeoutError(),
+  'transport-connect-timeout': () => new undiciErrors.ConnectTimeoutError(),
   // Node mints errno errors as plain Errors carrying `code`; these mirror
   // the exact shapes seen in incidents #409, #387, #457, #511.
   'transport-dns-again': () =>
@@ -230,6 +198,8 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     }),
   'transport-connection-reset': () =>
     Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }),
+  'transport-socket-closed': () =>
+    Object.assign(new Error('other side closed'), { code: 'UND_ERR_SOCKET' }),
   'transport-connection-aborted': () =>
     Object.assign(new Error('timeout of 30000ms exceeded'), {
       code: 'ECONNABORTED',
@@ -239,6 +209,13 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
   'transport-timed-out': () =>
     Object.assign(new Error('timeout of 60000ms exceeded'), {
       code: 'ETIMEDOUT',
+    }),
+  // agentkeepalive destroys an idle socket with this exact shape — the
+  // keep-alive agent the OpenAI SDK uses (incident #333).
+  'transport-socket-timeout': () =>
+    Object.assign(new Error('Socket timeout'), {
+      code: 'ERR_SOCKET_TIMEOUT',
+      timeout: 300000,
     }),
   'transport-broken-pipe': () =>
     Object.assign(new Error('write EPIPE'), {
@@ -312,6 +289,90 @@ describe('SUPPRESSIONS registry', () => {
         expect(exceptionTypeOf(sample())).toBe(suppression.exceptionType);
       },
     );
+
+    // The other half of the raw-duplicate suppressions: dropping the errno
+    // must not touch the classified taxonomy the alerting relies on, which
+    // reports under PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER> (AYC-767).
+    it('suppresses a raw body timeout but retains its classified provider failure', () => {
+      const raw = new undiciErrors.BodyTimeoutError();
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'openai' },
+      );
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderTimeoutError);
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+      expect(ignoredErrorTypes).not.toContain(
+        exceptionTypeOf(new TypeError('unexpected failure')),
+      );
+    });
+
+    // Incidents #692/#693: Mistral connect timeouts recovered by retry.
+    it('suppresses a raw connect timeout but retains its classified provider failure', () => {
+      const raw = new undiciErrors.ConnectTimeoutError();
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'mistral' },
+      );
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderTimeoutError);
+      expect(exceptionTypeOf(classified)).toBe(
+        'PROVIDER_UNAVAILABLE_TIMEOUT_MISTRAL',
+      );
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+    });
+
+    it('suppresses a raw socket closure but retains its classified provider failure', () => {
+      const raw = Object.assign(new Error('other side closed'), {
+        code: 'UND_ERR_SOCKET',
+      });
+      const classified = wrapProviderFailure(
+        new TypeError('fetch failed', { cause: raw }),
+        { provider: 'azure' },
+      );
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(raw));
+      expect(classified).toBeInstanceOf(ProviderConnectionError);
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+    });
+
+    it('suppresses malformed client JSON', () => {
+      const clientBody = tagMalformedJsonBody(createMalformedJsonError());
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(clientBody));
+    });
+
+    it('keeps unrelated SyntaxErrors reportable', () => {
+      const upstream = tagMalformedJsonBody(
+        new SyntaxError('Unexpected token < in JSON at position 0'),
+      );
+
+      expect(exceptionTypeOf(upstream)).toBe('SyntaxError');
+      expect(ignoredErrorTypes).not.toContain('SyntaxError');
+    });
+
+    it('keeps aborted requests reportable', () => {
+      const abortedRequest = tagMalformedJsonBody(
+        createHttpError(400, 'request aborted', { type: 'request.aborted' }),
+      );
+
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(abortedRequest));
+    });
+
+    it('suppresses the runtime idle signal but leaves its classified timeout reporting', () => {
+      const idleSignal = ERROR_SAMPLES['runtime-model-idle-timeout']();
+      const classified = new ProviderTimeoutError({
+        provider: 'openai',
+        underlyingCode: 'ERR_SOCKET_TIMEOUT',
+      });
+
+      expect(ignoredErrorTypes).toContain(exceptionTypeOf(idleSignal));
+      expect(exceptionTypeOf(classified)).toBe(
+        'PROVIDER_UNAVAILABLE_TIMEOUT_OPENAI',
+      );
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+    });
   });
 
   describe('disableInstrumentation entries', () => {

@@ -46,7 +46,7 @@ export default function OrgsSearch({ search }: Readonly<OrgsSearchProps>) {
   }, [searchValue, search, navigate]);
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative min-w-48 flex-1 max-w-md">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
       <Input
         ref={searchInputRef}

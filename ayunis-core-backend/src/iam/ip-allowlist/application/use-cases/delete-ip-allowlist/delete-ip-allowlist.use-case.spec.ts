@@ -1,8 +1,8 @@
 import { DeleteIpAllowlistUseCase } from './delete-ip-allowlist.use-case';
 import { DeleteIpAllowlistCommand } from './delete-ip-allowlist.command';
-import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import type { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
-import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import type { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
+import { UnexpectedIpAllowlistError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { UUID } from 'crypto';
 
 describe('DeleteIpAllowlistUseCase', () => {

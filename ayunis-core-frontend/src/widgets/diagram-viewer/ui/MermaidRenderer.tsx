@@ -114,7 +114,7 @@ export function MermaidRenderer({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  onClick={() => zoomIn()}
+                  onClick={() => void zoomIn()}
                   title={t('diagram.zoom.in')}
                   aria-label={t('diagram.zoom.in')}
                 >
@@ -124,7 +124,7 @@ export function MermaidRenderer({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  onClick={() => zoomOut()}
+                  onClick={() => void zoomOut()}
                   title={t('diagram.zoom.out')}
                   aria-label={t('diagram.zoom.out')}
                 >
@@ -134,7 +134,7 @@ export function MermaidRenderer({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  onClick={() => resetTransform()}
+                  onClick={() => void resetTransform()}
                   title={t('diagram.zoom.reset')}
                   aria-label={t('diagram.zoom.reset')}
                 >

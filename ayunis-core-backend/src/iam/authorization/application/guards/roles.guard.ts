@@ -9,7 +9,7 @@ import type { Request } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-audit.util';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from 'src/iam/authorization/application/decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -31,11 +31,14 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    this.logger.warn('Access denied: insufficient role', {
-      ...buildAccessDeniedAuditContext(request, user),
-      userRole: user?.role,
-      requiredRoles: contextRoles,
-    });
+    this.logger.warn(
+      {
+        ...buildAccessDeniedAuditContext(request, user),
+        userRole: user?.role,
+        requiredRoles: contextRoles,
+      },
+      'Access denied: insufficient role',
+    );
     return false;
   }
 }

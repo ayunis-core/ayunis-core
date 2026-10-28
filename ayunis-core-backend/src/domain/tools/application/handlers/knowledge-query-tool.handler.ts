@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { KnowledgeQueryTool } from '../../domain/tools/knowledge-query-tool.entity';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import type { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { QueryKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { QueryKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.query';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { handleEmbeddingError } from '../utils/embedding-error.utils';
+import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 @Injectable()
 export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
@@ -28,8 +29,8 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
-    this.logger.log('execute', { tool: tool.name, input });
+    const { tool, input, context } = params;
+    this.logger.log({ tool: tool.name, input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -47,10 +48,13 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
           knowledgeBaseId: validatedInput.knowledgeBaseId as UUID,
           query: validatedInput.query,
           userId,
+          threadId: context.threadId,
         }),
       );
 
       const formatted = results.map((result) => ({
+        chunkId: result.chunk.id,
+        citable: result.sourceCreatedBy !== SourceCreator.SYSTEM,
         content: result.chunk.content,
         startLine: (result.chunk.meta.startLine as number | undefined) ?? null,
         endLine: (result.chunk.meta.endLine as number | undefined) ?? null,
@@ -69,7 +73,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
   }
 
   private handleError(error: unknown, toolName: string): never {
-    this.logger.error('execute', error);
+    this.logger.error({ err: error }, 'execute');
 
     if (error instanceof KnowledgeBaseNotFoundError) {
       throw new ToolExecutionFailedError({

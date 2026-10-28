@@ -11,7 +11,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     return {
-      models: await queryClient.fetchQuery({
+      models: await queryClient.query({
         queryKey:
           getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
         queryFn: () => superAdminCatalogModelsControllerGetAllCatalogModels(),

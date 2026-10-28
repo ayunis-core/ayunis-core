@@ -10,9 +10,9 @@ import {
 } from './TeamsEmptyState';
 import { CreateTeamDialog } from './CreateTeamDialog';
 import { EditTeamDialog } from './EditTeamDialog';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import type { Team } from '../model/types';
+import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 import { PermissionGate } from '@/features/permissions';
 
 interface TeamsSettingsPageProps {

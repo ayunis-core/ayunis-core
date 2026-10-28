@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { GetLatestSubscriptionUseCase } from './get-latest-subscription.use-case';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
@@ -13,7 +12,7 @@ import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { SubscriptionNotFoundError } from '../../subscription.errors';
+import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -84,7 +83,7 @@ describe('GetLatestSubscriptionUseCase', () => {
         GetLatestSubscriptionUseCase,
         {
           provide: SubscriptionRepository,
-          useValue: { findLatestByOrgId: jest.fn() },
+          useValue: { findByOrgId: jest.fn() },
         },
         {
           provide: GetInvitesByOrgUseCase,
@@ -106,15 +105,11 @@ describe('GetLatestSubscriptionUseCase', () => {
     getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   beforeEach(() => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'orgId') return orgId;
@@ -150,7 +145,7 @@ describe('GetLatestSubscriptionUseCase', () => {
   }
 
   it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(null);
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
     await expect(useCase.execute(createQuery())).rejects.toThrow(
       SubscriptionNotFoundError,
@@ -164,7 +159,7 @@ describe('GetLatestSubscriptionUseCase', () => {
       renewalCycleAnchor: futureStart,
       noOfSeats: 10,
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     mockInvitesAndUsers(2, 5);
 
     const result = await useCase.execute(createQuery());
@@ -176,7 +171,7 @@ describe('GetLatestSubscriptionUseCase', () => {
 
   it('should return an active seat-based subscription with computed available seats', async () => {
     const subscription = createSeatBasedSubscription(orgId, { noOfSeats: 10 });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     mockInvitesAndUsers(2, 5);
 
     const result = await useCase.execute(createQuery());
@@ -188,7 +183,7 @@ describe('GetLatestSubscriptionUseCase', () => {
 
   it('should use the requesting user id when loading open invites', async () => {
     const subscription = createSeatBasedSubscription(orgId, { noOfSeats: 10 });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
     mockInvitesAndUsers(2, 5);
 
     await useCase.execute(createQuery());
@@ -207,7 +202,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     const subscription = createUsageBasedSubscription(orgId, {
       startsAt: futureStart,
     });
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     const result = await useCase.execute(createQuery());
 
@@ -216,9 +211,44 @@ describe('GetLatestSubscriptionUseCase', () => {
     expect(result.nextRenewalDate).toEqual(futureStart);
   });
 
+  it('presents the serving subscription when a newer record has ended', async () => {
+    const serving = createUsageBasedSubscription(orgId, {
+      startsAt: new Date('2025-01-01'),
+    });
+    serving.createdAt = new Date('2025-01-01T00:00:00.000Z');
+    const ended = createUsageBasedSubscription(orgId, {
+      startsAt: new Date('2025-05-01'),
+    });
+    ended.createdAt = new Date('2025-05-01T00:00:00.000Z');
+    ended.endsAt = new Date('2025-06-01T00:00:00.000Z');
+    subscriptionRepository.findByOrgId.mockResolvedValue([ended, serving]);
+
+    const result = await useCase.execute(createQuery());
+
+    expect(result.subscription).toBe(serving);
+  });
+
+  it('falls back to the newest record once every subscription has ended', async () => {
+    const older = createUsageBasedSubscription(orgId, {
+      startsAt: new Date('2024-01-01'),
+      cancelledAt: new Date('2024-06-01'),
+    });
+    older.createdAt = new Date('2024-01-01T00:00:00.000Z');
+    const newer = createUsageBasedSubscription(orgId, {
+      startsAt: new Date('2025-01-01'),
+      cancelledAt: new Date('2025-06-01'),
+    });
+    newer.createdAt = new Date('2025-01-01T00:00:00.000Z');
+    subscriptionRepository.findByOrgId.mockResolvedValue([older, newer]);
+
+    const result = await useCase.execute(createQuery());
+
+    expect(result.subscription).toBe(newer);
+  });
+
   it('should return null for available seats on usage-based subscription', async () => {
     const subscription = createUsageBasedSubscription(orgId);
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     const result = await useCase.execute(createQuery());
 
@@ -227,7 +257,7 @@ describe('GetLatestSubscriptionUseCase', () => {
 
   it('should not query invites or users for usage-based subscription', async () => {
     const subscription = createUsageBasedSubscription(orgId);
-    subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
+    subscriptionRepository.findByOrgId.mockResolvedValue([subscription]);
 
     await useCase.execute(createQuery());
 

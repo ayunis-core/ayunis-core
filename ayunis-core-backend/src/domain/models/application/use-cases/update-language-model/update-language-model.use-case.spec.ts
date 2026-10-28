@@ -1,17 +1,21 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UpdateLanguageModelUseCase } from './update-language-model.use-case';
 import { UpdateLanguageModelCommand } from './update-language-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
-import { ModelNotFoundByIdError } from '../../models.errors';
+import {
+  ModelAlreadyExistsError,
+  ModelNotFoundByIdError,
+} from 'src/domain/models/application/models.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
+  const logger = createLoggerMock();
   let useCase: UpdateLanguageModelUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let clearDefaultsUseCase: jest.Mocked<ClearDefaultsByCatalogModelIdUseCase>;
@@ -50,8 +54,8 @@ describe('UpdateLanguageModelUseCase', () => {
     clearDefaultsUseCase = module.get(ClearDefaultsByCatalogModelIdUseCase);
 
     // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    logger.log.mockImplementation();
+    logger.debug.mockImplementation();
   });
 
   afterEach(() => {
@@ -62,6 +66,8 @@ describe('UpdateLanguageModelUseCase', () => {
     id: UUID,
     isArchived: boolean,
     tier?: ModelTier,
+    hasProviderFault?: boolean,
+    contextWindowSize = 200_000,
   ): LanguageModel => {
     return new LanguageModel({
       id,
@@ -73,7 +79,9 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      contextWindowSize,
       tier,
+      hasProviderFault,
     });
   };
 
@@ -81,6 +89,8 @@ describe('UpdateLanguageModelUseCase', () => {
     id: UUID,
     isArchived: boolean,
     tier?: ModelTier,
+    hasProviderFault?: boolean,
+    contextWindowSize = 200_000,
   ): UpdateLanguageModelCommand => {
     return new UpdateLanguageModelCommand({
       id,
@@ -92,7 +102,9 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      contextWindowSize,
       tier,
+      hasProviderFault,
     });
   };
 
@@ -118,50 +130,35 @@ describe('UpdateLanguageModelUseCase', () => {
       );
     });
 
-    it('should NOT call clearDefaultsUseCase when model was already archived', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, true);
-      const command = createUpdateCommand(mockModelId, true);
+    it.each([
+      {
+        name: 'model was already archived',
+        wasArchived: true,
+        isArchived: true,
+      },
+      {
+        name: 'unarchiving (true -> false)',
+        wasArchived: true,
+        isArchived: false,
+      },
+      {
+        name: 'isArchived remains false',
+        wasArchived: false,
+        isArchived: false,
+      },
+    ])(
+      'should NOT call clearDefaultsUseCase when $name',
+      async ({ wasArchived, isArchived }) => {
+        modelsRepository.findOne.mockResolvedValue(
+          createMockLanguageModel(mockModelId, wasArchived),
+        );
+        modelsRepository.save.mockResolvedValue();
 
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
+        await useCase.execute(createUpdateCommand(mockModelId, isArchived));
 
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should NOT call clearDefaultsUseCase when unarchiving (true -> false)', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, true);
-      const command = createUpdateCommand(mockModelId, false);
-
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('should NOT call clearDefaultsUseCase when isArchived remains false', async () => {
-      // Arrange
-      const existingModel = createMockLanguageModel(mockModelId, false);
-      const command = createUpdateCommand(mockModelId, false);
-
-      modelsRepository.findOne.mockResolvedValue(existingModel);
-      modelsRepository.save.mockResolvedValue();
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
-    });
+        expect(clearDefaultsUseCase.execute).not.toHaveBeenCalled();
+      },
+    );
 
     it('should save the model before clearing defaults', async () => {
       // Arrange
@@ -183,6 +180,51 @@ describe('UpdateLanguageModelUseCase', () => {
 
       // Assert
       expect(callOrder).toEqual(['save', 'clearDefaults']);
+    });
+
+    it('should reject a name and provider used by another model', async () => {
+      const conflictingModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const conflictingModel = createMockLanguageModel(
+        conflictingModelId,
+        false,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne
+        .mockResolvedValueOnce(existingModel)
+        .mockResolvedValueOnce(conflictingModel);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ModelAlreadyExistsError,
+      );
+      expect(modelsRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should allow an unchanged name and provider', async () => {
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      await expect(useCase.execute(command)).resolves.toEqual(
+        expect.objectContaining({ id: mockModelId }),
+      );
+    });
+
+    it('should allow a unique name and provider', async () => {
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne
+        .mockResolvedValueOnce(existingModel)
+        .mockResolvedValueOnce(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      await expect(useCase.execute(command)).resolves.toEqual(
+        expect.objectContaining({ id: mockModelId }),
+      );
     });
 
     it('should throw ModelNotFoundByIdError when model does not exist', async () => {
@@ -226,15 +268,15 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.save.mockResolvedValue();
       clearDefaultsUseCase.execute.mockResolvedValue();
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const logSpy = logger.log;
 
       // Act
       await useCase.execute(command);
 
       // Assert
       expect(logSpy).toHaveBeenCalledWith(
-        'Model is being archived, clearing defaults',
         { modelId: mockModelId },
+        'Model is being archived, clearing defaults',
       );
     });
 
@@ -254,6 +296,67 @@ describe('UpdateLanguageModelUseCase', () => {
       expect(result.tier).toBe(ModelTier.HIGH);
       expect(modelsRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ tier: ModelTier.HIGH }),
+      );
+    });
+
+    it('preserves an existing provider fault when the update omits the status', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        true,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result.hasProviderFault).toBe(true);
+    });
+
+    it('clears an existing provider fault when explicitly set to false', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        true,
+      );
+      const command = createUpdateCommand(mockModelId, false, undefined, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result.hasProviderFault).toBe(false);
+    });
+
+    it('updates the context window size when provided', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        undefined,
+        32_000,
+      );
+      const command = createUpdateCommand(
+        mockModelId,
+        false,
+        undefined,
+        undefined,
+        128_000,
+      );
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result).toHaveProperty('contextWindowSize', 128_000);
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ contextWindowSize: 128_000 }),
       );
     });
 
@@ -290,15 +393,15 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.findOne.mockResolvedValue(existingModel);
       modelsRepository.save.mockResolvedValue();
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const logSpy = logger.log;
 
       // Act
       await useCase.execute(command);
 
       // Assert
       expect(logSpy).not.toHaveBeenCalledWith(
-        'Model is being archived, clearing defaults',
         expect.anything(),
+        'Model is being archived, clearing defaults',
       );
     });
   });

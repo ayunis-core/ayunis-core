@@ -1,15 +1,18 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
+} from 'src/domain/messages/application/ports/messages.repository';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  MessageThreadMissingError,
+} from 'src/domain/messages/application/messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
+import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/events/assistant-message-created.event';
 import type { UUID } from 'crypto';
 
 @Injectable()
@@ -25,43 +28,41 @@ export class SaveAssistantMessageUseCase {
 
   async execute(
     command: SaveAssistantMessageCommand,
-  ): Promise<AssistantMessage> {
-    this.logger.log('Saving assistant message', {
-      messageId: command.message.id,
-      threadId: command.message.threadId,
-    });
+  ): Promise<AssistantMessage | null> {
+    this.logger.log(
+      {
+        messageId: command.message.id,
+        threadId: command.message.threadId,
+      },
+      'Saving assistant message',
+    );
 
     try {
       const saved = (await this.messagesRepository.create(
         command.message,
       )) as AssistantMessage;
 
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      this.eventEmitter
-        .emitAsync(
-          AssistantMessageCreatedEvent.EVENT_NAME,
-          new AssistantMessageCreatedEvent(
-            userId ?? ('unknown' as UUID),
-            orgId ?? ('unknown' as UUID),
-            command.message.threadId,
-            saved.id,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit AssistantMessageCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            messageId: saved.id,
-          });
-        });
-
+      this.emitCreatedEvent(command, saved);
       return saved;
     } catch (error) {
-      this.logger.error('Failed to save assistant message', {
-        messageId: command.message.id,
-        threadId: command.message.threadId,
-        error: error as Error,
-      });
+      if (error instanceof MessageThreadMissingError) {
+        this.logger.warn(
+          {
+            messageId: command.message.id,
+            threadId: command.message.threadId,
+          },
+          'Skipped saving assistant message because thread no longer exists',
+        );
+        return null;
+      }
+      this.logger.error(
+        {
+          messageId: command.message.id,
+          threadId: command.message.threadId,
+          err: error as Error,
+        },
+        'Failed to save assistant message',
+      );
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.ASSISTANT.toLowerCase(), error)
         : new MessageCreationError(
@@ -69,5 +70,32 @@ export class SaveAssistantMessageUseCase {
             new Error('Unknown error'),
           );
     }
+  }
+
+  private emitCreatedEvent(
+    command: SaveAssistantMessageCommand,
+    saved: AssistantMessage,
+  ): void {
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+    this.eventEmitter
+      .emitAsync(
+        AssistantMessageCreatedEvent.EVENT_NAME,
+        new AssistantMessageCreatedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId ?? ('unknown' as UUID),
+          command.message.threadId,
+          saved.id,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            messageId: saved.id,
+          },
+          'Failed to emit AssistantMessageCreatedEvent',
+        );
+      });
   }
 }

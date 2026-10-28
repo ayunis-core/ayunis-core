@@ -6,19 +6,24 @@ import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { ActiveSubscriptionResponseDtoSubscriptionType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { ActiveSubscriptionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { ApiKeysList } from './ApiKeysList';
 import { CreateApiKeyDialog } from './CreateApiKeyDialog';
 import { RevealSecretDialog } from './RevealSecretDialog';
-import type { ApiKey } from '../model/types';
+import type {
+  ApiKey,
+  ApiKeyCreditLimit,
+} from '@/pages/admin-settings/api-keys-settings/model/types';
 
 interface ApiKeysSettingsPageProps {
   apiKeys: ApiKey[];
+  creditLimits: ApiKeyCreditLimit[];
   subscription: ActiveSubscriptionResponseDto;
 }
 
 export function ApiKeysSettingsPage({
   apiKeys,
+  creditLimits,
   subscription,
 }: Readonly<ApiKeysSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-api-keys');
@@ -37,6 +42,7 @@ export function ApiKeysSettingsPage({
         size="sm"
         onClick={() => setCreateDialogOpen(true)}
         disabled={requiresUsageBasedUpgrade}
+        data-testid="api-key-create"
       >
         {t('apiKeys.page.add')}
       </Button>
@@ -55,7 +61,14 @@ export function ApiKeysSettingsPage({
           </Alert>
         )}
 
-        <ApiKeysList apiKeys={apiKeys} />
+        <ApiKeysList
+          apiKeys={apiKeys}
+          creditLimits={creditLimits}
+          canManageCreditLimits={
+            subscription.subscriptionType ===
+            ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED
+          }
+        />
 
         <CreateApiKeyDialog
           open={createDialogOpen}

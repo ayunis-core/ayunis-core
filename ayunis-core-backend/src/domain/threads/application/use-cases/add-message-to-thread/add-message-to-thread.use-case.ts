@@ -3,9 +3,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageCommand } from './add-message.command';
-import { MessageAdditionError } from '../../threads.errors';
+import { MessageAdditionError } from 'src/domain/threads/application/threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 
 @Injectable()
 export class AddMessageToThreadUseCase {
@@ -17,10 +17,13 @@ export class AddMessageToThreadUseCase {
   ) {}
 
   execute(command: AddMessageCommand): Thread {
-    this.logger.log('addMessage', {
-      threadId: command.thread.id,
-      messageRole: command.message.role,
-    });
+    this.logger.log(
+      {
+        threadId: command.thread.id,
+        messageRole: command.message.role,
+      },
+      'addMessage',
+    );
     try {
       command.thread.messages.push(command.message);
 
@@ -40,18 +43,24 @@ export class AddMessageToThreadUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit ThreadMessageAddedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            threadId: command.thread.id,
-          });
+          this.logger.error(
+            {
+              err: err as Error,
+              threadId: command.thread.id,
+            },
+            'Failed to emit ThreadMessageAddedEvent',
+          );
         });
 
       return command.thread;
     } catch (error) {
-      this.logger.error('Failed to add message to thread', {
-        threadId: command.thread.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId: command.thread.id,
+          err: error as Error,
+        },
+        'Failed to add message to thread',
+      );
       throw error instanceof Error
         ? new MessageAdditionError(command.thread.id, error)
         : new MessageAdditionError(

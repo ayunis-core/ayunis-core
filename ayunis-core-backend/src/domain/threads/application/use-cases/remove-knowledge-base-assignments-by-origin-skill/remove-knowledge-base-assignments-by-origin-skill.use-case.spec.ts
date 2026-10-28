@@ -1,10 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { randomUUID } from 'crypto';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from './remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from './remove-knowledge-base-assignments-by-origin-skill.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 
 describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
   let useCase: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase;
@@ -24,8 +24,6 @@ describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
 
     useCase = module.get(RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {

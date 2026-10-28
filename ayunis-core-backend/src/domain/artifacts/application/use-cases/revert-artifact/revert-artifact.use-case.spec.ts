@@ -1,17 +1,17 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { RevertArtifactUseCase } from './revert-artifact.use-case';
 import { RevertArtifactCommand } from './revert-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -22,6 +22,8 @@ describe('RevertArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -58,10 +60,9 @@ describe('RevertArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -74,9 +75,6 @@ describe('RevertArtifactUseCase', () => {
 
     useCase = module.get<RevertArtifactUseCase>(RevertArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {

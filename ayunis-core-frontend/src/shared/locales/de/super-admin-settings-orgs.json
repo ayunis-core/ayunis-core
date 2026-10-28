@@ -29,10 +29,6 @@
     "updatedAt": "Aktualisiert am",
     "actions": "Aktionen"
   },
-  "statuses": {
-    "active": "Aktiv",
-    "inactive": "Inaktiv"
-  },
   "empty": {
     "title": "Noch keine Organisationen",
     "description": "Neue Organisationen erscheinen hier."
@@ -42,6 +38,24 @@
     "error": "Organisation konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "search": {
-    "placeholder": "Organisationen suchen..."
+    "placeholder": "Nach Name oder ID suchen..."
+  },
+  "lifecycle": {
+    "label": "Lebenszyklus-Status",
+    "all": "Alle Organisationen",
+    "paying": "Zahlend",
+    "expired": "Abgelaufen",
+    "trial": "Testphase",
+    "no-plan": "Kein Tarif",
+    "archived": "Archiviert"
+  },
+  "lifecycleSummary": {
+    "total_one": "{{count, number}} Organisation",
+    "total_other": "{{count, number}} Organisationen",
+    "paying": "{{count, number}} zahlend",
+    "expired": "{{count, number}} abgelaufen",
+    "trial": "{{count, number}} in der Testphase",
+    "no-plan": "{{count, number}} ohne Tarif",
+    "archived": "{{count, number}} archiviert"
   }
 }

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 import { CreateChapterCommand } from './create-chapter.command';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class CreateChapterUseCase {
   constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
   async execute(command: CreateChapterCommand): Promise<AcademyChapter> {
-    this.logger.log('Creating academy chapter', { title: command.title });
+    this.logger.log({ title: command.title }, 'Creating academy chapter');
     try {
       const maxPosition = await this.chapterRepository.findMaxPosition();
       const chapter = new AcademyChapter({
@@ -23,9 +23,12 @@ export class CreateChapterUseCase {
       return await this.chapterRepository.create(chapter);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating academy chapter', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating academy chapter',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

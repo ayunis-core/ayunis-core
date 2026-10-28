@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { CleanupBudgetAlertNotificationsUseCase } from '../use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
+import { CleanupBudgetAlertNotificationsUseCase } from 'src/iam/budget-alerts/application/use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
 import { BudgetAlertCleanupTask } from './budget-alert-cleanup.task';
 
 describe('BudgetAlertCleanupTask', () => {

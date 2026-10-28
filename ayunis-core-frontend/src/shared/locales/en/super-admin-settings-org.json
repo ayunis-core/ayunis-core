@@ -15,8 +15,10 @@
     "roleAdmin": "Admin",
     "roleUser": "User",
     "roleManager": "Manager",
+    "status": "Status",
     "actions": "Actions",
     "sendPasswordReset": "Send Password Reset",
+    "openOrganization": "Open organization",
     "delete": "Delete"
   },
   "empty": {
@@ -29,11 +31,11 @@
     "cancelled": "cancelled",
     "reactivate": "Reactivate",
     "reactivateSubscription": "Reactivate Subscription",
-    "reactivateSubscriptionDescription": "The subscription will be reactivated and will continue as usual.",
-    "reactivateAnytime": "You can reactivate the subscription at any time.",
+    "reactivateSubscriptionDescription": "Reactivate the subscription for its remaining term, if eligible.",
+    "reactivateAnytime": "Reactivation is subject to the remaining subscription term.",
     "cancel": "Cancel",
     "cancelSubscription": "Cancel Subscription",
-    "cancelSubscriptionDescription": "Are you sure you want to cancel this subscription? This action cannot be undone.",
+    "cancelSubscriptionDescription": "Cancel this subscription? Access follows the cancellation rules and cannot continue beyond its agreed end date.",
     "confirmCancel": "Confirm Cancel",
     "cancelCancel": "Cancel",
     "nextRenewalDate": "Next Billing: {{date}}",
@@ -56,6 +58,8 @@
     "cancelError": "An unexpected error occurred",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
     "uncancelError": "An unexpected error occurred",
+    "uncancelErrorAccessOverlap": "Reactivating this subscription would overlap another subscription's access period.",
+    "multipleActiveSubscriptions": "Several subscriptions are currently serving this organization. Resolve the overlap in the subscription history first.",
     "edit": "Edit",
     "startsAtLabel": "Start date",
     "startsAtPlaceholder": "Select a start date",
@@ -67,6 +71,7 @@
     "updateStartDateSuccess": "Start date updated successfully",
     "updateStartDateErrorSubscriptionNotFound": "Subscription not found",
     "updateStartDateErrorSubscriptionAlreadyCancelled": "Cancelled subscriptions cannot be edited",
+    "updateStartDateErrorAccessOverlap": "The new start date would overlap another subscription's access period.",
     "updateStartDateErrorUnexpected": "An unexpected error occurred",
     "scheduled": "Scheduled",
     "scheduledDescription": "This subscription is scheduled to start on {{date}}.",
@@ -81,7 +86,66 @@
     "changeSuccess": "Subscription changed successfully",
     "changeErrorSubscriptionNotFound": "No active subscription to change",
     "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
-    "changeErrorUnexpected": "An unexpected error occurred"
+    "changeErrorAccessOverlap": "The new subscription would overlap another subscription's access period. Adjust its start date or end the other subscription first.",
+    "changeErrorUnexpected": "An unexpected error occurred",
+    "createErrorEndDate": "End date must be after the start date (or after now if no start date is set).",
+    "endsAt": "Access ends: {{date}}"
+  },
+  "subscriptionHistory": {
+    "title": "Subscription history",
+    "description": "Every subscription belonging to this organization, including older and cancelled records.",
+    "latest": "Latest",
+    "notCancelled": "—",
+    "noAccessEnd": "Open-ended",
+    "multipleActive": "{{count}} subscriptions are currently serving this organization. This view lists all of them instead of picking one.",
+    "status": {
+      "ACTIVE": "Active",
+      "SCHEDULED": "Scheduled",
+      "CANCELLED": "Cancelled",
+      "HISTORICAL": "Historical"
+    },
+    "types": {
+      "SEAT_BASED": "Seat-based",
+      "USAGE_BASED": "Usage-based"
+    },
+    "columns": {
+      "type": "Type",
+      "status": "Status",
+      "createdAt": "Created",
+      "startsAt": "Starts",
+      "cancelledAt": "Cancelled",
+      "endsAt": "Access ends",
+      "details": "Details"
+    },
+    "details": {
+      "seats": "{{count}} seats",
+      "credits": "{{count}} monthly credits",
+      "none": "—"
+    }
+  },
+  "subscriptionOverlap": {
+    "action": "Resolve overlap",
+    "title": "Resolve subscription overlap",
+    "description": "Select the subscription that should remain authoritative and record why this correction is required.",
+    "authoritative": "Authoritative subscription",
+    "authoritativePlaceholder": "Select the subscription that remains active",
+    "subscriptionLabel": "{{type}}, starts {{date}}",
+    "subscriptionLabelStarted": "{{type}}, started {{date}}",
+    "automaticAccessEnd": "Access for every other subscription will end automatically when it first overlaps the authoritative subscription.",
+    "reason": "Correction reason",
+    "reasonPlaceholder": "Reference the contract transition or support case",
+    "cancel": "Cancel",
+    "confirm": "Apply correction",
+    "resolving": "Applying...",
+    "success": "Subscription overlap resolved",
+    "invalidCorrection": "The correction does not resolve the current overlap. Refresh the page and verify the selected subscription.",
+    "unauthorized": "You are not authorized to correct subscription access.",
+    "error": "The subscription overlap could not be resolved.",
+    "validation": {
+      "required": "This field is required",
+      "maxLength": "Use 500 characters or fewer",
+      "invalid": "Check the selected subscription and reason"
+    }
   },
   "licenseSeats": {
     "title": "License Seats",
@@ -151,17 +215,22 @@
     "monthlyCreditsDescription": "The monthly credit budget for this organization. Resets on the 1st of each month.",
     "startsAtLabel": "Start Date",
     "startsAtPlaceholder": "Starts immediately",
-    "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date."
+    "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date.",
+    "endsAtLabel": "End date",
+    "endsAtPlaceholder": "Choose an end date",
+    "endsAtDescription": "Leave empty for an open-ended subscription. Access ends at the start of the selected day.",
+    "endsAtClear": "Clear end date",
+    "startsAtClear": "Clear start date"
   },
   "changeSubscriptionDialog": {
     "title": "Change Subscription",
-    "description": "Change the subscription type or its data. This ends the current subscription and creates a new one — the type cannot be changed in place.",
+    "description": "Replace the current subscription with a new one. The current subscription's access ends when the replacement starts.",
     "changeButton": "Change Subscription",
     "continue": "Continue",
     "changing": "Changing...",
     "warningTitle": "Change this subscription?",
-    "warningDescription": "This ends the current subscription and creates a new one with the data you entered. Choose how to handle the current subscription. This cannot be undone.",
-    "confirmCancel": "Cancel current & create new",
+    "warningDescription": "Choose whether to keep the current subscription in the history or delete it. This cannot be undone.",
+    "confirmCancel": "End current access & create new",
     "confirmDelete": "Delete current & create new",
     "back": "Back"
   },
@@ -188,7 +257,8 @@
   },
   "deleteUser": {
     "success": "User deleted successfully",
-    "error": "Failed to delete user. Please try again."
+    "error": "Failed to delete user. Please try again.",
+    "notFound": "User not found."
   },
   "confirmDelete": {
     "title": "Delete User",
@@ -208,6 +278,7 @@
     "copyButton": "Copy",
     "copiedButton": "Copied",
     "copied": "Link copied to clipboard",
+    "copyError": "Failed to copy the link",
     "close": "Close"
   },
   "confirmPasswordReset": {
@@ -273,7 +344,109 @@
     "models": "Models",
     "usage": "Usage",
     "crawlDomains": "Crawl Domains",
-    "addons": "Add-ons"
+    "addons": "Add-ons",
+    "sso": "SSO"
+  },
+  "sso": {
+    "title": "Single sign-on",
+    "description": "Connect this organization to its verified Zitadel broker organization.",
+    "emailDomains": "Verified email domains",
+    "zitadelOrgId": "Zitadel organization ID",
+    "domainVerified": "I verified ownership of every domain and completed the Zitadel setup.",
+    "mappingLocked": "You can add verified domains while SSO stays active. Existing domains and the Zitadel organization are locked. Save identity provider changes separately before adding domains.",
+    "loadError": "The SSO connection could not be loaded.",
+    "cancel": "Cancel",
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "notConfigured": "Not configured"
+    },
+    "configure": {
+      "save": "Save connection",
+      "success": "SSO connection and identity provider saved."
+    },
+    "idp": {
+      "zitadelIdpId": "Zitadel identity provider ID",
+      "notConfigured": "Not configured — users will see the broker login"
+    },
+    "domains": {
+      "add": "Add domain",
+      "remove": "Remove domain"
+    },
+    "access": {
+      "title": "Access and provisioning",
+      "description": "Control runtime login and JIT account creation independently. Invitations remain available."
+    },
+    "jit": {
+      "label": "JIT provisioning",
+      "description": "Create an Ayunis user on the first valid municipal SSO login.",
+      "success": "JIT provisioning updated."
+    },
+    "passwordLogin": {
+      "requireSsoLabel": "Require SSO for this organization",
+      "requireSsoDescription": "When enabled, users can sign in only through the configured organization SSO.",
+      "confirmTitle": "Require SSO for every user?",
+      "confirmDescription": "Confirm the customer has successfully tested SSO and the active mapping is complete.",
+      "passwordImpact": "Password login and password reset will no longer be available for this organization.",
+      "sessionImpact": "Existing password sessions can no longer renew; issued access remains valid until it expires.",
+      "domainImpact": "Users outside the configured domains will not be able to sign in with a password.",
+      "confirm": "I verified the domains and identity provider, and the customer successfully tested SSO.",
+      "confirmButton": "Require SSO",
+      "requireSsoSuccess": "SSO is now required for this organization.",
+      "restoreSuccess": "Local password login restored."
+    },
+    "enable": {
+      "button": "Enable SSO",
+      "title": "Enable this SSO connection?",
+      "description": "Review the exact routing mapping that will become active.",
+      "confirm": "I reviewed the domains, Zitadel organization, and identity provider mapping.",
+      "confirmButton": "Enable SSO",
+      "success": "SSO enabled."
+    },
+    "disable": {
+      "button": "Disable SSO",
+      "success": "SSO disabled. Local login remains available.",
+      "requiresPasswordLogin": "Restore local password login before disabling SSO."
+    },
+    "validation": {
+      "emailDomains": {
+        "required": "Enter at least one verified email domain.",
+        "arrayMinSize": "Enter at least one verified email domain.",
+        "arrayMaxSize": "You can configure up to 50 email domains.",
+        "arrayUnique": "Each email domain can only be entered once.",
+        "matches": "Enter valid email domains.",
+        "invalid": "Enter valid email domains."
+      },
+      "zitadelOrgId": {
+        "required": "Enter the Zitadel organization ID.",
+        "isNotEmpty": "Enter the Zitadel organization ID.",
+        "maxLength": "The Zitadel organization ID is too long.",
+        "matches": "The Zitadel organization ID cannot contain whitespace.",
+        "invalid": "Enter a valid Zitadel organization ID."
+      },
+      "zitadelIdpId": {
+        "required": "Enter the Zitadel identity provider ID.",
+        "isNotEmpty": "Enter the Zitadel identity provider ID.",
+        "maxLength": "The Zitadel identity provider ID is too long.",
+        "matches": "The Zitadel identity provider ID cannot contain whitespace.",
+        "invalid": "Enter a valid Zitadel identity provider ID."
+      },
+      "domainVerified": {
+        "required": "Confirm domain ownership and the Zitadel setup."
+      },
+      "invalid": "Review the entered SSO connection."
+    },
+    "errors": {
+      "conflict": "One of these domains or the Zitadel organization is already assigned to another organization.",
+      "domainAccountConflict": "Accounts with these email domains exist in another Core organization. Resolve their organization membership before requiring SSO or adding these domains.",
+      "mustDisable": "Disable SSO before changing its routing mapping.",
+      "changed": "The connection changed while you were reviewing it. Reload and try again.",
+      "notFound": "No SSO connection exists for this organization.",
+      "invalid": "The SSO connection is incomplete or invalid.",
+      "mustRestorePasswordLogin": "Restore local password login before disabling SSO.",
+      "passwordlessUsersExist": "SSO cannot be disabled because one or more users do not have a password. Set passwords for them or keep SSO enabled.",
+      "unexpected": "The SSO connection could not be updated."
+    }
   },
   "addons": {
     "title": "Add-ons",
@@ -333,7 +506,25 @@
   },
   "orgDetails": {
     "name": "Name",
-    "id": "ID"
+    "id": "ID",
+    "rename": {
+      "edit": "Rename",
+      "save": "Save",
+      "cancel": "Cancel",
+      "success": "Organization renamed",
+      "error": "Failed to rename organization",
+      "errorNotFound": "This organization no longer exists",
+      "errorRejected": "The organization could not be renamed. Please check the name."
+    },
+    "validation": {
+      "name": {
+        "isNotEmpty": "Name is required",
+        "isString": "Name must be text",
+        "invalid": "Invalid name"
+      },
+      "invalid": "Invalid input"
+    },
+    "title": "Organisation details"
   },
   "trial": {
     "title": "Trial Information",
@@ -369,8 +560,13 @@
     "updateError": "Failed to update model. Please try again.",
     "deleteSuccess": "Model deleted successfully",
     "deleteError": "Failed to delete model. Please try again.",
+    "referencedByUsage": "This model has historical usage data and cannot be deleted. Archive it instead.",
+    "stillPermitted": "This model is still available to organizations. Remove all model permissions first.",
     "alreadyExists": "A model with this identifier already exists.",
     "notFound": "Model not found. It may have been deleted.",
+    "invalid": "Some model details are invalid. Please review them and try again.",
+    "providerNotSupported": "This provider is not supported for this model.",
+    "imageGenerationProviderNotSupported": "This provider does not support image-generation models.",
     "tabs": {
       "active": "Active",
       "archived": "Archived"
@@ -398,6 +594,7 @@
       "noImageGenerationModelsEmpty": "No image generation models have been added to the catalog yet.",
       "noImageGenerationModelsArchived": "No image generation models have been archived.",
       "archivedBadge": "Archived",
+      "providerFaultBadge": "Provider fault",
       "streamingBadge": "Streaming",
       "toolsBadge": "Tools",
       "visionBadge": "Vision",
@@ -419,7 +616,10 @@
         "provider": "Provider",
         "providerPlaceholder": "Select a provider",
         "displayName": "Display name",
+        "contextWindowSize": "Context window size",
+        "contextWindowSizePlaceholder": "e.g. 128000",
         "archived": "Archived",
+        "providerFault": "Known upstream/provider fault",
         "cancel": "Cancel",
         "create": "Create",
         "creating": "Creating…",
@@ -442,7 +642,57 @@
         "embeddingDisplayNamePlaceholder": "e.g. Text Embedding 3 Small",
         "imageGenerationNamePlaceholder": "e.g. gpt-image-1",
         "imageGenerationDisplayNamePlaceholder": "e.g. GPT Image 1"
+      },
+      "validation": {
+        "contextWindowSize": {
+          "required": "Context window size is required",
+          "isInt": "Context window size must be a whole number",
+          "min": "Context window size must be at least 1",
+          "invalid": "Enter a valid context window size"
+        },
+        "invalid": "Review the entered model details"
       }
     }
+  },
+  "lifecycle": {
+    "archiveButton": "Archive",
+    "restoreButton": "Restore",
+    "deleteButton": "Delete",
+    "archive": "Archive organisation",
+    "restore": "Restore organisation",
+    "delete": "Delete organisation",
+    "archiveTitle": "Archive organisation?",
+    "restoreTitle": "Restore organisation?",
+    "archiveDescription": "All data stays. Members will be signed out and cannot sign in until the organisation is restored.",
+    "restoreDescription": "Members can sign in again. Previous sessions remain invalid.",
+    "deleteTitle": "Permanently delete organisation?",
+    "deleteDescription": "This permanently deletes <name/>, its users and all its data and stored files. This action cannot be undone.",
+    "typeName": "Type <name/> to confirm",
+    "cancel": "Cancel",
+    "archivedSuccess": "Organisation archived",
+    "restoredSuccess": "Organisation restored",
+    "deletedSuccess": "Organisation deleted",
+    "errorNotFound": "Organisation no longer exists",
+    "confirmationMismatch": "The name must match exactly",
+    "cleanupIncomplete": "The organisation was deleted, but some files or processing data could not be removed. Contact support.",
+    "errorUnauthorized": "Super admin privileges are required",
+    "error": "Could not update organisation",
+    "processingActive": "Document processing is still running. The organisation was not deleted. Retry once processing finishes.",
+    "managementTitle": "Organisation management",
+    "deleteActionDescription": "Permanently remove this organisation, its members, data and stored files. This cannot be undone."
+  },
+  "usageVisibility": {
+    "title": "Usage data",
+    "label": "Hide usage for individual users",
+    "success": "Usage visibility updated",
+    "error": "Could not update usage visibility",
+    "notFound": "Organisation not found",
+    "description": "When enabled, the user usage table is hidden for this organisation's admins and usage of individual users is no longer available to them."
+  },
+  "validation": {
+    "endsAt": {
+      "isDateString": "Enter a valid end date."
+    },
+    "invalid": "Please check this value."
   }
 }

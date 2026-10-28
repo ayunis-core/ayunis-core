@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PreflightCheckCommand } from './preflight-check.command';
-import { TooManyPagesError } from '../../file-retriever.errors';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { detectFileType } from 'src/common/util/file-type';
 import retrievalConfig from 'src/config/retrieval.config';
 import PdfParse from 'pdf-parse';
@@ -21,9 +21,7 @@ export class PreflightCheckUseCase {
     if (fileType === 'pdf') {
       await this.checkPdfPageCount(command.fileData, command.fileName);
     }
-    // Other types are either cheap to process or converted to PDF later —
-    // the OCR page cap on direct PDF uploads is the only provider-imposed
-    // hard limit we can check upfront.
+    // Office documents are checked after conversion, when PDF metadata exists.
   }
 
   private async checkPdfPageCount(
@@ -35,7 +33,12 @@ export class PreflightCheckUseCase {
     let pageCount: number;
     try {
       // pdf-parse reads metadata including page count without full text extraction
-      const pdf = await PdfParse(fileData, {
+      const parse = PdfParse as (
+        data: Uint8Array,
+        options: PdfParse.Options,
+      ) => Promise<PdfParse.Result>;
+      // Pass a copy: PDF.js may detach the input buffer, and callers reuse fileData.
+      const pdf = await parse(new Uint8Array(fileData), {
         // Only read first page to get metadata quickly
         max: 1,
       });
@@ -44,14 +47,16 @@ export class PreflightCheckUseCase {
       // If pdf-parse fails to read metadata, let it through — the actual
       // processing step will handle or fail on the content itself
       this.logger.warn(
-        `Could not read PDF metadata for preflight: ${(error as Error).message}`,
+        { err: error as Error, fileName },
+        'Could not read PDF metadata for preflight',
       );
       return;
     }
 
     if (pageCount > maxPages) {
       this.logger.warn(
-        `PDF "${fileName}" has ${pageCount} pages (max: ${maxPages})`,
+        { fileName, pageCount, maxPages },
+        'PDF exceeds the page limit',
       );
       throw new TooManyPagesError({ fileName, pageCount, maxPages });
     }

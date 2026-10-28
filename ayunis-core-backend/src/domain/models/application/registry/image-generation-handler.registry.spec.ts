@@ -1,11 +1,12 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ConfigService } from '@nestjs/config';
-import { Logger } from '@nestjs/common';
 import { ImageGenerationHandlerRegistry } from './image-generation-handler.registry';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { ModelProviderNotSupportedError } from '../models.errors';
-import type { ImageGenerationHandler } from '../ports/image-generation.handler';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelProviderNotSupportedError } from 'src/domain/models/application/models.errors';
+import type { ImageGenerationHandler } from 'src/domain/models/application/ports/image-generation.handler';
 
 describe('ImageGenerationHandlerRegistry', () => {
+  const logger = createLoggerMock();
   let registry: ImageGenerationHandlerRegistry;
   let configService: jest.Mocked<ConfigService>;
 
@@ -24,8 +25,8 @@ describe('ImageGenerationHandlerRegistry', () => {
 
     registry = new ImageGenerationHandlerRegistry(configService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {
@@ -50,7 +51,7 @@ describe('ImageGenerationHandlerRegistry', () => {
       );
     });
 
-    it('should return mock handler when app.isTest is true', () => {
+    it('should return mock handler when app.mockInference is true', () => {
       configService.get.mockReturnValue(true);
       registry.registerMockHandler(mockHandler);
 
@@ -59,7 +60,7 @@ describe('ImageGenerationHandlerRegistry', () => {
       expect(result).toBe(mockHandler);
     });
 
-    it('should throw descriptive error when mock handler not registered in test env', () => {
+    it('should throw descriptive error when mock handler not registered with mock inference enabled', () => {
       configService.get.mockReturnValue(true);
 
       expect(() => registry.getHandler(ModelProvider.AZURE)).toThrow(

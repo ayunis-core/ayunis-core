@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { DeleteAllPendingInvitesCommand } from './delete-all-pending-invites.command';
 
 @Injectable()
@@ -12,16 +12,19 @@ export class DeleteAllPendingInvitesUseCase {
   async execute(
     command: DeleteAllPendingInvitesCommand,
   ): Promise<{ deletedCount: number }> {
-    this.logger.log('execute', { orgId: command.orgId });
+    this.logger.log({ orgId: command.orgId }, 'execute');
 
     const deletedCount = await this.invitesRepository.deleteAllPendingByOrg(
       command.orgId as UUID,
     );
 
-    this.logger.debug('All pending invites deleted', {
-      orgId: command.orgId,
-      deletedCount,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+        deletedCount,
+      },
+      'All pending invites deleted',
+    );
 
     return { deletedCount };
   }

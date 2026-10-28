@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
@@ -8,9 +7,14 @@ import { GetPiiWhitelistUseCase } from 'src/domain/anonymization-settings/applic
 import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
 import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
-import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
+import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
+import { toUnmaskedWhitelistEntry } from 'src/domain/thread-pii-masks/domain/unmasked-mask-whitelist';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+  type ThreadPiiMaskAnonymizationStage,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import type { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
 
 export interface ThreadAnonymizationResult extends AnonymizationResult {
@@ -23,7 +27,10 @@ export interface ThreadAnonymizationResult extends AnonymizationResult {
  * thread, honoring the org's PII whitelist. New masks are persisted before
  * the result is returned, so anonymized text never circulates without its
  * dictionary entries. Engine failures (AnonymizationFailedError) propagate
- * unchanged so callers keep their fail-safe handling.
+ * unchanged so callers keep their fail-safe handling; lookup, build, and
+ * persistence failures are wrapped in ThreadPiiMaskAnonymizationError,
+ * except a thread deleted mid-run (ThreadPiiMaskThreadMissingError), which
+ * propagates unchanged so runs can abort instead of failing.
  */
 @Injectable()
 export class AnonymizeTextForThreadUseCase {
@@ -39,55 +46,104 @@ export class AnonymizeTextForThreadUseCase {
   async execute(
     command: AnonymizeTextForThreadCommand,
   ): Promise<ThreadAnonymizationResult> {
-    this.logger.debug('Anonymizing text for thread', {
+    const logContext = this.logContext(command);
+    this.logger.debug(logContext, 'Anonymizing text for thread');
+
+    const { entries, globalWords, existing } = await this.loadContext(
+      command,
+      logContext,
+    );
+    const whitelist = [
+      ...entries.map(
+        (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
+      ),
+      ...globalWords.map(toWhitelistEntry),
+      // Keep manually unmasked rows in `existing` so historical mask tokens
+      // stay stable while their current values remain exempt for this thread.
+      ...existing.filter((mask) => mask.unmasked).map(toUnmaskedWhitelistEntry),
+    ];
+    const result = await this.anonymizeTextUseCase.execute(
+      new AnonymizeTextCommand(
+        command.text,
+        undefined,
+        whitelist,
+        existing.map((mask) => mask.toPiiMask()),
+        { ...command.measurementCaller, orgId: command.orgId },
+      ),
+    );
+    const created = await this.runStage('new_masks_build', logContext, () =>
+      result.newMasks.map((mask) =>
+        ThreadPiiMask.fromPiiMask(command.threadId, mask),
+      ),
+    );
+    if (created.length > 0) {
+      await this.runStage(
+        'new_masks_persistence',
+        {
+          ...logContext,
+          existingMaskCount: existing.length,
+          newMaskCount: created.length,
+        },
+        () => this.repository.saveMany(created),
+      );
+    }
+    return { ...result, masks: [...existing, ...created] };
+  }
+
+  private async loadContext(
+    command: AnonymizeTextForThreadCommand,
+    logContext: Record<string, unknown>,
+  ) {
+    const entries = await this.runStage(
+      'org_whitelist_lookup',
+      logContext,
+      () =>
+        this.getPiiWhitelistUseCase.execute(
+          new GetPiiWhitelistQuery(command.orgId),
+        ),
+    );
+    const globalWords = await this.runStage(
+      'global_whitelist_lookup',
+      logContext,
+      () => this.getGlobalPiiWhitelistUseCase.execute(),
+    );
+    const existing = await this.runStage(
+      'existing_masks_lookup',
+      logContext,
+      () => this.repository.findByThreadId(command.threadId),
+    );
+    return { entries, globalWords, existing };
+  }
+
+  private logContext(command: AnonymizeTextForThreadCommand) {
+    return {
       orgId: command.orgId,
       threadId: command.threadId,
-    });
+      textLength: command.text.length,
+    };
+  }
 
+  private async runStage<T>(
+    stage: ThreadPiiMaskAnonymizationStage,
+    metadata: Record<string, unknown>,
+    operation: () => T | Promise<T>,
+  ): Promise<T> {
     try {
-      const entries = await this.getPiiWhitelistUseCase.execute(
-        new GetPiiWhitelistQuery(command.orgId),
-      );
-      const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
-      const whitelist = [
-        ...entries.map(
-          (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
-        ),
-        ...globalWords.map(toWhitelistEntry),
-      ];
-      const existing = await this.repository.findByThreadId(command.threadId);
-
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(
-          command.text,
-          undefined,
-          whitelist,
-          existing.map((mask) => mask.toPiiMask()),
-        ),
-      );
-
-      const created = result.newMasks.map((mask) =>
-        ThreadPiiMask.fromPiiMask(command.threadId, mask),
-      );
-      if (created.length > 0) {
-        await this.repository.saveMany(created);
+      return await operation();
+    } catch (cause) {
+      if (cause instanceof ThreadPiiMaskThreadMissingError) {
+        this.logger.warn(
+          { stage, ...metadata },
+          'Thread was deleted while anonymizing; masks were not persisted',
+        );
+        throw cause;
       }
-
-      return { ...result, masks: [...existing, ...created] };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to anonymize text for thread', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        threadId: command.threadId,
-      });
-
-      throw new UnexpectedThreadPiiMasksError('anonymize', {
-        orgId: command.orgId,
-        threadId: command.threadId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
+      const error = new ThreadPiiMaskAnonymizationError(stage, metadata, cause);
+      this.logger.error(
+        { errorCode: error.code, ...error.metadata },
+        'Failed to anonymize text for thread',
+      );
+      throw error;
     }
   }
 }

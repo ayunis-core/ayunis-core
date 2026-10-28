@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
-import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
+import { UnexpectedIpAllowlistError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { DeleteIpAllowlistCommand } from './delete-ip-allowlist.command';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class DeleteIpAllowlistUseCase {
   ) {}
 
   async execute(command: DeleteIpAllowlistCommand): Promise<void> {
-    this.logger.debug('Deleting IP allowlist', { orgId: command.orgId });
+    this.logger.debug({ orgId: command.orgId }, 'Deleting IP allowlist');
 
     try {
       await this.repository.deleteByOrgId(command.orgId);
@@ -23,10 +23,13 @@ export class DeleteIpAllowlistUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to delete IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to delete IP allowlist',
+      );
 
       throw new UnexpectedIpAllowlistError('delete', {
         orgId: command.orgId,

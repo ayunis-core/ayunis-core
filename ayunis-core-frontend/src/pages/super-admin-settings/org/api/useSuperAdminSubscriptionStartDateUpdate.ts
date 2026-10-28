@@ -1,8 +1,8 @@
 import {
-  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
   useSuperAdminSubscriptionsControllerUpdateStartDate,
+  type UpdateStartDateDto,
 } from '@/shared/api';
-import type { UpdateStartDateDto } from '@/shared/api';
+import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -10,7 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { UseFormReturn } from 'react-hook-form';
-import type { UpdateSubscriptionStartDateFormData } from '../model/types';
+import type { UpdateSubscriptionStartDateFormData } from '@/pages/super-admin-settings/org/model/types';
 
 interface UseSuperAdminSubscriptionStartDateUpdateProps {
   orgId: string;
@@ -54,6 +54,12 @@ export default function useSuperAdminSubscriptionStartDateUpdate({
                   ),
                 );
                 break;
+              case 'SUBSCRIPTION_ACCESS_OVERLAP':
+                showError(t('subscription.updateStartDateErrorAccessOverlap'));
+                break;
+              case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
+                showError(t('subscription.multipleActiveSubscriptions'));
+                break;
               default:
                 showError(t('subscription.updateStartDateErrorUnexpected'));
             }
@@ -62,13 +68,7 @@ export default function useSuperAdminSubscriptionStartDateUpdate({
           }
         },
         onSettled: () => {
-          void queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
-                orgId,
-              ),
-          });
-          void router.invalidate();
+          invalidateOrgSubscriptionQueries(queryClient, router, orgId);
         },
       },
     });

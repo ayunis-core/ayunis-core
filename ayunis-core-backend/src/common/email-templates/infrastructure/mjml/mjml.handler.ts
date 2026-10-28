@@ -1,4 +1,4 @@
-import { TemplateRendererPort } from '../../application/ports/template-renderer.port';
+import { TemplateRendererPort } from 'src/common/email-templates/application/ports/template-renderer.port';
 import {
   BudgetWarningTemplate,
   EmailConfirmationTemplate,
@@ -6,7 +6,7 @@ import {
   InvitationTemplate,
   PasswordResetTemplate,
   SetInitialPasswordTemplate,
-} from '../../domain/email-template.entity';
+} from 'src/common/email-templates/domain/email-template.entity';
 import { Injectable } from '@nestjs/common';
 import {
   emailConfirmationHtml,
@@ -29,38 +29,38 @@ import {
   budgetWarningSubject,
   budgetWarningText,
 } from './templates/budget-warning.template';
-import { RenderedEmailContent } from '../../domain/rendered-email-content.entity';
+import { RenderedEmailContent } from 'src/common/email-templates/domain/rendered-email-content.entity';
 
 @Injectable()
 export class MjmlHandler implements TemplateRendererPort {
-  renderTemplate(template: EmailTemplate): RenderedEmailContent {
+  async renderTemplate(template: EmailTemplate): Promise<RenderedEmailContent> {
     if (template instanceof EmailConfirmationTemplate) {
       return new RenderedEmailContent({
-        html: emailConfirmationHtml(template.content).html,
+        html: (await emailConfirmationHtml(template.content)).html,
         text: emailConfirmationText(template.content),
       });
     }
     if (template instanceof InvitationTemplate) {
       return new RenderedEmailContent({
-        html: invitationHtml(template.content).html,
+        html: (await invitationHtml(template.content)).html,
         text: invitationText(template.content),
       });
     }
     if (template instanceof PasswordResetTemplate) {
       return new RenderedEmailContent({
-        html: passwordResetHtml(template.content).html,
+        html: (await passwordResetHtml(template.content)).html,
         text: passwordResetText(template.content),
       });
     }
     if (template instanceof SetInitialPasswordTemplate) {
       return new RenderedEmailContent({
-        html: setInitialPasswordHtml(template.content).html,
+        html: (await setInitialPasswordHtml(template.content)).html,
         text: setInitialPasswordText(template.content),
       });
     }
     if (template instanceof BudgetWarningTemplate) {
       return new RenderedEmailContent({
-        html: budgetWarningHtml(template.content).html,
+        html: (await budgetWarningHtml(template.content)).html,
         text: budgetWarningText(template.content),
         subject: budgetWarningSubject(template.content),
       });

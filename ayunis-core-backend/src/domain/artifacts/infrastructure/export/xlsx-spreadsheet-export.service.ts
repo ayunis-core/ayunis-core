@@ -3,17 +3,17 @@ import * as ExcelJS from 'exceljs';
 import {
   SpreadsheetExportPort,
   type SpreadsheetExportInput,
-} from '../../application/ports/spreadsheet-export.port';
-import type { SpreadsheetCell } from '../../application/helpers/spreadsheet-content-format';
-import { isFormulaCell } from '../../application/helpers/spreadsheet-content-format';
+} from 'src/domain/artifacts/application/ports/spreadsheet-export.port';
+import type { SpreadsheetCell } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
+import { isFormulaCell } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import type {
   EvaluatedCell,
   SpreadsheetEvaluation,
-} from '../../application/helpers/evaluate-spreadsheet';
+} from 'src/domain/artifacts/application/helpers/evaluate-spreadsheet';
 import {
   isSpreadsheetErrorValue,
   SpreadsheetEvaluator,
-} from '../../application/helpers/evaluate-spreadsheet';
+} from 'src/domain/artifacts/application/helpers/evaluate-spreadsheet';
 
 /**
  * Functions introduced after Excel 2007 are stored in the file format with an
@@ -125,6 +125,10 @@ function toCsvField(cell: EvaluatedCell): string {
 export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
   private readonly logger = new Logger(XlsxSpreadsheetExportService.name);
 
+  constructor() {
+    super();
+  }
+
   async exportToXlsx(data: SpreadsheetExportInput): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     workbook.calcProperties.fullCalcOnLoad = true;
@@ -170,9 +174,10 @@ export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
         data.formulaCells,
       ).evaluateForExport();
     } catch (error) {
-      this.logger.warn('Spreadsheet evaluation failed, exporting raw values', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error },
+        'Spreadsheet evaluation failed, exporting raw values',
+      );
       return {
         values: data.grid.rows,
         liveFormulaCells: data.grid.rows.map((row) => row.map(() => false)),

@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { CreateDocumentTool } from '../../domain/tools/create-document-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
 import { CreateArtifactCommand } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -48,7 +48,10 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('Failed to execute create_document tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute create_document tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

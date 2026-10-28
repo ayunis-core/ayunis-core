@@ -1,9 +1,9 @@
 {
   "requirement": {
-    "title": "KI-Führerschein-Pflicht",
-    "description": "Legen Sie fest, ob Benutzer Ihrer Organisation den KI-Führerschein in der Academy bestehen müssen, bevor sie den Ayunis Core Chat nutzen können. Das Lesen bestehender Chats wird nie blockiert.",
-    "saved": "Zertifikatspflicht aktualisiert",
-    "error": "Zertifikatspflicht konnte nicht aktualisiert werden",
+    "title": "Pflicht zur KI-Schulung nach EU AI Act",
+    "description": "Legen Sie fest, ob Benutzer Ihrer Organisation die KI-Schulung nach EU AI Act in der Academy abschließen müssen, bevor sie den Ayunis Core Chat nutzen können. Das Lesen bestehender Chats wird nie blockiert.",
+    "saved": "Schulungspflicht aktualisiert",
+    "error": "Schulungspflicht konnte nicht aktualisiert werden",
     "errorUnexpected": "Beim Speichern ist etwas schiefgelaufen. Bitte versuchen Sie es erneut.",
     "modes": {
       "unrestricted": {
@@ -12,12 +12,49 @@
       },
       "requiredOnce": {
         "label": "Einmalig erforderlich",
-        "description": "Benutzer müssen den KI-Führerschein bestehen, bevor sie den Chat nutzen. Einmal bestanden, läuft er nie ab."
+        "description": "Benutzer müssen die KI-Schulung nach EU AI Act abschließen, bevor sie den Chat nutzen. Einmal abgeschlossen, muss sie nicht erneuert werden."
       },
       "requiredAnnually": {
         "label": "Jährlich erforderlich",
-        "description": "Benutzer müssen den KI-Führerschein bestehen und alle 12 Monate erneuern. Zum Erneuern muss die gesamte Academy erneut abgeschlossen werden."
+        "description": "Benutzer müssen die KI-Schulung nach EU AI Act abschließen und alle 12 Monate erneuern. Zum Erneuern muss die gesamte Academy erneut abgeschlossen werden."
       }
+    }
+  },
+  "overview": {
+    "title": "Schulungsstatus je Benutzer",
+    "description": "Wer die KI-Schulung nach EU AI Act abgeschlossen hat, wann sie abgeschlossen wurde und bei wem Handlungsbedarf besteht. Abschlüsse, die innerhalb von 30 Tagen ablaufen, gelten als bald ablaufend.",
+    "searchPlaceholder": "Nach Name oder E-Mail suchen",
+    "empty": "Keine Benutzer entsprechen diesen Filtern",
+    "emptyDescription": "Setzen Sie die Suche oder den Statusfilter zurück, um alle Benutzer zu sehen.",
+    "filter": {
+      "all": "Alle Status"
+    },
+    "column": {
+      "member": "Benutzer",
+      "lastPassed": "Zuletzt abgeschlossen",
+      "renewalDue": "Erneuerung fällig",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "status": {
+      "valid": "Gültig",
+      "expiringSoon": "Läuft bald ab",
+      "expired": "Abgelaufen",
+      "notPassed": "Noch nicht abgeschlossen"
+    },
+    "export": {
+      "fileName": "Schulungsstatus_Ayunis_Core_KI-Schulung.csv",
+      "button": "Als CSV exportieren",
+      "loading": "Wird exportiert...",
+      "error": "Der Export konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "rateLimited": "Zu viele Exporte. Bitte versuchen Sie es in einigen Minuten erneut."
+    },
+    "certificate": {
+      "download": "Teilnahmebestätigung für {{name}} herunterladen",
+      "error": "Die Teilnahmebestätigung konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
+      "notCompleted": "Dieser Benutzer hat die KI-Schulung noch nicht abgeschlossen.",
+      "rateLimited": "Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.",
+      "downloading": "Teilnahmebestätigung für {{name}} wird heruntergeladen"
     }
   }
 }

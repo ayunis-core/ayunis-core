@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { AgentRunUnit } from '../model/types';
-import { renderRichToolCard } from '../lib/render-rich-tool-card';
+import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline/model/types';
+import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import AgentRunTimeline from './AgentRunTimeline';
 
 vi.mock('react-i18next', () => ({
@@ -11,8 +11,25 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/widgets/markdown', () => ({
-  Markdown: ({ children }: { children: string }) => (
-    <div data-testid={`text-${children}`}>{children}</div>
+  Markdown: ({
+    children,
+    renderLegalReferences,
+    renderSourceCitations,
+    renderUrlReferences,
+  }: {
+    children: string;
+    renderLegalReferences?: boolean;
+    renderSourceCitations?: boolean;
+    renderUrlReferences?: boolean;
+  }) => (
+    <div
+      data-testid={`text-${children}`}
+      data-legal-references={renderLegalReferences ? 'true' : 'false'}
+      data-source-citations={renderSourceCitations ? 'true' : 'false'}
+      data-url-references={renderUrlReferences ? 'true' : 'false'}
+    >
+      {children}
+    </div>
   ),
 }));
 
@@ -22,7 +39,7 @@ vi.mock('./AgentRunTimelineRow', () => ({
   ),
 }));
 
-vi.mock('../lib/render-rich-tool-card', () => ({
+vi.mock('@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card', () => ({
   renderRichToolCard: vi.fn(() => <div data-testid="rich-card" />),
 }));
 
@@ -83,6 +100,18 @@ const unit: AgentRunUnit = {
 };
 
 describe('AgentRunTimeline', () => {
+  it.each(['legal-references', 'source-citations', 'url-references'])(
+    'enables %s for assistant text blocks',
+    (reference) => {
+      render(<AgentRunTimeline unit={unit} />);
+      for (const block of ['before', 'after']) {
+        expect(
+          screen.getByTestId(`text-${block}`).getAttribute(`data-${reference}`),
+        ).toBe('true');
+      }
+    },
+  );
+
   it('renders a rich tool row and card inline between surrounding text', () => {
     render(<AgentRunTimeline unit={unit} />);
 
@@ -244,6 +273,52 @@ describe('AgentRunTimeline', () => {
         isStreaming: true,
       }),
     );
+  });
+
+  it('keeps completed activity expanded until assistant text arrives', () => {
+    const activityBlock = {
+      kind: 'activity' as const,
+      key: 'completed-activity',
+      steps: [
+        {
+          kind: 'tool' as const,
+          key: 'completed-tool',
+          status: 'done' as const,
+          toolUse: {
+            type: 'tool_use' as const,
+            id: 'completed-tool',
+            name: 'internet_search',
+            params: {},
+          },
+        },
+      ],
+    };
+    const { rerender } = render(
+      <AgentRunTimeline
+        unit={{ ...unit, blocks: [activityBlock], isStreaming: true }}
+      />,
+    );
+
+    expect(screen.getByTestId('step-completed-tool')).toBeTruthy();
+
+    rerender(
+      <AgentRunTimeline
+        unit={{
+          ...unit,
+          blocks: [
+            activityBlock,
+            {
+              kind: 'text',
+              key: 'assistant-answer',
+              content: { type: 'text', text: 'answer' },
+            },
+          ],
+          isStreaming: true,
+        }}
+      />,
+    );
+
+    expect(screen.queryByTestId('step-completed-tool')).toBeNull();
   });
 
   it('does not render the response-start orb after timeline content exists', () => {

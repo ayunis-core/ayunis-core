@@ -8,6 +8,8 @@ export interface SubscriptionParams {
   createdAt?: Date;
   updatedAt?: Date;
   cancelledAt?: Date | null;
+  endsAt?: Date | null;
+  originalEndsAt?: Date | null;
   startsAt?: Date;
   orgId: UUID;
   billingInfo: SubscriptionBillingInfo;
@@ -18,6 +20,8 @@ export abstract class Subscription {
   createdAt: Date;
   updatedAt: Date;
   cancelledAt: Date | null;
+  endsAt: Date | null;
+  originalEndsAt: Date | null;
   startsAt: Date;
   orgId: UUID;
   billingInfo: SubscriptionBillingInfo;
@@ -28,6 +32,8 @@ export abstract class Subscription {
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     this.cancelledAt = params.cancelledAt ?? null;
+    this.endsAt = params.endsAt ?? null;
+    this.originalEndsAt = params.originalEndsAt ?? null;
     this.startsAt = params.startsAt ?? new Date();
     this.orgId = params.orgId;
     this.billingInfo = params.billingInfo;

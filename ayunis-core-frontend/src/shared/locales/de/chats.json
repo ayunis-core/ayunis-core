@@ -15,6 +15,8 @@
   "card": {
     "untitled": "Ohne Titel",
     "anonymous": "Anonym",
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen",
     "confirmDelete": {
       "title": "Chat löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -24,6 +26,7 @@
   },
   "delete": {
     "success": "Chat erfolgreich gelöscht!",
-    "error": "Chat konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    "error": "Chat konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Chat nicht gefunden"
   }
 }

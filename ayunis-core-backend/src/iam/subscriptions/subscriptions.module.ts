@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetLatestSubscriptionUseCase } from './application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
+import { ListOrgSubscriptionsUseCase } from './application/use-cases/list-org-subscriptions/list-org-subscriptions.use-case';
 import { CreateSubscriptionUseCase } from './application/use-cases/create-subscription/create-subscription.use-case';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription/cancel-subscription.use-case';
 import { UncancelSubscriptionUseCase } from './application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
@@ -17,8 +18,8 @@ import { SubscriptionMapper } from './infrastructure/persistence/local/mappers/s
 import { SubscriptionsController } from './presenters/http/subscriptions.controller';
 import { SuperAdminSubscriptionsController } from './presenters/http/super-admin-subscriptions.controller';
 import { SubscriptionResponseMapper } from './presenters/http/mappers/subscription-response.mapper';
-import { UsersModule } from '../users/users.module';
-import { InvitesModule } from '../invites/invites.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { InvitesModule } from 'src/iam/invites/invites.module';
 import { UpdateSeatsUseCase } from './application/use-cases/update-seats/update-seats.use-case';
 import { UpdateBillingInfoUseCase } from './application/use-cases/update-billing-info/update-billing-info.use-case';
 import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/local/mappers/subscription-billing-info.mapper';
@@ -31,6 +32,14 @@ import { UpdateStartDateUseCase } from './application/use-cases/update-start-dat
 import { UpdateMonthlyCreditsUseCase } from './application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
 import { ChangeSubscriptionUseCase } from './application/use-cases/change-subscription/change-subscription.use-case';
 import { SubscriptionFactory } from './application/services/subscription-factory.service';
+import { SeatAllocationLock } from 'src/iam/subscriptions/application/ports/seat-allocation-lock';
+import { PostgresSeatAllocationLock } from 'src/iam/subscriptions/infrastructure/persistence/local/postgres-seat-allocation-lock';
+import { AssertSeatAvailableUseCase } from 'src/iam/subscriptions/application/use-cases/assert-seat-available/assert-seat-available.use-case';
+import { UpdateSeatsWithAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats-with-allocation-lock/update-seats-with-allocation-lock.use-case';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { ResolveSubscriptionOverlapUseCase } from 'src/iam/subscriptions/application/use-cases/resolve-subscription-overlap/resolve-subscription-overlap.use-case';
+import { SubscriptionAccessAdjustmentRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-access-adjustment.record';
+import { SuperAdminSubscriptionOverlapController } from 'src/iam/subscriptions/presenters/http/super-admin-subscription-overlap.controller';
 
 @Module({
   imports: [
@@ -39,15 +48,24 @@ import { SubscriptionFactory } from './application/services/subscription-factory
       SeatBasedSubscriptionRecord,
       UsageBasedSubscriptionRecord,
       SubscriptionBillingInfoRecord,
+      SubscriptionAccessAdjustmentRecord,
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
   ],
-  controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
+  controllers: [
+    SubscriptionsController,
+    SuperAdminSubscriptionsController,
+    SuperAdminSubscriptionOverlapController,
+  ],
   providers: [
     {
       provide: SubscriptionRepository,
       useClass: LocalSubscriptionsRepository,
+    },
+    {
+      provide: SeatAllocationLock,
+      useClass: PostgresSeatAllocationLock,
     },
     SubscriptionMapper,
     SubscriptionResponseMapper,
@@ -56,6 +74,7 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
     GetLatestSubscriptionUseCase,
+    ListOrgSubscriptionsUseCase,
     CreateSubscriptionUseCase,
     ChangeSubscriptionUseCase,
     CancelSubscriptionUseCase,
@@ -68,6 +87,10 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     GetMonthlyCreditLimitUseCase,
     ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
+    AssertSeatAvailableUseCase,
+    UpdateSeatsWithAllocationLockUseCase,
+    AcquireSeatAllocationLockUseCase,
+    ResolveSubscriptionOverlapUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
@@ -77,6 +100,8 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     GetMonthlyCreditLimitUseCase,
     ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
+    AssertSeatAvailableUseCase,
+    AcquireSeatAllocationLockUseCase,
   ],
 })
 export class SubscriptionsModule {}

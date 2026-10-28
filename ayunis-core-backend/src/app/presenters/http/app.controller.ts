@@ -84,11 +84,6 @@ export class AppController {
     type: FeatureTogglesResponseDto,
   })
   featureToggles(): FeatureTogglesResponseDto {
-    return {
-      knowledgeBasesEnabled: this.features.knowledgeBasesEnabled,
-      letterheadsEnabled: this.features.letterheadsEnabled,
-      skillsEnabled: this.features.skillsEnabled,
-      agentRuntimeEnabled: this.features.agentRuntimeEnabled,
-    };
+    return { ...this.features };
   }
 }

@@ -5,7 +5,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   useInitiateChat,
   type SourceUploadStatus,
-} from '../api/useInitiateChat';
+} from '@/features/chat-initiation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -18,8 +18,11 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
-import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
+import { WorkspacePicker } from './WorkspacePicker';
+import { useAcademyAccessStatus } from '@/features/academy';
+import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
+import { useTimeBasedGreeting } from '@/pages/new-chat/model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
@@ -28,8 +31,8 @@ import type {
 } from '@/shared/contexts/chat/chatContext';
 import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
-import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
-import { useSkipPersonalization } from '../api/useSkipPersonalization';
+import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
+import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
@@ -39,6 +42,8 @@ interface NewChatPageProps {
   isEmbeddingModelEnabled: boolean;
   initialPrompt?: string;
   initialAttachmentUrl?: string;
+  /** Preselects a workspace, e.g. when arriving from a workspace page. */
+  initialWorkspaceId?: string;
 }
 
 export default function NewChatPage({
@@ -46,6 +51,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   initialPrompt,
   initialAttachmentUrl,
+  initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -77,7 +83,17 @@ export default function NewChatPage({
   useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const [modelId, setModelId] = useState(selectedModelId);
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [previousDefaultModelId, setPreviousDefaultModelId] =
+    useState(selectedModelId);
+  if (selectedModelId !== previousDefaultModelId) {
+    setPreviousDefaultModelId(selectedModelId);
+    setModelId(selectedModelId);
+  }
+  const { isAnonymousByDefault } = useAnonymousModeDefault();
+  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(
+    initialWorkspaceId ?? null,
+  );
   type LocalSource = {
     id: string;
     name: string;
@@ -111,8 +127,13 @@ export default function NewChatPage({
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     IntegrationSummary[]
   >([]);
-  const [selectedSkillId, setSelectedSkillId] = useState<string>();
-  const [selectedSkillName, setSelectedSkillName] = useState<string>();
+  const [selectedSkill, setSelectedSkill] = useState<{
+    id: string;
+    name: string;
+    workspaceId?: string;
+  }>();
+  const selectedSkillId = selectedSkill?.id;
+  const selectedSkillName = selectedSkill?.name;
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
 
   const handleMistExitComplete = useCallback(() => {
@@ -143,19 +164,27 @@ export default function NewChatPage({
     setModelId(modelId);
   }
 
-  function handleSkillSelect(skillId: string, skillName: string) {
-    if (selectedSkillId === skillId) {
-      setSelectedSkillId(undefined);
-      setSelectedSkillName(undefined);
-    } else {
-      setSelectedSkillId(skillId);
-      setSelectedSkillName(skillName);
-    }
+  function handleSkillSelect(
+    id: string,
+    name: string,
+    skillWorkspaceId?: string,
+  ) {
+    setSelectedSkill(
+      selectedSkillId === id
+        ? undefined
+        : { id, name, workspaceId: skillWorkspaceId },
+    );
   }
 
   function handleSkillRemove() {
-    setSelectedSkillId(undefined);
-    setSelectedSkillName(undefined);
+    setSelectedSkill(undefined);
+  }
+
+  function handleWorkspaceChange(id: string | null) {
+    if (selectedSkill?.workspaceId && selectedSkill.workspaceId !== id) {
+      setSelectedSkill(undefined);
+    }
+    setWorkspaceId(id);
   }
 
   function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
@@ -186,6 +215,7 @@ export default function NewChatPage({
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
+      workspaceId: workspaceId ?? undefined,
       onSourceStatus: handleSourceStatus,
     });
   }
@@ -270,7 +300,6 @@ export default function NewChatPage({
               onCancel={handleCancel}
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
-              onDownloadSource={() => null}
               onAddKnowledgeBase={(kb) => {
                 setSelectedKnowledgeBases((prev) => [...prev, kb]);
               }}
@@ -298,6 +327,13 @@ export default function NewChatPage({
               selectedSkillName={selectedSkillName}
               onSkillRemove={handleSkillRemove}
             />
+
+            <div className="mt-1.5 flex justify-start">
+              <WorkspacePicker
+                workspaceId={workspaceId}
+                onWorkspaceChange={handleWorkspaceChange}
+              />
+            </div>
           </div>
 
           <div
@@ -312,6 +348,7 @@ export default function NewChatPage({
               settleMs={900}
             >
               <PinnedSkills
+                workspaceId={workspaceId}
                 onSkillSelect={handleSkillSelect}
                 selectedSkillId={selectedSkillId}
               />

@@ -1,5 +1,7 @@
 import i18n from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
+import * as z from 'zod';
 
 // Import translation files directly
 import enAuth from './shared/locales/en/auth.json';
@@ -36,6 +38,10 @@ import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
 import enInstallIntegration from './shared/locales/en/install-integration.json';
 import deInstallIntegration from './shared/locales/de/install-integration.json';
+import enWorkspaces from './shared/locales/en/workspaces.json';
+import deWorkspaces from './shared/locales/de/workspaces.json';
+import enWorkspace from './shared/locales/en/workspace.json';
+import deWorkspace from './shared/locales/de/workspace.json';
 import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
@@ -103,6 +109,8 @@ const resources = {
     install: enInstall,
     'install-integration': enInstallIntegration,
     skills: enSkills,
+    workspaces: enWorkspaces,
+    workspace: enWorkspace,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
@@ -145,6 +153,8 @@ const resources = {
     install: deInstall,
     'install-integration': deInstallIntegration,
     skills: deSkills,
+    workspaces: deWorkspaces,
+    workspace: deWorkspace,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
@@ -170,31 +180,30 @@ const resources = {
   },
 };
 
-// Language detector options
-// const detectionOptions = {
-//   // order and from where user language should be detected
-//   order: ["localStorage", "htmlTag", "path", "subdomain"],
+const detectionOptions = {
+  order: ['localStorage'],
+  lookupLocalStorage: 'ayunis-language',
+  caches: ['localStorage'],
+};
 
-//   // keys or params to lookup language from
-//   lookupLocalStorage: "ayunis-language",
-
-//   // cache user language on
-//   caches: ["localStorage"],
-
-//   // only detect languages that are defined in our resources
-//   checkWhitelist: true,
-// };
+// Validators that carry no explicit message fall back to zod's built-in
+// copy, which is English unless a locale is configured. i18next emits
+// languageChanged during init, so the handler below covers the initial
+// language too.
+function applyZodLocale(lng: string): void {
+  z.config(lng.startsWith('en') ? z.locales.en() : z.locales.de());
+}
 
 // Keep <html lang> in sync with the active locale. A mismatched lang
 // (e.g. lang="en" on German content) triggers Chrome auto-translate,
 // which rewrites DOM text nodes and corrupts streamed assistant messages.
 i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
+  applyZodLocale(lng);
 });
 
 void i18n
-  // detect user language
-  //.use(LanguageDetector)
+  .use(LanguageDetector)
   // pass the i18n instance to react-i18next.
   .use(initReactI18next)
   // init i18next
@@ -204,7 +213,7 @@ void i18n
     fallbackLng: 'de',
     supportedLngs: ['en', 'de'],
 
-    //detection: detectionOptions,
+    detection: detectionOptions,
 
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default

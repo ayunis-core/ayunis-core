@@ -1,14 +1,17 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { FindThreadQuery } from './find-thread.query';
-import { ThreadNotFoundError } from '../../threads.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ThreadNotFoundError,
+  UnexpecteThreadError,
+} from 'src/domain/threads/application/threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { CountMessagesTokensUseCase } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
 import { CountMessagesTokensCommand } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.command';
-
-const WARNING_THRESHOLD_TOKENS = 50000;
+import { getLongChatWarningThresholdTokens } from 'src/common/token-counter/application/util/context-budget.helper';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 export interface FindThreadResult {
   thread: Thread;
@@ -25,33 +28,23 @@ export class FindThreadUseCase {
     private readonly countMessagesTokensUseCase: CountMessagesTokensUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(query: FindThreadQuery): Promise<FindThreadResult> {
-    this.logger.log('findOne', { threadId: query.id });
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-      const thread = await this.threadsRepository.findOne(query.id, userId);
-      if (!thread) {
-        throw new ThreadNotFoundError(query.id, userId);
-      }
-
-      const tokenCount = this.countMessagesTokensUseCase.execute(
-        new CountMessagesTokensCommand(thread.messages),
-      );
-      const isLongChat = tokenCount > WARNING_THRESHOLD_TOKENS;
-
-      return { thread, isLongChat };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to find thread', {
-        threadId: query.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
+    this.logger.log({ threadId: query.id }, 'findOne');
+    const { userId } = getRequiredUserContext(this.contextService);
+    const thread = await this.threadsRepository.findOne(query.id, userId);
+    if (!thread) {
+      throw new ThreadNotFoundError(query.id, userId);
     }
+
+    const tokenCount = this.countMessagesTokensUseCase.execute(
+      new CountMessagesTokensCommand(thread.messages),
+    );
+    const warningThreshold = getLongChatWarningThresholdTokens(
+      thread.model?.model.contextWindowSize,
+    );
+    const isLongChat = tokenCount > warningThreshold;
+
+    return { thread, isLongChat };
   }
 }

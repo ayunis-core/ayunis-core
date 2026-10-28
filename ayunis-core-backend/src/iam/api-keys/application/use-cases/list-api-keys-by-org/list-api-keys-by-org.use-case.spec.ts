@@ -1,12 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ListApiKeysByOrgUseCase } from './list-api-keys-by-org.use-case';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { UnexpectedApiKeyError } from '../../api-keys.errors';
+import { UnexpectedApiKeyError } from 'src/iam/api-keys/application/api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('ListApiKeysByOrgUseCase', () => {
@@ -44,9 +43,6 @@ describe('ListApiKeysByOrgUseCase', () => {
     useCase = module.get(ListApiKeysByOrgUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns api keys for the caller org, including revoked ones', async () => {

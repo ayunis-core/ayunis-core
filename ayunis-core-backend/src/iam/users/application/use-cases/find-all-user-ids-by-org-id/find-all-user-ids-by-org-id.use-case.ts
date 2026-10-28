@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindAllUserIdsByOrgIdQuery } from './find-all-user-ids-by-org-id.query';
 
 /**
@@ -14,7 +14,7 @@ export class FindAllUserIdsByOrgIdUseCase {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async execute(query: FindAllUserIdsByOrgIdQuery): Promise<UUID[]> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'execute');
     return this.usersRepository.findAllIdsByOrgId(query.orgId);
   }
 }

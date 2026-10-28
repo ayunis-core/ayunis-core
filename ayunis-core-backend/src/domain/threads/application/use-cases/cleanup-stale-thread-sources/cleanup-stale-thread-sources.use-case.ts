@@ -3,15 +3,20 @@ import type { UUID } from 'crypto';
 import {
   ThreadsRepository,
   type StaleThreadSourceRef,
-} from '../../ports/threads.repository';
+} from 'src/domain/threads/application/ports/threads.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { FindUnreferencedSourceIdsUseCase } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { FindUnreferencedSourceIdsQuery } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.query';
 import { CleanupStaleThreadSourcesResult } from './cleanup-stale-thread-sources.result';
+import { chunk } from 'src/common/util/chunk';
 
 const STALE_THREAD_SOURCE_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+// Each delete is one transaction over sources, chunks, and vector-index rows;
+// bounding it keeps a large backlog (15k sources on the first successful run,
+// AYC-1237) from holding one giant transaction per org.
+export const STALE_SOURCE_DELETE_BATCH_SIZE = 500;
 
 function groupSourcesByOrg(
   candidates: StaleThreadSourceRef[],
@@ -40,7 +45,7 @@ export class CleanupStaleThreadSourcesUseCase {
 
   async execute(): Promise<CleanupStaleThreadSourcesResult> {
     const cutoff = new Date(Date.now() - STALE_THREAD_SOURCE_DAYS * MS_PER_DAY);
-    this.logger.log('execute', { cutoff, staleDays: STALE_THREAD_SOURCE_DAYS });
+    this.logger.log({ cutoff, staleDays: STALE_THREAD_SOURCE_DAYS }, 'execute');
     const candidates =
       await this.threadsRepository.findSourcesWithOnlyStaleDirectAssignments(
         cutoff,
@@ -73,24 +78,36 @@ export class CleanupStaleThreadSourcesUseCase {
     result: CleanupStaleThreadSourcesResult,
   ): Promise<void> {
     for (const [orgId, sourceIds] of grouped) {
-      try {
-        await this.deleteSourcesUseCase.execute(
-          new DeleteSourcesCommand(sourceIds, orgId),
-        );
-        result.deletedCount += sourceIds.length;
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Unknown error';
-        result.failedCount += sourceIds.length;
-        result.errors.push(
-          ...sourceIds.map((sourceId) => ({ sourceId, error: message })),
-        );
-        this.logger.error('Batch delete failed', {
-          error: error as Error,
+      for (const batch of chunk(sourceIds, STALE_SOURCE_DELETE_BATCH_SIZE)) {
+        await this.deleteBatch(orgId, batch, result);
+      }
+    }
+  }
+
+  private async deleteBatch(
+    orgId: UUID,
+    sourceIds: UUID[],
+    result: CleanupStaleThreadSourcesResult,
+  ): Promise<void> {
+    try {
+      await this.deleteSourcesUseCase.execute(
+        new DeleteSourcesCommand(sourceIds, orgId),
+      );
+      result.deletedCount += sourceIds.length;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      result.failedCount += sourceIds.length;
+      result.errors.push(
+        ...sourceIds.map((sourceId) => ({ sourceId, error: message })),
+      );
+      this.logger.error(
+        {
+          err: error as Error,
           count: sourceIds.length,
           orgId,
-        });
-      }
+        },
+        'Batch delete failed',
+      );
     }
   }
 }

@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LocalAuthenticationRepository } from './local-authentication.repository';
@@ -35,10 +34,6 @@ describe('LocalAuthenticationRepository', () => {
     repository = module.get(LocalAuthenticationRepository);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

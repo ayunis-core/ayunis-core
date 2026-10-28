@@ -1,9 +1,10 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { formatAjvErrors } from 'src/common/validators/tool-params.validator';
-import { Tool } from '../tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
 import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import { buildMcpCanonicalName } from 'src/domain/tools/domain/value-objects/mcp-canonical-name';
 
 /**
  * Ephemeral tool entity representing an MCP tool.
@@ -13,6 +14,7 @@ import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
   public readonly integrationName: string;
+  public readonly originalName: string;
   public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
 
@@ -23,13 +25,14 @@ export class McpIntegrationTool extends Tool {
     integrationLogoUrl: string | null,
   ) {
     super({
-      name: mcpTool.name,
-      description: mcpTool.description ?? '',
+      name: buildMcpCanonicalName('tool', mcpTool.name, mcpTool.integrationId),
+      description: `Use the "${mcpTool.name}" tool from MCP integration "${integrationName}".\n${mcpTool.description ?? ''}`,
       parameters: mcpTool.inputSchema,
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
     this.integrationName = integrationName;
+    this.originalName = mcpTool.name;
     this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
   }

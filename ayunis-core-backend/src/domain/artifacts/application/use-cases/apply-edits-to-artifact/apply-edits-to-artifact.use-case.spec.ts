@@ -1,10 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApplyEditsToArtifactUseCase } from './apply-edits-to-artifact.use-case';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import {
   ArtifactContentTooLargeError,
   ArtifactEditAmbiguousError,
@@ -12,12 +12,12 @@ import {
   ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UpdateArtifactUseCase } from '../update-artifact/update-artifact.use-case';
+import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
 
 describe('ApplyEditsToArtifactUseCase', () => {
   let useCase: ApplyEditsToArtifactUseCase;
@@ -25,6 +25,8 @@ describe('ApplyEditsToArtifactUseCase', () => {
   let updateArtifactUseCase: jest.Mocked<UpdateArtifactUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -41,10 +43,9 @@ describe('ApplyEditsToArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockUpdateUseCase = {
@@ -58,9 +59,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: UpdateArtifactUseCase, useValue: mockUpdateUseCase },
       ],
-    })
-      .setLogger(new Logger())
-      .compile();
+    }).compile();
 
     useCase = module.get<ApplyEditsToArtifactUseCase>(
       ApplyEditsToArtifactUseCase,

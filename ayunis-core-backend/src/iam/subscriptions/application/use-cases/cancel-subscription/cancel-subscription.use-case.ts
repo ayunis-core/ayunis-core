@@ -1,19 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CancelSubscriptionCommand } from './cancel-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import {
-  SubscriptionNotFoundError,
   SubscriptionAlreadyCancelledError,
   UnexpectedSubscriptionError,
-} from '../../subscription.errors';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
-import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionCancelledEvent } from '../../events/subscription-cancelled.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { findManageableSubscription } from 'src/iam/subscriptions/application/util/find-manageable-subscription';
+import { getCancellationAccessEnd } from 'src/iam/subscriptions/application/util/get-cancellation-access-end';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -21,82 +24,113 @@ export class CancelSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: CancelSubscriptionCommand): Promise<void> {
-    this.logger.log('Cancelling subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-    });
-
+    this.logger.log(
+      { orgId: command.orgId, requestingUserId: command.requestingUserId },
+      'Cancelling subscription',
+    );
     try {
       validateSubscriptionAccess(
         this.contextService,
         command.requestingUserId,
         command.orgId,
       );
-
-      this.logger.debug('Finding subscription');
-      const result = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
+      await this.acquireAllocationLock.execute(command.orgId);
+      const subscription = await this.findSubscription(command);
+      await this.cancelSubscription(command, subscription);
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        {
+          err: error as Error,
           orgId: command.orgId,
           requestingUserId: command.requestingUserId,
-        }),
+        },
+        'Subscription cancellation failed',
       );
-      if (!result) {
-        this.logger.warn('Subscription not found', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionNotFoundError(command.orgId);
-      }
-      const subscription = result.subscription;
+      throw new UnexpectedSubscriptionError('Unexpected error');
+    }
+  }
 
-      this.logger.debug('Checking if subscription is already cancelled');
-      if (subscription.cancelledAt) {
-        this.logger.warn('Subscription already cancelled', {
-          orgId: command.orgId,
-          cancelledAt: subscription.cancelledAt,
-        });
-        throw new SubscriptionAlreadyCancelledError(command.orgId);
-      }
+  private async findSubscription(
+    command: CancelSubscriptionCommand,
+  ): Promise<Subscription> {
+    this.logger.debug('Finding subscription');
+    return findManageableSubscription(
+      this.subscriptionRepository,
+      command.orgId,
+    );
+  }
 
-      this.logger.debug('Updating subscription to cancelled');
-      subscription.cancelledAt = new Date();
-      await this.subscriptionRepository.update(subscription);
-
-      this.logger.debug('Subscription cancelled successfully', {
+  private async cancelSubscription(
+    command: CancelSubscriptionCommand,
+    subscription: Subscription,
+  ): Promise<void> {
+    this.logger.debug('Checking if subscription is already cancelled');
+    if (subscription.cancelledAt) {
+      this.logger.warn(
+        { orgId: command.orgId, cancelledAt: subscription.cancelledAt },
+        'Subscription already cancelled',
+      );
+      throw new SubscriptionAlreadyCancelledError(command.orgId);
+    }
+    // Captured before the write, because cancelling flips isActive for a
+    // usage-based subscription.
+    const wasServing = isActive(subscription);
+    subscription.cancelledAt = new Date();
+    const cancellationAccessEnd = getCancellationAccessEnd(
+      subscription,
+      subscription.cancelledAt,
+    );
+    subscription.endsAt = this.earlierDate(
+      subscription.endsAt,
+      cancellationAccessEnd,
+    );
+    await this.subscriptionRepository.update(subscription);
+    this.logger.debug(
+      {
         subscriptionId: subscription.id,
         orgId: command.orgId,
         cancelledAt: subscription.cancelledAt,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionCancelledEvent.EVENT_NAME,
-          new SubscriptionCancelledEvent(
-            command.orgId,
-            toSubscriptionEventData(subscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionCancelledEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Subscription cancellation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      });
-      throw new UnexpectedSubscriptionError('Unexpected error');
+        endsAt: subscription.endsAt,
+      },
+      'Subscription cancelled successfully',
+    );
+    // A subscription that never started served nobody, so nothing downstream
+    // ended: listeners tear down entitlements (credit limits) for the whole
+    // org, which would strip a still-serving subscription's limits.
+    if (wasServing) {
+      this.emitCancelledEvent(command.orgId, subscription);
     }
+  }
+
+  private earlierDate(left: Date | null, right: Date): Date {
+    return left && left < right ? left : right;
+  }
+
+  private emitCancelledEvent(
+    orgId: CancelSubscriptionCommand['orgId'],
+    subscription: Subscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionCancelledEvent.EVENT_NAME,
+        new SubscriptionCancelledEvent(
+          orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId },
+          'Failed to emit SubscriptionCancelledEvent',
+        );
+      });
   }
 }

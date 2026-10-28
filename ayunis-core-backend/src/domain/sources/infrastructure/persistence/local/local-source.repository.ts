@@ -1,8 +1,17 @@
+import {
+  insertCrawledFileSources,
+  selectCrawledFilesWithinCapacity,
+} from './crawled-file-sources.helpers';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { EntityManager, LessThan, Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
@@ -21,6 +30,11 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
+import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
+import { chunk } from 'src/common/util/chunk';
+
+// Keeps each candidate lookup far below Postgres' 65,535 bind-parameter cap.
+export const UNREFERENCED_LOOKUP_CHUNK_SIZE = 1000;
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -28,21 +42,38 @@ export class LocalSourceRepository extends SourceRepository {
 
   constructor(
     @InjectRepository(SourceRecord)
-    private readonly sourceRepository: Repository<SourceRecord>,
-    @InjectRepository(TextSourceDetailsRecord)
-    private readonly textSourceDetailsRepository: Repository<TextSourceDetailsRecord>,
-    @InjectRepository(DataSourceDetailsRecord)
-    private readonly dataSourceDetailsRepository: Repository<DataSourceDetailsRecord>,
-    @InjectRepository(SourceContentChunkRecord)
-    private readonly sourceContentChunkRepository: Repository<SourceContentChunkRecord>,
+    private readonly defaultSourceRepository: Repository<SourceRecord>,
     private readonly mapper: SourceMapper,
     private readonly chunkMapper: SourceContentChunkMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private getManager(): EntityManager {
+    // Scheduled and background callers can run without an active CLS context.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return this.txHost.tx ?? this.defaultSourceRepository.manager;
+  }
+
+  private get sourceRepository(): Repository<SourceRecord> {
+    return this.getManager().getRepository(SourceRecord);
+  }
+
+  private get textSourceDetailsRepository(): Repository<TextSourceDetailsRecord> {
+    return this.getManager().getRepository(TextSourceDetailsRecord);
+  }
+
+  private get dataSourceDetailsRepository(): Repository<DataSourceDetailsRecord> {
+    return this.getManager().getRepository(DataSourceDetailsRecord);
+  }
+
+  private get sourceContentChunkRepository(): Repository<SourceContentChunkRecord> {
+    return this.getManager().getRepository(SourceContentChunkRecord);
+  }
+
   async findById(id: UUID): Promise<TextSource | DataSource | null> {
-    this.logger.log('findById', { id });
+    this.logger.log({ id }, 'findById');
     const record = await this.sourceRepository.findOne({
       where: { id },
     });
@@ -79,7 +110,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<Source[]> {
-    this.logger.log('findByIds', { count: ids.length });
+    this.logger.log({ count: ids.length }, 'findByIds');
     if (ids.length === 0) {
       return [];
     }
@@ -97,7 +128,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
-    this.logger.log('findByKnowledgeBaseId', { knowledgeBaseId });
+    this.logger.log({ knowledgeBaseId }, 'findByKnowledgeBaseId');
     const records = await this.sourceRepository
       .createQueryBuilder('source')
       .leftJoinAndSelect(
@@ -115,18 +146,24 @@ export class LocalSourceRepository extends SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource> {
-    this.logger.log('saveTextSource', { sourceId: source.id });
+    this.logger.log({ sourceId: source.id }, 'saveTextSource');
     const {
       source: sourceRecord,
       details,
       contentChunks,
     } = this.mapper.toTextSourceRecord(source, content);
-    this.logger.debug('Saving text source record', {
-      sourceId: sourceRecord.id,
-      chunksCount: contentChunks.length,
-    });
+    this.logger.debug(
+      {
+        sourceId: sourceRecord.id,
+        chunksCount: contentChunks.length,
+      },
+      'Saving text source record',
+    );
+    // Uploads assign the knowledge base after enqueueing, so a job's copy of
+    // the source can predate the link — saving it must not null the column.
+    delete (sourceRecord as Partial<TextSourceRecord>).knowledgeBaseId;
     const savedSource = await this.sourceRepository.save(sourceRecord);
-    this.logger.debug('Saved source record with id', { id: savedSource.id });
+    this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
     const savedDetails = await this.textSourceDetailsRepository.save(details);
     const savedContentChunks =
       await this.sourceContentChunkRepository.save(contentChunks);
@@ -135,11 +172,60 @@ export class LocalSourceRepository extends SourceRepository {
     return this.mapper.toDomain(savedSource);
   }
 
+  async completeCrawlWithFileSources(
+    sourceId: UUID,
+    files: FileSource[],
+    maximumSources = Number.MAX_SAFE_INTEGER,
+  ): Promise<FileSource[] | null> {
+    return this.txHost.withTransaction(async () => {
+      const registered = await selectCrawledFilesWithinCapacity(
+        this.getManager(),
+        sourceId,
+        files,
+        maximumSources,
+      );
+      if (
+        !(await this.updateStatusConditionally(
+          sourceId,
+          SourceStatus.PROCESSING,
+          SourceStatus.READY,
+        ))
+      )
+        return null;
+      if (registered.length === 0) return [];
+      await insertCrawledFileSources(this.getManager(), registered);
+      return registered;
+    });
+  }
+
+  async saveProcessingTextSourceContent(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): Promise<boolean> {
+    return this.txHost.withTransaction(async () => {
+      // This guarded write locks the row until content is stored; deletion cannot
+      // race the content save, and no source upsert can resurrect a deleted file.
+      const updated = await this.sourceRepository.update(
+        { id: source.id, status: SourceStatus.PROCESSING },
+        { name: source.name, processingStartedAt: new Date() },
+      );
+      if (!updated.affected) return false;
+      const { details, contentChunks } = this.mapper.toTextSourceRecord(
+        source,
+        content,
+      );
+      await this.textSourceDetailsRepository.save(details);
+      // A stalled delivery may still index prior chunk IDs; keep them citable.
+      await this.sourceContentChunkRepository.save(contentChunks);
+      return true;
+    });
+  }
+
   async findStaleProcessingSourceIds(
     staleBefore: Date,
     limit: number,
   ): Promise<UUID[]> {
-    this.logger.log('findStaleProcessingSourceIds', { staleBefore, limit });
+    this.logger.log({ staleBefore, limit }, 'findStaleProcessingSourceIds');
     const records = await this.sourceRepository.find({
       select: { id: true },
       where: {
@@ -156,18 +242,18 @@ export class LocalSourceRepository extends SourceRepository {
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
   async save(source: Source): Promise<Source> {
-    this.logger.log('save', { sourceId: source.id });
+    this.logger.log({ sourceId: source.id }, 'save');
     if (source instanceof TextSource) {
       const { source: sourceRecord } = this.mapper.toRecord(source);
       const savedSource = await this.sourceRepository.save(sourceRecord);
-      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
       return this.mapper.toDomain(savedSource as TextSourceRecord);
     }
     if (source instanceof DataSource) {
       const { source: sourceRecord, details } = this.mapper.toRecord(source);
       sourceRecord.dataSourceDetails = details;
       const savedSource = await this.sourceRepository.save(sourceRecord);
-      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
       const savedDetails = await this.dataSourceDetailsRepository.save(details);
       savedSource.dataSourceDetails = savedDetails;
       return this.mapper.toDomain(savedSource);
@@ -179,20 +265,35 @@ export class LocalSourceRepository extends SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingErrorCode: SourceProcessingErrorCode | null;
+    }>,
   ): Promise<boolean> {
-    this.logger.log('updateStatusConditionally', {
-      sourceId,
-      fromStatus,
-      toStatus,
-    });
+    this.logger.log(
+      {
+        sourceId,
+        fromStatus,
+        toStatus,
+      },
+      'updateStatusConditionally',
+    );
     const qb = this.sourceRepository
       .createQueryBuilder()
       .update()
       .set({
         status: toStatus,
+        ...(toStatus !== SourceStatus.FAILED
+          ? {
+              processingError: null,
+              processingErrorCode: null,
+            }
+          : {}),
         ...(updates?.processingError !== undefined
           ? { processingError: updates.processingError }
+          : {}),
+        ...(updates?.processingErrorCode !== undefined
+          ? { processingErrorCode: updates.processingErrorCode }
           : {}),
       })
       .where('id = :id AND status = :fromStatus', {
@@ -223,7 +324,7 @@ export class LocalSourceRepository extends SourceRepository {
     const result = await this.dataSourceDetailsRepository
       .createQueryBuilder()
       .update(CSVDataSourceDetailsRecord)
-      .set({ data })
+      .set({ data: this.mapper.toStoredCsvData(data) })
       .where('"sourceId" = :id', { id: sourceId })
       .execute();
     return (result.affected ?? 0) > 0;
@@ -234,7 +335,7 @@ export class LocalSourceRepository extends SourceRepository {
     startLine: number,
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null> {
-    this.logger.log('extractTextLines', { sourceId, startLine, endLine });
+    this.logger.log({ sourceId, startLine, endLine }, 'extractTextLines');
     const result: { totalLines: string; text: string }[] =
       await this.textSourceDetailsRepository.query(
         `SELECT
@@ -256,12 +357,54 @@ export class LocalSourceRepository extends SourceRepository {
     };
   }
 
-  async findContentChunksByIds(
-    chunkIds: UUID[],
-  ): Promise<
-    { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
+  async findCitationTarget(
+    chunkId: UUID,
+  ): Promise<SourceCitationTarget | null> {
+    this.logger.log({ chunkId }, 'findCitationTarget');
+    const record = await this.sourceContentChunkRepository
+      .createQueryBuilder('chunk')
+      .innerJoinAndSelect('chunk.source', 'details')
+      .innerJoinAndSelect('details.source', 'source')
+      .select([
+        'chunk.id',
+        'chunk.content',
+        'chunk.meta',
+        'chunk.createdAt',
+        'chunk.updatedAt',
+        'details.id',
+        'source.id',
+        'source.name',
+        'source.createdBy',
+        'source.status',
+        'source.knowledgeBaseId',
+        'source.url',
+      ])
+      .where('chunk.id = :chunkId', { chunkId })
+      .getOne();
+    if (!record) return null;
+
+    return {
+      chunk: this.chunkMapper.toDomain(record),
+      source: {
+        id: record.source.source.id,
+        name: record.source.source.name,
+        createdBy: record.source.source.createdBy,
+        status: record.source.source.status,
+        knowledgeBaseId: record.source.source.knowledgeBaseId,
+        url: record.source.source.url,
+      },
+    };
+  }
+
+  async findContentChunksByIds(chunkIds: UUID[]): Promise<
+    {
+      chunk: TextSourceContentChunk;
+      sourceId: UUID;
+      sourceName: string;
+      sourceCreatedBy: SourceCreator;
+    }[]
   > {
-    this.logger.log('findContentChunksByIds', { count: chunkIds.length });
+    this.logger.log({ count: chunkIds.length }, 'findContentChunksByIds');
     if (chunkIds.length === 0) {
       return [];
     }
@@ -269,7 +412,7 @@ export class LocalSourceRepository extends SourceRepository {
       .createQueryBuilder('chunk')
       .innerJoinAndSelect('chunk.source', 'details')
       .innerJoin('details.source', 'source')
-      .addSelect(['source.id', 'source.name'])
+      .addSelect(['source.id', 'source.name', 'source.createdBy'])
       .where('chunk.id IN (:...ids)', { ids: chunkIds })
       .getMany();
 
@@ -277,43 +420,51 @@ export class LocalSourceRepository extends SourceRepository {
       chunk: this.chunkMapper.toDomain(record),
       sourceId: record.source.source.id,
       sourceName: record.source.source.name,
+      sourceCreatedBy: record.source.source.createdBy,
     }));
   }
 
   async delete(sourceId: UUID): Promise<void> {
-    this.logger.log('delete', { sourceId });
-    await this.sourceRepository
-      .createQueryBuilder()
-      .delete()
-      .where('id = :id', { id: sourceId })
-      .execute();
+    this.logger.log({ sourceId }, 'delete');
+    await this.sourceRepository.delete({ id: sourceId });
   }
 
   async deleteMany(sourceIds: UUID[]): Promise<void> {
-    this.logger.log('deleteMany', { count: sourceIds.length });
+    this.logger.log({ count: sourceIds.length }, 'deleteMany');
     if (sourceIds.length === 0) {
       return;
     }
-    await this.sourceRepository
-      .createQueryBuilder()
-      .delete()
-      .where('id IN (:...ids)', { ids: sourceIds })
-      .execute();
+    await this.sourceRepository.delete(sourceIds);
   }
 
   async findUnreferencedIds(
     candidateIds: UUID[],
     olderThan: Date,
   ): Promise<UUID[]> {
-    this.logger.log('findUnreferencedIds', {
-      candidateCount: candidateIds.length,
-      olderThan,
-    });
+    this.logger.log(
+      {
+        candidateCount: candidateIds.length,
+        olderThan,
+      },
+      'findUnreferencedIds',
+    );
 
-    if (candidateIds.length === 0) {
-      return [];
+    const unreferencedIds: UUID[] = [];
+    for (const candidates of chunk(
+      candidateIds,
+      UNREFERENCED_LOOKUP_CHUNK_SIZE,
+    )) {
+      unreferencedIds.push(
+        ...(await this.findUnreferencedIdsChunk(candidates, olderThan)),
+      );
     }
+    return unreferencedIds;
+  }
 
+  private async findUnreferencedIdsChunk(
+    candidateIds: UUID[],
+    olderThan: Date,
+  ): Promise<UUID[]> {
     const rows = await this.sourceRepository
       .createQueryBuilder('s')
       .select('s.id', 'id')
@@ -322,9 +473,6 @@ export class LocalSourceRepository extends SourceRepository {
       .andWhere('s."createdAt" < :olderThan', { olderThan })
       .andWhere(
         `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,
-      )
-      .andWhere(
-        `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
       )
       .getRawMany<{ id: UUID }>();
 

@@ -1,20 +1,31 @@
-import { BadRequestException } from '@nestjs/common';
 import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
-import { memoryStorage } from 'multer';
+import { BadRequestException } from '@nestjs/common';
+import { TotalSizeLimitedMemoryStorage } from './total-size-limited-memory.storage';
+import { ImageUploadAdmission } from './image-upload-admission';
 import {
-  ALLOWED_IMAGE_TYPES,
+  IMAGE_UPLOAD_BYTE_BUDGET,
   MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGES,
+  MAX_TOTAL_SIZE_BYTES,
+  ALLOWED_IMAGE_TYPES,
 } from './image-upload.constants';
 
+export const IMAGE_UPLOAD_ADMISSION = new ImageUploadAdmission(
+  IMAGE_UPLOAD_BYTE_BUDGET,
+);
+
 export const IMAGE_UPLOAD_OPTIONS: MulterOptions = {
-  // eslint-disable-next-line sonarjs/content-length -- multer file size limit, not HTTP header
-  storage: memoryStorage(),
-  limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new BadRequestException(`Invalid file type: ${file.mimetype}`), false);
-    }
+  storage: new TotalSizeLimitedMemoryStorage(
+    MAX_TOTAL_SIZE_BYTES,
+    IMAGE_UPLOAD_ADMISSION,
+  ),
+  limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: MAX_IMAGES },
+  fileFilter: (_request, file, callback) => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) callback(null, true);
+    else
+      callback(
+        new BadRequestException(`Invalid file type: ${file.mimetype}`),
+        false,
+      );
   },
 };

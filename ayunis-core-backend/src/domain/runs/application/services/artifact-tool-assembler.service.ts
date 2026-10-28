@@ -168,9 +168,12 @@ export class ArtifactToolAssemblerService {
     try {
       return await this.findAllLetterheadsUseCase.execute();
     } catch (error) {
-      this.logger.warn('Failed to fetch letterheads, continuing without them', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to fetch letterheads, continuing without them',
+      );
       return [];
     }
   }

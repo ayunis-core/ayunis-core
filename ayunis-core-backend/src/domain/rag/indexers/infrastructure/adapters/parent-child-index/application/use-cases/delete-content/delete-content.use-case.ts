@@ -7,6 +7,7 @@ import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexe
 @Injectable()
 export class DeleteContentUseCase {
   private readonly logger = new Logger(DeleteContentUseCase.name);
+
   constructor(
     private readonly parentChildIndexerRepository: ParentChildIndexerRepository,
   ) {}
@@ -18,7 +19,7 @@ export class DeleteContentUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to delete content');
       throw new UnexpectedIndexError(error as Error);
     }
   }

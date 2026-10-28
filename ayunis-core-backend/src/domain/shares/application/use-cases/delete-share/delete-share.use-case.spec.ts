@@ -1,4 +1,8 @@
 // Mock the Transactional decorator
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
@@ -10,8 +14,8 @@ import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteShareUseCase } from './delete-share.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareDeletedEvent } from '../../events/share-deleted.event';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
@@ -27,11 +31,13 @@ describe('DeleteShareUseCase', () => {
   let contextService: ContextService;
   let repository: SharesRepository;
   let eventEmitter: EventEmitter2;
+  let logger: LoggerMock;
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteShareUseCase,
@@ -190,11 +196,15 @@ describe('DeleteShareUseCase', () => {
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
-  it('should throw when share does not exist', async () => {
+  it('should log unexpected deletion failures with a message', async () => {
     (contextService.get as jest.Mock).mockReturnValue(mockUserId);
     (repository.findById as jest.Mock).mockResolvedValue(null);
 
     await expect(useCase.execute(randomUUID())).rejects.toThrow();
+    expect(logger.error).toHaveBeenCalledWith(
+      { err: expect.any(Error) },
+      'Failed to delete share',
+    );
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 

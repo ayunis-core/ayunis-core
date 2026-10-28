@@ -12,7 +12,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
-import { ModelTierStars } from '@/widgets/model-type-card';
+import { ModelTierStars } from '@/widgets/model-select-options';
 
 interface ModelItemProps {
   model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;
@@ -38,6 +38,15 @@ export function ModelItem({
           <ProviderFlag provider={model.provider} className="mr-1" />
           {model.displayName}
           {isLanguage && model.tier && <ModelTierStars tier={model.tier} />}
+          {isLanguage && model.hasProviderFault && (
+            <Badge
+              variant="secondary"
+              className="ml-2"
+              data-testid="model-catalog-provider-fault-badge"
+            >
+              {t('models.catalog.providerFaultBadge')}
+            </Badge>
+          )}
           {model.isArchived && (
             <Badge variant="secondary" className="ml-2">
               {t('models.catalog.archivedBadge')}
@@ -78,7 +87,12 @@ export function ModelItem({
         </div>
       </ItemContent>
       <ItemActions>
-        <Button variant="ghost" size="icon" onClick={onEdit}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onEdit}
+          data-testid={`model-catalog-edit-${model.id}`}
+        >
           <Pencil className="h-4 w-4" />
         </Button>
         <Button

@@ -1,4 +1,5 @@
 import type {
+  ApiKeyUsageResponseDto,
   UsageStatsResponseDto,
   ModelDistributionResponseDto,
   ProviderUsageChartResponseDto,
@@ -62,5 +63,8 @@ export interface UsageOverviewHooks {
   useUserUsage: (
     params: UserUsageQueryParams,
   ) => QueryResult<UserUsageResponseDto>;
+  useApiKeyUsage: (
+    params: DateRangeParams,
+  ) => QueryResult<ApiKeyUsageResponseDto>;
   usePermittedModels: () => { data?: PermittedModelOption[] };
 }

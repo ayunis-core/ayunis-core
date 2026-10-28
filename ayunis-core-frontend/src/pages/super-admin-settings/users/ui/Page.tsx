@@ -1,10 +1,27 @@
 import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
-import { useUserExport } from '../api/useUserExport';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
+import { useUserExport } from '@/pages/super-admin-settings/users/api/useUserExport';
+import type {
+  PaginationDto,
+  SuperAdminUserListItemResponseDto,
+} from '@/shared/api';
+import { UsersTable } from './UsersTable';
 
-export default function SuperAdminUsersPage() {
+interface SuperAdminUsersPageProps {
+  users: SuperAdminUserListItemResponseDto[];
+  pagination?: PaginationDto;
+  search?: string;
+  currentPage: number;
+}
+
+export default function SuperAdminUsersPage({
+  users,
+  pagination,
+  search,
+  currentPage,
+}: Readonly<SuperAdminUsersPageProps>) {
   const { t } = useTranslation('super-admin-settings-users');
   const { t: tLayout } = useTranslation('super-admin-settings-layout');
   const { exportUsers, isExporting } = useUserExport();
@@ -28,6 +45,12 @@ export default function SuperAdminUsersPage() {
             {isExporting ? t('export.loading') : t('export.button')}
           </Button>
         </div>
+        <UsersTable
+          users={users}
+          pagination={pagination}
+          search={search}
+          currentPage={currentPage}
+        />
       </div>
     </SuperAdminSettingsLayout>
   );

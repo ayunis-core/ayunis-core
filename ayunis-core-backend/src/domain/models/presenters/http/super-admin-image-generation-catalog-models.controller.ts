@@ -4,10 +4,10 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -27,10 +27,10 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateImageGenerationModelCommand } from '../../application/use-cases/create-image-generation-model/create-image-generation-model.command';
-import { CreateImageGenerationModelUseCase } from '../../application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
-import { UpdateImageGenerationModelCommand } from '../../application/use-cases/update-image-generation-model/update-image-generation-model.command';
-import { UpdateImageGenerationModelUseCase } from '../../application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
+import { CreateImageGenerationModelCommand } from 'src/domain/models/application/use-cases/create-image-generation-model/create-image-generation-model.command';
+import { CreateImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
+import { UpdateImageGenerationModelCommand } from 'src/domain/models/application/use-cases/update-image-generation-model/update-image-generation-model.command';
+import { UpdateImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
 import { CreateImageGenerationModelRequestDto } from './dto/create-image-generation-model-request.dto';
 import { ImageGenerationModelResponseDto } from './dto/image-generation-model-response.dto';
 import { UpdateImageGenerationModelRequestDto } from './dto/update-image-generation-model-request.dto';
@@ -86,7 +86,8 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @Body() dto: CreateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
     this.logger.log(
-      `Creating image-generation model ${dto.name} by super admin ${userId}`,
+      { modelName: dto.name, userId },
+      'Creating image-generation model by super admin',
     );
     const command = new CreateImageGenerationModelCommand({
       name: dto.name,
@@ -138,9 +139,20 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @Body() dto: UpdateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
     this.logger.log(
-      `Updating image-generation model ${id} by super admin ${userId}`,
+      { modelId: id, userId },
+      'Updating image-generation model by super admin',
     );
-    const command = new UpdateImageGenerationModelCommand({
+    const model = await this.updateImageGenerationModelUseCase.execute(
+      this.toUpdateCommand(id, dto),
+    );
+    return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);
+  }
+
+  private toUpdateCommand(
+    id: UUID,
+    dto: UpdateImageGenerationModelRequestDto,
+  ): UpdateImageGenerationModelCommand {
+    return new UpdateImageGenerationModelCommand({
       id,
       name: dto.name,
       provider: dto.provider,
@@ -149,7 +161,5 @@ export class SuperAdminImageGenerationCatalogModelsController {
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
     });
-    const model = await this.updateImageGenerationModelUseCase.execute(command);
-    return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);
   }
 }

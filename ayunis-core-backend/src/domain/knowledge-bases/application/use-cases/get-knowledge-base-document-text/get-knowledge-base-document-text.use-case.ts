@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { GetKnowledgeBaseDocumentTextQuery } from './get-knowledge-base-document-text.query';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
+import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 
 @Injectable()
 export class GetKnowledgeBaseDocumentTextUseCase {
@@ -16,19 +18,23 @@ export class GetKnowledgeBaseDocumentTextUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
+    private readonly findKnowledgeBaseForThread: FindKnowledgeBaseForThreadUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: GetKnowledgeBaseDocumentTextQuery): Promise<Source> {
-    this.logger.debug('Getting document text from knowledge base', {
-      knowledgeBaseId: query.knowledgeBaseId,
-      documentId: query.documentId,
-    });
+    this.logger.debug(
+      {
+        knowledgeBaseId: query.knowledgeBaseId,
+        documentId: query.documentId,
+      },
+      'Getting document text from knowledge base',
+    );
 
-    const knowledgeBase =
-      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
-        query.knowledgeBaseId,
-      );
+    const knowledgeBase = await this.findKnowledgeBaseForThread.execute({
+      knowledgeBaseId: query.knowledgeBaseId,
+      threadId: query.threadId,
+    });
 
     if (knowledgeBase.orgId !== query.orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { AddonDeactivatedEvent } from '../../events/addon-deactivated.event';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 import { DeactivateAddonCommand } from './deactivate-addon.command';
 
 @Injectable()
@@ -16,10 +16,13 @@ export class DeactivateAddonUseCase {
   ) {}
 
   async execute(command: DeactivateAddonCommand): Promise<void> {
-    this.logger.log('Deactivating addon', {
-      orgId: command.orgId,
-      type: command.type,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+        type: command.type,
+      },
+      'Deactivating addon',
+    );
 
     try {
       const existing = await this.orgAddonRepository.findByOrgAndType(
@@ -43,15 +46,14 @@ export class DeactivateAddonUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit AddonDeactivatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-            type: command.type,
-          });
+          this.logger.error(
+            { err: err as Error, orgId: command.orgId, type: command.type },
+            'Failed to emit AddonDeactivatedEvent',
+          );
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deactivating addon', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error deactivating addon');
       throw new UnexpectedAddonError('deactivate', { error: error as Error });
     }
   }

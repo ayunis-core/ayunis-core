@@ -1,9 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DownloadObjectCommand } from './download-object.command';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 
@@ -44,9 +47,13 @@ export class DownloadObjectUseCase {
   async execute(
     command: DownloadObjectCommand,
   ): Promise<NodeJS.ReadableStream> {
-    this.logger.debug(`Downloading object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Downloading object',
+    );
 
     try {
       const bucketName = command.bucket || this.getDefaultBucket();
@@ -65,7 +72,8 @@ export class DownloadObjectUseCase {
       });
 
       this.logger.debug(
-        `Successfully started download for object: ${command.objectName}`,
+        { fileName: command.objectName },
+        'Successfully started object download',
       );
 
       return stream;
@@ -75,8 +83,8 @@ export class DownloadObjectUseCase {
       }
 
       this.logger.error(
-        `Failed to download object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to download object',
       );
       throw new DownloadFailedError();
     }

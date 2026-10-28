@@ -3,18 +3,19 @@ import axios from 'axios';
 import type { AxiosError } from 'axios';
 import FormData from 'form-data';
 import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
-import retryWithBackoff from 'src/common/util/retryWithBackoff';
-import { DocumentConverterPort } from '../../application/ports/document-converter.port';
+import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import {
+  DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileRetrieverError,
   FileTooLargeError,
   UnprocessableDocumentError,
-} from '../../application/file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 @Injectable()
 export class GotenbergConverterService extends DocumentConverterPort {
   private readonly logger = new Logger(GotenbergConverterService.name);
+
   /** 10 minutes — large documents can take a while to convert */
   private readonly TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -32,40 +33,25 @@ export class GotenbergConverterService extends DocumentConverterPort {
    * @returns PDF file as a Buffer
    */
   async convertToPdf(fileData: Buffer, fileName: string): Promise<Buffer> {
-    this.logger.debug(`Converting ${fileName} to PDF via Gotenberg`);
+    this.logger.debug({ fileName }, 'Converting document to PDF via Gotenberg');
 
     try {
-      const response = await retryWithBackoff({
-        fn: () => {
-          const formData = new FormData();
-          formData.append('files', fileData, { filename: fileName });
-
-          return axios.post(
-            `${this.config.url}/forms/libreoffice/convert`,
-            formData,
-            {
-              headers: formData.getHeaders(),
-              responseType: 'arraybuffer',
-              timeout: this.TIMEOUT_MS,
-            },
-          );
+      const formData = new FormData();
+      formData.append('files', fileData, { filename: fileName });
+      const response = await axios.post(
+        `${this.config.url}/forms/libreoffice/convert`,
+        formData,
+        {
+          headers: formData.getHeaders(),
+          responseType: 'arraybuffer',
+          timeout: this.TIMEOUT_MS,
         },
-        maxRetries: 3,
-        delay: 2000,
-        retryIfError: (error) => {
-          if (axios.isAxiosError(error) && error.response?.status === 503) {
-            this.logger.warn(
-              `Gotenberg service busy, retrying... (${fileName})`,
-            );
-            return true;
-          }
-          return false;
-        },
-      });
+      );
 
       const pdfBuffer = Buffer.from(response.data as ArrayBuffer);
       this.logger.debug(
-        `Gotenberg conversion complete: ${fileName} → ${pdfBuffer.length} bytes PDF`,
+        { fileName, pdfBytes: pdfBuffer.length },
+        'Gotenberg conversion complete',
       );
 
       return pdfBuffer;
@@ -96,6 +82,10 @@ export class GotenbergConverterService extends DocumentConverterPort {
 
     if (status === 413) {
       return new FileTooLargeError();
+    }
+
+    if (status === 503) {
+      return new DocumentConversionUnavailableError(fileName);
     }
 
     if (status === 504 || error.code === 'ECONNABORTED') {

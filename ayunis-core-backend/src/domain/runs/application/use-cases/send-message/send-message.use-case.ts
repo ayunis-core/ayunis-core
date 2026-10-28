@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
-import type { RunEvent } from '../../run-events';
-import { ExecuteRunAndSetTitleUseCase } from '../execute-run-and-set-title/execute-run-and-set-title.use-case';
-import { ExecuteRunAndSetTitleCommand } from '../execute-run-and-set-title/execute-run-and-set-title.command';
+import type { RunEvent } from 'src/domain/runs/application/run-events';
+import { ExecuteRunAndSetTitleUseCase } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { ExecuteRunAndSetTitleCommand } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { SendMessageCommand } from './send-message.command';
 
 @Injectable()
@@ -41,19 +41,25 @@ export class SendMessageUseCase {
       return;
     }
 
-    this.logger.debug('Incrementing trial messages for non-subscription org', {
-      orgId,
-    });
+    this.logger.debug(
+      {
+        orgId,
+      },
+      'Incrementing trial messages for non-subscription org',
+    );
 
     // Fire-and-forget by design: trial accounting must not delay or fail the
     // run. The .catch keeps a failure out of the unhandledRejection path.
     this.incrementTrialMessagesUseCase
       .execute(new IncrementTrialMessagesCommand(orgId))
       .catch((error: unknown) => {
-        this.logger.error('Failed to increment trial messages', {
-          orgId,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        this.logger.error(
+          {
+            orgId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          'Failed to increment trial messages',
+        );
       });
   }
 }

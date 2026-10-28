@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { GetTeamPermittedImageGenerationModelsQuery } from './get-team-permitted-image-generation-models.query';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
-import { UnexpectedModelError } from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 @Injectable()
 export class GetTeamPermittedImageGenerationModelsUseCase {
@@ -21,10 +21,13 @@ export class GetTeamPermittedImageGenerationModelsUseCase {
   async execute(
     query: GetTeamPermittedImageGenerationModelsQuery,
   ): Promise<PermittedImageGenerationModel[]> {
-    this.logger.log('execute', {
-      teamId: query.teamId,
-      orgId: query.orgId,
-    });
+    this.logger.log(
+      {
+        teamId: query.teamId,
+        orgId: query.orgId,
+      },
+      'execute',
+    );
 
     this.validator.validateAdminAccess(query.orgId);
     await this.validator.validateTeamInOrg(query.teamId, query.orgId);

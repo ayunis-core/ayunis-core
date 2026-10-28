@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 @Entity({ name: 'refresh_tokens' })
 export class RefreshTokenRecord extends BaseRecord {
@@ -21,6 +22,21 @@ export class RefreshTokenRecord extends BaseRecord {
   @Column()
   tokenHash: string;
 
+  @Column({
+    type: 'enum',
+    enum: SessionAuthenticationMethod,
+    default: SessionAuthenticationMethod.PASSWORD,
+  })
+  authenticationMethod: SessionAuthenticationMethod;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  zitadelSessionId: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  familyExpiresAt: Date | null;
+
+  @Index()
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 
@@ -30,6 +46,7 @@ export class RefreshTokenRecord extends BaseRecord {
   @Column({ type: 'timestamptz', nullable: true })
   revokedAt: Date | null;
 
+  @Index()
   @Column({ type: 'varchar', nullable: true })
   replacedByTokenId: UUID | null;
 

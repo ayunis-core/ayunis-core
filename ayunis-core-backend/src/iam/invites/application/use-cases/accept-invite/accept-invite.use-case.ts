@@ -1,27 +1,37 @@
+import { Transactional } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
-import { InvitesRepository } from '../../ports/invites.repository';
+import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
-  InviteJwtPayload,
-  InviteJwtService,
-} from '../../services/invite-jwt.service';
-import { AcceptInviteCommand } from './accept-invite.command';
-import {
-  InviteNotFoundError,
-  InviteExpiredError,
   InviteAlreadyAcceptedError,
+  InviteExpiredError,
+  InviteNotFoundError,
   InvalidInviteTokenError,
   InvalidPasswordError,
+  UnexpectedInviteError,
   UserAlreadyExistsError,
-} from '../../invites.errors';
-import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
-import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
+} from 'src/iam/invites/application/invites.errors';
+import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/application/authentication.errors';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import {
+  InviteJwtService,
+  type InviteJwtPayload,
+} from 'src/iam/invites/application/services/invite-jwt.service';
+import { AcceptInviteCommand } from 'src/iam/invites/application/use-cases/accept-invite/accept-invite.command';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
-import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
-import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
-import { UnexpectedInviteError } from '../../invites.errors';
-import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import { AssignUserToTeamsCommand } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.command';
+import { AssignUserToTeamsUseCase } from 'src/iam/teams/application/use-cases/assign-user-to-teams/assign-user-to-teams.use-case';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -33,17 +43,20 @@ export class AcceptInviteUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
+    private readonly publishUserCreated: UserCreatedEventPublisher,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
+    private readonly assignUserToTeams: AssignUserToTeamsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(
     command: AcceptInviteCommand,
   ): Promise<{ inviteId: string; email: string; orgId: string }> {
-    this.logger.log('execute', { hasToken: !!command.inviteToken });
+    this.logger.log({ hasToken: !!command.inviteToken }, 'execute');
 
     const invite = await this.resolveValidatedInvite(command);
-
-    await this.createUserUseCase.execute(
+    const preparedUser = await this.createUserUseCase.prepare(
       new CreateUserCommand({
         email: invite.email,
         password: command.password,
@@ -56,18 +69,40 @@ export class AcceptInviteUseCase {
       }),
     );
 
-    await this.invitesRepository.accept(invite.id);
-
-    this.logger.debug('Invite accepted successfully', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    const user = await this.acceptAndCreateUser(invite, preparedUser);
+    this.publishUserCreated.publish(user);
+    this.logger.debug(
+      { inviteId: invite.id, email: invite.email },
+      'Invite accepted successfully',
+    );
 
     return {
       inviteId: invite.id,
       email: invite.email,
       orgId: invite.orgId,
     };
+  }
+
+  @Transactional()
+  private async acceptAndCreateUser(
+    invite: Invite,
+    preparedUser: User,
+  ): Promise<User> {
+    await this.assertLocalPasswordAdmissionAllowed(invite.orgId, true);
+    await this.acquireAllocationLock.execute(invite.orgId);
+    this.rejectExpiredInvite(invite);
+    await this.rejectExistingUser(invite.email);
+    if (!(await this.invitesRepository.accept(invite.id))) {
+      throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
+    }
+    const user =
+      await this.createUserUseCase.createPreparedWithoutPublishing(
+        preparedUser,
+      );
+    await this.assignUserToTeams.execute(
+      new AssignUserToTeamsCommand(user.id, invite.orgId, invite.teamIds),
+    );
+    return user;
   }
 
   private async resolveValidatedInvite(
@@ -77,40 +112,23 @@ export class AcceptInviteUseCase {
     try {
       payload = this.inviteJwtService.verifyInviteToken(command.inviteToken);
     } catch (error) {
-      this.logger.error('Invalid invite token', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error({ err: error as Error }, 'Invalid invite token');
       throw new InvalidInviteTokenError('Token verification failed');
     }
 
     const invite = await this.invitesRepository.findOne(payload.inviteId);
     if (!invite) {
-      this.logger.error('Invite not found', { inviteId: payload.inviteId });
+      this.logger.error({ inviteId: payload.inviteId }, 'Invite not found');
       throw new InviteNotFoundError(payload.inviteId);
     }
 
-    const existingUser = await this.findUserByEmailUseCase.execute(
-      new FindUserByEmailQuery(invite.email),
-    );
-    if (existingUser) {
-      throw new UserAlreadyExistsError();
-    }
-
+    await this.rejectExistingUser(invite.email);
     if (invite.acceptedAt) {
-      this.logger.error('Invite already accepted', { inviteId: invite.id });
+      this.logger.error({ inviteId: invite.id }, 'Invite already accepted');
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
-
-    if (invite.expiresAt < new Date()) {
-      this.logger.error('Invite expired', {
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
-      throw new InviteExpiredError({
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
-    }
+    this.rejectExpiredInvite(invite);
+    await this.assertLocalPasswordAdmissionAllowed(invite.orgId);
 
     if (
       !(await this.isValidPasswordUseCase.execute(
@@ -119,7 +137,37 @@ export class AcceptInviteUseCase {
     ) {
       throw new InvalidPasswordError();
     }
-
     return invite;
+  }
+
+  private async assertLocalPasswordAdmissionAllowed(
+    orgId: UUID,
+    lockPolicy = false,
+  ): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(orgId, lockPolicy),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new LocalPasswordLoginDisabledError();
+    }
+  }
+
+  private async rejectExistingUser(email: string): Promise<void> {
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(email),
+    );
+    if (existingUser) throw new UserAlreadyExistsError();
+  }
+
+  private rejectExpiredInvite(invite: Invite): void {
+    if (invite.expiresAt >= new Date()) return;
+    this.logger.error(
+      { inviteId: invite.id, expiresAt: invite.expiresAt },
+      'Invite expired',
+    );
+    throw new InviteExpiredError({
+      inviteId: invite.id,
+      expiresAt: invite.expiresAt,
+    });
   }
 }

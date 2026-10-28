@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { RecordThreadActivityUseCase } from './record-thread-activity.use-case';
 import { RecordThreadActivityCommand } from './record-thread-activity.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 
 describe('RecordThreadActivityUseCase', () => {
   let useCase: RecordThreadActivityUseCase;

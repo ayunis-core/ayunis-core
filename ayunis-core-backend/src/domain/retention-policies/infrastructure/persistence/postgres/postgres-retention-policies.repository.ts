@@ -26,10 +26,13 @@ export class PostgresRetentionPoliciesRepository extends RetentionPoliciesReposi
   }
 
   async upsert(policy: OrgRetentionPolicy): Promise<OrgRetentionPolicy> {
-    this.logger.debug('upsert', {
-      orgId: policy.orgId,
-      retentionDays: policy.retentionDays,
-    });
+    this.logger.debug(
+      {
+        orgId: policy.orgId,
+        retentionDays: policy.retentionDays,
+      },
+      'upsert',
+    );
     const saved = await this.repository.save(
       OrgRetentionPolicyMapper.toRecord(policy),
     );

@@ -5,11 +5,23 @@ on:
     paths:
       - 'ayunis-core-backend/**'
       - '.github/workflows/backend-tests.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
+      - '.github/actions/start-minio/action.yml'
       - 'docker-compose.yml'
   push:
     branches: [main]
     paths:
       - 'ayunis-core-backend/**'
+      # Seeds the shared ESLint cache below: pull requests can only restore
+      # caches saved on main, and the cache key includes the lockfile hash.
+      - 'pnpm-lock.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint-and-typecheck:
@@ -20,20 +32,10 @@ jobs:
         working-directory: ayunis-core-backend
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build workspace packages
         run: pnpm run build:deps
@@ -41,8 +43,25 @@ jobs:
       - name: Run TypeScript type check
         run: pnpm exec tsc --noEmit
 
+      # Type-aware ESLint over the whole backend takes ~4.5 minutes cold. The
+      # cache re-lints only files whose content changed, so a type change in
+      # one file does not re-lint its importers. The pre-commit hook and the
+      # cold run after any lockfile/config change remain the full backstop.
+      # The key covers everything that changes lint results without changing
+      # the linted file: dependency versions, the ESLint and TypeScript
+      # config, and the Prettier config that eslint-plugin-prettier reads at
+      # runtime. No broader fallback: ESLint's own per-entry hash covers only
+      # its config and version, not tsconfig or Prettier options.
+      - name: Restore ESLint cache
+        uses: actions/cache@v6
+        with:
+          path: ayunis-core-backend/.eslintcache
+          key: eslint-backend-${{ hashFiles('pnpm-lock.yaml', 'ayunis-core-backend/.prettierrc', 'ayunis-core-backend/.prettierignore', 'ayunis-core-backend/eslint.config.mjs', 'ayunis-core-backend/tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-backend-${{ hashFiles('pnpm-lock.yaml', 'ayunis-core-backend/.prettierrc', 'ayunis-core-backend/.prettierignore', 'ayunis-core-backend/eslint.config.mjs', 'ayunis-core-backend/tsconfig.json') }}-
+
       - name: Run linter
-        run: pnpm run lint
+        run: pnpm run lint --cache --cache-location .eslintcache --cache-strategy content
 
   test:
     runs-on: ubuntu-latest
@@ -54,6 +73,15 @@ jobs:
 
     # Service containers to run with this job
     services:
+      redis:
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
       postgres:
         image: pgvector/pgvector:pg16
         env:
@@ -73,31 +101,13 @@ jobs:
         working-directory: ayunis-core-backend
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Start MinIO
-        run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=ayunis-ci \
-            -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
-            quay.io/minio/minio:latest server /data
-          # Wait for MinIO to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/start-minio
 
       - name: Build workspace packages
         run: pnpm run build:deps
@@ -155,3 +165,4 @@ jobs:
         env:
           NODE_ENV: test
           NODE_OPTIONS: --experimental-vm-modules
+          QUEUE_TELEMETRY_REDIS_PORT: 6379

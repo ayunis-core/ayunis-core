@@ -1,6 +1,9 @@
 version: 2
 updates:
-  # Root package.json (husky, etc.)
+  # pnpm workspace: a single root entry covers every workspace package
+  # (backend, frontend, packages/*, e2e). Dependabot can only update the
+  # shared root pnpm-lock.yaml from the directory that contains it, so
+  # per-package entries produce PRs that fail `pnpm install --frozen-lockfile`.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -10,31 +13,19 @@ updates:
       prefix: "chore(deps)"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 5
-    groups:
-      root-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # Backend (NestJS)
-  - package-ecosystem: "npm"
-    directory: "/ayunis-core-backend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-backend)"
-    labels:
-      - "dependencies"
-      - "backend"
-    open-pull-requests-limit: 8
+    open-pull-requests-limit: 10
+    ignore:
+      # Every undici Agent we create (MCP OAuth, discovered-PDF crawl) goes
+      # through fetchWithUndiciDispatcher, so the major no longer has to match
+      # the one Node embeds. Held on 7 until undici 8 is validated — AYC-1009.
+      - dependency-name: "undici"
+        update-types: ["version-update:semver-major"]
     groups:
       nest:
         patterns:
           - "@nestjs/*"
+          - "nestjs-*"
+          - "@nestjs-cls/*"
         update-types:
           - "minor"
           - "patch"
@@ -51,29 +42,11 @@ updates:
           - "jest"
           - "@jest/*"
           - "supertest"
+          - "vitest"
+          - "@playwright/*"
         update-types:
           - "minor"
           - "patch"
-      other:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # Frontend (React/Vite)
-  - package-ecosystem: "npm"
-    directory: "/ayunis-core-frontend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-frontend)"
-    labels:
-      - "dependencies"
-      - "frontend"
-    open-pull-requests-limit: 8
-    groups:
       react:
         patterns:
           - "react"
@@ -102,26 +75,6 @@ updates:
           - "minor"
           - "patch"
       other:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  # UI design-system package
-  - package-ecosystem: "npm"
-    directory: "/packages/ui"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-ui)"
-    labels:
-      - "dependencies"
-      - "frontend"
-    open-pull-requests-limit: 8
-    groups:
-      ui-dependencies:
         patterns:
           - "*"
         update-types:
@@ -179,8 +132,8 @@ updates:
       - "dependencies"
       - "docker"
     ignore:
-      # node:26 caused severe request slowness (connection stalls); runtime is
-      # pinned to 24.16.0-alpine. Do not remove without re-validating — see AYC-423.
+      # Node majors are adopted deliberately (LTS lines only): a major once
+      # caused provider connection stalls in production (AYC-423, AYC-1009).
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
     groups:

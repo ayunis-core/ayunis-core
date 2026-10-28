@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { RefreshToken } from '../../domain/refresh-token.entity';
+import type { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 
 export abstract class RefreshTokensRepository {
   abstract insert(token: RefreshToken): Promise<void>;
@@ -30,6 +30,14 @@ export abstract class RefreshTokensRepository {
   abstract revokeFamily(familyId: UUID): Promise<void>;
 
   abstract revokeAllForUser(userId: UUID): Promise<void>;
+
+  abstract revokeByZitadelSessionId(zitadelSessionId: string): Promise<void>;
+
+  abstract revokeSsoForUser(userId: UUID): Promise<void>;
+
+  abstract revokeAllForOrg(orgId: UUID): Promise<void>;
+
+  abstract revokePasswordSessionsForOrg(orgId: UUID): Promise<void>;
 
   /**
    * Revokes every non-revoked token for the user except the given family. Used

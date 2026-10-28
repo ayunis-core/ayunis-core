@@ -1,76 +1,70 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillRepository } from '../../ports/skill.repository';
-import { FindOneSkillQuery } from './find-one-skill.query';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-
-export interface SkillWithUserContext {
-  skill: Skill;
-  isActive: boolean;
-  isShared: boolean;
-  isPinned: boolean;
-}
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { SkillContext } from 'src/domain/skills/application/models/skill-context';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { FindOneSkillQuery } from './find-one-skill.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindOneSkillUseCase {
   private readonly logger = new Logger(FindOneSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
+    private readonly creatorNames: SkillCreatorNameService,
+    private readonly context: ContextService,
   ) {}
 
-  async execute(query: FindOneSkillQuery): Promise<SkillWithUserContext> {
-    this.logger.log('Finding skill', { id: query.id });
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(query: FindOneSkillQuery): Promise<SkillContext> {
+    this.logger.log({ id: query.id }, 'Finding skill');
+    const skill = await this.repository.findById(query.id);
+    if (!skill) throw new SkillNotFoundError(query.id);
+    await this.authorization.requireRead(skill);
+    return this.resolveContext(skill);
+  }
 
-      // Try owned skill first
-      const ownedSkill = await this.skillRepository.findOne(query.id, userId);
-      if (ownedSkill) {
-        const [isActive, isPinned] = await Promise.all([
-          this.skillRepository.isSkillActive(query.id, userId),
-          this.skillRepository.isSkillPinned(query.id, userId),
-        ]);
-        return { skill: ownedSkill, isActive, isShared: false, isPinned };
-      }
-
-      // Check if skill is shared with user
-      const share = await this.findShareByEntityUseCase.execute(
-        new FindShareByEntityQuery(SharedEntityType.SKILL, query.id),
+  private async resolveContext(skill: Skill): Promise<SkillContext> {
+    if (!(skill instanceof PersonalSkill)) {
+      const states = await this.repository.getWorkspaceSkillStates(
+        [skill.id],
+        skill.workspaceId,
       );
-
-      if (share) {
-        const sharedSkills = await this.skillRepository.findByIds([query.id]);
-        if (sharedSkills.length > 0) {
-          const [isActive, isPinned] = await Promise.all([
-            this.skillRepository.isSkillActive(query.id, userId),
-            this.skillRepository.isSkillPinned(query.id, userId),
-          ]);
-          return {
-            skill: sharedSkills[0],
-            isActive,
-            isShared: true,
-            isPinned,
-          };
-        }
-      }
-
-      throw new SkillNotFoundError(query.id);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding skill', { error: error as Error });
-      throw new UnexpectedSkillError(error);
+      const state = states.get(skill.id) ?? {
+        isActive: false,
+        isPinned: false,
+      };
+      return { skill, ...state, isShared: false, creatorName: null };
     }
+    return this.resolvePersonalContext(skill);
+  }
+
+  private async resolvePersonalContext(
+    skill: PersonalSkill,
+  ): Promise<SkillContext<PersonalSkill>> {
+    const userId = this.requireUserId();
+    const isShared = skill.userId !== userId;
+    const [isActive, isPinned, creatorName] = await Promise.all([
+      this.repository.isSkillActive(skill.id, userId),
+      this.repository.isSkillPinned(skill.id, userId),
+      isShared ? this.creatorNames.resolveOne(skill.userId) : null,
+    ]);
+    return { skill, isActive, isPinned, isShared, creatorName };
+  }
+
+  private requireUserId(): UUID {
+    const { userId } = getRequiredUserContext(this.context);
+    return userId;
   }
 }

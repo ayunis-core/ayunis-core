@@ -1,3 +1,5 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import { McpIntegrationsRepository } from './mcp-integrations.repository';
@@ -73,6 +75,9 @@ describe('McpIntegrationsRepository', () => {
       predefinedRepository as unknown as Repository<PredefinedMcpIntegrationRecord>,
       marketplaceRepository as unknown as Repository<MarketplaceMcpIntegrationRecord>,
       mapper,
+      {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
   });
 

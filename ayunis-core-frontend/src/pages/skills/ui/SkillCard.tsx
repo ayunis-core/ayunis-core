@@ -7,23 +7,17 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { Trash2, Pin } from 'lucide-react';
-import { useDeleteSkill } from '../api/useDeleteSkill';
+import { useDeleteSkill } from '@/pages/skills/api/useDeleteSkill';
 import { PermissionGate } from '@/features/permissions';
 import {
-  useToggleSkillActive,
-  useToggleSkillPinned,
+  useSetSkillActivation,
+  useSetSkillPin,
 } from '@/features/skill-actions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import type { Skill } from '../model/openapi';
+import type { Skill } from '@/pages/skills/model/openapi';
 import { useRouter } from '@tanstack/react-router';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from '@ayunis/ui/components/item';
+import { SkillListItem } from '@/shared/ui/skill-list-item';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 interface SkillCardProps {
@@ -38,8 +32,8 @@ export default function SkillCard({
 }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
-  const toggleActive = useToggleSkillActive();
-  const togglePinned = useToggleSkillPinned();
+  const setActivation = useSetSkillActivation();
+  const setPin = useSetSkillPin();
   const { confirm } = useConfirmation();
   const router = useRouter();
 
@@ -57,11 +51,11 @@ export default function SkillCard({
   }
 
   function handleToggleActive() {
-    toggleActive.mutate({ id: skill.id });
+    setActivation.mutate({ id: skill.id, isActive: !skill.isActive });
   }
 
   function handleTogglePinned() {
-    togglePinned.mutate({ id: skill.id });
+    setPin.mutate({ id: skill.id, isPinned: !skill.isPinned });
   }
 
   function handleNavigateToDetail() {
@@ -78,7 +72,7 @@ export default function SkillCard({
             e.stopPropagation();
             handleTogglePinned();
           }}
-          disabled={togglePinned.isPending}
+          disabled={setPin.isPending}
           aria-label={
             skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
           }
@@ -93,13 +87,10 @@ export default function SkillCard({
   ) : null;
 
   return (
-    <Item
-      variant="outline"
-      className="cursor-pointer"
-      onClick={handleNavigateToDetail}
-    >
-      <ItemContent>
-        <ItemTitle>
+    <SkillListItem
+      testId={`skill-card-${skill.id}`}
+      title={
+        <>
           <span>{skill.name}</span>
           {skill.isShared && (
             <Badge variant="secondary" className="ml-2 text-xs">
@@ -111,52 +102,51 @@ export default function SkillCard({
               {t('shared.by', { name: skill.creatorName })}
             </span>
           )}
-        </ItemTitle>
-        <ItemDescription>{skill.shortDescription}</ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {skill.isActive ? t('card.activeLabel') : t('card.inactiveLabel')}
-          </span>
-          <Switch
-            checked={skill.isActive}
-            onCheckedChange={handleToggleActive}
-            disabled={toggleActive.isPending}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-        {pinButton &&
-          (pinTourTarget ? (
-            <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-              {pinButton}
-            </OnboardingTourTarget>
-          ) : (
-            pinButton
-          ))}
-        {!skill.isShared && (
-          <PermissionGate permission="manage_skills">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete();
-                  }}
-                  disabled={deleteSkill.isPending}
-                  aria-label={t('card.deleteLabel')}
-                >
-                  <Trash2 />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
-            </Tooltip>
-          </PermissionGate>
-        )}
-      </ItemActions>
-    </Item>
+        </>
+      }
+      description={skill.shortDescription}
+      onClick={handleNavigateToDetail}
+      actions={
+        <>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {skill.isActive ? t('card.activeLabel') : t('card.inactiveLabel')}
+            </span>
+            <Switch
+              checked={skill.isActive}
+              onCheckedChange={handleToggleActive}
+              disabled={setActivation.isPending}
+            />
+          </div>
+          {pinButton &&
+            (pinTourTarget ? (
+              <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
+                {pinButton}
+              </OnboardingTourTarget>
+            ) : (
+              pinButton
+            ))}
+          {!skill.isShared && (
+            <PermissionGate permission="manage_skills">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={handleDelete}
+                    disabled={deleteSkill.isPending}
+                    aria-label={t('card.deleteLabel')}
+                  >
+                    <Trash2 />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
+              </Tooltip>
+            </PermissionGate>
+          )}
+        </>
+      }
+    />
   );
 }

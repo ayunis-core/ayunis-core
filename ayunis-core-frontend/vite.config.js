@@ -19,16 +19,25 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
+  build: {
+    // Emit sourcemaps without referencing them from the bundles. The maps
+    // never ship (the Dockerfile deletes them); CI uploads them to AppSignal
+    // keyed by revision (see the sourcemaps job in build-images.yml).
+    sourcemap: "hidden",
+  },
   server: {
     port: port,
   },
   test: {
     globals: true,
     environment: "jsdom",
+    // Node 25+ defines its own global localStorage (undefined without
+    // --localstorage-file), which shadows jsdom's. The flag is valid on 24 too.
+    execArgv: ["--no-experimental-webstorage"],
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      "@": resolve(import.meta.dirname, "./src"),
     },
   },
 });

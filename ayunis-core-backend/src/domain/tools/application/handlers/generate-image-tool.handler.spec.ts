@@ -1,10 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GenerateImageToolHandler } from './generate-image-tool.handler';
-import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
@@ -87,9 +86,6 @@ describe('GenerateImageToolHandler', () => {
     }).compile();
 
     handler = module.get<GenerateImageToolHandler>(GenerateImageToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -156,6 +152,85 @@ describe('GenerateImageToolHandler', () => {
 
     const command = mockGenerateImage.execute.mock.calls[0][0];
     expect(command.size).toBe('landscape');
+  });
+
+  it('passes a confirmed transparent background to GenerateImageUseCase', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.background).toBe('transparent');
+  });
+
+  it('returns only the image id when transparency was applied', async () => {
+    setupHappyPath();
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        undefined,
+        true,
+      ),
+    );
+
+    const result = await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(result).toBe(mockImageId);
+  });
+
+  it('tells the model when transparency was not applied', async () => {
+    setupHappyPath();
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        undefined,
+        false,
+      ),
+    );
+
+    const result = await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'The word Ostheide in navy lettering',
+        background: 'transparent',
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(result.startsWith(`${mockImageId}\n`)).toBe(true);
+    expect(result).toMatch(/transparency was not applied/i);
+  });
+
+  it('asks for confirmation before setting a transparent background', () => {
+    const tool = new GenerateImageTool();
+    const parameters = tool.parameters as {
+      properties: {
+        background: { enum: string[]; description: string };
+      };
+    };
+    const background = parameters.properties.background;
+
+    expect(background.enum).toEqual(['transparent']);
+    expect(tool.descriptionLong).toMatch(/confirm/i);
+    expect(background.description).toMatch(/explicitly/i);
   });
 
   it('should leave size undefined when not provided', async () => {

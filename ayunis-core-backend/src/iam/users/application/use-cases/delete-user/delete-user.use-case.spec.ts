@@ -11,16 +11,17 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
-import { UserDeletedEvent } from '../../events/user-deleted.event';
-import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
-import { UsersRepository } from '../../ports/users.repository';
+import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
+import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserUnauthorizedError } from '../../users.errors';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserUnauthorizedError } from 'src/iam/users/application/users.errors';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -47,7 +48,7 @@ describe('DeleteUserUseCase', () => {
           userId: '123e4567-e89b-12d3-a456-426614174000',
           orgId: '123e4567-e89b-12d3-a456-426614174000',
           role: UserRole.ADMIN,
-          systemRole: null,
+          systemRole: SystemRole.CUSTOMER,
         };
         return context[key];
       }) as ContextService['get'],
@@ -277,7 +278,12 @@ describe('DeleteUserUseCase', () => {
       .spyOn(mockUsersRepository, 'delete')
       .mockRejectedValue(new Error('Repository error'));
 
-    await expect(useCase.execute(command)).rejects.toThrow('Repository error');
+    await expect(useCase.execute(command)).rejects.toMatchObject({
+      code: 'USER_UNEXPECTED_ERROR',
+      metadata: {
+        error: expect.objectContaining({ message: 'Repository error' }),
+      },
+    });
     expect(cleanup).not.toHaveBeenCalled();
   });
 
@@ -339,7 +345,12 @@ describe('DeleteUserUseCase', () => {
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
-    await expect(useCase.execute(command)).rejects.toThrow('Repository error');
+    await expect(useCase.execute(command)).rejects.toMatchObject({
+      code: 'USER_UNEXPECTED_ERROR',
+      metadata: {
+        error: expect.objectContaining({ message: 'Repository error' }),
+      },
+    });
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith(
       command.userId,
     );

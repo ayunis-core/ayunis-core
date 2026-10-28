@@ -1,6 +1,17 @@
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+
+type UpdateIntegrationConfigSchema = Omit<
+  IntegrationConfigSchema,
+  'authType'
+> & {
+  authType?: IntegrationConfigSchema['authType'];
+};
+
 interface UpdateMcpIntegrationParams {
   integrationId: string;
   name?: string;
+  serverUrl?: string;
+  configSchema?: UpdateIntegrationConfigSchema;
   credentials?: string;
   authHeaderName?: string;
   returnsPii?: boolean;
@@ -11,6 +22,8 @@ interface UpdateMcpIntegrationParams {
 export class UpdateMcpIntegrationCommand {
   public readonly integrationId: string;
   public readonly name?: string;
+  public readonly serverUrl?: string;
+  public readonly configSchema?: UpdateIntegrationConfigSchema;
   public readonly credentials?: string;
   public readonly authHeaderName?: string;
   public readonly returnsPii?: boolean;
@@ -20,6 +33,8 @@ export class UpdateMcpIntegrationCommand {
   constructor(params: UpdateMcpIntegrationParams) {
     this.integrationId = params.integrationId;
     this.name = params.name;
+    this.serverUrl = params.serverUrl;
+    this.configSchema = params.configSchema;
     this.credentials = params.credentials;
     this.authHeaderName = params.authHeaderName;
     this.returnsPii = params.returnsPii;

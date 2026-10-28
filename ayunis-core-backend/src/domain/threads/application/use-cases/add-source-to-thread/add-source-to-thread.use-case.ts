@@ -1,30 +1,14 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
-import { SourceAdditionError } from '../../threads.errors';
+import { SourceAdditionError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SourceAlreadyAssignedError } from '../../threads.errors';
-import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
-
-const PG_UNIQUE_VIOLATION = '23505';
-
-// The duplicate check below is check-then-insert and can race with a
-// concurrent add of the same source; the database unique violation is the
-// authoritative signal and must map to the same 409 as the app-level check.
-function isUniqueConstraintViolation(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) {
-    return false;
-  }
-  const record = error as Record<string, unknown>;
-  const driverError = record.driverError as Record<string, unknown> | undefined;
-  return (
-    record.code === PG_UNIQUE_VIOLATION ||
-    driverError?.code === PG_UNIQUE_VIOLATION
-  );
-}
+import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
+import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
 
 @Injectable()
 export class AddSourceToThreadUseCase {
@@ -37,10 +21,13 @@ export class AddSourceToThreadUseCase {
 
   @Transactional()
   async execute(command: AddSourceCommand): Promise<void> {
-    this.logger.log('addSource', {
-      threadId: command.thread.id,
-      sourceId: command.source.id,
-    });
+    this.logger.log(
+      {
+        threadId: command.thread.id,
+        sourceId: command.source.id,
+      },
+      'addSource',
+    );
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -95,7 +82,7 @@ export class AddSourceToThreadUseCase {
     if (isUniqueConstraintViolation(error)) {
       return new SourceAlreadyAssignedError(command.source.id);
     }
-    this.logger.error('addSource', error);
+    this.logger.error({ err: error as Error }, 'addSource');
     return new SourceAdditionError(command.thread.id, error as Error);
   }
 }

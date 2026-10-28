@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { GetOnboardingUseCase } from './get-onboarding.use-case';
 import { GetOnboardingQuery } from './get-onboarding.query';
-import { OnboardingRepository } from '../../ports/onboarding.repository';
+import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 
 describe('GetOnboardingUseCase', () => {

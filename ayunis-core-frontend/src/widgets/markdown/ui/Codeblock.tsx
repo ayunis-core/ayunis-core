@@ -42,6 +42,7 @@ export default function CodeBlock({
   }
 
   const code = children.replace(/\n$/, '');
+  const showLineNumbers = code.includes('\n');
 
   const handleCopy = async () => {
     try {
@@ -59,6 +60,8 @@ export default function CodeBlock({
         style={theme === 'dark' ? oneDark : oneLight}
         language={language ?? 'text'}
         PreTag="div"
+        showLineNumbers={showLineNumbers}
+        lineNumberStyle={{ userSelect: 'none' }}
         customStyle={{
           margin: '0',
           borderRadius: '0.375rem',

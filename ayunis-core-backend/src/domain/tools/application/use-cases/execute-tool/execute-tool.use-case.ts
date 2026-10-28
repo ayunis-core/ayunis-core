@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ToolHandlerRegistry } from '../../tool-handler.registry';
-import { ToolExecutionFailedError } from '../../tools.errors';
+import { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
@@ -12,11 +12,14 @@ export class ExecuteToolUseCase {
   constructor(private readonly toolHandlerRegistry: ToolHandlerRegistry) {}
 
   async execute(command: ExecuteToolCommand): Promise<string> {
-    this.logger.log('execute', {
-      toolName: command.tool.name,
-      input: command.input,
-      parameters: command.tool.parameters,
-    });
+    this.logger.log(
+      {
+        tool: { name: command.tool.name },
+        input: command.input,
+        tools: command.tool.parameters,
+      },
+      'execute',
+    );
 
     try {
       const handler = this.toolHandlerRegistry.getHandler(command.tool);
@@ -29,7 +32,7 @@ export class ExecuteToolUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unknown error', error as Error);
+      this.logger.error({ err: error as Error }, 'Unknown error');
       throw new ToolExecutionFailedError({
         toolName: command.tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

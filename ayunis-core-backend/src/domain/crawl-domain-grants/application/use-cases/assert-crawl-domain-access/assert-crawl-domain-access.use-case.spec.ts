@@ -1,9 +1,10 @@
 import type { UUID } from 'crypto';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { AssertCrawlDomainAccessUseCase } from './assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
-import type { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
+import type { CrawlDomainGrantRepository } from 'src/domain/crawl-domain-grants/application/ports/crawl-domain-grant.repository';
 import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
-import { CrawlDomainAccessDeniedError } from '../../crawl-domain-grants.errors';
+import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 
 const ORG_A = '11111111-1111-1111-1111-111111111111' as UUID;
 const ORG_B = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -21,6 +22,64 @@ function repoReturning(
 }
 
 describe('AssertCrawlDomainAccessUseCase', () => {
+  it('requires a grant when the caller requests explicit private-destination access', async () => {
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => null),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://10.0.0.5/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+  });
+
+  it('permits explicit private access only for the granted organization', async () => {
+    const grant = new CrawlDomainGrant({
+      orgId: ORG_A,
+      domain: 'intranet.customer.de',
+    });
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => grant),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://intranet.customer.de/statute.pdf',
+          ORG_B,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://intranet.customer.de/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('does not let an ungrantable private IPv6 host bypass explicit access', async () => {
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      repoReturning(() => null),
+    );
+    await expect(
+      useCase.execute(
+        new AssertCrawlDomainAccessCommand(
+          'https://[::1]/statute.pdf',
+          ORG_A,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+  });
+
   it('allows when no grant exists for the host', async () => {
     const useCase = new AssertCrawlDomainAccessUseCase(
       repoReturning(() => null),
@@ -53,14 +112,16 @@ describe('AssertCrawlDomainAccessUseCase', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('blocks with a 404 access-denied error when the host is granted to another org', async () => {
+  it('logs blocked cross-org crawls with object-first metadata', async () => {
     const grant = new CrawlDomainGrant({
       orgId: ORG_A,
       domain: 'intranet.customer.de',
     });
+    const logger = createLoggerMock();
     const useCase = new AssertCrawlDomainAccessUseCase(
       repoReturning(() => grant),
     );
+
     await expect(
       useCase.execute(
         new AssertCrawlDomainAccessCommand(
@@ -69,6 +130,10 @@ describe('AssertCrawlDomainAccessUseCase', () => {
         ),
       ),
     ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+    expect(logger.warn).toHaveBeenCalledWith(
+      { domain: 'intranet.customer.de', orgId: ORG_B },
+      'Blocked cross-org crawl of a restricted domain',
+    );
   });
 
   it('does not block a different host under the same registrable domain (exact-host match)', async () => {

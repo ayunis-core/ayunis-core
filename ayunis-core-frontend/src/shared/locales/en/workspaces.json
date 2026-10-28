@@ -1,0 +1,163 @@
+{
+  "page": {
+    "title": "Workspaces",
+    "addWorkspace": "Add workspace",
+    "emptyTitle": "No workspaces yet",
+    "emptyDescription": "Create a workspace to group your chats by topic.",
+    "skillCount_one": "{{count}} skill",
+    "skillCount_other": "{{count}} skills",
+    "knowledgeBaseCount_one": "{{count}} knowledge base",
+    "knowledgeBaseCount_other": "{{count}} knowledge bases",
+    "lastEdited": "Edited {{date}}"
+  },
+  "card": {
+    "pin": "Add to favorites",
+    "unpin": "Remove from favorites"
+  },
+  "appearance": {
+    "iconLabel": "Icon",
+    "colorLabel": "Color",
+    "customColor": "Custom color",
+    "previewPlaceholder": "Preview",
+    "icons": {
+      "folder": "Folder",
+      "file": "Documents",
+      "files": "Records",
+      "filecheck": "Review",
+      "clipboard": "Checklist",
+      "archive": "Archive",
+      "inbox": "Inbox",
+      "mail": "Mail",
+      "stamp": "Official stamp",
+      "idcard": "ID documents",
+      "landmark": "Town hall",
+      "building": "Buildings",
+      "map": "Map",
+      "mappin": "Location",
+      "users": "People",
+      "usercheck": "Citizens’ office",
+      "handshake": "Contracts",
+      "social": "Social services",
+      "baby": "Childcare",
+      "school": "Schools",
+      "library": "Library",
+      "book": "Bylaws",
+      "scale": "Legal",
+      "gavel": "Resolutions",
+      "shield": "Public order",
+      "lock": "Data protection",
+      "key": "Access",
+      "siren": "Emergency",
+      "ambulance": "Ambulance service",
+      "flame": "Fire service",
+      "package": "Procurement",
+      "store": "Trade",
+      "briefcase": "Economy",
+      "truck": "Vehicle fleet",
+      "wrench": "Works depot",
+      "hammer": "Construction",
+      "cone": "Roadworks",
+      "bus": "Public transport",
+      "bike": "Cycling",
+      "car": "Vehicle registration",
+      "receipt": "Billing",
+      "euro": "Finance",
+      "calculator": "Costing",
+      "piggy": "Budget",
+      "chart": "Analysis",
+      "trend": "Development",
+      "calendar": "Appointments",
+      "clock": "Deadlines",
+      "recycle": "Waste",
+      "tree": "Green spaces",
+      "leaf": "Environment",
+      "droplet": "Water",
+      "dog": "Dog license",
+      "palette": "Culture",
+      "music": "Events",
+      "sport": "Sport",
+      "trophy": "Competitions",
+      "vote": "Elections",
+      "server": "IT",
+      "idea": "Ideas",
+      "megaphone": "Public relations",
+      "presentation": "Meetings",
+      "utensils": "Hospitality",
+      "phone": "Citizen hotline"
+    },
+    "colors": {
+      "violet": "Violet",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "amber": "Amber",
+      "rose": "Rose"
+    }
+  },
+  "form": {
+    "nameLabel": "What are you working on?",
+    "namePlaceholder": "e.g. Citizen enquiries",
+    "descriptionLabel": "What do you want to achieve?",
+    "descriptionPlaceholder": "Optional description",
+    "cancel": "Cancel"
+  },
+  "createDialog": {
+    "title": "New workspace",
+    "submit": "Create workspace",
+    "submitting": "Creating …"
+  },
+  "actions": {
+    "more": "More workspace actions",
+    "edit": "Edit workspace",
+    "delete": "Delete workspace"
+  },
+  "settingsDialog": {
+    "title": "Workspace settings",
+    "submit": "Save",
+    "submitting": "Saving …",
+    "open": "Settings"
+  },
+  "deleteDialog": {
+    "rowTitle": "Delete workspace",
+    "rowDescription": "The workspace and every chat inside it will be deleted.",
+    "title": "Delete workspace",
+    "description": "“{{name}}” and every chat inside it will be permanently deleted.",
+    "confirmNameLabel": "If you really want to delete this workspace, enter its name: “{{name}}”.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel"
+  },
+  "picker": {
+    "empty": "No workspaces yet",
+    "noWorkspace": "No workspace",
+    "placeholder": "Select workspace",
+    "addToWorkspace": "Add to workspace",
+    "removeFromWorkspace": "Remove from workspace",
+    "newWorkspace": "New workspace"
+  },
+  "validation": {
+    "invalid": "Invalid value",
+    "name": {
+      "invalid": "Please enter a valid name",
+      "isNotEmpty": "Please enter a name",
+      "maxLength": "The name is too long"
+    },
+    "description": {
+      "maxLength": "The description is too long"
+    }
+  },
+  "toast": {
+    "createSuccess": "Workspace created",
+    "createError": "The workspace could not be created",
+    "updateSuccess": "Workspace saved",
+    "updateError": "The workspace could not be saved",
+    "deleteSuccess": "Workspace deleted",
+    "deleteError": "The workspace could not be deleted",
+    "notFound": "Workspace not found",
+    "pinError": "Favorites could not be updated",
+    "reorderError": "The new order could not be saved",
+    "chatMoved": "Chat moved",
+    "chatRemoved": "Chat removed from the workspace",
+    "chatMoveError": "The chat could not be moved",
+    "chatNotFound": "Chat not found"
+  }
+}

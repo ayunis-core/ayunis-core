@@ -1,6 +1,9 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 import { getMyPermissionsControllerGetMineQueryOptions } from '@/shared/api';
-import { allowedSettingsSections } from '@/features/permissions';
+import {
+  allowedSettingsSections,
+  createAuthorization,
+} from '@/features/permissions';
 
 function AdminSettingsLayout() {
   return <Outlet />;
@@ -12,10 +15,11 @@ export const Route = createFileRoute('/_authenticated/admin-settings')({
   // permissions grant (Teams today); anything else redirects. Every settings
   // sub-route flows through here, so admin-only screens stay admin-only.
   beforeLoad: async ({ context: { user, queryClient }, location }) => {
-    const { permissions } = await queryClient.fetchQuery(
+    const { permissions } = await queryClient.query(
       getMyPermissionsControllerGetMineQueryOptions(),
     );
-    const allowed = allowedSettingsSections(user.role, permissions);
+    const authorization = createAuthorization(user.role, permissions);
+    const allowed = allowedSettingsSections(authorization);
 
     if (allowed.some((path) => location.pathname.startsWith(path))) {
       return;

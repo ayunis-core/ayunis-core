@@ -5,11 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -30,24 +30,24 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
-import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
-import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
-import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
-import { GetConfiguredModelsByTypeQuery } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
-import { GetConfiguredModelsByTypeUseCase } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
-import { ModelType } from '../../domain/value-objects/model-type.enum';
-import { SetOrgDefaultLanguageModelCommand } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
-import { SetOrgDefaultLanguageModelUseCase } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
-import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
-import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
-import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
-import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
+import { CreatePermittedModelCommand } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.command';
+import { CreatePermittedModelUseCase } from 'src/domain/models/application/use-cases/create-permitted-model/create-permitted-model.use-case';
+import { DeletePermittedModelCommand } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.command';
+import { DeletePermittedModelUseCase } from 'src/domain/models/application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
+import { GetConfiguredModelsByTypeQuery } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
+import { GetConfiguredModelsByTypeUseCase } from 'src/domain/models/application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { SetOrgDefaultLanguageModelCommand } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
+import { SetOrgDefaultLanguageModelUseCase } from 'src/domain/models/application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
+import { GetPermittedModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.query';
+import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
+import { UpdatePermittedModelCommand } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.command';
+import { UpdatePermittedModelUseCase } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.use-case';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
-} from '../../domain/permitted-model.entity';
+} from 'src/domain/models/domain/permitted-model.entity';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
@@ -57,6 +57,19 @@ import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
+
+type PermittedModelResponseDto =
+  | PermittedLanguageModelResponseDto
+  | PermittedEmbeddingModelResponseDto
+  | PermittedImageGenerationModelResponseDto;
+
+const permittedModelResponseSchema = {
+  oneOf: [
+    { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+    { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
+    { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
+  ],
+};
 
 @ApiTags('Super Admin Models')
 @Controller('super-admin/models')
@@ -102,7 +115,8 @@ export class SuperAdminPermittedModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log(
-      `Getting available language models for org ${orgId} by super admin ${userId}`,
+      { orgId, userId },
+      'Getting available language models for org by super admin',
     );
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.LANGUAGE),
@@ -134,7 +148,8 @@ export class SuperAdminPermittedModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log(
-      `Getting available embedding models for org ${orgId} by super admin ${userId}`,
+      { orgId, userId },
+      'Getting available embedding models for org by super admin',
     );
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.EMBEDDING),
@@ -166,7 +181,8 @@ export class SuperAdminPermittedModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log(
-      `Getting available image-generation models for org ${orgId} by super admin ${userId}`,
+      { orgId, userId },
+      'Getting available image-generation models for org by super admin',
     );
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.IMAGE_GENERATION),
@@ -218,7 +234,8 @@ export class SuperAdminPermittedModelsController {
     @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
   ): Promise<PermittedLanguageModelResponseDto> {
     this.logger.log(
-      `Managing org default model for org ${orgId} by super admin ${userId}`,
+      { orgId, userId },
+      'Managing org default model by super admin',
     );
     const command = new SetOrgDefaultLanguageModelCommand(
       setOrgDefaultModelDto.permittedModelId,
@@ -271,17 +288,10 @@ export class SuperAdminPermittedModelsController {
     )[]
   > {
     this.logger.log(
-      `Getting permitted models for org ${orgId} by super admin ${userId}`,
+      { orgId, userId },
+      'Getting permitted models for org by super admin',
     );
-    const query = new GetPermittedModelsQuery(orgId);
-    const models = await this.getPermittedModelsUseCase.execute(query);
-    const responseDtos = models.map((model) =>
-      this.modelResponseDtoMapper.toDto(model),
-    );
-    this.logger.log(
-      `Successfully retrieved ${models.length} permitted models for org ${orgId}`,
-    );
-    return responseDtos;
+    return this.getPermittedModelDtos(orgId);
   }
 
   @Post(':orgId/permitted-models')
@@ -322,7 +332,8 @@ export class SuperAdminPermittedModelsController {
     @Body() dto: CreatePermittedModelDto,
   ): Promise<void> {
     this.logger.log(
-      `Creating permitted model ${dto.modelId} for org ${orgId} by super admin ${userId}`,
+      { modelId: dto.modelId, orgId, userId },
+      'Creating permitted model for org by super admin',
     );
     const command = new CreatePermittedModelCommand(
       dto.modelId,
@@ -375,14 +386,10 @@ export class SuperAdminPermittedModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log(
-      `Deleting permitted model ${id} for org ${orgId} by super admin ${userId}`,
+    this.logDelete(id, orgId, userId);
+    await this.deletePermittedModelUseCase.execute(
+      new DeletePermittedModelCommand({ orgId, permittedModelId: id }),
     );
-    const command = new DeletePermittedModelCommand({
-      orgId,
-      permittedModelId: id,
-    });
-    await this.deletePermittedModelUseCase.execute(command);
   }
 
   @Patch(':orgId/permitted-models/:id')
@@ -407,13 +414,7 @@ export class SuperAdminPermittedModelsController {
   @ApiBody({ type: UpdatePermittedModelDto })
   @ApiOkResponse({
     description: 'Successfully updated permitted model',
-    schema: {
-      oneOf: [
-        { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
-        { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
-        { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
-      ],
-    },
+    schema: permittedModelResponseSchema,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -434,32 +435,65 @@ export class SuperAdminPermittedModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdatePermittedModelDto,
+  ): Promise<PermittedModelResponseDto> {
+    this.logUpdate(id, orgId, userId);
+    return this.updateModel(orgId, id, dto);
+  }
+
+  private async getPermittedModelDtos(
+    orgId: UUID,
   ): Promise<
-    | PermittedLanguageModelResponseDto
-    | PermittedEmbeddingModelResponseDto
-    | PermittedImageGenerationModelResponseDto
+    (
+      | PermittedLanguageModelResponseDto
+      | PermittedEmbeddingModelResponseDto
+      | PermittedImageGenerationModelResponseDto
+    )[]
   > {
-    this.logger.log(
-      `Updating permitted model ${id} for org ${orgId} by super admin ${userId}`,
+    const models = await this.getPermittedModelsUseCase.execute(
+      new GetPermittedModelsQuery(orgId),
     );
-    const command = new UpdatePermittedModelCommand({
-      permittedModelId: id,
-      orgId,
-      anonymousOnly: dto.anonymousOnly,
-    });
-    const updatedModel =
-      await this.updatePermittedModelUseCase.execute(command);
-    if (updatedModel instanceof PermittedLanguageModel) {
-      return this.modelResponseDtoMapper.toLanguageModelDto(updatedModel);
+    this.logger.log(
+      { modelCount: models.length, orgId },
+      'Successfully retrieved permitted models for org',
+    );
+    return models.map((model) => this.modelResponseDtoMapper.toDto(model));
+  }
+
+  private async updateModel(
+    orgId: UUID,
+    id: UUID,
+    dto: UpdatePermittedModelDto,
+  ): Promise<PermittedModelResponseDto> {
+    const updated = await this.updatePermittedModelUseCase.execute(
+      new UpdatePermittedModelCommand({
+        permittedModelId: id,
+        orgId,
+        anonymousOnly: dto.anonymousOnly,
+      }),
+    );
+    if (updated instanceof PermittedLanguageModel) {
+      return this.modelResponseDtoMapper.toLanguageModelDto(updated);
     }
-    if (updatedModel instanceof PermittedEmbeddingModel) {
-      return this.modelResponseDtoMapper.toEmbeddingModelDto(updatedModel);
+    if (updated instanceof PermittedEmbeddingModel) {
+      return this.modelResponseDtoMapper.toEmbeddingModelDto(updated);
     }
-    if (updatedModel instanceof PermittedImageGenerationModel) {
-      return this.modelResponseDtoMapper.toImageGenerationModelDto(
-        updatedModel,
-      );
+    if (updated instanceof PermittedImageGenerationModel) {
+      return this.modelResponseDtoMapper.toImageGenerationModelDto(updated);
     }
-    throw new Error(`Unknown model type: ${updatedModel.constructor.name}`);
+    throw new Error(`Unknown model type: ${updated.constructor.name}`);
+  }
+
+  private logDelete(id: UUID, orgId: UUID, userId: UUID): void {
+    this.logger.log(
+      { permittedModelId: id, orgId, userId },
+      'Deleting permitted model for org by super admin',
+    );
+  }
+
+  private logUpdate(id: UUID, orgId: UUID, userId: UUID): void {
+    this.logger.log(
+      { permittedModelId: id, orgId, userId },
+      'Updating permitted model for org by super admin',
+    );
   }
 }

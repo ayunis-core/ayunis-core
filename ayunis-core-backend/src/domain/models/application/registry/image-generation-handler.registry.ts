@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { ImageGenerationHandler } from '../ports/image-generation.handler';
-import { ModelProviderNotSupportedError } from '../models.errors';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ImageGenerationHandler } from 'src/domain/models/application/ports/image-generation.handler';
+import { ModelProviderNotSupportedError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class ImageGenerationHandlerRegistry {
   private readonly logger = new Logger(ImageGenerationHandlerRegistry.name);
+
   private readonly handlers = new Map<ModelProvider, ImageGenerationHandler>();
   private mockHandler?: ImageGenerationHandler;
 
@@ -21,11 +22,11 @@ export class ImageGenerationHandlerRegistry {
   }
 
   getHandler(provider: ModelProvider): ImageGenerationHandler {
-    const isTest = this.configService.get<boolean>('app.isTest');
-    if (isTest) {
+    const mockInference = this.configService.get<boolean>('app.mockInference');
+    if (mockInference) {
       if (!this.mockHandler) {
         throw new Error(
-          'Mock image generation handler not registered. Call registerMockHandler() before using getHandler() in test environment.',
+          'Mock image generation handler not registered. Call registerMockHandler() before using getHandler() when mock inference is enabled.',
         );
       }
       this.logger.log('Using mock handler for image generation');
@@ -33,7 +34,7 @@ export class ImageGenerationHandlerRegistry {
     }
     const handler = this.handlers.get(provider);
     if (!handler) {
-      this.logger.error('Image generation handler not found', { provider });
+      this.logger.error({ provider }, 'Image generation handler not found');
       throw new ModelProviderNotSupportedError(provider);
     }
     return handler;

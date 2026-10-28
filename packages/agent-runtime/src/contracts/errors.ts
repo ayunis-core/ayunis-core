@@ -1,3 +1,5 @@
+import type { ProviderFailureFacts, Usage } from './provider';
+
 export class AgentRuntimeError extends Error {
   readonly code: string;
   readonly details?: Readonly<Record<string, unknown>>;
@@ -17,14 +19,12 @@ export class AgentRuntimeError extends Error {
   }
 }
 
-/** Thrown synchronously by run() on invalid input — the only throwing path. */
 export class InvalidRunInputError extends AgentRuntimeError {
   constructor(message: string, details?: Readonly<Record<string, unknown>>) {
     super('INVALID_INPUT', message, { details });
   }
 }
 
-/** Surfaced as an `error` event + `run_end { status: 'max_iterations' }`. */
 export class MaxIterationsError extends AgentRuntimeError {
   constructor(maxIterations: number) {
     super(
@@ -35,45 +35,50 @@ export class MaxIterationsError extends AgentRuntimeError {
   }
 }
 
-/** Surfaced as `run_end { status: 'aborted' }`. */
 export class RunAbortedError extends AgentRuntimeError {
   constructor(reason?: string) {
     super('RUN_ABORTED', reason ?? 'Run aborted');
   }
 }
 
-/** Wraps model provider failures; surfaced as an `error` event. */
 export class ProviderError extends AgentRuntimeError {
-  constructor(message: string, cause?: unknown) {
-    super('PROVIDER_FAILED', message, { cause });
+  readonly providerFailure?: ProviderFailureFacts;
+
+  constructor(
+    message: string,
+    cause?: unknown,
+    providerFailure?: ProviderFailureFacts,
+  ) {
+    super('PROVIDER_FAILED', message, {
+      cause,
+      ...(providerFailure ? { details: { providerFailure } } : {}),
+    });
+    this.providerFailure = providerFailure;
   }
 }
 
-/**
- * The model emitted a tool call whose arguments did not arrive intact —
- * unparseable JSON, or the token limit was reached mid-call. Executing such
- * a call with guessed input would fail identically on every retry, so the
- * run fails instead; surfaced as an `error` event.
- */
 export class MalformedToolCallError extends AgentRuntimeError {
-  constructor(details: {
-    toolNames: readonly (string | null)[];
-    reason: 'unparseable_arguments' | 'token_limit_reached';
-  }) {
+  readonly usage?: Usage;
+
+  constructor(
+    details: {
+      toolNames: readonly (string | null)[];
+      reason:
+        | 'unparseable_arguments'
+        | 'token_limit_reached'
+        | 'tool_disabled_fallback';
+    },
+    options?: { usage?: Usage },
+  ) {
     super(
       'MALFORMED_TOOL_CALL',
       'Model emitted a tool call whose arguments did not arrive intact',
       { details },
     );
+    this.usage = options?.usage;
   }
 }
 
-/**
- * A tool failed several consecutive times with the identical error — the
- * model is not converging on a working call, so the run stops instead of
- * repeating the attempt until the iteration cap; surfaced as an `error`
- * event.
- */
 export class RepeatedToolFailureError extends AgentRuntimeError {
   constructor(details: { toolName: string; failureCount: number }) {
     super(
@@ -84,21 +89,42 @@ export class RepeatedToolFailureError extends AgentRuntimeError {
   }
 }
 
-/**
- * Wraps a hook failure with the hook's name and the phase it failed in,
- * so multi-hook runs stay debuggable; surfaced as an `error` event.
- */
 export class HookFailedError extends AgentRuntimeError {
-  constructor(options: { hookName: string; phase: string; cause: unknown }) {
+  constructor(options: {
+    hookName: string;
+    phase: string;
+    cause: unknown;
+    underlyingError?: AgentRuntimeError;
+    originalOutcome?: string;
+  }) {
     const reason =
       options.cause instanceof Error ? options.cause.message : 'unknown error';
     super(
       'HOOK_FAILED',
       `Hook '${options.hookName}' failed in ${options.phase}: ${reason}`,
       {
-        details: { hookName: options.hookName, phase: options.phase },
+        details: {
+          hookName: options.hookName,
+          phase: options.phase,
+          ...(options.originalOutcome
+            ? { originalOutcome: options.originalOutcome }
+            : {}),
+          ...(options.underlyingError
+            ? {
+                underlyingError: serializeRuntimeError(options.underlyingError),
+              }
+            : {}),
+        },
         cause: options.cause,
       },
     );
   }
 }
+
+const serializeRuntimeError = (
+  error: AgentRuntimeError,
+): Readonly<Record<string, unknown>> => ({
+  code: error.code,
+  message: error.message,
+  ...(error.details ? { details: error.details } : {}),
+});

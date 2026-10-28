@@ -87,14 +87,149 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toMatch(/<w:strike\/>/);
   });
 
-  it('should render bullet lists', async () => {
+  it.each([
+    {
+      name: 'render bullet lists',
+      html: '<ul><li><p>Item 1</p></li><li><p>Item 2</p></li></ul>',
+      text: 'Item 1',
+      marker: 'Item 2',
+    },
+    {
+      name: 'render tables with header styling',
+      html: '<table><tr><th>Name</th></tr><tr><td>Alice</td></tr></table>',
+      text: 'Name',
+      marker: 'Alice',
+    },
+    {
+      name: 'render links as external hyperlinks',
+      html: '<p><a href="https://example.com">Click here</a></p>',
+      text: 'Click here',
+      marker: 'hyperlink',
+    },
+    {
+      name: 'render code blocks with monospace font',
+      html: '<pre><code>const x = 1;</code></pre>',
+      text: 'const x = 1;',
+      marker: 'Courier New',
+    },
+    {
+      name: 'preserve text-align on paragraphs',
+      html: '<p style="text-align: center">Centered</p>',
+      text: 'Centered',
+      marker: 'center',
+    },
+    {
+      name: 'preserve text-align on headings',
+      html: '<h1 style="text-align: right">Right Heading</h1>',
+      text: 'Right Heading',
+      marker: 'right',
+    },
+  ])('should $name', async ({ html, text, marker }) => {
+    const xml = await extractDocumentXml(await convertHtmlToDocx(html));
+
+    expect(xml).toContain(text);
+    expect(xml).toContain(marker);
+  });
+
+  it('should apply span text color from hex and rgb() values', async () => {
     const buffer = await convertHtmlToDocx(
-      '<ul><li><p>Item 1</p></li><li><p>Item 2</p></li></ul>',
+      '<p><span style="color: #1a7f37">neu</span> ' +
+        '<span style="color: rgb(207, 34, 46)"><s>entfallen</s></span> ' +
+        '<span style="color: #c00">kurz</span></p>',
     );
     const xml = await extractDocumentXml(buffer);
 
-    expect(xml).toContain('Item 1');
-    expect(xml).toContain('Item 2');
+    expect(xml).toContain('<w:color w:val="1A7F37"/>');
+    expect(xml).toContain('<w:color w:val="CF222E"/>');
+    expect(xml).toContain('<w:color w:val="CC0000"/>');
+  });
+
+  it('should apply span background-color as run shading', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p><span style="background-color: rgb(218, 251, 225)">neu</span></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toMatch(/<w:shd [^>]*w:fill="DAFBE1"/);
+  });
+
+  it('should render <mark> as a yellow highlight', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p>Bußgeld <mark>500 € → 1.000 €</mark></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('<w:highlight w:val="yellow"/>');
+  });
+
+  it('should ignore colors it cannot map to hex', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p><span style="color: var(--brand)">Text</span></p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Text');
+    expect(xml).not.toContain('<w:color');
+  });
+
+  it.each(['ul', 'ol'])(
+    'should keep mixed inline content in one %s list paragraph',
+    async (tag) => {
+      const buffer = await convertHtmlToDocx(
+        `<${tag}><li>Vor <strong>Fett</strong> und <span style="font-family: Calibri">Schrift</span><mark>Markiert</mark><a href="https://example.com">Link</a><br>danach</li></${tag}>`,
+      );
+      const xml = await extractDocumentXml(buffer);
+      const paragraphs = xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? [];
+
+      expect(paragraphs).toHaveLength(1);
+      expect(paragraphs[0]?.match(/<w:t[^>]*>(.*?)<\/w:t>/g)).toEqual([
+        '<w:t xml:space="preserve">Vor </w:t>',
+        '<w:t xml:space="preserve">Fett</w:t>',
+        '<w:t xml:space="preserve"> und </w:t>',
+        '<w:t xml:space="preserve">Schrift</w:t>',
+        '<w:t xml:space="preserve">Markiert</w:t>',
+        '<w:t xml:space="preserve">Link</w:t>',
+        '<w:t xml:space="preserve">danach</w:t>',
+      ]);
+      expect(xml).toContain('<w:b/>');
+      expect(xml).toContain('<w:highlight w:val="yellow"/>');
+      expect(xml).toContain('<w:hyperlink');
+      expect(xml).toContain('<w:br/>');
+      expect(xml).toContain('<w:ilvl w:val="0"/>');
+    },
+  );
+
+  it('should preserve list headings and text around nested lists in order', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<ol><li><h3>Überschrift</h3>Vor <strong>Unterliste</strong><ul><li><em>Verschachtelt</em></li></ul>Danach <span>weiter</span><p>Absatz</p></li><li>Zweiter Punkt</li></ol>',
+    );
+    const xml = await extractDocumentXml(buffer);
+    const paragraphs = xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? [];
+    const text = paragraphs.map((paragraph) =>
+      [...paragraph.matchAll(/<w:t[^>]*>(.*?)<\/w:t>/g)]
+        .map((match) => match[1])
+        .join(''),
+    );
+
+    expect(text).toEqual([
+      'Überschrift',
+      'Vor Unterliste',
+      'Verschachtelt',
+      'Danach weiter',
+      'Absatz',
+      'Zweiter Punkt',
+    ]);
+    expect(paragraphs[0]).toContain('Heading3');
+    expect(paragraphs[2]).toContain('<w:ilvl w:val="1"/>');
+    expect(paragraphs[2]).toContain('<w:i/>');
+    expect(paragraphs[5]).toContain('<w:ilvl w:val="0"/>');
+    expect(
+      paragraphs.filter((paragraph) => paragraph.includes('<w:numPr>')),
+    ).toHaveLength(3);
+    for (const index of [1, 3, 4]) {
+      expect(paragraphs[index]).not.toContain('<w:numPr>');
+      expect(paragraphs[index]).toContain('<w:ind w:left="720"/>');
+    }
   });
 
   it('should render ordered lists', async () => {
@@ -109,35 +244,25 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain('w:numId');
   });
 
-  it('should render tables with header styling', async () => {
+  it('should render a header-less table without borders', async () => {
     const buffer = await convertHtmlToDocx(
-      '<table><tr><th>Name</th></tr><tr><td>Alice</td></tr></table>',
+      '<table><tr><td>Herr Müller</td><td>Elisabetta Cavalet</td></tr></table>',
     );
     const xml = await extractDocumentXml(buffer);
 
-    expect(xml).toContain('Name');
-    expect(xml).toContain('Alice');
+    expect(xml).toContain('Herr Müller');
+    expect(xml).toContain('Elisabetta Cavalet');
+    expect(xml).not.toContain('CCCCCC');
+    expect(xml).toContain('w:val="none"');
   });
 
-  it('should render links as external hyperlinks', async () => {
+  it('should keep borders on a table that has a header row', async () => {
     const buffer = await convertHtmlToDocx(
-      '<p><a href="https://example.com">Click here</a></p>',
+      '<table><tr><th>Posten</th></tr><tr><td>1</td></tr></table>',
     );
     const xml = await extractDocumentXml(buffer);
 
-    expect(xml).toContain('Click here');
-    // External hyperlinks use relationship IDs
-    expect(xml).toContain('hyperlink');
-  });
-
-  it('should render code blocks with monospace font', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<pre><code>const x = 1;</code></pre>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('const x = 1;');
-    expect(xml).toContain('Courier New');
+    expect(xml).toContain('CCCCCC');
   });
 
   it('should render blockquotes with indent', async () => {
@@ -155,26 +280,6 @@ describe('convertHtmlToDocx', () => {
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
-  });
-
-  it('should preserve text-align on paragraphs', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<p style="text-align: center">Centered</p>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Centered');
-    expect(xml).toContain('center');
-  });
-
-  it('should preserve text-align on headings', async () => {
-    const buffer = await convertHtmlToDocx(
-      '<h1 style="text-align: right">Right Heading</h1>',
-    );
-    const xml = await extractDocumentXml(buffer);
-
-    expect(xml).toContain('Right Heading');
-    expect(xml).toContain('right');
   });
 
   it('should render line-height: 1 as single line spacing', async () => {
@@ -195,6 +300,64 @@ describe('convertHtmlToDocx', () => {
 
     expect(xml).toMatch(/<w:spacing[^>]*w:line="360"[^>]*w:lineRule="auto"/);
   });
+
+  it('should render a percentage line-height as auto line spacing', async () => {
+    const xml = await extractDocumentXml(
+      await convertHtmlToDocx('<p style="line-height: 150%">Loose</p>'),
+    );
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="360"[^>]*w:lineRule="auto"/);
+  });
+
+  it.each([
+    ['0', 0, 0],
+    ['auto', 0, 0],
+    ['0 auto', 0, 0],
+    ['6pt 0', 120, 120],
+    ['6pt 0 12pt', 120, 240],
+    ['6pt 0 12pt 0', 120, 240],
+  ])(
+    'should render margin: %s as spacing before/after',
+    async (margin, before, after) => {
+      const xml = await extractDocumentXml(
+        await convertHtmlToDocx(`<p style="margin: ${margin}">Shorthand</p>`),
+      );
+
+      expect(xml).toMatch(
+        new RegExp(
+          `<w:spacing[^>]*w:after="${after}"[^>]*w:before="${before}"`,
+        ),
+      );
+    },
+  );
+
+  it('should let a later margin longhand override the shorthand', async () => {
+    const xml = await extractDocumentXml(
+      await convertHtmlToDocx(
+        '<p style="margin: 0; margin-bottom: 6pt">Cascade</p>',
+      ),
+    );
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="120"[^>]*w:before="0"/);
+  });
+
+  it.each([
+    ['margin: 0; margin-top: 6pt; margin: 12pt', 240, 240],
+    ['margin-top: 6pt; margin: 0; margin-top: 12pt', 240, 0],
+  ])(
+    'should apply repeated margin declarations in order: %s',
+    async (style, before, after) => {
+      const xml = await extractDocumentXml(
+        await convertHtmlToDocx(`<p style="${style}">Cascade</p>`),
+      );
+
+      expect(xml).toMatch(
+        new RegExp(
+          `<w:spacing[^>]*w:after="${after}"[^>]*w:before="${before}"`,
+        ),
+      );
+    },
+  );
 
   it('should render margin-bottom as spacing after the paragraph', async () => {
     const buffer = await convertHtmlToDocx(
@@ -244,6 +407,40 @@ describe('convertHtmlToDocx', () => {
       (xml.match(/<w:spacing[^>]*w:after="0"/g) ?? []).length,
     ).toBeGreaterThanOrEqual(2);
     expect(xml).toMatch(/<w:spacing[^>]*w:line="240"/);
+  });
+
+  it('should preserve spacing styled directly on list items', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<ul><li style="line-height: 1; margin-top: 0pt; margin-bottom: 0pt; text-align: justify">Direct item</li></ul>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Direct item');
+    expect(xml).toMatch(
+      /<w:spacing[^>]*w:after="0"[^>]*w:before="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+    );
+    expect(xml).toContain('w:val="both"');
+  });
+
+  it.each([
+    [
+      'list item',
+      '<ul><li style="margin-bottom: 0"><p style="line-height: 1">Item</p></li></ul>',
+    ],
+    [
+      'blockquote',
+      '<blockquote style="margin-bottom: 0"><p style="line-height: 1">Quote</p></blockquote>',
+    ],
+    [
+      'table cell',
+      '<table><tr><td style="margin-bottom: 0"><p style="line-height: 1">Cell</p></td></tr></table>',
+    ],
+  ])('should merge %s and nested paragraph spacing', async (_name, html) => {
+    const xml = await extractDocumentXml(await convertHtmlToDocx(html));
+
+    expect(xml).toMatch(
+      /<w:spacing[^>]*w:after="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+    );
   });
 
   it('should convert px margins to twips', async () => {

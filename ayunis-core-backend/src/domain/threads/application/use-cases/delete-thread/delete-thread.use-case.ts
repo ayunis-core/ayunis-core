@@ -1,9 +1,12 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
+import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
+import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
 
 @Injectable()
 export class DeleteThreadUseCase {
@@ -13,10 +16,11 @@ export class DeleteThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
-    this.logger.log('delete', { threadId: command.id });
+    this.logger.log({ threadId: command.id }, 'delete');
 
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -29,38 +33,38 @@ export class DeleteThreadUseCase {
       throw new UnauthorizedException('Organization context required');
     }
 
+    const logContext = { threadId: command.id, userId };
     try {
-      // First verify the thread exists and belongs to the user
       const thread = await this.threadsRepository.findOne(command.id, userId);
 
       if (!thread) {
-        // Idempotent delete: treat already-deleted threads as success
         this.logger.warn(
+          logContext,
           'Thread already deleted or not found, treating as success',
-          {
-            threadId: command.id,
-            userId,
-          },
         );
         return;
       }
 
-      await this.threadsRepository.delete(command.id, userId);
+      const event = new ThreadDeletionRequestedEvent(command.id, userId, orgId);
+      event.deferCleanup('purge thread storage', () =>
+        this.purgeThreadStorage(command.id, orgId),
+      );
+      await this.eventEmitter.emitAsync(
+        ThreadDeletionRequestedEvent.EVENT_NAME,
+        event,
+      );
 
-      this.logger.log('Thread deleted successfully', {
-        threadId: command.id,
-        userId,
-      });
+      await this.threadsRepository.delete(command.id, userId);
+      await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
+
+      this.logger.log(logContext, 'Thread deleted successfully');
     } catch (error) {
-      this.logger.error('Failed to delete thread', {
-        threadId: command.id,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to delete thread',
+      );
       throw error;
     }
-
-    await this.purgeThreadStorage(command.id, orgId);
   }
 
   // MinIO blobs (message images, generated images) live outside the DB
@@ -80,10 +84,13 @@ export class DeleteThreadUseCase {
         ]),
       );
     } catch (error) {
-      this.logger.error('Failed to purge storage for deleted thread', {
-        threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId,
+          err: error as Error,
+        },
+        'Failed to purge storage for deleted thread',
+      );
     }
   }
 }

@@ -1,16 +1,17 @@
-import { Logger } from '@nestjs/common';
 import {
   Client,
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
-import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
+import { McpClientPoolService } from './mcp-client-pool.service';
+import type { McpConnectionConfig } from 'src/domain/mcp/application/ports/mcp-client.port';
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
-} from '../../application/mcp.errors';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+  McpToolTimeoutError,
+} from 'src/domain/mcp/application/mcp.errors';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
 
 jest.mock('@modelcontextprotocol/client', () => ({
@@ -19,9 +20,12 @@ jest.mock('@modelcontextprotocol/client', () => ({
 }));
 
 const REQUEST_TIMEOUT = { timeout: 30000 };
+const CAPABILITY_DISCOVERY_TIMEOUT = { timeout: 10000 };
 
 describe('McpSdkClientAdapter', () => {
   let adapter: McpSdkClientAdapter;
+  let clientPool: McpClientPoolService;
+  let configService: { get: jest.Mock };
   let clientMock: {
     connect: jest.Mock;
     close: jest.Mock;
@@ -37,15 +41,15 @@ describe('McpSdkClientAdapter', () => {
   const config: McpConnectionConfig = {
     serverUrl: 'https://mcp.example.com/mcp',
     headers: { Authorization: 'Bearer token-value' },
-  };
-
-  const buildAbortError = () => {
-    const error = new Error('This operation was aborted');
-    error.name = 'AbortError';
-    return error;
+    connectionScope: {
+      orgId: randomUUID(),
+      integrationId: randomUUID(),
+      userId: randomUUID(),
+    },
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
     clientMock = {
       connect: jest.fn().mockResolvedValue(undefined),
       close: jest.fn().mockResolvedValue(undefined),
@@ -63,12 +67,13 @@ describe('McpSdkClientAdapter', () => {
     };
     (Client as unknown as jest.Mock).mockImplementation(() => clientMock);
 
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-
-    adapter = new McpSdkClientAdapter();
+    clientPool = new McpClientPoolService();
+    configService = { get: jest.fn().mockReturnValue(false) };
+    adapter = new McpSdkClientAdapter(clientPool, configService as never);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await clientPool.onModuleDestroy();
     jest.restoreAllMocks();
   });
 
@@ -82,7 +87,7 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('passes configured headers to the v2 HTTP transport', async () => {
+    it('preserves self-hosted transport while passing configured headers', async () => {
       await adapter.listTools(config);
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
@@ -93,6 +98,26 @@ describe('McpSdkClientAdapter', () => {
           onInsufficientScope: 'throw',
         },
       );
+    });
+
+    it('uses the guarded fetch boundary for all cloud transport requests', async () => {
+      const guardedFetch = { fetch: jest.fn() };
+      configService.get.mockReturnValue(true);
+      adapter = new McpSdkClientAdapter(
+        clientPool,
+        configService as never,
+        undefined,
+        undefined,
+        guardedFetch,
+      );
+
+      await adapter.listTools(config);
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL(config.serverUrl),
+        expect.objectContaining({ fetch: guardedFetch.fetch }),
+      );
+      expect(configService.get).toHaveBeenCalledWith('app.isCloudHosted');
     });
 
     it('uses the guarded fetch boundary for OAuth transport requests', async () => {
@@ -119,16 +144,24 @@ describe('McpSdkClientAdapter', () => {
       };
       const oauthFetch = { fetch: jest.fn() };
       adapter = new McpSdkClientAdapter(
+        clientPool,
+        configService as never,
         providerFactory as never,
         integrations as never,
         oauthFetch,
       );
 
+      const userId = randomUUID();
       await adapter.listTools({
         serverUrl: config.serverUrl,
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+          userId,
+        },
         oauth: {
           integrationId: integration.id,
-          userId: randomUUID(),
+          userId,
           orgId: integration.orgId,
         },
       });
@@ -137,26 +170,12 @@ describe('McpSdkClientAdapter', () => {
         new URL(config.serverUrl),
         expect.objectContaining({
           authProvider,
-          fetchFn: oauthFetch.fetch,
+          fetch: oauthFetch.fetch,
         }),
       );
     });
 
-    it('returns the tools reported by the server', async () => {
-      const tools = [
-        {
-          name: 'search_registry',
-          description: 'Search the registry',
-          inputSchema: { type: 'object' },
-        },
-      ];
-      clientMock.listTools.mockResolvedValue({ tools });
-
-      await expect(adapter.listTools(config)).resolves.toEqual(tools);
-      expect(clientMock.close).toHaveBeenCalled();
-    });
-
-    it('enforces the timeout through the SDK request options', async () => {
+    it('uses the full timeout unless the caller supplies a shorter budget', async () => {
       await adapter.listTools(config);
 
       expect(clientMock.connect).toHaveBeenCalledWith(
@@ -169,64 +188,45 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('still returns the result when closing the client fails', async () => {
-      const tools = [
-        {
-          name: 'search_registry',
-          description: 'Search the registry',
-          inputSchema: { type: 'object' },
-        },
-      ];
-      clientMock.listTools.mockResolvedValue({ tools });
-      clientMock.close.mockRejectedValue(buildAbortError());
+    it('enforces a caller-supplied discovery timeout', async () => {
+      await adapter.listTools(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
-      await expect(adapter.listTools(config)).resolves.toEqual(tools);
-    });
-
-    it('preserves the operation error when closing the client also fails', async () => {
-      clientMock.listTools.mockRejectedValue(
-        new Error('MCP error -32001: Request timed out'),
+      expect(clientMock.connect).toHaveBeenCalledWith(
+        expect.anything(),
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
-      clientMock.close.mockRejectedValue(buildAbortError());
-
-      await expect(adapter.listTools(config)).rejects.toThrow(
-        'Request timed out',
+      expect(clientMock.listTools).toHaveBeenCalledWith(
+        undefined,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
-    });
-
-    it('closes the client when the operation fails', async () => {
-      clientMock.listTools.mockRejectedValue(new Error('boom'));
-
-      await expect(adapter.listTools(config)).rejects.toThrow('boom');
-      expect(clientMock.close).toHaveBeenCalled();
     });
   });
 
   describe('request timeout forwarding', () => {
     it('passes the timeout to listResources', async () => {
-      await adapter.listResources(config);
+      await adapter.listResources(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listResources).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
     it('passes the timeout to listResourceTemplates', async () => {
-      await adapter.listResourceTemplates(config);
+      await adapter.listResourceTemplates(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listResourceTemplates).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
     it('passes the timeout to listPrompts', async () => {
-      await adapter.listPrompts(config);
+      await adapter.listPrompts(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listPrompts).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
@@ -314,12 +314,12 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('produces a user-presentable message naming the 30s budget', async () => {
+    it('produces a user-presentable message naming the discovery budget', async () => {
       clientMock.listTools.mockRejectedValue(buildDomAbortError());
 
-      await expect(adapter.listTools(config)).rejects.toThrow(
-        /did not respond within 30s/,
-      );
+      await expect(
+        adapter.listTools(config, CAPABILITY_DISCOVERY_TIMEOUT),
+      ).rejects.toThrow(/did not respond within 10s/);
     });
 
     it('keeps the original error on the non-serialized cause', async () => {
@@ -329,6 +329,25 @@ describe('McpSdkClientAdapter', () => {
       const mapped = await adapter.listTools(config).catch((e: unknown) => e);
 
       expect((mapped as Error).cause).toBe(abortError);
+    });
+
+    it('attaches privacy-safe operation diagnostics to classified timeouts', async () => {
+      clientMock.listPrompts.mockRejectedValue(buildSdkTimeoutError());
+
+      const mapped = await adapter
+        .listPrompts(config, CAPABILITY_DISCOVERY_TIMEOUT)
+        .catch((error: unknown) => error);
+
+      expect(mapped).toBeInstanceOf(McpConnectionTimeoutError);
+      expect((mapped as McpConnectionTimeoutError).metadata).toEqual({
+        integrationId: config.connectionScope.integrationId,
+        orgId: config.connectionScope.orgId,
+        operation: 'listPrompts',
+        serverHost: 'mcp.example.com',
+        timeoutMs: 10000,
+        underlyingCode: 'REQUEST_TIMEOUT',
+        underlyingName: 'SdkError',
+      });
     });
   });
 
@@ -411,14 +430,78 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('maps timeouts on callTool as well', async () => {
+    // A connected server whose tool outlives the budget is slow upstream,
+    // not an outage (AYC-1120): it gets its own incident type.
+    it('maps a tool call that outlives the budget to McpToolTimeoutError', async () => {
       clientMock.callTool.mockRejectedValue(
+        new DOMException('This operation was aborted', 'AbortError'),
+      );
+
+      const mapped = await adapter
+        .callTool(config, { toolName: 'search', parameters: {} })
+        .catch((error: unknown) => error);
+
+      expect(mapped).toBeInstanceOf(McpToolTimeoutError);
+      expect(mapped).not.toBeInstanceOf(McpConnectionTimeoutError);
+      expect((mapped as McpToolTimeoutError).metadata).toEqual({
+        integrationId: config.connectionScope.integrationId,
+        orgId: config.connectionScope.orgId,
+        operation: 'callTool',
+        serverHost: 'mcp.example.com',
+        timeoutMs: 30000,
+        underlyingCode: 20,
+        underlyingName: 'AbortError',
+      });
+    });
+
+    it('maps a transport timeout during a tool call to McpToolTimeoutError', async () => {
+      clientMock.callTool.mockRejectedValue(
+        buildFetchFailedError(
+          'UND_ERR_HEADERS_TIMEOUT',
+          'Headers Timeout Error',
+        ),
+      );
+
+      await expect(
+        adapter.callTool(config, { toolName: 'search', parameters: {} }),
+      ).rejects.toThrow(McpToolTimeoutError);
+    });
+
+    it.each(['UND_ERR_CONNECT_TIMEOUT', 'ERR_SOCKET_CONNECTION_TIMEOUT'])(
+      'keeps a %s during a tool call as McpConnectionTimeoutError',
+      async (code) => {
+        clientMock.callTool.mockRejectedValue(
+          buildFetchFailedError(code, 'Connection attempt timed out'),
+        );
+
+        const mapped = await adapter
+          .callTool(config, { toolName: 'search', parameters: {} })
+          .catch((error: unknown) => error);
+
+        expect(mapped).toBeInstanceOf(McpConnectionTimeoutError);
+        expect(mapped).not.toBeInstanceOf(McpToolTimeoutError);
+      },
+    );
+
+    it('keeps a connect timeout before a tool call as McpConnectionTimeoutError', async () => {
+      clientMock.connect.mockRejectedValue(
         new DOMException('This operation was aborted', 'AbortError'),
       );
 
       await expect(
         adapter.callTool(config, { toolName: 'search', parameters: {} }),
       ).rejects.toThrow(McpConnectionTimeoutError);
+      expect(clientMock.callTool).not.toHaveBeenCalled();
+    });
+
+    it('keeps a connection failure during a tool call as McpConnectionFailedError', async () => {
+      clientMock.callTool.mockRejectedValue(
+        buildFetchFailedError('ECONNREFUSED', 'connect ECONNREFUSED'),
+      );
+
+      await expect(
+        adapter.callTool(config, { toolName: 'search', parameters: {} }),
+      ).rejects.toThrow(McpConnectionFailedError);
     });
 
     it('passes non-timeout errors through unchanged', async () => {
@@ -432,15 +515,20 @@ describe('McpSdkClientAdapter', () => {
   });
 
   describe('validateConnection', () => {
-    it('reports the connection as valid when all listings succeed', async () => {
-      await expect(adapter.validateConnection(config)).resolves.toEqual({
-        valid: true,
-      });
+    it('keeps the full request timeout for explicit validation', async () => {
+      await adapter.validateConnection(config);
+
+      expect(clientMock.connect).toHaveBeenCalledWith(
+        expect.anything(),
+        REQUEST_TIMEOUT,
+      );
+      expect(clientMock.listTools).toHaveBeenCalledWith(
+        undefined,
+        REQUEST_TIMEOUT,
+      );
     });
 
-    it('reports the connection as valid even when closing the client fails', async () => {
-      clientMock.close.mockRejectedValue(buildAbortError());
-
+    it('reports the connection as valid when all listings succeed', async () => {
       await expect(adapter.validateConnection(config)).resolves.toEqual({
         valid: true,
       });

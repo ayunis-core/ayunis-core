@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetCreditUsageUseCase } from './get-credit-usage.use-case';
 import { GetCreditUsageQuery } from './get-credit-usage.query';
-import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-monthly-credit-usage.use-case';
-import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
+import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetMonthlyCreditUsageQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import type { UUID } from 'crypto';
 

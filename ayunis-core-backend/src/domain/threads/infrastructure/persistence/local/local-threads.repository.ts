@@ -1,3 +1,6 @@
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ExpiredThreadRef,
@@ -6,10 +9,12 @@ import {
   ThreadsFindAllOptions,
   ThreadsPagination,
   ThreadsRepository,
+  ThreadContextRefs,
 } from 'src/domain/threads/application/ports/threads.repository';
-import { Logger, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import type { EntityManager } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -18,6 +23,8 @@ import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assign
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
+import { findThreadCitationContext } from './queries/find-thread-citation-context';
+import { applyThreadSearch } from './queries/apply-thread-search';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -25,15 +32,21 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   constructor(
     @InjectRepository(ThreadRecord)
-    private readonly threadRepository: Repository<ThreadRecord>,
+    private readonly defaultRepo: Repository<ThreadRecord>,
     private readonly threadMapper: ThreadMapper,
     private readonly assignments: LocalThreadAssignmentsRepository,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private get threadRepository(): Repository<ThreadRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(ThreadRecord) ?? this.defaultRepo;
+  }
+
   async create(thread: Thread): Promise<Thread> {
-    this.logger.log('create', { thread });
+    this.logger.log({ threadId: thread.id, userId: thread.userId }, 'create');
     const threadEntity = this.threadMapper.toRecord(thread);
     const savedThreadEntity = await this.threadRepository.save(threadEntity);
     const reloadedThreadEntity = await this.threadRepository.findOne({
@@ -64,29 +77,67 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findOne(id: UUID, userId: UUID): Promise<Thread | null> {
-    this.logger.log('findOne', { id, userId });
+    this.logger.log({ id, userId }, 'findOne');
     const threadEntity = await this.threadRepository.findOne({
       where: { id, userId },
+      relationLoadStrategy: 'query',
       relations: [
         'messages',
         'model',
-        'sourceAssignments',
-        'sourceAssignments.source',
-        'sourceAssignments.source.dataSourceDetails',
         'knowledgeBaseAssignments',
         'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
       ],
-      order: {
-        messages: {
-          createdAt: 'ASC',
-        },
-      },
     });
     if (!threadEntity) {
       return null;
     }
+    threadEntity.sourceAssignments =
+      await this.assignments.findSourceAssignmentsByThreadId(id);
+    threadEntity.messages?.sort(
+      (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
+    );
     return this.threadMapper.toDomain(threadEntity);
+  }
+
+  async findContextRefs(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadContextRefs | null> {
+    const rows = await this.threadRepository
+      .createQueryBuilder('thread')
+      .leftJoin('thread.knowledgeBaseAssignments', 'assignment')
+      .select('thread.workspaceId', 'workspaceId')
+      .addSelect('assignment.knowledgeBaseId', 'knowledgeBaseId')
+      .where('thread.id = :id', { id })
+      .andWhere('thread.userId = :userId', { userId })
+      .getRawMany<{
+        workspaceId: UUID | null;
+        knowledgeBaseId: UUID | null;
+      }>();
+    if (rows.length === 0) return null;
+    return {
+      workspaceId: rows[0].workspaceId,
+      knowledgeBaseIds: rows.flatMap(({ knowledgeBaseId }) =>
+        knowledgeBaseId ? [knowledgeBaseId] : [],
+      ),
+    };
+  }
+
+  async findCitationContext(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadCitationContext | null> {
+    return findThreadCitationContext(this.threadRepository, id, userId);
+  }
+
+  async findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]> {
+    if (ids.length === 0) return [];
+
+    const records = await this.threadRepository.find({
+      where: { userId, id: In(ids) },
+    });
+    return records.map((record) => this.threadMapper.toDomain(record));
   }
 
   async findAll(
@@ -95,18 +146,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     filters?: ThreadsFindAllFilters,
     pagination?: ThreadsPagination,
   ): Promise<Paginated<Thread>> {
-    this.logger.log('findAll', { userId, filters, pagination });
+    const { search: text, ...safeFilters } = filters ?? {};
+    this.logger.log({ userId, ...safeFilters, text, pagination }, 'findAll');
 
     const queryBuilder = this.threadRepository
       .createQueryBuilder('thread')
       .where('thread.userId = :userId', { userId });
 
-    if (filters?.search) {
-      queryBuilder.andWhere('thread.title ILIKE :search', {
-        search: `%${filters.search}%`,
-      });
-    }
-
+    this.applyFindAllFilters(queryBuilder, filters);
     this.applyFindAllRelations(queryBuilder, options);
 
     queryBuilder.orderBy('thread.createdAt', 'DESC');
@@ -133,6 +180,21 @@ export class LocalThreadsRepository extends ThreadsRepository {
       offset,
       total,
     });
+  }
+
+  private applyFindAllFilters(
+    queryBuilder: SelectQueryBuilder<ThreadRecord>,
+    filters?: ThreadsFindAllFilters,
+  ): void {
+    if (filters?.search) {
+      applyThreadSearch(queryBuilder, filters.search);
+    }
+
+    if (filters?.workspaceId) {
+      queryBuilder.andWhere('thread.workspaceId = :workspaceId', {
+        workspaceId: filters.workspaceId,
+      });
+    }
   }
 
   private applyFindAllRelations(
@@ -172,7 +234,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     modelId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]> {
-    this.logger.log('findAllByModel', { modelId });
+    this.logger.log({ modelId }, 'findAllByModel');
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
       relations: this.getRelations(options),
@@ -204,7 +266,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async update(thread: Thread): Promise<Thread> {
-    this.logger.log('update', { threadId: thread.id });
+    this.logger.log({ threadId: thread.id }, 'update');
     const threadRecord = this.threadMapper.toRecord(thread);
     const savedThreadRecord = await this.threadRepository.save(threadRecord);
     return this.threadMapper.toDomain(savedThreadRecord);
@@ -215,7 +277,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     title: string;
   }): Promise<void> {
-    this.logger.log('updateTitle', { params });
+    this.logger.log(
+      {
+        threadId: params.threadId,
+        userId: params.userId,
+        text: params.title,
+      },
+      'updateTitle',
+    );
     const result = await this.threadRepository.update(
       { id: params.threadId, userId: params.userId },
       { title: params.title },
@@ -249,11 +318,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     permittedModelId: UUID;
   }): Promise<void> {
-    this.logger.log('updateModel', {
-      threadId: params.threadId,
-      userId: params.userId,
-      permittedModelId: params.permittedModelId,
-    });
+    this.logger.log(
+      {
+        threadId: params.threadId,
+        userId: params.userId,
+        permittedModelId: params.permittedModelId,
+      },
+      'updateModel',
+    );
     const result = await this.threadRepository
       .createQueryBuilder()
       .update(ThreadRecord)
@@ -297,17 +369,57 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {
-    this.logger.log('delete', { id, userId });
+    this.logger.log({ id, userId }, 'delete');
     await this.threadRepository.delete({ id, userId });
   }
 
   async findAllIdsByUserId(userId: UUID): Promise<UUID[]> {
-    this.logger.log('findAllIdsByUserId', { userId });
+    this.logger.log({ userId }, 'findAllIdsByUserId');
     const rows = await this.threadRepository.find({
       where: { userId },
       select: { id: true },
     });
     return rows.map((row) => row.id);
+  }
+
+  async findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]> {
+    this.logger.log({ workspaceId }, 'findAllIdsByWorkspaceId');
+    const rows = await this.threadRepository.find({
+      where: { workspaceId },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  async filterExistingIds(threadIds: UUID[]): Promise<UUID[]> {
+    if (threadIds.length === 0) return [];
+    const rows = await this.threadRepository.find({
+      where: { id: In(threadIds) },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  async assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void> {
+    this.logger.log(
+      {
+        threadId: params.threadId,
+        userId: params.userId,
+        workspaceId: params.workspaceId,
+      },
+      'assignToWorkspace',
+    );
+    const result = await this.threadRepository.update(
+      { id: params.threadId, userId: params.userId },
+      { workspaceId: params.workspaceId },
+    );
+    if (!result.affected) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
   }
 
   async removeSourceAssignmentsByOriginSkill(params: {
@@ -343,7 +455,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
-    this.logger.log('findAllByOrgIdWithSources', { orgId });
+    this.logger.log({ orgId }, 'findAllByOrgIdWithSources');
     const threadEntities = await this.threadRepository
       .createQueryBuilder('thread')
       .innerJoin('users', 'user', 'user.id = thread.userId')
@@ -358,21 +470,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async findExpiredThreadRefsByOrg(
     params: FindExpiredThreadRefsParams,
   ): Promise<ExpiredThreadRef[]> {
-    this.logger.log('findExpiredThreadRefsByOrg', {
-      orgId: params.orgId,
-      activeBefore: params.activeBefore,
-      limit: params.limit,
-      offset: params.offset,
-    });
-    // Select only id + owner (no message/source hydration) — enforcement
-    // deletes via DeleteThreadUseCase by id, so the full entity is unneeded.
-    // COALESCE(lastActivityAt, createdAt) defends against any null slipping
-    // through; ASC ordering keeps the oldest threads first so a paging offset
-    // can step past threads that failed to delete on a previous iteration.
-    // thread.id is a stable secondary key: enforcement advances the offset
-    // only past failed deletes, so rows with equal activity timestamps must
-    // keep a deterministic order across queries or expired threads could be
-    // skipped for the rest of the run.
+    this.logger.log({ ...params }, 'findExpiredThreadRefsByOrg');
+    // Enforcement advances its offset past failed deletes. Stable ID ordering
+    // prevents equal timestamps from skipping rows on subsequent batches.
     const rows = await this.threadRepository
       .createQueryBuilder('thread')
       .innerJoin('users', 'user', 'user.id = thread.userId')

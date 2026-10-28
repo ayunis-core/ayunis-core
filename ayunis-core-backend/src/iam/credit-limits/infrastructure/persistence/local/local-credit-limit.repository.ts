@@ -4,12 +4,16 @@ import { In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
-import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import type { DefaultUserCreditLimit } from 'src/iam/credit-limits/domain/default-user-credit-limit.entity';
+import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
 import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
+  ApiKeyCreditLimitRecord,
   CreditLimitRecord,
-  UserCreditLimitRecord,
+  DefaultUserCreditLimitRecord,
   TeamCreditLimitRecord,
+  UserCreditLimitRecord,
 } from './schema/credit-limit.record';
 import { CreditLimitMapper } from './mappers/credit-limit.mapper';
 
@@ -22,6 +26,10 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
     private readonly userRepository: Repository<UserCreditLimitRecord>,
     @InjectRepository(TeamCreditLimitRecord)
     private readonly teamRepository: Repository<TeamCreditLimitRecord>,
+    @InjectRepository(ApiKeyCreditLimitRecord)
+    private readonly apiKeyRepository: Repository<ApiKeyCreditLimitRecord>,
+    @InjectRepository(DefaultUserCreditLimitRecord)
+    private readonly defaultUserRepository: Repository<DefaultUserCreditLimitRecord>,
     private readonly mapper: CreditLimitMapper,
   ) {
     super();
@@ -41,6 +49,11 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
   async findTeamLimits(orgId: UUID): Promise<TeamCreditLimit[]> {
     const records = await this.teamRepository.find({ where: { orgId } });
     return records.map((record) => this.mapper.toTeamDomain(record));
+  }
+
+  async findApiKeyLimits(orgId: UUID): Promise<ApiKeyCreditLimit[]> {
+    const records = await this.apiKeyRepository.find({ where: { orgId } });
+    return records.map((record) => this.mapper.toApiKeyDomain(record));
   }
 
   async findByUserId(
@@ -76,6 +89,29 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
     return records.map((record) => this.mapper.toTeamDomain(record));
   }
 
+  async findByApiKeyId(
+    orgId: UUID,
+    apiKeyId: UUID,
+  ): Promise<ApiKeyCreditLimit | null> {
+    const record = await this.apiKeyRepository.findOne({
+      where: { orgId, apiKeyId },
+    });
+    return record ? this.mapper.toApiKeyDomain(record) : null;
+  }
+
+  async findDefaultUserLimit(
+    orgId: UUID,
+  ): Promise<DefaultUserCreditLimit | null> {
+    const record = await this.defaultUserRepository.findOne({
+      where: { orgId },
+    });
+    return record ? this.mapper.toDefaultUserDomain(record) : null;
+  }
+
+  async deleteDefaultUserLimit(orgId: UUID): Promise<void> {
+    await this.defaultUserRepository.delete({ orgId });
+  }
+
   async deleteByUserId(orgId: UUID, userId: UUID): Promise<void> {
     await this.userRepository.delete({ orgId, userId });
   }
@@ -84,8 +120,11 @@ export class LocalCreditLimitRepository extends CreditLimitRepository {
     await this.teamRepository.delete({ orgId, teamId });
   }
 
+  async deleteByApiKeyId(orgId: UUID, apiKeyId: UUID): Promise<void> {
+    await this.apiKeyRepository.delete({ orgId, apiKeyId });
+  }
+
   async deleteByOrg(orgId: UUID): Promise<void> {
-    // Removes both user- and team-scoped rows;
     await this.repository.delete({ orgId });
   }
 }

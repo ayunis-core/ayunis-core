@@ -66,8 +66,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Name der Fähigkeit eingeben...",
       "shortDescriptionLabel": "Auslöser",
-      "shortDescriptionPlaceholder": "Beschreiben Sie, wann die KI diese Fähigkeit aktivieren soll...",
-      "shortDescriptionHint": "Ein guter Auslöser hilft der KI zu verstehen, wann diese Fähigkeit verwendet werden soll.",
+      "shortDescriptionPlaceholder": "Beschreiben Sie, wann Ayunis Core diese Fähigkeit aktivieren soll...",
+      "shortDescriptionHint": "Ein guter Auslöser hilft Ayunis Core zu verstehen, wann diese Fähigkeit verwendet werden soll.",
       "instructionsLabel": "Anweisungen",
       "instructionsPlaceholder": "Detaillierte Anweisungen, die eingefügt werden, wenn die Fähigkeit aktiviert wird..."
     },
@@ -120,7 +120,7 @@
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
     "fileSourceUnreadableError": "Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
-    "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen.",
+    "sourceLimitExceededError": "Eine Fähigkeit kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen.",
     "noEmbeddingModelError": "Es ist kein Embedding-Modell aktiviert. Bitte bitten Sie Ihren Administrator, eines zu aktivieren, bevor Sie Dateien hochladen."
   },
   "mcpIntegrations": {

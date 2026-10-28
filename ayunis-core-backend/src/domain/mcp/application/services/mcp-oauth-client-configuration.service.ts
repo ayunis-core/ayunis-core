@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
 import { McpOAuthClientRegistration } from '../../domain/mcp-oauth-client-registration.entity';
 import { McpValidationFailedError } from '../mcp.errors';
@@ -7,6 +7,7 @@ import { McpOAuthClientRegistrationRepositoryPort } from '../ports/mcp-oauth-cli
 import { McpOAuthPendingSessionRepositoryPort } from '../ports/mcp-oauth-pending-session.repository.port';
 import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
+import { McpClientService } from './mcp-client.service';
 
 export interface McpOAuthStaticClientInput {
   clientId: string;
@@ -20,8 +21,8 @@ export class McpOAuthClientConfigurationService {
     private readonly registrations: McpOAuthClientRegistrationRepositoryPort,
     private readonly tokens: McpOAuthUserTokenRepositoryPort,
     private readonly pendingSessions: McpOAuthPendingSessionRepositoryPort,
-    @Optional()
-    private readonly capabilityCache?: McpCapabilityCacheService,
+    private readonly capabilityCache: McpCapabilityCacheService,
+    private readonly mcpClientService: McpClientService,
   ) {}
 
   async initialize(
@@ -56,7 +57,7 @@ export class McpOAuthClientConfigurationService {
         createdAt: existing?.createdAt,
       }),
     );
-    await this.clearExistingAuthorization(integration.id, replacement.id);
+    await this.clearExistingAuthorization(integration, replacement.id);
   }
 
   validate(
@@ -95,16 +96,17 @@ export class McpOAuthClientConfigurationService {
   }
 
   private async clearExistingAuthorization(
-    integrationId: SchemaConfiguredMcpIntegration['id'],
+    integration: SchemaConfiguredMcpIntegration,
     replacementId: McpOAuthClientRegistration['id'],
   ): Promise<void> {
-    await this.pendingSessions.deleteByIntegration(integrationId);
-    await this.tokens.deleteByIntegration(integrationId);
+    await this.mcpClientService.invalidateConnections(integration);
+    await this.pendingSessions.deleteByIntegration(integration.id);
+    await this.tokens.deleteByIntegration(integration.id);
     await this.registrations.deleteByIntegrationExcept(
-      integrationId,
+      integration.id,
       replacementId,
     );
-    this.capabilityCache?.invalidate(integrationId);
+    this.capabilityCache.invalidate(integration.id);
   }
 
   private rejectClient(

@@ -1,40 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { SkillRepository } from '../../ports/skill.repository';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import { DeleteSkillCommand } from './delete-skill.command';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteSkillUseCase {
   private readonly logger = new Logger(DeleteSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: DeleteSkillCommand): Promise<void> {
-    this.logger.log('Deleting skill', { skillId: command.skillId });
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(command.skillId);
-      }
-
-      await this.skillRepository.delete(command.skillId, userId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deleting skill', { error: error as Error });
-      throw new UnexpectedSkillError(error);
-    }
+    this.logger.log({ skillId: command.skillId }, 'Deleting skill');
+    const skill = await this.repository.findById(command.skillId);
+    if (!skill) throw new SkillNotFoundError(command.skillId);
+    await this.authorization.requireWrite(skill);
+    await this.repository.delete(skill.id);
   }
 }

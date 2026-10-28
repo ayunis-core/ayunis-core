@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';
-import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
+import { EmbeddingsHandlerRegistry } from 'src/domain/rag/embeddings/application/embeddings-handler.registry';
 import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class GetAvailableProvidersUseCase {
   constructor(private readonly providerRegistry: EmbeddingsHandlerRegistry) {}
 
   execute(query: GetAvailableProvidersQuery): EmbeddingsProvider[] {
-    this.logger.log('execute', query);
+    this.logger.log(query, 'execute');
     return this.providerRegistry.getAvailableProviders();
   }
 }

@@ -7,6 +7,7 @@ on:
       - 'packages/ui/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
   push:
     branches: [main]
     paths:
@@ -14,47 +15,77 @@ on:
       - 'packages/ui/**'
       - 'pnpm-lock.yaml'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The frontend consumes @ayunis/ui from source, so none of these jobs needs
+# another's output; they run in parallel instead of one ~3-minute chain.
 jobs:
   build:
+    name: Frontend build
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run production build
         working-directory: ayunis-core-frontend
+        run: pnpm run build
+
+  lint:
+    name: Frontend lint
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build application
-        run: pnpm run build
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run linter
+        working-directory: ayunis-core-frontend
         run: pnpm run lint
 
+  test:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
       - name: Run tests
+        working-directory: ayunis-core-frontend
         run: pnpm run test
 
-      - name: Type-check UI package
+  ui-package:
+    name: UI package
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
         working-directory: packages/ui
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Type-check UI package
         run: pnpm run typecheck
 
       - name: Lint UI package
-        working-directory: packages/ui
         run: pnpm run lint
 
       - name: Check UI package dependencies
-        working-directory: packages/ui
         run: pnpm run deps:check

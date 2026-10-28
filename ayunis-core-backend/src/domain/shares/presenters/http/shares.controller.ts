@@ -7,9 +7,9 @@ import {
   Query,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
 import {
@@ -22,16 +22,16 @@ import {
 } from '@nestjs/swagger';
 
 // Import use cases
-import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
+import { CreateShareUseCase } from 'src/domain/shares/application/use-cases/create-share/create-share.use-case';
 import {
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
   CreateTeamKnowledgeBaseShareCommand,
-} from '../../application/use-cases/create-share/create-share.command';
-import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
-import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
-import { GetSharesQuery } from '../../application/use-cases/get-shares/get-shares.query';
+} from 'src/domain/shares/application/use-cases/create-share/create-share.command';
+import { DeleteShareUseCase } from 'src/domain/shares/application/use-cases/delete-share/delete-share.use-case';
+import { GetSharesUseCase } from 'src/domain/shares/application/use-cases/get-shares/get-shares.use-case';
+import { GetSharesQuery } from 'src/domain/shares/application/use-cases/get-shares/get-shares.query';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 
@@ -42,9 +42,9 @@ import {
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { TeamShareScope } from '../../domain/share-scope.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
@@ -82,10 +82,13 @@ export class SharesController {
   async createSkillShare(
     @Body() dto: CreateSkillShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.log('createSkillShare', {
-      skillId: dto.skillId,
-      teamId: dto.teamId,
-    });
+    this.logger.log(
+      {
+        skillId: dto.skillId,
+        teamId: dto.teamId,
+      },
+      'createSkillShare',
+    );
 
     const command = dto.teamId
       ? new CreateTeamSkillShareCommand(dto.skillId as UUID, dto.teamId as UUID)
@@ -125,10 +128,13 @@ export class SharesController {
   async createKnowledgeBaseShare(
     @Body() dto: CreateKnowledgeBaseShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.log('createKnowledgeBaseShare', {
-      knowledgeBaseId: dto.knowledgeBaseId,
-      teamId: dto.teamId,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: dto.knowledgeBaseId,
+        teamId: dto.teamId,
+      },
+      'createKnowledgeBaseShare',
+    );
 
     const command = dto.teamId
       ? new CreateTeamKnowledgeBaseShareCommand(
@@ -180,7 +186,7 @@ export class SharesController {
     @Query('entityId', ParseUUIDPipe) entityId: UUID,
     @Query('entityType') entityType: SharedEntityType,
   ): Promise<ShareResponseDto[]> {
-    this.logger.log('getShares', { entityId, entityType });
+    this.logger.log({ entityId, entityType }, 'getShares');
 
     const shares = await this.getSharesUseCase.execute(
       new GetSharesQuery(entityId, entityType),
@@ -224,7 +230,7 @@ export class SharesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteShare(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('deleteShare', { id });
+    this.logger.log({ id }, 'deleteShare');
 
     await this.deleteShareUseCase.execute(id);
   }

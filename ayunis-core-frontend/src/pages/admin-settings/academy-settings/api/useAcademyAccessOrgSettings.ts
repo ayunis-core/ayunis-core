@@ -3,9 +3,11 @@ import {
   useAcademyAccessControllerUpsertOrgSettings,
   getAcademyAccessControllerGetOrgSettingsQueryKey,
   getAcademyAccessControllerGetStatusQueryKey,
+  getAcademyAccessControllerListOrgCertificatesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -13,6 +15,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 export function useAcademyAccessOrgSettings() {
   const { t } = useTranslation('admin-settings-academy');
   const queryClient = useQueryClient();
+  const router = useRouter();
   const queryKey = getAcademyAccessControllerGetOrgSettingsQueryKey();
 
   const { data, isLoading, isError, refetch } =
@@ -42,6 +45,13 @@ export function useAcademyAccessOrgSettings() {
         await queryClient.invalidateQueries({
           queryKey: getAcademyAccessControllerGetStatusQueryKey(),
         });
+        // The overview's validity statuses are derived server-side from the
+        // mode, so they are stale the moment it changes. Both the cached pages
+        // and the route loader that reads them have to go.
+        await queryClient.invalidateQueries({
+          queryKey: getAcademyAccessControllerListOrgCertificatesQueryKey(),
+        });
+        await router.invalidate();
       },
     },
   });

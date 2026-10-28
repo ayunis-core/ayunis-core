@@ -1,6 +1,8 @@
 import { HtmlDocumentExportService } from './html-document-export.service';
 import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
-import type { LetterheadConfig } from '../../application/ports/document-export.port';
+import type { LetterheadConfig } from 'src/domain/artifacts/application/ports/document-export.port';
+import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
+import { TimeoutError } from 'puppeteer-core';
 import * as JSZip from 'jszip';
 
 async function extractDocumentXml(buffer: Buffer): Promise<string> {
@@ -16,6 +18,8 @@ async function extractDocumentXml(buffer: Buffer): Promise<string> {
 const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
 
 const mockPage = {
+  setRequestInterception: jest.fn().mockResolvedValue(undefined),
+  on: jest.fn(),
   setContent: jest.fn().mockResolvedValue(undefined),
   pdf: jest.fn().mockResolvedValue(FAKE_PDF),
   close: jest.fn().mockResolvedValue(undefined),
@@ -29,10 +33,15 @@ const mockBrowser = {
 
 const mockLaunch = jest.fn().mockResolvedValue(mockBrowser);
 
-jest.mock('puppeteer-core', () => ({
-  __esModule: true,
-  default: { launch: (...args: unknown[]) => mockLaunch(...args) },
-}));
+jest.mock('puppeteer-core', () => {
+  const { TimeoutError: ActualTimeoutError } =
+    jest.requireActual('puppeteer-core');
+  return {
+    __esModule: true,
+    TimeoutError: ActualTimeoutError,
+    default: { launch: (...args: unknown[]) => mockLaunch(...args) },
+  };
+});
 
 describe('HtmlDocumentExportService', () => {
   let service: HtmlDocumentExportService;
@@ -110,50 +119,32 @@ describe('HtmlDocumentExportService', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should handle headings followed by paragraphs', async () => {
-      const html =
-        '<h1>Title</h1><p>Normal paragraph text.</p><p>Another paragraph.</p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle inline formatting', async () => {
-      const html =
-        '<p><strong>Bold</strong> <em>italic</em> <u>underline</u> <s>strike</s></p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle blockquotes', async () => {
-      const html = '<blockquote><p>Quoted text</p></blockquote>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle code blocks', async () => {
-      const html = '<pre><code>const x = 1;\nconsole.log(x);</code></pre>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should handle links', async () => {
-      const html = '<p>Visit <a href="https://example.com">Example</a></p>';
-      const result = await service.exportToDocx(html);
-
-      expect(result).toBeInstanceOf(Buffer);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should sanitize dangerous HTML', async () => {
-      const html = '<p>Safe</p><script>alert("xss")</script><p>Also safe</p>';
+    it.each([
+      {
+        name: 'handle headings followed by paragraphs',
+        html: '<h1>Title</h1><p>Normal paragraph text.</p><p>Another paragraph.</p>',
+      },
+      {
+        name: 'handle inline formatting',
+        html: '<p><strong>Bold</strong> <em>italic</em> <u>underline</u> <s>strike</s></p>',
+      },
+      {
+        name: 'handle blockquotes',
+        html: '<blockquote><p>Quoted text</p></blockquote>',
+      },
+      {
+        name: 'handle code blocks',
+        html: '<pre><code>const x = 1;\nconsole.log(x);</code></pre>',
+      },
+      {
+        name: 'handle links',
+        html: '<p>Visit <a href="https://example.com">Example</a></p>',
+      },
+      {
+        name: 'sanitize dangerous HTML',
+        html: '<p>Safe</p><script>alert("xss")</script><p>Also safe</p>',
+      },
+    ])('should $name', async ({ html }) => {
       const result = await service.exportToDocx(html);
 
       expect(result).toBeInstanceOf(Buffer);
@@ -170,6 +161,18 @@ describe('HtmlDocumentExportService', () => {
       expect(xml).toMatch(/<w:spacing[^>]*w:after="0"/);
       expect(xml).toMatch(/<w:spacing[^>]*w:before="0"/);
       expect(xml).toContain('both'); // JUSTIFIED alignment
+    });
+
+    it('should preserve spacing styled directly on list items', async () => {
+      const html =
+        '<ul><li style="line-height: 1; margin-top: 0pt; margin-bottom: 0pt; text-align: justify;">Item</li></ul>';
+      const result = await service.exportToDocx(html);
+      const xml = await extractDocumentXml(result);
+
+      expect(xml).toMatch(
+        /<w:spacing[^>]*w:after="0"[^>]*w:before="0"[^>]*w:line="240"[^>]*w:lineRule="auto"/,
+      );
+      expect(xml).toContain('w:val="both"');
     });
   });
 
@@ -188,13 +191,67 @@ describe('HtmlDocumentExportService', () => {
       expect(header).toBe('%PDF');
     });
 
-    it('should set page content with networkidle0', async () => {
+    it('should render after document load without waiting for network idle', async () => {
       await service.exportToPdf('<p>Hello</p>');
 
       expect(mockPage.setContent).toHaveBeenCalledWith(
         expect.stringContaining('Hello'),
-        { waitUntil: 'networkidle0' },
+        { waitUntil: 'load' },
       );
+    });
+
+    it('should abort remote resources before rendering', async () => {
+      await service.exportToPdf(
+        '<p>Agenda</p><img src="https://assets.example.org/header.png">',
+      );
+
+      expect(mockPage.setRequestInterception).toHaveBeenCalledWith(true);
+      expect(mockPage.on).toHaveBeenCalledWith('request', expect.any(Function));
+
+      const handleRequest = mockPage.on.mock.calls[0][1] as (request: {
+        url: () => string;
+        abort: () => void;
+        continue: () => void;
+      }) => void;
+      const request = {
+        url: () => 'https://assets.example.org/header.png',
+        abort: jest.fn(),
+        continue: jest.fn(),
+      };
+      handleRequest(request);
+
+      expect(request.abort).toHaveBeenCalled();
+      expect(request.continue).not.toHaveBeenCalled();
+    });
+
+    it('should allow embedded data resources', async () => {
+      await service.exportToPdf('<p>Agenda</p>');
+
+      const handleRequest = mockPage.on.mock.calls[0][1] as (request: {
+        url: () => string;
+        abort: () => void;
+        continue: () => void;
+      }) => void;
+      const request = {
+        url: () => 'data:image/png;base64,aGVhZGVy',
+        abort: jest.fn(),
+        continue: jest.fn(),
+      };
+      handleRequest(request);
+
+      expect(request.continue).toHaveBeenCalled();
+      expect(request.abort).not.toHaveBeenCalled();
+    });
+
+    it('should classify Puppeteer timeouts as artifact export timeouts', async () => {
+      mockPage.setContent.mockRejectedValueOnce(
+        new TimeoutError('Navigation timeout of 30000 ms exceeded'),
+      );
+
+      await expect(service.exportToPdf('<p>Agenda</p>')).rejects.toBeInstanceOf(
+        ArtifactExportTimeoutError,
+      );
+      expect(mockPage.close).toHaveBeenCalled();
     });
 
     it('should generate A4 PDF with correct margins when no letterhead', async () => {
@@ -273,6 +330,89 @@ describe('HtmlDocumentExportService', () => {
         expect(htmlArg).toContain(
           '@page :first {\n    size: A4;\n    margin: 55mm 15mm 20mm 15mm;\n  }',
         );
+      });
+
+      describe('DIN 5008 letter layout', () => {
+        const headBlockHtml =
+          '<table><tbody><tr><td><p>Herr Müller</p></td>' +
+          '<td><p>Elisabetta Cavalet</p></td></tr></tbody></table>' +
+          '<p><strong>Beratungsgespräch</strong></p>';
+
+        it('should mark a header-less table as the letter head block', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('<table class="letter-layout">');
+        });
+
+        it('should render the head block borderless', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(/table\.letter-layout td \{[^}]*border: 0/);
+        });
+
+        it('should reserve the DIN 5008 address field height so the body starts below it', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('height: 53.5mm');
+          expect(htmlArg).toMatch(
+            /table\.letter-layout \{[^}]*margin-bottom: 0/,
+          );
+        });
+
+        it('should size the address column so the information block lands at 125mm', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toContain('width: 100mm');
+        });
+
+        it('should reserve the Vermerkzone so the recipient sits in the Anschriftzone', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout td:first-child \{[^}]*padding-top: 17\.7mm/,
+          );
+        });
+
+        it('should clear the top margin after the head block so the subject lands on the DIN line', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout \+ \* \{[^}]*margin-top: 0/,
+          );
+        });
+
+        it('should single-space the head block so a long address stays in its zone', async () => {
+          await service.exportToPdf(headBlockHtml, letterheadConfig);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).toMatch(
+            /table\.letter-layout p \{[^}]*margin: 0;[^}]*line-height: 1\.25/,
+          );
+        });
+
+        it('should leave a data table with a header row bordered', async () => {
+          await service.exportToPdf(
+            '<table><thead><tr><th>Posten</th></tr></thead>' +
+              '<tbody><tr><td>1</td></tr></tbody></table>',
+            letterheadConfig,
+          );
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).not.toContain('<table class="letter-layout">');
+        });
+
+        it('should not apply letter layout rules without a letterhead', async () => {
+          await service.exportToPdf(headBlockHtml);
+
+          const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+          expect(htmlArg).not.toContain('letter-layout');
+        });
       });
 
       it('should call compositor with content PDF and background PDFs', async () => {

@@ -11,14 +11,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import SettingsLayout from '../../admin-settings-layout';
-import { MarginEditor } from '@/widgets/margin-editor';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
+import { MarginEditor, useDinLetterPresets } from '@/widgets/margin-editor';
 import type { PdfSource } from '@/widgets/margin-editor';
-import { useUpdateLetterhead } from '../api/useUpdateLetterhead';
+import { useUpdateLetterhead } from '@/pages/admin-settings/letterhead-detail/api/useUpdateLetterhead';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { buildPdfUrl, getContinuationPageSource } from '../lib/pdf-source';
-import type { LetterheadFormFields } from '../model/types';
+import {
+  buildPdfUrl,
+  getContinuationPageSource,
+} from '@/pages/admin-settings/letterhead-detail/lib/pdf-source';
+import type { LetterheadFormFields } from '@/pages/admin-settings/letterhead-detail/model/types';
 
 interface LetterheadDetailPageProps {
   letterhead: LetterheadResponseDto;
@@ -28,6 +31,7 @@ export function LetterheadDetailPage({
   letterhead,
 }: Readonly<LetterheadDetailPageProps>) {
   const { t } = useTranslation('admin-settings-letterheads');
+  const dinLetterPresets = useDinLetterPresets();
 
   const initialMargins = useMemo(
     () => ({
@@ -157,6 +161,7 @@ export function LetterheadDetailPage({
               margins={firstPageMargins}
               onMarginsChange={setFirstPageMargins}
               label={t('letterheads.createDialog.firstPageMarginsLabel')}
+              presets={dinLetterPresets}
             />
           </CardContent>
         </Card>

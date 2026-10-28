@@ -1,10 +1,14 @@
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { ListOrgMcpIntegrationsUseCase } from './list-org-mcp-integrations.use-case';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { UnexpectedMcpError } from 'src/domain/mcp/application/mcp.errors';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
@@ -13,17 +17,17 @@ import { randomUUID } from 'crypto';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('ListOrgMcpIntegrationsUseCase', () => {
+  let logger: LoggerMock;
   let useCase: ListOrgMcpIntegrationsUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let contextService: jest.Mocked<ContextService>;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockIntegrationId1 = randomUUID();
   const mockIntegrationId2 = randomUUID();
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const mockRepository = {
       save: jest.fn(),
       findById: jest.fn(),
@@ -58,8 +62,6 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
     contextService = module.get(ContextService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -111,7 +113,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       expect(repository.findAll).toHaveBeenCalledTimes(1);
       expect(repository.findAll).toHaveBeenCalledWith(mockOrgId);
       expect(contextService.get).toHaveBeenCalledWith('orgId');
-      expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');
+      expect(logger.log).toHaveBeenCalledWith('listOrgMcpIntegrations');
     });
 
     it('should return empty array when organization has no integrations', async () => {
@@ -126,7 +128,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       expect(repository.findAll).toHaveBeenCalledTimes(1);
       expect(repository.findAll).toHaveBeenCalledWith(mockOrgId);
       expect(contextService.get).toHaveBeenCalledWith('orgId');
-      expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');
+      expect(logger.log).toHaveBeenCalledWith('listOrgMcpIntegrations');
     });
 
     it('should throw UnauthorizedException when user not authenticated', async () => {
@@ -158,9 +160,9 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute()).rejects.toThrow(UnexpectedMcpError);
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error listing integrations',
-        { error: unexpectedError },
       );
     });
 
@@ -172,7 +174,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       await useCase.execute();
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');
+      expect(logger.log).toHaveBeenCalledWith('listOrgMcpIntegrations');
     });
   });
 });

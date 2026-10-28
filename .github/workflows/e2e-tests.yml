@@ -1,0 +1,558 @@
+name: App Integration
+
+# Browser tests against the real stack: built frontend served by the backend
+# (same-origin, like production), real Postgres/Redis/MinIO/Mailcatcher, and
+# deterministic LLM mocks (MOCK_INFERENCE=true — no API keys, no cost).
+# See ayunis-core-e2e/PLAN.md for the architecture and source layout
+# (fixtures -> clients/factories/flows -> domain specs).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - 'ayunis-core-backend/src/**'
+      - 'ayunis-core-backend/package.json'
+      - 'ayunis-core-backend/nest-cli.json'
+      - 'ayunis-core-frontend/src/**'
+      - 'ayunis-core-frontend/public/**'
+      - 'ayunis-core-frontend/index.html'
+      - 'ayunis-core-frontend/package.json'
+      - 'ayunis-core-frontend/tsconfig*.json'
+      - 'ayunis-core-frontend/vite.config.*'
+      - 'ayunis-core-e2e/**'
+      - 'packages/agent-runtime/**'
+      - 'packages/inference/**'
+      - 'packages/provider-*/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/e2e-tests.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
+      - '.github/actions/start-minio/action.yml'
+  push:
+    branches: [main]
+
+concurrency:
+  group: app-integration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  cleanup-pr-media:
+    name: Cleanup PR media
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Delete hosted PR media branch and comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          PR_MEDIA_BRANCH: pr-media/pr-${{ github.event.pull_request.number }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${PR_MEDIA_BRANCH}" --silent; then
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${PR_MEDIA_BRANCH}"
+            echo "Deleted ${PR_MEDIA_BRANCH}"
+          else
+            echo "No ${PR_MEDIA_BRANCH} branch to delete"
+          fi
+
+          marker="<!-- pr-screenshots -->"
+          comment_ids="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${marker}\")) | .id")"
+          while IFS= read -r comment_id; do
+            [ -n "$comment_id" ] || continue
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" > /dev/null
+            echo "Deleted screenshot comment ${comment_id} on PR #${PR}"
+          done <<< "$comment_ids"
+
+  backend-build:
+    name: Build backend artifact
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Build backend and runtime packages
+        working-directory: ayunis-core-backend
+        run: |
+          pnpm run build:deps
+          pnpm exec nest build
+
+      - name: Upload backend build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-backend-build
+          path: |
+            ayunis-core-backend/dist
+            packages/agent-runtime/dist
+            packages/inference/dist
+            packages/provider-anthropic/dist
+            packages/provider-gemini/dist
+            packages/provider-mistral/dist
+            packages/provider-ollama/dist
+            packages/provider-openai/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  frontend-build:
+    name: Build frontend artifact
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Build frontend
+        working-directory: ayunis-core-frontend
+        run: pnpm run build
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-frontend-dist
+          path: ayunis-core-frontend/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  e2e:
+    name: Browser e2e
+    needs:
+      - backend-build
+      - frontend-build
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    outputs:
+      pr-media-enabled: ${{ steps.pr-media-scenes.outputs.enabled }}
+      clear-pr-media-comment: ${{ steps.pr-media-scenes.outputs.clear-comment }}
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ayunis
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      mailcatcher:
+        image: dockage/mailcatcher:0.9.0
+        ports:
+          - 1025:1025
+          - 1080:1080
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Start MinIO
+        uses: ./.github/actions/start-minio
+
+      - name: Download backend build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: e2e-backend-build
+          path: .
+
+      # Same layout as the production image: the backend serves the SPA from
+      # dist/frontend (ServeStaticModule), so browser and API share one origin.
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: e2e-frontend-dist
+          path: ayunis-core-backend/dist/frontend
+
+      - name: Create backend environment file
+        working-directory: ayunis-core-backend
+        run: |
+          cat > .env << 'EOF'
+          # NODE_ENV stays unset => development: allows MOCK_INFERENCE and the
+          # seed script while keeping production-only validations off.
+          PORT=3000
+          MOCK_INFERENCE=true
+
+          # Database
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=ayunis
+
+          # Auth
+          JWT_SECRET=e2e-ci-jwt-secret-minimum-32-characters-long
+          COOKIE_SECRET=e2e-ci-cookie-secret
+          COOKIE_SECURE=false
+          COOKIE_SAME_SITE=lax
+
+          # Legal acceptances created during registration
+          TERMS_OF_SERVICE_VERSION=e2e-terms-v1
+          PRIVACY_POLICY_VERSION=e2e-privacy-v1
+
+          # Seat-based subscriptions. Creating one reads the YEARLY value (the
+          # factory always builds seat-based subscriptions on a yearly cycle);
+          # without it every seat-based create fails with "Price per seat not
+          # configured". MONTHLY backs GET /subscriptions/price.
+          SUBSCRIPTIONS_PRICE_PER_SEAT_MONTHLY=20
+          SUBSCRIPTIONS_PRICE_PER_SEAT_YEARLY=18
+
+          # Deterministic model availability. MOCK_INFERENCE handles requests,
+          # but the app still hides providers without configured credentials.
+          AWS_BEDROCK_REGION=eu-central-1
+          AZURE_OPENAI_API_KEY=e2e-ci-dummy
+
+          # Deterministic Mistral OCR contract server
+          MISTRAL_API_KEY=e2e-ci-mistral-key
+          MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
+
+          # MinIO
+          MINIO_ENDPOINT=localhost
+          MINIO_PORT=9000
+          MINIO_USE_SSL=false
+          MINIO_ACCESS_KEY=ayunis-ci
+          MINIO_SECRET_KEY=ayunis-ci-minio-secret
+          MINIO_BUCKET=ayunis
+
+          # Redis (password optional outside production)
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+
+          # Email -> Mailcatcher (tokens are read from its JSON API)
+          SMTP_HOST=127.0.0.1
+          SMTP_PORT=1025
+
+          # Same-origin app: email links must point at the backend origin.
+          FRONTEND_BASEURL=http://localhost:3000
+          CORS_ALLOWED_ORIGINS=http://localhost:3000
+
+          MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          EOF
+
+      - name: Start Mistral OCR contract server
+        run: |
+          nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \
+            || { cat mistral-ocr-mock.log; exit 1; }
+
+      - name: Run migrations
+        working-directory: ayunis-core-backend
+        run: pnpm run migration:run:dev
+
+      - name: Seed database
+        working-directory: ayunis-core-backend
+        run: pnpm run seed:minimal:ts
+
+      - name: Start backend
+        working-directory: ayunis-core-backend
+        run: |
+          nohup node dist/src/main > backend.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done' \
+            || { echo '--- backend.log ---'; cat backend.log; exit 1; }
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter ayunis-core-e2e exec playwright install --with-deps chromium
+
+      - name: Lint e2e package
+        run: pnpm --filter ayunis-core-e2e lint
+
+      - name: Typecheck e2e package
+        run: pnpm --filter ayunis-core-e2e typecheck
+
+      - name: Run e2e tests
+        run: pnpm --filter ayunis-core-e2e test
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          E2E_API_URL: http://localhost:3000
+          E2E_MAIL_URL: http://localhost:1080
+
+      # -- Temporary PR media ------------------------------------------------
+      # Scene code lives on pr-media/pr-<n> instead of the product branch.
+      # This job runs PR/scene code with read-only permissions; publishing
+      # happens later in a no-checkout write-token job.
+      - name: Load PR media scenes
+        id: pr-media-scenes
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          ref="pr-media/pr-${PR}"
+          mkdir -p .pr-media
+          if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${ref}" --silent 2>/dev/null; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+            echo "No PR media branch ${ref}"
+            exit 0
+          fi
+
+          scenes_error="$(mktemp)"
+          if ! gh api "repos/${GITHUB_REPOSITORY}/contents/.pr-media/scenes.ts?ref=${ref}" --jq .content > .pr-media/scenes.ts.b64 2>"${scenes_error}"; then
+            if grep -q "Not Found" "${scenes_error}"; then
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+              echo "No .pr-media/scenes.ts on ${ref}"
+              exit 0
+            fi
+            cat "${scenes_error}" >&2
+            exit 1
+          fi
+
+          base64 -d .pr-media/scenes.ts.b64 > .pr-media/scenes.ts
+          cp .pr-media/scenes.ts ayunis-core-e2e/pr-media/scenes.generated.ts
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "clear-comment=false" >> "$GITHUB_OUTPUT"
+          echo "Loaded PR media scenes from ${ref}"
+
+      - name: Install media tooling
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Capture PR screenshots and demos
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        run: pnpm --filter ayunis-core-e2e run pr-media:capture
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          E2E_API_URL: http://localhost:3000
+          E2E_MAIL_URL: http://localhost:1080
+
+      - name: Package PR media artifact
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p pr-media-artifact/.pr-media pr-media-artifact/media
+          cp .pr-media/scenes.ts pr-media-artifact/.pr-media/scenes.ts
+          shopt -s nullglob
+          media=(ayunis-core-e2e/screenshots-output/*.png ayunis-core-e2e/screenshots-output/*.gif)
+          if [ ${#media[@]} -eq 0 ]; then
+            echo "No PR media files were generated"
+            exit 1
+          fi
+          cp "${media[@]}" pr-media-artifact/media/
+
+      - name: Upload PR media artifact
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-media-${{ github.event.pull_request.number }}
+          path: pr-media-artifact
+          if-no-files-found: error
+          retention-days: 3
+          include-hidden-files: true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            ayunis-core-e2e/playwright-report
+            ayunis-core-e2e/test-results
+          retention-days: 7
+
+      - name: Upload backend log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-log
+          path: |
+            ayunis-core-backend/backend.log
+          retention-days: 7
+
+  publish-pr-media:
+    name: Publish PR media
+    needs: e2e
+    if: github.event_name == 'pull_request' && needs.e2e.outputs.pr-media-enabled == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Download PR media artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: pr-media-${{ github.event.pull_request.number }}
+          path: pr-media-artifact
+
+      - name: Publish screenshots and demos to PR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          shots_dir="pr-media-artifact/media"
+          branch="pr-media/pr-${PR}"
+          marker="<!-- pr-screenshots -->"
+
+          shopt -s nullglob
+          shots=("$shots_dir"/*.png)
+          gifs=("$shots_dir"/*.gif)
+          media=("${shots[@]}" "${gifs[@]}")
+          if [ ${#media[@]} -eq 0 ]; then
+            echo "No screenshots or videos in $shots_dir — nothing to publish."
+            exit 0
+          fi
+
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          git -C "$work" init -q
+          git -C "$work" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          if git -C "$work" fetch -q --depth=1 origin "$branch"; then
+            git -C "$work" checkout -q -B "$branch" FETCH_HEAD
+          else
+            git -C "$work" checkout -q --orphan "$branch"
+            mkdir -p "$work/.pr-media"
+            cp pr-media-artifact/.pr-media/scenes.ts "$work/.pr-media/scenes.ts"
+          fi
+
+          dest="$work/docs/pr-media/pr-${PR}"
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp "${media[@]}" "$dest/"
+
+          git -C "$work" add -A
+          if git -C "$work" diff --cached --quiet; then
+            sha="$(git -C "$work" rev-parse HEAD)"
+            echo "PR media files are unchanged on ${branch}; keeping ${sha}"
+          else
+            git -C "$work" \
+              -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qm "docs(pr-media): UI screenshots for PR #${PR}"
+            sha="$(git -C "$work" rev-parse HEAD)"
+            git -C "$work" push -q \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "HEAD:refs/heads/${branch}"
+          fi
+
+          raw_base="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${sha}/docs/pr-media/pr-${PR}"
+          body="$marker
+          ### 📸 UI screenshots and demos
+
+          Captured automatically for affected frontend routes from this PR's build (mock LLM, seeded data, German locale).
+          "
+
+          section() {
+            local title="$1" suffix="$2" open="$3" printed_any=false
+            local out="<details${open}><summary>${title}</summary>
+
+          "
+            for f in "${shots[@]}"; do
+              local name route gif gif_name scene
+              name="$(basename "$f")"
+              [[ "$name" == *"--${suffix}.png" ]] || continue
+              route="${name%--"${suffix}".png}"
+              printed_any=true
+              out+="**${route}**
+          ![${name}](${raw_base}/${name})
+
+          "
+              for gif in "$shots_dir/${route}--"*--"${suffix}.gif"; do
+                [ -f "$gif" ] || continue
+                gif_name="$(basename "$gif")"
+                scene="${gif_name#"${route}"--}"
+                scene="${scene%--"${suffix}".gif}"
+                out+="_${scene}_
+          ![${gif_name}](${raw_base}/${gif_name})
+
+          "
+              done
+            done
+            out+="</details>"
+            # Must not return the false status of an empty section: under
+            # `set -e` that aborts the assignment below, so a scene set
+            # covering only one viewport never reaches the comment upsert.
+            if $printed_any; then
+              printf '%s\n' "$out"
+            fi
+          }
+
+          body+="$(section 'Desktop (1280px)' 'desktop' ' open')
+          $(section 'Mobile (375px)' 'mobile' '')"
+
+          comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -1)"
+
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              -f body="$body" > /dev/null
+            echo "Updated screenshot comment ${comment_id} on PR #${PR} (${#shots[@]} shots, ${#gifs[@]} videos, ${sha})"
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+              -f body="$body" > /dev/null
+            echo "Created screenshot comment on PR #${PR} (${#shots[@]} shots, ${#gifs[@]} videos, ${sha})"
+          fi
+
+  clear-pr-media-comment:
+    name: Clear PR media comment
+    needs: e2e
+    if: github.event_name == 'pull_request' && needs.e2e.outputs.clear-pr-media-comment == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Delete stale screenshots comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          marker="<!-- pr-screenshots -->"
+          comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -1)"
+          if [ -n "$comment_id" ]; then
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}"
+            echo "Deleted stale screenshot comment ${comment_id} from PR #${PR}"
+          else
+            echo "No stale screenshot comment on PR #${PR}"
+          fi

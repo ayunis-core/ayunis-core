@@ -3,11 +3,5 @@ import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCor
 
 export function useFeatureToggles(): FeatureTogglesResponseDto {
   const { data } = useAppControllerFeatureToggles();
-
-  return {
-    knowledgeBasesEnabled: data?.knowledgeBasesEnabled ?? true,
-    letterheadsEnabled: data?.letterheadsEnabled ?? false,
-    skillsEnabled: data?.skillsEnabled ?? false,
-    agentRuntimeEnabled: data?.agentRuntimeEnabled ?? false,
-  };
+  return data ?? {};
 }

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
 import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
-import { UnexpectedMfaError } from '../../mfa.errors';
+import { UnexpectedMfaError } from 'src/iam/mfa/application/mfa.errors';
 import { UpsertOrgMfaRequirementCommand } from './upsert-org-mfa-requirement.command';
 
 @Injectable()
@@ -16,10 +16,13 @@ export class UpsertOrgMfaRequirementUseCase {
   async execute(
     command: UpsertOrgMfaRequirementCommand,
   ): Promise<OrgMfaRequirement> {
-    this.logger.log('upsertOrgMfaRequirement', {
-      orgId: command.orgId,
-      required: command.required,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+        required: command.required,
+      },
+      'upsertOrgMfaRequirement',
+    );
 
     try {
       const existing = await this.orgMfaRequirementsRepository.findByOrgId(
@@ -36,9 +39,12 @@ export class UpsertOrgMfaRequirementUseCase {
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error upserting org MFA requirement', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error upserting org MFA requirement',
+      );
       throw new UnexpectedMfaError(error);
     }
   }

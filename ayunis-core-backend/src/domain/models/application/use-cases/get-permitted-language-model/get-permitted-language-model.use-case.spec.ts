@@ -1,20 +1,22 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { GetPermittedLanguageModelUseCase } from './get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelNotFoundByIdError } from '../../models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelNotFoundByIdError } from 'src/domain/models/application/models.errors';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 
 describe('GetPermittedLanguageModelUseCase', () => {
+  const logger = createLoggerMock();
   let useCase: GetPermittedLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getEffectiveLanguageModelsUseCase: jest.Mocked<GetEffectiveLanguageModelsUseCase>;
@@ -35,6 +37,7 @@ describe('GetPermittedLanguageModelUseCase', () => {
     isArchived: false,
     canUseTools: true,
     canVision: false,
+    contextWindowSize: 128_000,
   });
 
   const permittedModelForOrg = (orgId: UUID) =>
@@ -65,12 +68,9 @@ describe('GetPermittedLanguageModelUseCase', () => {
         {
           provide: ContextService,
           useValue: {
-            get: jest.fn((key: string) => {
-              if (key === 'userId') return mockUserId;
-              if (key === 'orgId') return mockOrgId;
-              if (key === 'systemRole') return null;
-              return null;
-            }),
+            get: jest.fn(
+              getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+            ),
           },
         },
       ],
@@ -82,8 +82,8 @@ describe('GetPermittedLanguageModelUseCase', () => {
       GetEffectiveLanguageModelsUseCase,
     );
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

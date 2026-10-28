@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { AnonymizeTextForThreadUseCase } from './anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
@@ -11,7 +10,13 @@ import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/d
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
 import type { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
+import {
+  UnexpectedAnonymizationSettingsError,
+  UnexpectedGlobalAnonymizationWhitelistError,
+} from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import { Logger } from '@nestjs/common';
+import { QueryFailedError } from 'typeorm';
 
 describe('AnonymizeTextForThreadUseCase', () => {
   const orgId = '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c' as UUID;
@@ -45,8 +50,10 @@ describe('AnonymizeTextForThreadUseCase', () => {
       } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const command = () =>
@@ -73,6 +80,7 @@ describe('AnonymizeTextForThreadUseCase', () => {
     expect(anonymizeExecute).toHaveBeenCalledWith(
       expect.objectContaining({
         text,
+        measurementContext: { orgId, source: 'user_message' },
         whitelist: [new PiiWhitelistEntry(PiiCategory.LOCATION, null)],
         existingMasks: [
           {
@@ -109,6 +117,37 @@ describe('AnonymizeTextForThreadUseCase', () => {
           new PiiWhitelistEntry(PiiCategory.LOCATION, null),
           new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Mitarbeitende'),
         ],
+      }),
+    );
+  });
+
+  it('whitelists manually unmasked values while keeping their masks for numbering', async () => {
+    const unmasked = new ThreadPiiMask({
+      threadId,
+      category: PiiCategory.PERSON_NAME,
+      maskIndex: 1,
+      value: 'Dr. Moritz (Chef)',
+      unmasked: true,
+    });
+    const active = new ThreadPiiMask({
+      threadId,
+      category: PiiCategory.EMAIL_ADDRESS,
+      maskIndex: 1,
+      value: 'a@b.de',
+    });
+    findByThreadId.mockResolvedValue([unmasked, active]);
+
+    await useCase.execute(command());
+
+    expect(anonymizeExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whitelist: [
+          new PiiWhitelistEntry(
+            PiiCategory.PERSON_NAME,
+            'Dr\\. Moritz \\(Chef\\)',
+          ),
+        ],
+        existingMasks: [unmasked.toPiiMask(), active.toPiiMask()],
       }),
     );
   });
@@ -171,11 +210,126 @@ describe('AnonymizeTextForThreadUseCase', () => {
     );
   });
 
-  it('wraps repository failures in a module error', async () => {
+  it('wraps repository failures in a stage-specific module error', async () => {
     saveMany.mockRejectedValue(new Error('unique constraint violation'));
 
-    await expect(useCase.execute(command())).rejects.toThrow(
-      UnexpectedThreadPiiMasksError,
+    await expect(useCase.execute(command())).rejects.toMatchObject({
+      code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+    });
+  });
+
+  it('propagates a thread deleted before mask persistence as a warning, not a persistence failure', async () => {
+    const errorLog = jest.spyOn(Logger.prototype, 'error');
+    const warnLog = jest.spyOn(Logger.prototype, 'warn');
+    findByThreadId.mockResolvedValue([
+      new ThreadPiiMask({
+        threadId,
+        category: PiiCategory.EMAIL_ADDRESS,
+        maskIndex: 1,
+        value: 'dani@example.org',
+      }),
+    ]);
+    saveMany.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+
+    await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+      ThreadPiiMaskThreadMissingError,
     );
+    expect(findByThreadId).toHaveBeenCalledWith(threadId);
+    expect(errorLog).not.toHaveBeenCalled();
+    expect(warnLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'new_masks_persistence',
+        threadId,
+        existingMaskCount: 1,
+        newMaskCount: 1,
+      }),
+      expect.any(String),
+    );
+  });
+
+  it('classifies existing-mask lookup failures without raw database messages', async () => {
+    findByThreadId.mockRejectedValue(
+      Object.assign(new Error('query contained sensitive values'), {
+        code: '57P01',
+      }),
+    );
+
+    await expect(useCase.execute(command())).rejects.toMatchObject({
+      name: 'THREAD_PII_MASK_LOOKUP_FAILED',
+      code: 'THREAD_PII_MASK_LOOKUP_FAILED',
+      metadata: {
+        stage: 'existing_masks_lookup',
+        textLength: text.length,
+        databaseCode: '57P01',
+      },
+    });
+  });
+
+  it.each([
+    [
+      'org whitelist',
+      () => whitelistExecute,
+      new UnexpectedAnonymizationSettingsError('get'),
+      'THREAD_PII_MASK_ORG_WHITELIST_LOOKUP_FAILED',
+      'org_whitelist_lookup',
+    ],
+    [
+      'global whitelist',
+      () => globalWhitelistExecute,
+      new UnexpectedGlobalAnonymizationWhitelistError(
+        new Error('lookup failed with private data'),
+      ),
+      'THREAD_PII_MASK_GLOBAL_WHITELIST_LOOKUP_FAILED',
+      'global_whitelist_lookup',
+    ],
+  ])(
+    'classifies %s lookup failures',
+    async (_, getMock, cause, code, stage) => {
+      getMock().mockRejectedValue(cause);
+
+      const result = useCase.execute(command());
+
+      await expect(result).rejects.toMatchObject({
+        name: code,
+        code,
+        metadata: { stage, textLength: text.length },
+      });
+      await expect(result).rejects.not.toMatchObject({
+        metadata: expect.objectContaining({ databaseCode: expect.anything() }),
+      });
+    },
+  );
+
+  it('classifies persistence failures with allowlisted database diagnostics', async () => {
+    const driverError = Object.assign(
+      new Error('duplicate value contains sensitive text'),
+      {
+        code: '23505',
+        constraint: 'UQ_thread_pii_masks_thread_category_value',
+        detail: 'Key (value)=(sensitive text) already exists',
+      },
+    );
+    saveMany.mockRejectedValue(
+      new QueryFailedError('INSERT INTO thread_pii_masks', [], driverError),
+    );
+
+    const result = useCase.execute(command());
+
+    await expect(result).rejects.toMatchObject({
+      name: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      metadata: {
+        stage: 'new_masks_persistence',
+        textLength: text.length,
+        existingMaskCount: 0,
+        newMaskCount: 1,
+        databaseCode: '23505',
+        databaseConstraint: 'UQ_thread_pii_masks_thread_category_value',
+        causeType: 'QueryFailedError',
+      },
+    });
+    await expect(result).rejects.not.toMatchObject({
+      metadata: expect.objectContaining({ detail: expect.anything() }),
+    });
   });
 });

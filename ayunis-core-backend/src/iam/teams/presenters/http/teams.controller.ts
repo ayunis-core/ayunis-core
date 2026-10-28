@@ -20,24 +20,24 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { CreateTeamUseCase } from '../../application/use-cases/create-team/create-team.use-case';
-import { CreateTeamCommand } from '../../application/use-cases/create-team/create-team.command';
-import { UpdateTeamUseCase } from '../../application/use-cases/update-team/update-team.use-case';
-import { UpdateTeamCommand } from '../../application/use-cases/update-team/update-team.command';
-import { DeleteTeamUseCase } from '../../application/use-cases/delete-team/delete-team.use-case';
-import { DeleteTeamCommand } from '../../application/use-cases/delete-team/delete-team.command';
-import { ListTeamsUseCase } from '../../application/use-cases/list-teams/list-teams.use-case';
-import { ListMyTeamsUseCase } from '../../application/use-cases/list-my-teams/list-my-teams.use-case';
-import { GetTeamUseCase } from '../../application/use-cases/get-team/get-team.use-case';
-import { GetTeamQuery } from '../../application/use-cases/get-team/get-team.query';
-import { ListTeamMembersUseCase } from '../../application/use-cases/list-team-members/list-team-members.use-case';
-import { ListTeamMembersQuery } from '../../application/use-cases/list-team-members/list-team-members.query';
-import { AddTeamMemberUseCase } from '../../application/use-cases/add-team-member/add-team-member.use-case';
-import { AddTeamMemberCommand } from '../../application/use-cases/add-team-member/add-team-member.command';
-import { BulkAddTeamMembersUseCase } from '../../application/use-cases/bulk-add-team-members/bulk-add-team-members.use-case';
-import { BulkAddTeamMembersCommand } from '../../application/use-cases/bulk-add-team-members/bulk-add-team-members.command';
-import { RemoveTeamMemberUseCase } from '../../application/use-cases/remove-team-member/remove-team-member.use-case';
-import { RemoveTeamMemberCommand } from '../../application/use-cases/remove-team-member/remove-team-member.command';
+import { CreateTeamUseCase } from 'src/iam/teams/application/use-cases/create-team/create-team.use-case';
+import { CreateTeamCommand } from 'src/iam/teams/application/use-cases/create-team/create-team.command';
+import { UpdateTeamUseCase } from 'src/iam/teams/application/use-cases/update-team/update-team.use-case';
+import { UpdateTeamCommand } from 'src/iam/teams/application/use-cases/update-team/update-team.command';
+import { DeleteTeamUseCase } from 'src/iam/teams/application/use-cases/delete-team/delete-team.use-case';
+import { DeleteTeamCommand } from 'src/iam/teams/application/use-cases/delete-team/delete-team.command';
+import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
+import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
+import { ListTeamMembersUseCase } from 'src/iam/teams/application/use-cases/list-team-members/list-team-members.use-case';
+import { ListTeamMembersQuery } from 'src/iam/teams/application/use-cases/list-team-members/list-team-members.query';
+import { AddTeamMemberUseCase } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.use-case';
+import { AddTeamMemberCommand } from 'src/iam/teams/application/use-cases/add-team-member/add-team-member.command';
+import { BulkAddTeamMembersUseCase } from 'src/iam/teams/application/use-cases/bulk-add-team-members/bulk-add-team-members.use-case';
+import { BulkAddTeamMembersCommand } from 'src/iam/teams/application/use-cases/bulk-add-team-members/bulk-add-team-members.command';
+import { RemoveTeamMemberUseCase } from 'src/iam/teams/application/use-cases/remove-team-member/remove-team-member.use-case';
+import { RemoveTeamMemberCommand } from 'src/iam/teams/application/use-cases/remove-team-member/remove-team-member.command';
 import { CreateTeamDto } from './dtos/create-team.dto';
 import { UpdateTeamDto } from './dtos/update-team.dto';
 import { TeamResponseDto } from './dtos/team-response.dto';
@@ -111,7 +111,10 @@ export class TeamsController {
 
     const teams = await this.listTeamsUseCase.execute();
 
-    this.logger.log(`Successfully retrieved ${teams.length} teams`);
+    this.logger.log(
+      { teamCount: teams.length },
+      'Successfully retrieved teams',
+    );
     return this.teamDtoMapper.toDtoListWithMemberCount(teams);
   }
 
@@ -137,7 +140,10 @@ export class TeamsController {
 
     const teams = await this.listMyTeamsUseCase.execute();
 
-    this.logger.log(`Successfully retrieved ${teams.length} teams for user`);
+    this.logger.log(
+      { teamCount: teams.length },
+      'Successfully retrieved teams for user',
+    );
     return this.teamDtoMapper.toDtoList(teams);
   }
 
@@ -172,12 +178,12 @@ export class TeamsController {
   async getTeam(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<TeamResponseDto> {
-    this.logger.log(`Getting team with id: ${id}`);
+    this.logger.log({ teamId: id }, 'Getting team');
 
     const query = new GetTeamQuery(id);
     const response = await this.getTeamUseCase.execute(query);
 
-    this.logger.log(`Successfully retrieved team with id: ${id}`);
+    this.logger.log({ teamId: id }, 'Successfully retrieved team');
     return this.teamDtoMapper.toDto(response);
   }
 
@@ -216,12 +222,12 @@ export class TeamsController {
   async createTeam(
     @Body() createTeamDto: CreateTeamDto,
   ): Promise<TeamResponseDto> {
-    this.logger.log(`Creating team with name: ${createTeamDto.name}`);
+    this.logger.log({ name: createTeamDto.name }, 'Creating team');
 
     const command = new CreateTeamCommand(createTeamDto.name);
     const team = await this.createTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully created team with id: ${team.id}`);
+    this.logger.log({ teamId: team.id }, 'Successfully created team');
     return this.teamDtoMapper.toDto(team);
   }
 
@@ -261,9 +267,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateTeamDto: UpdateTeamDto,
   ): Promise<TeamResponseDto> {
-    this.logger.log(
-      `Updating team ${id} with name: ${updateTeamDto.name}, modelOverrideEnabled: ${updateTeamDto.modelOverrideEnabled}`,
-    );
+    this.logger.log({ teamId: id, ...updateTeamDto }, 'Updating team');
 
     const command = new UpdateTeamCommand(
       id,
@@ -272,7 +276,7 @@ export class TeamsController {
     );
     const team = await this.updateTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully updated team with id: ${team.id}`);
+    this.logger.log({ teamId: team.id }, 'Successfully updated team');
     return this.teamDtoMapper.toDto(team);
   }
 
@@ -303,12 +307,12 @@ export class TeamsController {
     description: 'Internal server error',
   })
   async deleteTeam(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log(`Deleting team with id: ${id}`);
+    this.logger.log({ teamId: id }, 'Deleting team');
 
     const command = new DeleteTeamCommand(id);
     await this.deleteTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully deleted team with id: ${id}`);
+    this.logger.log({ teamId: id }, 'Successfully deleted team');
   }
 
   @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
@@ -339,7 +343,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Query() queryDto: ListTeamMembersQueryDto,
   ): Promise<PaginatedTeamMembersResponseDto> {
-    this.logger.log(`Listing members for team: ${id}`);
+    this.logger.log({ teamId: id }, 'Listing members for team');
 
     const query = new ListTeamMembersQuery({
       teamId: id,
@@ -349,7 +353,8 @@ export class TeamsController {
     const result = await this.listTeamMembersUseCase.execute(query);
 
     this.logger.log(
-      `Successfully retrieved ${result.data.length} members for team: ${id}`,
+      { teamId: id, memberCount: result.data.length },
+      'Successfully retrieved members for team',
     );
     return {
       data: this.teamMemberDtoMapper.toDtoList(result.data),
@@ -397,17 +402,13 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() addTeamMemberDto: AddTeamMemberDto,
   ): Promise<TeamMemberResponseDto> {
-    this.logger.log(`Adding user ${addTeamMemberDto.userId} to team: ${id}`);
+    const { userId } = addTeamMemberDto;
+    this.logger.log({ teamId: id, userId }, 'Adding user to team');
 
-    const command = new AddTeamMemberCommand({
-      teamId: id,
-      userId: addTeamMemberDto.userId,
-    });
+    const command = new AddTeamMemberCommand({ teamId: id, userId });
     const teamMember = await this.addTeamMemberUseCase.execute(command);
 
-    this.logger.log(
-      `Successfully added user ${addTeamMemberDto.userId} to team: ${id}`,
-    );
+    this.logger.log({ teamId: id, userId }, 'Successfully added user to team');
     return this.teamMemberDtoMapper.toDto(teamMember);
   }
 
@@ -432,7 +433,8 @@ export class TeamsController {
     @Body() bulkAddTeamMembersDto: BulkAddTeamMembersDto,
   ): Promise<TeamMemberResponseDto[]> {
     this.logger.log(
-      `Adding ${bulkAddTeamMembersDto.userIds.length} users to team: ${id}`,
+      { teamId: id, userCount: bulkAddTeamMembersDto.userIds.length },
+      'Adding users to team',
     );
 
     const command = new BulkAddTeamMembersCommand({
@@ -442,7 +444,8 @@ export class TeamsController {
     const teamMembers = await this.bulkAddTeamMembersUseCase.execute(command);
 
     this.logger.log(
-      `Successfully added ${teamMembers.length} users to team: ${id}`,
+      { teamId: id, userCount: teamMembers.length },
+      'Successfully added users to team',
     );
     return this.teamMemberDtoMapper.toDtoList(teamMembers);
   }
@@ -477,7 +480,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('userId', ParseUUIDPipe) userId: UUID,
   ): Promise<void> {
-    this.logger.log(`Removing user ${userId} from team: ${id}`);
+    this.logger.log({ teamId: id, userId }, 'Removing user from team');
 
     const command = new RemoveTeamMemberCommand({
       teamId: id,
@@ -485,6 +488,9 @@ export class TeamsController {
     });
     await this.removeTeamMemberUseCase.execute(command);
 
-    this.logger.log(`Successfully removed user ${userId} from team: ${id}`);
+    this.logger.log(
+      { teamId: id, userId },
+      'Successfully removed user from team',
+    );
   }
 }

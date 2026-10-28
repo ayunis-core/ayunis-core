@@ -1,11 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
+import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -13,7 +17,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   NoModelProvidedError,
   ThreadCreationError,
-} from '../../threads.errors';
+} from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
@@ -22,12 +26,14 @@ describe('CreateThreadUseCase', () => {
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let contextService: jest.Mocked<ContextService>;
+  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
+    logger = createLoggerMock();
     const mockThreadsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
@@ -47,6 +53,10 @@ describe('CreateThreadUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockAssertWorkspaceReadAccessUseCase = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateThreadUseCase,
@@ -56,6 +66,10 @@ describe('CreateThreadUseCase', () => {
           useValue: mockGetPermittedLanguageModelUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: AssertWorkspaceReadAccessUseCase,
+          useValue: mockAssertWorkspaceReadAccessUseCase,
+        },
       ],
     }).compile();
 
@@ -65,10 +79,6 @@ describe('CreateThreadUseCase', () => {
       GetPermittedLanguageModelUseCase,
     );
     contextService = module.get(ContextService);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -92,6 +102,7 @@ describe('CreateThreadUseCase', () => {
         isArchived: false,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
         createdAt: now,
         updatedAt: now,
       });
@@ -186,6 +197,7 @@ describe('CreateThreadUseCase', () => {
         updatedAt: now,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
       });
       const mockModel = new PermittedLanguageModel({
         id: mockModelId,
@@ -207,7 +219,6 @@ describe('CreateThreadUseCase', () => {
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       threadsRepository.create.mockResolvedValue(mockCreatedThread);
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
       const getModelExecuteSpy = jest.spyOn(
         getPermittedLanguageModelUseCase,
         'execute',
@@ -217,7 +228,7 @@ describe('CreateThreadUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(logSpy).toHaveBeenCalledWith('execute');
+      expect(logger.log).toHaveBeenCalledWith('execute');
       expect(getModelExecuteSpy).toHaveBeenCalled();
     });
 
@@ -237,6 +248,7 @@ describe('CreateThreadUseCase', () => {
         isArchived: false,
         canUseTools: false,
         canVision: false,
+        contextWindowSize: 128_000,
         createdAt: now,
         updatedAt: now,
       });
@@ -254,7 +266,6 @@ describe('CreateThreadUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       threadsRepository.create.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
       const getModelExecuteSpy = jest.spyOn(
         getPermittedLanguageModelUseCase,
         'execute',
@@ -264,10 +275,10 @@ describe('CreateThreadUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         ThreadCreationError,
       );
-      expect(errorSpy).toHaveBeenCalledWith('Failed to create thread', {
-        userId: mockUserId,
-        error: 'Database connection failed',
-      });
+      expect(logger.error).toHaveBeenCalledWith(
+        { userId: mockUserId, err: repositoryError },
+        'Failed to create thread',
+      );
       expect(getModelExecuteSpy).toHaveBeenCalled();
     });
   });

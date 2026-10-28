@@ -70,9 +70,8 @@ export class ChatCompletionMessageDto implements OpenAIChatCompletionMessage {
   role!: OpenAIChatCompletionRole;
 
   // string, null (assistant tool-call-only turns), or OpenAI's array-of-parts
-  // form. The mapper folds text parts into a single string and rejects
-  // non-text modalities (image_url, input_audio) since multimodal is not
-  // yet wired through the inference port.
+  // form. Inline file_data parts are extracted to text before mapping;
+  // image_url and input_audio remain unsupported.
   @IsOptional()
   content?: string | OpenAIChatCompletionContentPart[] | null;
 

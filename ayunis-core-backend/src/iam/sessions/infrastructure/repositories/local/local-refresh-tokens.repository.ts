@@ -1,30 +1,44 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { RefreshTokenRecord } from './schema/refresh-token.record';
 import { RefreshTokenMapper } from './mappers/refresh-token.mapper';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 /** Internal control flow: aborts the rotation transaction to roll it back. */
 class RotationLostError extends Error {}
+
+// Each deleted row also fires the self-referencing FK's SET NULL lookup, so a
+// bounded batch keeps every DELETE inside the statement timeout no matter how
+// large the expired backlog has grown (AYC-1237).
+export const EXPIRED_TOKEN_DELETE_BATCH_SIZE = 1000;
 
 @Injectable()
 export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   constructor(
     @InjectRepository(RefreshTokenRecord)
     private readonly repository: Repository<RefreshTokenRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
   async insert(token: RefreshToken): Promise<void> {
-    await this.repository.save(RefreshTokenMapper.toRecord(token));
+    await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
+      .save(RefreshTokenMapper.toRecord(token));
   }
 
   async findByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
-    const record = await this.repository.findOne({ where: { tokenHash } });
+    const record = await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
+      .findOne({ where: { tokenHash } });
     return record ? RefreshTokenMapper.toDomain(record) : null;
   }
 
@@ -33,7 +47,7 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     successor: RefreshToken,
   ): Promise<boolean> {
     try {
-      await this.repository.manager.transaction(async (manager) => {
+      await this.txHost.tx.transaction(async (manager) => {
         // Successor goes in first so the FK behind replacedByTokenId holds;
         // losing the conditional update rolls the insert back. The conditional
         // update on DB time keeps rotation single-winner under concurrency and
@@ -62,9 +76,12 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async wasUsedWithinGrace(id: UUID, graceSeconds: number): Promise<boolean> {
-    const count = await this.repository
+    const count = await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
       .createQueryBuilder('t')
       .where('t.id = :id', { id })
+      .andWhere('t.revokedAt IS NULL')
+      .andWhere('t.expiresAt > NOW()')
       .andWhere('t.usedAt IS NOT NULL')
       .andWhere('t.usedAt > NOW() - make_interval(secs => :graceSeconds)', {
         graceSeconds,
@@ -73,6 +90,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     return count > 0;
   }
 
+  // Reuse handling calls this after the refresh transaction rolls back, so
+  // the theft-response revocation commits independently.
   async revokeFamily(familyId: UUID): Promise<void> {
     await this.repository
       .createQueryBuilder()
@@ -93,6 +112,67 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
       .execute();
   }
 
+  async revokeByZitadelSessionId(zitadelSessionId: string): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where('zitadelSessionId = :zitadelSessionId', { zitadelSessionId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.SSO,
+      })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokeSsoForUser(userId: UUID): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where('userId = :userId', { userId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.SSO,
+      })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokeAllForOrg(orgId: UUID): Promise<void> {
+    const records = this.txHost.tx.getRepository(RefreshTokenRecord);
+    const userIds = records.manager
+      .createQueryBuilder(UserRecord, 'user')
+      .select('user.id')
+      .where('user.orgId = :orgId')
+      .getQuery();
+    await records
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where(`"userId" IN (${userIds})`, { orgId })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokePasswordSessionsForOrg(orgId: UUID): Promise<void> {
+    const records = this.txHost.tx.getRepository(RefreshTokenRecord);
+    const userIds = records.manager
+      .createQueryBuilder(UserRecord, 'user')
+      .select('user.id')
+      .where('user.orgId = :orgId')
+      .getQuery();
+    await records
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where(`"userId" IN (${userIds})`, { orgId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
   async revokeAllForUserExceptFamily(
     userId: UUID,
     keepFamilyId: UUID,
@@ -108,7 +188,28 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async deleteExpired(now: Date): Promise<number> {
-    const result = await this.repository.delete({ expiresAt: LessThan(now) });
+    let deleted = 0;
+    let batch: number;
+    do {
+      batch = await this.deleteExpiredBatch(now);
+      deleted += batch;
+    } while (batch === EXPIRED_TOKEN_DELETE_BATCH_SIZE);
+    return deleted;
+  }
+
+  private async deleteExpiredBatch(now: Date): Promise<number> {
+    const expiredIds = this.repository
+      .createQueryBuilder('token')
+      .select('token.id')
+      .where('token.expiresAt < :now')
+      .limit(EXPIRED_TOKEN_DELETE_BATCH_SIZE)
+      .getQuery();
+    const result = await this.repository
+      .createQueryBuilder()
+      .delete()
+      .from(RefreshTokenRecord)
+      .where(`id IN (${expiredIds})`, { now })
+      .execute();
     return result.affected ?? 0;
   }
 }

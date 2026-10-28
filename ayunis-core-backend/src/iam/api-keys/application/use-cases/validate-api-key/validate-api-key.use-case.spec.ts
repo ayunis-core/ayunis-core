@@ -1,13 +1,15 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ValidateApiKeyUseCase } from './validate-api-key.use-case';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyExpiredError, ApiKeyNotFoundError } from '../../api-keys.errors';
+import {
+  ApiKeyExpiredError,
+  ApiKeyNotFoundError,
+} from 'src/iam/api-keys/application/api-keys.errors';
 
 describe('ValidateApiKeyUseCase', () => {
   let useCase: ValidateApiKeyUseCase;
@@ -57,11 +59,6 @@ describe('ValidateApiKeyUseCase', () => {
     useCase = module.get(ValidateApiKeyUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     compareHashUseCase = module.get(CompareHashUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns the api key on a valid, active, unexpired token', async () => {

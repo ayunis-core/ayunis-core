@@ -1,5 +1,5 @@
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import { ThreadPiiMaskRecord } from '../schema/thread-pii-mask.record';
+import { ThreadPiiMaskRecord } from 'src/domain/thread-pii-masks/infrastructure/persistence/postgres/schema/thread-pii-mask.record';
 
 export class ThreadPiiMaskMapper {
   static toDomain(record: ThreadPiiMaskRecord): ThreadPiiMask {
@@ -9,6 +9,7 @@ export class ThreadPiiMaskMapper {
       category: record.category,
       maskIndex: record.maskIndex,
       value: record.value,
+      unmasked: record.unmasked,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -21,6 +22,7 @@ export class ThreadPiiMaskMapper {
     record.category = domain.category;
     record.maskIndex = domain.maskIndex;
     record.value = domain.value;
+    record.unmasked = domain.unmasked;
     record.createdAt = domain.createdAt;
     record.updatedAt = new Date();
     return record;

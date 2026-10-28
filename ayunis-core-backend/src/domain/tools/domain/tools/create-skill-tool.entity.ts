@@ -1,6 +1,6 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
 const createSkillToolParameters = {
@@ -31,7 +31,7 @@ const createSkillToolParameters = {
 
 type CreateSkillToolParameters = FromSchema<typeof createSkillToolParameters>;
 
-export class CreateSkillTool extends DisplayableTool {
+export class CreateSkillTool extends Tool {
   constructor() {
     super({
       name: ToolType.CREATE_SKILL,

@@ -1,6 +1,8 @@
 export { isAcademyAddonActive } from './isAcademyAddonActive';
 export { useIsAcademyAddonActive } from './useIsAcademyAddonActive';
-export { useDownloadCertificate } from './useDownloadCertificate';
+export { useDownloadParticipationConfirmation } from './useDownloadParticipationConfirmation';
 export { useAcademyAccessStatus } from './useAcademyAccessStatus';
-export { default as AcademyGateNotice } from './ui/AcademyGateNotice';
+export { useAcademyProgress } from './useAcademyProgress';
+export { resolveCertificateExpiryNotice } from './lib/resolve-certificate-expiry-notice';
+export type { CertificateExpiryNoticeLevel } from './lib/resolve-certificate-expiry-notice';
 export { ACADEMY_LANDING_PAGE_URL } from './constants';

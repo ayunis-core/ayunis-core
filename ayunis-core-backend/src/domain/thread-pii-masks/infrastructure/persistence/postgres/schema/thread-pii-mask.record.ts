@@ -24,4 +24,7 @@ export class ThreadPiiMaskRecord extends BaseRecord {
 
   @Column({ type: 'text' })
   value: string;
+
+  @Column({ type: 'boolean', default: false })
+  unmasked: boolean;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 
-import { DEFAULT_TIMEOUT_MS, mistral } from './mistral-provider';
+import { mistral } from './mistral-provider';
 
 const mistralCtor = vi.hoisted(() => vi.fn());
 
@@ -11,15 +11,9 @@ beforeEach(() => {
 });
 
 describe('mistral client construction', () => {
-  it('bounds the whole request with the default timeout', () => {
-    mistral({ apiKey: 'mistral-key', model: 'mistral-large-latest' });
-
-    expect(mistralCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ timeoutMs: DEFAULT_TIMEOUT_MS }),
-    );
-  });
-
-  it('lets the host override the timeout', () => {
+  // The SDK's timeoutMs bounds the whole request; the provider bounds only
+  // response start itself, so the SDK must not receive it.
+  it('does not hand the timeout to the SDK', () => {
     mistral({
       apiKey: 'mistral-key',
       model: 'mistral-large-latest',
@@ -27,7 +21,44 @@ describe('mistral client construction', () => {
     });
 
     expect(mistralCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ timeoutMs: 60_000 }),
+      expect.not.objectContaining({ timeoutMs: expect.anything() }),
+    );
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ retryConfig: { strategy: 'none' } }),
+    );
+  });
+
+  it('targets the EU server by default', () => {
+    mistral({ apiKey: 'mistral-key', model: 'mistral-large-latest' });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ server: 'eu' }),
+    );
+  });
+
+  it('lets the host override the server URL', () => {
+    mistral({
+      apiKey: 'mistral-key',
+      model: 'mistral-large-latest',
+      baseUrl: 'http://127.0.0.1:3199',
+    });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ serverURL: 'http://127.0.0.1:3199' }),
+    );
+  });
+
+  it('keeps retries configurable for direct non-streaming adapters', () => {
+    mistral({
+      apiKey: 'mistral-key',
+      model: 'mistral-large-latest',
+      maxRetries: 3,
+    });
+
+    expect(mistralCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        retryConfig: expect.objectContaining({ strategy: 'backoff' }),
+      }),
     );
   });
 });
@@ -36,7 +67,13 @@ describe('request deadline', () => {
   const streamOptions = async (
     request: Partial<Parameters<ReturnType<typeof mistral>['stream']>[0]>,
   ) => {
-    const stream = vi.fn().mockResolvedValue([]);
+    const stream = vi.fn().mockResolvedValue(
+      new ReadableStream({
+        start(controller) {
+          controller.close();
+        },
+      }),
+    );
     // A regular function, not an arrow: the SDK client is built with `new`.
     mistralCtor.mockImplementation(function () {
       return { chat: { stream } };

@@ -3,35 +3,43 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
-import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.command';
-import { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
-import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
+import {
+  isAcknowledgementOnlyTool,
+  isExternallyHandledTool,
+  isHybridArtifactTool,
+} from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ToolUsedEvent } from '../events/tool-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import {
+  RunToolCompletedEvent,
+  type RunToolOutcome,
+} from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
-} from '../runs.errors';
-import { RunToolResultInput } from '../../domain/run-input.entity';
+} from 'src/domain/runs/application/runs.errors';
+import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  addToolResultTruncationNotice,
+  limitToolResult,
+  truncateAnonymousToolResult,
+} from 'src/domain/runs/application/helpers/limit-tool-result.helper';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 
-const MAX_TOOL_RESULT_LENGTH = 20000;
-
-export interface ToolResultOutcome {
-  toolName: string;
-  result: string;
-  succeeded: boolean;
-}
+const DISPLAY_ACK = 'Tool has been displayed successfully';
+const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 interface ProcessedToolResult {
   content: ToolResultMessageContent;
@@ -39,11 +47,14 @@ interface ProcessedToolResult {
   piiMasks: ThreadPiiMask[] | null;
 }
 
-export interface CollectedToolResults {
+interface ToolProcessingContext {
+  orgId: UUID;
+  threadId: UUID;
+  isAnonymous: boolean;
+}
+
+interface CollectedToolResults {
   contents: ToolResultMessageContent[];
-  /** Per-result success flags, in content order — feeds the run loop's repeated-failure breaker (AYC-646). */
-  outcomes: ToolResultOutcome[];
-  /** Latest full mask dictionary when any result was anonymized, else null. */
   piiMasks: ThreadPiiMask[] | null;
 }
 
@@ -53,7 +64,6 @@ export class ToolResultCollectorService {
 
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
-    private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
@@ -62,9 +72,10 @@ export class ToolResultCollectorService {
   async collectToolResults(params: {
     thread: Thread;
     tools: Tool[];
-    input: RunToolResultInput | null;
+    input: RunToolResultInput;
     orgId: UUID;
     isAnonymous: boolean;
+    executionPath: RunExecutionPath;
   }): Promise<CollectedToolResults> {
     this.logger.debug('collectToolResults');
     const { thread, tools, input, orgId, isAnonymous } = params;
@@ -77,40 +88,68 @@ export class ToolResultCollectorService {
       : [];
 
     const contents: ToolResultMessageContent[] = [];
-    const outcomes: ToolResultOutcome[] = [];
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
-      const result = await this.processToolUse(
-        content,
-        tools,
-        input,
-        orgId,
-        thread.id,
-        isAnonymous,
-      );
+      let result: ProcessedToolResult;
+      try {
+        result = await this.processToolUse(content, tools, input, {
+          orgId,
+          threadId: thread.id,
+          isAnonymous,
+        });
+      } catch (error) {
+        this.emitToolCompleted(params.executionPath, 'error', content.name);
+        throw error;
+      }
+      const outcome = result.succeeded ? 'success' : 'error';
+      this.emitToolCompleted(params.executionPath, outcome, content.name);
       contents.push(result.content);
-      outcomes.push({
-        toolName: result.content.toolName,
-        result: result.content.result,
-        succeeded: result.succeeded,
-      });
       // Each anonymization returns the full dictionary — the latest wins.
       piiMasks = result.piiMasks ?? piiMasks;
     }
 
-    return { contents, outcomes, piiMasks };
+    return { contents, piiMasks };
+  }
+
+  private emitToolCompleted(
+    executionPath: RunExecutionPath,
+    outcome: RunToolOutcome,
+    toolName: string,
+  ): void {
+    if (outcome === 'error') {
+      this.logger.warn(
+        { execution_path: executionPath, tool_name: toolName },
+        'Run tool call failed',
+      );
+    }
+    this.eventEmitter
+      .emitAsync(
+        RunToolCompletedEvent.EVENT_NAME,
+        new RunToolCompletedEvent(executionPath, outcome),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+          'Failed to emit RunToolCompletedEvent',
+        );
+      });
   }
 
   private async processToolUse(
     content: ToolUseMessageContent,
     tools: Tool[],
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
-    const tool = tools.find((t) => t.name === content.name);
+    // History from before the integration namespace carries MCP calls under
+    // the plain upstream name, and models imitate what they see there.
+    const tool =
+      tools.find((t) => t.name === content.name) ??
+      tools.find(
+        (t) =>
+          t instanceof McpIntegrationTool && t.originalName === content.name,
+      );
     if (!tool) {
       return {
         content: new ToolResultMessageContent(
@@ -123,115 +162,108 @@ export class ToolResultCollectorService {
       };
     }
 
-    this.emitToolUsedEvent(orgId, content.name);
+    this.emitToolUsedEvent(context.orgId, content);
 
     try {
-      return await this.executeByCapability(
-        tool,
-        content,
-        input,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+      return await this.executeByRuntimePolicy(tool, content, input, context);
     } catch (error) {
-      if (error instanceof ApplicationError) {
+      if (
+        error instanceof ApplicationError ||
+        error instanceof ThreadPiiMaskThreadMissingError
+      ) {
         throw error;
       }
-      this.logger.error(`Error processing tool ${content.name}`, error);
+      this.logger.error(
+        {
+          toolName: content.name,
+          err: error instanceof Error ? error : new Error(String(error)),
+        },
+        'Error processing tool',
+      );
       throw new RunToolExecutionFailedError(content.name, {
         error: error as Error,
       });
     }
   }
 
-  private emitToolUsedEvent(orgId: UUID, toolName: string): void {
+  private emitToolUsedEvent(orgId: UUID, content: ToolUseMessageContent): void {
     const userId = this.contextService.get('userId');
     this.eventEmitter
       .emitAsync(
         ToolUsedEvent.EVENT_NAME,
-        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, toolName),
+        new ToolUsedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId,
+          content.name,
+          content.integration?.id as UUID | undefined,
+          content.integration?.name,
+        ),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit ToolUsedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          toolName,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            toolName: content.name,
+          },
+          'Failed to emit ToolUsedEvent',
+        );
       });
   }
 
-  private async executeByCapability(
+  private async executeByRuntimePolicy(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
-    const capabilities = this.checkToolCapabilitiesUseCase.execute(
-      new CheckToolCapabilitiesQuery(tool),
-    );
-
-    if (capabilities.isDisplayable && capabilities.isExecutable) {
-      return this.processHybridTool(
-        tool,
-        content,
-        input,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+    if (isHybridArtifactTool(tool)) {
+      return this.processHybridTool(tool, content, input, context);
     }
-
-    if (capabilities.isDisplayable) {
+    if (isAcknowledgementOnlyTool(tool)) {
       return {
-        ...this.processDisplayOnlyTool(tool, content, input),
+        ...this.processClientRenderedTool(tool, content, input, DISPLAY_ACK),
         piiMasks: null,
       };
     }
-
-    if (capabilities.isExecutable) {
-      return this.executeBackendTool(
-        tool,
-        content,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+    if (isExternallyHandledTool(tool)) {
+      return {
+        ...this.processClientRenderedTool(
+          tool,
+          content,
+          input,
+          EXTERNAL_TOOL_RESULT,
+        ),
+        piiMasks: null,
+      };
     }
-
-    return {
-      content: new ToolResultMessageContent(
-        content.id,
-        content.name,
-        `Tool ${content.name} has no executable or displayable capability.`,
-      ),
-      succeeded: false,
-      piiMasks: null,
-    };
+    return this.executeBackendTool(
+      tool,
+      content,
+      context.orgId,
+      context.threadId,
+      context.isAnonymous,
+    );
   }
 
   private async processHybridTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     const executionResult = await this.executeBackendTool(
       tool,
       content,
-      orgId,
-      threadId,
-      isAnonymous,
+      context.orgId,
+      context.threadId,
+      context.isAnonymous,
     );
     if (executionResult.succeeded) {
       // No re-validation here: the handler already validated the
       // null-stripped input, and rechecking the raw params could reject a
       // call whose side effect just succeeded.
       return {
-        ...this.handleDisplayableTool(content, input),
+        ...this.handleClientRenderedTool(content, input, DISPLAY_ACK),
         piiMasks: executionResult.piiMasks,
       };
     }
@@ -242,72 +274,17 @@ export class ToolResultCollectorService {
     };
   }
 
-  exitLoopAfterAgentResponse(
-    agentResponseMessage: AssistantMessage,
-    tools: Tool[],
-  ): boolean {
-    const responseDoesNotContainToolCalls = agentResponseMessage.content.every(
-      (content) => content.type !== MessageContentType.TOOL_USE,
-    );
-    if (responseDoesNotContainToolCalls) return true;
-
-    try {
-      const displayOnlyCalls = agentResponseMessage.content
-        .filter((content) => content instanceof ToolUseMessageContent)
-        .map((content) => ({
-          content,
-          tool: this.findDisplayOnlyTool(content, tools),
-        }))
-        .filter(
-          (call): call is { content: ToolUseMessageContent; tool: Tool } =>
-            call.tool !== undefined,
-        );
-      // Only exit the loop when every display-only call's params validate —
-      // one invalid call must keep the loop running so the model receives
-      // its validation error and retries, instead of the turn ending with a
-      // bad call left unretried (AYC-675). Hybrid tools never exit here;
-      // they also need execution.
-      const allValid = displayOnlyCalls.every(
-        ({ content, tool }) =>
-          this.validateDisplayableParams(tool, content) === null,
-      );
-      if (displayOnlyCalls.length > 0 && allValid) return true;
-    } catch (error) {
-      this.logger.error('Error checking for display tools', error);
-    }
-
-    return false;
-  }
-
-  private findDisplayOnlyTool(
-    content: ToolUseMessageContent,
-    tools: Tool[],
-  ): Tool | undefined {
-    const tool = tools.find((candidate) => candidate.name === content.name);
-    if (!tool) {
-      this.logger.warn(
-        `Tool ${content.name} mentioned in response but not found`,
-      );
-      return undefined;
-    }
-    const capabilities = this.checkToolCapabilitiesUseCase.execute(
-      new CheckToolCapabilitiesQuery(tool),
-    );
-    return capabilities.isDisplayable && !capabilities.isExecutable
-      ? tool
-      : undefined;
-  }
-
-  private processDisplayOnlyTool(
+  private processClientRenderedTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
+    input: RunToolResultInput,
+    defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
     // An explicit frontend-supplied result means the user already interacted
     // with the rendered widget — never block it on (possibly historical)
     // invalid params.
-    if (input?.toolId !== content.id) {
-      const validationError = this.validateDisplayableParams(tool, content);
+    if (input.toolId !== content.id) {
+      const validationError = this.validateClientRenderedParams(tool, content);
       if (validationError !== null) {
         return {
           content: new ToolResultMessageContent(
@@ -319,14 +296,15 @@ export class ToolResultCollectorService {
         };
       }
     }
-    return this.handleDisplayableTool(content, input);
+    return this.handleClientRenderedTool(content, input, defaultResult);
   }
 
-  private handleDisplayableTool(
+  private handleClientRenderedTool(
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
+    input: RunToolResultInput,
+    defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
-    if (input?.toolId === content.id) {
+    if (input.toolId === content.id) {
       return {
         content: new ToolResultMessageContent(
           input.toolId,
@@ -340,21 +318,21 @@ export class ToolResultCollectorService {
       content: new ToolResultMessageContent(
         content.id,
         content.name,
-        'Tool has been displayed successfully',
+        defaultResult,
       ),
       succeeded: true,
     };
   }
 
   /**
-   * Display-only tools bypass backend execution, so this is the only place
+   * Client-rendered tools bypass backend execution, so this is the only place
    * their schema runs; the returned message is model-actionable (AYC-646
    * formatting) and null means the params are valid. Nulls are stripped the
    * same way `ExecuteToolUseCase` does for executable tools, so a
    * strict-mode model's explicit null for an optional param never fails a
-   * display-only call.
+   * client-rendered call.
    */
-  private validateDisplayableParams(
+  private validateClientRenderedParams(
     tool: Tool,
     content: ToolUseMessageContent,
   ): string | null {
@@ -396,15 +374,21 @@ export class ToolResultCollectorService {
         }
       });
 
-    if (result.length > MAX_TOOL_RESULT_LENGTH) {
-      result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
-    }
-
     let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
-      const anonymized = await this.anonymizeText(result, orgId, threadId);
-      result = anonymized.anonymizedText;
+      const limited = truncateAnonymousToolResult(result);
+      const anonymized = await this.anonymizeText(
+        limited.result,
+        orgId,
+        threadId,
+      );
+      const anonymizedResult = limited.truncated
+        ? addToolResultTruncationNotice(anonymized.anonymizedText)
+        : anonymized.anonymizedText;
+      result = limitToolResult(anonymizedResult);
       piiMasks = anonymized.masks;
+    } else {
+      result = limitToolResult(result);
     }
 
     return {
@@ -421,10 +405,13 @@ export class ToolResultCollectorService {
   ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
     try {
       const result = await this.anonymizeTextForThreadUseCase.execute(
-        new AnonymizeTextForThreadCommand(text, orgId, threadId),
+        new AnonymizeTextForThreadCommand(text, orgId, threadId, {
+          source: 'tool_result',
+        }),
       );
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
+      if (error instanceof ThreadPiiMaskThreadMissingError) throw error;
       throw new RunAnonymizationUnavailableError(
         {
           originalError:

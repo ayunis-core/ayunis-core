@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ExtractTextLinesUseCase } from './extract-text-lines.use-case';
 import { ExtractTextLinesQuery } from './extract-text-lines.query';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { randomUUID } from 'crypto';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 describe('ExtractTextLinesUseCase', () => {
   let useCase: ExtractTextLinesUseCase;

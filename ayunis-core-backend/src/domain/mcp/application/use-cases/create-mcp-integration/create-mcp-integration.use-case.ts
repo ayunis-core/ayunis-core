@@ -1,14 +1,14 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { CreatePredefinedMcpIntegrationCommand } from './create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { PredefinedMcpIntegrationRegistry } from 'src/domain/mcp/application/registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpConfigService } from '../../services/mcp-config.service';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { ConnectionValidationService } from 'src/domain/mcp/application/services/connection-validation.service';
+import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config.service';
 import { McpAuthMethod } from 'src/domain/mcp/domain';
 import { McpIntegrationKind } from 'src/domain/mcp/domain';
 import {
@@ -17,7 +17,7 @@ import {
   UnexpectedMcpError,
   DuplicateMcpIntegrationError,
   McpValidationFailedError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UUID } from 'crypto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
@@ -27,7 +27,7 @@ import {
   PredefinedMcpIntegrationConfig,
 } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { McpIntegration, McpIntegrationAuth } from 'src/domain/mcp/domain';
-import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
+import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 
 @Injectable()
 export class CreateMcpIntegrationUseCase {
@@ -76,7 +76,7 @@ export class CreateMcpIntegrationUseCase {
     command: CreatePredefinedMcpIntegrationCommand,
     orgId: UUID,
   ): Promise<PredefinedMcpIntegration> {
-    this.logger.log('createPredefinedIntegration', { slug: command.slug });
+    this.logger.log({ slug: command.slug }, 'createPredefinedIntegration');
 
     try {
       if (!this.registryService.isValidSlug(command.slug)) {
@@ -184,9 +184,7 @@ export class CreateMcpIntegrationUseCase {
     command: CreateCustomMcpIntegrationCommand,
     orgId: UUID,
   ): Promise<CustomMcpIntegration> {
-    this.logger.log('createCustomIntegration', {
-      serverUrl: command.serverUrl,
-    });
+    this.logger.log({ url: command.serverUrl }, 'createCustomIntegration');
 
     try {
       if (!this.isValidUrl(command.serverUrl)) {
@@ -271,9 +269,10 @@ export class CreateMcpIntegrationUseCase {
       throw error;
     }
 
-    this.logger.error(`Unexpected error creating ${kind} integration`, {
-      error: error as Error,
-    });
+    this.logger.error(
+      { err: error as Error, kind },
+      'Unexpected error creating integration',
+    );
     throw new UnexpectedMcpError('Unexpected error occurred');
   }
 

@@ -1,64 +1,91 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillRepository } from '../../ports/skill.repository';
-import { CreateSkillCommand } from './create-skill.command';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { UUID } from 'crypto';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   DuplicateSkillNameError,
+  SkillInvalidInputError,
   UnexpectedSkillError,
-} from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
+} from 'src/domain/skills/application/skills.errors';
+import { InvalidSkillNameError } from 'src/domain/skills/domain/abstract-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { CreateSkillCommand } from './create-skill.command';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class CreateSkillUseCase {
   private readonly logger = new Logger(CreateSkillUseCase.name);
 
   constructor(
-    private readonly skillRepository: SkillRepository,
-    private readonly contextService: ContextService,
+    private readonly repository: SkillRepository,
+    private readonly authorization: SkillAuthorizationService,
+    private readonly context: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  @Transactional()
   async execute(command: CreateSkillCommand): Promise<Skill> {
-    this.logger.log('Creating skill', { name: command.name });
+    this.logger.log(
+      { name: command.name, ownerType: command.owner.type },
+      'Creating skill',
+    );
+    const { userId } = getRequiredUserContext(this.context);
+    const skill = this.createEntity(command, userId);
+    await this.authorization.requireWrite(skill);
+    await this.assertUniqueName(skill);
+    const created = await this.repository.create(skill);
+    await this.activate(created, command.isActive ?? true, userId);
+    return created;
+  }
+
+  private createEntity(command: CreateSkillCommand, userId: UUID): Skill {
+    const params = {
+      name: command.name,
+      shortDescription: command.shortDescription,
+      instructions: command.instructions,
+      mcpIntegrationIds: command.mcpIntegrationIds,
+    };
     try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      // Check for duplicate name
-      const existing = await this.skillRepository.findByNameAndOwner(
-        command.name,
-        userId,
-      );
-      if (existing) {
-        throw new DuplicateSkillNameError(command.name);
-      }
-
-      const skill = new Skill({
-        name: command.name,
-        shortDescription: command.shortDescription,
-        instructions: command.instructions,
-        userId,
-      });
-
-      const created = await this.skillRepository.create(skill);
-
-      if (command.isActive) {
-        await this.skillRepository.activateSkill(created.id, userId);
-      }
-
-      return created;
+      return command.owner.type === 'workspace'
+        ? new WorkspaceSkill({
+            ...params,
+            workspaceId: command.owner.workspaceId,
+          })
+        : new PersonalSkill({ ...params, userId });
     } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof InvalidSkillNameError
-      )
-        throw error;
-      this.logger.error('Error creating skill', { error: error as Error });
-      throw new UnexpectedSkillError(error);
+      if (error instanceof InvalidSkillNameError) {
+        throw new SkillInvalidInputError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  private async assertUniqueName(skill: Skill): Promise<void> {
+    const existing =
+      skill instanceof WorkspaceSkill
+        ? await this.repository.findByNameAndWorkspace(
+            skill.name,
+            skill.workspaceId,
+          )
+        : await this.repository.findByNameAndOwner(skill.name, skill.userId);
+    if (existing) throw new DuplicateSkillNameError(skill.name);
+  }
+
+  private async activate(
+    skill: Skill,
+    requestedActive: boolean,
+    userId: UUID,
+  ): Promise<void> {
+    if (!requestedActive) return;
+    if (skill instanceof WorkspaceSkill) {
+      await this.repository.activateWorkspaceSkill(skill.id, skill.workspaceId);
+    } else {
+      await this.repository.activateSkill(skill.id, userId);
     }
   }
 }

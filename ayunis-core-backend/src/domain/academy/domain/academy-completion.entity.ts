@@ -3,10 +3,9 @@ import { randomUUID } from 'crypto';
 
 /**
  * A learner's whole-academy completion snapshot. One row per user, stamped when
- * every currently quiz-enabled chapter has been passed. `completedAt` is only
+ * every configured chapter has a valid confirmation. `completedAt` is only
  * ever (re)written on full completion — it is never cleared or recomputed by
  * content changes, so adding a chapter never revokes an existing completion.
- * This single date is what a future access gate reads.
  */
 export class AcademyCompletion {
   public readonly id: UUID;

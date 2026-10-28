@@ -3,13 +3,17 @@ import { plainToInstance, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
+  Matches,
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsUrl,
   Min,
   validateSync,
   type ValidationError,
 } from 'class-validator';
+import { validateTrustProxy } from 'src/config/trust-proxy';
+import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
 const BOOLEAN_STRINGS = ['true', 'false'] as const;
@@ -38,6 +42,8 @@ export class EnvironmentVariables {
   // App / HTTP
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) PORT?: number;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) DISABLE_REGISTRATION?: string;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) DISABLE_ORG_EVENTS_WEBHOOKS?: string;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MOCK_INFERENCE?: string;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -67,10 +73,37 @@ export class EnvironmentVariables {
   @Min(1)
   PASSWORD_HASH_ROUNDS?: number;
   @IsOptional()
+  @Matches(/^[1-9]\d*$/, {
+    message: '$property must be a positive decimal integer',
+  })
+  AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS?: string;
+  @IsOptional()
+  @Matches(/^[1-9]\d*$/, {
+    message: '$property must be a positive decimal integer',
+  })
+  AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES?: string;
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
   SESSION_REFRESH_GRACE_SECONDS?: number;
+
+  // Municipal SSO — optional as a group so local authentication remains
+  // available before the broker integration is configured.
+  @IsOptional()
+  @IsUrl({ require_protocol: true, require_tld: false })
+  SSO_OIDC_ISSUER?: string;
+  @IsOptional() @IsNotEmpty() SSO_OIDC_CLIENT_ID?: string;
+  @IsOptional() @IsNotEmpty() SSO_OIDC_CLIENT_SECRET?: string;
+  @IsOptional() @IsNotEmpty() SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY?: string;
+  @IsOptional()
+  @IsUrl({ require_protocol: true, require_tld: false })
+  SSO_OIDC_CALLBACK_URL?: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  SSO_REAUTH_MAX_AGE_SECONDS?: number;
 
   // Database
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) POSTGRES_PORT?: number;
@@ -155,12 +188,6 @@ export class EnvironmentVariables {
   @IsOptional() @IsIn(['brave', 'staan']) INTERNET_SEARCH_PROVIDER?: string;
   @IsOptional() @IsIn(['de-de', 'en-us', 'fr-fr']) STAAN_SEARCH_MARKET?: string;
 
-  // Feature flags
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_KNOWLEDGE_BASES_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_LETTERHEADS_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SKILLS_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_AGENT_RUNTIME_ENABLED?: string;
-
   // Retention
   @IsOptional() @IsIn(BOOLEAN_STRINGS) RETENTION_DRY_RUN?: string;
 }
@@ -222,6 +249,57 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
   return messages;
 }
 
+const SSO_OIDC_KEYS = [
+  'SSO_OIDC_ISSUER',
+  'SSO_OIDC_CLIENT_ID',
+  'SSO_OIDC_CLIENT_SECRET',
+  'SSO_OIDC_CALLBACK_URL',
+  'SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY',
+] as const;
+
+function validateSsoOidcRules(env: Record<string, unknown>): string[] {
+  const configured = SSO_OIDC_KEYS.filter((key) => env[key] !== undefined);
+  if (configured.length === 0) {
+    return [];
+  }
+  const messages = SSO_OIDC_KEYS.filter((key) => env[key] === undefined).map(
+    (key) => `${key} is required when municipal SSO OIDC is configured`,
+  );
+  for (const key of ['SSO_OIDC_ISSUER', 'SSO_OIDC_CALLBACK_URL'] as const) {
+    const value = env[key];
+    if (
+      typeof value === 'string' &&
+      usesDisallowedSsoProtocol(value, env.NODE_ENV === 'production')
+    ) {
+      messages.push(`${key} must use HTTPS except for local development`);
+    }
+  }
+  const encryptionKey = env.SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY;
+  if (
+    typeof encryptionKey === 'string' &&
+    !/^[0-9a-f]{64}$/i.test(encryptionKey)
+  ) {
+    messages.push(
+      'SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY must be a 64-character hex string',
+    );
+  }
+  return messages;
+}
+
+function usesDisallowedSsoProtocol(
+  value: string,
+  isProduction: boolean,
+): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol !== 'https:' && (isProduction || !isLoopbackHttpUrl(value))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Validate the whole environment at boot. Returns the untouched config on
  * success (factories keep reading `process.env`); throws one aggregated error
@@ -236,6 +314,8 @@ export function validateEnv(
   const messages = [
     ...collectConstraintMessages(errors),
     ...validateProductionRules(env),
+    ...validateTrustProxy(env.TRUST_PROXY),
+    ...validateSsoOidcRules(env),
   ];
   if (messages.length > 0) {
     messages.sort((a, b) => a.localeCompare(b));

@@ -1,11 +1,11 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IpAllowlistGuard } from './ip-allowlist.guard';
-import type { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
-import { IpAllowlist } from '../../domain/ip-allowlist.entity';
-import { IpNotAllowedError } from '../ip-allowlist.errors';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
+import { IpNotAllowedError } from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
 import type { UUID } from 'crypto';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -125,9 +125,7 @@ describe('IpAllowlistGuard', () => {
   });
 
   it('should log a warning with audit context when the client IP is not in the allowlist', async () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createLoggerMock();
     repository.findByOrgId.mockResolvedValue(
       new IpAllowlist({ orgId, cidrs: ['10.0.0.0/8'] }),
     );
@@ -139,9 +137,8 @@ describe('IpAllowlistGuard', () => {
 
     await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    const [message, meta] = warnSpy.mock.calls[0];
-    expect(message).toMatch(/allowlist/i);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    const [meta, message] = logger.warn.mock.calls[0];
     expect(meta).toEqual(
       expect.objectContaining({
         userId: activeUser.id,
@@ -149,8 +146,7 @@ describe('IpAllowlistGuard', () => {
         clientIp: '192.168.1.50',
       }),
     );
-
-    warnSpy.mockRestore();
+    expect(message).toMatch(/allowlist/i);
   });
 
   it('should throw IpNotAllowedError when the client IP cannot be determined', async () => {

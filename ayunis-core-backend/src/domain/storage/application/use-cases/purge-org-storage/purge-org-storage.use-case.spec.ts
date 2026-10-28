@@ -1,9 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { PurgeOrgStorageUseCase } from './purge-org-storage.use-case';
 import { PurgeOrgStorageCommand } from './purge-org-storage.command';
-import { PurgeStoragePrefixesUseCase } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import type { UUID } from 'crypto';
 
 describe('PurgeOrgStorageUseCase', () => {
@@ -28,8 +27,6 @@ describe('PurgeOrgStorageUseCase', () => {
     }).compile();
 
     useCase = module.get(PurgeOrgStorageUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

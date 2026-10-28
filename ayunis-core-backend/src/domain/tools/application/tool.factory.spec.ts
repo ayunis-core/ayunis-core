@@ -1,3 +1,4 @@
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { ToolFactory } from './tool.factory';
 import {
   HttpToolConfig,
@@ -6,16 +7,17 @@ import {
 } from 'src/domain/tools/domain/tools/http-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
-import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
-import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
-import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
-import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
-import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
-import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
-import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
-import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
-import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
-import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
+import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -71,7 +73,7 @@ describe('ToolFactory', () => {
     it('should create an EditSkillTool', () => {
       const tool = factory.createTool({
         type: ToolType.EDIT_SKILL,
-        context: ['user__my-skill'],
+        context: new Map([['user__my-skill', randomUUID()]]),
       });
       expect(tool).toBeInstanceOf(EditSkillTool);
     });
@@ -112,6 +114,12 @@ describe('ToolFactory', () => {
       expect(tool.name).toBe(ToolType.GENERATE_IMAGE);
     });
 
+    it('should create a MapTool', () => {
+      const tool = factory.createTool({ type: ToolType.MAP });
+      expect(tool).toBeInstanceOf(MapTool);
+      expect(tool.name).toBe(ToolType.MAP);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -149,6 +157,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.WEBSITE_CONTENT);
       expect(types).toContain(ToolType.SEND_EMAIL);
       expect(types).toContain(ToolType.CREATE_CALENDAR_EVENT);
+      expect(types).toContain(ToolType.CREATE_FILE);
       expect(types).toContain(ToolType.CODE_EXECUTION);
       expect(types).toContain(ToolType.MCP_TOOL);
       expect(types).toContain(ToolType.MCP_RESOURCE);
@@ -156,6 +165,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.BAR_CHART);
       expect(types).toContain(ToolType.LINE_CHART);
       expect(types).toContain(ToolType.PIE_CHART);
+      expect(types).toContain(ToolType.MAP);
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
@@ -171,8 +181,17 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DIAGRAM);
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
+      expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
+      expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
 
-      expect(types.length).toBe(28);
+      expect(types).toHaveLength(32);
     });
+  });
+});
+
+describe('create_file factory registration', () => {
+  it('creates a file tool without configuration', () => {
+    const tool = new ToolFactory().createTool({ type: ToolType.CREATE_FILE });
+    expect(tool).toBeInstanceOf(CreateFileTool);
   });
 });

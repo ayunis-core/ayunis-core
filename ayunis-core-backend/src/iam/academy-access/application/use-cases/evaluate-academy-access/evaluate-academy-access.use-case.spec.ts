@@ -1,14 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { EvaluateAcademyAccessUseCase } from './evaluate-academy-access.use-case';
 import { EvaluateAcademyAccessQuery } from './evaluate-academy-access.query';
-import { GetOrgAcademyAccessSettingsUseCase } from '../get-org-academy-access-settings/get-org-academy-access-settings.use-case';
+import { GetOrgAcademyAccessSettingsUseCase } from 'src/iam/academy-access/application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.use-case';
 import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.use-case';
 import { GetAcademyCompletionUseCase } from 'src/domain/academy/application/use-cases/get-academy-completion/get-academy-completion.use-case';
-import { OrgAcademyAccessSettings } from '../../../domain/org-academy-access-settings.entity';
-import { AcademyAccessMode } from '../../../domain/value-objects/academy-access-mode.enum';
+import { OrgAcademyAccessSettings } from 'src/iam/academy-access/domain/org-academy-access-settings.entity';
+import { AcademyAccessMode } from 'src/iam/academy-access/domain/value-objects/academy-access-mode.enum';
 
 describe('EvaluateAcademyAccessUseCase', () => {
   let useCase: EvaluateAcademyAccessUseCase;
@@ -43,9 +42,6 @@ describe('EvaluateAcademyAccessUseCase', () => {
     getAcademyCompletionUseCase = module.get(GetAcademyCompletionUseCase);
 
     isAddonActiveUseCase.execute.mockResolvedValue(true);
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

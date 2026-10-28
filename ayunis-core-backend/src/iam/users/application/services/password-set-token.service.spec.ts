@@ -1,17 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PasswordSetTokenService } from './password-set-token.service';
-import { PasswordSetTokensRepository } from '../ports/password-set-tokens.repository';
-import { PasswordSetTokenPurpose } from '../../domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import {
   aPasswordSetToken,
   createMockPasswordSetTokensRepository,
   TEST_USER_ID,
-} from '../testing/password-set-token.fixtures';
+} from 'src/iam/users/application/testing/password-set-token.fixtures';
 
 describe('PasswordSetTokenService', () => {
   let service: PasswordSetTokenService;
@@ -35,10 +34,6 @@ describe('PasswordSetTokenService', () => {
 
     service = module.get(PasswordSetTokenService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

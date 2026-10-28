@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
   ArtifactContentTooLargeError,
@@ -9,7 +9,7 @@ import {
   ArtifactLetterheadNotSupportedError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import {
@@ -17,12 +17,12 @@ import {
   DocumentArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
+import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -38,7 +38,7 @@ export class UpdateArtifactUseCase {
   async execute(
     command: UpdateArtifactCommand,
   ): Promise<ArtifactVersion | void> {
-    this.logger.log('Updating artifact', { artifactId: command.artifactId });
+    this.logger.log({ artifactId: command.artifactId }, 'Updating artifact');
 
     const userId = this.resolveUserId();
 
@@ -69,10 +69,7 @@ export class UpdateArtifactUseCase {
   }
 
   private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId } = getRequiredUserContext(this.contextService);
     return userId;
   }
 

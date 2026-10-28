@@ -1,12 +1,15 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
-import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+} from 'src/domain/messages/application/ports/messages.repository';
+import {
+  MessageThreadMissingError,
+  UnexpectedToolResultMessageError,
+} from 'src/domain/messages/application/messages.errors';
 
 @Injectable()
 export class CreateToolResultMessageUseCase {
@@ -17,12 +20,16 @@ export class CreateToolResultMessageUseCase {
     private readonly messagesRepository: MessagesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedToolResultMessageError)
   async execute(
     command: CreateToolResultMessageCommand,
-  ): Promise<ToolResultMessage> {
-    this.logger.log('Creating tool result message', {
-      threadId: command.threadId,
-    });
+  ): Promise<ToolResultMessage | null> {
+    this.logger.log(
+      {
+        threadId: command.threadId,
+      },
+      'Creating tool result message',
+    );
 
     const toolResultMessage = new ToolResultMessage({
       id: command.id,
@@ -35,16 +42,14 @@ export class CreateToolResultMessageUseCase {
         toolResultMessage,
       )) as ToolResultMessage;
     } catch (error) {
-      this.logger.error('Failed to create tool result message', {
-        threadId: command.threadId,
-        error: error as Error,
-      });
-      throw error instanceof Error
-        ? new MessageCreationError(MessageRole.TOOL.toLowerCase(), error)
-        : new MessageCreationError(
-            MessageRole.TOOL.toLowerCase(),
-            new Error('Unknown error'),
-          );
+      if (error instanceof MessageThreadMissingError) {
+        this.logger.warn(
+          { threadId: command.threadId },
+          'Skipped saving tool result message because thread no longer exists',
+        );
+        return null;
+      }
+      throw error;
     }
   }
 }

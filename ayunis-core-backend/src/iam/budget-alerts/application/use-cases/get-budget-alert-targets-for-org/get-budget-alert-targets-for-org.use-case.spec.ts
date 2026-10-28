@@ -5,7 +5,7 @@ import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-c
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetUserCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/get-user-credit-limits-overview.use-case';
 import { GetTeamCreditLimitsOverviewUseCase } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/get-team-credit-limits-overview.use-case';
-import { BudgetAlertScope } from '../../../domain/value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import { GetBudgetAlertTargetsForOrgQuery } from './get-budget-alert-targets-for-org.query';
 import { GetBudgetAlertTargetsForOrgUseCase } from './get-budget-alert-targets-for-org.use-case';
 

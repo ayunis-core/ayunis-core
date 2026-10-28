@@ -6,7 +6,10 @@ import type { AssembleToolUseCase } from 'src/domain/tools/application/use-cases
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import type { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GetPermittedImageGenerationModelQuery } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.query';
-import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import {
+  EffectiveImageGenerationModelConflictError,
+  PermittedImageGenerationModelNotFoundForOrgError,
+} from 'src/domain/models/application/models.errors';
 
 export async function assembleImageGenerationTools(args: {
   orgId: UUID | undefined;
@@ -28,15 +31,25 @@ export async function assembleImageGenerationTools(args: {
   } catch (error) {
     if (error instanceof PermittedImageGenerationModelNotFoundForOrgError) {
       logger.debug(
-        'No permitted image-generation model; dropping generate_image tool',
         { orgId },
+        'No permitted image-generation model; dropping generate_image tool',
       );
       return [];
     }
-    logger.error('Failed to check image generation model availability', {
-      orgId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    if (error instanceof EffectiveImageGenerationModelConflictError) {
+      logger.warn(
+        { orgId },
+        'Conflicting team image-generation grants; dropping generate_image tool',
+      );
+      return [];
+    }
+    logger.error(
+      {
+        orgId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      'Failed to check image generation model availability',
+    );
     throw error;
   }
   return [

@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { PromoteToSuperAdminCommand } from './promote-to-super-admin.command';
 import { User } from 'src/iam/users/domain/user.entity';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserNotFoundError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -34,9 +37,12 @@ export class PromoteToSuperAdminUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error promoting user to super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error promoting user to super admin',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TemplateRendererPort } from '../../ports/template-renderer.port';
+import { TemplateRendererPort } from 'src/common/email-templates/application/ports/template-renderer.port';
 import { RenderTemplateCommand } from './render-template.command';
 import { RenderedEmailContent } from 'src/common/email-templates/domain/rendered-email-content.entity';
 
@@ -7,7 +7,7 @@ import { RenderedEmailContent } from 'src/common/email-templates/domain/rendered
 export class RenderTemplateUseCase {
   constructor(private readonly templateRenderer: TemplateRendererPort) {}
 
-  execute(command: RenderTemplateCommand): RenderedEmailContent {
+  execute(command: RenderTemplateCommand): Promise<RenderedEmailContent> {
     return this.templateRenderer.renderTemplate(command.template);
   }
 }

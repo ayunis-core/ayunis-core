@@ -1,9 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
 import {
   CertificateRendererPort,
   CertificateRenderInput,
-} from '../../application/ports/certificate-renderer.port';
+} from 'src/domain/academy/application/ports/certificate-renderer.port';
 import { buildCertificateHtml } from './certificate-template';
 
 @Injectable()
@@ -13,6 +13,7 @@ export class PuppeteerCertificateRendererService
   private readonly logger = new Logger(
     PuppeteerCertificateRendererService.name,
   );
+
   private readonly chromium = new LazyChromiumBrowser();
 
   async onModuleDestroy(): Promise<void> {

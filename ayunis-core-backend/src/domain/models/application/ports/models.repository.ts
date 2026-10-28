@@ -17,6 +17,10 @@ export type FindOneModelParams =
 export abstract class ModelsRepository {
   abstract findAll(): Promise<Model[]>;
   abstract findOne(params: FindOneModelParams): Promise<Model | undefined>;
+  abstract withCatalogModelLocked<Result>(
+    id: UUID,
+    operation: (model: Model | undefined) => Promise<Result>,
+  ): Promise<Result>;
   abstract findOneLanguage(id: UUID): Promise<LanguageModel | undefined>;
   abstract findOneEmbedding(id: UUID): Promise<EmbeddingModel | undefined>;
   abstract findOneImageGeneration(

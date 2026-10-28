@@ -1,15 +1,16 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 
 export interface PromptMessage {
   role: string;
@@ -42,57 +43,28 @@ export class GetMcpPromptUseCase {
   ) {}
 
   async execute(query: GetMcpPromptQuery): Promise<PromptResult> {
-    this.logger.log('getMcpPrompt', {
-      id: query.integrationId,
-      prompt: query.promptName,
-    });
+    this.logger.log(
+      { id: query.integrationId, prompt: query.promptName },
+      'getMcpPrompt',
+    );
 
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      const integration = await this.repository.findById(query.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(query.integrationId);
-      }
-
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(query.integrationId);
-      }
-
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(query.integrationId);
-      }
-
-      // Retrieve prompt from MCP server
-      const userId = this.contextService.get('userId');
+      const integration = await this.getAccessibleIntegration(query);
       const promptResponse = await this.mcpClientService.getPrompt(
         integration,
         query.promptName,
-        query.args || {},
-        userId,
+        query.args ?? {},
+        this.contextService.get('userId'),
       );
-
-      this.logger.log('promptRetrieved', {
-        id: query.integrationId,
-        prompt: query.promptName,
-        messageCount: promptResponse.messages.length,
-      });
-
-      // Map to PromptResult
-      const response = promptResponse as McpPromptResponse;
-      return {
-        messages: response.messages.map((msg) => ({
-          role: msg.role,
-          content:
-            typeof msg.content === 'string'
-              ? msg.content
-              : (msg.content.text ?? JSON.stringify(msg.content)),
-        })),
-        description: response.description,
-      };
+      this.logger.log(
+        {
+          id: query.integrationId,
+          prompt: query.promptName,
+          messageCount: promptResponse.messages.length,
+        },
+        'promptRetrieved',
+      );
+      return this.mapPromptResponse(promptResponse as McpPromptResponse);
     } catch (error) {
       if (
         error instanceof ApplicationError ||
@@ -100,10 +72,44 @@ export class GetMcpPromptUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error getting prompt', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Unexpected error getting prompt',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
+  }
+
+  private async getAccessibleIntegration(
+    query: GetMcpPromptQuery,
+  ): Promise<McpIntegration> {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const integration = await this.repository.findById(query.integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(query.integrationId);
+    }
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(query.integrationId);
+    }
+    if (!integration.enabled) {
+      throw new McpIntegrationDisabledError(query.integrationId);
+    }
+    return integration;
+  }
+
+  private mapPromptResponse(response: McpPromptResponse): PromptResult {
+    return {
+      messages: response.messages.map((message) => ({
+        role: message.role,
+        content:
+          typeof message.content === 'string'
+            ? message.content
+            : (message.content.text ?? JSON.stringify(message.content)),
+      })),
+      description: response.description,
+    };
   }
 }

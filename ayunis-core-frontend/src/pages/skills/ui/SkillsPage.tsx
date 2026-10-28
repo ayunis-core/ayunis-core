@@ -2,10 +2,10 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import CreateSkillDialog from './CreateSkillDialog';
+import CreateSkillMenu from './CreateSkillMenu';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
-import type { Skill } from '../model/openapi';
+import type { Skill } from '@/pages/skills/model/openapi';
 import SkillsEmptyState from './SkillsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
@@ -44,12 +44,12 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
 
   const createSkillAction = (
     <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
-      <CreateSkillDialog />
+      <CreateSkillMenu />
     </OnboardingTourTarget>
   );
 
   const headerAction = (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="skills/" />
       {hasPinnableSkill ? (
         createSkillAction
@@ -106,9 +106,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                   }
                   action={
                     canCreate ? (
-                      <CreateSkillDialog
+                      <CreateSkillMenu
                         buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon={true}
+                        showIcon
                       />
                     ) : undefined
                   }

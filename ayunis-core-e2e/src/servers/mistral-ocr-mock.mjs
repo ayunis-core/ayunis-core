@@ -1,0 +1,101 @@
+import { Buffer } from "node:buffer";
+import { createServer } from "node:http";
+import process from "node:process";
+
+const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
+
+const extractionCounts = new Map();
+
+const server = createServer(async (request, response) => {
+  if (request.method === "GET" && request.url === "/health") {
+    return sendJson(response, 200, { status: "ok" });
+  }
+
+  if (request.method === "GET" && request.url.startsWith("/extractions/")) {
+    const marker = request.url.slice("/extractions/".length);
+    return sendJson(response, 200, {
+      count: extractionCounts.get(marker) ?? 0,
+    });
+  }
+
+  if (request.method === "POST" && request.url === "/v1/ocr") {
+    const body = JSON.parse(await readBody(request));
+    if (body.document?.type !== "document_url") {
+      return sendJson(response, 400, {
+        message: "Expected the document inline as a document_url",
+      });
+    }
+    const document = decodeDocument(body.document.document_url);
+    if (document.includes("AYC-1059-OCR-REJECT")) {
+      return sendJson(response, 400, {
+        object: "error",
+        type: "document_parser_invalid_file",
+        message: "Synthetic OCR rejection",
+        code: "3740",
+      });
+    }
+    const marker = document.match(/AYC-1348-[a-f0-9-]+/)?.[0];
+    if (marker)
+      extractionCounts.set(marker, (extractionCounts.get(marker) ?? 0) + 1);
+    if (!requestsImageTextAnnotations(body)) {
+      return sendJson(response, 400, {
+        message: "Expected image text annotations without base64 image data",
+      });
+    }
+    return sendJson(response, 200, ocrResponse());
+  }
+
+  return sendJson(response, 404, { message: "Not found" });
+});
+
+server.listen(port, "127.0.0.1");
+
+function decodeDocument(documentUrl) {
+  const base64 = String(documentUrl ?? "").split(";base64,")[1] ?? "";
+  return Buffer.from(base64, "base64").toString("latin1");
+}
+
+function requestsImageTextAnnotations(body) {
+  return (
+    body?.include_image_base64 === false &&
+    body?.bbox_annotation_format?.type === "json_schema" &&
+    body?.bbox_annotation_format?.json_schema?.name === "image_text"
+  );
+}
+
+function ocrResponse() {
+  return {
+    pages: [
+      {
+        index: 0,
+        markdown: "![img-0.jpeg](img-0.jpeg)",
+        images: [
+          {
+            id: "img-0.jpeg",
+            top_left_x: 50,
+            top_left_y: 225,
+            bottom_right_x: 266,
+            bottom_right_y: 357,
+            image_annotation: JSON.stringify({
+              text: "Case AYC-815-2026: Extraction approved by council",
+            }),
+          },
+        ],
+        dimensions: null,
+      },
+    ],
+    model: "mistral-ocr-latest",
+    usage_info: { pages_processed: 1, doc_size_bytes: 1024 },
+  };
+}
+
+function sendJson(response, status, body) {
+  response.writeHead(status, { "content-type": "application/json" });
+  response.end(JSON.stringify(body));
+}
+
+async function readBody(request) {
+  const chunks = [];
+  for await (const chunk of request) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
+}

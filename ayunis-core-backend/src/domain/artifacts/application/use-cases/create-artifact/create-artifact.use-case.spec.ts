@@ -4,14 +4,18 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { CreateArtifactUseCase } from './create-artifact.use-case';
 import { CreateArtifactCommand } from './create-artifact.command';
-import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
+import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -22,7 +26,7 @@ import {
   ArtifactContentTooLargeError,
   InvalidSpreadsheetContentError,
   ARTIFACT_MAX_CONTENT_LENGTH,
-} from '../../artifacts.errors';
+} from 'src/domain/artifacts/application/artifacts.errors';
 import {
   DiagramArtifact,
   DocumentArtifact,
@@ -36,8 +40,11 @@ describe('CreateArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
+  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
@@ -52,10 +59,9 @@ describe('CreateArtifactUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockFindThreadUseCase = {
@@ -83,8 +89,7 @@ describe('CreateArtifactUseCase', () => {
     artifactsRepository = module.get(ArtifactsRepository);
     findThreadUseCase = module.get(FindThreadUseCase);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    logger = createLoggerMock();
   });
 
   afterEach(() => {
@@ -118,6 +123,10 @@ describe('CreateArtifactUseCase', () => {
       '<h1>Budget Report</h1><p>Q1 2026 expenses...</p>',
     );
     expect(result.versions[0].authorType).toBe(AuthorType.ASSISTANT);
+    expect(logger.log).toHaveBeenCalledWith(
+      { type: ArtifactType.DOCUMENT },
+      'Creating artifact',
+    );
   });
 
   it('should create an artifact with letterheadId when provided', async () => {

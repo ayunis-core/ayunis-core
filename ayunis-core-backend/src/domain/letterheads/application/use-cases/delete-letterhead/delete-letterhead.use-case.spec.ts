@@ -1,14 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { DeleteLetterheadUseCase } from './delete-letterhead.use-case';
 import { DeleteLetterheadCommand } from './delete-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadNotFoundError } from '../../letterheads.errors';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 describe('DeleteLetterheadUseCase', () => {
@@ -50,8 +49,6 @@ describe('DeleteLetterheadUseCase', () => {
     useCase = module.get(DeleteLetterheadUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
     deleteObjectUseCase = module.get(DeleteObjectUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {

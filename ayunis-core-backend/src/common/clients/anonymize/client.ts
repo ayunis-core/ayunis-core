@@ -1,8 +1,56 @@
+import { Agent } from 'node:http';
 import { Logger } from '@nestjs/common';
 import axios, { isAxiosError } from 'axios';
 import type { AxiosRequestConfig } from 'axios';
 
 const logger = new Logger('AnonymizeClient');
+
+interface AnonymizeTimingMetadata {
+  requestDurationMs: number;
+  queueDurationMs?: number;
+  modelLoadDurationMs?: number;
+  processingDurationMs?: number;
+  coldStart?: boolean;
+}
+
+function serverTimingKey(
+  name: string,
+):
+  | keyof Omit<AnonymizeTimingMetadata, 'requestDurationMs' | 'coldStart'>
+  | null {
+  switch (name) {
+    case 'queue':
+      return 'queueDurationMs';
+    case 'model_load':
+      return 'modelLoadDurationMs';
+    case 'processing':
+      return 'processingDurationMs';
+    default:
+      return null;
+  }
+}
+
+export function parseAnonymizeTimingMetadata(
+  headers: Record<string, unknown>,
+  requestDurationMs: number,
+): AnonymizeTimingMetadata {
+  const metadata: AnonymizeTimingMetadata = { requestDurationMs };
+  const serverTiming = headers['server-timing'];
+  if (typeof serverTiming === 'string') {
+    for (const entry of serverTiming.split(',')) {
+      const match = /^([a-z_]+);dur=([0-9.]+)$/.exec(entry.trim());
+      if (!match) continue;
+      const key = serverTimingKey(match[1]);
+      const value = Number(match[2]);
+      if (key && Number.isFinite(value)) metadata[key] = value;
+    }
+  }
+  const coldStart = headers['x-anonymize-cold-start'];
+  if (coldStart === 'true' || coldStart === 'false') {
+    metadata.coldStart = coldStart === 'true';
+  }
+  return metadata;
+}
 
 const anonymizeAxios = axios.create({
   baseURL: process.env.ANONYMIZE_SERVICE_URL || 'http://localhost:8002',
@@ -17,6 +65,12 @@ const anonymizeAxios = axios.create({
   // the transport classifier reads as a connection failure; clarified it
   // arrives as ETIMEDOUT and groups under the timeout taxonomy (AYC-654).
   transitional: { clarifyTimeoutError: true },
+  // uvicorn drops a connection after 5s idle without sending a Keep-Alive
+  // hint, and Node's default agent also keeps idle sockets for 5s. A request
+  // sent on a socket at that boundary fails with ECONNRESET before the service
+  // reads it (AYC-1171). Expiring idle sockets earlier on our side closes the
+  // race.
+  httpAgent: new Agent({ keepAlive: true, timeout: 4_000 }),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -45,12 +99,31 @@ export function toSlimTransportError(error: unknown): Error {
   return slim;
 }
 
+const requestStartedAt = new WeakMap<object, number>();
+
+anonymizeAxios.interceptors.request.use((config) => {
+  requestStartedAt.set(config, performance.now());
+  return config;
+});
+
 anonymizeAxios.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const startedAt = requestStartedAt.get(response.config);
+    if (startedAt !== undefined) {
+      logger.log(
+        parseAnonymizeTimingMetadata(
+          response.headers,
+          Math.round((performance.now() - startedAt) * 100) / 100,
+        ),
+        'Anonymize request complete',
+      );
+    }
+    return response;
+  },
   (error: unknown) => {
     if (isAxiosError(error) && error.response?.status === 500) {
       const data: unknown = error.response.data;
-      logger.error('Anonymize service error', { data });
+      logger.error({ response: data }, 'Anonymize service error');
     }
     return Promise.reject(toSlimTransportError(error));
   },

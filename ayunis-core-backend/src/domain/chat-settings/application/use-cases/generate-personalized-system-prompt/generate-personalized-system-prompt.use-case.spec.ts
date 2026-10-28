@@ -1,6 +1,7 @@
 import { GeneratePersonalizedSystemPromptUseCase } from './generate-personalized-system-prompt.use-case';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
-import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
+import { PersonalizedSystemPromptGenerationError } from 'src/domain/chat-settings/application/chat-settings.errors';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import {
   DefaultModelNotFoundError,
@@ -10,11 +11,11 @@ import { randomUUID } from 'crypto';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import type { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
-import type { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';
+import type { UpsertUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 
 const userId = randomUUID();
 const orgId = randomUUID();
@@ -64,11 +65,7 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
     };
 
     contextService = {
-      get: jest.fn().mockImplementation((key: string) => {
-        if (key === 'userId') return userId;
-        if (key === 'orgId') return orgId;
-        return undefined;
-      }),
+      get: jest.fn(getFromUserContext({ userId: userId, orgId: orgId })),
     };
 
     useCase = new GeneratePersonalizedSystemPromptUseCase(

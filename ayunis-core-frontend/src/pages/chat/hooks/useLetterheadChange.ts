@@ -1,23 +1,26 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUpdateArtifact } from '../api/useUpdateArtifact';
+import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 
 interface UseLetterheadChangeOptions {
   artifactId: string;
   threadId: string;
+  workspaceId?: string | null;
 }
 
 export function useLetterheadChange({
   artifactId,
   threadId,
+  workspaceId,
 }: UseLetterheadChangeOptions) {
   const { t } = useTranslation('artifacts');
 
   const { updateArtifact } = useUpdateArtifact({
     artifactId,
     threadId,
+    workspaceId,
     onError: (error) => {
       try {
         const { code } = extractErrorData(error);

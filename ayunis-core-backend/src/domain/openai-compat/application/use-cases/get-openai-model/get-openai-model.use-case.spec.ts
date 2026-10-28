@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 import { GetOpenAIModelUseCase } from './get-openai-model.use-case';
 import { GetOpenAIModelQuery } from './get-openai-model.query';
-import type { ListOpenAIModelsUseCase } from '../list-openai-models/list-openai-models.use-case';
-import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
-import type { OpenAIModelObject } from '../../types/openai-model.types';
+import type { ListOpenAIModelsUseCase } from 'src/domain/openai-compat/application/use-cases/list-openai-models/list-openai-models.use-case';
+import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
+import type { OpenAIModelObject } from 'src/domain/openai-compat/application/types/openai-model.types';
 
 describe('GetOpenAIModelUseCase', () => {
   let useCase: GetOpenAIModelUseCase;

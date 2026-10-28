@@ -1,47 +1,51 @@
-import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
-import { ModelsModule } from '../domain/models/models.module';
-import { SkillsModule } from '../domain/skills/skills.module';
-import { MessagesModule } from '../domain/messages/messages.module';
-import { ToolsModule } from '../domain/tools/tools.module';
-import { ThreadsModule } from '../domain/threads/threads.module';
-import { RunsModule } from '../domain/runs/runs.module';
-import { SplitterModule } from '../domain/rag/splitters/splitter.module';
-import { EmbeddingsModule } from '../domain/rag/embeddings/embeddings.module';
-import { RetrieverModule } from '../domain/retrievers/retriever.module';
-import { SourcesModule } from '../domain/sources/sources.module';
-import { StorageModule } from '../domain/storage/storage.module';
-import { SharesModule } from '../domain/shares/shares.module';
-import { McpModule } from '../domain/mcp/mcp.module';
-import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
-import { UsageModule } from '../domain/usage/usage.module';
-import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
-import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
-import { AnonymizationSettingsModule } from '../domain/anonymization-settings/anonymization-settings.module';
-import { RetentionPoliciesModule } from '../domain/retention-policies/retention-policies.module';
-import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
-import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
-import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
-import { AcademyModule } from '../domain/academy/academy.module';
-import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
-import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
-import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
-import { IamModule } from '../iam/iam.module';
+import { ModelsModule } from 'src/domain/models/models.module';
+import { SkillsModule } from 'src/domain/skills/skills.module';
+import { MessagesModule } from 'src/domain/messages/messages.module';
+import { ToolsModule } from 'src/domain/tools/tools.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { RunsModule } from 'src/domain/runs/runs.module';
+import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
+import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
+import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
+import { SharesModule } from 'src/domain/shares/shares.module';
+import { McpModule } from 'src/domain/mcp/mcp.module';
+import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
+import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
+import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
+import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
+import { RetentionPoliciesModule } from 'src/domain/retention-policies/retention-policies.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { CrawlDomainGrantsModule } from 'src/domain/crawl-domain-grants/crawl-domain-grants.module';
+import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
+import { AcademyModule } from 'src/domain/academy/academy.module';
+import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
+import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
+import { FavoritesModule } from 'src/domain/favorites/favorites.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { OpenAICompatModule } from 'src/domain/openai-compat/openai-compat.module';
+import { IamModule } from 'src/iam/iam.module';
 
-import { AuthProvider } from '../config/authentication.config';
-import { rootConfigs } from '../config/root-configs';
-import { validateEnv } from '../config/env.validation';
-import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
-import dataSource from '../db/datasource';
-import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
+import { AuthProvider } from 'src/config/authentication.config';
+import { rootConfigs } from 'src/config/root-configs';
+import { validateEnv } from 'src/config/env.validation';
+import { CookieParserMiddleware } from 'src/common/middleware/cookie-parser.middleware';
+import dataSource from 'src/db/datasource';
+import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers.middleware';
+import { AppsignalNamespaceMiddleware } from 'src/common/middleware/appsignal-namespace.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import type { RedisConfig } from '../config/redis.config';
+import { serveFrontendOptions } from './presenters/http/serve-frontend.options';
+import type { RedisConfig } from 'src/config/redis.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -52,7 +56,10 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
-import { IntegrationsModule } from '../integrations/integrations.module';
+import { IntegrationsModule } from 'src/integrations/integrations.module';
+import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
+import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-telemetry.module';
+import { LoggingModule } from 'src/common/logger/logging.module';
 
 @Module({
   imports: [
@@ -61,6 +68,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       load: rootConfigs,
       validate: validateEnv,
     }),
+    LoggingModule,
     ClsModule.forRoot({
       global: true,
       middleware: { mount: true },
@@ -78,9 +86,9 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       ],
     }),
     ScheduleModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'frontend'),
-    }),
+    ServeStaticModule.forRoot(
+      serveFrontendOptions(join(__dirname, '..', '..', 'frontend')),
+    ),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) =>
@@ -138,12 +146,16 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     AcademyModule,
     ArtifactsModule,
     LetterheadsModule,
+    FavoritesModule,
+    WorkspacesModule,
     OpenAICompatModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
+    QueueInspectionModule,
+    QueueTelemetryModule,
   ],
   controllers: [AppController],
   providers: [
@@ -160,9 +172,9 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       provide: APP_FILTER,
       useClass: ApplicationErrorFilter,
     },
-    Logger,
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
+    AppsignalNamespaceMiddleware,
     IsCloudUseCase,
     IsRegistrationDisabledUseCase,
     GetFrontendRuntimeConfigUseCase,
@@ -171,7 +183,11 @@ import { IntegrationsModule } from '../integrations/integrations.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CookieParserMiddleware, SecurityHeadersMiddleware)
+      .apply(
+        AppsignalNamespaceMiddleware,
+        CookieParserMiddleware,
+        SecurityHeadersMiddleware,
+      )
       .forRoutes('*');
   }
 }

@@ -1,0 +1,159 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import type { ModelWithConfigResponseDto } from '@/shared/api';
+import ModelTypeCard, { type ModelActions } from './ModelTypeCard';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+const model = (
+  modelId: string,
+  isPermitted: boolean,
+): ModelWithConfigResponseDto => ({
+  modelId,
+  permittedModelId: isPermitted ? `permit-${modelId}` : null,
+  name: `model-${modelId}`,
+  provider: 'azure',
+  displayName: `Model ${modelId}`,
+  type: 'image-generation',
+  canStream: false,
+  isReasoning: false,
+  canUseTools: false,
+  canVision: false,
+  isPermitted,
+  isDefault: false,
+  anonymousOnly: isPermitted ? false : null,
+});
+
+const actions = (): ModelActions => ({
+  enableModel: vi.fn(),
+  deletePermittedModel: vi.fn(),
+  isEnabling: false,
+  isDisabling: false,
+});
+
+describe(ModelTypeCard.name, () => {
+  it('adds stable selectors only when a prefix is supplied', () => {
+    const { rerender } = render(
+      <ModelTypeCard
+        type="image-generation"
+        models={[model('selected', true)]}
+        actions={actions()}
+        testIdPrefix="team-model"
+      />,
+    );
+
+    expect(screen.getByTestId('team-model-image-generation-card')).toBeTruthy();
+    expect(screen.getByTestId('team-model-selected-toggle')).toBeTruthy();
+
+    rerender(
+      <ModelTypeCard
+        type="image-generation"
+        models={[model('selected', true)]}
+        actions={actions()}
+      />,
+    );
+    expect(screen.queryByTestId('team-model-image-generation-card')).toBeNull();
+  });
+
+  it('explains image model behaviour with a hint that other model types do not get', () => {
+    const { rerender } = render(
+      <ModelTypeCard
+        type="image-generation"
+        models={[model('selected', true)]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.getByTestId('model-type-card-hint-trigger')).toBeTruthy();
+
+    rerender(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.queryByTestId('model-type-card-hint-trigger')).toBeNull();
+  });
+
+  it('offers the anonymous-only toggle for language models only', () => {
+    const modelActions = { ...actions(), updatePermittedModel: vi.fn() };
+    const { rerender } = render(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={modelActions}
+      />,
+    );
+
+    expect(screen.getByText('models.anonymousOnly')).toBeTruthy();
+
+    for (const type of ['embedding', 'image-generation'] as const) {
+      rerender(
+        <ModelTypeCard
+          type={type}
+          models={[model('selected', true)]}
+          actions={modelActions}
+        />,
+      );
+      expect(screen.queryByText('models.anonymousOnly')).toBeNull();
+    }
+  });
+
+  it('shows the tier as the chat selector category and the model info card on hover', () => {
+    render(
+      <ModelTypeCard
+        type="language"
+        models={[
+          {
+            ...model('tiered', true),
+            type: 'language',
+            tier: 'high',
+            description: 'Good for long documents',
+          },
+        ]}
+        actions={actions()}
+      />,
+    );
+
+    expect(screen.getByText('models.category.high')).toBeTruthy();
+    expect(screen.queryByLabelText(/models\.tierPerformance/)).toBeNull();
+    expect(screen.queryByText('Good for long documents')).toBeNull();
+
+    const trigger = screen.getByTestId('model-type-card-model-info-trigger');
+    fireEvent.mouseEnter(trigger);
+
+    expect(screen.getByText('Good for long documents')).toBeTruthy();
+    expect(screen.getByText('models.tierUsage.high')).toBeTruthy();
+
+    // A touch tap fires the hover and the click together.
+    fireEvent.click(trigger);
+    expect(screen.getByText('Good for long documents')).toBeTruthy();
+  });
+
+  it('lets callers disable alternatives while keeping the selected model removable', () => {
+    const modelActions = actions();
+    render(
+      <ModelTypeCard
+        type="image-generation"
+        models={[model('selected', true), model('alternative', false)]}
+        actions={modelActions}
+        testIdPrefix="team-model"
+        isToggleDisabled={(item) => !item.isPermitted}
+      />,
+    );
+
+    const selected = screen.getByTestId('team-model-selected-toggle');
+    const alternative = screen.getByTestId('team-model-alternative-toggle');
+    expect(selected.hasAttribute('disabled')).toBe(false);
+    expect(alternative.hasAttribute('disabled')).toBe(true);
+
+    fireEvent.click(selected);
+    expect(modelActions.deletePermittedModel).toHaveBeenCalledWith(
+      'permit-selected',
+    );
+  });
+});

@@ -4,9 +4,9 @@ import { ImageGenerationModel } from 'src/domain/models/domain/models/image-gene
 import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
 
 @Injectable()
@@ -49,9 +49,12 @@ export class UpdateImageGenerationModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error updating image-generation model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error updating image-generation model',
+      );
       throw new UnexpectedModelError(error as Error);
     }
   }

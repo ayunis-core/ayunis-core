@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { ListObjectsCommand } from './list-objects.command';
 import storageConfig from 'src/config/storage.config';
 
@@ -15,7 +15,7 @@ export class ListObjectsUseCase {
   ) {}
 
   async execute(command: ListObjectsCommand): Promise<string[]> {
-    this.logger.debug(`Listing objects with prefix: ${command.prefix}`);
+    this.logger.debug({ prefix: command.prefix }, 'Listing objects');
     const bucket = command.bucket ?? this.config.minio.bucket;
     return this.objectStorage.listObjects(command.prefix, bucket);
   }

@@ -1,0 +1,71 @@
+import type { Locator, Page } from '@playwright/test';
+import { login } from '../../src/clients/api/auth.client';
+import {
+  createLanguageCatalogModel,
+  deleteCatalogModel,
+} from '../../src/clients/api/models.client';
+import { test, expect } from '../../src/fixtures/test';
+import { loginThroughUi } from '../../src/flows/auth.flow';
+
+test.use({ storageState: { cookies: [], origins: [] } });
+
+async function openEditDialog(
+  page: Page,
+  modelId: string,
+): Promise<Locator> {
+  await page.getByTestId(`model-catalog-edit-${modelId}`).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
+async function saveDialog(dialog: Locator): Promise<void> {
+  await dialog.getByRole('button', { name: /Save|Speichern/ }).click();
+  await expect(dialog).toBeHidden();
+}
+
+test('super admin must keep a context window size on a model', async ({
+  page,
+  publicApi,
+}) => {
+  const uniqueKey = Date.now().toString();
+
+  await login(publicApi, 'admin@demo.local', 'admin');
+  const catalogModel = await createLanguageCatalogModel(publicApi, {
+    name: `e2e-context-window-${uniqueKey}`,
+    displayName: `E2E Context Window ${uniqueKey}`,
+    contextWindowSize: 128000,
+  });
+
+  try {
+    await loginThroughUi(page, 'admin@demo.local', 'admin');
+    await page.goto('/super-admin-settings/models-catalog');
+
+    let dialog = await openEditDialog(page, catalogModel.id);
+    let contextWindowInput = dialog.getByTestId(
+      'model-catalog-context-window-size',
+    );
+    await expect(contextWindowInput).toHaveValue('128000');
+    await contextWindowInput.fill('256000');
+    await saveDialog(dialog);
+
+    dialog = await openEditDialog(page, catalogModel.id);
+    contextWindowInput = dialog.getByTestId(
+      'model-catalog-context-window-size',
+    );
+    await expect(contextWindowInput).toHaveValue('256000');
+    await contextWindowInput.clear();
+    await dialog.getByRole('button', { name: /Save|Speichern/ }).click();
+    await expect(contextWindowInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    dialog = await openEditDialog(page, catalogModel.id);
+    await expect(
+      dialog.getByTestId('model-catalog-context-window-size'),
+    ).toHaveValue('256000');
+  } finally {
+    await deleteCatalogModel(publicApi, catalogModel.id);
+  }
+});

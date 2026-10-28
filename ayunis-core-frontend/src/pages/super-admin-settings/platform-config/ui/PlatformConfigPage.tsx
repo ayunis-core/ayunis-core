@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
+import AcademyMinimumModuleSecondsSection from './AcademyMinimumModuleSecondsSection';
 import CreditsPerEuroSection from './CreditsPerEuroSection';
 import FairUseLimitsSection from './FairUseLimitsSection';
 import ImageGenerationFairUseSection from './ImageGenerationFairUseSection';
@@ -13,6 +14,7 @@ export default function PlatformConfigPage() {
         <CreditsPerEuroSection />
         <FairUseLimitsSection />
         <ImageGenerationFairUseSection />
+        <AcademyMinimumModuleSecondsSection />
       </div>
     </SuperAdminSettingsLayout>
   );

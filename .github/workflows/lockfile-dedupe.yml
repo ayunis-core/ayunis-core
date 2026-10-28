@@ -1,0 +1,46 @@
+name: Lockfile Dedupe
+
+on:
+  pull_request:
+    paths:
+      # Any manifest change that could introduce a duplicate has to relock,
+      # or `pnpm install --frozen-lockfile` fails elsewhere first — so
+      # watching the lockfile covers every package.json in the workspace.
+      - 'pnpm-lock.yaml'
+      # The catalog decides which versions the workspace shares, so editing
+      # it changes resolutions without necessarily touching a package.json.
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/lockfile-dedupe.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dedupe:
+    name: Lockfile Dedupe
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      # A package resolved at two versions gives its consumer a different
+      # module instance than the package itself uses, which breaks anything
+      # relying on shared state — a store, a React context, a class identity.
+      # That surfaced three times in one dependency batch: sonner (every
+      # toast stopped rendering), react-hook-form (Control<> mismatches) and
+      # @mistralai/mistralai (a defeated instanceof retry check).
+      - name: Check for dedupable packages
+        run: pnpm dedupe --check
+
+      - name: Explain the failure
+        if: failure()
+        run: |
+          echo "::error::Lockfile has dedupable packages. Run 'pnpm dedupe' and commit pnpm-lock.yaml. If a duplicate is intentional, pin the shared version in the pnpm-workspace.yaml catalog instead."

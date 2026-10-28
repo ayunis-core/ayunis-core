@@ -16,12 +16,12 @@ import { ThinkingMessageContent } from 'src/domain/messages/domain/message-conte
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { toInferenceMessages } from './message.mapper';
 
-const convertImageToBase64 = jest.fn();
+const loadImage = jest.fn();
 const imageContentService = {
-  convertImageToBase64,
+  loadImage,
 } as unknown as ImageContentService;
 
-beforeEach(() => convertImageToBase64.mockReset());
+beforeEach(() => loadImage.mockReset());
 
 describe('toInferenceMessages', () => {
   it('maps a user text message to a neutral user message', async () => {
@@ -40,8 +40,8 @@ describe('toInferenceMessages', () => {
   });
 
   it('resolves image content to inline base64 data preceded by its ref label', async () => {
-    convertImageToBase64.mockResolvedValue({
-      base64: 'AAAA',
+    loadImage.mockResolvedValue({
+      buffer: Buffer.from('AAAA', 'base64'),
       contentType: 'image/png',
     });
     const message = new UserMessage({
@@ -53,7 +53,7 @@ describe('toInferenceMessages', () => {
       'org-1',
       imageContentService,
     );
-    expect(convertImageToBase64).toHaveBeenCalledTimes(1);
+    expect(loadImage).toHaveBeenCalledTimes(1);
     expect(messages[0].content).toEqual([
       { type: 'text', text: `[image ref: ${message.id}:0]` },
       {
@@ -65,8 +65,8 @@ describe('toInferenceMessages', () => {
   });
 
   it('labels every image of a multi-image message with its own ref', async () => {
-    convertImageToBase64.mockResolvedValue({
-      base64: 'AAAA',
+    loadImage.mockResolvedValue({
+      buffer: Buffer.from('AAAA', 'base64'),
       contentType: 'image/png',
     });
     const message = new UserMessage({

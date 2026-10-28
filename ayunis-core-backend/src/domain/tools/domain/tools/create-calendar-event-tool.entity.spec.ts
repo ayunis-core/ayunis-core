@@ -18,11 +18,7 @@ describe('CreateCalendarEventTool', () => {
 
   it('should have the correct tool type and name', () => {
     expect(tool.type).toBe(ToolType.CREATE_CALENDAR_EVENT);
-    expect(tool.isDisplayable).toBe(true);
-  });
-
-  it('should stay display-only so valid calls end the turn instantly', () => {
-    expect(tool.isExecutable).toBe(false);
+    expect(tool.name).toBe('create_calendar_event');
   });
 
   describe('validateParams', () => {

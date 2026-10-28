@@ -2,31 +2,48 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ApiKeysSettingsPage } from '@/pages/admin-settings/api-keys-settings';
 import {
   apiKeysControllerListApiKeys,
+  creditLimitsControllerGetApiKeyLimits,
   getApiKeysControllerListApiKeysQueryKey,
+  getCreditLimitsControllerGetApiKeyLimitsQueryKey,
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { ActiveSubscriptionResponseDtoSubscriptionType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/api-keys')(
   {
     component: RouteComponent,
     loader: async ({ context: { queryClient } }) => {
       const [apiKeys, subscription] = await Promise.all([
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getApiKeysControllerListApiKeysQueryKey(),
           queryFn: () => apiKeysControllerListApiKeys(),
         }),
-        queryClient.fetchQuery({
+        queryClient.query({
           queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
           queryFn: () => subscriptionsControllerHasActiveSubscription(),
         }),
       ]);
-      return { apiKeys, subscription };
+      const creditLimits =
+        subscription.subscriptionType ===
+        ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED
+          ? await queryClient.query({
+              queryKey: getCreditLimitsControllerGetApiKeyLimitsQueryKey(),
+              queryFn: () => creditLimitsControllerGetApiKeyLimits(),
+            })
+          : [];
+      return { apiKeys, creditLimits, subscription };
     },
   },
 );
 
 function RouteComponent() {
-  const { apiKeys, subscription } = Route.useLoaderData();
-  return <ApiKeysSettingsPage apiKeys={apiKeys} subscription={subscription} />;
+  const { apiKeys, creditLimits, subscription } = Route.useLoaderData();
+  return (
+    <ApiKeysSettingsPage
+      apiKeys={apiKeys}
+      creditLimits={creditLimits}
+      subscription={subscription}
+    />
+  );
 }

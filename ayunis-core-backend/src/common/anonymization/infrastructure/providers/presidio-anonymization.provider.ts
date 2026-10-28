@@ -1,51 +1,114 @@
+import { AnonymizationMeasurementService } from './anonymization-measurement.service';
+import type { DetectionMeasurementContext } from 'src/common/anonymization/domain/detection-measurement-context';
 import { Injectable, Logger } from '@nestjs/common';
-import { AnonymizationPort } from '../../application/ports/anonymization.port';
-import { AnonymizationFailedError } from '../../application/anonymization.errors';
+import pLimit from 'p-limit';
+import { AnonymizationPort } from 'src/common/anonymization/application/ports/anonymization.port';
+import {
+  AnonymizationFailedError,
+  AnonymizationInputTooLongError,
+} from 'src/common/anonymization/application/anonymization.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { PiiDetection } from '../../domain/pii-detection';
+import {
+  classifyTransportError,
+  isRetryableProviderTimeoutFailure,
+  SETUP_RETRY_BACKOFF_MS,
+} from 'src/common/errors/provider-transport-error.classifier';
+import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
+import {
+  ANONYMIZATION_CHUNK_CONCURRENCY,
+  ANONYMIZATION_CHUNK_LENGTH,
+  ANONYMIZATION_CHUNK_OVERLAP,
+  MAX_ANONYMIZATION_TEXT_LENGTH,
+} from 'src/common/anonymization/application/anonymization.constants';
+import {
+  mergeChunkSpans,
+  splitIntoChunks,
+  type TextChunk,
+} from './presidio-text-chunks';
+import { resolveDetectionOverlaps } from 'src/common/anonymization/domain/detection-precedence';
+
+const MAX_DETECTION_ATTEMPTS = 2;
+
+function backoff(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * The UTF-16 offset of every code point in `text`, plus a final entry for the
+ * end of the string. The anonymize service returns Python string indices,
+ * which count code points, so its spans have to be translated before
+ * substring/slice — those count UTF-16 code units, where an astral character
+ * is two (AYC-905). The table's length is the code point count the service
+ * sees, which is also what the input-size limit is measured in.
+ */
+function utf16OffsetsByCodePoint(text: string): number[] {
+  const offsets: number[] = [];
+  for (let offset = 0; offset < text.length; offset += 1) {
+    offsets.push(offset);
+    if ((text.codePointAt(offset) ?? 0) > 0xffff) {
+      offset += 1;
+    }
+  }
+  offsets.push(text.length);
+  return offsets;
+}
 
 @Injectable()
 export class PresidioAnonymizationProvider extends AnonymizationPort {
   private readonly logger = new Logger(PresidioAnonymizationProvider.name);
 
-  async detect(text: string, entities?: string[]): Promise<PiiDetection[]> {
-    this.logger.debug('Detecting PII', {
-      textLength: text.length,
-      entities,
-    });
+  constructor(private readonly measurement: AnonymizationMeasurementService) {
+    super();
+  }
 
+  async detect(
+    text: string,
+    entities?: string[],
+    context?: DetectionMeasurementContext,
+  ): Promise<PiiDetection[]> {
+    const utf16Offsets = utf16OffsetsByCodePoint(text);
+    const textLength = utf16Offsets.length - 1;
+    this.validateTextLength(textLength);
+
+    this.logger.debug({ textLength, entities }, 'Detecting PII');
+    const startedAt = performance.now();
+
+    const codePoints = Array.from(text);
+    const chunks = splitIntoChunks(
+      codePoints,
+      ANONYMIZATION_CHUNK_LENGTH,
+      ANONYMIZATION_CHUNK_OVERLAP,
+    );
+
+    const observation = this.measurement.start(text, entities, context);
     try {
-      const client = getMSPresidioPIIDetectionAPI();
-
-      const response = await client.analyzeTextAnalyzePost({
+      const results = await this.detectChunks(chunks, entities, codePoints);
+      const detections = resolveDetectionOverlaps(
+        results.map((result) => this.toDetection(text, result, utf16Offsets)),
         text,
-        entities: entities ?? null,
-      });
-
-      const nonOverlappingResults = this.dropOverlappingResults(
-        response.results,
-      );
-      const detections = nonOverlappingResults.map((result) =>
-        this.toDetection(text, result),
       );
 
-      this.logger.debug('PII detection complete', {
-        textLength: text.length,
-        detectionCount: detections.length,
-      });
+      this.logDetectionComplete(
+        textLength,
+        chunks.length,
+        detections.length,
+        startedAt,
+      );
 
+      this.measurement.finish(observation, detections);
       return detections;
     } catch (error: unknown) {
-      this.logger.error('PII detection failed', { error: error as Error });
-      // Every caller treats a detect() failure as fatal and fail-closed (the
-      // user's message is blocked rather than sent unmasked), so this catch
-      // is the single classification point. Transport failures and upstream
-      // 5xx group under PROVIDER_UNAVAILABLE_*_ANONYMIZE; a 4xx means we
-      // built a bad request and stays a distinct AnonymizationFailedError
-      // (AYC-654).
+      this.measurement.finish(observation);
+      this.logDetectionFailure(textLength, startedAt, error);
+      // Every caller treats a service-call pipeline failure as fatal and
+      // fail-closed (the user's message is blocked rather than sent unmasked),
+      // so this catch is their single classification point. Transport failures
+      // and upstream 5xx group under PROVIDER_UNAVAILABLE_*_ANONYMIZE. A
+      // remaining 4xx means our request shape drifted despite local validation
+      // and stays a distinct AnonymizationFailedError (AYC-654).
       const providerError = wrapProviderFailure(error, {
         provider: 'anonymize',
       });
@@ -59,40 +122,108 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     }
   }
 
-  private toDetection(text: string, result: RecognizerResult): PiiDetection {
+  private validateTextLength(textLength: number): void {
+    if (textLength > MAX_ANONYMIZATION_TEXT_LENGTH) {
+      throw new AnonymizationInputTooLongError(
+        textLength,
+        MAX_ANONYMIZATION_TEXT_LENGTH,
+      );
+    }
+  }
+
+  private async detectChunks(
+    chunks: readonly TextChunk[],
+    entities: string[] | undefined,
+    codePoints: readonly string[],
+  ): Promise<RecognizerResult[]> {
+    const limit = pLimit(ANONYMIZATION_CHUNK_CONCURRENCY);
+    const resultsPerChunk = await Promise.all(
+      chunks.map((chunk) =>
+        limit(() =>
+          this.detectWithRetry(chunk.text, entities, chunk.end - chunk.start),
+        ),
+      ),
+    );
+    return mergeChunkSpans(chunks, resultsPerChunk, codePoints);
+  }
+
+  private async detectWithRetry(
+    text: string,
+    entities: string[] | undefined,
+    textLength: number,
+  ): Promise<RecognizerResult[]> {
+    const client = getMSPresidioPIIDetectionAPI();
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const response = await client.analyzeTextAnalyzePost({
+          text,
+          entities: entities ?? null,
+        });
+        return response.results;
+      } catch (error) {
+        if (
+          attempt >= MAX_DETECTION_ATTEMPTS ||
+          (!isRetryableProviderTimeoutFailure(error) &&
+            classifyTransportError(error)?.code !== 'ECONNREFUSED')
+        ) {
+          throw error;
+        }
+        this.logger.warn(
+          { textLength, attempt, maxAttempts: MAX_DETECTION_ATTEMPTS },
+          'PII detection temporarily unavailable before a response; retrying once',
+        );
+        await backoff(SETUP_RETRY_BACKOFF_MS);
+      }
+    }
+  }
+
+  private logDetectionComplete(
+    textLength: number,
+    chunkCount: number,
+    detectionCount: number,
+    startedAt: number,
+  ): void {
+    this.logger.log(
+      {
+        textLength,
+        chunkCount,
+        detectionCount,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+      },
+      'PII detection complete',
+    );
+  }
+
+  private logDetectionFailure(
+    textLength: number,
+    startedAt: number,
+    error: unknown,
+  ): void {
+    this.logger.error(
+      {
+        textLength,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+        err: error,
+      },
+      'PII detection failed',
+    );
+  }
+
+  private toDetection(
+    text: string,
+    result: RecognizerResult,
+    utf16Offsets: readonly number[],
+  ): PiiDetection {
+    // Clamped rather than trusted: the span comes from an external service.
+    const start = utf16Offsets[result.start] ?? text.length;
+    const end = utf16Offsets[result.end] ?? text.length;
     return {
       entityType: result.entity_type,
       category: mapPresidioEntityToCategory(result.entity_type),
-      text: text.substring(result.start, result.end),
-      start: result.start,
-      end: result.end,
+      text: text.substring(start, end),
+      start,
+      end,
       score: result.score,
     };
-  }
-
-  // GLiNER runs with flat_ner=False and can return nested/overlapping spans
-  // for the same text (e.g. "Dani" and "der Dani" both as PERSON). Applying
-  // them both with naive offset-based substitution corrupts the output
-  // (e.g. "[PERSON]SON]"), so keep only the outermost of each overlap chain.
-  private dropOverlappingResults(
-    results: RecognizerResult[],
-  ): RecognizerResult[] {
-    if (results.length < 2) {
-      return results;
-    }
-
-    const sorted = [...results].sort(
-      (a, b) => a.start - b.start || b.end - a.end,
-    );
-
-    const kept: RecognizerResult[] = [];
-    let lastEnd = -1;
-    for (const result of sorted) {
-      if (result.start >= lastEnd) {
-        kept.push(result);
-        lastEnd = result.end;
-      }
-    }
-    return kept;
   }
 }

@@ -1,6 +1,6 @@
 import { FindActivePreCreatedTemplatesUseCase } from './find-active-pre-created-templates.use-case';
 import { FindActivePreCreatedTemplatesQuery } from './find-active-pre-created-templates.query';
-import type { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import type { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';

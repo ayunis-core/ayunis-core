@@ -1,17 +1,18 @@
+import { ActivateWorkspaceSkillByNameUseCase } from 'src/domain/skills/application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ActivateSkillToolHandler } from './activate-skill-tool.handler';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
-import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+
 import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 describe('ActivateSkillToolHandler', () => {
   let handler: ActivateSkillToolHandler;
@@ -20,6 +21,7 @@ describe('ActivateSkillToolHandler', () => {
   let mockSkillActivationService: jest.Mocked<SkillActivationService>;
   let mockFindAlwaysOnTemplateByName: jest.Mocked<FindAlwaysOnTemplateByNameUseCase>;
 
+  const activateWorkspace = jest.fn();
   const mockThreadId = randomUUID();
   const mockSkillId = randomUUID();
 
@@ -40,6 +42,10 @@ describe('ActivateSkillToolHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActivateSkillToolHandler,
+        {
+          provide: ActivateWorkspaceSkillByNameUseCase,
+          useValue: { execute: activateWorkspace },
+        },
         { provide: FindSkillByNameUseCase, useValue: mockFindSkillByName },
         { provide: FindThreadUseCase, useValue: mockFindThread },
         {
@@ -54,19 +60,38 @@ describe('ActivateSkillToolHandler', () => {
     }).compile();
 
     handler = module.get<ActivateSkillToolHandler>(ActivateSkillToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
+  it('routes a workspace slug to the trusted thread without resolving a same-named personal skill', async () => {
+    activateWorkspace.mockResolvedValue({
+      instructions: 'Workspace instructions',
+    });
+    const result = await handler.execute({
+      tool: new ActivateSkillTool(
+        new Map([
+          ['workspace__budget-analysis', 'Budget Analysis'],
+          ['user__budget-analysis', 'Budget Analysis'],
+        ]),
+      ),
+      input: { skill_slug: 'workspace__budget-analysis' },
+      context: { threadId: mockThreadId, orgId: randomUUID() },
+    });
+    expect(result).toBe('Workspace instructions');
+    expect(activateWorkspace).toHaveBeenCalledWith({
+      threadId: mockThreadId,
+      name: 'Budget Analysis',
+    });
+    expect(mockFindSkillByName.execute).not.toHaveBeenCalled();
+  });
+
   function createMockSkill(
-    overrides?: Partial<ConstructorParameters<typeof Skill>[0]>,
+    overrides?: Partial<ConstructorParameters<typeof PersonalSkill>[0]>,
   ) {
-    return new Skill({
+    return new PersonalSkill({
       id: mockSkillId,
       name: 'Budget Analysis',
       shortDescription: 'Analyzes municipal budgets',

@@ -4,11 +4,11 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -24,14 +24,14 @@ import {
 import type { UUID } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { CreateCourseModuleUseCase } from '../../application/use-cases/create-course-module/create-course-module.use-case';
-import { CreateCourseModuleCommand } from '../../application/use-cases/create-course-module/create-course-module.command';
-import { UpdateCourseModuleUseCase } from '../../application/use-cases/update-course-module/update-course-module.use-case';
-import { UpdateCourseModuleCommand } from '../../application/use-cases/update-course-module/update-course-module.command';
-import { DeleteCourseModuleUseCase } from '../../application/use-cases/delete-course-module/delete-course-module.use-case';
-import { DeleteCourseModuleCommand } from '../../application/use-cases/delete-course-module/delete-course-module.command';
-import { ReorderCourseModulesUseCase } from '../../application/use-cases/reorder-course-modules/reorder-course-modules.use-case';
-import { ReorderCourseModulesCommand } from '../../application/use-cases/reorder-course-modules/reorder-course-modules.command';
+import { CreateCourseModuleUseCase } from 'src/domain/academy/application/use-cases/create-course-module/create-course-module.use-case';
+import { CreateCourseModuleCommand } from 'src/domain/academy/application/use-cases/create-course-module/create-course-module.command';
+import { UpdateCourseModuleUseCase } from 'src/domain/academy/application/use-cases/update-course-module/update-course-module.use-case';
+import { UpdateCourseModuleCommand } from 'src/domain/academy/application/use-cases/update-course-module/update-course-module.command';
+import { DeleteCourseModuleUseCase } from 'src/domain/academy/application/use-cases/delete-course-module/delete-course-module.use-case';
+import { DeleteCourseModuleCommand } from 'src/domain/academy/application/use-cases/delete-course-module/delete-course-module.command';
+import { ReorderCourseModulesUseCase } from 'src/domain/academy/application/use-cases/reorder-course-modules/reorder-course-modules.use-case';
+import { ReorderCourseModulesCommand } from 'src/domain/academy/application/use-cases/reorder-course-modules/reorder-course-modules.command';
 import { CreateCourseModuleRequestDto } from './dto/create-course-module-request.dto';
 import { UpdateCourseModuleRequestDto } from './dto/update-course-module-request.dto';
 import { ReorderCourseModulesRequestDto } from './dto/reorder-course-modules-request.dto';
@@ -79,7 +79,7 @@ export class SuperAdminAcademyCourseModulesController {
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
     @Body() dto: CreateCourseModuleRequestDto,
   ): Promise<CourseModuleResponseDto> {
-    this.logger.log(`Creating academy module in chapter ${chapterId}`);
+    this.logger.log({ chapterId }, 'Creating academy module');
     const courseModule = await this.createCourseModuleUseCase.execute(
       new CreateCourseModuleCommand({
         chapterId,
@@ -122,7 +122,8 @@ export class SuperAdminAcademyCourseModulesController {
     @Body() dto: ReorderCourseModulesRequestDto,
   ): Promise<void> {
     this.logger.log(
-      `Reordering ${dto.courseModuleIds.length} modules of chapter ${chapterId}`,
+      { chapterId, courseModuleCount: dto.courseModuleIds.length },
+      'Reordering academy modules',
     );
     await this.reorderCourseModulesUseCase.execute(
       new ReorderCourseModulesCommand({
@@ -157,7 +158,7 @@ export class SuperAdminAcademyCourseModulesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateCourseModuleRequestDto,
   ): Promise<CourseModuleResponseDto> {
-    this.logger.log(`Updating academy module ${id}`);
+    this.logger.log({ courseModuleId: id }, 'Updating academy module');
     const courseModule = await this.updateCourseModuleUseCase.execute(
       new UpdateCourseModuleCommand({
         courseModuleId: id,
@@ -191,7 +192,7 @@ export class SuperAdminAcademyCourseModulesController {
   async deleteCourseModule(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
-    this.logger.log(`Deleting academy module ${id}`);
+    this.logger.log({ courseModuleId: id }, 'Deleting academy module');
     await this.deleteCourseModuleUseCase.execute(
       new DeleteCourseModuleCommand({ courseModuleId: id }),
     );

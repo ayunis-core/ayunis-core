@@ -1,20 +1,26 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { UUID } from 'crypto';
+import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import { Injectable, Logger } from '@nestjs/common';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
   RawUrlResponse,
   UrlRetrieverHandler,
-} from '../../ports/url-retriever.handler';
+} from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
 import {
+  UnexpectedUrlRetrieverError,
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverParsingError,
-} from '../../url-retriever.errors';
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 
 const PDF_MIME_TYPE = 'application/pdf';
 
@@ -26,10 +32,13 @@ export class RetrieveUrlUseCase {
     private readonly handler: UrlRetrieverHandler,
     private readonly assertCrawlDomainAccessUseCase: AssertCrawlDomainAccessUseCase,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
+    private readonly pdfExtractionCache: PdfExtractionCachePort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
-    this.logger.debug(`Retrieving URL: ${command.url}`);
+    this.logger.debug({ url: command.url }, 'Retrieving URL');
 
     // Org-scoped crawl gate — runs BEFORE the try/catch so a thrown
     // CrawlDomainAccessDeniedError (404) is not swallowed into a retriever
@@ -46,6 +55,13 @@ export class RetrieveUrlUseCase {
       const raw = await this.handler.fetch({
         url: command.url,
         options: command.options,
+        assertPrivateDestinationAccess:
+          command.privateDestinationPolicy === 'explicit-grant'
+            ? (url) =>
+                this.assertCrawlDomainAccessUseCase.execute(
+                  new AssertCrawlDomainAccessCommand(url, command.orgId, true),
+                )
+            : undefined,
         onRedirect: (url) =>
           this.assertCrawlDomainAccessUseCase.execute(
             new AssertCrawlDomainAccessCommand(url, command.orgId),
@@ -56,7 +72,7 @@ export class RetrieveUrlUseCase {
         assertContentType: (contentType, finalUrl) =>
           this.assertContentTypeAcceptable(contentType, finalUrl, command.url),
       });
-      return await this.parseByContentType(raw, command.url);
+      return await this.parseByContentType(raw, command.url, command.orgId);
     } catch (error) {
       return this.mapError(error, command.url);
     }
@@ -70,9 +86,12 @@ export class RetrieveUrlUseCase {
   private async parseByContentType(
     raw: RawUrlResponse,
     requestedUrl: string,
+    orgId: UUID,
   ): Promise<UrlRetrieverResult> {
     if (this.isPdf(raw.contentType, raw.finalUrl, requestedUrl)) {
-      return this.parsePdf(raw);
+      return this.pdfExtractionCache.getOrLoad(orgId, raw, () =>
+        this.parsePdf(raw),
+      );
     }
 
     this.assertSupportedContentType(raw.contentType, raw.finalUrl);
@@ -115,10 +134,7 @@ export class RetrieveUrlUseCase {
     }
 
     // Otherwise log and convert to appropriate domain error
-    this.logger.error(
-      `URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      error instanceof Error ? error.stack : 'Unknown error',
-    );
+    this.logger.error({ err: error as Error, url }, 'URL retrieval failed');
 
     throw new UrlRetrieverProviderNotAvailableError(
       this.handler.constructor.name,
@@ -173,10 +189,23 @@ export class RetrieveUrlUseCase {
    * Delegate PDF parsing to the file-retrieval pipeline (Mistral OCR or
    * pdf-parse), flattening the extracted pages into the text content the
    * crawler indexes. PDFs have no anchors to follow, so the result has no links.
+   *
+   * Fetched PDFs run the same preflight page-count guard as uploads (AYC-332):
+   * the download size is already bounded by the handler's streaming cap, but a
+   * small file can still hold thousands of pages and trigger a long, expensive
+   * OCR job. The guard throws TooManyPagesError (422), which propagates for a
+   * single fetch and is skipped per-page by the crawler.
    */
   private async parsePdf(raw: RawUrlResponse): Promise<UrlRetrieverResult> {
     const fileName = this.fileNameFromUrl(raw.finalUrl);
     try {
+      await this.preflightCheckUseCase.execute(
+        new PreflightCheckCommand({
+          fileData: raw.body,
+          fileName,
+          fileType: PDF_MIME_TYPE,
+        }),
+      );
       const result = await this.retrieveFileContentUseCase.execute(
         new RetrieveFileContentCommand({
           fileData: raw.body,
@@ -194,6 +223,8 @@ export class RetrieveUrlUseCase {
         fileName,
         result.metadata,
         [],
+        [],
+        true,
       );
     } catch (error) {
       // Domain errors (the file pipeline's own failures) keep their meaning;

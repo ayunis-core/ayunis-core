@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HashingHandler } from '../../ports/hashing.handler';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
 import { CompareHashCommand } from './compare-hash.command';
-import { ComparisonFailedError, HashingError } from '../../hashing.errors';
+import {
+  ComparisonFailedError,
+  HashingError,
+} from 'src/iam/hashing/application/hashing.errors';
 
 @Injectable()
 export class CompareHashUseCase {
@@ -17,13 +20,16 @@ export class CompareHashUseCase {
         command.plainText,
         command.hash,
       );
-      this.logger.debug('Comparison completed', { isMatch });
+      this.logger.debug({ isMatch }, 'Comparison completed');
       return isMatch;
     } catch (error) {
       if (!(error instanceof HashingError)) {
-        this.logger.error('Failed to compare hash', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to compare hash',
+        );
         throw new ComparisonFailedError(
           error instanceof Error ? error.message : 'Unknown error',
         );

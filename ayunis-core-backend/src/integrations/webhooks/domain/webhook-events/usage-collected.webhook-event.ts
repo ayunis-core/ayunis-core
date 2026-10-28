@@ -8,6 +8,7 @@ import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 export interface UsageCollectedWebhookPayload {
   id: UUID;
   userId: UUID | null;
+  apiKeyId?: UUID;
   organizationId: UUID;
   modelId: UUID;
   modelName: string;
@@ -39,6 +40,7 @@ export class UsageCollectedWebhookEvent extends WebhookEvent<UsageCollectedWebho
     this.data = {
       id: usage.id,
       userId: usage.userId,
+      ...(usage.apiKeyId ? { apiKeyId: usage.apiKeyId } : {}),
       organizationId: usage.organizationId,
       modelId: usage.modelId,
       modelName,

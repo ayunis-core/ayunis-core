@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+UI_DIR="$REPO_DIR/packages/ui"
+PORT="${STORYBOOK_PORT:-6006}"
+CHECKOUT_ID="$(printf '%s' "$REPO_DIR" | cksum | cut -d' ' -f1)"
+SESSION="ayunis-storybook-$CHECKOUT_ID-$PORT"
+STATE_DIR="$REPO_DIR/.dev/storybook"
+LOG_FILE="$STATE_DIR/storybook-$PORT.log"
+URL="http://localhost:$PORT"
+
+mkdir -p "$STATE_DIR"
+
+info() { echo "==> $*"; }
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+session_alive() {
+  tmux has-session -t "$SESSION" 2>/dev/null
+}
+
+storybook_ready() {
+  curl --silent --fail --max-time 2 "$URL/iframe.html" >/dev/null 2>&1
+}
+
+cmd_up() {
+  command -v tmux >/dev/null 2>&1 || die "tmux is required to manage Storybook"
+
+  if session_alive; then
+    info "Storybook is already running at $URL"
+    return
+  fi
+
+  if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >&2
+    die "Port $PORT is already occupied. Choose another with STORYBOOK_PORT=<port> ./storybook up."
+  fi
+
+  : > "$LOG_FILE"
+  tmux new-session -d -s "$SESSION" \
+    "cd $(printf '%q' "$UI_DIR") && exec pnpm storybook --port $(printf '%q' "$PORT") >> $(printf '%q' "$LOG_FILE") 2>&1"
+
+  for _ in {1..120}; do
+    if storybook_ready; then
+      info "Storybook is ready at $URL"
+      return
+    fi
+    if ! session_alive; then
+      tail -n 40 "$LOG_FILE" >&2
+      die "Storybook exited during startup"
+    fi
+    sleep 1
+  done
+
+  tail -n 40 "$LOG_FILE" >&2
+  cmd_down
+  die "Storybook did not become ready within 120 seconds"
+}
+
+cmd_down() {
+  if ! session_alive; then
+    info "Storybook is not running for this checkout"
+    return
+  fi
+
+  tmux send-keys -t "$SESSION" C-c
+  for _ in {1..10}; do
+    if ! session_alive; then
+      info "Storybook stopped"
+      return
+    fi
+    sleep 1
+  done
+
+  die "Storybook did not stop after Ctrl-C. Inspect the session with: tmux attach -t $SESSION"
+}
+
+cmd_status() {
+  if session_alive && storybook_ready; then
+    echo "running  $URL"
+  elif session_alive; then
+    echo "starting or unhealthy  $URL"
+  else
+    echo "stopped"
+  fi
+}
+
+cmd_logs() {
+  if [ ! -f "$LOG_FILE" ]; then
+    die "No Storybook log exists yet"
+  fi
+  tail -n "${TAIL:-80}" "$LOG_FILE"
+}
+
+case "${1:-help}" in
+  up) cmd_up ;;
+  down) cmd_down ;;
+  status) cmd_status ;;
+  logs) cmd_logs ;;
+  help|--help|-h)
+    cat <<EOF
+Usage: ./storybook <up|down|status|logs>
+
+Environment:
+  STORYBOOK_PORT  HTTP port (default: 6006)
+  TAIL            Number of log lines shown by logs (default: 80)
+EOF
+    ;;
+  *) die "Unknown command: $1" ;;
+esac

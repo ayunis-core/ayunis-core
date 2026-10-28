@@ -1,12 +1,13 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadNotFoundError } from '../../threads.errors';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
@@ -18,6 +19,8 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
   let getMcpIntegrationsByIdsUseCase: jest.Mocked<GetMcpIntegrationsByIdsUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+
+  const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockMcpIntegrationId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockMcpIntegrationId2 = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -32,10 +35,9 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     };
 
     const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        return undefined;
-      }),
+      get: jest.fn(
+        getFromUserContext({ userId: mockUserId, orgId: mockOrgId }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockGetMcpIntegrationsByIdsUseCase = {
@@ -57,9 +59,6 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     useCase = module.get(AddMcpIntegrationToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
     getMcpIntegrationsByIdsUseCase = module.get(GetMcpIntegrationsByIdsUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

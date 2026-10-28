@@ -1,7 +1,11 @@
 import { applyDomPatch } from '@/shared/lib/dom-patch';
 applyDomPatch(); // Must be called before React renders
 
-import { initAppsignal } from '@/shared/lib/appsignal';
+import {
+  initAppsignal,
+  recoverableErrorReport,
+  reportError,
+} from '@/shared/lib/appsignal';
 initAppsignal();
 
 import {
@@ -26,7 +30,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
+import { StartupPending } from '@/shared/ui/startup-pending/StartupPending';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
+import { shouldRetryQuery } from '@/shared/api/client';
+import {
+  createOpenPanelScreenViewAnalytics,
+  openPanel,
+  trackOpenPanelOutgoingLinks,
+  trackOpenPanelScreenViews,
+} from '@/shared/lib/openpanel';
 
 // Import the generated route tree
 import { routeTree } from './app/routeTree.gen.ts';
@@ -41,14 +53,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-      retry: (failureCount, error: unknown) => {
-        // Don't retry on 4xx errors (client errors)
-        const status = (error as { status?: number }).status;
-        if (status && status >= 400 && status < 500) {
-          return false;
-        }
-        return failureCount < 3;
-      },
+      retry: shouldRetryQuery,
     },
     mutations: {
       retry: 1,
@@ -81,16 +86,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
+if (openPanel) {
+  trackOpenPanelScreenViews(
+    router,
+    createOpenPanelScreenViewAnalytics(openPanel),
+  );
+  trackOpenPanelOutgoingLinks(openPanel);
+}
+
 // Render the app
 const rootElement = document.getElementById('app');
 if (rootElement && !rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+  const root = ReactDOM.createRoot(rootElement, {
+    onRecoverableError: (error, errorInfo) => {
+      console.error(error);
+      const { matches } = router.state;
+      const route =
+        matches.length > 0 ? matches[matches.length - 1].fullPath : undefined;
+      const report = recoverableErrorReport(error, errorInfo, route);
+      reportError(report.error, report.params);
+    },
+  });
   root.render(
     <StrictMode>
       <ErrorBoundary>
         <RootLayout>
           <QueryClientProvider client={queryClient}>
             <RouterProvider router={router} />
+            <StartupPending router={router} />
           </QueryClientProvider>
         </RootLayout>
       </ErrorBoundary>

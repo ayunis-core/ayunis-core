@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SkillTemplateRepository } from '../../ports/skill-template.repository';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
 import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import { FindActivePreCreatedTemplatesQuery } from './find-active-pre-created-templates.query';
-import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
+import { UnexpectedSkillTemplateError } from 'src/domain/skill-templates/application/skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -27,9 +27,12 @@ export class FindActivePreCreatedTemplatesUseCase {
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding active pre-created templates', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error finding active pre-created templates',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
   }

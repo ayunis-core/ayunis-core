@@ -1,11 +1,6 @@
 import type { AssistantMessage, Message, ProviderMetadata } from './message';
-import type { Usage } from './provider';
+import type { ProviderFailureFacts, Usage } from './provider';
 
-/**
- * Every event carries the nesting envelope so consumers can attribute
- * events to nested (subagent) runs or flatten them. `depth` is 0 for the
- * root run; `path` lists run ids from root to the emitting run.
- */
 export interface RunEventEnvelope {
   runId: string;
   depth: number;
@@ -15,7 +10,6 @@ export interface RunEventEnvelope {
 
 export type RunStatus = 'completed' | 'aborted' | 'max_iterations' | 'error';
 
-/** Input to `emit` from hooks and tools; becomes a `custom` RunEvent. */
 export interface CustomEventInput {
   name: string;
   data: unknown;
@@ -35,6 +29,22 @@ export interface ToolCallSnapshot {
   input: Record<string, unknown> | null;
   providerMetadata?: ProviderMetadata;
   status: 'streaming' | 'invalid';
+}
+
+export type ModelCallTrigger =
+  | 'initial'
+  | 'provider_retry'
+  | 'empty_recovery'
+  | 'malformed_recovery'
+  | 'fallback';
+
+export interface TerminalModelCallInfo {
+  readonly modelCallId: string;
+  readonly runId: string;
+  readonly turn: number;
+  readonly callSequence: number;
+  readonly trigger: ModelCallTrigger;
+  readonly provider: string;
 }
 
 export type RunEventPayload =
@@ -58,6 +68,8 @@ export type RunEventPayload =
       code: string;
       message: string;
       details?: Readonly<Record<string, unknown>>;
+      modelCall?: TerminalModelCallInfo;
+      providerFailure?: ProviderFailureFacts;
     }
   | {
       type: 'finalization_error';

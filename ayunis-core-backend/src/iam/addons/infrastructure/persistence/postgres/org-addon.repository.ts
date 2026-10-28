@@ -36,7 +36,7 @@ export class PostgresOrgAddonRepository extends OrgAddonRepository {
   }
 
   async create(addon: OrgAddon): Promise<OrgAddon> {
-    this.logger.debug('create', { orgId: addon.orgId, type: addon.type });
+    this.logger.debug({ orgId: addon.orgId, type: addon.type }, 'create');
 
     const record = OrgAddonMapper.toRecord(addon);
     await this.repository.save(record);

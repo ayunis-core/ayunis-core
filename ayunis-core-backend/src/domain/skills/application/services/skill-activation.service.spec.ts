@@ -1,8 +1,15 @@
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { randomUUID } from 'crypto';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { SkillActivationService } from './skill-activation.service';
-import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
+import { FindActivatableSkillUseCase } from 'src/domain/skills/application/use-cases/find-activatable-skill/find-activatable-skill.use-case';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
 import { AddKnowledgeBaseToThreadUseCase } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
@@ -11,22 +18,28 @@ import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threa
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { UUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 
-describe('SkillActivationService', () => {
+describe(SkillActivationService.name, () => {
   let service: SkillActivationService;
-  let skillAccessService: jest.Mocked<SkillAccessService>;
+  let findActivatableSkill: jest.Mocked<FindActivatableSkillUseCase>;
   let addSourceToThreadUseCase: jest.Mocked<AddSourceToThreadUseCase>;
   let addMcpIntegrationToThreadUseCase: jest.Mocked<AddMcpIntegrationToThreadUseCase>;
   let addKnowledgeBaseToThreadUseCase: jest.Mocked<AddKnowledgeBaseToThreadUseCase>;
   let getSourcesByIdsUseCase: jest.Mocked<GetSourcesByIdsUseCase>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
+  let logger: LoggerMock;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const skillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const sourceId1 = '660e8400-e29b-41d4-a716-446655440001' as UUID;
   const sourceId2 = '660e8400-e29b-41d4-a716-446655440002' as UUID;
@@ -42,9 +55,9 @@ describe('SkillActivationService', () => {
     });
 
   const makeSkill = (
-    overrides?: Partial<ConstructorParameters<typeof Skill>[0]>,
+    overrides?: Partial<ConstructorParameters<typeof PersonalSkill>[0]>,
   ) =>
-    new Skill({
+    new PersonalSkill({
       id: skillId,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',
@@ -66,12 +79,13 @@ describe('SkillActivationService', () => {
     });
 
   beforeEach(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SkillActivationService,
         {
-          provide: SkillAccessService,
-          useValue: { findAccessibleSkill: jest.fn() },
+          provide: FindActivatableSkillUseCase,
+          useValue: { execute: jest.fn() },
         },
         {
           provide: AddSourceToThreadUseCase,
@@ -89,11 +103,19 @@ describe('SkillActivationService', () => {
           provide: GetSourcesByIdsUseCase,
           useValue: { execute: jest.fn() },
         },
+        {
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: ContextService,
+          useValue: { get: jest.fn().mockReturnValue(orgId) },
+        },
       ],
     }).compile();
 
     service = module.get(SkillActivationService);
-    skillAccessService = module.get(SkillAccessService);
+    findActivatableSkill = module.get(FindActivatableSkillUseCase);
     addSourceToThreadUseCase = module.get(AddSourceToThreadUseCase);
     addMcpIntegrationToThreadUseCase = module.get(
       AddMcpIntegrationToThreadUseCase,
@@ -102,9 +124,7 @@ describe('SkillActivationService', () => {
       AddKnowledgeBaseToThreadUseCase,
     );
     getSourcesByIdsUseCase = module.get(GetSourcesByIdsUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    eventEmitter = module.get(EventEmitter2);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -115,14 +135,15 @@ describe('SkillActivationService', () => {
       const skill = makeSkill();
       const sources = [makeSource(sourceId1), makeSource(sourceId2)];
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue(sources);
 
       const result = await service.activateOnThread(skillId, thread);
 
-      expect(skillAccessService.findAccessibleSkill).toHaveBeenCalledWith(
+      expect(findActivatableSkill.execute).toHaveBeenCalledWith({
         skillId,
-      );
+        thread,
+      });
       expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(2);
       expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
       expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
@@ -130,6 +151,59 @@ describe('SkillActivationService', () => {
         'Analyze the legal question thoroughly.',
       );
       expect(result.skillName).toBe('Legal Research');
+    });
+
+    it('loads workspace instructions and attaches resources only when explicitly activated', async () => {
+      const thread = makeThread();
+      thread.workspaceId = randomUUID();
+      const skill = new WorkspaceSkill({
+        ...makeSkill(),
+        workspaceId: thread.workspaceId,
+      });
+      findActivatableSkill.execute.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([makeSource(sourceId1)]);
+
+      expect(addSourceToThreadUseCase.execute).not.toHaveBeenCalled();
+      expect(addMcpIntegrationToThreadUseCase.execute).not.toHaveBeenCalled();
+      expect(addKnowledgeBaseToThreadUseCase.execute).not.toHaveBeenCalled();
+      const result = await service.activateOnThread(skillId, thread);
+
+      expect(findActivatableSkill.execute).toHaveBeenCalledWith({
+        skillId,
+        thread,
+      });
+      expect(result).toEqual({
+        instructions: skill.instructions,
+        skillName: skill.name,
+      });
+      expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          threadId: thread.id,
+          knowledgeBaseId: knowledgeBaseId1,
+          originSkillId: skill.id,
+        }),
+      );
+    });
+
+    it('should emit the used skill after activation succeeds', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+
+      findActivatableSkill.execute.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        SkillUsedEvent.EVENT_NAME,
+        new SkillUsedEvent(userId, orgId, skillId, 'Legal Research'),
+      );
     });
 
     it('should return the skill instructions and name', async () => {
@@ -144,7 +218,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
 
       const result = await service.activateOnThread(skillId, thread);
@@ -155,7 +229,7 @@ describe('SkillActivationService', () => {
 
     it('should propagate SkillNotFoundError when user cannot access the skill', async () => {
       const thread = makeThread();
-      skillAccessService.findAccessibleSkill.mockRejectedValue(
+      findActivatableSkill.execute.mockRejectedValue(
         new SkillNotFoundError(skillId),
       );
 
@@ -173,7 +247,7 @@ describe('SkillActivationService', () => {
       const skill = makeSkill({ mcpIntegrationIds: [] });
       const sources = [makeSource(sourceId1), makeSource(sourceId2)];
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue(sources);
       addSourceToThreadUseCase.execute
         .mockRejectedValueOnce(new SourceAlreadyAssignedError(sourceId1))
@@ -192,7 +266,7 @@ describe('SkillActivationService', () => {
       const skill = makeSkill();
       const sources = [makeSource(sourceId1), makeSource(sourceId2)];
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue(sources);
       addSourceToThreadUseCase.execute.mockRejectedValue(
         new SourceAlreadyAssignedError(sourceId1),
@@ -210,7 +284,7 @@ describe('SkillActivationService', () => {
       const skill = makeSkill({ mcpIntegrationIds: [] });
       const sources = [makeSource(sourceId1)];
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue(sources);
       addSourceToThreadUseCase.execute.mockRejectedValue(
         new Error('Database connection lost'),
@@ -229,7 +303,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [knowledgeBaseId1, knowledgeBaseId2],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
 
       await service.activateOnThread(skillId, thread);
@@ -259,7 +333,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
 
       const result = await service.activateOnThread(skillId, thread);
@@ -278,7 +352,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [knowledgeBaseId1, knowledgeBaseId2],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
       addKnowledgeBaseToThreadUseCase.execute
         .mockRejectedValueOnce(new KnowledgeBaseNotFoundError(knowledgeBaseId1))
@@ -287,9 +361,9 @@ describe('SkillActivationService', () => {
       const result = await service.activateOnThread(skillId, thread);
 
       expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'Knowledge base not found, skipping (stale reference)',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ knowledgeBaseId: knowledgeBaseId1 }),
+        'Knowledge base not found, skipping (stale reference)',
       );
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
@@ -304,7 +378,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
       addMcpIntegrationToThreadUseCase.execute
         .mockRejectedValueOnce(
@@ -315,9 +389,9 @@ describe('SkillActivationService', () => {
       const result = await service.activateOnThread(skillId, thread);
 
       expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'MCP integration not found, skipping (stale reference)',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ mcpIntegrationId: mcpIntegrationId1 }),
+        'MCP integration not found, skipping (stale reference)',
       );
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
@@ -332,7 +406,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
       addMcpIntegrationToThreadUseCase.execute.mockRejectedValue(
         new Error('Database connection lost'),
@@ -351,7 +425,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [knowledgeBaseId1],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
       addKnowledgeBaseToThreadUseCase.execute.mockRejectedValue(
         new Error('Database connection lost'),
@@ -370,7 +444,7 @@ describe('SkillActivationService', () => {
         knowledgeBaseIds: [knowledgeBaseId1],
       });
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([]);
 
       // First activation
@@ -390,7 +464,7 @@ describe('SkillActivationService', () => {
       const readySource = makeSource(sourceId1, SourceStatus.READY);
       const failedSource = makeSource(sourceId2, SourceStatus.FAILED);
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([
         readySource,
         failedSource,
@@ -412,7 +486,7 @@ describe('SkillActivationService', () => {
       });
       const processingSource = makeSource(sourceId1, SourceStatus.PROCESSING);
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([processingSource]);
 
       await service.activateOnThread(skillId, thread);
@@ -428,17 +502,17 @@ describe('SkillActivationService', () => {
       });
       const failedSource = makeSource(sourceId1, SourceStatus.FAILED);
 
-      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      findActivatableSkill.execute.mockResolvedValue(skill);
       getSourcesByIdsUseCase.execute.mockResolvedValue([failedSource]);
 
       await service.activateOnThread(skillId, thread);
 
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'Skipping non-ready source',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceId: sourceId1,
           status: SourceStatus.FAILED,
         }),
+        'Skipping non-ready source',
       );
     });
   });

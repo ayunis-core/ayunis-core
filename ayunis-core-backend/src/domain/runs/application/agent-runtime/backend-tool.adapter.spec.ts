@@ -1,13 +1,34 @@
-import { RunContext } from '@ayunis/agent-runtime';
+import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
+import { RunAbortedError, RunContext } from '@ayunis/agent-runtime';
 import type { ToolExecutionContext } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
-import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
+import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
+import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
+import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { BackendToolAdapter } from './backend-tool.adapter';
+import { MAX_ANONYMOUS_TOOL_RESULT_LENGTH } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -20,32 +41,29 @@ function fakeTool(name: string): BackendTool {
   } as unknown as BackendTool;
 }
 
-function toolCtx(): ToolExecutionContext {
+function toolCtx(isAnonymous = false): ToolExecutionContext {
   return {
-    context: RunContext.create({ orgId, threadId, isAnonymous: false }),
+    context: RunContext.create({ orgId, threadId, isAnonymous }),
     toolCallId: 'c1',
+    emit: jest.fn(),
   } as unknown as ToolExecutionContext;
 }
 
 describe('BackendToolAdapter', () => {
   let execute: jest.Mock;
-  let checkExecute: jest.Mock;
   let anonymize: jest.Mock;
   let adapter: BackendToolAdapter;
 
   beforeEach(() => {
     execute = jest.fn();
-    checkExecute = jest.fn();
     anonymize = jest.fn();
     adapter = new BackendToolAdapter(
       { execute } as unknown as ExecuteToolUseCase,
-      { execute: checkExecute } as unknown as CheckToolCapabilitiesUseCase,
       { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
     );
   });
 
   it('runs an executable tool in-loop and returns its result', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('42 degrees');
 
     const [tool] = adapter.toRuntimeTools([fakeTool('get_weather')]);
@@ -56,55 +74,100 @@ describe('BackendToolAdapter', () => {
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves display-only tools without execute so the loop ends', () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: false });
+  it.each([
+    new CreateFileTool(),
+    new BarChartTool(),
+    new LineChartTool(),
+    new PieChartTool(),
+    new MapTool(),
+  ])(
+    'acknowledges $name and continues without backend execution',
+    async (backendTool) => {
+      const [tool] = adapter.toRuntimeTools([backendTool]);
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('bar_chart')]);
+      expect(tool.execute).toBeDefined();
+      expect(await tool.execute!({}, toolCtx())).toEqual({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      });
+      expect(execute).not.toHaveBeenCalled();
+    },
+  );
 
-    expect(tool.execute).toBeUndefined();
+  it('validates acknowledgement-only chart input', () => {
+    const [tool] = adapter.toRuntimeTools([new BarChartTool()]);
+
+    expect(() => tool.validateInput!({ chartTitle: 'Incomplete' })).toThrow(
+      /missing required parameter 'xAxis'/,
+    );
+    expect(execute).not.toHaveBeenCalled();
   });
 
-  it('wires display-only tools to backend param validation (AYC-675)', () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: false });
-    const backendTool = fakeTool('create_calendar_event');
-    (backendTool as { validateParams?: unknown }).validateParams = jest.fn(
-      (params: Record<string, unknown>) => {
-        if (params.start === 'not-a-date') {
-          throw new Error("'start' must be a valid ISO 8601 date-time");
-        }
-        return params;
-      },
-    );
+  it.each([
+    new SendEmailTool(),
+    new CreateCalendarEventTool(),
+    new CreateSkillTool(),
+    new EditSkillTool(),
+  ])(
+    'leaves $name without execute so the current run terminates',
+    (backendTool) => {
+      const [tool] = adapter.toRuntimeTools([backendTool]);
 
-    const [tool] = adapter.toRuntimeTools([backendTool]);
+      expect(tool.execute).toBeUndefined();
+    },
+  );
+
+  it('validates terminal widget input before display (AYC-675)', () => {
+    const [tool] = adapter.toRuntimeTools([new CreateCalendarEventTool()]);
 
     expect(tool.validateInput).toBeDefined();
-    // Same error shape as the legacy collector and the executable path, so
-    // the model sees one format on both loops.
-    expect(() => tool.validateInput!({ start: 'not-a-date' })).toThrow(
+    expect(() =>
+      tool.validateInput!({
+        title: 'Budget review',
+        description: 'Review the proposed budget',
+        location: 'Berlin',
+        start: 'not-a-date',
+        end: '2026-01-31T15:30:00Z',
+      }),
+    ).toThrow(
       /The tool didn't provide any result due to the following error in tool usage: 'start' must be a valid ISO 8601 date-time/,
     );
     expect(() =>
-      tool.validateInput!({ start: '2026-01-31T14:30:00Z' }),
+      tool.validateInput!({
+        title: 'Budget review',
+        description: 'Review the proposed budget',
+        location: 'Berlin',
+        start: '2026-01-31T14:30:00Z',
+        end: '2026-01-31T15:30:00Z',
+      }),
     ).not.toThrow();
   });
 
-  it('hands hybrid tools a display acknowledgement, not the raw result', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
-    execute.mockResolvedValue('the document body');
+  it.each([
+    new CreateDocumentTool(),
+    new UpdateDocumentTool(),
+    new EditDocumentTool(),
+    new CreateDiagramTool(),
+    new UpdateDiagramTool(),
+    new CreateSpreadsheetTool(),
+    new UpdateSpreadsheetTool(),
+  ])(
+    'executes $name once and returns a display acknowledgement',
+    async (backendTool) => {
+      execute.mockResolvedValue('raw artifact result');
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('create_document')]);
-    const result = await tool.execute!({}, toolCtx());
+      const [tool] = adapter.toRuntimeTools([backendTool]);
+      const result = await tool.execute!({}, toolCtx());
 
-    expect(result).toEqual({
-      result: 'Tool has been displayed successfully',
-      isError: false,
-    });
-    expect(execute).toHaveBeenCalledTimes(1);
-  });
+      expect(result).toEqual({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      });
+      expect(execute).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('returns a hybrid tool execution error instead of a display acknowledgement', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
     execute.mockRejectedValue(
       new ToolExecutionFailedError({
         toolName: 'create_document',
@@ -113,7 +176,7 @@ describe('BackendToolAdapter', () => {
       }),
     );
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('create_document')]);
+    const [tool] = adapter.toRuntimeTools([new CreateDocumentTool()]);
     const result = await tool.execute!({}, toolCtx());
 
     expect(result).toEqual({
@@ -122,21 +185,27 @@ describe('BackendToolAdapter', () => {
     });
   });
 
-  it('truncates oversized executable results', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
-    execute.mockResolvedValue('x'.repeat(25000));
+  it('returns executable results up to 200,000 characters', async () => {
+    const toolResult = 'x'.repeat(200_000);
+    execute.mockResolvedValue(toolResult);
 
     const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
     const result = await tool.execute!({}, toolCtx());
 
-    expect(result).toEqual({
-      result: expect.stringMatching(/too long to display/i),
-      isError: false,
-    });
+    expect(result).toEqual({ result: toolResult, isError: false });
+  });
+
+  it('leaves non-PII result limiting to the agent runtime', async () => {
+    const toolResult = `${'x'.repeat(200_000)}additional content`;
+    execute.mockResolvedValue(toolResult);
+
+    const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
+    const result = await tool.execute!({}, toolCtx());
+
+    expect(result).toEqual({ result: toolResult, isError: false });
   });
 
   it('redacts PII tool output and emits masks in anonymous mode', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockResolvedValue({
       anonymizedText: 'call {{pii:PERSON_1}} at {{pii:PHONE_1}}',
@@ -163,13 +232,40 @@ describe('BackendToolAdapter', () => {
       isError: false,
     });
     expect(anonymize).toHaveBeenCalledTimes(1);
+    expect(anonymize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        measurementCaller: { source: 'tool_result' },
+      }),
+    );
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'thread_pii_masks' }),
     );
   });
 
+  it('limits PII tool output before anonymization', async () => {
+    const retainedResult = 'x'.repeat(MAX_ANONYMOUS_TOOL_RESULT_LENGTH);
+    execute.mockResolvedValue(`${retainedResult}discarded`);
+    anonymize.mockResolvedValue({
+      anonymizedText: 'anonymized result',
+      masks: [],
+    });
+    const piiTool = {
+      ...fakeTool('resident_lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+    const result = await tool.execute!({}, toolCtx(true));
+    const command = anonymize.mock.calls[0][0] as AnonymizeTextForThreadCommand;
+
+    expect(command.text).toBe(retainedResult);
+    expect(result).toEqual({
+      result: 'anonymized result\n[result truncated]',
+      isError: false,
+    });
+  });
+
   it('stops the runtime when PII tool output cannot be anonymized', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockRejectedValue(new Error('anonymizer unavailable'));
     const piiTool = {
@@ -189,11 +285,27 @@ describe('BackendToolAdapter', () => {
     });
   });
 
+  it('aborts the runtime instead of failing when the thread was deleted during redaction', async () => {
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+    const piiTool = {
+      ...fakeTool('lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+    const ctx = toolCtx(true);
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, ctx)).rejects.toBeInstanceOf(
+      RunAbortedError,
+    );
+    expect(ctx.emit).not.toHaveBeenCalled();
+  });
+
   // `cause` is process-local and the runtime error event serializes details
   // only, so a classified provider failure must ride in `details` to survive
   // to mapRunError and keep the PROVIDER_UNAVAILABLE_* grouping (AYC-654).
   it('serializes a classified anonymize outage into the runtime error details', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockRejectedValue(
       new ProviderTimeoutError({ provider: 'anonymize' }),
@@ -221,8 +333,51 @@ describe('BackendToolAdapter', () => {
     });
   });
 
+  it('serializes a thread-mask failure without raw persistence details', async () => {
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(
+      new ThreadPiiMaskAnonymizationError(
+        'new_masks_persistence',
+        {
+          textLength: 24,
+          existingMaskCount: 2,
+          newMaskCount: 1,
+        },
+        Object.assign(new Error('duplicate sensitive value'), {
+          code: '23505',
+          constraint: 'UQ_thread_pii_masks_thread_category_value',
+          detail: 'sensitive value',
+        }),
+      ),
+    );
+    const piiTool = {
+      ...fakeTool('lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, toolCtx(true))).rejects.toMatchObject({
+      code: 'ANONYMIZATION_UNAVAILABLE',
+      details: {
+        hostError: {
+          type: 'thread_pii_mask_failure',
+          context: {
+            code: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+            stage: 'new_masks_persistence',
+            textLength: 24,
+            existingMaskCount: 2,
+            newMaskCount: 1,
+            databaseCode: '23505',
+            databaseConstraint: 'UQ_thread_pii_masks_thread_category_value',
+            causeType: 'Error',
+          },
+        },
+      },
+    });
+  });
+
   it('surfaces an exposeToLLM tool error message to the model', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockRejectedValue(
       new ToolExecutionFailedError({
         toolName: 'search',

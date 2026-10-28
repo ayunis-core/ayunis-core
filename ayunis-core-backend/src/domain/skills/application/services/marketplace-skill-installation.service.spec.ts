@@ -1,15 +1,17 @@
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { MarketplaceSkillInstallationService } from './marketplace-skill-installation.service';
 import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
-import type { CreateSkillWithUniqueNameUseCase } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
+import type { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import type {
   SkillListResponseDto,
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
-import { Skill } from '../../domain/skill.entity';
+
 import type { UUID } from 'crypto';
 import { MarketplaceSkillNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
-import { CreateSkillWithUniqueNameCommand } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
+import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
+import { createMockMarketplaceClient } from 'src/domain/marketplace/application/testing/marketplace.fixtures';
 
 const USER_ID = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -40,11 +42,7 @@ describe('MarketplaceSkillInstallationService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CreateSkillWithUniqueNameUseCase>;
 
-    marketplaceClient = {
-      getPreInstalledSkills: jest.fn(),
-      getSkillByIdentifier: jest.fn(),
-      getIntegrationByIdentifier: jest.fn(),
-    };
+    marketplaceClient = createMockMarketplaceClient();
 
     service = new MarketplaceSkillInstallationService(
       getMarketplaceSkillUseCase,
@@ -54,7 +52,7 @@ describe('MarketplaceSkillInstallationService', () => {
   });
 
   it('should fetch marketplace skill and delegate creation to CreateSkillWithUniqueNameUseCase', async () => {
-    const createdSkill = new Skill({
+    const createdSkill = new PersonalSkill({
       name: 'Meeting Summarizer',
       shortDescription: 'AI description for meeting summarizer',
       instructions:
@@ -138,7 +136,7 @@ describe('MarketplaceSkillInstallationService', () => {
       }));
       createSkillWithUniqueNameUseCase.execute.mockImplementation(
         async (command) =>
-          new Skill({
+          new PersonalSkill({
             name: command.name,
             shortDescription: command.shortDescription,
             instructions: command.instructions,
@@ -187,7 +185,7 @@ describe('MarketplaceSkillInstallationService', () => {
         });
       createSkillWithUniqueNameUseCase.execute.mockImplementation(
         async (command) =>
-          new Skill({
+          new PersonalSkill({
             name: command.name,
             shortDescription: command.shortDescription,
             instructions: command.instructions,

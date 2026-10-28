@@ -10,25 +10,16 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { useRegister } from '../api';
+import { useRegister } from '@/pages/auth/register/api';
 import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { Label } from '@ayunis/ui/components/label';
 import { useGtm } from '@/features/useGtm';
 import config from '@/shared/config';
-import { Card, CardContent } from '@ayunis/ui/components/card';
 import { DepartmentField } from '@/shared/ui/department-field';
 
-interface RegisterPageProps {
-  isCloud: boolean;
-  isRegistrationDisabled: boolean;
-}
-
-export function RegisterPage({
-  isCloud,
-  isRegistrationDisabled,
-}: Readonly<RegisterPageProps>) {
+export function RegisterPage({ isCloud }: Readonly<{ isCloud: boolean }>) {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation('auth');
   const agbHref = 'https://www.ayunis.com/agb-software-%c3%bcberlassung';
@@ -46,37 +37,6 @@ export function RegisterPage({
     enabled: gtmEnabled,
     ucSettingsId: usercentricsSettingsId,
   });
-
-  // Show registration closed message when cloud AND registration is disabled
-  if (isCloud && isRegistrationDisabled) {
-    return (
-      <OnboardingLayout
-        title={t('register.registrationClosedTitle')}
-        description={t('register.registrationClosedDescription')}
-        footer={
-          <>
-            {t('register.or')}{' '}
-            <Link to="/login" className="font-medium text-primary underline">
-              {t('register.signInExisting')}
-            </Link>
-          </>
-        }
-      >
-        <Card>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground font-medium">
-              <a
-                href={`mailto:${t('register.registrationClosedContact')}`}
-                className="text-primary underline hover:no-underline"
-              >
-                {t('register.registrationClosedContact')}
-              </a>
-            </p>
-          </CardContent>
-        </Card>
-      </OnboardingLayout>
-    );
-  }
 
   return (
     <OnboardingLayout
@@ -107,8 +67,10 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-email"
                     placeholder={t('register.emailPlaceholder')}
                     type="email"
+                    autoComplete="username"
                     {...field}
                   />
                 </FormControl>
@@ -125,6 +87,8 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-user-name"
+                    autoComplete="name"
                     placeholder={t('register.userNamePlaceholder')}
                     {...field}
                   />
@@ -142,6 +106,7 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-org-name"
                     placeholder={t('register.orgNamePlaceholder')}
                     {...field}
                   />
@@ -166,6 +131,8 @@ export function RegisterPage({
                 <FormControl>
                   <PasswordInput
                     required
+                    data-testid="register-password"
+                    autoComplete="new-password"
                     placeholder={t('register.passwordPlaceholder')}
                     {...field}
                   />
@@ -209,6 +176,7 @@ export function RegisterPage({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="legalAcceptance"
+                        data-testid="register-legal-acceptance"
                         required
                         checked={field.value}
                         onCheckedChange={field.onChange}
@@ -247,7 +215,12 @@ export function RegisterPage({
               )}
             />
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="register-submit"
+          >
             {isLoading
               ? t('register.creatingAccount')
               : t('register.createAccountButton')}

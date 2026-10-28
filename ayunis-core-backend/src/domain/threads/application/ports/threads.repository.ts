@@ -1,7 +1,8 @@
-import type { SourceAssignment } from '../../domain/thread-source-assignment.entity';
-import type { Thread } from '../../domain/thread.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
+import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
@@ -12,6 +13,7 @@ export interface ThreadsFindAllOptions {
 
 export interface ThreadsFindAllFilters {
   search?: string;
+  workspaceId?: UUID;
 }
 
 export interface ThreadsPagination {
@@ -38,9 +40,23 @@ export interface StaleThreadSourceRef {
   orgId: UUID;
 }
 
+export interface ThreadContextRefs {
+  workspaceId: UUID | null;
+  knowledgeBaseIds: UUID[];
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
+  abstract findContextRefs(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadContextRefs | null>;
+  abstract findCitationContext(
+    id: UUID,
+    userId: UUID,
+  ): Promise<ThreadCitationContext | null>;
+  abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
   abstract findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,
@@ -93,8 +109,21 @@ export abstract class ThreadsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void>;
+  /**
+   * `workspaceId: null` detaches the thread from its workspace.
+   * Throws `ThreadNotFoundError` when the user owns no such thread. Filing a
+   * chat is treated as an edit and bumps `updatedAt`.
+   */
+  abstract assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
+  abstract findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]>;
+  /** Returns the subset of the given ids whose thread rows still exist. */
+  abstract filterExistingIds(threadIds: UUID[]): Promise<UUID[]>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   /**
    * Returns a page of expired thread references (id + owner) for an org,

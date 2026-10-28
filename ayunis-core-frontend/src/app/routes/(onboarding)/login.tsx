@@ -1,5 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import LoginPage from '@/pages/auth/login';
+import { appControllerIsCloud } from '@/shared/api';
+import { meQueryOptions } from '@/shared/api/me-query-options';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import z from 'zod';
 
 export const Route = createFileRoute('/(onboarding)/login')({
@@ -7,14 +10,33 @@ export const Route = createFileRoute('/(onboarding)/login')({
     emailVerified: z.boolean().optional(),
     redirect: z.string().optional(),
   }),
-  loaderDeps: ({ search }) => search,
-  loader: ({ deps: { emailVerified, redirect } }) => {
-    return { emailVerified, redirect };
+  beforeLoad: async ({ context: { queryClient }, search }) => {
+    // staleTime 0 overrides the app-wide 5-minute default: a cached "signed
+    // in" is not good enough here. If the cookie died meanwhile (expiry,
+    // revocation, logout in another tab) a warm cache would bounce the user
+    // into an app whose every request 401s, with no way back to this form.
+    const user = await queryClient
+      .query({ ...meQueryOptions(), staleTime: 0 })
+      .catch(() => null);
+    if (user) {
+      throw redirect({ to: safeRedirectPath(search.redirect) });
+    }
+  },
+  loader: async () => {
+    const { isCloud, isRegistrationDisabled } = await appControllerIsCloud();
+    return { showRegisterLink: !(isCloud && isRegistrationDisabled) };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { emailVerified, redirect } = Route.useSearch();
-  return <LoginPage redirect={redirect} emailVerified={emailVerified} />;
+  const { showRegisterLink } = Route.useLoaderData();
+  return (
+    <LoginPage
+      redirect={redirect}
+      emailVerified={emailVerified}
+      showRegisterLink={showRegisterLink}
+    />
+  );
 }

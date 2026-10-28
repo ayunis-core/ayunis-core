@@ -5,8 +5,9 @@ import {
   useMcpIntegrationsControllerUpdate,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateIntegrationFormData } from '../model/types';
+import type { UpdateIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
 
 export function useUpdateIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -14,15 +15,32 @@ export function useUpdateIntegration(onSuccess?: () => void) {
 
   const mutation = useMcpIntegrationsControllerUpdate({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (integration, variables) => {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
+        const configSchema = integration.configSchema as Parameters<
+          typeof hasOAuthConfiguration
+        >[0];
+        if (
+          hasConnectionChanges(variables.data) &&
+          !hasOAuthConfiguration(configSchema) &&
+          integration.userAuthorizationRequired !== true &&
+          integration.connectionStatus === 'error'
+        ) {
+          showError(
+            integration.lastConnectionError
+              ? t('integrations.updateIntegration.connectionFailed', {
+                  message: integration.lastConnectionError,
+                })
+              : t('integrations.updateIntegration.connectionFailedGeneric'),
+          );
+          return;
+        }
         showSuccess(t('integrations.updateIntegration.success'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        console.error('Update integration failed:', error);
         try {
           const { code } = extractErrorData(error);
           switch (code) {
@@ -31,6 +49,18 @@ export function useUpdateIntegration(onSuccess?: () => void) {
               break;
             case 'INVALID_SERVER_URL':
               showError(t('integrations.updateIntegration.invalidServerUrl'));
+              break;
+            case 'MCP_VALIDATION_FAILED':
+              showError(
+                t('integrations.updateIntegration.invalidConfiguration'),
+              );
+              break;
+            case 'MCP_MISSING_REQUIRED_CONFIG':
+              showError(
+                t(
+                  'integrations.updateIntegration.missingRequiredConfiguration',
+                ),
+              );
               break;
             default:
               showError(t('integrations.updateIntegration.error'));
@@ -51,4 +81,14 @@ export function useUpdateIntegration(onSuccess?: () => void) {
     updateIntegration,
     isUpdating: mutation.isPending,
   };
+}
+
+function hasConnectionChanges(data: UpdateIntegrationFormData): boolean {
+  return [
+    data.serverUrl,
+    data.configSchema,
+    data.orgConfigValues,
+    data.credentials,
+    data.authHeaderName,
+  ].some((value) => value !== undefined);
 }

@@ -3,8 +3,11 @@
 # dev — manage a per-worktree development stack for ayunis-core
 #
 # Usage:
-#   ./dev up   [--slot N]   Start infra (Docker) + backend + frontend in background
-#   ./dev down [--slot N]   Stop everything
+#   ./dev up   [--slot N] [--with-anonymisation] [--e2e]
+#                              Start infra (Docker) + backend + frontend in background
+#                              --e2e enables deterministic LLM mocks and disables
+#                              outbound org-event webhooks
+#   ./dev down [--slot N]      Stop everything
 #   ./dev status [--slot N] Show what's running and on which ports
 #   ./dev logs [--slot N] [--tail N] [backend|frontend|infra|all]
 #                           Print recent logs (default: all, last 80 lines)
@@ -15,6 +18,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR_PHYS="$(cd "$(dirname "$0")" && pwd -P)"   # lsof and `pwd -P` report physical paths
 COMPOSE_FILE="$REPO_DIR/compose.dev.yml"
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -23,36 +27,69 @@ die()  { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
 warn() { echo "⚠️  $*" >&2; }
 
+# Die unless $1's parent directory really lives inside this checkout. Unlinking or
+# truncating the final component is not enough: a checked-out branch can replace a
+# tracked *directory* (e.g. ayunis-core-backend) with a symlink, and every write
+# below it would then land in whatever that link points at.
+_assert_inside_repo() {
+  local dir root
+  root="$(cd "$REPO_DIR" && pwd -P)"
+  dir="$(cd "$(dirname "$1")" 2>/dev/null && pwd -P)" \
+    || die "cannot resolve $(dirname "$1")"
+  case "$dir/" in "$root"/*) return 0 ;; esac
+  die "$1 resolves to $dir, outside this checkout — refusing to write through a symlinked directory"
+}
+
 # ── Parse arguments ────────────────────────────────────────────────────────
 
 SLOT=""
+WITH_ANONYMISATION=false
+E2E_MODE=false
 COMMAND="${1:-help}"
 shift || true
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --slot) SLOT="${2:?--slot requires a number}"; shift 2 ;;
-    *)      break ;;
+    --with-anonymisation) WITH_ANONYMISATION=true; shift ;;
+    --e2e) E2E_MODE=true; shift ;;
+    *) break ;;
   esac
 done
+
+if $WITH_ANONYMISATION && [ "$COMMAND" != "up" ]; then
+  die "--with-anonymisation is only supported by ./dev up"
+fi
+
+if $E2E_MODE && [ "$COMMAND" != "up" ]; then
+  die "--e2e is only supported by ./dev up"
+fi
 
 # ── Resolve slot: explicit flag > saved file > error ──────────────────────
 
 SLOT_FILE="$REPO_DIR/.dev/slot"
 
 if [ -n "$SLOT" ]; then
+  # Validate before persisting: a saved bad value would make every later command
+  # without --slot die until the file is deleted by hand.
+  [[ "$SLOT" =~ ^[0-9]+$ ]] || die "slot must be a non-negative integer, got: $SLOT"
   # Slot provided explicitly — save it for future commands
   mkdir -p "$REPO_DIR/.dev"
   echo "$SLOT" > "$SLOT_FILE"
 elif [ -f "$SLOT_FILE" ]; then
   SLOT="$(cat "$SLOT_FILE")"
 else
-  # No slot given and none saved — only help works without a slot
-  if [[ "$COMMAND" != "help" && "$COMMAND" != "--help" && "$COMMAND" != "-h" ]]; then
+  # Inventory and UI commands discover slots across worktrees.
+  if [[ "$COMMAND" != "help" && "$COMMAND" != "--help" && "$COMMAND" != "-h" \
+    && "$COMMAND" != "slots" && "$COMMAND" != "ui" ]]; then
     die "No slot specified and none previously saved. Run: ./dev up --slot N"
   fi
   SLOT=0  # dummy for help
 fi
+
+# Arithmetic below evaluates $SLOT; a non-integer can smuggle command substitution
+# (e.g. "x[$(cmd)]"), and the value may come from a worktree's .dev/slot file.
+[[ "$SLOT" =~ ^[0-9]+$ ]] || die "slot must be a non-negative integer, got: $SLOT"
 
 # ── Derived port mappings (offset = SLOT * 10) ────────────────────────────
 
@@ -79,6 +116,19 @@ CHECKOUT_ID="$(printf '%s' "$REPO_DIR" | cksum | cut -d' ' -f1)"
 BACKEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-backend"
 FRONTEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-frontend"
 
+INFRA_SERVICES=(
+  postgres
+  minio
+  mailcatcher
+  docker-socket-proxy
+  code-execution
+  redis
+  gotenberg
+)
+if $WITH_ANONYMISATION; then
+  INFRA_SERVICES+=(anonymize)
+fi
+
 # ── Docker compose wrapper ─────────────────────────────────────────────────
 
 dc() {
@@ -95,6 +145,10 @@ dc() {
 INFISICAL_OK=false
 BACKEND_SECRETS_PREFIX=""
 FRONTEND_SECRETS_PREFIX=""
+BACKEND_E2E_ENV_PREFIX=""
+if $E2E_MODE; then
+  BACKEND_E2E_ENV_PREFIX="env MOCK_INFERENCE=true DISABLE_ORG_EVENTS_WEBHOOKS=true ORG_EVENTS_WEBHOOK_URL= "
+fi
 
 _infisical_preflight() {
   export INFISICAL_DISABLE_UPDATE_CHECK=true
@@ -205,7 +259,18 @@ cmd_up() {
   _sync_dependencies
   _export_infra_env
 
-  if _infra_healthy \
+  # The healthy fast path must not swallow --e2e: skip it unless .env.dev
+  # already carries the e2e settings.
+  local e2e_env_ready=true
+  if $E2E_MODE; then
+    if ! grep -q '^MOCK_INFERENCE=true$' "$REPO_DIR/ayunis-core-backend/.env.dev" 2>/dev/null \
+      || ! grep -q '^ORG_EVENTS_WEBHOOK_URL=$' "$REPO_DIR/ayunis-core-backend/.env.dev" 2>/dev/null; then
+      e2e_env_ready=false
+    fi
+  fi
+
+  if $e2e_env_ready \
+    && _infra_healthy \
     && _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT" \
     && _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
     info "Backend already running (PID $(_display_pid "$STATE_DIR/backend.pid"))"
@@ -259,7 +324,7 @@ cmd_up() {
 
     # -- 1. Docker infrastructure -----------------------------------------
     info "Starting Docker infrastructure …"
-    dc up -d --build --wait 2>&1 | tail -5
+    dc up -d --build --wait "${INFRA_SERVICES[@]}" 2>&1 | tail -5
   fi
 
   # -- 2. Generate .env.dev for backend ------------------------------------
@@ -268,10 +333,25 @@ cmd_up() {
   # connection config and persisted infra creds are written here too, since
   # a contributor's .env (from .env.example) targets the Docker deployment.
   info "Writing $env_dev (slot $SLOT) …"
+  _assert_inside_repo "$env_dev"
+  rm -f "$env_dev"   # never write through a symlink a checked-out branch may have planted here
   {
     echo "# Auto-generated by ./dev up --slot $SLOT — do not edit manually."
     echo "DEV_PORT_OFFSET=$OFFSET"
-    if ! $INFISICAL_OK; then
+    if $E2E_MODE; then
+      echo "# e2e mode: all LLM providers replaced by deterministic mocks."
+      echo "MOCK_INFERENCE=true"
+      echo "# e2e mode: keep the stack hermetic — no outbound org-events"
+      echo "# webhooks (a personal .env may point at an external endpoint;"
+      echo "# each event would cost up to 3 HTTPS attempts with 10s timeouts)."
+      echo "DISABLE_ORG_EVENTS_WEBHOOKS=true"
+      echo "ORG_EVENTS_WEBHOOK_URL="
+    fi
+    if $INFISICAL_OK; then
+      echo "# Host-side database commands use the slot's published Postgres port."
+      echo "POSTGRES_HOST=localhost"
+      echo "POSTGRES_PORT=5432"
+    else
       cat <<EOF
 # Local fallback (no Infisical): base slot-0 connection config; ports are
 # offset by DEV_PORT_OFFSET at boot. Provider API keys belong in .env.
@@ -308,6 +388,9 @@ EOF
   # -- 4. Backend (native) ------------------------------------------------
   if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
     info "Backend already running (PID $(_display_pid "$STATE_DIR/backend.pid"))"
+    if $E2E_MODE; then
+      warn "Backend was already running — MOCK_INFERENCE takes effect on its next start (nest --watch reloads on backend file changes, or ./dev down && ./dev up --e2e)."
+    fi
   else
     _refuse_unmanaged_listener "$STATE_DIR/backend.pid" "$BACKEND_PORT" "Backend"
     if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
@@ -321,7 +404,7 @@ EOF
       "$STATE_DIR/backend.pid" \
       "$STATE_DIR/backend.log" \
       "$BACKEND_SESSION" \
-      "cd '$REPO_DIR/ayunis-core-backend' && exec ${BACKEND_SECRETS_PREFIX}pnpm run start:dev"
+      "cd '$REPO_DIR/ayunis-core-backend' && exec ${BACKEND_SECRETS_PREFIX}${BACKEND_E2E_ENV_PREFIX}pnpm run start:dev"
   fi
 
   # -- 5. Frontend (native) -----------------------------------------------
@@ -364,6 +447,18 @@ EOF
   echo ""
 }
 
+# Checkouts (compose working_dir) other than this one with RUNNING containers in
+# this slot's project. Stopped leftovers don't count: `compose down` removing them
+# is harmless, stopping someone's live stack is not.
+_foreign_slot_owners() {
+  local id
+  docker ps -q --filter "label=com.docker.compose.project=$PROJECT_NAME" 2>/dev/null \
+    | while IFS= read -r id; do
+        docker inspect -f '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$id" 2>/dev/null || true
+      done \
+    | grep -Fvx "$REPO_DIR" | sort -u | paste -sd, - || true
+}
+
 cmd_down() {
   info "Stopping slot $SLOT …"
   _export_infra_env
@@ -371,8 +466,31 @@ cmd_down() {
   _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_SESSION"
   _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_SESSION"
 
+  # Compose project names are global (ayunis-dev-N), so another checkout may have
+  # reused this slot number since we last used it. Only stop containers we started.
+  local foreign
+  foreign="$(_foreign_slot_owners)"
+  if [ -n "$foreign" ]; then
+    warn "Slot $SLOT has running containers started from $foreign — leaving them alone. Run ./dev down there."
+    return 0
+  fi
+
   # Stop Docker infrastructure
   dc down
+
+  local entry label port pids leftovers=""
+  for entry in "Backend:$BACKEND_PORT" "Frontend:$FRONTEND_PORT"; do
+    label="${entry%%:*}"
+    port="${entry##*:}"
+    pids="$(_listener_pids "$port")"
+    if [ -n "$pids" ]; then
+      leftovers="$leftovers $label port $port (PID $pids);"
+    fi
+  done
+
+  if [ -n "$leftovers" ]; then
+    die "Slot $SLOT is still occupied —$leftovers stop those processes or use another slot."
+  fi
 
   info "Slot $SLOT stopped."
 }
@@ -501,8 +619,7 @@ _sync_dependencies() {
 
 _infra_healthy() {
   local expected_services service status_line state health
-  expected_services="$(dc config --services 2>/dev/null)" || return 1
-  [ -n "$expected_services" ] || return 1
+  expected_services="$(printf '%s\n' "${INFRA_SERVICES[@]}")"
 
   local service_status
   service_status="$(dc ps --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null)" || return 1
@@ -551,7 +668,11 @@ _print_ready_summary() {
   echo "  MinIO:        localhost:$MINIO_HOST_PORT  (console: $MINIO_CONSOLE_HOST_PORT)"
   echo "  Mailcatcher:  smtp :$MAILCATCHER_SMTP_HOST_PORT  web :$MAILCATCHER_WEB_HOST_PORT"
   echo "  Code exec:    localhost:$CODE_EXEC_HOST_PORT"
-  echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
+  if $WITH_ANONYMISATION; then
+    echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
+  else
+    echo "  Anonymize:    disabled"
+  fi
   echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
 }
 
@@ -607,22 +728,42 @@ _service_healthy() {
     && _url_healthy "$url"
 }
 
+# The process that owns the port sits three to four levels below the pidfile pid
+# (infisical run -> pnpm shim -> pnpm -> node), so `pkill -P` reaches only the
+# middle of the chain and the leaf keeps listening.
+_descendant_pids() {
+  local pid="$1" child
+  while IFS= read -r child; do
+    [[ "$child" =~ ^[0-9]+$ ]] || continue
+    _descendant_pids "$child"
+    printf '%s\n' "$child"
+  done < <(pgrep -P "$pid" 2>/dev/null || true)
+}
+
+# Deepest-first, so a supervising parent (nest --watch) cannot respawn a leaf
+# after we signalled it. The process-group kill stays because a descendant that
+# has already been reparented away is invisible to the pgrep walk.
+_signal_process_tree() {
+  local signal="$1" pid="$2" descendant
+  while IFS= read -r descendant; do
+    kill -"$signal" "$descendant" 2>/dev/null || true
+  done < <(_descendant_pids "$pid")
+  kill -"$signal" -- -"$pid" 2>/dev/null || true
+  kill -"$signal" "$pid" 2>/dev/null || true
+}
+
 _terminate_process_tree() {
   local pid="$1"
-  kill -TERM -- -"$pid" 2>/dev/null || true
-  pkill -TERM -P "$pid" 2>/dev/null || true
-  kill -TERM "$pid" 2>/dev/null || true
+  _signal_process_tree TERM "$pid"
   sleep 1
-  kill -9 -- -"$pid" 2>/dev/null || true
-  pkill -9 -P "$pid" 2>/dev/null || true
-  kill -9 "$pid" 2>/dev/null || true
+  _signal_process_tree KILL "$pid"
 }
 
 _kill_pid() {
   local pidfile="$1"
   local label="${2:-process}"
   local session="${3:-}"
-  local pid session_pid="" terminate_pid=""
+  local pid session_pid="" terminate_pid="" session_alive=0
   pid="$(_read_pid "$pidfile")"
 
   if [ -n "$session" ] && _tmux_session_alive "$session"; then
@@ -632,17 +773,50 @@ _kill_pid() {
     elif _pid_process_alive "$pidfile"; then
       terminate_pid="$pid"
     fi
-    info "Stopping $label (PID ${terminate_pid:-unknown}) …"
-    tmux kill-session -t "$session" 2>/dev/null || true
+    session_alive=1
   elif _pid_process_alive "$pidfile"; then
     terminate_pid="$pid"
-    info "Stopping $label (PID $pid) …"
   fi
+
+  # The pid file may be forged (QA worktrees check out untrusted branches): only
+  # signal a process that demonstrably runs from this checkout. This must happen
+  # BEFORE the session is torn down — once the pane process is gone the check has
+  # nothing left to inspect, and we would skip the tree kill that reaps the
+  # orphaned pnpm → nest → node children.
+  if [ -n "$terminate_pid" ] && ! _pid_owned_by_repo "$terminate_pid"; then
+    warn "$label pid file points at PID $terminate_pid, which is not a process of this checkout — leaving it alone"
+    rm -f "$pidfile"
+    return 0
+  fi
+
+  if [ -n "$terminate_pid" ] || [ "$session_alive" = 1 ]; then
+    info "Stopping $label (PID ${terminate_pid:-unknown}) …"
+  fi
+  [ "$session_alive" = 1 ] && { tmux kill-session -t "$session" 2>/dev/null || true; }
 
   # tmux can exit before a watcher child; the pane's process group remains
   # scoped to this checkout even after the session disappears.
   [ -n "$terminate_pid" ] && _terminate_process_tree "$terminate_pid"
   rm -f "$pidfile"
+}
+
+# True when the process demonstrably belongs to this checkout. The working
+# directory is authoritative; the command line is only a fallback for when lsof
+# says nothing. Comparisons carry a trailing slash — without it a sibling checkout
+# (…-wt-x vs …-wt-x-extra) would match as a prefix. lsof reports the *physical*
+# cwd, so compare against the resolved repo path too (a checkout reached through a
+# symlink, or /tmp → /private/tmp, would otherwise look foreign and our own
+# servers would never be stopped).
+_pid_owned_by_repo() {
+  local pid="$1" cwd
+  { [[ "$pid" =~ ^[0-9]+$ ]] && [ "$pid" -gt 1 ]; } || return 1
+  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n '/^n/{s/^n//p;q;}')"
+  if [ -n "$cwd" ]; then
+    case "$cwd/" in "$REPO_DIR"/*|"$REPO_DIR_PHYS"/*) return 0 ;; esac
+    return 1
+  fi
+  ps -o command= -p "$pid" 2>/dev/null | grep -qF -- "$REPO_DIR/" && return 0
+  ps -o command= -p "$pid" 2>/dev/null | grep -qF -- "$REPO_DIR_PHYS/"
 }
 
 _show_log() {
@@ -664,15 +838,21 @@ case "$COMMAND" in
   down)   cmd_down ;;
   status) cmd_status ;;
   logs)   cmd_logs "$@" ;;
+  slots)  node "$REPO_DIR/scripts/dev-slots-ui.mjs" list ;;
+  ui)     node "$REPO_DIR/scripts/dev-slots-ui.mjs" serve "$@" ;;
   help|--help|-h)
-    echo "Usage: ./dev <up|down|status|logs> [--slot N] [logs options]"
+    echo "Usage: ./dev <up|down|status|logs|slots|ui> [options]"
     echo ""
     echo "Commands:"
-    echo "  up     --slot N                            Start the full dev stack in background"
+    echo "  up     --slot N [--with-anonymisation] [--e2e]"
+    echo "                                             Start the dev stack in background"
+    echo "                                             --e2e: mock all LLM providers (MOCK_INFERENCE=true)"
     echo "  down   [--slot N]                          Stop everything"
     echo "  status [--slot N]                          Show what's running"
     echo "  logs   [--slot N] [--tail N] [backend|frontend|infra|all]"
     echo "                                             Print recent logs (default: all, 80 lines)"
+    echo "  slots                                     List slots across all worktrees as JSON"
+    echo "  ui     [--port N]                         Start the local slot control panel"
     echo ""
     echo "The --slot flag is required on first use (./dev up --slot N)."
     echo "After that, the slot is saved to .dev/slot and all commands work without --slot."

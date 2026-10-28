@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetCreditUsageQuery } from './get-credit-usage.query';
-import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-monthly-credit-usage.use-case';
-import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
+import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetMonthlyCreditUsageQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
 import type { CreditUsage } from 'src/domain/usage/domain/credit-usage';
-import { UnexpectedUsageError } from '../../usage.errors';
+import { UnexpectedUsageError } from 'src/domain/usage/application/usage.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class GetCreditUsageUseCase {
   ) {}
 
   async execute(query: GetCreditUsageQuery): Promise<CreditUsage> {
-    this.logger.log('Getting credit usage', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'Getting credit usage');
 
     try {
       const { monthlyCredits, startsAt } =
@@ -38,7 +38,10 @@ export class GetCreditUsageUseCase {
       return { monthlyCredits, creditsUsed, creditsRemaining };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get credit usage', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get credit usage',
+      );
       throw new UnexpectedUsageError(error as Error, {
         orgId: query.orgId,
       });

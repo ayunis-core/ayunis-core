@@ -6,7 +6,7 @@ export function createEditUserFormSchema(t: (key: string) => string) {
     email: z
       .string()
       .min(1, t('editUserDialog.emailRequired'))
-      .email(t('editUserDialog.emailInvalid')),
+      .pipe(z.email(t('editUserDialog.emailInvalid'))),
   });
 }
 

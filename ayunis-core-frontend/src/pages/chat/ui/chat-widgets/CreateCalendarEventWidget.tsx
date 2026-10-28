@@ -1,15 +1,16 @@
 // Types
-import type { ToolUseMessageContent } from '../../model/openapi';
-import type { CalendarEventInput } from '../../api/useGenerateIcs';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { CalendarEventInput } from '@/pages/chat/api/useGenerateIcs';
 import { cn } from '@ayunis/ui/lib/cn';
 
 // Utils
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 
 // API
-import { useGenerateIcs } from '../../api/useGenerateIcs';
+import { useGenerateIcs } from '@/pages/chat/api/useGenerateIcs';
 
 // Shadcn
 import { Label } from '@ayunis/ui/components/label';
@@ -146,14 +147,7 @@ export default function CreateCalendarEventWidget({
     const blob = new Blob([icsContent], {
       type: 'text/calendar; charset=utf-8',
     });
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = objectUrl;
-    a.download = `${title || 'event'}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(objectUrl);
+    saveBlobAs(blob, `${title || 'event'}.ics`);
   }
 
   return (

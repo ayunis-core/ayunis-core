@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HashingHandler } from '../../ports/hashing.handler';
+import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handler';
 import { HashTextCommand } from './hash-text.command';
-import { HashingFailedError, HashingError } from '../../hashing.errors';
+import {
+  HashingFailedError,
+  HashingError,
+} from 'src/iam/hashing/application/hashing.errors';
 
 @Injectable()
 export class HashTextUseCase {
@@ -18,9 +21,12 @@ export class HashTextUseCase {
       return hashedData;
     } catch (error) {
       if (!(error instanceof HashingError)) {
-        this.logger.error('Failed to hash data', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to hash data',
+        );
         throw new HashingFailedError(
           error instanceof Error ? error.message : 'Unknown error',
         );

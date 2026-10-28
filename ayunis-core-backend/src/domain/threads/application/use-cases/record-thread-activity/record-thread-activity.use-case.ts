@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { RecordThreadActivityCommand } from './record-thread-activity.command';
 
 /**
@@ -22,10 +22,13 @@ export class RecordThreadActivityUseCase {
         lastActivityAt: command.occurredAt,
       });
     } catch (error) {
-      this.logger.error('Failed to record thread activity', {
-        threadId: command.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId: command.threadId,
+          err: error as Error,
+        },
+        'Failed to record thread activity',
+      );
     }
   }
 }

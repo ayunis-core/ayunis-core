@@ -1,3 +1,4 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
@@ -8,7 +9,7 @@ import { SkillRepository } from 'src/domain/skills/application/ports/skill.repos
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
 import type { UUID } from 'crypto';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import type { Share } from 'src/domain/shares/domain/share.entity';
 import type { RemainingShareScope } from 'src/domain/shares/application/events/share-deleted.event';
 import {
@@ -35,11 +36,14 @@ export class KnowledgeBaseShareDeletedListener {
       return;
     }
 
-    this.logger.log('Cascading KB share deletion through skills and threads', {
-      knowledgeBaseId: event.entityId,
-      ownerId: event.ownerId,
-      remainingScopeCount: event.remainingScopes.length,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: event.entityId,
+        ownerId: event.ownerId,
+        remainingScopeCount: event.remainingScopes.length,
+      },
+      'Cascading KB share deletion through skills and threads',
+    );
 
     const lostAccessUserIds =
       await this.shareScopeResolver.resolveLostAccessUserIds(event);
@@ -66,10 +70,13 @@ export class KnowledgeBaseShareDeletedListener {
       affectedSkillIds,
     );
 
-    this.logger.log('Removed KB from affected skills', {
-      knowledgeBaseId: event.entityId,
-      affectedSkillCount: affectedSkillIds.length,
-    });
+    this.logger.log(
+      {
+        knowledgeBaseId: event.entityId,
+        affectedSkillCount: affectedSkillIds.length,
+      },
+      'Removed KB from affected skills',
+    );
 
     // For each affected skill that is itself shared, clean up thread KB
     // assignments that originated from that skill (for ALL users, since the
@@ -78,7 +85,7 @@ export class KnowledgeBaseShareDeletedListener {
   }
 
   private async cascadeToSharedSkillThreads(
-    affectedSkills: Skill[],
+    affectedSkills: PersonalSkill[],
     knowledgeBaseId: UUID,
   ): Promise<void> {
     for (const skill of affectedSkills) {
@@ -109,11 +116,11 @@ export class KnowledgeBaseShareDeletedListener {
       );
 
       this.logger.log(
-        'Removed KB thread assignments originating from shared skill',
         {
           skillId: skill.id,
           userCount: allUserIds.length,
         },
+        'Removed KB thread assignments originating from shared skill',
       );
     }
   }

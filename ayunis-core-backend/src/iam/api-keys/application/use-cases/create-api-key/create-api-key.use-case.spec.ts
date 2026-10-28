@@ -1,11 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import type { UUID } from 'crypto';
 import { CreateApiKeyUseCase } from './create-api-key.use-case';
 import { CreateApiKeyCommand } from './create-api-key.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
@@ -13,7 +13,7 @@ import {
   ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('CreateApiKeyUseCase', () => {
@@ -26,7 +26,9 @@ describe('CreateApiKeyUseCase', () => {
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
-    const contextValues: Record<string, unknown> = { orgId, userId };
+    const contextValues: Record<string, unknown> = {
+      ...aUserContext({ orgId, userId }),
+    };
 
     const mockApiKeysRepository = {
       findById: jest.fn(),
@@ -58,11 +60,6 @@ describe('CreateApiKeyUseCase', () => {
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
     hashTextUseCase = module.get(HashTextUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns the created api key and the plaintext secret', async () => {
@@ -113,6 +110,20 @@ describe('CreateApiKeyUseCase', () => {
     );
 
     expect(apiKey.name).toBe('staging deploy bot');
+  });
+
+  it('stores a trimmed description and treats a blank one as none', async () => {
+    apiKeysRepository.create.mockImplementation(async (key) => key);
+
+    const described = await useCase.execute(
+      new CreateApiKeyCommand('CI bot', null, '  Deploys the portal  '),
+    );
+    const blank = await useCase.execute(
+      new CreateApiKeyCommand('CI bot', null, '   '),
+    );
+
+    expect(described.apiKey.description).toBe('Deploys the portal');
+    expect(blank.apiKey.description).toBeNull();
   });
 
   it('rejects an empty/whitespace-only name with ApiKeyInvalidInputError', async () => {

@@ -10,10 +10,9 @@ export interface CreditLimitParams {
 }
 
 /**
- * A monthly credit allowance for one user or one team. Presence of a row = a
- * cap; absence = unlimited (within the org budget); `monthlyCredits === 0`
- * freezes the principal. One subclass per scope, each owning its own target id,
- * so an invalid "both / neither target" state is unrepresentable.
+ * A monthly credit allowance for one principal. Presence of a row = a cap;
+ * absence = unlimited within the org budget; `monthlyCredits === 0` freezes the
+ * principal. One subclass per scope owns the corresponding target id.
  */
 export abstract class CreditLimit {
   public readonly id: UUID;

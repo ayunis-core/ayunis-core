@@ -1,12 +1,15 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { MarketplaceInstallFailedError } from '../../skills.errors';
-import { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
-import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';
+import { MarketplaceInstallFailedError } from 'src/domain/skills/application/skills.errors';
+import { MarketplaceSkillInstallationService } from 'src/domain/skills/application/services/marketplace-skill-installation.service';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 
 @Injectable()
 export class InstallSkillFromMarketplaceUseCase {
@@ -18,8 +21,11 @@ export class InstallSkillFromMarketplaceUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(command: InstallSkillFromMarketplaceCommand): Promise<Skill> {
-    this.logger.log('execute', { identifier: command.identifier });
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(
+    command: InstallSkillFromMarketplaceCommand,
+  ): Promise<PersonalSkill> {
+    this.logger.log({ identifier: command.identifier }, 'execute');
 
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -40,11 +46,14 @@ export class InstallSkillFromMarketplaceUseCase {
           new MarketplaceSkillInstalledEvent(userId, orgId, identifier),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit MarketplaceSkillInstalledEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            identifier,
-            userId,
-          });
+          this.logger.error(
+            {
+              err: err as Error,
+              identifier,
+              userId,
+            },
+            'Failed to emit MarketplaceSkillInstalledEvent',
+          );
         });
 
       return skill;
@@ -52,11 +61,14 @@ export class InstallSkillFromMarketplaceUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to install marketplace skill', {
-        identifier: command.identifier,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          identifier: command.identifier,
+          userId,
+          err: error as Error,
+        },
+        'Failed to install marketplace skill',
+      );
       throw new MarketplaceInstallFailedError(command.identifier);
     }
   }

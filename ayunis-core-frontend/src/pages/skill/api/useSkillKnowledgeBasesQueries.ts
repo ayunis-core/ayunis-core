@@ -2,6 +2,7 @@ import {
   useKnowledgeBasesControllerFindAll,
   useSkillKnowledgeBasesControllerListSkillKnowledgeBases,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 /**
  * Hook to fetch both available and assigned knowledge bases for a skill
@@ -12,7 +13,7 @@ export function useSkillKnowledgeBasesQueries(skillId: string) {
     isLoading: loadingAvailable,
     isError: errorAvailable,
     refetch: refetchAvailable,
-  } = useKnowledgeBasesControllerFindAll();
+  } = useKnowledgeBasesControllerFindAll(personalKnowledgeBaseListParams);
 
   const {
     data: assignedKnowledgeBases,

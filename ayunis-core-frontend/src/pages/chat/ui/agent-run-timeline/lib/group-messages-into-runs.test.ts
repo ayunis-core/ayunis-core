@@ -204,15 +204,17 @@ describe('groupMessagesIntoRuns', () => {
 
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    const block = run.blocks[0];
-    if (block.kind !== 'activity') throw new Error('expected activity');
-    expect(block.steps).toHaveLength(2);
-    expect(block.steps[0]).toMatchObject({
+    const activity = run.blocks[0];
+    const document = run.blocks[1];
+    if (activity.kind !== 'activity' || document.kind !== 'rich-tool') {
+      throw new Error('expected activity and document blocks');
+    }
+    expect(activity.steps[0]).toMatchObject({
       kind: 'tool',
       result: 'search results',
       status: 'done',
     });
-    expect(block.steps[1]).toMatchObject({
+    expect(document.steps[0]).toMatchObject({
       kind: 'tool',
       status: 'in_progress',
     });
@@ -292,17 +294,80 @@ describe('groupMessagesIntoRuns', () => {
     expect(units).toHaveLength(2);
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.blocks.map((block) => block.kind)).toEqual(['activity', 'text']);
+    expect(run.blocks.map((block) => block.kind)).toEqual([
+      'activity',
+      'rich-tool',
+      'text',
+    ]);
     const activity = run.blocks[0];
-    const text = run.blocks[1];
-    if (activity.kind !== 'activity' || text.kind !== 'text') {
-      throw new Error('expected activity and text blocks');
+    const readDocument = run.blocks[1];
+    const text = run.blocks[2];
+    if (
+      activity.kind !== 'activity' ||
+      readDocument.kind !== 'rich-tool' ||
+      text.kind !== 'text'
+    ) {
+      throw new Error('expected activity, document, and text blocks');
     }
-    expect(activity.steps).toHaveLength(3); // thinking + 2 tool calls
+    expect(activity.steps).toHaveLength(2); // thinking + web search
     expect(activity.steps[0].kind).toBe('thinking');
     expect(activity.steps[1]).toMatchObject({ kind: 'tool', status: 'done' });
-    expect(activity.steps[2]).toMatchObject({ kind: 'tool', status: 'done' });
+    expect(readDocument.steps[0]).toMatchObject({
+      kind: 'tool',
+      status: 'done',
+      toolUse: { name: 'read_document' },
+    });
     expect(text.content.text).toBe('done!');
+  });
+
+  it('renders an earlier document inline after many document turns', () => {
+    const previousTurns = Array.from({ length: 18 }, (_, index) => [
+      userMessage(`Create script ${index + 1}`),
+      assistantMessage([
+        {
+          type: 'tool_use' as const,
+          id: `create-${index + 1}`,
+          name: 'create_document',
+          params: { title: `Script ${index + 1}` },
+        },
+      ]),
+      toolResultMessage(`create-${index + 1}`, `artifact-${index + 1}`),
+    ]).flat();
+    const messages = [
+      ...previousTurns,
+      userMessage('Show script 11'),
+      assistantMessage([
+        {
+          type: 'tool_use',
+          id: 'read-script-11',
+          name: 'read_document',
+          params: { artifact_id: 'artifact-11' },
+        },
+      ]),
+      toolResultMessage(
+        'read-script-11',
+        JSON.stringify({ artifactId: 'artifact-11', title: 'Script 11' }),
+      ),
+      assistantMessage([{ type: 'text', text: 'Here is script 11.' }]),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, { isStreaming: false });
+    const finalRun = units.at(-1);
+    if (finalRun?.kind !== 'agent-run') throw new Error('expected agent-run');
+
+    expect(finalRun.blocks.map((block) => block.kind)).toEqual([
+      'rich-tool',
+      'text',
+    ]);
+    const document = finalRun.blocks[0];
+    if (document.kind !== 'rich-tool') throw new Error('expected document');
+    expect(document.steps[0]).toMatchObject({
+      result: expect.stringContaining('artifact-11'),
+      toolUse: {
+        name: 'read_document',
+        params: { artifact_id: 'artifact-11' },
+      },
+    });
   });
 
   it('marks tool steps without results as in_progress', () => {
@@ -751,7 +816,7 @@ describe('groupMessagesIntoRuns', () => {
       expect(richTool.steps).toHaveLength(2);
     });
 
-    it('merges same-artifact edits across intervening ordinary tool activity', () => {
+    it('merges same-artifact edits across an intervening document read', () => {
       const messages = [
         userMessage('refine'),
         assistantMessage([
@@ -787,13 +852,10 @@ describe('groupMessagesIntoRuns', () => {
 
       const run = units[1];
       if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-      expect(run.blocks.map((block) => block.kind)).toEqual([
-        'rich-tool',
-        'activity',
-      ]);
+      expect(run.blocks.map((block) => block.kind)).toEqual(['rich-tool']);
       const richTool = run.blocks[0];
       if (richTool.kind !== 'rich-tool') throw new Error('expected rich tool');
-      expect(richTool.steps).toHaveLength(2);
+      expect(richTool.steps).toHaveLength(3);
     });
 
     it('does not merge edits separated by assistant prose', () => {

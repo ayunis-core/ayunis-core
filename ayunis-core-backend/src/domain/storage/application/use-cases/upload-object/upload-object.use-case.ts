@@ -1,16 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
-import { StorageObject } from '../../../domain/storage-object.entity';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { UploadObjectCommand } from './upload-object.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import {
   BucketNotFoundError,
   InvalidObjectNameError,
   StoragePermissionDeniedError,
-  UploadFailedError,
-} from '../../storage.errors';
-import { StorageObjectUpload } from '../../../domain/storage-object-upload.entity';
+} from 'src/domain/storage/application/storage.errors';
+import { wrapUploadFailure } from 'src/domain/storage/application/util/wrap-upload-failure.helper';
+import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 
 @Injectable()
 export class UploadObjectUseCase {
@@ -23,10 +23,13 @@ export class UploadObjectUseCase {
   ) {}
 
   async execute(command: UploadObjectCommand): Promise<StorageObject> {
-    this.logger.debug(`Uploading object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
-
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Uploading object',
+    );
     try {
       const bucketName = this.resolveTargetBucket(command);
 
@@ -38,12 +41,6 @@ export class UploadObjectUseCase {
           bucketName,
         ),
       );
-
-      this.logger.debug(`Successfully uploaded object: ${command.objectName}`, {
-        bucket: bucketName,
-        size: result.size,
-        etag: result.etag,
-      });
 
       return new StorageObject(
         command.objectName,
@@ -63,10 +60,10 @@ export class UploadObjectUseCase {
       }
 
       this.logger.error(
-        `Failed to upload object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to upload object',
       );
-      throw new UploadFailedError();
+      throw wrapUploadFailure(error);
     }
   }
 
@@ -106,8 +103,8 @@ export class UploadObjectUseCase {
       return true;
     } catch (error) {
       this.logger.error(
-        `Error checking if bucket exists: ${bucketName}`,
-        error,
+        { bucket: bucketName, err: error as Error },
+        'Error checking if bucket exists',
       );
       return false;
     }

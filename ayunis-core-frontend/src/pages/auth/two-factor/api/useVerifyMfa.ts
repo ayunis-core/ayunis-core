@@ -4,11 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useMfaLoginControllerVerify } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
+import { rememberSuccessfulSsoLogin } from '@/features/sso';
 
 export function useVerifyMfa({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const verifyMutation = useMfaLoginControllerVerify();
+  const verifyMutation = useMfaLoginControllerVerify({
+    mutation: { retry: false },
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const verify = (code: string) => {
@@ -17,7 +21,8 @@ export function useVerifyMfa({ redirect }: { redirect?: string }) {
       { data: { code } },
       {
         onSuccess: () => {
-          void navigate({ to: redirect || '/chat' });
+          rememberSuccessfulSsoLogin();
+          void navigate({ to: safeRedirectPath(redirect) });
         },
         onError: (error) => {
           try {
@@ -33,6 +38,8 @@ export function useVerifyMfa({ redirect }: { redirect?: string }) {
               // The 5-minute login window expired — start over.
               showError(t('twoFactor.error.expired'));
               void navigate({ to: '/login' });
+            } else if (errorCode === 'SERVICE_UNAVAILABLE') {
+              showError(t('serviceUnavailable'));
             } else {
               showError(t('twoFactor.error.unexpected'));
             }

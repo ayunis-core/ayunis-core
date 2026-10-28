@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DocumentProcessingPort } from '../../ports/document-processing.port';
+import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { EnqueueDocumentProcessingCommand } from './enqueue-document-processing.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 @Injectable()
 export class EnqueueDocumentProcessingUseCase {
@@ -13,10 +13,13 @@ export class EnqueueDocumentProcessingUseCase {
   ) {}
 
   async execute(command: EnqueueDocumentProcessingCommand): Promise<void> {
-    this.logger.debug('Enqueuing document processing job', {
-      sourceId: command.sourceId,
-      fileName: command.fileName,
-    });
+    this.logger.debug(
+      {
+        sourceId: command.sourceId,
+        fileName: command.fileName,
+      },
+      'Enqueuing document processing job',
+    );
 
     try {
       await this.documentProcessingPort.enqueue({
@@ -29,9 +32,12 @@ export class EnqueueDocumentProcessingUseCase {
       });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error enqueuing document processing job', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error enqueuing document processing job',
+      );
       throw new UnexpectedSourceError(
         'Error enqueuing document processing job',
         { error: error as Error },

@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ReorderChaptersUseCase } from './reorder-chapters.use-case';
 import { ReorderChaptersCommand } from './reorder-chapters.command';
-import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { InvalidReorderError } from '../../academy.errors';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { InvalidReorderError } from 'src/domain/academy/application/academy.errors';
 
 describe('ReorderChaptersUseCase', () => {
   let useCase: ReorderChaptersUseCase;
@@ -26,9 +25,6 @@ describe('ReorderChaptersUseCase', () => {
 
     useCase = module.get<ReorderChaptersUseCase>(ReorderChaptersUseCase);
     repository = module.get(AcademyChapterRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

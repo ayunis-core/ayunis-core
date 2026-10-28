@@ -38,7 +38,9 @@ reads, reachable with `MANAGE_TEAMS` or `ASSIGN_USERS_TO_TEAMS`).
 
 - New orgs: `CreateOrgUseCase` awaits `SeedDefaultRolePermissionsUseCase`, which
   grants `DEFAULT_ROLE_PERMISSIONS` to every configurable role in a single
-  `setForRoles` transaction. Inline rather than an `org.created` listener:
+  `setForRoles` transaction. `setForRoles` joins an ambient transaction when
+  called during registration and opens its own transaction for standalone
+  calls. Inline rather than an `org.created` listener:
   an org without a grant matrix leaves every non-admin with no permissions, so a
   failure must fail org creation instead of being logged and swallowed.
 - Existing orgs: backfilled by the `CreateRolePermissions` migration so no

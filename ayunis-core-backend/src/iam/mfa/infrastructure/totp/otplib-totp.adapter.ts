@@ -1,18 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
-import type { OtpauthUriParams } from '../../application/ports/totp.port';
-import { TotpPort } from '../../application/ports/totp.port';
-import { TOTP_ISSUER, TOTP_WINDOW } from '../../domain/mfa.constants';
+import type { OtpauthUriParams } from 'src/iam/mfa/application/ports/totp.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
+import { TOTP_ISSUER, TOTP_WINDOW } from 'src/iam/mfa/domain/mfa.constants';
 
 const TOTP_CODE_PATTERN = /^\d{6}$/;
 
 @Injectable()
 export class OtplibTotpAdapter extends TotpPort {
   private readonly logger = new Logger(OtplibTotpAdapter.name);
+
   private readonly authenticator = authenticator.clone({
     window: TOTP_WINDOW,
   });
+
+  constructor() {
+    super();
+  }
 
   generateSecret(): string {
     return this.authenticator.generateSecret();
@@ -45,7 +50,7 @@ export class OtplibTotpAdapter extends TotpPort {
       const currentCounter = Math.floor(epoch / 1000 / step);
       return Promise.resolve(currentCounter + delta);
     } catch (error) {
-      this.logger.warn('TOTP verification errored', { error });
+      this.logger.warn({ err: error as Error }, 'TOTP verification errored');
       return Promise.resolve(null);
     }
   }

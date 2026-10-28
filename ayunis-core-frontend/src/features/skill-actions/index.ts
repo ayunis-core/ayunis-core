@@ -1,2 +1,3 @@
-export { useToggleSkillActive } from './api/useToggleSkillActive';
-export { useToggleSkillPinned } from './api/useToggleSkillPinned';
+export { useSetSkillActivation } from './api/useSetSkillActivation';
+export { useSetSkillPin } from './api/useSetSkillPin';
+export { useImproveSkillText } from './api/useImproveSkillText';

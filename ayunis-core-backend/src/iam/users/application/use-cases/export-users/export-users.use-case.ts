@@ -3,8 +3,11 @@ import { convertCSVToString } from 'src/common/util/csv';
 import {
   UserExportRow,
   UsersExportRepository,
-} from '../../ports/users-export.repository';
-import { UserError, UserUnexpectedError } from '../../users.errors';
+} from 'src/iam/users/application/ports/users-export.repository';
+import {
+  UserError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class ExportUsersUseCase {
@@ -16,29 +19,37 @@ export class ExportUsersUseCase {
     this.logger.log('Exporting users for subscribed organizations');
 
     try {
-      const rows = await this.usersExportRepository.findSubscribedOrgUsers();
+      const rows = await this.usersExportRepository.findSubscribedOrgUsers(
+        new Date(),
+      );
 
-      return convertCSVToString({
-        headers: [
-          'Eindeutige ID',
-          'Vorname',
-          'Nachname',
-          'E-Mail',
-          'Rolle',
-          'Organisation',
-          'Teams',
-          'Abonnement',
-          'Abonnement Startdatum',
-        ],
-        rows: rows.map((row) => this.toCsvRow(row)),
-      });
+      return convertCSVToString(
+        {
+          headers: [
+            'Eindeutige ID',
+            'Vorname',
+            'Nachname',
+            'E-Mail',
+            'Rolle',
+            'Organisation',
+            'Teams',
+            'Abonnement',
+            'Abonnement Startdatum',
+          ],
+          rows: rows.map((row) => this.toCsvRow(row)),
+        },
+        { escapeFormulae: true },
+      );
     } catch (error) {
       if (error instanceof UserError) {
         throw error;
       }
-      this.logger.error('Error exporting users', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error exporting users',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }
@@ -56,19 +67,7 @@ export class ExportUsersUseCase {
       row.teams ?? '',
       row.subscriptionType,
       this.formatDate(row.subscriptionStartsAt),
-    ].map((cell) => this.neutralizeFormula(cell));
-  }
-
-  // Prevent CSV formula injection: a cell beginning with =, +, -, @, tab, or
-  // carriage return is treated as a formula by Excel/LibreOffice. Prefix such
-  // values (which include user-controlled name/email/org/team fields) with a
-  // single quote so spreadsheet apps render them as literal text.
-  private neutralizeFormula(cell: string): string {
-    if (cell.length > 0 && /^[=+\-@\t\r]/.test(cell)) {
-      return `'${cell}`;
-    }
-
-    return cell;
+    ];
   }
 
   private splitName(name: string): { firstName: string; lastName: string } {

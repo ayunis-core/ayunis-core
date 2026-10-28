@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import {
@@ -31,10 +32,18 @@ export abstract class SourceResponseDto {
   status: SourceStatus;
 
   @ApiProperty({
-    description: 'Error message if processing failed',
+    description:
+      'Deprecated generic failure message. Use processingErrorCode for localization.',
     required: false,
+    deprecated: true,
   })
   processingError?: string;
+
+  @ApiPropertyOptional({
+    enum: SourceProcessingErrorCode,
+    enumName: 'SourceProcessingErrorCode',
+  })
+  processingErrorCode?: SourceProcessingErrorCode;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

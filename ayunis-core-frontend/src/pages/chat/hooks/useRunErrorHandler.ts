@@ -18,6 +18,13 @@ export function useRunErrorHandler(_threadId: string) {
         case 'INFERENCE_TIMEOUT':
           showError(t('chat.errorInferenceTimeout'));
           break;
+        case 'INFERENCE_MALFORMED_TOOL_CALL':
+          showError(
+            error.details?.malformedReason === 'token_limit_reached'
+              ? t('chat.errorMalformedToolCallTokenLimit')
+              : t('chat.errorMalformedToolCall'),
+          );
+          break;
         case 'RUN_NO_MODEL_FOUND':
           showError(t('chat.errorNoModelFound'));
           break;
@@ -31,10 +38,20 @@ export function useRunErrorHandler(_threadId: string) {
           showError(t('chat.errorToolExecutionFailed'));
           break;
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
+        case 'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_REJECTED_ANONYMIZE':
           showError(t('chat.errorAnonymizationUnavailable'));
+          break;
+        case 'ANONYMIZATION_INPUT_TOO_LONG':
+          showError(t('chat.errorAnonymizationInputTooLong'));
           break;
         case 'RUN_CONTEXT_BUDGET_EXCEEDED':
           showError(t('chat.errorContextBudgetExceeded'));
+          break;
+        case 'RUN_THREAD_BUSY':
+          showError(t('chat.errorThreadBusy'));
           break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds

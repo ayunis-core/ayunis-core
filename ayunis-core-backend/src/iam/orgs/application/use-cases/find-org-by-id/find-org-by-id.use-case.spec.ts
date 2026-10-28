@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOrgByIdUseCase } from './find-org-by-id.use-case';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgNotFoundError } from '../../orgs.errors';
+import { OrgNotFoundError } from 'src/iam/orgs/application/orgs.errors';
 import type { UUID } from 'crypto';
 
 describe('FindOrgByIdUseCase', () => {

@@ -29,9 +29,9 @@ import type { User, CreateUserDto } from "@/lib/api";
 
 ## Scripts
 
-- `npm run openapi:fetch` - Fetch the latest OpenAPI schema from the backend
-- `npm run openapi:generate` - Generate TypeScript types and React Query hooks
-- `npm run openapi:update` - Fetch schema and generate types (recommended)
+- `pnpm run openapi:fetch` - Fetch the latest OpenAPI schema from the backend
+- `pnpm run openapi:generate` - Generate TypeScript types and React Query hooks
+- `pnpm run openapi:update` - Fetch schema and generate types (recommended)
 
 ## Configuration
 

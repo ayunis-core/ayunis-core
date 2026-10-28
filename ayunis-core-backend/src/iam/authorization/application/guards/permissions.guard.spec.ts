@@ -1,8 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionsGuard } from './permissions.guard';
-import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
@@ -53,10 +52,6 @@ function createGuard(options: {
 }
 
 describe('PermissionsGuard', () => {
-  beforeEach(() => {
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });

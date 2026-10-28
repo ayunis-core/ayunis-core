@@ -1,21 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
+import {
+  ApiKeysRepository,
+  type ApiKeyMetadataChanges,
+} from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyRecord } from './schema/api-key.record';
-import { ApiKeyMapper } from './mappers/api-key.mapper';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
+import { ApiKeyMapper } from 'src/iam/api-keys/infrastructure/repositories/local/mappers/api-key.mapper';
 
 @Injectable()
 export class LocalApiKeysRepository extends ApiKeysRepository {
   private readonly logger = new Logger(LocalApiKeysRepository.name);
 
-  constructor(private readonly apiKeyRepository: Repository<ApiKeyRecord>) {
+  constructor(
+    @InjectRepository(ApiKeyRecord)
+    private readonly apiKeyRepository: Repository<ApiKeyRecord>,
+  ) {
     super();
   }
 
   async findById(id: UUID): Promise<ApiKey | null> {
-    this.logger.log('findById', { id });
+    this.logger.log({ id }, 'findById');
 
     const record = await this.apiKeyRepository.findOne({ where: { id } });
     if (!record) {
@@ -25,7 +32,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<ApiKey[]> {
-    this.logger.log('findByOrgId', { orgId });
+    this.logger.log({ orgId }, 'findByOrgId');
 
     const records = await this.apiKeyRepository.find({
       where: { orgId },
@@ -45,7 +52,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   }
 
   async create(apiKey: ApiKey): Promise<ApiKey> {
-    this.logger.log('create', { id: apiKey.id, orgId: apiKey.orgId });
+    this.logger.log({ id: apiKey.id, orgId: apiKey.orgId }, 'create');
 
     const record = ApiKeyMapper.toRecord(apiKey);
     const saved = await this.apiKeyRepository.save(record);
@@ -55,7 +62,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
   // Conditional UPDATE so concurrent revokes preserve the original revoked_at
   // timestamp — a second call with revoked_at already set is a no-op.
   async revoke(id: UUID): Promise<void> {
-    this.logger.log('revoke', { id });
+    this.logger.log({ id }, 'revoke');
 
     await this.apiKeyRepository
       .createQueryBuilder()
@@ -63,5 +70,35 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
       .set({ revokedAt: () => 'NOW()' })
       .where('id = :id AND revoked_at IS NULL', { id })
       .execute();
+  }
+
+  // The active check lives in the UPDATE itself so a concurrent revoke or an
+  // expiry between read and write cannot be overwritten with new metadata.
+  // clock_timestamp() instead of NOW(): NOW() is fixed at transaction start
+  // and would miss an expiry that passes while the UPDATE waits for a lock.
+  async updateMetadataIfActive(
+    id: UUID,
+    orgId: UUID,
+    changes: ApiKeyMetadataChanges,
+  ): Promise<ApiKey | null> {
+    this.logger.log({ id, orgId }, 'updateMetadataIfActive');
+
+    const result = await this.apiKeyRepository
+      .createQueryBuilder()
+      .update(ApiKeyRecord)
+      .set(changes)
+      .where('id = :id', { id })
+      .andWhere('org_id = :orgId', { orgId })
+      .andWhere('revoked_at IS NULL')
+      .andWhere('(expires_at IS NULL OR expires_at > clock_timestamp())')
+      // RETURNING yields raw snake_case columns; alias them to record properties.
+      .returning(
+        this.apiKeyRepository.metadata.columns
+          .map((c) => `"${c.databaseName}" AS "${c.propertyName}"`)
+          .join(', '),
+      )
+      .execute();
+    const record = (result.raw as ApiKeyRecord[]).at(0);
+    return record ? ApiKeyMapper.toDomain(record) : null;
   }
 }

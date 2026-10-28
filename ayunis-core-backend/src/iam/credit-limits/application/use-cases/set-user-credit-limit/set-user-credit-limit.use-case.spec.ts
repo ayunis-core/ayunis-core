@@ -3,18 +3,18 @@ import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
   CreditLimitTargetNotFoundError,
   InvalidCreditLimitError,
-} from '../../credit-limits.errors';
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import {
   aUserCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { SetUserCreditLimitUseCase } from './set-user-credit-limit.use-case';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
 

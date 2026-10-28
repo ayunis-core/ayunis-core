@@ -24,7 +24,7 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 ## Prerequisites
 
 - Node.js (v24+)
-- npm or yarn
+- pnpm
 - Docker and Docker Compose
 - PostgreSQL with pgvector extension
 
@@ -61,15 +61,19 @@ From the **repository root**:
 ./dev down          # Stop everything
 ```
 
+Anonymisation is omitted by default to speed up startup. Add
+`--with-anonymisation` to `./dev up` when working on anonymisation behavior.
+
 Use `./dev up --slot 1` to run a second instance in parallel (e.g. for another worktree).
 
 Environment precedence and the `DEV_PORT_OFFSET` slot derivation are
 documented in `src/config/SUMMARY.md`. Useful to know:
 
-- **Manual commands that need secrets** (Infisical path) must be prefixed,
-  because the DB config no longer lives in a local file:
-  `infisical run --env=dev --path=/backend -- pnpm seed` (same for
-  `pnpm run cli` and `pnpm run migration:*:dev`).
+- `pnpm seed` works directly after `./dev up`; the generated `.env.dev`
+  points standalone database commands at the selected slot. Other manual
+  commands that need the full Infisical environment must be prefixed:
+  `infisical run --env=dev --path=/backend -- pnpm run cli` (same for
+  `pnpm run migration:*:dev`).
 - **Personal overrides:** to change a shared value just for yourself (a
   feature flag, a temporary API key), set a *personal override* on the secret
   in the Infisical UI — the CLI resolves it automatically. Offline
@@ -90,13 +94,13 @@ Manual setup:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build the application
-npm run build
+pnpm run build
 
 # Start the production server
-npm run start:prod
+pnpm run start:prod
 ```
 
 ## Environment Variables
@@ -193,12 +197,27 @@ Each domain module follows the same structure with:
 
 The API documentation is available at `/api` using Swagger UI when the application is running.
 
+### Generated clients for external services
+
+`src/common/clients/*/generated` (marketplace, code execution, anonymize) is
+Orval output, generated from each service's OpenAPI document with
+`pnpm run generate:client` (targets are in `orval.config.ts`). Nothing checks
+these clients against the deployed services automatically, and the e2e suite
+runs with the marketplace disabled.
+
+Rule: when one of these services ships an API change, regenerate the client
+against the deployed service in the same change set and commit the diff.
+For the marketplace, point `orval.config.ts` at the staging instance's
+`/api/docs-json` for that run, then restore the local target. Verify the
+marketplace chat tools manually against staging before a release that
+touches them.
+
 ## Testing
 
 ```bash
 # Run unit tests
-npm run test
+pnpm run test
 
 # Generate test coverage report
-npm run test:cov
+pnpm run test:cov
 ```

@@ -1,7 +1,10 @@
-import type {
-  AssistantMessage as RuntimeAssistantMessage,
-  Hook,
-  RunContext,
+import {
+  RunAbortedError,
+  type AfterModelTurnContext,
+  type AssistantMessage as RuntimeAssistantMessage,
+  type Hook,
+  type ReadonlySnapshot,
+  type RunContext,
 } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
@@ -13,12 +16,21 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
-import { assistantMessageId, toolResultMessageId } from '../message-id';
-import { toBackendAssistantMessage } from '../inference-message.mapper';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import {
+  assistantMessageId,
+  toolResultMessageId,
+} from 'src/domain/runs/application/agent-runtime/message-id';
+import { toBackendAssistantMessage } from 'src/domain/runs/application/agent-runtime/inference-message.mapper';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 /** Per-run RunContext key for tool results awaiting a grouped flush. */
 const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
+
+interface PersistenceHookParams {
+  thread: Thread;
+  integrations: RuntimeToolIntegrationRegistry;
+  onMessagePersisted: (messageId: UUID) => void;
+}
 
 /** The tool results of one iteration, grouped for a single-message flush. */
 interface PendingToolResults {
@@ -27,13 +39,12 @@ interface PendingToolResults {
 }
 
 /**
- * Builds the persistence hook for a run. Assistant turns are saved as the model
- * call completes (`afterModelCall`); tool results are accumulated per iteration
- * and flushed as one grouped message before the next model call (and at run
- * end) — providers require every tool result for an assistant turn in a single
- * message. Persistence runs inside the loop so a disconnected SSE client can't
- * drop messages. The assistant id is derived deterministically so the persisted
- * copy matches the streamed one.
+ * Builds the persistence hook for a run. Assistant turns are saved once the
+ * logical model turn reaches its terminal outcome, so retries and recovery do
+ * not persist superseded calls. Tool results are accumulated per iteration and
+ * flushed as one grouped message before the next model turn (and at run end).
+ * The assistant id is derived deterministically so the persisted copy matches
+ * the streamed one.
  */
 @Injectable()
 export class PersistenceHookFactory {
@@ -43,27 +54,12 @@ export class PersistenceHookFactory {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
   ) {}
 
-  create(params: {
-    thread: Thread;
-    integrations: RuntimeToolIntegrationRegistry;
-  }): Hook {
+  create(params: PersistenceHookParams): Hook {
     return {
       name: 'ayunis-persistence',
-      runEndFailureMode: 'critical',
-      afterModelCall: (ctx) =>
-        this.persistAssistantMessage(
-          ctx.message,
-          params.thread,
-          assistantMessageId(ctx.context.runId, ctx.iteration),
-          params.integrations,
-        ),
-      modelCallInterrupted: (ctx) =>
-        this.persistAssistantMessage(
-          ctx.message,
-          params.thread,
-          assistantMessageId(ctx.context.runId, ctx.iteration),
-          params.integrations,
-        ),
+      inheritToChildRuns: false,
+      terminalFailureMode: 'critical',
+      afterModelTurn: (ctx) => this.persistAssistantMessageOrAbort(ctx, params),
       afterToolCall: async (ctx) => {
         const pending = ctx.context.get<PendingToolResults>(
           PENDING_TOOL_RESULTS,
@@ -78,23 +74,35 @@ export class PersistenceHookFactory {
         );
         ctx.context.set(PENDING_TOOL_RESULTS, pending);
         if (ctx.isLastToolCall) {
-          await this.flushToolResults(ctx.context, params.thread);
+          await this.flushToolResults(ctx.context, params);
         }
       },
-      beforeModelCall: (ctx) =>
-        this.flushToolResults(ctx.context, params.thread),
-      runEnd: (ctx) => this.flushToolResults(ctx.context, params.thread),
+      beforeModelTurn: (ctx) => this.flushToolResults(ctx.context, params),
+      runEnd: (ctx) => this.flushToolResults(ctx.context, params),
     };
+  }
+
+  private async persistAssistantMessageOrAbort(
+    ctx: AfterModelTurnContext,
+    params: PersistenceHookParams,
+  ): Promise<void> {
+    const message = assistantMessageForTurn(ctx);
+    if (!message) return;
+    const persisted = await this.persistAssistantMessage(
+      message,
+      assistantMessageId(ctx.context.runId, ctx.iteration),
+      params,
+    );
+    if (!persisted) ctx.abort('thread no longer exists');
   }
 
   private async persistAssistantMessage(
     message: RuntimeAssistantMessage,
-    thread: Thread,
     id: UUID,
-    integrations: RuntimeToolIntegrationRegistry,
-  ): Promise<void> {
+    { thread, integrations, onMessagePersisted }: PersistenceHookParams,
+  ): Promise<boolean> {
     if (message.content.length === 0) {
-      return;
+      return true;
     }
     const backendMessage = toBackendAssistantMessage(
       message,
@@ -105,19 +113,30 @@ export class PersistenceHookFactory {
     const saved = await this.saveAssistantMessageUseCase.execute(
       new SaveAssistantMessageCommand(backendMessage),
     );
+    if (!saved) return false;
+    onMessagePersisted(saved.id);
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );
+    return true;
   }
 
   private async flushToolResults(
     context: RunContext,
-    thread: Thread,
+    { thread, onMessagePersisted }: PersistenceHookParams,
   ): Promise<void> {
     const pending = context.get<PendingToolResults>(PENDING_TOOL_RESULTS);
     if (!pending || pending.contents.length === 0) {
       return;
     }
+    // Drained before the write, not after it: the runEnd flush exists to
+    // persist contents no earlier phase attempted, not to retry a write that
+    // already failed. Retrying one turned every persistence failure into a
+    // second, critical finalization failure that hid the real cause (AYC-904).
+    context.set(PENDING_TOOL_RESULTS, {
+      iteration: pending.iteration,
+      contents: [],
+    });
     const saved = await this.createToolResultMessageUseCase.execute(
       new CreateToolResultMessageCommand(
         thread.id,
@@ -125,12 +144,49 @@ export class PersistenceHookFactory {
         toolResultMessageId(context.runId, pending.iteration),
       ),
     );
+    if (!saved) {
+      throw new RunAbortedError(
+        'Run aborted because the thread no longer exists',
+      );
+    }
+    onMessagePersisted(saved.id);
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );
-    context.set(PENDING_TOOL_RESULTS, {
-      iteration: pending.iteration,
-      contents: [],
-    });
   }
+}
+
+function assistantMessageForTurn(
+  ctx: AfterModelTurnContext,
+): RuntimeAssistantMessage | undefined {
+  const call = 'call' in ctx.outcome ? ctx.outcome.call : undefined;
+  if (!call) return undefined;
+  if (ctx.outcome.type === 'accepted' && call.type === 'accepted') {
+    return cloneAssistantMessage(call.message);
+  }
+  if (
+    (call.type === 'rejected' &&
+      call.reason !== 'refusal' &&
+      call.reason !== 'pause_turn') ||
+    !call.visibleOutput ||
+    call.message.content.length === 0
+  ) {
+    return undefined;
+  }
+  return cloneAssistantMessage(
+    call.message,
+    call.message.content.filter(
+      (content) => content.type === 'text' || content.type === 'thinking',
+    ),
+  );
+}
+
+function cloneAssistantMessage(
+  message: ReadonlySnapshot<RuntimeAssistantMessage>,
+  content: ReadonlySnapshot<RuntimeAssistantMessage>['content'] = message.content,
+): RuntimeAssistantMessage {
+  return {
+    role: 'assistant',
+    content: content.map((item) => structuredClone(item)),
+  };
 }

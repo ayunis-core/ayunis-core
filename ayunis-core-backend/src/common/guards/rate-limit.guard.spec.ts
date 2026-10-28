@@ -1,20 +1,26 @@
-import { Logger } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { ConfigService } from '@nestjs/config';
 import { RateLimitGuard } from './rate-limit.guard';
-import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
-import type { RateLimitOptions } from '../decorators/rate-limit.decorator';
+import { RateLimitExceededError } from 'src/common/errors/rate-limit-exceeded.error';
+import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
 
 describe('RateLimitGuard', () => {
   let guard: RateLimitGuard;
   let reflector: jest.Mocked<Reflector>;
   let configService: jest.Mocked<ConfigService>;
-
   const clientIp = '203.0.113.7';
 
-  function createContext(handlerName = 'create'): ExecutionContext {
-    const request = { headers: { 'x-forwarded-for': clientIp } };
+  function createContext(
+    handlerName = 'create',
+    userId?: string,
+  ): ExecutionContext {
+    const request = {
+      ip: clientIp,
+      socket: { remoteAddress: clientIp },
+      headers: {},
+      user: userId ? { id: userId, orgId: 'municipality' } : undefined,
+    };
     return {
       switchToHttp: () => ({ getRequest: () => request }),
       getHandler: () => ({ name: handlerName }),
@@ -31,9 +37,6 @@ describe('RateLimitGuard', () => {
     } as unknown as jest.Mocked<ConfigService>;
 
     guard = new RateLimitGuard(reflector, configService);
-
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -62,6 +65,21 @@ describe('RateLimitGuard', () => {
     }
 
     expect(() => guard.canActivate(createContext())).toThrow(
+      RateLimitExceededError,
+    );
+  });
+
+  it('gives authenticated administrators independent quotas behind one IP', () => {
+    configService.get.mockReturnValue(true);
+    reflector.getAllAndOverride.mockReturnValue({
+      limit: 1,
+      windowMs: 60_000,
+      keyBy: 'user',
+    });
+
+    expect(guard.canActivate(createContext('download', 'anna'))).toBe(true);
+    expect(guard.canActivate(createContext('download', 'bruno'))).toBe(true);
+    expect(() => guard.canActivate(createContext('download', 'anna'))).toThrow(
       RateLimitExceededError,
     );
   });

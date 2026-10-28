@@ -26,4 +26,5 @@ export interface OpenAIErrorEnvelope {
 export interface MappedOpenAIError {
   status: number;
   body: OpenAIErrorEnvelope;
+  headers?: Record<string, string>;
 }

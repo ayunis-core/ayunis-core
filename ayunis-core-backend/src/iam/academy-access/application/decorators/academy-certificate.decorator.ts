@@ -4,7 +4,7 @@ export const REQUIRE_ACADEMY_CERTIFICATE_KEY = 'requiresAcademyCertificate';
 
 /**
  * Marks a controller as part of the Ayunis Core chat surface, which orgs may
- * gate behind the KI-Führerschein certificate.
+ * gate behind the KI-Schulung nach EU AI Act certificate.
  *
  * Apply at class level: `AcademyCertificateGuard` only blocks state-changing
  * requests, so reads stay open and a blocked user keeps access to their chat

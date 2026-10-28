@@ -64,7 +64,6 @@ export default function CreateDiagramWidget({
       contentKey={content.name}
       contentId={content.id}
       isStreaming={isStreaming}
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string during streaming should fall back to translation
       title={params.title || t('chat.tools.create_diagram.title')}
       statusLabel={statusLabel}
       buttonLabel={t('chat.tools.create_diagram.openInEditor')}

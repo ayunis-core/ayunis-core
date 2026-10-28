@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { AnonymizeTextUseCase } from './anonymize-text.use-case';
 import { AnonymizeTextCommand } from './anonymize-text.command';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
@@ -8,11 +8,13 @@ import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist
 describe('AnonymizeTextUseCase', () => {
   let useCase: AnonymizeTextUseCase;
   let detect: jest.Mock;
+  const logger = createLoggerMock();
 
   beforeEach(() => {
     detect = jest.fn();
+    logger.log.mockReset();
+    logger.error.mockReset();
     useCase = new AnonymizeTextUseCase({ detect });
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   const text = 'Ich bin der Dani, erreichbar unter amt32@stadt-marl.de';
@@ -70,7 +72,7 @@ describe('AnonymizeTextUseCase', () => {
 
     await useCase.execute(new AnonymizeTextCommand(text, ['PERSON']));
 
-    expect(detect).toHaveBeenCalledWith(text, ['PERSON']);
+    expect(detect).toHaveBeenCalledWith(text, ['PERSON'], undefined);
   });
 
   it('produces legacy placeholders and no new masks without existingMasks', async () => {
@@ -123,5 +125,75 @@ describe('AnonymizeTextUseCase', () => {
       'Ich bin der {{pii:PERSON_NAME_1}}, erreichbar unter amt32@stadt-marl.de',
     );
     expect(result.newMasks).toEqual([]);
+  });
+
+  it('classifies mask application failures without exposing detected text', async () => {
+    detect.mockResolvedValue([
+      {
+        ...detections[0],
+        category: undefined,
+        text: 'sensitive value',
+      },
+    ]);
+
+    const result = useCase.execute(
+      new AnonymizeTextCommand(text, undefined, undefined, []),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      name: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+      code: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+      metadata: {
+        stage: 'mask_application',
+        textLength: text.length,
+        detectionCount: 1,
+        causeType: 'TypeError',
+      },
+    });
+    await expect(result).rejects.not.toMatchObject({
+      metadata: expect.objectContaining({
+        originalError: expect.stringContaining('sensitive value'),
+      }),
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        errorCode: 'ANONYMIZATION_MASK_APPLICATION_FAILED',
+        stage: 'mask_application',
+        textLength: text.length,
+        detectionCount: 1,
+        causeType: 'TypeError',
+      },
+      'Anonymization failed after detection',
+    );
+  });
+
+  it('classifies whitelist filtering failures without exposing detected text', async () => {
+    detect.mockResolvedValue(detections);
+    const malformedWhitelist = [undefined] as unknown as PiiWhitelistEntry[];
+
+    const result = useCase.execute(
+      new AnonymizeTextCommand(text, undefined, malformedWhitelist),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      name: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+      code: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+      metadata: {
+        stage: 'whitelist_filter',
+        textLength: text.length,
+        detectionCount: detections.length,
+        causeType: 'TypeError',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        errorCode: 'ANONYMIZATION_WHITELIST_FILTER_FAILED',
+        stage: 'whitelist_filter',
+        textLength: text.length,
+        detectionCount: detections.length,
+        causeType: 'TypeError',
+      },
+      'Anonymization failed after detection',
+    );
   });
 });

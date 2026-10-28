@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 
 const pieChartToolParameters = {
   type: 'object' as const,
@@ -40,7 +40,7 @@ const pieChartToolParameters = {
 
 type PieChartToolParameters = FromSchema<typeof pieChartToolParameters>;
 
-export class PieChartTool extends DisplayableTool {
+export class PieChartTool extends Tool {
   constructor() {
     super({
       name: ToolType.PIE_CHART,

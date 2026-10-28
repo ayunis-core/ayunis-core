@@ -4,24 +4,27 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuthenticationControllerLogin } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import { useTranslation } from 'react-i18next';
-import * as z from 'zod';
+import {
+  createLoginFormSchema,
+  type LoginFormFields,
+} from '@/pages/auth/login/model/login-form';
+import { forgetRememberedSsoOrgId } from '@/features/sso';
 
 export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const loginMutation = useAuthenticationControllerLogin();
-
-  const loginFormSchema = z.object({
-    email: z.string().email({
-      message: t('login.emailInvalid'),
-    }),
-    password: z.string().min(1, {
-      message: t('login.passwordRequired'),
-    }),
+  const loginMutation = useAuthenticationControllerLogin({
+    mutation: { retry: false },
   });
 
-  const form = useForm<z.infer<typeof loginFormSchema>>({
+  const loginFormSchema = createLoginFormSchema({
+    emailInvalid: t('login.emailInvalid'),
+    passwordRequired: t('login.passwordRequired'),
+  });
+
+  const form = useForm<LoginFormFields>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: '',
@@ -29,7 +32,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof loginFormSchema>) => {
+  const onSubmit = (values: LoginFormFields) => {
     loginMutation.mutate(
       {
         data: {
@@ -39,6 +42,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
       },
       {
         onSuccess: (data) => {
+          forgetRememberedSsoOrgId();
           if (data.mfaRequired) {
             // No session yet — only the short-lived MFA pending cookie is
             // set. The two-factor page completes the login.
@@ -52,7 +56,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
             return;
           }
           // With cookie-based auth, the backend automatically sets HTTP-only cookies
-          void navigate({ to: redirect || '/chat' });
+          void navigate({ to: safeRedirectPath(redirect) });
         },
         onError: (error) => {
           try {
@@ -60,6 +64,14 @@ export function useLogin({ redirect }: { redirect?: string }) {
             if (code === 'IP_NOT_ALLOWED') {
               void navigate({ to: '/ip-blocked' });
               return;
+            } else if (code === 'SERVICE_UNAVAILABLE') {
+              showError(t('serviceUnavailable'));
+            } else if (code === 'ORG_NOT_ACTIVE') {
+              showError(t('login.error.orgNotActive'));
+            } else if (code === 'USER_ACCOUNT_LOCKED') {
+              showError(t('login.error.accountLocked'));
+            } else if (code === 'LOCAL_PASSWORD_LOGIN_DISABLED') {
+              showError(t('login.error.ssoRequired'));
             } else if (status === 401 || status === 403) {
               showError(t('login.error.invalidCredentials'));
             } else if (code === 'RATE_LIMIT_EXCEEDED') {

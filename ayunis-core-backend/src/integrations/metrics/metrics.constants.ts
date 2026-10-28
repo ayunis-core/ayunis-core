@@ -3,6 +3,11 @@
 export const METRICS_PATH = '/metrics';
 
 export const AYUNIS_TOKENS_TOTAL = 'ayunis_tokens_total';
+export const AYUNIS_RUNS_TOTAL = 'ayunis_runs_total';
+export const AYUNIS_RUN_DURATION_SECONDS = 'ayunis_run_duration_seconds';
+export const AYUNIS_RUN_TOOL_CALLS_TOTAL = 'ayunis_run_tool_calls_total';
+export const AYUNIS_RUN_USAGE_COLLECTIONS_TOTAL =
+  'ayunis_run_usage_collections_total';
 export const AYUNIS_INFERENCE_DURATION_SECONDS =
   'ayunis_inference_duration_seconds';
 export const AYUNIS_INFERENCE_ERRORS_TOTAL = 'ayunis_inference_errors_total';
@@ -31,6 +36,8 @@ export const LABEL_DIRECTION = 'direction';
 export const LABEL_ROLE = 'role';
 export const LABEL_ERROR_TYPE = 'error_type';
 export const LABEL_STREAMING = 'streaming';
+export const LABEL_EXECUTION_PATH = 'execution_path';
+export const LABEL_OUTCOME = 'outcome';
 export const LABEL_TOOL_NAME = 'tool_name';
 export const LABEL_DEPARTMENT = 'department';
 export const LABEL_MARKETPLACE_TYPE = 'marketplace_type';

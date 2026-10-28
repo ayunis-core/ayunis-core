@@ -7,12 +7,12 @@ import {
   Param,
   Body,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
+  Logger,
+  Query,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
@@ -25,45 +25,43 @@ import {
   ApiBodyOptions,
   ApiParamOptions,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
-import { randomUUID } from 'crypto';
 import * as fs from 'fs';
-
-const UPLOADS_DIR = './uploads';
-fs.mkdirSync(resolve(UPLOADS_DIR), { recursive: true });
 import {
-  CurrentUser,
-  UserProperty,
-} from 'src/iam/authentication/application/decorators/current-user.decorator';
-import {
-  detectFileType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
-  getCanonicalMimeType,
-} from 'src/common/util/file-type';
+  cleanupTempUploadFile,
+  createDocumentUploadInterceptor,
+  resolveDocumentUploadMimeType,
+  type UploadedDocument,
+} from 'src/common/http/document-upload';
 
-import { CreateKnowledgeBaseUseCase } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
-import { UpdateKnowledgeBaseUseCase } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
-import { DeleteKnowledgeBaseUseCase } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
-import { AddDocumentToKnowledgeBaseUseCase } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
-import { AddUrlToKnowledgeBaseUseCase } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
-import { RemoveDocumentFromKnowledgeBaseUseCase } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
-import { ListKnowledgeBaseDocumentsUseCase } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
-import { KnowledgeBaseAccessService } from '../../application/services/knowledge-base-access.service';
+import { CreateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
+import { CreateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.command';
+import { FindKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
+import { FindKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.query';
+import { ListKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
+import { ListKnowledgeBasesQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-bases/list-knowledge-bases.query';
+import { SetKnowledgeBaseActivationUseCase } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
+import { SetKnowledgeBaseActivationCommand } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.command';
+import { UpdateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
+import { UpdateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.command';
+import { DeleteKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
+import { DeleteKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
+import { AddDocumentToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { AddDocumentToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
+import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
+import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
+import { RemoveDocumentFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
+import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
+import { ListKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
+import { ListKnowledgeBaseDocumentsQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
+import { MissingFileError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 
-import { CreateKnowledgeBaseCommand } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.command';
-import { UpdateKnowledgeBaseCommand } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.command';
-import { DeleteKnowledgeBaseCommand } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
-import { AddDocumentToKnowledgeBaseCommand } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
-import { AddUrlToKnowledgeBaseCommand } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
-import { RemoveDocumentFromKnowledgeBaseCommand } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
-import { ListKnowledgeBaseDocumentsQuery } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
+import { ListKnowledgeBasesQueryDto } from './dto/list-knowledge-bases-query.dto';
+import { toKnowledgeBaseOwner } from './dto/knowledge-base-owner.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
+import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
 import {
   KnowledgeBaseResponseDto,
   KnowledgeBaseListResponseDto,
@@ -72,23 +70,9 @@ import {
   KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
-import { MissingFileError } from '../../application/knowledge-bases.errors';
-import { KnowledgeBasesConstants } from '../../domain/knowledge-bases.constants';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
-
-interface UploadedDocument {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-  path: string;
-}
 
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
@@ -104,43 +88,34 @@ const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
       file: {
         type: 'string',
         format: 'binary',
-        description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
+        description:
+          'The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB)',
       },
     },
     required: ['file'],
   },
 };
 
-/* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-const DocumentUploadInterceptor = FileInterceptor('file', {
-  storage: diskStorage({
-    destination: UPLOADS_DIR,
-    filename: (_req, file, cb) => {
-      cb(null, `${randomUUID()}${extname(file.originalname)}`);
-    },
-  }),
-  limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
-  // Browsers send the multipart filename as raw UTF-8 bytes; busboy defaults to
-  // latin1, which garbles umlauts and other non-ASCII characters into mojibake.
-  defParamCharset: 'utf8',
-});
-/* eslint-enable sonarjs/content-length */
+const DocumentUploadInterceptor = createDocumentUploadInterceptor(
+  KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES,
+);
 
 @ApiTags('knowledge-bases')
-@RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('knowledge-bases')
 export class KnowledgeBasesController {
   private readonly logger = new Logger(KnowledgeBasesController.name);
 
   constructor(
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
+    private readonly listKnowledgeBasesUseCase: ListKnowledgeBasesUseCase,
+    private readonly findKnowledgeBaseUseCase: FindKnowledgeBaseUseCase,
+    private readonly setKnowledgeBaseActivationUseCase: SetKnowledgeBaseActivationUseCase,
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
-    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
@@ -155,22 +130,21 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async create(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: CreateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('create', { name: dto.name, userId });
-
+    this.logger.log({ name: dto.name, ownerType: dto.ownerType }, 'create');
     const knowledgeBase = await this.createKnowledgeBaseUseCase.execute(
       new CreateKnowledgeBaseCommand({
         name: dto.name,
         description: dto.description,
-        userId,
-        orgId,
+        owner: toKnowledgeBaseOwner(dto),
       }),
     );
-
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+      isActive: true,
+      isShared: false,
+      documentCount: 0,
+    });
   }
 
   @Get()
@@ -183,16 +157,26 @@ export class KnowledgeBasesController {
     type: KnowledgeBaseListResponseDto,
   })
   async findAll(
-    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Query() query: ListKnowledgeBasesQueryDto,
   ): Promise<KnowledgeBaseListResponseDto> {
-    this.logger.log('findAll', { userId });
-
-    const results = await this.knowledgeBaseAccessService.findAllAccessible();
-
+    this.logger.log({ ownerType: query.ownerType }, 'findAll');
+    const page = await this.listKnowledgeBasesUseCase.execute(
+      new ListKnowledgeBasesQuery({
+        owner: toKnowledgeBaseOwner(query),
+        search: query.search,
+        limit: query.limit,
+        offset: query.offset,
+      }),
+    );
     return {
-      data: results.map((r) =>
-        this.knowledgeBaseDtoMapper.toDto(r.knowledgeBase, r.isShared),
+      data: page.data.map(({ knowledgeBase, ...context }) =>
+        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context),
       ),
+      pagination: {
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      },
     };
   }
 
@@ -213,12 +197,12 @@ export class KnowledgeBasesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('findOne', { id });
-
-    const { knowledgeBase, isShared } =
-      await this.knowledgeBaseAccessService.findOneAccessible(id);
-
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
+    this.logger.log({ id }, 'findOne');
+    const { knowledgeBase, ...context } =
+      await this.findKnowledgeBaseUseCase.execute(
+        new FindKnowledgeBaseQuery(id),
+      );
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context);
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -239,22 +223,38 @@ export class KnowledgeBasesController {
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async update(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('update', { id, name: dto.name, userId });
-
-    const knowledgeBase = await this.updateKnowledgeBaseUseCase.execute(
+    this.logger.log({ id, name: dto.name }, 'update');
+    await this.updateKnowledgeBaseUseCase.execute(
       new UpdateKnowledgeBaseCommand({
         knowledgeBaseId: id,
-        userId,
         name: dto.name,
         description: dto.description,
       }),
     );
+    return this.findOne(id);
+  }
 
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
+  @Patch(':id/activation')
+  @ApiOperation({ summary: 'Set knowledge base activation for the user' })
+  @ApiParam(KB_ID_PARAM)
+  @ApiBody({ type: SetKnowledgeBaseActivationRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The knowledge base activation has been set',
+    type: KnowledgeBaseResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  async setActivation(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: SetKnowledgeBaseActivationRequestDto,
+  ): Promise<KnowledgeBaseResponseDto> {
+    await this.setKnowledgeBaseActivationUseCase.execute(
+      new SetKnowledgeBaseActivationCommand(id, dto.isActive),
+    );
+    return this.findOne(id);
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -272,14 +272,10 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('id', ParseUUIDPipe) id: UUID,
-  ): Promise<void> {
-    this.logger.log('delete', { id, userId });
-
+  async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log({ id }, 'delete');
     await this.deleteKnowledgeBaseUseCase.execute(
-      new DeleteKnowledgeBaseCommand({ knowledgeBaseId: id, userId }),
+      new DeleteKnowledgeBaseCommand({ knowledgeBaseId: id }),
     );
   }
 
@@ -300,17 +296,12 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async listDocuments(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseDocumentListResponseDto> {
-    this.logger.log('listDocuments', { knowledgeBaseId: id, userId });
-
-    await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
-
+    this.logger.log({ knowledgeBaseId: id }, 'listDocuments');
     const sources = await this.listDocumentsUseCase.execute(
       new ListKnowledgeBaseDocumentsQuery(id),
     );
-
     return {
       data: sources.map((source) =>
         this.knowledgeBaseDtoMapper.toDocumentDto(source),
@@ -338,7 +329,6 @@ export class KnowledgeBasesController {
   })
   @UseInterceptors(DocumentUploadInterceptor)
   async addDocument(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @UploadedFile() file?: UploadedDocument,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
@@ -346,56 +336,44 @@ export class KnowledgeBasesController {
       throw new MissingFileError();
     }
 
-    this.logger.log('addDocument', {
-      knowledgeBaseId: id,
-      fileName: file.originalname,
-    });
-
-    const canonicalMimeType = await this.resolveDocumentMimeType(file);
-
+    this.logger.log(
+      {
+        knowledgeBaseId: id,
+        fileName: file.originalname,
+      },
+      'addDocument',
+    );
     try {
-      const fileData = await fs.promises.readFile(file.path);
-
-      const source = await this.addDocumentUseCase.execute(
-        new AddDocumentToKnowledgeBaseCommand({
-          knowledgeBaseId: id,
-          userId,
-          fileData,
-          fileName: file.originalname,
-          fileType: canonicalMimeType,
-        }),
-      );
-
-      return this.knowledgeBaseDtoMapper.toDocumentDto(source);
+      const canonicalMimeType = this.resolveDocumentMimeType(file);
+      return await this.processDocumentUpload(id, file, canonicalMimeType);
     } finally {
       await this.cleanupTempFile(file.path);
     }
   }
 
-  private async resolveDocumentMimeType(
+  private async processDocumentUpload(
+    knowledgeBaseId: UUID,
     file: UploadedDocument,
-  ): Promise<string> {
-    const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (
-      !isDocumentFile(detectedType) &&
-      !isPlainTextFile(detectedType) &&
-      !isAudioFile(detectedType)
-    ) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, and audio files (MP3, M4A, WAV, WebM).`,
-      );
-    }
+    fileType: string,
+  ): Promise<KnowledgeBaseDocumentResponseDto> {
+    const fileData = await fs.promises.readFile(file.path);
+    const source = await this.addDocumentUseCase.execute(
+      new AddDocumentToKnowledgeBaseCommand({
+        knowledgeBaseId,
+        file: { data: fileData, name: file.originalname, type: fileType },
+      }),
+    );
+    return this.knowledgeBaseDtoMapper.toDocumentDto(source);
+  }
 
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
-
-    return canonicalMimeType;
+  private resolveDocumentMimeType(file: UploadedDocument): string {
+    return resolveDocumentUploadMimeType({
+      file,
+      errorMessage: (reason, detectedType) =>
+        reason === 'missing-mime'
+          ? `Unable to determine MIME type for detected file type: ${detectedType}`
+          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG, and audio files (MP3, M4A, WAV, WebM).`,
+    });
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -417,20 +395,20 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async addUrl(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: AddUrlToKnowledgeBaseDto,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
-    this.logger.log('addUrl', {
-      knowledgeBaseId: id,
-      url: dto.url,
-      maxDepth: dto.maxDepth,
-    });
-
+    this.logger.log(
+      {
+        knowledgeBaseId: id,
+        url: dto.url,
+        maxDepth: dto.maxDepth,
+      },
+      'addUrl',
+    );
     const source = await this.addUrlUseCase.execute(
       new AddUrlToKnowledgeBaseCommand({
         knowledgeBaseId: id,
-        userId,
         url: dto.url,
         maxDepth: dto.maxDepth,
       }),
@@ -464,33 +442,25 @@ export class KnowledgeBasesController {
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeDocument(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('documentId', ParseUUIDPipe) documentId: UUID,
   ): Promise<void> {
-    this.logger.log('removeDocument', {
-      knowledgeBaseId: id,
-      documentId,
-      userId,
-    });
-
+    this.logger.log(
+      {
+        knowledgeBaseId: id,
+        documentId,
+      },
+      'removeDocument',
+    );
     await this.removeDocumentUseCase.execute(
       new RemoveDocumentFromKnowledgeBaseCommand({
         knowledgeBaseId: id,
         documentId,
-        userId,
       }),
     );
   }
 
   private async cleanupTempFile(filePath: string): Promise<void> {
-    try {
-      await fs.promises.unlink(filePath);
-    } catch (error) {
-      this.logger.warn('Failed to clean up temp file', {
-        filePath,
-        error: error as Error,
-      });
-    }
+    await cleanupTempUploadFile(filePath, this.logger);
   }
 }

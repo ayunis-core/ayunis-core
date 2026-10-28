@@ -4,9 +4,16 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/events/assistant-message-created.event';
 import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
+import {
+  RUN_TERMINAL_OUTCOMES,
+  RunTerminalEvent,
+} from 'src/domain/runs/application/events/run-terminal.event';
+import { RUN_EXECUTION_PATHS } from 'src/domain/runs/application/run-execution-path';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
-import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
+import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
+import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
@@ -46,6 +53,10 @@ describe('PrometheusMetricsListener', () => {
   let userCreationsCounter: ReturnType<typeof mockCounter>;
   let messagesCounter: ReturnType<typeof mockCounter>;
   let userActivityCounter: ReturnType<typeof mockCounter>;
+  let runsCounter: ReturnType<typeof mockCounter>;
+  let runDurationHistogram: ReturnType<typeof mockHistogram>;
+  let runToolCallsCounter: ReturnType<typeof mockCounter>;
+  let runUsageCollectionsCounter: ReturnType<typeof mockCounter>;
   let inferenceHistogram: ReturnType<typeof mockHistogram>;
   let inferenceErrorsCounter: ReturnType<typeof mockCounter>;
   let tokensCounter: ReturnType<typeof mockCounter>;
@@ -57,6 +68,10 @@ describe('PrometheusMetricsListener', () => {
     userCreationsCounter = mockCounter();
     messagesCounter = mockCounter();
     userActivityCounter = mockCounter();
+    runsCounter = mockCounter();
+    runDurationHistogram = mockHistogram();
+    runToolCallsCounter = mockCounter();
+    runUsageCollectionsCounter = mockCounter();
     inferenceHistogram = mockHistogram();
     inferenceErrorsCounter = mockCounter();
     tokensCounter = mockCounter();
@@ -68,6 +83,10 @@ describe('PrometheusMetricsListener', () => {
       userCreationsCounter as never,
       messagesCounter as never,
       userActivityCounter as never,
+      runsCounter as never,
+      runDurationHistogram as never,
+      runToolCallsCounter as never,
+      runUsageCollectionsCounter as never,
       inferenceHistogram as never,
       inferenceErrorsCounter as never,
       tokensCounter as never,
@@ -164,6 +183,43 @@ describe('PrometheusMetricsListener', () => {
     });
   });
 
+  describe('handleRunTerminal', () => {
+    it.each(
+      RUN_EXECUTION_PATHS.flatMap((executionPath) =>
+        RUN_TERMINAL_OUTCOMES.map((outcome) => ({ executionPath, outcome })),
+      ),
+    )(
+      'records $outcome for the $executionPath path',
+      ({ executionPath, outcome }) => {
+        listener.handleRunTerminal(
+          new RunTerminalEvent(executionPath, outcome, 2500),
+        );
+
+        const labels = { execution_path: executionPath, outcome };
+        expect(runsCounter.inc).toHaveBeenCalledWith(labels);
+        expect(runDurationHistogram.observe).toHaveBeenCalledWith(labels, 2.5);
+      },
+    );
+  });
+
+  it('records tool and usage outcomes without identifier labels', () => {
+    listener.handleRunToolCompleted(
+      new RunToolCompletedEvent('agent_runtime', 'error'),
+    );
+    listener.handleRunUsageCollection(
+      new RunUsageCollectionEvent('legacy', 'success'),
+    );
+
+    expect(runToolCallsCounter.inc).toHaveBeenCalledWith({
+      execution_path: 'agent_runtime',
+      outcome: 'error',
+    });
+    expect(runUsageCollectionsCounter.inc).toHaveBeenCalledWith({
+      execution_path: 'legacy',
+      outcome: 'success',
+    });
+  });
+
   describe('handleInferenceCompleted', () => {
     it('should observe inference duration histogram', () => {
       listener.handleInferenceCompleted(
@@ -174,11 +230,17 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           1500,
+          'agent_runtime',
         ),
       );
 
       expect(inferenceHistogram.observe).toHaveBeenCalledWith(
-        { model: 'gpt-4', provider: 'openai', streaming: 'false' },
+        {
+          model: 'gpt-4',
+          provider: 'openai',
+          streaming: 'false',
+          execution_path: 'agent_runtime',
+        },
         1.5,
       );
     });
@@ -192,11 +254,17 @@ describe('PrometheusMetricsListener', () => {
           'anthropic',
           true,
           2000,
+          'legacy',
         ),
       );
 
       expect(inferenceHistogram.observe).toHaveBeenCalledWith(
-        { model: 'claude-3', provider: 'anthropic', streaming: 'true' },
+        {
+          model: 'claude-3',
+          provider: 'anthropic',
+          streaming: 'true',
+          execution_path: 'legacy',
+        },
         2,
       );
     });
@@ -210,6 +278,7 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           500,
+          'legacy',
           {
             message: 'Too Many Requests',
             statusCode: 429,
@@ -222,6 +291,7 @@ describe('PrometheusMetricsListener', () => {
         provider: 'openai',
         error_type: 'rate_limit',
         streaming: 'false',
+        execution_path: 'legacy',
       });
     });
 
@@ -234,6 +304,7 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           500,
+          'legacy',
           {
             message: 'Request timed out',
           },
@@ -245,6 +316,7 @@ describe('PrometheusMetricsListener', () => {
         provider: 'openai',
         error_type: 'timeout',
         streaming: 'false',
+        execution_path: 'legacy',
       });
     });
 
@@ -257,6 +329,7 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           500,
+          'legacy',
           {
             message: 'Something completely unexpected happened',
           },
@@ -268,6 +341,7 @@ describe('PrometheusMetricsListener', () => {
         provider: 'openai',
         error_type: 'unknown',
         streaming: 'false',
+        execution_path: 'legacy',
       });
     });
 
@@ -280,6 +354,7 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           500,
+          'legacy',
         ),
       );
 

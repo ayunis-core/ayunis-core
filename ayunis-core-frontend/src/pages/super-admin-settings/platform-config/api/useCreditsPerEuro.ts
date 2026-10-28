@@ -7,14 +7,7 @@ function isNotFoundError(error: unknown): boolean {
 
 export default function useCreditsPerEuro() {
   const { data, isLoading, isError, error } =
-    useSuperAdminPlatformConfigControllerGetCreditsPerEuro({
-      query: {
-        retry: (failureCount, err) => {
-          if (isNotFoundError(err)) return false;
-          return failureCount < 3;
-        },
-      },
-    });
+    useSuperAdminPlatformConfigControllerGetCreditsPerEuro();
 
   // 404 means the value hasn't been configured yet — not an error
   const isNotConfigured = isNotFoundError(error);

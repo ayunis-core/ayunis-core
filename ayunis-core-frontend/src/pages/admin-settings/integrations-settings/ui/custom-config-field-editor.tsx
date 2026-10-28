@@ -5,8 +5,8 @@ import type {
 } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
-import type { CreateCustomIntegrationFormData } from '../model/types';
-import { HTTP_HEADER_NAME_PATTERN } from '../lib/custom-config-field-validation';
+import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import { HTTP_HEADER_NAME_PATTERN } from '@/pages/admin-settings/integrations-settings/lib/custom-config-field-validation';
 import { Button } from '@ayunis/ui/components/button';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import {
@@ -31,6 +31,9 @@ interface CustomConfigFieldEditorProps {
   fields: FieldArrayWithId<CreateCustomIntegrationFormData, 'fields', 'id'>[];
   remove: UseFieldArrayRemove;
   disabled: boolean;
+  storedSecretKeys?: ReadonlySet<string>;
+  lockedFieldKeys?: ReadonlySet<string>;
+  testIdPrefix?: string;
 }
 
 export function CustomConfigFieldEditor({
@@ -38,6 +41,9 @@ export function CustomConfigFieldEditor({
   fields,
   remove,
   disabled,
+  storedSecretKeys = new Set(),
+  lockedFieldKeys = new Set(),
+  testIdPrefix,
 }: Readonly<CustomConfigFieldEditorProps>) {
   const { t } = useTranslation('admin-settings-integrations');
 
@@ -85,7 +91,7 @@ export function CustomConfigFieldEditor({
                   <Select
                     value={input.value}
                     onValueChange={input.onChange}
-                    disabled={disabled}
+                    disabled={disabled || lockedFieldKeys.has(field.key)}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -117,7 +123,7 @@ export function CustomConfigFieldEditor({
                   <Select
                     value={input.value}
                     onValueChange={input.onChange}
-                    disabled={disabled}
+                    disabled={disabled || lockedFieldKeys.has(field.key)}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -150,6 +156,9 @@ export function CustomConfigFieldEditor({
               label={t('integrations.createCustomDialog.fieldLabel')}
               required
               disabled={disabled}
+              testId={
+                testIdPrefix ? `${testIdPrefix}-${index}-label` : undefined
+              }
             />
             <TextField
               form={form}
@@ -159,6 +168,11 @@ export function CustomConfigFieldEditor({
               placeholder="Authorization"
               required
               disabled={disabled}
+              testId={
+                testIdPrefix
+                  ? `${testIdPrefix}-${index}-header-name`
+                  : undefined
+              }
             />
           </div>
 
@@ -170,6 +184,9 @@ export function CustomConfigFieldEditor({
               label={t('integrations.createCustomDialog.prefix')}
               placeholder="Bearer "
               disabled={disabled}
+              testId={
+                testIdPrefix ? `${testIdPrefix}-${index}-prefix` : undefined
+              }
             />
             <TextField
               form={form}
@@ -177,6 +194,9 @@ export function CustomConfigFieldEditor({
               name="help"
               label={t('integrations.createCustomDialog.help')}
               disabled={disabled}
+              testId={
+                testIdPrefix ? `${testIdPrefix}-${index}-help` : undefined
+              }
             />
           </div>
 
@@ -203,6 +223,8 @@ export function CustomConfigFieldEditor({
             form={form}
             index={index}
             disabled={disabled}
+            hasStoredSecret={storedSecretKeys.has(field.key)}
+            testId={testIdPrefix ? `${testIdPrefix}-${index}-value` : undefined}
           />
         </div>
       ))}
@@ -218,6 +240,7 @@ function TextField({
   placeholder,
   required = false,
   disabled,
+  testId,
 }: Readonly<{
   form: UseFormReturn<CreateCustomIntegrationFormData>;
   index: number;
@@ -226,6 +249,7 @@ function TextField({
   placeholder?: string;
   required?: boolean;
   disabled: boolean;
+  testId?: string;
 }>) {
   const { t } = useTranslation('admin-settings-integrations');
   const rules =
@@ -248,7 +272,12 @@ function TextField({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input {...field} placeholder={placeholder} disabled={disabled} />
+            <Input
+              {...field}
+              placeholder={placeholder}
+              disabled={disabled}
+              data-testid={testId}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -261,15 +290,21 @@ function OrganizationValueField({
   form,
   index,
   disabled,
+  hasStoredSecret,
+  testId,
 }: Readonly<{
   form: UseFormReturn<CreateCustomIntegrationFormData>;
   index: number;
   disabled: boolean;
+  hasStoredSecret: boolean;
+  testId?: string;
 }>) {
   const { t } = useTranslation('admin-settings-integrations');
   const scope = form.watch(`fields.${index}.scope`);
   const type = form.watch(`fields.${index}.type`);
-  const required = form.watch(`fields.${index}.required`);
+  const configuredAsRequired = form.watch(`fields.${index}.required`);
+  const required =
+    configuredAsRequired && !(type === 'secret' && hasStoredSecret);
   if (scope !== 'organization') return null;
 
   return (
@@ -284,12 +319,22 @@ function OrganizationValueField({
           </FormLabel>
           <FormControl>
             {type === 'secret' ? (
-              <PasswordInput {...field} disabled={disabled} />
+              <PasswordInput
+                {...field}
+                disabled={disabled}
+                data-testid={testId}
+                placeholder={
+                  hasStoredSecret
+                    ? t('integrations.editDialog.secretPlaceholder')
+                    : undefined
+                }
+              />
             ) : (
               <Input
                 {...field}
                 type={type === 'url' ? 'url' : 'text'}
                 disabled={disabled}
+                data-testid={testId}
               />
             )}
           </FormControl>

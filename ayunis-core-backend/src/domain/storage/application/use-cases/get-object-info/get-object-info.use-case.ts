@@ -1,10 +1,13 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { GetObjectInfoCommand } from './get-object-info.command';
 import storageConfig from 'src/config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
@@ -18,9 +21,13 @@ export class GetObjectInfoUseCase {
   ) {}
 
   async execute(command: GetObjectInfoCommand): Promise<StorageObject> {
-    this.logger.debug(`Getting info for object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Getting object info',
+    );
 
     try {
       const bucketName = command.bucket || this.getDefaultBucket();
@@ -30,12 +37,13 @@ export class GetObjectInfoUseCase {
       );
 
       this.logger.debug(
-        `Successfully retrieved info for object: ${command.objectName}`,
         {
           bucket: bucketName,
+          fileName: command.objectName,
           size: info.size,
           etag: info.etag,
         },
+        'Successfully retrieved object info',
       );
 
       return new StorageObject(
@@ -55,8 +63,8 @@ export class GetObjectInfoUseCase {
       }
 
       this.logger.error(
-        `Failed to get object info: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to get object info',
       );
       throw new DownloadFailedError();
     }

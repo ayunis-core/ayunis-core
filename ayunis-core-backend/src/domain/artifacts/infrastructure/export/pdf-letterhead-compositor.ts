@@ -59,7 +59,8 @@ export class PdfLetterheadCompositor {
 
     const outputBytes = await outputDoc.save();
     this.logger.log(
-      `Composited ${contentPageCount} page(s) with letterhead background`,
+      { pageCount: contentPageCount },
+      'Composited PDF with letterhead background',
     );
     return Buffer.from(outputBytes);
   }

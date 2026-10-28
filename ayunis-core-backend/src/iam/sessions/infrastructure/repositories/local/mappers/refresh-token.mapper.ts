@@ -1,5 +1,5 @@
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
-import { RefreshTokenRecord } from '../schema/refresh-token.record';
+import { RefreshTokenRecord } from 'src/iam/sessions/infrastructure/repositories/local/schema/refresh-token.record';
 
 export class RefreshTokenMapper {
   static toDomain(record: RefreshTokenRecord): RefreshToken {
@@ -8,6 +8,9 @@ export class RefreshTokenMapper {
       userId: record.userId,
       familyId: record.familyId,
       tokenHash: record.tokenHash,
+      authenticationMethod: record.authenticationMethod,
+      zitadelSessionId: record.zitadelSessionId,
+      familyExpiresAt: record.familyExpiresAt,
       expiresAt: record.expiresAt,
       usedAt: record.usedAt,
       revokedAt: record.revokedAt,
@@ -23,6 +26,9 @@ export class RefreshTokenMapper {
     record.userId = domain.userId;
     record.familyId = domain.familyId;
     record.tokenHash = domain.tokenHash;
+    record.authenticationMethod = domain.authenticationMethod;
+    record.zitadelSessionId = domain.zitadelSessionId;
+    record.familyExpiresAt = domain.familyExpiresAt;
     record.expiresAt = domain.expiresAt;
     record.usedAt = domain.usedAt;
     record.revokedAt = domain.revokedAt;

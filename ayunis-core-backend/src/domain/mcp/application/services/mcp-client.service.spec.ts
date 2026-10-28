@@ -1,24 +1,24 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { McpClientService } from './mcp-client.service';
-import { McpClientPort } from '../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
+import { McpClientPort } from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { randomUUID } from 'crypto';
-import { aCustomMcpIntegration } from '../testing/mcp-integration.fixtures';
-import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
-import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
-import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 
 class MockMcpClientPort extends McpClientPort {
   listTools = jest.fn();
@@ -29,6 +29,7 @@ class MockMcpClientPort extends McpClientPort {
   readResource = jest.fn();
   getPrompt = jest.fn();
   validateConnection = jest.fn();
+  invalidateConnections = jest.fn();
 }
 
 class MockCredentialEncryptionPort extends McpCredentialEncryptionPort {
@@ -41,6 +42,7 @@ class MockUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
   findByIntegrationAndUser = jest.fn();
   findByIntegrationIdsAndUser = jest.fn();
   deleteByIntegrationId = jest.fn();
+  removeKeysByIntegrationId = jest.fn();
 }
 
 describe('McpClientService', () => {
@@ -82,6 +84,21 @@ describe('McpClientService', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('invalidateConnections', () => {
+    it('invalidates the integration connection scope for one user', async () => {
+      const integration = aCustomMcpIntegration(baseIntegrationParams);
+      const userId = randomUUID();
+
+      await service.invalidateConnections(integration, userId);
+
+      expect(client.invalidateConnections).toHaveBeenCalledWith({
+        orgId: integration.orgId,
+        integrationId: integration.id,
+        userId,
+      });
+    });
   });
 
   describe('buildConnectionConfig', () => {
@@ -129,6 +146,11 @@ describe('McpClientService', () => {
         'X-Tenant-ID': 'council-42',
         Authorization: 'Bearer personal-token',
       });
+      expect(config.connectionScope).toEqual({
+        orgId: integration.orgId,
+        integrationId: integration.id,
+        userId,
+      });
     });
 
     it('returns base config with empty headers for no-auth integrations', async () => {
@@ -142,6 +164,11 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: {},
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
+        oauth: undefined,
       });
       expect(encryption.decrypt).not.toHaveBeenCalled();
     });
@@ -163,6 +190,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -184,6 +215,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { 'X-API-Key': 'decrypted-secret' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -207,6 +242,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -279,6 +318,11 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: 'https://mcp.ayunis.de/oparl',
         headers: { 'X-Oparl-Endpoint-Url': 'https://rim.ekom21.de/oparl' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
+        oauth: undefined,
       });
       expect(encryption.decrypt).not.toHaveBeenCalled();
     });
@@ -649,6 +693,10 @@ describe('McpClientService', () => {
         {
           serverUrl: integration.serverUrl,
           headers: {},
+          connectionScope: {
+            orgId: integration.orgId,
+            integrationId: integration.id,
+          },
           oauth: undefined,
         },
       );

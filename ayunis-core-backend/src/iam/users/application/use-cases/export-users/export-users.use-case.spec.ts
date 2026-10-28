@@ -1,7 +1,7 @@
 import { ExportUsersUseCase } from './export-users.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
-import type { UsersExportRepository } from '../../ports/users-export.repository';
+import type { UsersExportRepository } from 'src/iam/users/application/ports/users-export.repository';
 
 describe('ExportUsersUseCase', () => {
   it('should export all users of subscribed organizations as CSV', async () => {
@@ -33,6 +33,9 @@ describe('ExportUsersUseCase', () => {
     const csv = await new ExportUsersUseCase(repository).execute();
 
     expect(repository.findSubscribedOrgUsers).toHaveBeenCalledTimes(1);
+    expect(repository.findSubscribedOrgUsers).toHaveBeenCalledWith(
+      expect.any(Date),
+    );
     expect(csv).toBe(
       [
         '"Eindeutige ID","Vorname","Nachname","E-Mail","Rolle","Organisation","Teams","Abonnement","Abonnement Startdatum"',

@@ -4,5 +4,6 @@ export class GetEffectiveLanguageModelsQuery {
   constructor(
     public readonly orgId: UUID,
     public readonly userId?: UUID,
+    public readonly excludedPermittedModelIds: UUID[] = [],
   ) {}
 }

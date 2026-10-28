@@ -3,9 +3,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Res,
   StreamableFile,
+  Logger,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { Response } from 'express';
@@ -24,8 +24,8 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetAcademyCertificateUseCase } from '../../application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
-import { GetAcademyCertificateQuery } from '../../application/use-cases/get-academy-certificate/get-academy-certificate.query';
+import { GetAcademyCertificateUseCase } from 'src/domain/academy/application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
+import { GetAcademyCertificateQuery } from 'src/domain/academy/application/use-cases/get-academy-certificate/get-academy-certificate.query';
 
 @ApiTags('Academy')
 @Controller('academy/certificate')
@@ -42,13 +42,13 @@ export class AcademyCertificateController {
   // Each download renders a PDF in headless Chromium — keep bursts cheap
   @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
   @ApiOperation({
-    summary: 'Download the academy completion certificate',
+    summary: 'Download the academy participation confirmation',
     description:
-      'Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.',
+      'Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.',
   })
   @ApiResponse({
     status: 200,
-    description: 'The certificate PDF',
+    description: 'The participation confirmation PDF',
     content: {
       'application/octet-stream': {
         schema: { type: 'string', format: 'binary' },

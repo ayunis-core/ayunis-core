@@ -20,7 +20,7 @@ export interface BedrockProviderOptions {
   /** Static AWS secret key. Omit both keys to use the AWS credential chain. */
   awsSecretKey?: string;
   maxTokens?: number;
-  /** SDK-level retry count for transient failures. Default: 2. */
+  /** SDK retries are for direct non-streaming calls only. Streaming hosts must pass 0. */
   maxRetries?: number;
   /** Per-attempt timeout in ms until the response starts. Default: 120s. */
   timeoutMs?: number;

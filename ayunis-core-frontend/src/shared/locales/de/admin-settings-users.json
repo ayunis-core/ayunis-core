@@ -32,7 +32,8 @@
     "resend": "Einladung erneut senden",
     "sendPasswordReset": "Passwort-Reset senden",
     "noInvitesFound": "Keine Einladungen gefunden",
-    "total": "{{count}} gesamt"
+    "total": "{{count}} gesamt",
+    "teams": "Teams"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",
@@ -64,7 +65,12 @@
     "clickToCopy": "Klicken Sie auf die Schaltfläche, um den Einladungslink zu kopieren",
     "close": "Schließen",
     "success": "Einladung erfolgreich erstellt",
-    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut."
+    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
+    "teamsLabel": "Teams (optional)",
+    "teamsPlaceholder": "Teams auswählen",
+    "noTeamsFound": "Keine Teams gefunden",
+    "teamsLoadError": "Teams konnten nicht geladen werden.",
+    "teamsRestricted": "Die Teamzuweisung ist nicht verfügbar, solange die individuelle Nutzung ausgeblendet ist."
   },
   "confirmations": {
     "deleteInviteTitle": "Einladung löschen",
@@ -81,7 +87,8 @@
     "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "resendInviteTitle": "Einladung erneut senden",
     "resendInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} erneut senden möchten? Die abgelaufene Einladung wird gelöscht und eine neue erstellt.",
-    "resendText": "Erneut senden"
+    "resendText": "Erneut senden",
+    "deleteAllOrgInvitesDescription": "Möchten Sie alle ausstehenden Einladungen dieser Organisation löschen, auch außerhalb der aktuellen Suche oder Seite? Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "deleteAllInvites": {
     "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
@@ -93,7 +100,9 @@
     "emailNotAvailable": "Einladung nicht möglich.",
     "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
     "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse.",
-    "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen."
+    "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen.",
+    "multipleActiveSubscriptions": "Die Abonnements dieser Organisation überschneiden sich. Ein Superadmin muss die Überschneidung beheben, bevor Benutzer eingeladen werden können.",
+    "teamNotFound": "Ein ausgewähltes Team existiert nicht mehr. Bitte wählen Sie die Teams erneut aus."
   },
   "inviteResend": {
     "success": "Einladung erfolgreich erneut gesendet!",
@@ -107,7 +116,9 @@
     "error": {
       "inviteNotFound": "Einladung nicht gefunden",
       "unexpectedError": "Fehler beim Löschen der Einladung. Bitte versuchen Sie es erneut."
-    }
+    },
+    "notFound": "Einladung nicht gefunden. Sie wurde möglicherweise bereits angenommen oder gelöscht.",
+    "success": "Einladung erfolgreich gelöscht"
   },
   "userDelete": {
     "success": "Benutzer erfolgreich gelöscht",
@@ -153,16 +164,17 @@
     "dialogTitle": "Masseneinladung",
     "dialogDescription": "Laden Sie eine CSV-Datei hoch, um mehrere Benutzer gleichzeitig einzuladen.",
     "uploadTitle": "CSV-Datei hochladen",
-    "uploadDescription": "Laden Sie eine CSV-Datei mit den Spalten: email, role (user, manager oder admin) hoch",
+    "uploadDescription": "Laden Sie eine CSV-Datei mit email, role und optional teams hoch. Trennen Sie mehrere Teamnamen mit | und schreiben Sie ein | im Teamnamen als \\|.",
     "downloadTemplate": "Vorlage herunterladen",
     "selectFile": "CSV-Datei auswählen",
     "dragDrop": "oder per Drag & Drop",
-    "csvFormat": "CSV-Datei mit email,role Spalten",
+    "csvFormat": "CSV-Datei mit den Spalten email,role,teams",
     "previewTitle": "Einladungen prüfen",
     "previewDescription": "Überprüfen Sie die Einladungen vor dem Versenden. Alle Zeilen müssen gültig sein.",
     "rowNumber": "Zeile",
     "email": "E-Mail",
     "role": "Rolle",
+    "teams": "Teams",
     "status": "Status",
     "valid": "Gültig",
     "invalid": "Ungültig",
@@ -171,14 +183,17 @@
     "submitting": "Einladungen werden gesendet...",
     "resultsTitle": "Einladungen gesendet",
     "resultsDescription": "{{success}} von {{total}} Einladungen wurden erfolgreich erstellt.",
-    "allSuccess": "Alle {{count}} Einladungen erfolgreich erstellt!",
+    "allSuccess_one": "{{count}} Einladung erfolgreich erstellt!",
+    "allSuccess_other": "Alle {{count}} Einladungen erfolgreich erstellt!",
     "partialSuccess": "{{success}} von {{total}} Einladungen erstellt.",
+    "succeeded": "erfolgreich",
+    "failed": "fehlgeschlagen",
     "downloadUrls": "Einladungs-URLs herunterladen",
     "close": "Schließen",
     "error": "Fehler beim Erstellen der Einladungen. Bitte versuchen Sie es erneut.",
     "validationFailed": "Einige Einladungen haben die Validierung nicht bestanden. Bitte überprüfen Sie die Fehler.",
     "parseError": "CSV-Datei konnte nicht gelesen werden. Bitte überprüfen Sie das Format.",
-    "invalidHeaders": "Ungültige CSV-Spalten. Erwartet: email,role",
+    "invalidHeaders": "Ungültige CSV-Spalten. Erwartet: email,role oder email,role,teams",
     "invalidRowFormat": "Ungültiges Zeilenformat",
     "invalidRole": "Ungültige Rolle. Muss 'user', 'manager' oder 'admin' sein",
     "invalidEmail": "Ungültiges E-Mail-Format",
@@ -187,7 +202,10 @@
     "emptyFile": "CSV-Datei ist leer",
     "tooManyRows": "Zu viele Zeilen. Maximum ist 500.",
     "emailAlreadyInvited": "E-Mail hat bereits eine ausstehende Einladung",
-    "emailAlreadyUser": "E-Mail ist bereits ein Benutzer in dieser Organisation"
+    "emailAlreadyUser": "E-Mail ist bereits ein Benutzer in dieser Organisation",
+    "teamNotFound": "Mindestens ein Team wurde nicht gefunden",
+    "teamNotFoundWithNames": "Nicht gefundene Teams: {{teams}}",
+    "validationError": "Einladung konnte nicht validiert werden"
   },
   "resetMfa": {
     "menuItem": "Zwei-Faktor-Authentifizierung zurücksetzen",
@@ -198,5 +216,10 @@
     "confirmText": "Zurücksetzen",
     "success": "Zwei-Faktor-Authentifizierung wurde zurückgesetzt.",
     "error": "Zwei-Faktor-Authentifizierung konnte nicht zurückgesetzt werden."
+  },
+  "validation": {
+    "teamIds": {
+      "invalid": "Bitte wählen Sie gültige Teams aus."
+    }
   }
 }

@@ -30,28 +30,27 @@ import {
   Trash2,
   UserCheck,
   Mail,
-  Coins,
-  Ban,
   ShieldOff,
+  LockOpen,
 } from 'lucide-react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
-import { useUserDelete } from '../api/useUserDelete';
-import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
-import { useResetUserMfa } from '../api/useResetUserMfa';
+import { useUserRoleUpdate } from '@/pages/admin-settings/users-settings/api/useUserRoleUpdate';
+import { useUserDelete } from '@/pages/admin-settings/users-settings/api/useUserDelete';
+import { useTriggerPasswordReset } from '@/pages/admin-settings/users-settings/api/useTriggerPasswordReset';
+import { useResetUserMfa } from '@/pages/admin-settings/users-settings/api/useResetUserMfa';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import EditUserDialog from './EditUserDialog';
 import { useState, type ReactNode } from 'react';
-import type { User, UserRole } from '../model/openapi';
+import type {
+  User,
+  UserRole,
+} from '@/pages/admin-settings/users-settings/model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import { SetUserCreditLimitDialog } from './SetUserCreditLimitDialog';
-import {
-  useUserCreditLimits,
-  type CreditLimitInfo,
-} from '../api/useUserCreditLimits';
-import { useHasCreditBudget } from '@/features/credit-limits';
+import { useAdminUnlockUserAccount } from '@/pages/admin-settings/users-settings/api/useAdminUnlockUserAccount';
+import { canViewUserLockStatus } from '@/pages/admin-settings/users-settings/lib/canViewUserLockStatus';
+import { UserLockStatus } from '@/widgets/user-lock-status';
 
 const ROLE_OPTIONS: UserRole[] = ['user', 'manager', 'admin'];
 
@@ -69,29 +68,13 @@ export default function UsersSection({
   paginationSlot,
 }: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
-  const { t: tCredit } = useTranslation('admin-settings-credit-limits');
+  const { t: tAccountLock } = useTranslation('common', {
+    keyPrefix: 'accountLock',
+  });
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [creditLimitUser, setCreditLimitUser] = useState<User | null>(null);
-  const hasCreditBudget = useHasCreditBudget();
   const { user: currentUser } = useMe();
-  const { userLimits, setUserLimit, removeUserLimit, isSaving, isRemoving } =
-    useUserCreditLimits(
-      () => setCreditLimitUser(null),
-      () => setCreditLimitUser(null),
-    );
-
-  const renderCreditLimit = (limit: CreditLimitInfo | undefined) =>
-    limit ? (
-      tCredit('creditLimits.column.value', {
-        used: Math.round(limit.creditsUsed).toLocaleString(),
-        limit: Math.round(limit.monthlyCredits).toLocaleString(),
-      })
-    ) : (
-      <span className="text-muted-foreground">
-        {tCredit('creditLimits.column.none')}
-      </span>
-    );
+  const canViewLockStatus = canViewUserLockStatus(currentUser);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
     onSuccessCallback: () => setLoadingUserId(null),
   });
@@ -105,6 +88,7 @@ export default function UsersSection({
   const { resetUserMfa, isLoading: isResettingMfa } = useResetUserMfa({
     onSuccessCallback: () => setLoadingUserId(null),
   });
+  const unlockUserAccount = useAdminUnlockUserAccount();
   const { confirm } = useConfirmation();
 
   const roleLabels: Record<UserRole, string> = {
@@ -185,10 +169,33 @@ export default function UsersSection({
     });
   };
 
+  const handleUnlockUserAccount = (user: UserResponseDto) => {
+    confirm({
+      title: tAccountLock('unlock.confirmTitle'),
+      description: tAccountLock('unlock.confirmDescription', {
+        name: user.name,
+      }),
+      confirmText: tAccountLock('unlock.confirmText'),
+      cancelText: tAccountLock('unlock.cancelText'),
+      variant: 'default',
+      onConfirm: () => {
+        setLoadingUserId(user.id);
+        unlockUserAccount.mutate(
+          { userId: user.id },
+          { onSettled: () => setLoadingUserId(null) },
+        );
+      },
+    });
+  };
+
   const isUserLoading = (userId: string) => {
     return (
       loadingUserId === userId &&
-      (isUpdatingRole || isDeletingUser || isTriggeringReset || isResettingMfa)
+      (isUpdatingRole ||
+        isDeletingUser ||
+        isTriggeringReset ||
+        isResettingMfa ||
+        unlockUserAccount.isPending)
     );
   };
 
@@ -210,21 +217,35 @@ export default function UsersSection({
               <TableHead>{t('users.name')}</TableHead>
               <TableHead>{t('users.email')}</TableHead>
               <TableHead>{t('users.role')}</TableHead>
-              {hasCreditBudget && (
-                <TableHead>{tCredit('creditLimits.column.header')}</TableHead>
-              )}
+              {canViewLockStatus && <TableHead>{t('users.teams')}</TableHead>}
+              {canViewLockStatus && <TableHead>{t('users.status')}</TableHead>}
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
+              <TableRow key={user.id} data-testid={`admin-user-row-${user.id}`}>
+                <TableCell
+                  className="font-medium max-w-40 truncate"
+                  title={user.name}
+                >
+                  {user.name}
+                </TableCell>
+                <TableCell className="max-w-48 truncate" title={user.email}>
+                  {user.email}
+                </TableCell>
                 <TableCell>{roleLabels[user.role]}</TableCell>
-                {hasCreditBudget && (
+                {canViewLockStatus && (
+                  <TableCell
+                    className="max-w-48 whitespace-normal"
+                    data-testid={`user-teams-${user.id}`}
+                  >
+                    {user.teams?.map((team) => team.name).join(', ')}
+                  </TableCell>
+                )}
+                {canViewLockStatus && (
                   <TableCell>
-                    {renderCreditLimit(userLimits.get(user.id))}
+                    <UserLockStatus isLocked={user.isLocked} />
                   </TableCell>
                 )}
                 <TableCell>
@@ -234,6 +255,7 @@ export default function UsersSection({
                         variant="ghost"
                         className="h-8 w-8 p-0"
                         disabled={isUserLoading(user.id)}
+                        data-testid="admin-user-actions"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -279,6 +301,18 @@ export default function UsersSection({
                         <Mail />
                         {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
+                      {canViewLockStatus &&
+                        user.isLocked &&
+                        user.id !== currentUser?.id && (
+                          <DropdownMenuItem
+                            onClick={() => handleUnlockUserAccount(user)}
+                            disabled={isUserLoading(user.id)}
+                            data-testid="user-unlock-account"
+                          >
+                            <LockOpen />
+                            {tAccountLock('unlock.menuItem')}
+                          </DropdownMenuItem>
+                        )}
                       <TooltipIf
                         condition={user.email === currentUser?.email}
                         tooltip={t('resetMfa.selfTooltip')}
@@ -294,25 +328,6 @@ export default function UsersSection({
                           {t('resetMfa.menuItem')}
                         </DropdownMenuItem>
                       </TooltipIf>
-                      {hasCreditBudget && (
-                        <DropdownMenuItem
-                          onClick={() => setCreditLimitUser(user)}
-                        >
-                          <Coins />
-                          {userLimits.has(user.id)
-                            ? tCredit('creditLimits.menu.edit')
-                            : tCredit('creditLimits.menu.set')}
-                        </DropdownMenuItem>
-                      )}
-                      {hasCreditBudget && userLimits.has(user.id) && (
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => removeUserLimit(user.id)}
-                        >
-                          <Ban />
-                          {tCredit('creditLimits.menu.remove')}
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => handleDeleteUser(user)}
@@ -331,26 +346,6 @@ export default function UsersSection({
         {paginationSlot}
       </CardContent>
       <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
-      {creditLimitUser && (
-        <SetUserCreditLimitDialog
-          open
-          onOpenChange={(open) => !open && setCreditLimitUser(null)}
-          targetName={creditLimitUser.name}
-          initialMonthlyCredits={
-            userLimits.get(creditLimitUser.id)?.monthlyCredits
-          }
-          onSubmit={(monthlyCredits) =>
-            setUserLimit(creditLimitUser.id, monthlyCredits)
-          }
-          onRemove={
-            userLimits.has(creditLimitUser.id)
-              ? () => removeUserLimit(creditLimitUser.id)
-              : undefined
-          }
-          isSaving={isSaving}
-          isRemoving={isRemoving}
-        />
-      )}
     </Card>
   );
 }

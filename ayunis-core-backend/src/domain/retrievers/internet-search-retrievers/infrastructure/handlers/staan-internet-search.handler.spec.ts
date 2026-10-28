@@ -1,7 +1,7 @@
 import type { ConfigService } from '@nestjs/config';
 import { StaanInternetSearchHandler } from './staan-internet-search.handler';
-import { InternetSearchResult } from '../../domain/internet-search-result.entity';
-import { InternetSearchResultType } from '../../domain/value-objects/internet-search-result-type.enum';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
+import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 describe('StaanInternetSearchHandler', () => {
   let handler: StaanInternetSearchHandler;

@@ -1,18 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRecord } from './schema/trial.record';
 import { UUID } from 'crypto';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalTrialsRepository extends TrialRepository {
   constructor(
-    @InjectRepository(TrialRecord)
-    private readonly trialRecord: Repository<TrialRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get trialRecord(): Repository<TrialRecord> {
+    return this.getManager().getRepository(TrialRecord);
   }
 
   async create(trial: Trial): Promise<Trial> {

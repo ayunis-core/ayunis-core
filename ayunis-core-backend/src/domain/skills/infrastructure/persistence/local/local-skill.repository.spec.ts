@@ -1,35 +1,34 @@
-import type { EntityManager, Repository } from 'typeorm';
+import { In, IsNull, type EntityManager, type Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID } from 'crypto';
 
 import { LocalSkillRepository } from './local-skill.repository';
-import type { SkillRecord } from './schema/skill.record';
+import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
+import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
+import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
 import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors';
 
 describe('LocalSkillRepository', () => {
   let repository: LocalSkillRepository;
-  let activationRepo: jest.Mocked<Repository<SkillActivationRecord>>;
+  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toDomain' | 'toPersonal'>>;
   let mockManager: {
     findOne: jest.Mock;
     find: jest.Mock;
     count: jest.Mock;
+    delete: jest.Mock;
+    update: jest.Mock;
     query: jest.Mock;
     createQueryBuilder: jest.Mock;
+    getRepository: jest.Mock;
   };
 
   const userId = randomUUID();
   const skillId = randomUUID();
 
   beforeEach(() => {
-    activationRepo = {
-      find: jest.fn(),
-      count: jest.fn(),
-      manager: {} as EntityManager,
-    } as unknown as jest.Mocked<Repository<SkillActivationRecord>>;
-
     const skillRepo = {
       manager: {} as EntityManager,
     } as unknown as jest.Mocked<Repository<SkillRecord>>;
@@ -45,22 +44,187 @@ describe('LocalSkillRepository', () => {
       findOne: jest.fn(),
       find: jest.fn(),
       count: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn(),
       query: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+      getRepository: jest.fn(),
     };
+    mockManager.getRepository.mockReturnValue(mockManager);
 
     const txHost = {
       tx: mockManager,
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
-    const mapper = {} as SkillMapper;
+    skillMapper = {
+      toDomain: jest.fn(),
+      toPersonal: jest.fn(),
+    };
 
     repository = new LocalSkillRepository(
       skillRepo,
-      activationRepo,
-      mapper,
+      skillMapper as unknown as SkillMapper,
+      {} as LocalSkillAccessiblePageFinder,
+      new LocalSkillKnowledgeBaseIdsFinder(),
       txHost,
     );
+  });
+
+  it('skips empty scoped lookups', async () => {
+    await expect(repository.findByIds([], null)).resolves.toEqual([]);
+    expect(mockManager.find).not.toHaveBeenCalled();
+  });
+
+  it.each([null, randomUUID()])(
+    'filters scope in SQL and deduplicates IDs: %s',
+    async (workspaceId) => {
+      mockManager.find.mockResolvedValue([]);
+      await repository.findByIds([skillId, skillId], workspaceId);
+      expect(mockManager.find).toHaveBeenCalledWith({
+        where: { id: In([skillId]), workspaceId: workspaceId ?? IsNull() },
+        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+      });
+    },
+  );
+
+  describe('ambient transaction', () => {
+    it('finds a skill with relations written earlier in the transaction', async () => {
+      const sourceId = randomUUID();
+      const record = {
+        id: skillId,
+        userId,
+        sources: [{ id: sourceId }],
+        mcpIntegrations: [],
+        knowledgeBases: [],
+      } as unknown as SkillRecord;
+      const expected = { id: skillId, sourceIds: [sourceId] };
+      mockManager.findOne.mockResolvedValue(record);
+      skillMapper.toPersonal.mockReturnValue(expected as never);
+
+      await expect(repository.findOne(skillId, userId)).resolves.toBe(expected);
+      expect(mockManager.getRepository).toHaveBeenCalledWith(SkillRecord);
+    });
+
+    it('finds a skill without trusting a caller-supplied owner', async () => {
+      const record = {
+        id: skillId,
+        userId,
+        sources: [],
+        mcpIntegrations: [],
+        knowledgeBases: [],
+      } as unknown as SkillRecord;
+      const expected = { id: skillId };
+      mockManager.findOne.mockResolvedValue(record);
+      skillMapper.toDomain.mockReturnValue(expected as never);
+
+      await expect(repository.findById(skillId)).resolves.toBe(expected);
+      expect(mockManager.findOne).toHaveBeenCalledWith({
+        where: { id: skillId },
+        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+      });
+    });
+
+    it('deletes a skill through the ambient transaction', async () => {
+      mockManager.delete.mockResolvedValue({ affected: 1 });
+
+      await expect(repository.delete(skillId)).resolves.toBeUndefined();
+    });
+
+    it('reads activation state from the ambient transaction', async () => {
+      mockManager.count.mockResolvedValue(1);
+
+      await expect(repository.isSkillActive(skillId, userId)).resolves.toBe(
+        true,
+      );
+      expect(mockManager.getRepository).toHaveBeenCalledWith(
+        SkillActivationRecord,
+      );
+    });
+  });
+
+  it('finds the personal skill installed from a marketplace entry for the owner only', async () => {
+    const record = { id: skillId } as SkillRecord;
+    const expected = { id: skillId };
+    mockManager.findOne.mockResolvedValue(record);
+    skillMapper.toPersonal.mockReturnValue(expected as never);
+
+    await expect(
+      repository.findPersonalByMarketplaceIdentifier(userId, 'finance-clerk'),
+    ).resolves.toBe(expected);
+
+    expect(mockManager.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+          marketplaceIdentifier: 'finance-clerk',
+        }),
+        order: { createdAt: 'ASC' },
+      }),
+    );
+  });
+
+  it('returns null when no personal skill was installed from the entry', async () => {
+    mockManager.findOne.mockResolvedValue(null);
+
+    await expect(
+      repository.findPersonalByMarketplaceIdentifier(userId, 'finance-clerk'),
+    ).resolves.toBeNull();
+    expect(skillMapper.toPersonal).not.toHaveBeenCalled();
+  });
+
+  it('excludes workspace-owned skills from owner lists', async () => {
+    mockManager.find.mockResolvedValue([]);
+
+    await repository.findAllByOwner(userId);
+
+    expect(mockManager.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId,
+          workspaceId: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  describe('workspace activation state', () => {
+    it('returns active and pinned state from workspace activation rows', async () => {
+      const workspaceId = randomUUID();
+      mockManager.find.mockResolvedValue([{ skillId, isPinned: true }]);
+
+      await expect(
+        repository.getWorkspaceSkillStates([skillId], workspaceId),
+      ).resolves.toEqual(
+        new Map([[skillId, { isActive: true, isPinned: true }]]),
+      );
+      expect(mockManager.find).toHaveBeenCalledWith({
+        where: { skillId: expect.anything(), workspaceId },
+        select: ['skillId', 'isPinned'],
+      });
+    });
+
+    it('rejects pinning when no active workspace row exists', async () => {
+      const workspaceId = randomUUID();
+      mockManager.update.mockResolvedValue({ affected: 0 });
+
+      await expect(
+        repository.setWorkspaceSkillPinned(skillId, workspaceId, true),
+      ).rejects.toThrow(SkillNotActiveError);
+    });
+  });
+
+  describe('setSkillPinned', () => {
+    it('sets an explicit personal pin state idempotently', async () => {
+      mockManager.update.mockResolvedValue({ affected: 1 });
+
+      await repository.setSkillPinned(skillId, userId, false);
+
+      expect(mockManager.update).toHaveBeenCalledWith(
+        { skillId, userId },
+        { isPinned: false },
+      );
+    });
   });
 
   describe('pinSkill', () => {
@@ -93,34 +257,125 @@ describe('LocalSkillRepository', () => {
     });
   });
 
-  describe('toggleSkillPinned', () => {
-    it('should toggle isPinned and return new value using RETURNING clause', async () => {
-      mockManager.query.mockResolvedValue([{ isPinned: true }]);
+  it('paginates workspace skills alphabetically without activation or pinning affecting order', async () => {
+    const sharedSkillId = randomUUID();
+    const workspaceId = randomUUID();
+    const records = [
+      { id: randomUUID(), name: 'Citizen requests' } as SkillRecord,
+      { id: randomUUID(), name: 'Budget planning' } as SkillRecord,
+    ];
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([records, 7]),
+    };
+    const skillRepository = {
+      manager: {} as EntityManager,
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as jest.Mocked<Repository<SkillRecord>>;
+    const mapper = {
+      toWorkspace: jest.fn((record: SkillRecord) => record),
+    } as unknown as SkillMapper;
+    const repository = new LocalSkillRepository(
+      skillRepository,
+      mapper,
+      new LocalSkillAccessiblePageFinder(skillRepository, {
+        tx: undefined,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>),
+      new LocalSkillKnowledgeBaseIdsFinder(),
+      {
+        tx: mockManager,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
 
-      const result = await repository.toggleSkillPinned(skillId, userId);
+    const result = await repository.findPaginatedAccessible(
+      userId,
+      workspaceId,
+      [sharedSkillId],
+      {
+        search: 'citizen',
+        limit: 2,
+        offset: 4,
+      },
+    );
 
-      expect(result).toBe(true);
-      expect(mockManager.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE skill_activations'),
-        [skillId, userId],
-      );
-    });
+    expect(result.data).toEqual(records);
+    expect(queryBuilder.leftJoin).not.toHaveBeenCalled();
+    expect(queryBuilder.orderBy).not.toHaveBeenCalled();
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      'LOWER(skill.name)',
+      'skill_name_sort',
+    );
+    expect(queryBuilder.addOrderBy.mock.calls).toEqual([
+      ['skill_name_sort', 'ASC'],
+      ['skill.id', 'ASC'],
+    ]);
+    expect(result.total).toBe(7);
+    expect(result.limit).toBe(2);
+    expect(result.offset).toBe(4);
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'skill.workspaceId = :workspaceId',
+      { workspaceId },
+    );
+    expect(queryBuilder.skip).toHaveBeenCalledWith(4);
+    expect(queryBuilder.take).toHaveBeenCalledWith(2);
+    expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
+  });
 
-    it('should return false when skill was unpinned', async () => {
-      mockManager.query.mockResolvedValue([{ isPinned: false }]);
+  it('excludes workspace-owned skills from personal accessible lists', async () => {
+    const queryBuilder = {
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+    };
+    const skillRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as Repository<SkillRecord>;
+    const finder = new LocalSkillAccessiblePageFinder(skillRepository, {
+      tx: undefined,
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
-      const result = await repository.toggleSkillPinned(skillId, userId);
+    finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
 
-      expect(result).toBe(false);
-    });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'skill.workspaceId IS NULL',
+    );
+  });
 
-    it('should throw SkillNotActiveError when no activation row exists', async () => {
-      mockManager.query.mockResolvedValue([]);
+  it('returns knowledge-base IDs linked to the supplied skills', async () => {
+    const linkedKnowledgeBaseIds = [randomUUID(), randomUUID()];
+    const queryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      distinct: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(
+        linkedKnowledgeBaseIds.map((knowledgeBaseId) => ({
+          knowledgeBaseId,
+        })),
+      ),
+    };
+    mockManager.createQueryBuilder.mockReturnValue(queryBuilder);
 
-      await expect(
-        repository.toggleSkillPinned(skillId, userId),
-      ).rejects.toThrow(SkillNotActiveError);
-    });
+    await expect(
+      repository.findKnowledgeBaseIdsBySkillIds([skillId]),
+    ).resolves.toEqual(linkedKnowledgeBaseIds);
+    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+      'knowledge_bases',
+      'knowledgeBase',
+      '"knowledgeBase".id = skb."knowledgeBasesId"',
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      '"knowledgeBase"."userId" = skill."userId"',
+    );
   });
 
   describe('isSkillPinned', () => {
@@ -130,7 +385,7 @@ describe('LocalSkillRepository', () => {
       const result = await repository.isSkillPinned(skillId, userId);
 
       expect(result).toBe(true);
-      expect(mockManager.count).toHaveBeenCalledWith(SkillActivationRecord, {
+      expect(mockManager.count).toHaveBeenCalledWith({
         where: { skillId, userId, isPinned: true },
       });
     });
@@ -156,7 +411,7 @@ describe('LocalSkillRepository', () => {
       const result = await repository.getPinnedSkillIds(userId);
 
       expect(result).toEqual(new Set([pinnedSkillId1, pinnedSkillId2]));
-      expect(mockManager.find).toHaveBeenCalledWith(SkillActivationRecord, {
+      expect(mockManager.find).toHaveBeenCalledWith({
         where: { userId, isPinned: true },
         select: ['skillId'],
       });

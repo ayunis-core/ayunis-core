@@ -48,6 +48,7 @@ export function ForgotPasswordPage() {
                 <FormLabel>{t('forgotPassword.email')}</FormLabel>
                 <FormControl>
                   <Input
+                    data-testid="forgot-email"
                     placeholder={t('forgotPassword.emailPlaceholder')}
                     type="email"
                     {...field}
@@ -57,7 +58,12 @@ export function ForgotPasswordPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="forgot-submit"
+          >
             {isLoading
               ? t('forgotPassword.sending')
               : t('forgotPassword.sendResetLink')}

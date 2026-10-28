@@ -1,4 +1,9 @@
 import {
+  MAX_IMAGES,
+  MAX_IMAGE_SIZE_MIB,
+  MAX_TOTAL_IMAGE_SIZE_MIB,
+} from '@/widgets/chat-input/model/image-upload-policy';
+import {
   useState,
   useEffect,
   forwardRef,
@@ -7,35 +12,35 @@ import {
 } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@ayunis/ui/components/card';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
+  SourceProcessingErrorCode,
   FileSourceResponseDtoFileType,
   SourceResponseDtoCreatedBy,
   SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@/shared/api';
-import PlusButton from './PlusButton';
-import ModelSelector from './ModelSelector';
-import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import { SendButton } from './SendButton';
-import { AnonymousButton } from './AnonymousButton';
-import { SkillBadge } from './SkillBadge';
 import {
   usePendingImages,
   type PendingImage,
-  MAX_IMAGES,
-} from '../hooks/usePendingImages';
-import { useImagePaste } from '../hooks/useImagePaste';
-import { useFileDrop } from '../hooks/useFileDrop';
+} from '@/widgets/chat-input/hooks/usePendingImages';
+import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
+import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
+import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
+import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
+import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
+import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
+import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@ayunis/ui/lib/cn';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
+import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
+import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import './chat-input-glow.css';
-import { MicrophoneButton } from './MicrophoneButton';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -66,6 +71,7 @@ interface ChatInputProps {
     createdBy?: SourceResponseDtoCreatedBy;
     status?: SourceResponseDtoStatus;
     processingError?: string;
+    processingErrorCode?: SourceProcessingErrorCode;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];
@@ -81,7 +87,6 @@ interface ChatInputProps {
   onModelChange: (modelId: string) => void;
   onFileUpload: (files: File[]) => void;
   onRemoveSource: (sourceId: string) => void;
-  onDownloadSource: (sourceId: string) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onAddIntegration?: (integration: IntegrationSummary) => void;
@@ -106,6 +111,9 @@ interface ChatInputProps {
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
   initialMessage?: string;
+  draftChatId?: string;
+  /** The thread's sent prompts, oldest first, recalled with ArrowUp/ArrowDown. */
+  sentPrompts?: readonly string[];
 }
 
 export interface ChatInputRef {
@@ -113,6 +121,8 @@ export interface ChatInputRef {
   sendMessage: (message: string) => void;
   restoreFailedSubmission: (text: string, files: File[]) => boolean;
 }
+
+const NO_PROMPTS: readonly string[] = [];
 
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
@@ -128,7 +138,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onModelChange,
       onFileUpload,
       onRemoveSource,
-      onDownloadSource,
       onAddKnowledgeBase,
       onRemoveKnowledgeBase,
       onAddIntegration,
@@ -144,11 +153,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillName,
       onSkillRemove,
       initialMessage,
+      draftChatId,
+      sentPrompts = NO_PROMPTS,
     },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState(initialMessage ?? '');
+    const { message, setMessage } = useChatDraft(draftChatId, initialMessage);
     const isSubmitting = submissionState === 'submitting';
     const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
@@ -156,6 +167,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { t } = useTranslation('common');
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    useDraftCursorAtEnd(textareaRef, draftChatId);
+    const handlePromptHistoryKey = usePromptHistory(
+      message,
+      setMessage,
+      sentPrompts,
+    );
 
     // TextareaAutosize corrects its height during mount; the height transition
     // must not be active yet or that correction animates as a visible shrink
@@ -181,39 +198,36 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { pendingImages, addImages, removeImage, clearImages } =
       usePendingImages();
 
-    const handleImagesPasted = (files: File[]) => {
+    const attachImages = (files: File[]) => {
       const result = addImages(files);
+      if (result.oversizedRejected) {
+        showError(t('chatInput.imageTooLarge', { maxMiB: MAX_IMAGE_SIZE_MIB }));
+      }
       if (result.limitExceeded) {
         showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
+      }
+      if (result.totalExceeded) {
+        showError(
+          t('chatInput.imageTotalTooLarge', {
+            maxMiB: MAX_TOTAL_IMAGE_SIZE_MIB,
+          }),
+        );
       }
     };
 
     useImagePaste({
       containerRef,
       isFocused: isFocused && isVisionEnabled,
-      onImagesPasted: handleImagesPasted,
+      onImagesPasted: attachImages,
     });
 
     const { isDragging } = useFileDrop({
       containerRef,
       onDocumentDrop: onFileUpload,
-      onImagesDrop: (files) => {
-        const result = addImages(files);
-        if (result.limitExceeded) {
-          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
-        }
-      },
+      onImagesDrop: attachImages,
       isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
       isImageUploadEnabled: isVisionEnabled,
-      acceptedDocumentExtensions: [
-        '.pdf',
-        '.csv',
-        '.xlsx',
-        '.xls',
-        '.docx',
-        '.pptx',
-        '.txt',
-      ],
+      acceptedDocumentExtensions: ACCEPTED_DOCUMENT_EXTENSIONS,
     });
 
     useImperativeHandle(ref, () => ({
@@ -275,12 +289,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       const imageFiles = Array.from(files).filter((file) =>
         file.type.startsWith('image/'),
       );
-      if (imageFiles.length > 0) {
-        const result = addImages(imageFiles);
-        if (result.limitExceeded) {
-          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
-        }
-      }
+      if (imageFiles.length > 0) attachImages(imageFiles);
     };
 
     const canSend =
@@ -296,32 +305,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const hasPendingImages = pendingImages.length > 0;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-      // Ensure emojis are preserved when pasting
-      // Get the pasted text from clipboard
       const pastedText = e.clipboardData.getData('text/plain');
-
-      // If there's no text or it's empty, let default behavior handle it
       if (!pastedText) return;
 
-      // Prevent default to handle paste manually
-      e.preventDefault();
-
-      const target = e.currentTarget;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-
-      // Insert the pasted text at cursor position, preserving emojis
-      const newValue =
-        message.substring(0, start) + pastedText + message.substring(end);
-
-      setMessage(newValue);
-
-      // Set cursor position after pasted content
-      // Need to wait for React to update
-      setTimeout(() => {
-        const newCursorPos = start + pastedText.length;
-        target.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
+      if (insertTextPreservingUndo(e.currentTarget, pastedText)) {
+        e.preventDefault();
+      }
     }
 
     return (
@@ -330,166 +319,109 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         className="w-full space-y-2"
         data-testid="chat-input"
       >
-        <div
-          className={cn(
-            'chat-input-shell',
-            showProcessingGlow && 'chat-input-shell--active',
-          )}
+        <ProcessingGlow
+          isActive={showProcessingGlow}
+          className="chat-input-shell"
           aria-busy={showProcessingGlow}
           data-processing={showProcessingGlow ? 'true' : undefined}
         >
-          {showProcessingGlow && (
-            <div className="chat-input-shell__glow" aria-hidden="true">
-              <div className="chat-input-shell__glow-spinner">
-                <div className="chat-input-shell__glow-arc" />
-                <div className="chat-input-shell__glow-bloom" />
-              </div>
-            </div>
-          )}
-          <Card
-            className={cn(
-              'chat-input-shell__card py-4',
-              isDragging &&
-                'border-2 border-dashed border-primary bg-primary/5',
-              showProcessingGlow && !isDragging && 'bg-card',
-            )}
-          >
-            <CardContent className="px-4">
-              <div className="chat-input-body flex flex-col gap-4">
-                {hasAttachmentChips && (
-                  <ChatInputExpandable show>
-                    <SourcesList
-                      sources={sources}
-                      knowledgeBases={knowledgeBases}
-                      mcpIntegrations={mcpIntegrations}
-                      onRemove={onRemoveSource}
-                      onRemoveKnowledgeBase={onRemoveKnowledgeBase}
-                      onRemoveIntegration={onRemoveIntegration}
-                      onDownload={onDownloadSource}
-                    />
-                  </ChatInputExpandable>
-                )}
-
-                {hasPendingImages && (
-                  <ChatInputExpandable show>
-                    <div className="flex flex-wrap gap-2 items-center pt-0">
-                      {pendingImages.map((image: PendingImage) => (
-                        <PendingImageThumbnail
-                          key={image.id}
-                          image={image}
-                          onRemove={removeImage}
-                        />
-                      ))}
-                    </div>
-                  </ChatInputExpandable>
-                )}
-
-                <TextareaAutosize
-                  ref={textareaRef}
-                  minRows={1}
-                  maxRows={10}
-                  value={message}
-                  autoFocus
-                  readOnly={isSubmitting}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onPaste={handlePaste}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder={t('chatInput.placeholder')}
-                  aria-label={t('chatInput.placeholder')}
-                  className={cn(
-                    'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
-                    isHeightAnimationEnabled &&
-                      'chat-input-shell__textarea--animate',
-                    showProcessingGlow && 'opacity-90',
-                    isSubmitting && 'cursor-not-allowed',
-                    isStreaming && 'cursor-text',
+          <OnboardingTourTarget name={TOUR_TARGET.chatComposer} settleMs={900}>
+            <Card
+              className={cn(
+                'chat-input-shell__card py-3 sm:py-4',
+                isDragging &&
+                  'border-2 border-dashed border-primary bg-primary/5',
+                showProcessingGlow && !isDragging && 'bg-card',
+              )}
+            >
+              <CardContent className="px-3 sm:px-4">
+                <div className="chat-input-body flex flex-col gap-4">
+                  {hasAttachmentChips && (
+                    <ChatInputExpandable show>
+                      <SourcesList
+                        sources={sources}
+                        knowledgeBases={knowledgeBases}
+                        mcpIntegrations={mcpIntegrations}
+                        onRemove={onRemoveSource}
+                        onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                        onRemoveIntegration={onRemoveIntegration}
+                      />
+                    </ChatInputExpandable>
                   )}
-                  data-testid="input"
-                />
 
-                <div className="flex items-center justify-between">
-                  {/* Left side */}
-                  <div className="flex-shrink-0 flex items-center space-x-2">
-                    <OnboardingTourTarget
-                      name={TOUR_TARGET.chatUpload}
-                      settleMs={900}
-                    >
-                      <PlusButton
-                        onFileUpload={onFileUpload}
-                        onImageSelect={handleImageSelect}
-                        isFileSourceDisabled={
-                          !isEmbeddingModelEnabled || isSubmitting
-                        }
-                        isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                        onKnowledgeBaseSelect={onAddKnowledgeBase}
-                        attachedKnowledgeBaseIds={knowledgeBases?.map(
-                          (kb) => kb.id,
-                        )}
-                        onIntegrationSelect={onAddIntegration}
-                        attachedIntegrationIds={mcpIntegrations?.map(
-                          (integration) => integration.id,
-                        )}
-                      />
-                    </OnboardingTourTarget>
-                    <OnboardingTourTarget
-                      name={TOUR_TARGET.anonymousMode}
-                      settleMs={900}
-                    >
-                      <AnonymousButton
-                        isAnonymous={isAnonymous}
-                        onAnonymousChange={onAnonymousChange}
-                        isDisabled={isAnonymousChangeDisabled}
-                        isEnforced={isAnonymousEnforced}
-                      />
-                    </OnboardingTourTarget>
-                    {selectedSkillId && selectedSkillName && onSkillRemove && (
-                      <SkillBadge
-                        skillName={selectedSkillName}
-                        onRemove={() => onSkillRemove()}
-                      />
+                  {hasPendingImages && (
+                    <ChatInputExpandable show>
+                      <div className="flex flex-wrap gap-2 items-center pt-0">
+                        {pendingImages.map((image: PendingImage) => (
+                          <PendingImageThumbnail
+                            key={image.id}
+                            image={image}
+                            onRemove={removeImage}
+                          />
+                        ))}
+                      </div>
+                    </ChatInputExpandable>
+                  )}
+
+                  <TextareaAutosize
+                    ref={textareaRef}
+                    minRows={1}
+                    maxRows={10}
+                    value={message}
+                    autoFocus
+                    readOnly={isSubmitting}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onPaste={handlePaste}
+                    onKeyDown={
+                      isSubmitting ? undefined : handlePromptHistoryKey
+                    }
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder={t('chatInput.placeholder')}
+                    aria-label={t('chatInput.placeholder')}
+                    className={cn(
+                      'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                      isHeightAnimationEnabled &&
+                        'chat-input-shell__textarea--animate',
+                      showProcessingGlow && 'opacity-90',
+                      isSubmitting && 'cursor-not-allowed',
+                      isStreaming && 'cursor-text',
                     )}
-                  </div>
+                    data-testid="input"
+                  />
 
-                  <div className="flex-shrink-0 flex space-x-2">
-                    <TooltipIf
-                      condition={isModelChangeDisabled ?? false}
-                      tooltip={t('chatInput.modelChangeDisabledTooltip')}
-                    >
-                      <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
-                        <ModelSelector
-                          isDisabled={isModelChangeDisabled ?? false}
-                          selectedModelId={modelId}
-                          onModelChange={onModelChange}
-                        />
-                      </OnboardingTourTarget>
-                    </TooltipIf>
-                    <MicrophoneButton
-                      onTranscriptionComplete={(text) => {
-                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                        // Focus textarea and place cursor at end after transcription
-                        setTimeout(() => {
-                          const textarea = textareaRef.current;
-                          if (textarea) {
-                            textarea.focus();
-                            const length = textarea.value.length;
-                            textarea.setSelectionRange(length, length);
-                          }
-                        }, 0);
-                      }}
-                    />
-                    <SendButton
-                      inFlight={inFlight}
-                      canSend={!!canSend}
-                      onSend={handleSend}
-                      onCancel={onCancel}
-                    />
-                  </div>
+                  <ChatInputActionBar
+                    isSubmitting={isSubmitting}
+                    isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                    isVisionEnabled={isVisionEnabled}
+                    knowledgeBases={knowledgeBases}
+                    mcpIntegrations={mcpIntegrations}
+                    onFileUpload={onFileUpload}
+                    onImageSelect={handleImageSelect}
+                    onAddKnowledgeBase={onAddKnowledgeBase}
+                    onAddIntegration={onAddIntegration}
+                    isAnonymous={isAnonymous}
+                    onAnonymousChange={onAnonymousChange}
+                    isAnonymousChangeDisabled={isAnonymousChangeDisabled}
+                    isAnonymousEnforced={isAnonymousEnforced}
+                    selectedSkillId={selectedSkillId}
+                    selectedSkillName={selectedSkillName}
+                    onSkillRemove={onSkillRemove}
+                    isModelChangeDisabled={isModelChangeDisabled}
+                    modelId={modelId}
+                    onModelChange={onModelChange}
+                    inFlight={inFlight}
+                    canSend={!!canSend}
+                    onSend={handleSend}
+                    onCancel={onCancel}
+                    setMessage={setMessage}
+                    textareaRef={textareaRef}
+                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </OnboardingTourTarget>
+        </ProcessingGlow>
       </div>
     );
   },

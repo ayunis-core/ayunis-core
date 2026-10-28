@@ -3,10 +3,10 @@ import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
-import { UserTotpsRepository } from '../../ports/user-totps.repository';
-import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
-import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
-import { TotpPort } from '../../ports/totp.port';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { TotpSecretEncryptionPort } from 'src/iam/mfa/application/ports/totp-secret-encryption.port';
+import { TotpPort } from 'src/iam/mfa/application/ports/totp.port';
 import type { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import {
   LOCK_DURATION_MS,
@@ -18,7 +18,7 @@ import {
   MfaLockedError,
   MfaNotEnabledError,
   UnexpectedMfaError,
-} from '../../mfa.errors';
+} from 'src/iam/mfa/application/mfa.errors';
 import { VerifyMfaCodeCommand } from './verify-mfa-code.command';
 
 const TOTP_CODE_PATTERN = /^\d{6}$/;
@@ -41,7 +41,7 @@ export class VerifyMfaCodeUseCase {
   ) {}
 
   async execute(command: VerifyMfaCodeCommand): Promise<void> {
-    this.logger.log('verifyMfaCode', { userId: command.userId });
+    this.logger.log({ userId: command.userId }, 'verifyMfaCode');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(command.userId);
@@ -63,7 +63,7 @@ export class VerifyMfaCodeUseCase {
       }
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error verifying MFA code', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error verifying MFA code');
       throw new UnexpectedMfaError(error);
     }
   }
@@ -123,7 +123,7 @@ export class VerifyMfaCodeUseCase {
     );
 
     if (failures >= MAX_FAILED_ATTEMPTS) {
-      this.logger.warn('MFA locked after repeated failures', { userId });
+      this.logger.warn({ userId }, 'MFA locked after repeated failures');
       throw new MfaLockedError(lockedUntil);
     }
     throw new InvalidMfaCodeError();

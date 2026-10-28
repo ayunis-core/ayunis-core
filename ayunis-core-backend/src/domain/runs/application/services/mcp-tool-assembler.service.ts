@@ -48,7 +48,8 @@ export class McpToolAssemblerService {
     );
     for (const duplicate of duplicates) {
       this.logger.warn(
-        `Duplicate MCP tool name '${duplicate.name}', skipping later occurrence`,
+        { toolName: duplicate.name },
+        'Duplicate MCP tool name, skipping later occurrence',
       );
     }
     return unique;
@@ -139,14 +140,15 @@ export class McpToolAssemblerService {
         const failedId = integrationIdList[index];
         const meta = integrationMetaMap.get(failedId);
         this.logger.warn(
-          `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
           {
             integrationId: failedId,
+            integrationName: meta?.name,
             error:
               result.reason instanceof Error
                 ? result.reason.message
                 : 'Unknown error',
           },
+          'MCP integration unavailable, skipping',
         );
         // The skip is the only place run-time discovery outages surface, and
         // their raw transport duplicates are suppressed AppSignal-side
@@ -177,10 +179,15 @@ export class McpToolAssemblerService {
         }),
       ),
       ...mcpCapabilities.flatMap((capability) =>
-        capability.resources.map(
-          (resource) =>
-            new McpIntegrationResource(resource, capability.returnsPii),
-        ),
+        capability.resources.map((resource) => {
+          const meta = integrationMetaMap.get(resource.integrationId);
+          return new McpIntegrationResource(
+            resource,
+            capability.returnsPii,
+            meta?.name ?? 'Unknown',
+            meta?.logoUrl ?? null,
+          );
+        }),
       ),
     ];
   }

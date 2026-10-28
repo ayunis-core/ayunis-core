@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import PQueue from 'p-queue';
-import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 
 /**
  * Structural slice of p-queue's API that we depend on. Declaring it locally
@@ -33,6 +33,7 @@ const INGESTION_PRIORITY = 0;
 @Injectable()
 export class EmbeddingsThrottleService {
   private readonly logger = new Logger(EmbeddingsThrottleService.name);
+
   private sharedQueue: PriorityQueue | null = null;
 
   constructor(private readonly configService: ConfigService) {}
@@ -57,7 +58,7 @@ export class EmbeddingsThrottleService {
     const concurrency =
       this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
       DEFAULT_MAX_CONCURRENCY;
-    this.logger.log('Embeddings throttle initialized', { concurrency });
+    this.logger.log({ concurrency }, 'Embeddings throttle initialized');
     return new PQueue({ concurrency });
   }
 }

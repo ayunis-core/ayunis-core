@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { FindAllOrgIdsUseCase } from 'src/iam/orgs/application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
-import type { StorageObjectSummary } from '../../ports/object-storage.port';
-import { PurgeOrgStorageUseCase } from '../purge-org-storage/purge-org-storage.use-case';
-import { PurgeOrgStorageCommand } from '../purge-org-storage/purge-org-storage.command';
-import { extractOrgIdFromKey } from '../../../domain/org-storage-layout';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import type { StorageObjectSummary } from 'src/domain/storage/application/ports/object-storage.port';
+import { PurgeOrgStorageUseCase } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.use-case';
+import { PurgeOrgStorageCommand } from 'src/domain/storage/application/use-cases/purge-org-storage/purge-org-storage.command';
+import { extractOrgIdFromKey } from 'src/domain/storage/domain/org-storage-layout';
 
 /**
  * How old the newest blob under an org's prefixes must be before the sweeper
@@ -76,7 +76,7 @@ export class SweepOrphanStorageUseCase {
       await this.purgeOrphan(orgId as UUID, result);
     }
 
-    this.logger.log('Finished orphan storage sweep', { ...result });
+    this.logger.log({ ...result }, 'Finished orphan storage sweep');
     return result;
   }
 
@@ -84,7 +84,7 @@ export class SweepOrphanStorageUseCase {
     orgId: UUID,
     result: SweepOrphanStorageResult,
   ): Promise<void> {
-    this.logger.warn('Purging storage of nonexistent org', { orgId });
+    this.logger.warn({ orgId }, 'Purging storage of nonexistent org');
     const purge = await this.purgeOrgStorageUseCase.execute(
       new PurgeOrgStorageCommand(orgId),
     );

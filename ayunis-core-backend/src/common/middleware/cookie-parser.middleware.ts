@@ -6,9 +6,10 @@ import cookieParser from 'cookie-parser';
 @Injectable()
 export class CookieParserMiddleware implements NestMiddleware {
   private readonly logger = new Logger(CookieParserMiddleware.name);
+
   private cookieParserMiddleware: RequestHandler;
 
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const cookieSecret = this.configService.get<string>('auth.cookie.secret');
 
     if (!cookieSecret) {

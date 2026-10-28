@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 
 /**
  * Skill-specific implementation of share authorization.
@@ -21,7 +21,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * User must own the skill to view its shares.
    */
   async canViewShares(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canViewShares', { skillId, userId });
+    this.logger.log({ skillId, userId }, 'canViewShares');
 
     const skill = await this.skillRepository.findOne(skillId, userId);
     return skill !== null;
@@ -32,7 +32,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * User must own the skill to create shares for it.
    */
   async canCreateShare(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canCreateShare', { skillId, userId });
+    this.logger.log({ skillId, userId }, 'canCreateShare');
 
     const skill = await this.skillRepository.findOne(skillId, userId);
     return skill !== null;
@@ -43,7 +43,7 @@ export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrate
    * For skill shares, this is handled at the share level by checking ownerId.
    */
   canDeleteShare(shareId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('canDeleteShare', { shareId, userId });
+    this.logger.log({ shareId, userId }, 'canDeleteShare');
 
     return Promise.resolve(true);
   }

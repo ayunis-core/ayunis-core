@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InternetSearchHandler } from '../../application/ports/internet-search.handler';
-import { InternetSearchResult } from '../../domain/internet-search-result.entity';
+import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { ConfigService } from '@nestjs/config';
-import { InternetSearchResultType } from '../../domain/value-objects/internet-search-result-type.enum';
+import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 type BraveSearchResult = {
   news?: {
@@ -36,28 +36,23 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
   constructor(private readonly configService: ConfigService) {}
 
   async search(query: string): Promise<InternetSearchResult[]> {
-    this.logger.debug('Using Brave internet search handler', {
-      query,
-    });
+    this.logger.debug({ input: query }, 'Using Brave internet search handler');
     try {
       const response = await fetch(...this.buildRequest(query));
       const data = (await response.json()) as
         BraveSearchResult | BraveSearchErrorResult;
       if ('error' in data) {
-        this.logger.error('Brave search error', {
-          error: data.error,
-        });
+        this.logger.error({ response: data.error }, 'Brave search error');
         throw new Error(data.error.detail);
       }
       const results = this.mapResults(data);
-      this.logger.debug('Processed results', {
-        results,
-      });
+      this.logger.debug(
+        { resultCount: results.length },
+        'Processed search results',
+      );
       return results;
     } catch (error) {
-      this.logger.error('Error searching web', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error searching web');
       throw error;
     }
   }

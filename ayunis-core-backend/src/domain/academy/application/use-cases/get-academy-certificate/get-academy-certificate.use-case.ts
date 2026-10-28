@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { CertificateRendererPort } from '../../ports/certificate-renderer.port';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { CertificateRendererPort } from 'src/domain/academy/application/ports/certificate-renderer.port';
 import {
   AcademyCompletionNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 import { GetAcademyCertificateQuery } from './get-academy-certificate.query';
 
 export interface AcademyCertificateFile {
@@ -17,12 +17,12 @@ export interface AcademyCertificateFile {
 }
 
 export const CERTIFICATE_FILE_NAME =
-  'Ayunis-Core-KI-Fuehrerschein-Zertifikat.pdf';
+  'Teilnahmebestaetigung_Ayunis_Core_KI-Schulung.pdf';
 
 const CERTIFICATE_DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
   timeZone: 'Europe/Berlin',
-  day: 'numeric',
-  month: 'long',
+  day: '2-digit',
+  month: '2-digit',
   year: 'numeric',
 });
 
@@ -40,7 +40,7 @@ export class GetAcademyCertificateUseCase {
   async execute(
     query: GetAcademyCertificateQuery,
   ): Promise<AcademyCertificateFile> {
-    this.logger.log('Getting academy certificate', { userId: query.userId });
+    this.logger.log({ userId: query.userId }, 'Getting academy certificate');
 
     const completion = await this.completionRepository.findByUser(query.userId);
     if (!completion) {

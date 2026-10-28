@@ -8,19 +8,19 @@ import {
   OrgBudgetAlertNotification,
   TeamBudgetAlertNotification,
   UserBudgetAlertNotification,
-} from '../../../domain/budget-alert-notification.entity';
-import { BudgetAlertScope } from '../../../domain/value-objects/budget-alert-scope.enum';
+} from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import {
   collectCrossings,
   notificationKey,
   type BudgetCrossing,
-} from '../../utils/budget-alert-crossing';
-import { BudgetAlertNotificationRepository } from '../../ports/budget-alert-notification.repository';
+} from 'src/iam/budget-alerts/application/utils/budget-alert-crossing';
+import { BudgetAlertNotificationRepository } from 'src/iam/budget-alerts/application/ports/budget-alert-notification.repository';
 import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
-import { SendBudgetWarningEmailUseCase } from '../send-budget-warning-email/send-budget-warning-email.use-case';
-import { SendBudgetWarningEmailCommand } from '../send-budget-warning-email/send-budget-warning-email.command';
+import { SendBudgetWarningEmailUseCase } from 'src/iam/budget-alerts/application/use-cases/send-budget-warning-email/send-budget-warning-email.use-case';
+import { SendBudgetWarningEmailCommand } from 'src/iam/budget-alerts/application/use-cases/send-budget-warning-email/send-budget-warning-email.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
+import { UnexpectedBudgetAlertError } from 'src/iam/budget-alerts/application/budget-alerts.errors';
 import { ProcessBudgetAlertCrossingsQuery } from './process-budget-alert-crossings.query';
 
 const SCOPE_TO_WARNING: Record<BudgetAlertScope, BudgetWarningScope> = {
@@ -41,7 +41,7 @@ export class ProcessBudgetAlertCrossingsUseCase {
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
   async execute(query: ProcessBudgetAlertCrossingsQuery): Promise<void> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.log({ orgId: query.orgId }, 'execute');
 
     const sentKeys = await this.loadSentKeys(query.orgId, query.periodStart);
     const crossings = collectCrossings(query.targets, sentKeys);
@@ -53,10 +53,13 @@ export class ProcessBudgetAlertCrossingsUseCase {
       new GetOrgAdminsQuery(query.orgId),
     );
     if (admins.length === 0) {
-      this.logger.warn('Budget crossing with no admins to notify', {
-        orgId: query.orgId,
-        crossings: crossings.length,
-      });
+      this.logger.warn(
+        {
+          orgId: query.orgId,
+          crossings: crossings.length,
+        },
+        'Budget crossing with no admins to notify',
+      );
       return;
     }
 
@@ -99,12 +102,15 @@ export class ProcessBudgetAlertCrossingsUseCase {
         );
         delivered += 1;
       } catch (error) {
-        this.logger.error('Failed to send budget warning to admin', {
-          scope: crossing.target.scope,
-          targetId: crossing.target.targetId,
-          recipientId: admin.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            scope: crossing.target.scope,
+            targetId: crossing.target.targetId,
+            recipientId: admin.id,
+            err: error as Error,
+          },
+          'Failed to send budget warning to admin',
+        );
       }
     }
     return delivered;
@@ -124,12 +130,15 @@ export class ProcessBudgetAlertCrossingsUseCase {
     } catch (error) {
       // A failed insert must not block the org's remaining crossings; the
       // already-delivered email may repeat next run (at-least-once delivery).
-      this.logger.error('Failed to record budget alert crossing', {
-        orgId,
-        scope: crossing.target.scope,
-        targetId: crossing.target.targetId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          orgId,
+          scope: crossing.target.scope,
+          targetId: crossing.target.targetId,
+          err: error as Error,
+        },
+        'Failed to record budget alert crossing',
+      );
     }
   }
 

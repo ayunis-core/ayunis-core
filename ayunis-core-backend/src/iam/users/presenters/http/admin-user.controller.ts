@@ -3,10 +3,10 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -23,11 +23,11 @@ import { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { UserRole } from '../../domain/value-objects/role.object';
-import { AdminUpdateUserUseCase } from '../../application/use-cases/admin-update-user/admin-update-user.use-case';
-import { AdminUpdateUserCommand } from '../../application/use-cases/admin-update-user/admin-update-user.command';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { AdminUpdateUserUseCase } from 'src/iam/users/application/use-cases/admin-update-user/admin-update-user.use-case';
+import { AdminUpdateUserCommand } from 'src/iam/users/application/use-cases/admin-update-user/admin-update-user.command';
 import { AdminUpdateUserDto } from './dtos/admin-update-user.dto';
 import { UserResponseDto } from './dtos/user-response.dto';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
@@ -83,22 +83,35 @@ export class AdminUserController {
     @Body() dto: AdminUpdateUserDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
-    this.logger.log('adminUpdateUser', {
-      userId,
-      hasName: dto.name !== undefined,
-      hasEmail: dto.email !== undefined,
-    });
+    this.logAdminUpdate(userId, dto);
 
+    return this.updateUser(userId, dto, currentUserId);
+  }
+
+  private async updateUser(
+    userId: UUID,
+    dto: AdminUpdateUserDto,
+    currentUserId: UUID,
+  ): Promise<UserResponseDto> {
     if (userId === currentUserId) {
       throw new UnauthorizedException(
         'You cannot edit your own profile through this endpoint',
       );
     }
-
-    const updatedUser = await this.adminUpdateUserUseCase.execute(
+    const user = await this.adminUpdateUserUseCase.execute(
       new AdminUpdateUserCommand(userId, dto.name, dto.email),
     );
+    return this.userResponseDtoMapper.toDto(user);
+  }
 
-    return this.userResponseDtoMapper.toDto(updatedUser);
+  private logAdminUpdate(userId: UUID, dto: AdminUpdateUserDto): void {
+    this.logger.log(
+      {
+        userId,
+        hasName: dto.name !== undefined,
+        hasEmail: dto.email !== undefined,
+      },
+      'adminUpdateUser',
+    );
   }
 }

@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
-import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
-import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
+import { EvaluateBudgetAlertsForOrgUseCase } from 'src/iam/budget-alerts/application/use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
+import { BudgetAlertEvaluator } from 'src/iam/budget-alerts/application/services/budget-alert-evaluator.service';
 import { BudgetAlertsListener } from './budget-alerts.listener';
 
 const COOLDOWN_MS = 10 * 60 * 1000;
@@ -41,8 +41,6 @@ describe('BudgetAlertsListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BudgetAlertsListener,
-        // Real evaluator on purpose: the listener's debounce guarantees only
-        // hold together with the evaluator's per-org serialization.
         BudgetAlertEvaluator,
         { provide: OrgContextRunner, useValue: orgContextRunner },
         { provide: EvaluateBudgetAlertsForOrgUseCase, useValue: evaluateOrg },

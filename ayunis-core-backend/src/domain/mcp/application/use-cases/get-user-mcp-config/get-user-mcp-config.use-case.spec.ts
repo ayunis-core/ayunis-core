@@ -1,7 +1,7 @@
 import { GetUserMcpConfigUseCase } from './get-user-mcp-config.use-case';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
-import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -13,7 +13,7 @@ import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationNotConfigurableError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 import type { UUID } from 'crypto';
 
@@ -75,6 +75,7 @@ describe('GetUserMcpConfigUseCase', () => {
       findByIntegrationAndUser: jest.fn(),
       findByIntegrationIdsAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
+      removeKeysByIntegrationId: jest.fn(),
     };
 
     contextService = {

@@ -11,7 +11,7 @@ import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.comma
 import {
   BudgetWarningEmailRenderingFailedError,
   BudgetWarningEmailSendingFailedError,
-} from '../../budget-alerts.errors';
+} from 'src/iam/budget-alerts/application/budget-alerts.errors';
 
 // Where an admin can act on the warning: org budgets are only visible on the
 // usage page (raising them goes through the provider), team limits live on the
@@ -37,10 +37,10 @@ export class SendBudgetWarningEmailUseCase {
 
   @HandleUnexpectedErrors(BudgetWarningEmailSendingFailedError)
   async execute(command: SendBudgetWarningEmailCommand): Promise<void> {
-    this.logger.log('execute', { scope: command.scope });
+    this.logger.log({ scope: command.scope }, 'execute');
 
     const template = this.buildTemplate(command);
-    const content = this.renderTemplateUseCase.execute(
+    const content = await this.renderTemplateUseCase.execute(
       new RenderTemplateCommand(template),
     );
     if (!content.subject) {

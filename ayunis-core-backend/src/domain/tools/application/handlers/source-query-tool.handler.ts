@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
 import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
@@ -9,8 +9,9 @@ import { QueryTextSourceCommand } from 'src/domain/sources/application/use-cases
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { handleEmbeddingError } from '../utils/embedding-error.utils';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 @Injectable()
 export class SourceQueryToolHandler extends ToolExecutionHandler {
@@ -30,7 +31,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { orgId } = context;
-    this.logger.log('execute', tool, input);
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const source = await this.getSourceByIdUseCase.execute(
@@ -49,6 +50,10 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
 
       const result = matchedChunks.map((chunk) => {
         return {
+          chunkId: chunk.id,
+          sourceId: source.id,
+          sourceName: source.name,
+          citable: source.createdBy !== SourceCreator.SYSTEM,
           content: chunk.content,
           startLine: (chunk.meta.startLine as number | undefined) ?? null,
           endLine: (chunk.meta.endLine as number | undefined) ?? null,
@@ -62,7 +67,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       handleEmbeddingError(error, tool.name);
     }
   }

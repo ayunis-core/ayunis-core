@@ -1,670 +1,2392 @@
-import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { RunAnonymizationUnavailableError } from '../../runs.errors';
-import type { ContextService } from 'src/common/context/services/context.service';
-import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
-import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
-
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
-import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ExecuteRunUseCase } from './execute-run.use-case';
-import { ExecuteRunCommand } from './execute-run.command';
-import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
-import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
-import type { CreditLimitGuardService } from '../../services/credit-limit-guard.service';
-import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
-import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { RunErrorCode } from '../../runs.errors';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
-import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
-import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
-import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
-import type { ConfigService } from '@nestjs/config';
-import type { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
-import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
+import {
+  MockProvider,
+  ModelProviderError,
+  textTurn,
+  toolCallTurn,
+} from '@ayunis/agent-runtime';
+import type {
+  ModelProvider,
+  ProviderRequest,
+  TokenEstimator,
+  Tool as RuntimeTool,
+  ToolExecutionContext,
+} from '@ayunis/agent-runtime';
+import type { ProviderChunk } from '@ayunis/inference';
+import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
+import type { ContextService } from 'src/common/context/services/context.service';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
+import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
+import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
+import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
+import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import {
+  ThreadPiiMaskAnonymizationError,
+  ThreadPiiMaskThreadMissingError,
+} from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import {
+  AnonymizationFailedError,
+  AnonymizationInputTooLongError,
+} from 'src/common/anonymization/application/anonymization.errors';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
+import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
+import type { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
+import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import {
+  RunAnonymizationUnavailableError,
+  RunMaxIterationsReachedError,
+  RunNoModelFoundError,
+} from 'src/domain/runs/application/runs.errors';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
+import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
+import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
+import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
+import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
+import {
+  RunUserInput,
+  RunToolResultInput,
+} from 'src/domain/runs/domain/run-input.entity';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
+import { ExecuteRunUseCase } from './execute-run.use-case';
+import { RunAssemblyService } from 'src/domain/runs/application/services/run-assembly.service';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
+
+const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
+const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
+const integrationId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+const CONFIGURED_CONTEXT_WINDOW_SIZE = 750_000;
+interface Harness {
+  useCase: ExecuteRunUseCase;
+  findThread: jest.Mock;
+  save: jest.Mock;
+  collectUsage: jest.Mock;
+  ensureModelCallAllowed: jest.Mock;
+  cleanup: jest.Mock;
+  createToolResult: jest.Mock;
+  createSeedToolResult: jest.Mock;
+  emitAsync: jest.Mock;
+  anonymize: jest.Mock;
+  activateOnThread: jest.Mock;
+  workspaceContextFetch: jest.Mock;
+  createUser: jest.Mock;
+  provider: MockProvider;
+  providerSignal: () => AbortSignal | undefined;
+  countTokens: jest.Mock;
+  countTools: jest.Mock;
+  trackRun: jest.Mock;
+  trackedError: () => unknown;
+  resolveModelAccess: jest.Mock;
+  materializeHistory: jest.Mock;
+}
+
+interface HarnessOptions {
+  canVision?: boolean;
+  anonymous?: boolean;
+  turns?: readonly (readonly ProviderChunk[])[];
+  runtimeTools?: RuntimeTool[];
+  backendTools?: BackendTool[];
+  rebuiltRuntimeTools?: RuntimeTool[];
+  rebuiltBackendTools?: BackendTool[];
+  lastMessage?: Message;
+  toolResultCollector?: ToolResultCollectorService;
+  backendToolAdapter?: BackendToolAdapter;
+  providerRejects?: boolean;
+  providerStream?: (request: ProviderRequest) => AsyncIterable<ProviderChunk>;
+  tokensPerMessage?: number;
+  workspaceId?: UUID;
+  workspaceSkills?: BackendSkill[];
+  effectiveAnonymousOnly?: boolean;
+  contextWindowSize?: number;
+  modelName?: string;
+  modelConsumesCredits?: boolean;
+}
+
+function buildHarness(overrides: HarnessOptions = {}): Harness {
+  const model = {
+    name: overrides.modelName ?? 'claude',
+    provider: 'anthropic',
+    contextWindowSize: overrides.contextWindowSize,
+    canVision: overrides.canVision ?? false,
+    canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
+    consumesCredits: overrides.modelConsumesCredits ?? false,
+  } as unknown as LanguageModel;
+  const permitted = {
+    model,
+    anonymousOnly: false,
+  } as unknown as PermittedLanguageModel;
+  const thread = {
+    id: threadId,
+    model: permitted,
+    messages: [],
+    isAnonymous: overrides.anonymous ?? false,
+    workspaceId: overrides.workspaceId,
+    getLastMessage: () => overrides.lastMessage,
+  } as unknown as Thread;
+
+  const contextService = {
+    get: jest.fn(getFromUserContext({ userId: userId, orgId: orgId })),
+  } as unknown as ContextService;
+  const eventEmitter = {
+    emitAsync: jest.fn().mockResolvedValue([]),
+  } as unknown as EventEmitter2;
+  const emitAsync = eventEmitter.emitAsync as jest.Mock;
+  let telemetryError: unknown;
+  const trackRun = jest.fn(
+    async (_executionPath: string, createStream: () => Promise<unknown>) => {
+      try {
+        return await createStream();
+      } catch (error) {
+        telemetryError = error;
+        throw error;
+      }
+    },
+  );
+  const runTelemetryService = {
+    recordAttempt: jest.fn(),
+    track: trackRun,
+  } as unknown as RunTelemetryService;
+
+  const findThread = jest.fn().mockResolvedValue({ thread });
+  const findThreadUseCase = {
+    execute: findThread,
+  } as unknown as FindThreadUseCase;
+  const effectivePermit = {
+    ...permitted,
+    anonymousOnly: overrides.effectiveAnonymousOnly ?? permitted.anonymousOnly,
+  } as PermittedLanguageModel;
+  const resolveModelAccess = jest.fn().mockResolvedValue(effectivePermit);
+  const effectiveRunModelResolver = {
+    resolve: resolveModelAccess,
+  } as unknown as EffectiveRunModelResolverService;
+  const inferenceAdmissionGuard = {
+    preflight: jest.fn().mockResolvedValue(undefined),
+    ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<InferenceAdmissionGuard>;
+  const collectUsageAsyncService = {
+    collect: jest.fn(),
+    collectCritical: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<CollectUsageAsyncService>;
+  const initialRunContext = {
+    tools: overrides.backendTools ?? [],
+    instructions: 'system prompt',
+  };
+  const buildRunContext = jest.fn().mockResolvedValue(initialRunContext);
+  if (overrides.rebuiltBackendTools) {
+    buildRunContext
+      .mockResolvedValueOnce(initialRunContext)
+      .mockResolvedValueOnce({
+        tools: overrides.rebuiltBackendTools,
+        instructions: 'activated skill prompt',
+      });
+  }
+  const toolAssemblyService = {
+    buildRunContext,
+    findActiveSkills: jest.fn().mockResolvedValue([]),
+  } as unknown as ToolAssemblyService;
+  const toRuntimeTools = jest
+    .fn()
+    .mockReturnValue(overrides.runtimeTools ?? []);
+  if (overrides.rebuiltRuntimeTools) {
+    toRuntimeTools
+      .mockReturnValueOnce(overrides.runtimeTools ?? [])
+      .mockReturnValueOnce(overrides.rebuiltRuntimeTools);
+  }
+  const backendToolAdapter =
+    overrides.backendToolAdapter ??
+    ({ toRuntimeTools } as unknown as BackendToolAdapter);
+  const activateOnThread = jest.fn().mockResolvedValue({
+    instructions: 'Be a helpful clerk',
+    skillName: 'Clerk',
+  });
+  const skillActivationService = {
+    activateOnThread,
+  } as unknown as SkillActivationService;
+  const workspaceContext = overrides.workspaceSkills
+    ? ({
+        skills: overrides.workspaceSkills.map((skill) => ({
+          skill,
+          isActive: true,
+          isPinned: false,
+        })),
+      } as unknown as WorkspaceRunContext)
+    : undefined;
+  const workspaceContextFetch = jest.fn().mockResolvedValue(workspaceContext);
+  const buildWorkspaceRunContextUseCase = {
+    execute: workspaceContextFetch,
+  } as unknown as BuildWorkspaceRunContextUseCase;
+  const skillActivationHookFactory = new SkillActivationHookFactory(
+    findThreadUseCase,
+    toolAssemblyService,
+    backendToolAdapter,
+    buildWorkspaceRunContextUseCase,
+  );
+  const anonymize = jest.fn().mockResolvedValue({
+    anonymizedText: 'Hi {{pii:PERSON_1}}',
+    masks: [{ token: '{{pii:PERSON_1}}' }],
+  });
+  const anonymizeTextForThreadUseCase = {
+    execute: anonymize,
+  } as unknown as AnonymizeTextForThreadUseCase;
+  const createToolResult = jest.fn().mockImplementation((command) =>
+    Promise.resolve(
+      new ToolResultMessage({
+        id: command.id,
+        threadId: command.threadId,
+        content: command.content,
+      }),
+    ),
+  );
+  const createToolResultMessageUseCase = {
+    execute: createToolResult,
+  } as unknown as CreateToolResultMessageUseCase;
+  const userMessage = new UserMessage({
+    id: 'user-msg' as UUID,
+    threadId,
+    content: [],
+  });
+  const createUser = jest.fn().mockResolvedValue(userMessage);
+  const createUserMessageUseCase = {
+    execute: createUser,
+  } as unknown as CreateUserMessageUseCase;
+  const addMessageToThreadUseCase = new AddMessageToThreadUseCase(
+    contextService,
+    eventEmitter,
+  );
+  const materializeHistory = jest
+    .fn()
+    .mockResolvedValue([
+      { role: 'user', content: [{ type: 'text', text: 'hi' }] },
+    ]);
+  const runtimeHistoryMaterializer = {
+    materialize: materializeHistory,
+  } as unknown as RuntimeHistoryMaterializer;
+  const tokensPerText = overrides.tokensPerMessage ?? 1;
+  const countTokens = jest.fn((text: string) => (text ? tokensPerText : 0));
+  const countTools = jest.fn((tools: readonly unknown[]) =>
+    tools.length ? tokensPerText : 0,
+  );
+  const contextBudgetHookFactory = new ContextBudgetHookFactory();
+  const provider = Object.assign(
+    new MockProvider(overrides.turns ?? [textTurn('Hello')]),
+    {
+      tokenEstimator: {
+        exact: false,
+        tokensPerMessage: 0,
+        tokensPerImage: 1_600,
+        countText: countTokens,
+        countTools,
+      } satisfies TokenEstimator,
+    },
+  );
+  if (overrides.providerStream) {
+    provider.stream = overrides.providerStream;
+  }
+  let providerSignal: AbortSignal | undefined;
+  const streamProvider = provider.stream.bind(provider);
+  provider.stream = (providerRequest) => {
+    providerSignal = providerRequest.signal;
+    return streamProvider(providerRequest);
+  };
+  const resolveModelProviderUseCase = {
+    execute: overrides.providerRejects
+      ? jest.fn().mockRejectedValue(new Error('provider down'))
+      : jest.fn().mockResolvedValue(provider),
+  } as unknown as ResolveModelProviderUseCase;
+  const modelCallObservabilityHookFactory =
+    new ModelCallObservabilityHookFactory(eventEmitter);
+  const cleanup = jest.fn().mockResolvedValue(undefined);
+  const messageCleanupService = {
+    cleanupTrailingNonAssistantMessages: cleanup,
+  } as unknown as MessageCleanupService;
+  const save = jest
+    .fn()
+    .mockImplementation((command) => Promise.resolve(command.message));
+  const flushToolResult = jest.fn().mockImplementation((command) =>
+    Promise.resolve(
+      new ToolResultMessage({
+        id: command.id,
+        threadId: command.threadId,
+        content: command.content,
+      }),
+    ),
+  );
+  const persistenceHookFactory = new PersistenceHookFactory(
+    { execute: save } as never,
+    { execute: flushToolResult } as never,
+    addMessageToThreadUseCase,
+  );
+  const collectUsage = collectUsageAsyncService.collectCritical as jest.Mock;
+  const usageHookFactory = new UsageHookFactory(collectUsageAsyncService);
+  const creditGateHookFactory = new CreditGateHookFactory(
+    inferenceAdmissionGuard,
+  );
+  const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
+  const toolResultCollector = overrides.toolResultCollector ?? {
+    collectToolResults: jest
+      .fn()
+      .mockResolvedValue({ contents: [], piiMasks: null }),
+  };
+  const unmaskedTermsService = {
+    revealUnmaskedTerms: jest
+      .fn()
+      .mockImplementation((messages: readonly Message[]) =>
+        Promise.resolve([...messages]),
+      ),
+  } as unknown as UnmaskedTermsService;
+
+  const runAssemblyService = new RunAssemblyService(
+    unmaskedTermsService,
+    resolveModelProviderUseCase,
+    runtimeHistoryMaterializer,
+    creditGateHookFactory,
+    usageHookFactory,
+    modelCallObservabilityHookFactory,
+    persistenceHookFactory,
+    toolUsageHookFactory,
+    skillActivationHookFactory,
+    contextBudgetHookFactory,
+  );
+  const useCase = new ExecuteRunUseCase(
+    contextService,
+    findThreadUseCase,
+    effectiveRunModelResolver,
+    inferenceAdmissionGuard,
+    toolAssemblyService,
+    backendToolAdapter,
+    skillActivationService,
+    anonymizeTextForThreadUseCase,
+    createUserMessageUseCase,
+    createToolResultMessageUseCase,
+    addMessageToThreadUseCase,
+    messageCleanupService,
+    runTelemetryService,
+    toolResultCollector as ToolResultCollectorService,
+    runAssemblyService,
+    buildWorkspaceRunContextUseCase,
+    new ThreadRunLock(),
+  );
+
+  return {
+    useCase,
+    findThread,
+    save,
+    collectUsage,
+    ensureModelCallAllowed:
+      inferenceAdmissionGuard.ensureModelCallAllowed as jest.Mock,
+    cleanup,
+    createToolResult: flushToolResult,
+    createSeedToolResult: createToolResult,
+    emitAsync,
+    anonymize,
+    activateOnThread,
+    workspaceContextFetch,
+    createUser,
+    provider,
+    providerSignal: () => providerSignal,
+    countTokens,
+    countTools,
+    trackRun,
+    trackedError: () => telemetryError,
+    resolveModelAccess,
+    materializeHistory,
+  };
+}
+
+function realBackendToolAdapter(executeTool: jest.Mock): BackendToolAdapter {
+  return new BackendToolAdapter(
+    { execute: executeTool } as never,
+    { execute: jest.fn() } as never,
+  );
+}
+
+async function drain<T>(gen: AsyncIterable<T>): Promise<T[]> {
+  const items: T[] = [];
+  for await (const item of gen) {
+    items.push(item);
+  }
+  return items;
+}
+
+function userCommand(input = new RunUserInput('Hi there')): ExecuteRunCommand {
+  return new ExecuteRunCommand({ threadId, input });
+}
 
 describe('ExecuteRunUseCase', () => {
-  let useCase: ExecuteRunUseCase;
-  let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
-  let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
-  let contextService: jest.Mocked<ContextService>;
-  let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
-  let messageCleanupService: jest.Mocked<MessageCleanupService>;
-  let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
-  let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
+  const imageInput = () =>
+    new RunUserInput('Describe the town hall', [
+      {
+        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00]),
+        contentType: 'image/jpeg',
+      },
+    ]);
 
-  const userId = randomUUID();
-  const orgId = randomUUID();
-  const threadId = randomUUID();
+  it('releases original image buffers before yielding the saved message or starting inference', async () => {
+    const input = imageInput();
+    const { useCase, provider, createUser } = buildHarness({ canVision: true });
+    let save!: (message: UserMessage) => void;
+    let started!: () => void;
+    const storing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const saved = new Promise<UserMessage>((resolve) => {
+      save = resolve;
+    });
+    createUser.mockImplementation(() => {
+      started();
+      return saved;
+    });
+    const stream = await useCase.execute(userCommand(input));
+    const first = stream.next();
+    const message = new UserMessage({ threadId, content: [] });
+    try {
+      await storing;
+      expect(input.pendingImages).toHaveLength(1);
+      save(message);
+      expect((await first).value).toBe(message);
+      expect(input.pendingImages).toEqual([]);
+      expect(provider.requests).toHaveLength(0);
+    } finally {
+      save(message);
+      await first;
+      await stream.return('aborted');
+    }
+  });
 
-  function createMockThread(overrides: Partial<Thread> = {}): Thread {
-    const model = {
-      model: {
-        name: 'gpt-4',
-        canUseTools: true,
-        canVision: false,
-      } as LanguageModel,
-      anonymousOnly: false,
-    } as PermittedLanguageModel;
+  it('releases original image buffers when message persistence fails', async () => {
+    const input = imageInput();
+    const { useCase, createUser } = buildHarness({ canVision: true });
+    createUser.mockRejectedValue(new Error('Image storage failed'));
+    await expect(
+      drain(await useCase.execute(userCommand(input))),
+    ).rejects.toBeDefined();
+    expect(input.pendingImages).toEqual([]);
+  });
 
-    return {
-      id: threadId,
-      userId,
-      model,
-      isAnonymous: false,
-      messages: [],
-      getLastMessage: jest.fn().mockReturnValue(null),
-      ...overrides,
-    } as unknown as Thread;
-  }
+  it('releases original image buffers when preparation fails', async () => {
+    const input = imageInput();
+    const { useCase, findThread } = buildHarness({ canVision: true });
+    findThread.mockRejectedValue(new Error('Thread lookup failed'));
+    await expect(useCase.execute(userCommand(input))).rejects.toBeDefined();
+    expect(input.pendingImages).toEqual([]);
+  });
 
-  beforeEach(() => {
-    anonymizeTextForThreadUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextForThreadUseCase>;
-
-    findThreadUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindThreadUseCase>;
-
-    checkQuotaUseCase = {
-      execute: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<CheckQuotaUseCase>;
-
-    creditBudgetGuardService = {
-      ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<CreditBudgetGuardService>;
-
-    contextService = {
-      get: jest.fn(),
-    } as unknown as jest.Mocked<ContextService>;
-
-    toolAssemblyService = {
-      findActiveSkills: jest.fn().mockResolvedValue([]),
-      buildRunContext: jest.fn().mockResolvedValue({
-        tools: [],
-        instructions: 'Du bist ein hilfreicher Assistent der Stadtverwaltung',
-      }),
-    } as unknown as jest.Mocked<ToolAssemblyService>;
-
-    messageCleanupService = {
-      cleanupTrailingNonAssistantMessages: jest
-        .fn()
-        .mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<MessageCleanupService>;
-
-    contextService.get.mockImplementation((key?: string | symbol) => {
-      if (key === 'userId') return userId;
-      if (key === 'orgId') return orgId;
-      return undefined;
+  it('releases original image buffers if cancelled before streaming', async () => {
+    const input = imageInput();
+    const { useCase } = buildHarness({ canVision: true });
+    const controller = new AbortController();
+    const stream = await useCase.execute(
+      new ExecuteRunCommand({ threadId, input, signal: controller.signal }),
+    );
+    controller.abort();
+    expect(await stream.next()).toEqual({ done: true, value: 'aborted' });
+    expect(input.pendingImages).toEqual([]);
+  });
+  it('reads the thread for a second run only after the first run on it ended', async () => {
+    let releaseFirstAnswer!: () => void;
+    const firstAnswerMayFinish = new Promise<void>(
+      (resolve) => (releaseFirstAnswer = resolve),
+    );
+    let modelCalls = 0;
+    const { useCase, findThread } = buildHarness({
+      providerStream: async function* () {
+        modelCalls += 1;
+        if (modelCalls === 1) await firstAnswerMayFinish;
+        yield { textDelta: `Answer ${modelCalls}` };
+        yield { finishReason: 'stop' };
+      },
     });
 
-    const collectUsageAsyncService = {
-      collect: jest.fn(),
-    } as unknown as jest.Mocked<CollectUsageAsyncService>;
-
-    const creditLimitGuardService = {
-      ensureWithinLimits: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<CreditLimitGuardService>;
-
-    const inferenceUsageGuard = new InferenceUsageGuard(
-      checkQuotaUseCase,
-      creditBudgetGuardService,
-      creditLimitGuardService,
-      collectUsageAsyncService,
+    const firstRun = drain(await useCase.execute(userCommand()));
+    const threadReadsBeforeSecondRun = findThread.mock.calls.length;
+    const secondRun = useCase.execute(
+      userCommand(new RunUserInput('And the next permit?')),
     );
+    await new Promise((resolve) => setImmediate(resolve));
 
-    useCase = new ExecuteRunUseCase(
-      { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
-      { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
-      findThreadUseCase,
-      { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
-      contextService,
-      anonymizeTextForThreadUseCase,
-      inferenceUsageGuard,
-      toolAssemblyService,
-      {
-        collectToolResults: jest
-          .fn()
-          .mockResolvedValue({ contents: [], outcomes: [], piiMasks: null }),
-        exitLoopAfterAgentResponse: jest.fn().mockReturnValue(true),
-      } as unknown as ToolResultCollectorService,
-      messageCleanupService,
-      {
-        runInference: jest.fn(),
-      } as unknown as InferenceOrchestratorService,
-      {
-        activateOnThread: jest.fn(),
-      } as unknown as jest.Mocked<SkillActivationService>,
-      {
-        emitAsync: jest.fn().mockResolvedValue([]),
-      } as unknown as EventEmitter2,
-      {
-        get: jest.fn().mockReturnValue(false),
-      } as unknown as ConfigService,
-      {
-        execute: jest.fn(),
-      } as unknown as ExecuteRunViaRuntimeUseCase,
+    expect(findThread).toHaveBeenCalledTimes(threadReadsBeforeSecondRun);
+
+    releaseFirstAnswer();
+    await firstRun;
+    await drain(await secondRun);
+    expect(findThread.mock.calls.length).toBeGreaterThan(
+      threadReadsBeforeSecondRun,
     );
   });
 
-  describe('skill activation via quick action', () => {
-    it('should append already-activated note to instructions when skillId is provided', async () => {
-      const skillId = randomUUID();
-      const thread = createMockThread();
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-
-      const skillActivationService = (
-        useCase as unknown as {
-          skillActivationService: jest.Mocked<SkillActivationService>;
-        }
-      ).skillActivationService;
-      skillActivationService.activateOnThread.mockResolvedValue({
-        instructions: 'Analyze the legal question.',
-        skillName: 'Legal Research',
-      });
-
-      const inferenceOrchestratorService = (
-        useCase as unknown as {
-          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
-        }
-      ).inferenceOrchestratorService;
-      const assistantMessage = {
-        id: randomUUID(),
-        content: [{ type: 'text', text: 'Response' }],
-      } as unknown as AssistantMessage;
-
-      inferenceOrchestratorService.runInference.mockReturnValue(
-        (async function* () {
-          yield assistantMessage;
-          return assistantMessage;
-        })(),
-      );
-
-      const toolResultCollectorService = (
-        useCase as unknown as {
-          toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
-        }
-      ).toolResultCollectorService;
-      toolResultCollectorService.exitLoopAfterAgentResponse.mockReturnValue(
-        true,
-      );
-
-      const input = new RunUserInput('Hilfe bei Rechtsrecherche', [], skillId);
-      const command = new ExecuteRunCommand({
+  it('does not prepare or persist a cancelled run waiting behind another run', async () => {
+    const controller = new AbortController();
+    const { useCase, findThread, createUser, trackedError } = buildHarness();
+    const first = await useCase.execute(userCommand());
+    const readsBeforeWait = findThread.mock.calls.length;
+    const second = useCase.execute(
+      new ExecuteRunCommand({
         threadId,
-        input,
-        streaming: true,
-      });
+        input: new RunUserInput('Cancelled question'),
+        signal: controller.signal,
+      }),
+    );
+    controller.abort();
+    const cancelled = await second;
+    await expect(cancelled.next()).resolves.toEqual({
+      done: true,
+      value: 'aborted',
+    });
+    expect(trackedError()).toBeUndefined();
+    expect(findThread).toHaveBeenCalledTimes(readsBeforeWait);
+    expect(createUser).not.toHaveBeenCalled();
+    await first.return('aborted');
+    await drain(await useCase.execute(userCommand()));
+    expect(createUser).toHaveBeenCalledTimes(1);
+  });
 
-      const generator = await useCase.execute(command);
-      // Drain the generator to completion
-      let drainResult = await generator.next();
-      while (!drainResult.done) {
-        drainResult = await generator.next();
-      }
+  it('does not persist input cancelled after preparation but before streaming', async () => {
+    const controller = new AbortController();
+    const { useCase, createUser, cleanup } = buildHarness();
+    const stream = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Cancelled question'),
+        signal: controller.signal,
+      }),
+    );
+    controller.abort();
+    await expect(stream.next()).resolves.toEqual({
+      done: true,
+      value: 'aborted',
+    });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(cleanup).not.toHaveBeenCalled();
+    await drain(await useCase.execute(userCommand()));
+    expect(createUser).toHaveBeenCalledTimes(1);
+  });
 
-      // Verify the streaming inference was called with instructions containing the note
-      expect(inferenceOrchestratorService.runInference).toHaveBeenCalledWith(
-        expect.objectContaining({
-          instructions: expect.stringContaining(
-            'Skill "Legal Research" has already been activated on this thread. Do not call activate_skill for this skill.',
-          ),
-        }),
-      );
+  it('attributes every run to the agent-runtime telemetry path', async () => {
+    const { useCase, trackRun } = buildHarness();
+
+    await useCase.execute(userCommand());
+
+    expect(trackRun).toHaveBeenCalledWith(
+      'agent_runtime',
+      expect.any(Function),
+    );
+  });
+
+  it('denies an existing thread before provider inference after revocation', async () => {
+    const { useCase, resolveModelAccess, provider } = buildHarness();
+    resolveModelAccess.mockRejectedValue(new RunNoModelFoundError());
+
+    await expect(useCase.execute(userCommand())).rejects.toThrow(
+      RunNoModelFoundError,
+    );
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('uses the current effective grant anonymous policy', async () => {
+    const { useCase, anonymize } = buildHarness({
+      effectiveAnonymousOnly: true,
     });
 
-    it('should preserve already-activated note after a subsequent refreshRunContext triggered by AI-initiated activate_skill', async () => {
-      const skillId = randomUUID();
-      const thread = createMockThread();
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
+    await drain(await useCase.execute(userCommand()));
 
-      const skillActivationService = (
-        useCase as unknown as {
-          skillActivationService: jest.Mocked<SkillActivationService>;
-        }
-      ).skillActivationService;
-      skillActivationService.activateOnThread.mockResolvedValue({
-        instructions: 'Analyze the legal question.',
-        skillName: 'Legal Research',
-      });
+    expect(anonymize).toHaveBeenCalled();
+  });
 
-      const inferenceOrchestratorService = (
-        useCase as unknown as {
-          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
-        }
-      ).inferenceOrchestratorService;
+  it('reports unexpected preparation failures to telemetry in the runs error family', async () => {
+    const { useCase, findThread, trackedError } = buildHarness();
+    findThread.mockRejectedValueOnce(new Error('database connection lost'));
 
-      // First inference: assistant calls activate_skill tool
-      const toolCallMessage = {
-        id: randomUUID(),
-        content: [
-          {
-            type: 'tool_use',
-            toolId: 'tool-1',
-            toolName: ToolType.ACTIVATE_SKILL,
-            input: { skill_slug: 'Another Skill' },
-          },
+    await expect(useCase.execute(userCommand())).rejects.toMatchObject({
+      code: 'UNEXPECTED_RUN_ERROR',
+      statusCode: 500,
+    });
+    expect(trackedError()).toMatchObject({
+      code: 'UNEXPECTED_RUN_ERROR',
+      statusCode: 500,
+    });
+  });
+
+  it('streams a plain-chat turn, persisting and metering the assistant message', async () => {
+    const { useCase, save, collectUsage } = buildHarness();
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    // first item is the user message, then the streamed assistant message(s)
+    expect(items[0]).toMatchObject({ id: 'user-msg' });
+    const assistant = items
+      .slice(1)
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .pop();
+    expect(assistant).toBeDefined();
+    expect((assistant!.content[0] as TextMessageContent).text).toBe('Hello');
+
+    // persistence + usage hooks fired inside the loop
+    expect(save).toHaveBeenCalledTimes(1);
+    const savedMessage = save.mock.calls[0][0].message as AssistantMessage;
+    expect((savedMessage.content[0] as TextMessageContent).text).toBe('Hello');
+    // streamed and persisted assistant copies share the deterministic id
+    expect(savedMessage.id).toBe(assistant!.id);
+    expect(collectUsage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(String),
+      'agent_runtime',
+    );
+    expect(collectUsage).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs critical usage before best-effort observability and turn persistence', async () => {
+    const { useCase, collectUsage, emitAsync, save } = buildHarness({
+      turns: [
+        textTurn('The permit is valid.', {
+          inputTokens: 18,
+          outputTokens: 6,
+        }),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    const completionIndex = emitAsync.mock.calls.findIndex(
+      ([eventName]) => eventName === InferenceCompletedEvent.EVENT_NAME,
+    );
+    expect(completionIndex).toBeGreaterThanOrEqual(0);
+    expect(collectUsage.mock.invocationCallOrder[0]).toBeLessThan(
+      emitAsync.mock.invocationCallOrder[completionIndex],
+    );
+    expect(emitAsync.mock.invocationCallOrder[completionIndex]).toBeLessThan(
+      save.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('removes the seeded message when the first paid call is rejected', async () => {
+    const { useCase, ensureModelCallAllowed, provider, createUser, cleanup } =
+      buildHarness({ modelConsumesCredits: true });
+    ensureModelCallAllowed.mockRejectedValue(
+      new CreditBudgetExceededError({
+        orgId,
+        creditsUsed: 100,
+        monthlyCredits: 100,
+      }),
+    );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(CreditBudgetExceededError);
+
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('preserves a seeded tool result when its continuation call is rejected', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const toolResultCollector = {
+      collectToolResults: jest.fn().mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'chart-1',
+            'bar_chart',
+            'Chart displayed',
+          ),
         ],
-      } as unknown as AssistantMessage;
-
-      // Second inference: assistant responds normally
-      const finalMessage = {
-        id: randomUUID(),
-        content: [{ type: 'text', text: 'Final response' }],
-      } as unknown as AssistantMessage;
-
-      let inferenceCallCount = 0;
-      inferenceOrchestratorService.runInference.mockImplementation(() => {
-        inferenceCallCount++;
-        if (inferenceCallCount === 1) {
-          return (async function* () {
-            yield toolCallMessage;
-            return toolCallMessage;
-          })();
-        }
-        return (async function* () {
-          yield finalMessage;
-          return finalMessage;
-        })();
+        piiMasks: null,
+      }),
+    } as unknown as ToolResultCollectorService;
+    const { useCase, ensureModelCallAllowed, createSeedToolResult, cleanup } =
+      buildHarness({
+        modelConsumesCredits: true,
+        lastMessage,
+        toolResultCollector,
       });
+    ensureModelCallAllowed.mockRejectedValue(
+      new CreditBudgetExceededError({
+        orgId,
+        creditsUsed: 100,
+        monthlyCredits: 100,
+      }),
+    );
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
 
-      const toolResultCollectorService = (
-        useCase as unknown as {
-          toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
-        }
-      ).toolResultCollectorService;
+    await expect(drain(await useCase.execute(command))).rejects.toBeInstanceOf(
+      CreditBudgetExceededError,
+    );
 
-      let collectCallCount = 0;
-      toolResultCollectorService.collectToolResults.mockImplementation(
-        async () => {
-          collectCallCount++;
-          if (collectCallCount === 1) {
-            // First call: no pending results (initial processToolResults)
-            return { contents: [], outcomes: [], piiMasks: null };
-          }
-          // Second call: activate_skill tool result
-          return {
-            contents: [
-              new ToolResultMessageContent(
-                'tool-1',
-                ToolType.ACTIVATE_SKILL,
-                'Skill activated successfully',
+    expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it.each(['failure', 'abort', 'close'] as const)(
+    'keeps a settled mixed tool batch after continuation %s',
+    async (termination) => {
+      const controller = new AbortController();
+      const lastMessage = {
+        content: [
+          new ToolUseMessageContent('chart-1', 'bar_chart', {
+            title: 'Budget',
+          }),
+          new ToolUseMessageContent('search-1', 'internet_search', {
+            query: 'Berlin budget',
+          }),
+        ],
+      } as unknown as Message;
+      const executeTool = jest.fn().mockResolvedValue('Budget found');
+      const collector = new ToolResultCollectorService(
+        { execute: executeTool } as never,
+        { execute: jest.fn() } as never,
+        { get: jest.fn().mockReturnValue(userId) } as never,
+        { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+      );
+      const { useCase, cleanup, createSeedToolResult, findThread } =
+        buildHarness({
+          lastMessage,
+          backendTools: [new BarChartTool(), new InternetSearchTool()],
+          toolResultCollector: collector,
+          providerRejects: termination === 'failure',
+        });
+      const { thread } = (await findThread()) as { thread: Thread };
+      thread.messages = [lastMessage];
+      thread.getLastMessage = () => thread.messages.at(-1);
+      cleanup.mockImplementation((_id: UUID, ownedIds: ReadonlySet<UUID>) => {
+        thread.messages = thread.messages.filter(
+          (message) => !ownedIds.has(message.id),
+        );
+      });
+      const stream = await useCase.execute(
+        new ExecuteRunCommand({
+          threadId,
+          input: new RunToolResultInput('chart-1', 'bar_chart', 'Displayed'),
+          signal: controller.signal,
+        }),
+      );
+      const seed = await stream.next();
+      expect(seed.value).toBeInstanceOf(ToolResultMessage);
+      expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+      expect(executeTool).toHaveBeenCalledTimes(1);
+
+      if (termination === 'failure') {
+        await expect(drain(stream)).rejects.toThrow('provider down');
+      } else if (termination === 'abort') {
+        controller.abort();
+        await expect(drain(stream)).resolves.toEqual([]);
+      } else {
+        await stream.return('aborted');
+      }
+
+      expect(thread.getLastMessage()).toBeInstanceOf(ToolResultMessage);
+      await expect(
+        drain(
+          await useCase.execute(
+            new ExecuteRunCommand({
+              threadId,
+              input: new RunToolResultInput(
+                'chart-1',
+                'bar_chart',
+                'Displayed',
               ),
-            ],
-            outcomes: [
+            }),
+          ),
+        ),
+      ).rejects.toMatchObject({ code: 'RUN_INVALID_INPUT' });
+      expect(executeTool).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['length', 'refusal', 'pause_turn'] as const)(
+    'preserves completed tools when a later call terminates with %s',
+    async (finishReason) => {
+      const execute = jest.fn().mockResolvedValue('permit found');
+      const lookupTool = {
+        name: 'lookup_permit',
+        description: 'Look up a permit',
+        parameters: { type: 'object' },
+        execute,
+      };
+      const {
+        useCase,
+        save,
+        createToolResult,
+        cleanup,
+        provider,
+        collectUsage,
+      } = buildHarness({
+        modelConsumesCredits: true,
+        runtimeTools: [lookupTool],
+        turns: [
+          toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+          [
+            {
+              finishReason,
+              usage: {
+                inputTokens: 2,
+                cacheReadInputTokens: 39915,
+                outputTokens: 32000,
+              },
+            },
+          ],
+        ],
+      });
+      await expect(
+        drain(await useCase.execute(userCommand())),
+      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(provider.requests).toHaveLength(2);
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(createToolResult).toHaveBeenCalledTimes(1);
+      expect(collectUsage).toHaveBeenCalledTimes(2);
+      expect(cleanup).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['length', 'refusal', 'pause_turn'] as const)(
+    'cleans up a first-turn %s without visible output or completed tools',
+    async (finishReason) => {
+      const { useCase, cleanup, provider } = buildHarness({
+        turns: [
+          [{ finishReason, usage: { inputTokens: 2, outputTokens: 32000 } }],
+        ],
+      });
+      await expect(
+        drain(await useCase.execute(userCommand())),
+      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      expect(provider.requests).toHaveLength(1);
+      expect(cleanup).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('preserves completed tool phases when a later paid call is rejected', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const {
+      useCase,
+      ensureModelCallAllowed,
+      collectUsage,
+      save,
+      createToolResult,
+      cleanup,
+    } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+        textTurn('The permit exists.'),
+      ],
+    });
+    ensureModelCallAllowed
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(
+        new CreditBudgetExceededError({
+          orgId,
+          creditsUsed: 101,
+          monthlyCredits: 100,
+        }),
+      );
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(CreditBudgetExceededError);
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(collectUsage.mock.invocationCallOrder[0]).toBeLessThan(
+      ensureModelCallAllowed.mock.invocationCallOrder[1],
+    );
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('preserves completed tool phases when a later paid call omits usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, save, createToolResult, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }),
+        [
+          {
+            toolCallDeltas: [
               {
-                toolName: ToolType.ACTIVATE_SKILL,
-                result: 'Skill activated successfully',
-                succeeded: true,
+                index: 0,
+                id: 'permit-2',
+                name: lookupTool.name,
+                argumentsDelta: '{"parcelId":"incomplete"',
               },
             ],
-            piiMasks: null,
-          };
-        },
-      );
-
-      // First call: don't exit (tool call); second call: exit
-      let exitCallCount = 0;
-      toolResultCollectorService.exitLoopAfterAgentResponse.mockImplementation(
-        () => {
-          exitCallCount++;
-          return exitCallCount > 1;
-        },
-      );
-
-      const input = new RunUserInput('Hilfe bei Rechtsrecherche', [], skillId);
-      const command = new ExecuteRunCommand({
-        threadId,
-        input,
-        streaming: true,
-      });
-
-      const generator = await useCase.execute(command);
-      let drainResult = await generator.next();
-      while (!drainResult.done) {
-        drainResult = await generator.next();
-      }
-
-      // The second inference call must still contain the note
-      // (after refreshRunContext was called again in processToolResults)
-      const secondCall =
-        inferenceOrchestratorService.runInference.mock.calls[1];
-      expect(secondCall).toBeDefined();
-      const secondCallParams = secondCall[0] as { instructions?: string };
-      expect(secondCallParams.instructions).toContain(
-        'Skill "Legal Research" has already been activated on this thread. Do not call activate_skill for this skill.',
-      );
-    });
-  });
-
-  describe('anonymous mode anonymization failure', () => {
-    it('should throw RunAnonymizationUnavailableError when anonymize service is unavailable and thread is anonymous', async () => {
-      const thread = createMockThread({ isAnonymous: true });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
-        new AnonymizationFailedError('Connection refused'),
-      );
-
-      const input = new RunUserInput(
-        'Mein Name ist Max Mustermann und ich wohne in München',
-        [],
-      );
-      const command = new ExecuteRunCommand({
-        threadId,
-        input,
-        streaming: false,
-      });
-
-      const generator = await useCase.execute(command);
-      await expect(generator.next()).rejects.toThrow(
-        RunAnonymizationUnavailableError,
-      );
+          },
+          { finishReason: 'tool_calls' },
+        ],
+      ],
     });
 
-    it('should throw RunAnonymizationUnavailableError when anonymize service fails for model-enforced anonymous mode', async () => {
-      const model = {
-        model: {
-          name: 'gpt-4',
-          canUseTools: true,
-          canVision: false,
-        } as LanguageModel,
-        anonymousOnly: true,
-      } as PermittedLanguageModel;
-      const thread = createMockThread({ isAnonymous: false, model });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
-        new AnonymizationFailedError('Service timeout'),
-      );
-
-      const input = new RunUserInput(
-        'Kontaktieren Sie mich unter max@example.de',
-        [],
-      );
-      const command = new ExecuteRunCommand({
-        threadId,
-        input,
-        streaming: false,
-      });
-
-      const generator = await useCase.execute(command);
-      await expect(generator.next()).rejects.toThrow(
-        RunAnonymizationUnavailableError,
-      );
-    });
-  });
-
-  describe('tier-aware fair-use quota selection', () => {
-    // Paid model (has token costs) so `consumesCredits` is true and the
-    // credit-budget guard runs — these tests assert budget enforcement.
-    function makeTieredModel(
-      tier: ModelTier | undefined,
-    ): PermittedLanguageModel {
-      return {
-        model: new LanguageModel({
-          name: 'gpt-tier',
-          provider: ModelProvider.OPENAI,
-          displayName: 'GPT Tier',
-          canStream: true,
-          canUseTools: false,
-          isReasoning: false,
-          canVision: false,
-          isArchived: false,
-          inputTokenCost: 5,
-          outputTokenCost: 15,
-          tier,
-        }),
-        anonymousOnly: false,
-      } as PermittedLanguageModel;
-    }
-
-    function stubInferenceWithEmptyResponse() {
-      const inferenceOrchestratorService = (
-        useCase as unknown as {
-          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
-        }
-      ).inferenceOrchestratorService;
-      const assistantMessage = {
-        id: randomUUID(),
-        content: [{ type: 'text', text: 'ok' }],
-      } as unknown as AssistantMessage;
-      inferenceOrchestratorService.runInference.mockReturnValue(
-        (async function* () {
-          yield assistantMessage;
-          return assistantMessage;
-        })(),
-      );
-    }
-
-    async function drainGenerator(
-      generator: AsyncIterator<unknown>,
-    ): Promise<void> {
-      let result = await generator.next();
-      while (!result.done) {
-        result = await generator.next();
-      }
-    }
-
-    it.each([
-      [ModelTier.LOW, QuotaType.FAIR_USE_MESSAGES_LOW],
-      [ModelTier.MEDIUM, QuotaType.FAIR_USE_MESSAGES_MEDIUM],
-      [ModelTier.HIGH, QuotaType.FAIR_USE_MESSAGES_HIGH],
-    ])(
-      'routes a thread on a %s-tier model to %s',
-      async (tier, expectedQuotaType) => {
-        const thread = createMockThread({ model: makeTieredModel(tier) });
-        findThreadUseCase.execute.mockResolvedValue({
-          thread,
-          isLongChat: false,
-        });
-        stubInferenceWithEmptyResponse();
-
-        const command = new ExecuteRunCommand({
-          threadId,
-          input: new RunUserInput('hello', []),
-          streaming: true,
-        });
-        await drainGenerator(await useCase.execute(command));
-
-        expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
-        const query = checkQuotaUseCase.execute.mock.calls[0][0];
-        expect(query.userId).toBe(userId);
-        expect(query.orgId).toBe(orgId);
-        expect(query.quotaType).toBe(expectedQuotaType);
-        expect(
-          creditBudgetGuardService.ensureBudgetAvailable,
-        ).toHaveBeenCalledWith(orgId);
-      },
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Agent runtime failed',
     );
 
-    it('skips the fair-use quota check entirely for a ZERO-tier model', async () => {
-      const thread = createMockThread({
-        model: makeTieredModel(ModelTier.ZERO),
-      });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-      stubInferenceWithEmptyResponse();
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
 
-      const command = new ExecuteRunCommand({
-        threadId,
-        input: new RunUserInput('hello', []),
-        streaming: true,
-      });
-      await drainGenerator(await useCase.execute(command));
-
-      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
-      // Credit budget enforcement still applies — only fair-use is bypassed.
-      expect(
-        creditBudgetGuardService.ensureBudgetAvailable,
-      ).toHaveBeenCalledWith(orgId);
+  it('preserves completed tool phases when a later paid stream fails without usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    let calls = 0;
+    const { useCase, save, createToolResult, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      providerStream: async function* () {
+        calls += 1;
+        if (calls === 1) {
+          yield* toolCallTurn({
+            id: 'permit-1',
+            name: lookupTool.name,
+            input: {},
+          });
+          return;
+        }
+        yield {};
+        throw new ModelProviderError({
+          kind: 'timeout',
+          stage: 'stream_consumption',
+          timeoutSource: 'whole_stream',
+          cause: new Error('stream deadline exceeded'),
+        });
+      },
     });
 
-    it('falls back to FAIR_USE_MESSAGES_MEDIUM when the model has no tier', async () => {
-      const thread = createMockThread({ model: makeTieredModel(undefined) });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-      stubInferenceWithEmptyResponse();
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC' });
 
-      const command = new ExecuteRunCommand({
-        threadId,
-        input: new RunUserInput('hello', []),
-        streaming: true,
-      });
-      await drainGenerator(await useCase.execute(command));
+    expect(calls).toBe(2);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
 
-      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
-      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
-        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+  it('does not execute tools after paid output arrives without usage', async () => {
+    const execute = jest.fn().mockResolvedValue('permit found');
+    const lookupTool = {
+      name: 'lookup_permit',
+      description: 'Look up a permit',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, provider, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'permit-1', name: lookupTool.name, input: {} }, {}),
+      ],
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Agent runtime failed',
+    );
+
+    expect(provider.requests).toHaveLength(1);
+    expect(execute).not.toHaveBeenCalled();
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('inherits child usage and observability without persisting its transcript', async () => {
+    const childModel = {
+      name: 'gpt-5-mini',
+      provider: 'azure',
+    } as LanguageModel;
+    const childTurns = [
+      toolCallTurn(
+        { id: 'child-tool-1', name: 'child_lookup', input: {} },
+        { inputTokens: 5, outputTokens: 1 },
+      ),
+      textTurn('Child analysis complete.', {
+        inputTokens: 7,
+        outputTokens: 2,
+      }),
+    ];
+    let childTurn = 0;
+    const childProvider: ModelProvider = {
+      name: 'azure:gpt-5-mini',
+      async *stream() {
+        const chunks = childTurns[childTurn] ?? [];
+        childTurn += 1;
+        for (const chunk of chunks) yield chunk;
+      },
+    };
+    const childTool: RuntimeTool = {
+      name: 'child_lookup',
+      description: 'Look up child-only research data.',
+      parameters: { type: 'object' },
+      execute: () => 'Child-only lookup result.',
+    };
+    const delegate: RuntimeTool = {
+      name: 'delegate_research',
+      description: 'Delegate research to another configured model.',
+      parameters: { type: 'object' },
+      execute: async (
+        _input: Record<string, unknown>,
+        ctx: ToolExecutionContext,
+      ) => {
+        RuntimeModelRegistry.fromContext(ctx.context).register(
+          childProvider,
+          childModel,
+        );
+        await drain(
+          ctx.runChild({
+            instructions: 'Research the permit.',
+            model: childProvider,
+            messages: [
+              {
+                role: 'user',
+                content: [{ type: 'text', text: 'Review the permit.' }],
+              },
+            ],
+            tools: [childTool],
+          }),
+        );
+        return 'Child research complete.';
+      },
+    };
+    const {
+      useCase,
+      collectUsage,
+      ensureModelCallAllowed,
+      emitAsync,
+      save,
+      createToolResult,
+    } = buildHarness({
+      runtimeTools: [delegate],
+      turns: [
+        toolCallTurn({ id: 'delegate-1', name: delegate.name, input: {} }),
+        textTurn('The permit research is complete.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(collectUsage).toHaveBeenCalledWith(
+      childModel,
+      7,
+      2,
+      expect.any(String),
+      'agent_runtime',
+    );
+    expect(ensureModelCallAllowed).toHaveBeenCalledWith(
+      { userId, orgId },
+      childModel,
+    );
+    const completions = emitAsync.mock.calls
+      .filter(([name]) => name === InferenceCompletedEvent.EVENT_NAME)
+      .map(([, event]) => event as InferenceCompletedEvent);
+    const childCompletion = completions.find(
+      (event) => event.model === childModel.name,
+    );
+    expect(childCompletion).toMatchObject({
+      model: childModel.name,
+      provider: childModel.provider,
+    });
+    expect(
+      completions.filter((event) => event.model !== childModel.name),
+    ).toHaveLength(2);
+    expect(
+      completions.filter((event) => event.model === childModel.name),
+    ).toHaveLength(2);
+    expect(
+      collectUsage.mock.calls.find(
+        ([usedModel]) => usedModel === childModel,
+      )?.[3],
+    ).toBe(childCompletion?.modelCallId);
+    expect(new Set(completions.map((event) => event.modelCallId)).size).toBe(
+      completions.length,
+    );
+  });
+
+  it('uses the runtime retry defaults with the resolved provider directly', async () => {
+    jest.useFakeTimers();
+    let attempts = 0;
+    const { useCase } = buildHarness({
+      providerStream: async function* () {
+        attempts += 1;
+        if (attempts < 4) {
+          throw new ModelProviderError({
+            kind: 'server',
+            stage: 'stream_establishment',
+            upstreamStatus: 503,
+            cause: new Error('service unavailable'),
+          });
+        }
+        yield { textDelta: 'Recovered response', finishReason: 'stop' };
+      },
+    });
+
+    const result = drain(await useCase.execute(userCommand()));
+    await jest.advanceTimersByTimeAsync(10_000);
+
+    await expect(result).resolves.toEqual(expect.any(Array));
+    expect(attempts).toBe(4);
+    jest.useRealTimers();
+  });
+
+  it('preserves the persisted transcript when the tool-failure breaker trips', async () => {
+    const failingTool = {
+      name: 'create_document',
+      description: 'Creates a document',
+      parameters: { type: 'object', properties: {} },
+      execute: jest
+        .fn()
+        .mockRejectedValue(
+          new Error("Invalid parameters: missing required parameter 'title'"),
+        ),
+    };
+    const failingCall = {
+      id: 'doc-1',
+      name: 'create_document',
+      input: { content: '<h1>Bericht</h1>' },
+    };
+    const { useCase, cleanup } = buildHarness({
+      runtimeTools: [failingTool],
+      turns: [
+        toolCallTurn(failingCall),
+        toolCallTurn(failingCall),
+        toolCallTurn(failingCall),
+      ],
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_TOOL_EXECUTION_FAILED' });
+
+    // Like max-iterations, the completed tool phases stay — cleanup would
+    // delete the failed turn and re-arm its pending tool calls.
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('fails and cleans up when the provider returns no assistant content', async () => {
+    const { useCase, save, collectUsage, cleanup } = buildHarness({
+      turns: [
+        [
+          {
+            finishReason: 'stop',
+            usage: { inputTokens: 17, outputTokens: 0 },
+          },
+        ],
+      ],
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({
+      code: 'INFERENCE_FAILED',
+      message: 'Inference failed: model returned an empty response',
+    });
+    expect(save).not.toHaveBeenCalled();
+    expect(collectUsage).toHaveBeenCalledTimes(1);
+    expect(collectUsage).toHaveBeenCalledWith(
+      expect.anything(),
+      17,
+      0,
+      expect.any(String),
+      'agent_runtime',
+    );
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('collects usage once before surfacing assistant persistence failure', async () => {
+    const { useCase, save, collectUsage } = buildHarness({
+      turns: [
+        textTurn('Billable response', { inputTokens: 23, outputTokens: 5 }),
+      ],
+    });
+    save.mockRejectedValueOnce(new Error('database unavailable'));
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_FAILED' });
+
+    expect(collectUsage).toHaveBeenCalledTimes(1);
+    expect(collectUsage).toHaveBeenCalledWith(
+      expect.anything(),
+      23,
+      5,
+      expect.any(String),
+      'agent_runtime',
+    );
+  });
+
+  it('passes the request cancellation signal to the runtime provider call', async () => {
+    const controller = new AbortController();
+    const { useCase, providerSignal } = buildHarness();
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(providerSignal()).toBeDefined();
+    expect(providerSignal()).not.toBe(controller.signal);
+    expect(providerSignal()?.aborted).toBe(false);
+  });
+
+  it('cleans up an orphaned tool-use message when cancellation follows persistence', async () => {
+    const controller = new AbortController();
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('record found'),
+    };
+    const { useCase, save, cleanup } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({
+          id: 'records-1',
+          name: lookupTool.name,
+          input: { query: '2026 budget amendment' },
+        }),
+      ],
+    });
+    save.mockImplementationOnce(async (saveCommand) => {
+      controller.abort();
+      return saveCommand.message;
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Find the budget amendment'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('persists partial text before cleanup when the provider fails', async () => {
+    const order: string[] = [];
+    const { useCase, save, cleanup, createUser } = buildHarness({
+      providerStream: async function* () {
+        yield { textDelta: 'Partial answer' };
+        throw new Error('provider disconnected');
+      },
+    });
+    save.mockImplementation(async (saveCommand) => {
+      order.push('save');
+      return saveCommand.message;
+    });
+    cleanup.mockImplementation(async () => {
+      order.push('cleanup');
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].message.content).toMatchObject([
+      { text: 'Partial answer' },
+    ]);
+    expect(cleanup).toHaveBeenCalledWith(
+      threadId,
+      new Set([
+        (await createUser.mock.results[0].value).id,
+        save.mock.calls[0][0].message.id,
+      ]),
+    );
+    expect(order).toEqual(['save', 'cleanup']);
+  });
+
+  it('persists partial text when client cancellation interrupts the model', async () => {
+    const controller = new AbortController();
+    const { useCase, save, cleanup } = buildHarness({
+      providerStream: async function* () {
+        yield { textDelta: 'Partial answer' };
+        controller.abort();
+        yield { textDelta: 'not retained' };
+      },
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].message.content).toMatchObject([
+      { text: 'Partial answer' },
+    ]);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('still cleans up when critical usage persistence fails during cancellation', async () => {
+    const controller = new AbortController();
+    const { useCase, collectUsage, cleanup } = buildHarness({
+      modelConsumesCredits: true,
+      providerStream: async function* () {
+        yield {
+          textDelta: 'Partial paid answer',
+          usage: { inputTokens: 12, outputTokens: 4 },
+        };
+        controller.abort();
+        yield { textDelta: 'not retained' };
+      },
+    });
+    collectUsage.mockRejectedValue(new Error('usage database unavailable'));
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await expect(drain(await useCase.execute(command))).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_FAILED',
+    });
+
+    expect(collectUsage).toHaveBeenCalledTimes(1);
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('executes a tool in-loop and persists the grouped tool result', async () => {
+    const execute = jest.fn().mockResolvedValue('sunny in Berlin');
+    const searchTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, save, createToolResult } = buildHarness({
+      runtimeTools: [searchTool],
+      turns: [
+        toolCallTurn({
+          id: 'c1',
+          name: 'get_weather',
+          input: { city: 'Berlin' },
+        }),
+        textTurn('It is sunny.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    // the tool ran in-loop
+    expect(execute).toHaveBeenCalledTimes(1);
+    // two assistant turns persisted (tool call + final text), grouped tool result once
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    const finalText = items
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .map((m) => (m.content[0] as TextMessageContent)?.text)
+      .filter(Boolean)
+      .pop();
+    expect(finalText).toBe('It is sunny.');
+
+    // the streamed and persisted tool-result copies share a deterministic id
+    const streamedToolResult = items.find(
+      (i): i is ToolResultMessage => i instanceof ToolResultMessage,
+    );
+    const persistedCommand = createToolResult.mock.calls[0][0] as {
+      id?: string;
+    };
+    expect(streamedToolResult).toBeDefined();
+    expect(persistedCommand.id).toBe(streamedToolResult!.id);
+  });
+
+  it('emits each message-added event exactly once for a tool loop', async () => {
+    const runtimeTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('sunny'),
+    };
+    const { useCase, emitAsync } = buildHarness({
+      runtimeTools: [runtimeTool],
+      turns: [
+        toolCallTurn({ id: 'c1', name: runtimeTool.name, input: {} }),
+        textTurn('It is sunny.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    const additions = emitAsync.mock.calls.filter(
+      ([eventName]) => eventName === ThreadMessageAddedEvent.EVENT_NAME,
+    );
+    expect(additions).toEqual(
+      [1, 2, 3, 4].map((messageCount) => [
+        ThreadMessageAddedEvent.EVENT_NAME,
+        new ThreadMessageAddedEvent(userId, orgId, threadId, messageCount),
+      ]),
+    );
+  });
+
+  it('does not stream a grouped tool result when its persistence fails', async () => {
+    const execute = jest.fn().mockResolvedValue('classified record');
+    const lookupTool = {
+      name: 'lookup_record',
+      description: 'Look up a municipal record',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, createToolResult } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'record-1', name: lookupTool.name, input: {} }),
+      ],
+    });
+    createToolResult.mockRejectedValue(new Error('database unavailable'));
+    const items: RunStreamItem[] = [];
+
+    await expect(async () => {
+      for await (const item of await useCase.execute(userCommand())) {
+        items.push(item);
+      }
+    }).rejects.toBeDefined();
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(items).not.toContainEqual(expect.any(ToolResultMessage));
+  });
+
+  it('retains completed tool results when the runtime reaches its iteration cap', async () => {
+    const execute = jest.fn().mockResolvedValue('municipal record found');
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const turns = Array.from({ length: 50 }, (_, iteration) =>
+      toolCallTurn({
+        id: `records-${iteration}`,
+        name: lookupTool.name,
+        input: { query: `budget amendment ${iteration + 1}` },
+      }),
+    );
+    const { useCase, createToolResult, cleanup } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns,
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+
+    expect(execute).toHaveBeenCalledTimes(50);
+    expect(createToolResult).toHaveBeenCalledTimes(50);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('cleans up the final tool-use turn when its max-iteration flush fails', async () => {
+    const execute = jest.fn().mockResolvedValue('municipal record found');
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const turns = Array.from({ length: 50 }, (_, iteration) =>
+      toolCallTurn({
+        id: `records-${iteration}`,
+        name: lookupTool.name,
+        input: { query: `budget amendment ${iteration + 1}` },
+      }),
+    );
+    const { useCase, createToolResult, cleanup, save } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns,
+    });
+    createToolResult.mockImplementation(async (createCommand) => {
+      if (createToolResult.mock.calls.length === 50) {
+        throw new Error('database unavailable');
+      }
+      return new ToolResultMessage({
+        id: createCommand.id,
+        threadId: createCommand.threadId,
+        content: createCommand.content,
+      });
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Run execution failed',
+    );
+
+    expect(execute).toHaveBeenCalledTimes(50);
+    // 50, not 51: the failed 50th write is not re-attempted by the runEnd
+    // flush, so the failure is reported once instead of twice (AYC-904).
+    expect(createToolResult).toHaveBeenCalledTimes(50);
+    const ownedIds = cleanup.mock.calls[0][1] as Set<UUID>;
+    expect(ownedIds.size).toBe(100);
+    for (const [command] of save.mock.calls) {
+      expect(ownedIds.has(command.message.id as UUID)).toBe(true);
+    }
+    for (const [command] of createToolResult.mock.calls.slice(0, 49)) {
+      expect(ownedIds.has(command.id as UUID)).toBe(true);
+    }
+    expect(ownedIds.has(createToolResult.mock.calls[49][0].id as UUID)).toBe(
+      false,
+    );
+  });
+
+  it('includes MCP integration metadata in streamed and persisted tool calls', async () => {
+    const originalToolName = 'search_municipal_records';
+    const integration = {
+      id: integrationId,
+      name: 'Municipal Records',
+      logoUrl: 'https://example.com/municipal-records.svg',
+    };
+    const backendTool = new McpIntegrationTool(
+      new McpTool(
+        originalToolName,
+        'Search municipal records',
+        { type: 'object' },
+        integrationId,
+      ),
+      false,
+      integration.name,
+      integration.logoUrl,
+    );
+    const toolName = backendTool.name;
+    const runtimeTool = {
+      name: toolName,
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Record found'),
+    };
+    const { useCase, save } = buildHarness({
+      backendTools: [backendTool],
+      runtimeTools: [runtimeTool],
+      turns: [
+        toolCallTurn({ id: 'records-1', name: toolName, input: {} }),
+        textTurn('I found the record.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    const streamedToolUse = items
+      .filter(
+        (item): item is AssistantMessage => item instanceof AssistantMessage,
+      )
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent,
       );
+    const persistedToolUse = (
+      save.mock.calls[0][0].message as AssistantMessage
+    ).content.find(
+      (content): content is ToolUseMessageContent =>
+        content instanceof ToolUseMessageContent,
+    );
+    expect([
+      streamedToolUse?.integration,
+      persistedToolUse?.integration,
+    ]).toEqual([integration, integration]);
+  });
+
+  it('includes metadata for an MCP tool added by skill activation', async () => {
+    const originalToolName = 'search_procurement_system';
+    const integration = {
+      id: integrationId,
+      name: 'Procurement System',
+      logoUrl: 'https://example.com/procurement-system.svg',
+    };
+    const activateBackendTool = {
+      name: 'activate_skill',
+    } as unknown as BackendTool;
+    const activatedBackendTool = new McpIntegrationTool(
+      new McpTool(
+        originalToolName,
+        'Search procurement notices',
+        { type: 'object' },
+        integrationId,
+      ),
+      false,
+      integration.name,
+      integration.logoUrl,
+    );
+    const toolName = activatedBackendTool.name;
+    const activateRuntimeTool = {
+      name: 'activate_skill',
+      description: 'Activate a skill',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Skill activated'),
+    };
+    const activatedRuntimeTool = {
+      name: toolName,
+      description: 'Search procurement notices',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Notice found'),
+    };
+    const { useCase, save } = buildHarness({
+      backendTools: [activateBackendTool],
+      runtimeTools: [activateRuntimeTool],
+      rebuiltBackendTools: [activateBackendTool, activatedBackendTool],
+      rebuiltRuntimeTools: [activateRuntimeTool, activatedRuntimeTool],
+      turns: [
+        toolCallTurn({ id: 'activate-1', name: 'activate_skill', input: {} }),
+        toolCallTurn({ id: 'procurement-1', name: toolName, input: {} }),
+        textTurn('I found the procurement notice.'),
+      ],
     });
 
-    it('does NOT charge a quota when no model can be resolved', async () => {
-      const thread = createMockThread({
-        model: undefined as unknown as PermittedLanguageModel,
-      });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
+    const items = await drain(await useCase.execute(userCommand()));
 
-      const command = new ExecuteRunCommand({
-        threadId,
-        input: new RunUserInput('hello', []),
-        streaming: true,
-      });
+    const streamedToolUse = items
+      .filter(
+        (item): item is AssistantMessage => item instanceof AssistantMessage,
+      )
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent && content.name === toolName,
+      );
+    const persistedToolUse = save.mock.calls
+      .map((call) => call[0].message as AssistantMessage)
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent && content.name === toolName,
+      );
+    expect([
+      streamedToolUse?.integration,
+      persistedToolUse?.integration,
+    ]).toEqual([integration, integration]);
+  });
 
-      // `pickModel` throws synchronously — the outer try in `execute()`
-      // wraps it in `RunNoModelFoundError` (an `ApplicationError`) which is
-      // re-thrown unchanged. The wrapper turns it into a RunErrorEvent.
-      await expect(useCase.execute(command)).rejects.toMatchObject({
-        code: RunErrorCode.RUN_NO_MODEL_FOUND,
-      });
-      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
-      expect(
-        creditBudgetGuardService.ensureBudgetAvailable,
-      ).not.toHaveBeenCalled();
+  it('executes a backend sibling when accepting a historical chart result', async () => {
+    const displayTool = new BarChartTool();
+    const searchTool = new InternetSearchTool();
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+        new ToolUseMessageContent('search-1', 'internet_search', {
+          query: 'Berlin budget 2026',
+        }),
+      ],
+    } as unknown as Message;
+    const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
+    const collector = new ToolResultCollectorService(
+      { execute: executeTool } as never,
+      { execute: jest.fn() } as never,
+      { get: jest.fn().mockReturnValue(userId) } as never,
+      { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+    );
+    const { useCase, createSeedToolResult } = buildHarness({
+      backendTools: [displayTool, searchTool],
+      lastMessage,
+      toolResultCollector: collector,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    await drain(await useCase.execute(command));
+
+    const persisted = createSeedToolResult.mock.calls[0][0] as {
+      content: Array<{ toolId: string; result: string }>;
+    };
+    expect(persisted.content).toEqual([
+      expect.objectContaining({ toolId: 'chart-1', result: 'Chart displayed' }),
+      expect.objectContaining({
+        toolId: 'search-1',
+        result: 'Berlin budget results',
+      }),
+    ]);
+    expect(executeTool).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not execute stale pending tools when accepting a new user message', async () => {
+    const displayTool = new BarChartTool();
+    const searchTool = new InternetSearchTool();
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+        new ToolUseMessageContent('search-1', 'internet_search', {
+          query: 'Berlin budget 2026',
+        }),
+      ],
+    } as unknown as Message;
+    const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
+    const collector = new ToolResultCollectorService(
+      { execute: executeTool } as never,
+      { execute: jest.fn() } as never,
+      { get: jest.fn().mockReturnValue(userId) } as never,
+      { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+    );
+    const { useCase } = buildHarness({
+      backendTools: [displayTool, searchTool],
+      lastMessage,
+      toolResultCollector: collector,
+    });
+
+    const items = await drain(
+      await useCase.execute(userCommand(new RunUserInput('What comes next?'))),
+    );
+
+    expect(executeTool).not.toHaveBeenCalled();
+    expect(items[0]).toBeInstanceOf(UserMessage);
+  });
+
+  it('executes a host-assembled hybrid once and continues with its acknowledgement', async () => {
+    const executeTool = jest.fn().mockResolvedValue('raw document result');
+    const document = new CreateDocumentTool();
+    const { useCase, provider } = buildHarness({
+      backendTools: [document],
+      backendToolAdapter: realBackendToolAdapter(executeTool),
+      turns: [
+        toolCallTurn({
+          id: 'document-1',
+          name: document.name,
+          input: {
+            title: 'Budget report',
+            content: '<p>Budget details</p>',
+          },
+        }),
+        textTurn('The document is ready.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(provider.requests[1].messages.at(-1)).toMatchObject({
+      role: 'tool_result',
+      content: [
+        expect.objectContaining({
+          result: 'Tool has been displayed successfully',
+        }),
+      ],
     });
   });
 
-  describe('repeated identical tool failures', () => {
-    const failureText =
-      "The tool didn't provide any result due to the following error in tool usage: " +
-      "Failed to execute tool create_document: Invalid parameters: missing required parameter 'title'";
-
-    const failingCollectResult = () => ({
-      contents: [
-        new ToolResultMessageContent('tool-1', 'create_document', failureText),
+  it('retries an invalid chart when mixed with a terminal host widget', async () => {
+    const executeTool = jest.fn();
+    const email = new SendEmailTool();
+    const chart = new BarChartTool();
+    const { useCase, provider } = buildHarness({
+      backendTools: [email, chart],
+      backendToolAdapter: realBackendToolAdapter(executeTool),
+      turns: [
+        [
+          {
+            toolCallDeltas: [
+              {
+                index: 0,
+                id: 'email-1',
+                name: email.name,
+                argumentsDelta:
+                  '{"subject":"Budget","body":"Review it","to":"budget@example.org"}',
+              },
+              {
+                index: 1,
+                id: 'chart-1',
+                name: chart.name,
+                argumentsDelta: '{"chartTitle":"Incomplete"}',
+              },
+            ],
+          },
+          { finishReason: 'tool_calls' },
+        ],
+        textTurn('Please provide the missing chart data.'),
       ],
-      outcomes: [
-        {
-          toolName: 'create_document',
-          result: failureText,
-          succeeded: false,
-        },
-      ],
-      piiMasks: null,
     });
 
-    it('aborts the run instead of retrying the identical failing call until the iteration cap (AYC-646)', async () => {
-      const thread = createMockThread();
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
+    await drain(await useCase.execute(userCommand()));
 
-      const toolCallMessage = {
-        id: randomUUID(),
-        content: [{ type: 'tool_use', name: 'create_document' }],
-      } as unknown as AssistantMessage;
+    expect(provider.requests).toHaveLength(2);
+    expect(executeTool).not.toHaveBeenCalled();
+  });
 
-      const inferenceOrchestratorService = (
-        useCase as unknown as {
-          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+  it('continues after persisting a chart acknowledgement', async () => {
+    const displayTool = {
+      name: 'bar_chart',
+      description: 'Display a bar chart',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockReturnValue({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      }),
+    };
+    const { useCase, provider } = buildHarness({
+      backendTools: [displayTool as unknown as BackendTool],
+      runtimeTools: [displayTool],
+      turns: [
+        toolCallTurn({
+          id: 'chart-1',
+          name: 'bar_chart',
+          input: { title: 'Budget' },
+        }),
+        textTurn('The chart summarizes the budget increase.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    const toolResult = items.find(
+      (item): item is ToolResultMessage => item instanceof ToolResultMessage,
+    );
+    expect(toolResult?.content).toEqual([
+      expect.objectContaining({
+        toolId: 'chart-1',
+        toolName: 'bar_chart',
+        result: 'Tool has been displayed successfully',
+      }),
+    ]);
+    expect(displayTool.execute).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(2);
+  });
+
+  it.each([
+    'send_email',
+    'create_calendar_event',
+    'create_skill',
+    'edit_skill',
+  ])('terminates after the %s widget tool phase', async (name) => {
+    const terminalTool = {
+      name,
+      description: 'Request external user interaction',
+      parameters: { type: 'object' },
+    };
+    const { useCase, provider } = buildHarness({
+      backendTools: [terminalTool as unknown as BackendTool],
+      runtimeTools: [terminalTool],
+      turns: [toolCallTurn({ id: 'external-1', name, input: {} })],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(1);
+  });
+
+  it('emits tool usage for an executable tool invocation', async () => {
+    const executableTool = {
+      name: 'internet_search',
+      description: 'search',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Berlin budget results'),
+    };
+    const { useCase, emitAsync } = buildHarness({
+      runtimeTools: [executableTool],
+      turns: [
+        toolCallTurn({
+          id: 'search-1',
+          name: 'internet_search',
+          input: { query: 'Berlin budget 2026' },
+        }),
+        textTurn('The budget results are ready.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      ToolUsedEvent.EVENT_NAME,
+      new ToolUsedEvent(userId, orgId, 'internet_search'),
+    );
+  });
+
+  it('re-applies the context budget before every inference iteration', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, countTools, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(2);
+    expect(
+      provider.requests[1].messages.some(
+        (message) => message.role === 'tool_result',
+      ),
+    ).toBe(true);
+    expect(countTools).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'echo' }),
+    ]);
+  });
+
+  it('materializes persisted history for the selected model', async () => {
+    const { useCase, materializeHistory } = buildHarness({
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(materializeHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          model: expect.objectContaining({
+            contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('materializes persisted history for a model without a configured window', async () => {
+    const { useCase, materializeHistory } = buildHarness();
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(materializeHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          model: expect.objectContaining({ provider: 'anthropic' }),
+        }),
+      }),
+    );
+  });
+
+  it('accepts a latest turn that fits next to the instructions and tools', async () => {
+    const { useCase, provider } = buildHarness({
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+      tokensPerMessage: Math.floor((CONFIGURED_CONTEXT_WINDOW_SIZE * 0.9) / 2),
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(1);
+  });
+
+  it('retries with less history after the provider rejects the request as too long', async () => {
+    const requests: ProviderRequest[] = [];
+    const { useCase, materializeHistory } = buildHarness({
+      contextWindowSize: 40,
+      tokensPerMessage: 4,
+      providerStream: async function* (request) {
+        requests.push({ ...request, messages: [...request.messages] });
+        if (requests.length === 1) {
+          throw new ModelProviderError({
+            kind: 'rejection',
+            stage: 'stream_establishment',
+            upstreamStatus: 400,
+            rejectionReason: 'context_length_exceeded',
+            contextOverflowTokens: 2,
+            cause: new Error('prompt is too long: 202 tokens > 200 maximum'),
+          });
         }
-      ).inferenceOrchestratorService;
-      inferenceOrchestratorService.runInference = jest
-        .fn()
-        .mockImplementation(() =>
-          (async function* () {
-            yield toolCallMessage;
-            return toolCallMessage;
-          })(),
-        );
+        yield { textDelta: 'Fits now', finishReason: 'stop' };
+      },
+    });
+    const text = (role: 'user' | 'assistant', value: string) => ({
+      role,
+      content: [{ type: 'text' as const, text: value }],
+    });
+    materializeHistory.mockResolvedValue([
+      text('user', 'first'),
+      text('assistant', 'one'),
+      text('user', 'second'),
+      text('assistant', 'two'),
+      text('user', 'third'),
+    ]);
 
-      const toolResultCollectorService = (
-        useCase as unknown as {
-          toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
-        }
-      ).toolResultCollectorService;
-      let collectCallCount = 0;
-      toolResultCollectorService.collectToolResults.mockImplementation(
-        async () => {
-          collectCallCount++;
-          if (collectCallCount === 1) {
-            return { contents: [], outcomes: [], piiMasks: null };
-          }
-          return failingCollectResult();
-        },
-      );
-      toolResultCollectorService.exitLoopAfterAgentResponse.mockReturnValue(
-        false,
-      );
+    const items = await drain(await useCase.execute(userCommand()));
 
-      const command = new ExecuteRunCommand({
-        threadId,
-        input: new RunUserInput('Erstelle den Bericht als Dokument', []),
-        streaming: true,
-      });
+    expect(requests).toHaveLength(2);
+    expect(requests[1].messages).toEqual(requests[0].messages.slice(2));
+    expect(JSON.stringify(items)).toContain('Fits now');
+  });
 
-      const drain = async () => {
-        const generator = await useCase.execute(command);
-        let next = await generator.next();
-        while (!next.done) {
-          next = await generator.next();
-        }
-      };
+  it('does not call the provider when the latest turn exceeds the context window', async () => {
+    const { useCase, provider } = buildHarness({
+      contextWindowSize: CONFIGURED_CONTEXT_WINDOW_SIZE,
+      tokensPerMessage: CONFIGURED_CONTEXT_WINDOW_SIZE + 1,
+    });
 
-      await expect(drain()).rejects.toMatchObject({
-        code: RunErrorCode.RUN_TOOL_EXECUTION_FAILED,
-      });
-      // Three identical failures trip the breaker before a fourth model call.
-      expect(inferenceOrchestratorService.runInference).toHaveBeenCalledTimes(
-        3,
-      );
-      // The persisted tool-result transcript survives the abort — cleanup
-      // would delete the failed turn and re-arm the pending tool calls for
-      // the next run.
-      expect(
-        messageCleanupService.cleanupTrailingNonAssistantMessages,
-      ).not.toHaveBeenCalled();
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('cleans up trailing non-assistant messages when the run fails', async () => {
+    const { useCase, cleanup } = buildHarness({ providerRejects: true });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
+    expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
+  });
+
+  it('rejects a tool-result input with no pending tool call', async () => {
+    const { useCase } = buildHarness();
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('t1', 'search', 'result'),
+    });
+    // the (empty) thread has no assistant tool_use to attach the result to;
+    // the error surfaces when the stream is drained
+    await expect(drain(await useCase.execute(command))).rejects.toThrow(
+      /No pending tool call/i,
+    );
+  });
+
+  it('aborts without an error when the thread disappears while seeding a tool result', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collector = {
+      collectToolResults: jest.fn().mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'chart-1',
+            'bar_chart',
+            'Chart displayed',
+          ),
+        ],
+        piiMasks: null,
+      }),
+    } as unknown as ToolResultCollectorService;
+    const { useCase, createSeedToolResult, provider, cleanup } = buildHarness({
+      lastMessage,
+      toolResultCollector: collector,
+    });
+    createSeedToolResult.mockResolvedValue(null);
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    const stream = await useCase.execute(command);
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('anonymizes a display result and uses the pending tool name before persistence', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collectToolResults = jest.fn(
+      ({ input }: { input: RunToolResultInput }) => ({
+        contents: [
+          new ToolResultMessageContent(
+            input.toolId,
+            input.toolName,
+            input.result,
+          ),
+        ],
+        piiMasks: null,
+      }),
+    );
+    const { useCase, createSeedToolResult } = buildHarness({
+      anonymous: true,
+      lastMessage,
+      toolResultCollector: { collectToolResults } as never,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput(
+        'chart-1',
+        'forged_tool_name',
+        'Chart for Jane Doe',
+      ),
+    });
+
+    const items = await drain(await useCase.execute(command));
+
+    expect(collectToolResults.mock.calls[0][0].input).toMatchObject({
+      toolId: 'chart-1',
+      toolName: 'bar_chart',
+      result: 'Hi {{pii:PERSON_1}}',
+    });
+    expect(createSeedToolResult.mock.calls[0][0].content[0]).toMatchObject({
+      toolName: 'bar_chart',
+      result: 'Hi {{pii:PERSON_1}}',
+    });
+    expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
+  });
+
+  it('anonymizes the user message and streams the mask dictionary first', async () => {
+    const { useCase, anonymize } = buildHarness({ anonymous: true });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    expect(anonymize).toHaveBeenCalledTimes(1);
+    // masks are streamed before the (redacted) user message
+    expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
+    expect(items[1]).toMatchObject({ id: 'user-msg' });
+  });
+
+  it('preserves oversize validation and sends no unanonymized text', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const inputTooLongError = new AnonymizationInputTooLongError(
+      30_001,
+      30_000,
+    );
+    anonymize.mockRejectedValue(inputTooLongError);
+
+    const generator = await useCase.execute(
+      userCommand(new RunUserInput('A'.repeat(30_001))),
+    );
+
+    await expect(drain(generator)).rejects.toBe(inputTooLongError);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('preserves classified anonymization outages and sends no unanonymized text', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const timeout = new ProviderTimeoutError(
+      { provider: 'anonymize', underlyingCode: 'ETIMEDOUT' },
+      new Error('request timed out'),
+    );
+    anonymize.mockRejectedValue(timeout);
+
+    const generator = await useCase.execute(userCommand());
+
+    await expect(drain(generator)).rejects.toBe(timeout);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('keeps generic engine failures in the privacy-safe run group', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const engineFailure = new AnonymizationFailedError('invalid request');
+    anonymize.mockRejectedValue(engineFailure);
+
+    const generator = await useCase.execute(userCommand());
+    const error: unknown = await drain(generator).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'RunAnonymizationUnavailableError',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: engineFailure,
+    });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('preserves thread-mask grouping while keeping the privacy-safe run contract', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const maskFailure = new ThreadPiiMaskAnonymizationError(
+      'new_masks_persistence',
+      { textLength: 2, newMaskCount: 1, databaseCode: '23505' },
+      new Error('sensitive database detail'),
+    );
+    anonymize.mockRejectedValue(maskFailure);
+
+    const generator = await useCase.execute(userCommand());
+    const error: unknown = await drain(generator).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect(error).toMatchObject({
+      name: 'THREAD_PII_MASK_PERSISTENCE_FAILED',
+      code: 'RUN_ANONYMIZATION_UNAVAILABLE',
+      cause: maskFailure,
+    });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('aborts without an error when the thread disappears while persisting user-message masks', async () => {
+    const { useCase, anonymize, createUser, provider, cleanup } = buildHarness({
+      anonymous: true,
+    });
+    anonymize.mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+
+    const stream = await useCase.execute(userCommand());
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('aborts without an error when the thread disappears while persisting tool-result masks', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collectToolResults = jest
+      .fn()
+      .mockRejectedValue(new ThreadPiiMaskThreadMissingError(threadId));
+    const { useCase, createSeedToolResult, provider, cleanup } = buildHarness({
+      anonymous: true,
+      lastMessage,
+      toolResultCollector: { collectToolResults } as never,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart for Jane'),
+    });
+
+    const stream = await useCase.execute(command);
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(createSeedToolResult).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('activates a requested skill before the run and folds in its instructions', async () => {
+    const { useCase, activateOnThread, createUser, provider } = buildHarness();
+
+    const command = userCommand(
+      new RunUserInput('Hi', [], 'skill-1' as unknown as UUID),
+    );
+    await drain(await useCase.execute(command));
+
+    expect(activateOnThread).toHaveBeenCalledWith('skill-1', expect.anything());
+    // the skill instructions are folded into the created user message
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Be a helpful clerk',
+    });
+    expect(provider.requests[0].instructions).toContain(
+      'Skill "Clerk" has already been activated on this thread.',
+    );
+  });
+
+  it('accepts a skill-only quick action without text or images', async () => {
+    const { useCase, createUser } = buildHarness();
+    const command = userCommand(
+      new RunUserInput('', [], 'skill-1' as unknown as UUID),
+    );
+
+    await drain(await useCase.execute(command));
+
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      text: '',
+      pendingImages: [],
+      skillInstructions: 'Be a helpful clerk',
+    });
+  });
+
+  it('activates a workspace skill quick action through the regular resource attachment flow', async () => {
+    const projectSkillId = randomUUID();
+    const {
+      useCase,
+      activateOnThread,
+      provider,
+      workspaceContextFetch,
+      createUser,
+    } = buildHarness({
+      workspaceId: randomUUID(),
+      workspaceSkills: [
+        {
+          id: projectSkillId,
+          name: 'Permit Review',
+          instructions: 'Review the permit.',
+        } as BackendSkill,
+      ],
+    });
+
+    activateOnThread.mockResolvedValue({
+      instructions: 'Review the permit.',
+      skillName: 'Permit Review',
+    });
+    const command = userCommand(new RunUserInput('Hi', [], projectSkillId));
+
+    await drain(await useCase.execute(command));
+    expect(activateOnThread).toHaveBeenCalledWith(
+      projectSkillId,
+      expect.anything(),
+    );
+    expect(workspaceContextFetch).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(1);
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Review the permit.',
     });
   });
 });

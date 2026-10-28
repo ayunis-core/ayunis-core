@@ -64,15 +64,19 @@ export class OpenAIExceptionFilter extends BaseExceptionFilter {
         response.write('data: [DONE]\n\n');
         response.end();
       } catch (writeError) {
-        this.openaiCompatLogger.warn('Failed to emit final SSE error frame', {
-          status: mapped.status,
-          writeError:
-            writeError instanceof Error ? writeError.message : 'Unknown',
-        });
+        this.openaiCompatLogger.warn(
+          {
+            status: mapped.status,
+            writeError:
+              writeError instanceof Error ? writeError.message : 'Unknown',
+          },
+          'Failed to emit final SSE error frame',
+        );
       }
       return;
     }
 
+    if (mapped.headers) response.set(mapped.headers);
     response.status(mapped.status).json(mapped.body);
   }
 

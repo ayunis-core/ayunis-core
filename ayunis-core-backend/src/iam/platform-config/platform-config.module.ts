@@ -10,6 +10,8 @@ import { SetFairUseLimitUseCase } from './application/use-cases/set-fair-use-lim
 import { SetImageFairUseLimitUseCase } from './application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
 import { GetAppAlertUseCase } from './application/use-cases/get-app-alert/get-app-alert.use-case';
 import { SetAppAlertUseCase } from './application/use-cases/set-app-alert/set-app-alert.use-case';
+import { GetAcademyMinimumModuleSecondsUseCase } from './application/use-cases/get-academy-minimum-module-seconds/get-academy-minimum-module-seconds.use-case';
+import { SetAcademyMinimumModuleSecondsUseCase } from './application/use-cases/set-academy-minimum-module-seconds/set-academy-minimum-module-seconds.use-case';
 import { SuperAdminPlatformConfigController } from './presenters/http/super-admin-platform-config.controller';
 import { AppAlertController } from './presenters/http/app-alert.controller';
 
@@ -28,11 +30,14 @@ import { AppAlertController } from './presenters/http/app-alert.controller';
     SetImageFairUseLimitUseCase,
     GetAppAlertUseCase,
     SetAppAlertUseCase,
+    GetAcademyMinimumModuleSecondsUseCase,
+    SetAcademyMinimumModuleSecondsUseCase,
   ],
   exports: [
     GetCreditsPerEuroUseCase,
     GetFairUseLimitsUseCase,
     GetAppAlertUseCase,
+    GetAcademyMinimumModuleSecondsUseCase,
   ],
 })
 export class PlatformConfigModule {}

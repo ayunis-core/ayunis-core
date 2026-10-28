@@ -12,31 +12,81 @@
     "cancelText": "Abbrechen",
     "errorDeleteThread": "Chat konnte nicht gelöscht werden",
     "artifactSaved": "Dokument erfolgreich gespeichert",
+    "artifactPanel": {
+      "title": "Erstellte Inhalte",
+      "openList": "Erstellte Inhalte öffnen",
+      "emptyTitle": "Noch keine Inhalte erstellt",
+      "listLoadError": "Erstellte Inhalte konnten nicht geladen werden",
+      "type": {
+        "document": "Dokument",
+        "spreadsheet": "Tabelle",
+        "diagram": "Diagramm"
+      },
+      "loadErrorTitle": "Inhalt konnte nicht geladen werden",
+      "loadErrorDescription": "Der Inhalt konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "notFoundTitle": "Inhalt nicht gefunden",
+      "notFoundDescription": "Dieser Inhalt existiert möglicherweise nicht mehr.",
+      "retry": "Erneut versuchen"
+    },
+    "sidePanel": {
+      "open": "Seitenleiste öffnen",
+      "close": "Seitenleiste schließen"
+    },
+    "context": {
+      "tab": "Kontext",
+      "workspaceScope": "Arbeitsbereich",
+      "hint": {
+        "personal": "Persönlicher Kontext",
+        "workspace": "Arbeitsbereich: {{name}}",
+        "open": "Chatkontext öffnen",
+        "skills_one": "{{count}} Fähigkeit",
+        "skills_other": "{{count}} Fähigkeiten",
+        "knowledgeBases_one": "{{count}} Wissenssammlung",
+        "knowledgeBases_other": "{{count}} Wissenssammlungen"
+      },
+      "loadError": "Kontext konnte nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "skills": {
+        "title": "Fähigkeiten",
+        "empty": "Keine Fähigkeiten verfügbar"
+      },
+      "knowledgeBases": {
+        "title": "Wissenssammlungen",
+        "empty": "Keine Wissenssammlungen verfügbar",
+        "documents_one": "{{count}} Dokument",
+        "documents_other": "{{count}} Dokumente"
+      }
+    },
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
     "errorImageTooLarge": "Das Bild ist zu groß für das gewählte Modell. Bitte verkleinern Sie es (z. B. Auflösung reduzieren) und versuchen Sie es erneut.",
     "errorInferenceTimeout": "Das Modell hat zu lange nicht geantwortet. Die Verbindung wurde getrennt — bitte versuchen Sie es erneut.",
+    "errorMalformedToolCallTokenLimit": "Die Antwort des Modells wurde abgeschnitten, weil sie zu lang war. Bitte stellen Sie eine kleinere Anfrage oder teilen Sie die Aufgabe auf.",
+    "errorMalformedToolCall": "Das Modell hat einen ungültigen Werkzeugaufruf erzeugt. Bitte versuchen Sie es erneut.",
     "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "errorNoModelFound": "Kein Modell gefunden",
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
     "errorToolNotFound": "Tool nicht gefunden",
     "errorToolExecutionFailed": "Ein Tool ist wiederholt fehlgeschlagen. Bitte passen Sie Ihre Anfrage an und versuchen Sie es erneut.",
     "errorAnonymizationUnavailable": "Die Anonymisierung ist derzeit nicht verfügbar. Ihre Nachricht wurde nicht gesendet, um Ihre Daten zu schützen.",
+    "errorAnonymizationInputTooLong": "Ihre Nachricht überschreitet das Limit von 60.000 Zeichen für die Anonymisierung und wurde nicht gesendet. Bitte kürzen Sie sie und versuchen Sie es erneut.",
     "errorContextBudgetExceeded": "Die letzte Konversationsrunde ist zu groß für das Kontextfenster des Modells.",
+    "errorThreadBusy": "Die vorherige Antwort wird noch gestoppt. Bitte senden Sie Ihre Nachricht gleich noch einmal.",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorRestoreFailedSubmission": "Ihre vorherige Nachricht und Anhänge konnten nicht wiederhergestellt werden, da die Eingabe bereits einen Entwurf enthält.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",
+    "imageUploadsBusy": "Es werden gerade zu viele Bilder hochgeladen. Bitte versuchen Sie es gleich noch einmal.",
     "errorQuotaExceededWithTime": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es in {{minutes}} Minuten erneut.",
     "errorCreditBudgetExceeded": "Sie haben das Credits-Limit für diesen Monat erreicht. Bitte wenden Sie sich an Ihren Administrator.",
     "errorUserCreditLimitExceeded": "Sie haben Ihr monatliches Guthaben-Limit erreicht. Bitte wenden Sie sich an Ihren Administrator.",
     "errorTeamCreditLimitExceeded": "Ihr Team hat sein monatliches Guthaben-Limit erreicht. Bitte wenden Sie sich an Ihren Administrator.",
     "errorAddKnowledgeBase": "Wissenssammlung konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
     "errorRemoveKnowledgeBase": "Wissenssammlung konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+    "errorKnowledgeBaseUnavailable": "Diese Wissenssammlung oder dieser Chat ist nicht mehr verfügbar.",
     "errorAddIntegration": "Integration konnte nicht hinzugefügt werden",
     "errorRemoveIntegration": "Integration konnte nicht entfernt werden",
     "errorIntegrationNotFound": "Diese Integration existiert nicht mehr",
-    "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
@@ -46,7 +96,8 @@
       "working": "Arbeite…",
       "thoughtProcess": "Gedankengang",
       "preparingToolCall": "Werkzeugaufruf wird vorbereitet…",
-      "invalidToolCall": "Ungültiger Werkzeugaufruf",
+      "invalidToolCall": "Werkzeugaufruf fehlgeschlagen",
+      "invalidToolCallHint": "Das Modell hat einen fehlerhaften Werkzeugaufruf erzeugt. Versuchen Sie es erneut oder wählen Sie ein anderes Modell.",
       "summary_one": "{{count}} Schritt",
       "summary_other": "{{count}} Schritte",
       "errorStep": "Abgebrochen",
@@ -60,11 +111,13 @@
         "create_spreadsheet": "Tabelle erstellt",
         "update_spreadsheet": "Tabelle aktualisiert",
         "chart": "Diagramm erstellt",
+        "map": "Karte erstellt",
         "generate_image": "Bild generiert",
         "send_email": "E-Mail entworfen",
         "create_calendar_event": "Kalendereintrag erstellt",
         "create_skill": "Fähigkeit erstellt",
         "edit_skill": "Fähigkeit bearbeitet",
+        "install_marketplace_skill": "Fähigkeit zur Installation angeboten",
         "activate_skill": "Fähigkeit aktiviert",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
@@ -72,11 +125,18 @@
         "knowledge_query": "Wissenssammlung durchsucht",
         "code_execution": "Berechnung ausgeführt",
         "http": "HTTP-Anfrage ausgeführt",
-        "use_tool": "{{tool}} verwendet"
+        "use_tool": "{{tool}} verwendet",
+        "create_file": "Datei erstellt"
       }
+    },
+    "map": {
+      "loading": "Karte wird vorbereitet…",
+      "invalid": "Diese Karte kann nicht angezeigt werden, da ihre Daten leer oder ungültig sind.",
+      "ariaLabel": "Interaktive Karte: {{title}}"
     },
     "tools": {
       "internet_search": "Im Internet suchen",
+      "marketplace_search": "Im Marketplace suchen",
       "website_content": "Website abfragen",
       "source_query": "Datei durchsuchen",
       "source_get_text": "Datei durchsuchen",
@@ -84,7 +144,13 @@
       "activate_skill": "Fähigkeit aktivieren",
       "knowledge_query": "Wissen abrufen",
       "knowledge_get_text": "Wissen abrufen",
-      "read_document": "Dokument lesen",
+      "read_document": {
+        "title": "Dokument",
+        "reading": "Dokument wird gelesen…",
+        "available": "Dokument verfügbar",
+        "unavailable": "Dokument konnte nicht geöffnet werden",
+        "openInEditor": "Im Editor öffnen"
+      },
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",
@@ -124,6 +190,21 @@
         "error": "Fähigkeit konnte nicht aktualisiert werden",
         "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits",
         "skillNotFound": "Fähigkeit konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
+      },
+      "install_marketplace_skill": {
+        "title": "Fähigkeit aus dem Marketplace installieren",
+        "install": "Fähigkeit installieren",
+        "installing": "Wird installiert…",
+        "installed": "Fähigkeit installiert",
+        "success": "Fähigkeit erfolgreich installiert",
+        "error": "Fähigkeit konnte nicht installiert werden",
+        "notFound": "Diese Fähigkeit ist im Marketplace nicht mehr verfügbar",
+        "unavailable": "Der Marketplace ist derzeit nicht erreichbar",
+        "noPermission": "Sie dürfen keine Fähigkeiten installieren. Wenden Sie sich an Ihre Administration.",
+        "loading": "Katalogeintrag wird geladen…",
+        "entryUnavailable": "Diese Fähigkeit ist im Marketplace derzeit nicht verfügbar und kann hier nicht installiert werden.",
+        "alreadyInstalled": "Bereits installiert",
+        "openSkill": "Fähigkeit öffnen"
       },
       "create_document": {
         "title": "Dokument",
@@ -194,6 +275,11 @@
         "altFallback": "Generiertes Bild",
         "openPreview": "Bildvorschau öffnen",
         "download": "Bild herunterladen"
+      },
+      "create_file": {
+        "preparing": "Datei wird erstellt …",
+        "description": "XML-, JSON- oder Textdatei",
+        "download": "Herunterladen"
       }
     },
     "charts": {
@@ -201,11 +287,30 @@
     },
     "modelUnavailableTitle": "KI-Modell nicht mehr verfügbar",
     "modelUnavailableDescription": "Das in diesem Chat verwendete KI-Modell ist nicht mehr verfügbar, daher kann diese Konversation nicht fortgesetzt werden. Starten Sie einen neuen Chat, um weiterzuarbeiten.",
-    "longChatWarningTitle": "Konversation zu lang",
-    "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
+    "modelProviderFaultWarning": "Für das Modell „{{modelName}}“ ist derzeit eine Provider-Störung bekannt. Sie können die Konversation fortsetzen, Antworten können jedoch fehlschlagen.",
+    "longChatWarningTitle": "Dieser Chat hat das Limit Ihres Modells erreicht",
+    "longChatWarningDescription": "Bei jeder Nachricht wird der gesamte bisherige Chat mit allen angehängten Dateien erneut an das Modell gesendet. Ihr ausgewähltes Modell hat dafür eine feste Obergrenze, die dieser Chat fast erreicht hat. Das ist eine Eigenschaft des Modells und keine Einstellung von Ayunis. Wenn Sie weiterarbeiten möchten, beginnen Sie einen neuen Chat.",
+    "longChatWarningDismiss": "Warnung ausblenden",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
+    "sourceCitation": {
+      "title": "Quellenbeleg",
+      "loading": "Quelle wird geladen…",
+      "unavailable": "Diese Quelle ist nicht verfügbar oder Sie haben keinen Zugriff.",
+      "line": "Zeile {{line}}",
+      "lines": "Zeilen {{start}}–{{end}}",
+      "excerpt": "Zitierter Auszug",
+      "close": "Schließen"
+    },
     "piiMask": {
       "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
+      "tooltipClickable": "{{category}} — vor dem Senden an das KI-Modell anonymisiert. Klicken, um die Maskierung aufzuheben.",
+      "unmaskTitle": "Maskierung von \"{{value}}\" aufheben?",
+      "unmaskDescription": "Der Begriff wird in diesem Chat ab jetzt in seiner ursprünglichen Form an das KI-Modell gesendet, auch im bisherigen Gesprächsverlauf. Diese Aktion kann nicht rückgängig gemacht werden und ändert nicht die Anonymisierungseinstellungen Ihrer Organisation.",
+      "unmaskConfirm": "Maskierung aufheben",
+      "unmaskCancel": "Abbrechen",
+      "unmaskSuccess": "Maskierung für diesen Chat aufgehoben",
+      "unmaskNotFound": "Der Begriff wurde in diesem Chat nicht gefunden",
+      "unmaskError": "Maskierung konnte nicht aufgehoben werden",
       "categories": {
         "person_name": "Personenname",
         "organization": "Organisation",
@@ -220,7 +325,7 @@
         "other": "Personenbezogene Daten"
       }
     },
-    "academyCertificateRequiredError": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
+    "academyCertificateRequiredError": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
   },
   "newChat": {
     "newChat": "Neuer Chat",

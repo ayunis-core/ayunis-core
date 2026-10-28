@@ -1,14 +1,13 @@
 import { randomUUID } from 'crypto';
-import type { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
-import { GlobalWhitelistWordNotFoundError } from '../../anonymization-settings.errors';
+import type { GlobalAnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/global-anonymization-whitelist.repository';
+import { GlobalWhitelistWordNotFoundError } from 'src/domain/anonymization-settings/application/anonymization-settings.errors';
 import { DeleteGlobalPiiWhitelistWordCommand } from './delete-global-pii-whitelist-word.command';
 import { DeleteGlobalPiiWhitelistWordUseCase } from './delete-global-pii-whitelist-word.use-case';
 
 describe('DeleteGlobalPiiWhitelistWordUseCase', () => {
   const repository: jest.Mocked<GlobalAnonymizationWhitelistRepository> = {
     findAll: jest.fn(),
-    findByCategoryAndWord: jest.fn(),
-    create: jest.fn(),
+    createMany: jest.fn(),
     delete: jest.fn(),
   };
 

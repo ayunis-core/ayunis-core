@@ -1,15 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
-import { ToolHandlerRegistry } from '../../tool-handler.registry';
+import { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { JSONSchema } from 'json-schema-to-ts';
 import {
   ToolInvalidInputError,
   ToolExecutionFailedError,
-} from '../../tools.errors';
+} from 'src/domain/tools/application/tools.errors';
 
 // Mock tool implementation for testing
 class MockTool extends Tool {
@@ -38,10 +42,12 @@ describe('ExecuteToolUseCase', () => {
   let useCase: ExecuteToolUseCase;
   let mockToolHandlerRegistry: Partial<ToolHandlerRegistry>;
   let mockHandler: { execute: jest.Mock };
+  let logger: LoggerMock;
 
   const mockContext = '123e4567-e89b-12d3-a456-426614174000' as any;
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     mockHandler = {
       execute: jest.fn(),
     };
@@ -206,18 +212,20 @@ describe('ExecuteToolUseCase', () => {
       const input = {};
       const command = new ExecuteToolCommand(mockTool, input, mockContext);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
       mockHandler.execute.mockResolvedValue('result');
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('execute', {
-        toolName: 'Test Tool',
-        input,
-        parameters: mockTool.parameters,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          tool: { name: 'Test Tool' },
+          input,
+          tools: mockTool.parameters,
+        },
+        'execute',
+      );
     });
 
     it('strips schema-disallowed null params before invoking the handler', async () => {

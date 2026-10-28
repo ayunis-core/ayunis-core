@@ -1,14 +1,14 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
 import { UpdateIpAllowlistUseCase } from './update-ip-allowlist.use-case';
 import { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
-import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
+import type { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
 import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
-} from '../../ip-allowlist.errors';
-import type { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
+} from 'src/iam/ip-allowlist/application/ip-allowlist.errors';
+import type { IpAllowlistCachePort } from 'src/iam/ip-allowlist/application/ports/ip-allowlist-cache.port';
 import type { UUID } from 'crypto';
 
 describe('UpdateIpAllowlistUseCase', () => {

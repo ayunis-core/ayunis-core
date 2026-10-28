@@ -2,11 +2,12 @@ import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
-import type { MetricsConfig } from '../../config/metrics.config';
+import type { MetricsConfig } from 'src/config/metrics.config';
 
 @Injectable()
 export class MetricsAuthMiddleware implements NestMiddleware {
   private readonly logger = new Logger(MetricsAuthMiddleware.name);
+
   private readonly user: string | undefined;
   private readonly password: string | undefined;
   private readonly authEnabled: boolean;

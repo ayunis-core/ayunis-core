@@ -11,12 +11,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { PromoteToSuperAdminUseCase } from './promote-to-super-admin.use-case';
 import { PromoteToSuperAdminCommand } from './promote-to-super-admin.command';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
-import { UserNotFoundError } from '../../users.errors';
+import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 
 describe('PromoteToSuperAdminUseCase', () => {
   let useCase: PromoteToSuperAdminUseCase;

@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindSuperAdminsUseCase } from './find-super-admins.use-case';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
-import { UserUnexpectedError } from '../../users.errors';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 
 describe('FindSuperAdminsUseCase', () => {
   let useCase: FindSuperAdminsUseCase;

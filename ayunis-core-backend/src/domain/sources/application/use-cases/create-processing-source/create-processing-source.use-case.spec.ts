@@ -2,11 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateProcessingSourceUseCase } from './create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
-import { SourceRepository } from '../../ports/source.repository';
-import { createMockSourceRepository } from '../../testing/source.fixtures';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
-import { UnsupportedSourceFileTypeError } from '../../sources.errors';
+import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
 
 describe('CreateProcessingSourceUseCase', () => {
   let useCase: CreateProcessingSourceUseCase;
@@ -25,7 +25,7 @@ describe('CreateProcessingSourceUseCase', () => {
     useCase = module.get(CreateProcessingSourceUseCase);
   });
 
-  it('should create a FileSource with PROCESSING status for PDF', async () => {
+  it('keeps a queued PDF out of stale-processing cleanup until a worker claims it', async () => {
     const command = new CreateProcessingSourceCommand({
       fileType: 'application/pdf',
       fileName: 'Stadtratsbeschluss_2025.pdf',
@@ -37,7 +37,7 @@ describe('CreateProcessingSourceUseCase', () => {
     expect(result.name).toBe('Stadtratsbeschluss_2025.pdf');
     expect(result.fileType).toBe(FileType.PDF);
     expect(result.textType).toBe(TextType.FILE);
-    expect(result.processingStartedAt).toBeInstanceOf(Date);
+    expect(result.processingStartedAt).toBeNull();
     expect(mockSourceRepository.save).toHaveBeenCalledTimes(1);
   });
 
@@ -53,6 +53,29 @@ describe('CreateProcessingSourceUseCase', () => {
     expect(result.fileType).toBe(FileType.DOCX);
     expect(result.status).toBe(SourceStatus.PROCESSING);
   });
+
+  it.each([
+    ['application/vnd.oasis.opendocument.text', 'Brief.odt', FileType.ODT],
+    [
+      'application/vnd.oasis.opendocument.presentation',
+      'Praesentation.odp',
+      FileType.ODP,
+    ],
+  ])(
+    'should create a FileSource with PROCESSING status for %s',
+    async (mimeType, fileName, expectedFileType) => {
+      const command = new CreateProcessingSourceCommand({
+        fileType: mimeType,
+        fileName,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.fileType).toBe(expectedFileType);
+      expect(result.textType).toBe(TextType.FILE);
+      expect(result.status).toBe(SourceStatus.PROCESSING);
+    },
+  );
 
   it.each([
     ['audio/mpeg', 'meeting.mp3'],
@@ -72,9 +95,34 @@ describe('CreateProcessingSourceUseCase', () => {
       expect(result.fileType).toBe(FileType.AUDIO);
       expect(result.textType).toBe(TextType.FILE);
       expect(result.status).toBe(SourceStatus.PROCESSING);
-      expect(result.processingStartedAt).toBeInstanceOf(Date);
+      expect(result.processingStartedAt).toBeNull();
     },
   );
+
+  it('should create a FileSource with PROCESSING status for EML', async () => {
+    const command = new CreateProcessingSourceCommand({
+      fileType: 'message/rfc822',
+      fileName: 'Anfrage.eml',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.fileType).toBe(FileType.EML);
+    expect(result.textType).toBe(TextType.FILE);
+    expect(result.status).toBe(SourceStatus.PROCESSING);
+  });
+
+  it('should persist an Outlook MSG as an email FileSource', async () => {
+    const result = await useCase.execute(
+      new CreateProcessingSourceCommand({
+        fileType: 'application/vnd.ms-outlook',
+        fileName: 'Anfrage.msg',
+      }),
+    );
+
+    expect(result.fileType).toBe(FileType.EML);
+    expect(result.status).toBe(SourceStatus.PROCESSING);
+  });
 
   it('should throw UnsupportedSourceFileTypeError for unsupported file types', async () => {
     const command = new CreateProcessingSourceCommand({

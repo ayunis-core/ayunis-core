@@ -1,8 +1,8 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
@@ -81,9 +81,7 @@ describe('RolesGuard', () => {
   });
 
   it('should log a warning with audit context when the user role is rejected', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createLoggerMock();
     const { context, reflector } = createContext({
       roles: [UserRole.ADMIN],
       user: regularUser,
@@ -95,9 +93,8 @@ describe('RolesGuard', () => {
 
     guard.canActivate(context);
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    const [message, meta] = warnSpy.mock.calls[0];
-    expect(message).toMatch(/role/i);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    const [meta, message] = logger.warn.mock.calls[0];
     expect(meta).toEqual(
       expect.objectContaining({
         userId: regularUser.id,
@@ -109,7 +106,6 @@ describe('RolesGuard', () => {
         clientIp: '203.0.113.7',
       }),
     );
-
-    warnSpy.mockRestore();
+    expect(message).toMatch(/role/i);
   });
 });

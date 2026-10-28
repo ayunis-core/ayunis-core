@@ -1,10 +1,10 @@
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelsRepository } from '../../ports/models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -21,19 +21,22 @@ import {
   MultipleEmbeddingModelsNotAllowedError,
   MultipleImageGenerationModelsNotAllowedError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 describe('CreatePermittedModelUseCase', () => {
+  const logger = createLoggerMock();
   let useCase: CreatePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const existingPermittedModelId =
     '123e4567-e89b-12d3-a456-426614174002' as UUID;
@@ -83,15 +86,16 @@ describe('CreatePermittedModelUseCase', () => {
 
     // Configure ContextService mock
     mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return mockUserId;
       if (key === 'orgId') return mockOrgId;
       if (key === 'role') return UserRole.ADMIN;
-      if (key === 'systemRole') return null;
+      if (key === 'systemRole') return SystemRole.CUSTOMER;
       return null;
     });
 
     // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.log.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {
@@ -113,6 +117,7 @@ describe('CreatePermittedModelUseCase', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       });
 
       const mockPermittedModel = new PermittedModel({
@@ -123,7 +128,7 @@ describe('CreatePermittedModelUseCase', () => {
       modelsRepository.findOne.mockResolvedValue(mockModel);
       permittedModelsRepository.create.mockResolvedValue(mockPermittedModel);
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const logSpy = logger.log;
 
       // Act
       const result = await useCase.execute(command);
@@ -140,10 +145,10 @@ describe('CreatePermittedModelUseCase', () => {
       );
       expect(result).toBe(mockPermittedModel);
 
-      expect(logSpy).toHaveBeenCalledWith('execute', {
-        modelId: mockModelId,
-        orgId: mockOrgId,
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        { modelId: mockModelId, orgId: mockOrgId },
+        'execute',
+      );
     });
 
     it('should throw ModelNotFoundError when model is not found', async () => {
@@ -177,6 +182,7 @@ describe('CreatePermittedModelUseCase', () => {
         isArchived: false,
         canUseTools: true,
         canVision: false,
+        contextWindowSize: 128_000,
       });
 
       modelsRepository.findOne.mockResolvedValue(mockModel);
@@ -184,7 +190,7 @@ describe('CreatePermittedModelUseCase', () => {
       const repositoryError = new Error('Database constraint violation');
       permittedModelsRepository.create.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
+      const errorSpy = logger.error;
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -192,9 +198,10 @@ describe('CreatePermittedModelUseCase', () => {
       );
 
       expect(permittedModelsRepository.create).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith('Error creating permitted model', {
-        error: repositoryError,
-      });
+      expect(errorSpy).toHaveBeenCalledWith(
+        { err: repositoryError },
+        'Error creating permitted model',
+      );
     });
 
     it('should reject non-Azure image-generation models explicitly', async () => {
@@ -304,7 +311,7 @@ describe('CreatePermittedModelUseCase', () => {
 
       modelsRepository.findOne.mockResolvedValue(undefined);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
+      const errorSpy = logger.error;
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(

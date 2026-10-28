@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
-import { SkillRepository } from '../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 
 @Injectable()
 export class ShareDeletedListener {
@@ -21,11 +21,14 @@ export class ShareDeletedListener {
       return;
     }
 
-    this.logger.log('Cleaning up skill activations after share deletion', {
-      skillId: event.entityId,
-      ownerId: event.ownerId,
-      remainingScopeCount: event.remainingScopes.length,
-    });
+    this.logger.log(
+      {
+        skillId: event.entityId,
+        ownerId: event.ownerId,
+        remainingScopeCount: event.remainingScopes.length,
+      },
+      'Cleaning up skill activations after share deletion',
+    );
 
     if (event.remainingScopes.length === 0) {
       await this.skillRepository.deactivateAllExceptOwner(

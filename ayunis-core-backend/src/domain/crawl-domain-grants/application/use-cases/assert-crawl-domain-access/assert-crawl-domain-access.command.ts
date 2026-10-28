@@ -4,5 +4,6 @@ export class AssertCrawlDomainAccessCommand {
   constructor(
     public readonly url: string,
     public readonly orgId: UUID,
+    public readonly requireExplicitGrant = false,
   ) {}
 }

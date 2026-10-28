@@ -15,12 +15,42 @@ cd ayunis-core-frontend
 
 Before modifying any layer, read its `SUMMARY.md` in `src/[layer]/SUMMARY.md`. The top-level `src/SUMMARY.md` provides an overview.
 
+## Concise UI Copy
+
+Give users enough information to choose confidently, with minimal repetition.
+
+- Use short, specific action verbs for buttons: **Archive**, **Restore**, **Delete**. Include the target when the control would otherwise be ambiguous on its own.
+- Let nearby titles identify the subject and descriptions explain the consequence. When an action row already says **Archive organisation** and explains its effect, its button can simply say **Archive**.
+- Apply the same approach inside confirmation modals: keep the subject and consequences in the title and body, and use the action verb for the confirmation button. Avoid generic **Yes**, **OK**, or **Confirm** when a specific verb is clearer.
+- Preserve information that changes the decision: what is affected, whether the action is reversible, and any required confirmation. Concision must not weaken destructive-action warnings or remove the resource name needed to confirm deletion.
+- Prefer one useful explanation over repeated helper text. Keep implementation details out of product copy unless they help the user decide or recover from an error.
+- Review the rendered copy in each affected locale. Short labels must remain clear in context; do not impose word limits that make translations unnatural.
+
 ## Validation Sequence
+
+Choose validation breadth using the repository's Proportional Workflow.
+
+For Standard and High-Risk changes:
 
 ```bash
 pnpm run build                 # Must succeed
 pnpm run lint                  # Must pass
 ```
+
+For Fast Path changes, run the narrowest relevant test when behavior or test
+code changed, plus any lint/type check applicable to the touched files. Run the
+build when imports, types, dependencies, bundling, or other compile-time
+behavior could be affected.
+
+**Browser journey or system boundary changed?** Load the `e2e` skill when
+lower-level tests do not sufficiently prove the behavior. Add `data-testid`s
+needed by the journey to touched components in the same PR
+(`<feature>-<element>`, kebab-case) — text selectors are banned because the UI
+is i18n'd.
+
+**Would visual evidence materially help review?** After the product PR exists,
+load the `pr-media` skill and publish the smallest useful scene set to
+`pr-media/pr-<number>`. Do not commit media scenes to the product branch.
 
 ## Architecture (Feature-Sliced Design)
 
@@ -40,7 +70,7 @@ Layers only depend on layers to their right. Never import upward.
 
 ### Check demonstrated conventions before deciding placement
 
-The FSD rules above are the theory; **this repo's actual conventions are the tie-breaker.** Before deciding where a slice or component lives — feature vs widget vs page, which page a route maps to, whether something is "shared enough" to promote a layer — grep how comparable cases are already structured and follow that, rather than reasoning from FSD principles alone.
+The FSD rules above are the theory; **this repo's actual conventions are the tie-breaker.** Before deciding where a slice or component lives — feature vs widget vs page, which page a route maps to, whether something is "shared enough" to promote a layer — grep how comparable cases are already structured and follow that, rather than reasoning from FSD principles alone. Before adding any frontend file or introducing a new slice segment, inspect the target slice's existing directories and the two closest analogues.
 
 - The abstract heuristics ("used in ≥2 pages → widget", "used from more than one slice → promote") are necessary but not sufficient. They routinely disagree with how the codebase actually draws its boundaries when viewed across the whole repo instead of a single branch.
 - Concrete convention that has bitten before: **pages map one slice per route** — e.g. a list route and its detail route are separate page slices (`skills.index` vs `skill.$id`), not one page reused across two routes. Check the route files and `src/pages/` before assuming a shared placement.
@@ -49,7 +79,7 @@ The FSD rules above are the theory; **this repo's actual conventions are the tie
 
 ### Confirm placement before mutating a stacked PR chain
 
-Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a *preliminary* placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
+Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a _preliminary_ placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
 
 ## Shared UI Package — Registry-Managed Primitives
 
@@ -58,6 +88,7 @@ Framework-level primitives live in the repository-root `packages/ui/` workspace 
 - Run shadcn registry commands from `packages/ui/`, whose `components.json` owns the aliases and registry configuration: `cd ../packages/ui && pnpm dlx shadcn@latest add <component>`.
 - Do not patch `packages/ui/src/components/` for a feature-specific use case. Wrap or compose the primitive in the relevant frontend `ui/` directory or `src/shared/ui/` instead.
 - Changes inside `packages/ui/` must remain application-independent and be intentional design-system work. If a primitive genuinely needs a new generic capability, confirm that scope with the user before changing it.
+- Every newly introduced `packages/ui/src/components/<name>.tsx` component must include a colocated `<name>.stories.tsx`. Cover its representative default state and meaningful generic variants, states, or interactions; compound components should be demonstrated as a usable composition.
 - Import primitives from their public subpaths, such as `@ayunis/ui/components/button`, and `cn` from `@ayunis/ui/lib/cn`. Do not reach into `packages/ui/src/` from the frontend.
 
 ### Reach for existing primitives and tokens
@@ -73,13 +104,14 @@ Each page module can have these subdirectories:
 
 ```text
 src/pages/<page-name>/
-├── ui/       # Components — state, hooks, JSX only
+├── ui/       # Components — component-local state/hooks and JSX
+├── hooks/    # Standalone React behavior hooks, when the slice uses this segment
 ├── api/      # Mutation hooks (one per operation)
 ├── model/    # Types, constants, schemas
-└── lib/      # Pure helper functions (formatting, URL building, data transforms)
+└── lib/      # Pure helpers and established reusable behavior hooks
 ```
 
-Keep `ui/` components focused on component logic. Extract pure functions that don't depend on React state or hooks into `lib/`.
+Keep `ui/` components focused on component logic. Calling hooks inside a component does not make `ui/` the home for standalone `use*.ts` files. Put standalone interaction or presentation behavior hooks in the slice's established `hooks/` or `lib/` segment, choosing between them from the target slice and its two closest analogues; keep server operations in `api/` and state/domain concerns in `model/` when that is the slice convention. A component-specific hook may stay colocated only when comparable components in that slice already follow that pattern.
 
 ## API Client
 
@@ -99,14 +131,16 @@ For hooks that back a form (create/update dialogs), load the **frontend-form-pat
 
 ## Verifying in the Browser
 
-Use your harness's browser tooling to check the page renders and the console is clean. A render failure shows the React dev-server error overlay — the element `#webpack-dev-server-client-overlay` must not exist. The frontend URL depends on the dev slot (see `dev-environment`); seeded login credentials are in `seed-database`.
+When the change affects rendered UI or browser behavior, use your harness's browser tooling to check the affected page renders and the console is clean. A render failure shows the React dev-server error overlay — the element `#webpack-dev-server-client-overlay` must not exist. The frontend URL depends on the dev slot (see `dev-environment`); seeded login credentials are in `seed-database`.
 
 ## Completion Checklist
 
-- [ ] `pnpm run build` succeeds
-- [ ] `pnpm run lint` passes
-- [ ] Page renders without console errors
+- [ ] Validation matches the repository's Proportional Workflow
+- [ ] Relevant focused tests pass when behavior or test code changed
+- [ ] Build and package lint pass for Standard and High-Risk changes
+- [ ] Affected page renders without console errors when UI or browser behavior changed
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
 - [ ] UI primitives use public `@ayunis/ui` subpaths
+- [ ] New `packages/ui` components include representative Storybook stories
 - [ ] No feature-specific behavior added to `packages/ui/`

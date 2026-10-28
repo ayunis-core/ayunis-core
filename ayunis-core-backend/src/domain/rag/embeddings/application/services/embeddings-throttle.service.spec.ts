@@ -3,7 +3,7 @@ import {
   EmbeddingsThrottleService,
   type PriorityQueue,
 } from './embeddings-throttle.service';
-import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 
 /**
  * Records the priority each task was enqueued with and runs it immediately.

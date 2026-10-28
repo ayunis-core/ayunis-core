@@ -8,7 +8,7 @@ import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { Button } from '@ayunis/ui/components/button';
 import { Separator } from '@ayunis/ui/components/separator';
 import { useTranslation } from 'react-i18next';
-import { usePasswordUpdate } from '../api/usePasswordUpdate';
+import { usePasswordUpdate } from '@/pages/settings/account-settings/api/usePasswordUpdate';
 import {
   Form,
   FormControl,
@@ -44,6 +44,7 @@ export default function PasswordSettingsPage() {
                   <FormControl>
                     <PasswordInput
                       {...field}
+                      autoComplete="current-password"
                       placeholder={t('account.currentPasswordPlaceholder')}
                     />
                   </FormControl>
@@ -63,6 +64,7 @@ export default function PasswordSettingsPage() {
                   <FormControl>
                     <PasswordInput
                       {...field}
+                      autoComplete="new-password"
                       placeholder={t('account.newPasswordPlaceholder')}
                     />
                   </FormControl>
@@ -83,6 +85,7 @@ export default function PasswordSettingsPage() {
                   <FormControl>
                     <PasswordInput
                       {...field}
+                      autoComplete="new-password"
                       placeholder={t('account.confirmPasswordPlaceholder')}
                     />
                   </FormControl>

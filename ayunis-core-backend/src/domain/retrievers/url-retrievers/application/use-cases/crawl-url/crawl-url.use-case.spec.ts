@@ -13,10 +13,11 @@ jest.mock('p-limit', () => ({
 
 import { CrawlUrlUseCase } from './crawl-url.use-case';
 import { CrawlUrlCommand } from './crawl-url.command';
-import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
+import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
-import { UrlRetrieverProviderNotAvailableError } from '../../url-retriever.errors';
+import { UrlRetrieverProviderNotAvailableError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 
@@ -68,6 +69,49 @@ async function buildUseCase(
 }
 
 describe('CrawlUrlUseCase', () => {
+  it('discovers PDFs at depth zero without fetching them as HTML pages', async () => {
+    const retriever = fakeRetriever({
+      'https://acme.test/': {
+        links: [
+          'https://acme.test/navigation',
+          'https://cdn.test/statute.PDF#page=2',
+          'https://cdn.test/statute.PDF',
+        ],
+      },
+    });
+    const useCase = await buildUseCase(retriever);
+    const result = await useCase.execute(
+      new CrawlUrlCommand('https://acme.test/', ORG_ID, 0),
+    );
+    expect(result.pdfLinks).toEqual([
+      { url: 'https://cdn.test/statute.PDF', name: 'statute.PDF' },
+    ]);
+    expect(result.pages).toHaveLength(1);
+    expect(retriever.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps separate HTML and PDF budgets and discovers PDFs on the last HTML page', async () => {
+    const htmlLinks = Array.from(
+      { length: 24 },
+      (_, i) => `https://acme.test/page-${i}`,
+    );
+    const pdfLinks = Array.from(
+      { length: 30 },
+      (_, i) => `https://cdn.test/statute-${i}.pdf`,
+    );
+    const retriever = fakeRetriever({
+      'https://acme.test/': { links: [pdfLinks[0], ...htmlLinks] },
+      ...Object.fromEntries(htmlLinks.map((url) => [url, { links: pdfLinks }])),
+    });
+    const result = await (
+      await buildUseCase(retriever)
+    ).execute(new CrawlUrlCommand('https://acme.test/', ORG_ID, 1));
+    expect(result.pages).toHaveLength(25);
+    expect(result.pdfLinks).toHaveLength(25);
+    expect(new Set(result.pdfLinks.map((link) => link.url)).size).toBe(25);
+    expect(retriever.execute).toHaveBeenCalledTimes(25);
+  });
+
   it('returns only the root page when depth is 0', async () => {
     const retriever = fakeRetriever({
       'https://acme.test/': { links: ['https://acme.test/about'] },
@@ -178,7 +222,7 @@ describe('CrawlUrlUseCase', () => {
       new CrawlUrlCommand('https://acme.test/', ORG_ID, 1),
     );
 
-    expect(result.pages.length).toBe(UrlCrawlConstants.MAX_PAGES);
+    expect(result.pages).toHaveLength(UrlCrawlConstants.MAX_PAGES);
   });
 
   it('never exceeds MAX_PAGES when a depth-2 frontier over-budgets', async () => {
@@ -214,7 +258,7 @@ describe('CrawlUrlUseCase', () => {
     expect(result.pages.length).toBeLessThanOrEqual(
       UrlCrawlConstants.MAX_PAGES,
     );
-    expect(result.pages.length).toBe(UrlCrawlConstants.MAX_PAGES);
+    expect(result.pages).toHaveLength(UrlCrawlConstants.MAX_PAGES);
   });
 
   it('treats www and apex variants of a link as the same page', async () => {
@@ -234,7 +278,7 @@ describe('CrawlUrlUseCase', () => {
     );
 
     // Root + a single "about" page — not two.
-    expect(result.pages.length).toBe(2);
+    expect(result.pages).toHaveLength(2);
     expect(retriever.execute).toHaveBeenCalledTimes(2);
   });
 
@@ -312,6 +356,45 @@ describe('CrawlUrlUseCase', () => {
     ]);
   });
 
+  it('skips a PDF link that exceeds the page cap and keeps crawling the site', async () => {
+    // AYC-332: the PDF page cap is a hard error for a single fetch, but a crawl
+    // must not abandon a whole site because one linked PDF is too long.
+    const links: Record<string, string[]> = {
+      'https://acme.test/': [
+        'https://acme.test/haushaltsplan.pdf',
+        'https://acme.test/ok',
+      ],
+      'https://acme.test/ok': [],
+    };
+    const retriever = {
+      execute: jest.fn(({ url }: { url: string }) =>
+        url.endsWith('.pdf')
+          ? Promise.reject(
+              new TooManyPagesError({ pageCount: 4200, maxPages: 1000 }),
+            )
+          : Promise.resolve(
+              new UrlRetrieverResult(
+                `content of ${url}`,
+                url,
+                url,
+                {},
+                links[url],
+              ),
+            ),
+      ),
+    };
+    const useCase = await buildUseCase(retriever);
+
+    const result = await useCase.execute(
+      new CrawlUrlCommand('https://acme.test/', ORG_ID, 1),
+    );
+
+    expect(result.pages.map((p) => p.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/ok',
+    ]);
+  });
+
   it('redacts URL query tokens and raw error text from skip logs', async () => {
     const retriever = fakeRetriever({
       'https://acme.test/': {
@@ -326,12 +409,13 @@ describe('CrawlUrlUseCase', () => {
 
     await useCase.execute(new CrawlUrlCommand('https://acme.test/', ORG_ID, 1));
 
-    const logged = warnSpy.mock.calls.map((call) => String(call[0])).join('\n');
-    expect(logged).toContain('Skipping page during crawl');
-    expect(logged).toContain('https://acme.test/doc'); // redacted path retained
-    expect(logged).not.toContain('SECRET123'); // signed token dropped
-    expect(logged).not.toContain('token=');
-    expect(logged).toContain('PROVIDER_NOT_AVAILABLE'); // stable code, not raw msg
+    expect(warnSpy).toHaveBeenCalledWith(
+      {
+        url: 'https://acme.test/doc',
+        errorType: 'PROVIDER_NOT_AVAILABLE',
+      },
+      'Skipping page during crawl',
+    );
   });
 
   it('propagates the error when the root page fails to fetch', async () => {

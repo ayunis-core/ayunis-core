@@ -1,5 +1,5 @@
 import Piscina from 'piscina';
-import { SpreadsheetParseTimeoutError } from '../../application/sources.errors';
+import { SpreadsheetParseTimeoutError } from 'src/domain/sources/application/sources.errors';
 import { PiscinaSpreadsheetParserAdapter } from './piscina-spreadsheet-parser.adapter';
 
 const runMock = jest.fn();
@@ -70,12 +70,40 @@ describe('PiscinaSpreadsheetParserAdapter', () => {
     expect(poolOptions.resourceLimits?.maxOldGenerationSizeMb).toBe(512);
   });
 
-  it('rethrows non-abort errors unchanged', async () => {
-    const parseError = new Error('corrupt workbook');
-    runMock.mockRejectedValue(parseError);
+  it.each([
+    ['File is password-protected', 'encrypted_workbook'],
+    ['Unsupported ZIP Compression method 9', 'unsupported_archive'],
+    ['Bad compressed size: 10 != 12', 'archive_size_mismatch'],
+    ['Unrecognized CFB Header', 'invalid_container'],
+    ['Cannot find file [Content_Types].xml in zip', 'missing_workbook_part'],
+    ['Could not find workbook', 'missing_workbook_part'],
+    ['Unexpected end of data', 'truncated_data'],
+    ['Workbook is corrupt', 'corrupt_workbook'],
+  ])(
+    'classifies malformed workbook failure %s as %s',
+    async (message, parserReason) => {
+      const parseError = new Error(message);
+      runMock.mockRejectedValue(parseError);
+
+      await expect(
+        adapter.listDataSheets(Buffer.from('damaged-xlsx')),
+      ).rejects.toEqual(
+        expect.objectContaining({
+          code: 'UNPROCESSABLE_SPREADSHEET',
+          statusCode: 422,
+          cause: parseError,
+          metadata: { parserReason },
+        }),
+      );
+    },
+  );
+
+  it('rethrows worker infrastructure errors unchanged', async () => {
+    const workerError = new Error('Worker process exited unexpectedly');
+    runMock.mockRejectedValue(workerError);
 
     await expect(adapter.parseWorkbook(Buffer.from('xlsx'))).rejects.toBe(
-      parseError,
+      workerError,
     );
   });
 });

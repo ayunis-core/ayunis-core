@@ -9,11 +9,11 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
-import { OpenAIInvalidRequestError } from '../openai-compat.errors';
+import { OpenAIInvalidRequestError } from 'src/domain/openai-compat/application/openai-compat.errors';
 import type {
   OpenAIChatCompletionMessage,
   OpenAIChatCompletionRequest,
-} from '../types/openai-request.types';
+} from 'src/domain/openai-compat/application/types/openai-request.types';
 
 /**
  * Maps OpenAI chat-completion request DTOs into the domain shapes that
@@ -170,9 +170,9 @@ export class OpenAIRequestMapper {
     if (msg.content === undefined || msg.content === null) return '';
     if (typeof msg.content === 'string') return msg.content;
     // Many OpenAI-SDK clients always wrap content as an array of parts even
-    // for plain text. Fold all text parts into a single string; reject only
-    // genuinely unsupported modalities so connection tests pass. The DTO
-    // doesn't deeply validate parts, so treat each as unknown at runtime.
+    // for plain text. Inline files have already been expanded to text by
+    // OpenAIFileContentService. The DTO doesn't deeply validate parts, so
+    // treat each as unknown at runtime.
     if (!Array.isArray(msg.content)) {
       throw new OpenAIInvalidRequestError(
         'message content must be a string or an array of content parts',

@@ -54,6 +54,25 @@ describe('hook mutations', () => {
     });
   });
 
+  it('applies afterModelTurn mutations to the next turn only', async () => {
+    const hook: Hook = {
+      name: 'turn-state',
+      afterModelTurn: (ctx) => {
+        if (ctx.turn === 1) ctx.addInstructions('Persisted turn state.');
+      },
+    };
+    const model = twoIterationModel();
+
+    await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [hook] }),
+    );
+
+    expect(model.requests[0].instructions).toBe('Be helpful.');
+    expect(model.requests[1].instructions).toBe(
+      'Be helpful.\n\nPersisted turn state.',
+    );
+  });
+
   it('applies afterToolCall tool injection to the next iteration only', async () => {
     const injected = echoTool({ name: 'injected_tool' });
     const injector: Hook = {

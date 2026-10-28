@@ -1,11 +1,12 @@
+import { ActivateWorkspaceSkillByNameUseCase } from 'src/domain/skills/application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.query';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -17,6 +18,7 @@ import {
   parseSkillSlug,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
 } from 'src/common/util/skill-slug';
 
 @Injectable()
@@ -28,6 +30,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly skillActivationService: SkillActivationService,
     private readonly findAlwaysOnTemplateByNameUseCase: FindAlwaysOnTemplateByNameUseCase,
+    private readonly activateWorkspaceSkillByName: ActivateWorkspaceSkillByNameUseCase,
   ) {
     super();
   }
@@ -39,26 +42,26 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { threadId } = context;
-    this.logger.log('execute', tool, input);
+    this.logger.log({ name: tool.name, input: input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);
       const fullSlug = validatedInput.skill_slug;
 
-      const originalName = tool.resolveOriginalName(fullSlug);
-      if (!originalName) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Could not resolve slug "${fullSlug}" to a skill name`,
-          exposeToLLM: true,
-        });
-      }
+      const originalName = this.resolveSkillName(tool, fullSlug);
 
       const { prefix } = parseSkillSlug(fullSlug);
 
       switch (prefix) {
         case SYSTEM_PREFIX:
           return await this.activateSystemTemplate(tool.name, originalName);
+        case WORKSPACE_PREFIX:
+          return (
+            await this.activateWorkspaceSkillByName.execute({
+              threadId,
+              name: originalName,
+            })
+          ).instructions;
         case USER_PREFIX:
           return await this.activateUserSkill(
             tool.name,
@@ -78,13 +81,25 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',
         exposeToLLM: true,
       });
     }
+  }
+
+  private resolveSkillName(tool: ActivateSkillTool, slug: string): string {
+    const name = tool.resolveOriginalName(slug);
+    if (!name) {
+      throw new ToolExecutionFailedError({
+        toolName: tool.name,
+        message: `Could not resolve slug "${slug}" to a skill name`,
+        exposeToLLM: true,
+      });
+    }
+    return name;
   }
 
   private async activateSystemTemplate(

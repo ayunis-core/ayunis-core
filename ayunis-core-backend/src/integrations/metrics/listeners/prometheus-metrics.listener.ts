@@ -6,9 +6,12 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { AssistantMessageCreatedEvent } from 'src/domain/messages/application/events/assistant-message-created.event';
 import { RunExecutedEvent } from 'src/domain/runs/application/events/run-executed.event';
+import { RunTerminalEvent } from 'src/domain/runs/application/events/run-terminal.event';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
-import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
+import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
+import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
@@ -16,15 +19,19 @@ import {
   AYUNIS_USER_CREATIONS_TOTAL,
   AYUNIS_MESSAGES_TOTAL,
   AYUNIS_USER_ACTIVITY_TOTAL,
+  AYUNIS_RUNS_TOTAL,
+  AYUNIS_RUN_DURATION_SECONDS,
+  AYUNIS_RUN_TOOL_CALLS_TOTAL,
+  AYUNIS_RUN_USAGE_COLLECTIONS_TOTAL,
   AYUNIS_INFERENCE_DURATION_SECONDS,
   AYUNIS_INFERENCE_ERRORS_TOTAL,
   AYUNIS_TOKENS_TOTAL,
   AYUNIS_TOOL_USES_TOTAL,
   AYUNIS_THREAD_MESSAGE_COUNT,
   AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
-} from '../metrics.constants';
-import { safeMetric } from '../metrics.utils';
-import { classifyInferenceError } from '../classify-inference-error.helper';
+} from 'src/integrations/metrics/metrics.constants';
+import { safeMetric } from 'src/integrations/metrics/metrics.utils';
+import { classifyInferenceError } from 'src/integrations/metrics/classify-inference-error.helper';
 
 /**
  * Subscribes to domain events and records the corresponding Prometheus
@@ -42,6 +49,14 @@ export class PrometheusMetricsListener {
     private readonly messagesCounter: Counter<string>,
     @InjectMetric(AYUNIS_USER_ACTIVITY_TOTAL)
     private readonly userActivityCounter: Counter<string>,
+    @InjectMetric(AYUNIS_RUNS_TOTAL)
+    private readonly runsCounter: Counter<string>,
+    @InjectMetric(AYUNIS_RUN_DURATION_SECONDS)
+    private readonly runDurationHistogram: Histogram<string>,
+    @InjectMetric(AYUNIS_RUN_TOOL_CALLS_TOTAL)
+    private readonly runToolCallsCounter: Counter<string>,
+    @InjectMetric(AYUNIS_RUN_USAGE_COLLECTIONS_TOTAL)
+    private readonly runUsageCollectionsCounter: Counter<string>,
     @InjectMetric(AYUNIS_INFERENCE_DURATION_SECONDS)
     private readonly inferenceHistogram: Histogram<string>,
     @InjectMetric(AYUNIS_INFERENCE_ERRORS_TOTAL)
@@ -98,6 +113,38 @@ export class PrometheusMetricsListener {
     });
   }
 
+  @OnEvent(RunTerminalEvent.EVENT_NAME)
+  handleRunTerminal(event: RunTerminalEvent): void {
+    const labels = {
+      execution_path: event.executionPath,
+      outcome: event.outcome,
+    };
+    safeMetric(this.logger, () => this.runsCounter.inc(labels));
+    safeMetric(this.logger, () =>
+      this.runDurationHistogram.observe(labels, event.durationMs / 1000),
+    );
+  }
+
+  @OnEvent(RunToolCompletedEvent.EVENT_NAME)
+  handleRunToolCompleted(event: RunToolCompletedEvent): void {
+    safeMetric(this.logger, () =>
+      this.runToolCallsCounter.inc({
+        execution_path: event.executionPath,
+        outcome: event.outcome,
+      }),
+    );
+  }
+
+  @OnEvent(RunUsageCollectionEvent.EVENT_NAME)
+  handleRunUsageCollection(event: RunUsageCollectionEvent): void {
+    safeMetric(this.logger, () =>
+      this.runUsageCollectionsCounter.inc({
+        execution_path: event.executionPath,
+        outcome: event.outcome,
+      }),
+    );
+  }
+
   @OnEvent(InferenceCompletedEvent.EVENT_NAME)
   handleInferenceCompleted(event: InferenceCompletedEvent): void {
     const streamingLabel = event.streaming ? 'true' : 'false';
@@ -108,6 +155,7 @@ export class PrometheusMetricsListener {
           model: event.model,
           provider: event.provider,
           streaming: streamingLabel,
+          execution_path: event.executionPath,
         },
         event.durationMs / 1000,
       );
@@ -123,6 +171,7 @@ export class PrometheusMetricsListener {
             status: event.error!.statusCode,
           }),
           streaming: streamingLabel,
+          execution_path: event.executionPath,
         });
       });
     }

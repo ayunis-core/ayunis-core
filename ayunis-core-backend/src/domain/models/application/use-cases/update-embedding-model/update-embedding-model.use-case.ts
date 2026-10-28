@@ -1,14 +1,14 @@
 import { UpdateEmbeddingModelCommand } from './update-embedding-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
-import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
-import { ClearDefaultsByCatalogModelIdCommand } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
+import { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
+import { ClearDefaultsByCatalogModelIdCommand } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
 
 @Injectable()
 export class UpdateEmbeddingModelUseCase {
@@ -46,9 +46,12 @@ export class UpdateEmbeddingModelUseCase {
 
       // Clear defaults if model is being archived (for consistency, though embedding models typically don't have defaults)
       if (isBeingArchived) {
-        this.logger.log('Model is being archived, clearing defaults', {
-          modelId: command.id,
-        });
+        this.logger.log(
+          {
+            modelId: command.id,
+          },
+          'Model is being archived, clearing defaults',
+        );
         await this.clearDefaultsUseCase.execute(
           new ClearDefaultsByCatalogModelIdCommand(command.id),
         );

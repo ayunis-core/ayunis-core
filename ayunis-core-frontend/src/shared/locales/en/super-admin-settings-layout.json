@@ -12,6 +12,10 @@
     "superAdmins": "Super Admins",
     "platformConfig": "Platform Config",
     "appAlerts": "App Alerts",
-    "anonymization": "Anonymization"
+    "anonymization": "Anonymization",
+    "queueInspection": "Queue inspection"
+  },
+  "groups": {
+    "operations": "Operations"
   }
 }

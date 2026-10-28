@@ -6,6 +6,25 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Nest treats a logger call's last argument as the context, so
+// `logger.log('msg', { id })` silently drops the metadata instead of
+// emitting structured fields.
+const loggerMetadataFirst = {
+  selector:
+    "CallExpression:matches([callee.object.name=/[Ll]ogger$/], [callee.object.property.name=/[Ll]ogger$/])[callee.property.name=/^(log|warn|error|debug|verbose|fatal)$/][arguments.0.type='Literal'][arguments.1.type='ObjectExpression']",
+  message:
+    'Pass log metadata as the first argument: logger.log({ id }, "message").',
+};
+
+// Roles only exist on user-backed requests; reading them straight from the
+// request context skips the check that the caller is a user at all.
+const roleReadsThroughUserContext = {
+  selector:
+    "CallExpression[callee.property.name='get'][arguments.0.value=/^(role|systemRole)$/]",
+  message:
+    'Read roles via getUserContext / getRequiredUserContext / getSuperAdminContext / isSuperAdmin from src/common/context/required-context.',
+};
+
 export default tseslint.config(
   {
     ignores: [
@@ -89,6 +108,22 @@ export default tseslint.config(
       ],
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',
+      // Absolute imports only. `./sibling` stays fine; parent traversal does not.
+      // `warn` keeps the pre-existing backlog visible without failing repo-wide
+      // lint, while the pre-commit `--max-warnings=0` staged run blocks it on
+      // changed files.
+      '@typescript-eslint/no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              group: ['..', '../*', '../**'],
+              message:
+                "Use the absolute 'src/...' path instead of a relative import.",
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-import-type-side-effects': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
 
@@ -113,6 +148,44 @@ export default tseslint.config(
       'sonarjs/no-undefined-argument': 'warn',
       'sonarjs/duplicates-in-character-class': 'warn',
       'sonarjs/no-hardcoded-passwords': 'warn',
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    // Pino is an implementation detail of the logging boundary. Application
+    // code logs through `Logger` from @nestjs/common, which bootstrap points
+    // at the Pino adapter via installNestLogger.
+    ignores: ['src/common/logger/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'nestjs-pino',
+              message:
+                'Use Logger from @nestjs/common. nestjs-pino belongs to src/common/logger.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['pino', 'pino/*', 'pino-http', 'pino-pretty'],
+              message: 'Pino configuration belongs in src/common/logger.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        loggerMetadataFirst,
+        roleReadsThroughUserContext,
+      ],
+    },
+  },
+  {
+    files: ['src/common/context/required-context.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', loggerMetadataFirst],
     },
   },
   // Relaxed rules for test files

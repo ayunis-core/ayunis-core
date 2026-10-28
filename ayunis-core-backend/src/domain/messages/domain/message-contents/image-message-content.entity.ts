@@ -1,7 +1,7 @@
-import { MessageContent } from '../message-content.entity';
-import { MessageContentType } from '../value-objects/message-content-type.object';
+import { MessageContent } from 'src/domain/messages/domain/message-content.entity';
+import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { sanitizeUnicodeEscapes } from 'src/common/util/unicode-sanitizer';
-import { getImageStoragePath } from '../image-storage-path.util';
+import { getImageStoragePath } from 'src/domain/messages/domain/image-storage-path.util';
 
 /**
  * Represents image content in a message.
@@ -17,6 +17,10 @@ export class ImageMessageContent extends MessageContent {
     this.index = index;
     this.contentType = contentType;
     this.altText = altText ? sanitizeUnicodeEscapes(altText) : undefined;
+  }
+
+  getReferenceId(messageId: string): string {
+    return `${messageId}:${this.index}`;
   }
 
   /**

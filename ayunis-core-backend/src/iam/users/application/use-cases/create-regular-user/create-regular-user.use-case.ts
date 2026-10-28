@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateRegularUserCommand } from './create-regular-user.command';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { CreateUserUseCase } from '../create-user/create-user.use-case';
-import { CreateUserCommand } from '../create-user/create-user.command';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
 
 @Injectable()
 export class CreateRegularUserUseCase {
@@ -12,11 +12,14 @@ export class CreateRegularUserUseCase {
   constructor(private readonly createUserUseCase: CreateUserUseCase) {}
 
   async execute(command: CreateRegularUserCommand): Promise<User> {
-    this.logger.log('createUser', {
-      email: command.email,
-      orgId: command.orgId,
-      name: command.name,
-    });
+    this.logger.log(
+      {
+        email: command.email,
+        orgId: command.orgId,
+        name: command.name,
+      },
+      'createUser',
+    );
 
     const createUserCommand = new CreateUserCommand({
       email: command.email,

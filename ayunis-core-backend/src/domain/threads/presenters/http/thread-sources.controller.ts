@@ -4,16 +4,13 @@ import {
   Post,
   Get,
   Delete,
-  Logger,
   Param,
   ParseUUIDPipe,
   UploadedFile,
   HttpCode,
   HttpStatus,
-  Res,
-  StreamableFile,
+  Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -22,35 +19,24 @@ import {
 } from 'src/common/util/source-file-upload';
 import {
   ApiFileSourceUpload,
-  ApiSourceCsvDownload,
   ApiSourceIdParam,
   ApiSourceListResponse,
   ApiThreadIdParam,
 } from './decorators/thread-sources.decorators';
-import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
-import { AddFileSourceToThreadUseCase } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
-import { AddFileSourceToThreadCommand } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.command';
-import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
-import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
-import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
-import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AddFileSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
+import { AddFileSourceToThreadCommand } from 'src/domain/threads/application/use-cases/add-file-source-to-thread/add-file-source-to-thread.command';
+import { RemoveSourceFromThreadUseCase } from 'src/domain/threads/application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
+import { GetThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.use-case';
+import { RemoveSourceCommand } from 'src/domain/threads/application/use-cases/remove-source-from-thread/remove-source.command';
+import { FindThreadSourcesQuery } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.query';
 import {
   FileSourceResponseDto,
   UrlSourceResponseDto,
   CSVDataSourceResponseDto,
 } from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
-import { convertCSVToString } from 'src/common/util/csv';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
-import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import {
-  InvalidSourceTypeError,
-  SourceNotReadyError,
-} from 'src/domain/sources/application/sources.errors';
-import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import { SourceNotFoundError as SourceNotFoundInThreadError } from '../../application/threads.errors';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
@@ -64,7 +50,6 @@ export class ThreadSourcesController {
     private readonly addFileSourceToThreadUseCase: AddFileSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
   ) {}
 
@@ -79,7 +64,7 @@ export class ThreadSourcesController {
   ): Promise<
     (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
   > {
-    this.logger.log('getThreadSources', { threadId });
+    this.logger.log({ threadId }, 'getThreadSources');
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId),
     );
@@ -100,7 +85,7 @@ export class ThreadSourcesController {
       throw new BadRequestException('No file was provided in the request');
     }
 
-    this.logger.log('addFileSource', { threadId, fileName: file.originalname });
+    this.logger.log({ threadId, fileName: file.originalname }, 'addFileSource');
     try {
       const sources = await this.addFileSourceToThreadUseCase.execute(
         new AddFileSourceToThreadCommand({ threadId, file }),
@@ -110,7 +95,7 @@ export class ThreadSourcesController {
         this.sourceDtoMapper.toDto(source, threadId),
       );
     } catch (error: unknown) {
-      this.logger.error('addFileSource', { error });
+      this.logger.error({ err: error as Error }, 'addFileSource');
       throw error;
     } finally {
       removeUploadedFile(file.path);
@@ -131,7 +116,7 @@ export class ThreadSourcesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.log('removeSource', { threadId, sourceId });
+    this.logger.log({ threadId, sourceId }, 'removeSource');
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
@@ -139,51 +124,5 @@ export class ThreadSourcesController {
     await this.removeSourceFromThreadUseCase.execute(
       new RemoveSourceCommand(thread, sourceId),
     );
-  }
-
-  @Get(':id/sources/:sourceId/download')
-  @ApiSourceCsvDownload()
-  async downloadSource(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    this.logger.log('downloadSource', { threadId, sourceId });
-
-    const { thread } = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId),
-    );
-
-    const isAssigned = thread.sourceAssignments?.some(
-      (a) => a.source.id === sourceId,
-    );
-    if (!isAssigned) {
-      throw new SourceNotFoundInThreadError(sourceId, { threadId });
-    }
-
-    const source = await this.loadReadyCsvSource(sourceId);
-
-    const csvString = convertCSVToString(source.data);
-    const encodedName = encodeURIComponent(`${source.name}.csv`);
-    res.set({
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename*=UTF-8''${encodedName}`,
-    });
-
-    return new StreamableFile(Buffer.from(csvString, 'utf-8'));
-  }
-
-  private async loadReadyCsvSource(sourceId: UUID): Promise<CSVDataSource> {
-    const source = await this.getSourceByIdUseCase.execute(
-      new GetSourceByIdQuery(sourceId),
-    );
-
-    if (!(source instanceof CSVDataSource)) {
-      throw new InvalidSourceTypeError(source.constructor.name);
-    }
-    if (source.status !== SourceStatus.READY) {
-      throw new SourceNotReadyError(sourceId);
-    }
-    return source;
   }
 }

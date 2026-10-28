@@ -8,9 +8,12 @@ import { existsSync } from 'fs';
  * (typically from the owning service's `onModuleDestroy`).
  */
 export class LazyChromiumBrowser {
-  private readonly logger = new Logger(LazyChromiumBrowser.name);
   private browser: Browser | null = null;
   private launchPromise: Promise<void> | null = null;
+
+  constructor(
+    private readonly logger: Logger = new Logger(LazyChromiumBrowser.name),
+  ) {}
 
   async get(): Promise<Browser> {
     if (this.browser?.connected) {
@@ -46,7 +49,7 @@ export class LazyChromiumBrowser {
       executablePath,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    this.logger.log(`Puppeteer browser launched (${executablePath})`);
+    this.logger.log({ executablePath }, 'Puppeteer browser launched');
   }
 
   private resolveChromePath(): string {

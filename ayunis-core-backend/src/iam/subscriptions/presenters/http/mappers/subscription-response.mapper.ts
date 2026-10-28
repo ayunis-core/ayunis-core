@@ -4,7 +4,13 @@ import {
   isSeatBased,
   isUsageBased,
 } from 'src/iam/subscriptions/domain/subscription-type-guards';
-import { SubscriptionResponseDto } from '../dto/subscription-response.dto';
+import type { ListOrgSubscriptionsResult } from 'src/iam/subscriptions/application/use-cases/list-org-subscriptions/list-org-subscriptions.use-case';
+import { SubscriptionResponseDto } from 'src/iam/subscriptions/presenters/http/dto/subscription-response.dto';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
+import {
+  OrgSubscriptionHistoryItemDto,
+  OrgSubscriptionsResponseDto,
+} from 'src/iam/subscriptions/presenters/http/dto/org-subscriptions-response.dto';
 
 @Injectable()
 export class SubscriptionResponseMapper {
@@ -14,6 +20,7 @@ export class SubscriptionResponseMapper {
     nextRenewalDate: Date;
   }): SubscriptionResponseDto {
     const { subscription, availableSeats, nextRenewalDate } = data;
+    const endsAt = getEffectiveAccessEnd(subscription);
 
     const dto: SubscriptionResponseDto = {
       id: subscription.id,
@@ -21,9 +28,11 @@ export class SubscriptionResponseMapper {
       updatedAt: subscription.updatedAt,
       cancelledAt: subscription.cancelledAt,
       startsAt: subscription.startsAt,
+      endsAt,
       orgId: subscription.orgId,
       type: subscription.type,
-      nextRenewalDate,
+      nextRenewalDate:
+        endsAt && nextRenewalDate >= endsAt ? null : nextRenewalDate,
       billingInfo: {
         companyName: subscription.billingInfo.companyName,
         street: subscription.billingInfo.street,
@@ -48,5 +57,33 @@ export class SubscriptionResponseMapper {
     }
 
     return dto;
+  }
+
+  toHistoryResponse(
+    result: ListOrgSubscriptionsResult,
+  ): OrgSubscriptionsResponseDto {
+    return {
+      subscriptions: result.subscriptions.map((item) =>
+        this.toHistoryItemDto(item),
+      ),
+      activeCount: result.activeCount,
+    };
+  }
+
+  private toHistoryItemDto(item: {
+    subscription: Subscription;
+    status: OrgSubscriptionHistoryItemDto['status'];
+    isLatest: boolean;
+    nextRenewalDate: Date;
+  }): OrgSubscriptionHistoryItemDto {
+    return {
+      ...this.toDto({
+        subscription: item.subscription,
+        availableSeats: null,
+        nextRenewalDate: item.nextRenewalDate,
+      }),
+      status: item.status,
+      isLatest: item.isLatest,
+    };
   }
 }

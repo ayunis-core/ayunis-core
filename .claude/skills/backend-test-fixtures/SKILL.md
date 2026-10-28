@@ -98,6 +98,6 @@ repository.findByUserId.mockResolvedValue(existing);   // override per test
 
 ```bash
 pnpm jest src/<module>                                  # specs still green
-npx tsc -p tsconfig.build.json --noEmit                 # testing/ NOT compiled
-npx eslint --max-warnings=0 <changed files>             # mirrors pre-commit
+pnpm exec tsc -p tsconfig.build.json --noEmit                 # testing/ NOT compiled
+pnpm exec eslint --max-warnings=0 <changed files>             # mirrors pre-commit
 ```

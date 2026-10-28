@@ -4,9 +4,11 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
+import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -87,10 +89,16 @@ const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
 const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
+  refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
   saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
+    .fn<Promise<unknown>, [unknown, { text: string }]>()
+    .mockResolvedValue(undefined),
   updateStatusConditionally: jest.fn(),
+};
+
+const spreadsheetParser = {
+  parseWorkbook: jest.fn(),
+  parseCsv: jest.fn(),
 };
 
 const helper = {
@@ -99,15 +107,30 @@ const helper = {
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
 };
 
+const admitOrgProcessing = {
+  execute: jest.fn().mockResolvedValue(true),
+};
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
+
+describe('DocumentProcessingConsumer worker', () => {
+  it('runs four document jobs at once per instance', () => {
+    expect(
+      Reflect.getMetadata('bullmq:worker_metadata', DocumentProcessingConsumer),
+    ).toEqual({ concurrency: 4 });
+  });
+});
 
 describe('DocumentProcessingConsumer', () => {
   let consumer: DocumentProcessingConsumer;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
+    sourceRepository.saveTextSource.mockResolvedValue(undefined);
+    admitOrgProcessing.execute.mockResolvedValue(true);
 
     consumer = new DocumentProcessingConsumer(
       contextService as never,
@@ -117,7 +140,31 @@ describe('DocumentProcessingConsumer', () => {
       deleteObjectUseCase as never,
       sourceRepository as never,
       helper as never,
+      spreadsheetParser as never,
+      admitOrgProcessing as never,
+      new SourceProcessingHeartbeatService(sourceRepository as never),
     );
+  });
+
+  it('skips work when deletion wins before processing admission', async () => {
+    admitOrgProcessing.execute.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.findById).not.toHaveBeenCalled();
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('skips processing when the queued source can no longer be claimed', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
   it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
@@ -228,5 +275,155 @@ describe('DocumentProcessingConsumer', () => {
     expect(indexedOrgId).toBe(ORG_ID);
     expect(indexedChunks).toHaveLength(1);
     expect(indexedChunks[0].content).toBe('hello world');
+  });
+
+  it('saves a long-running email even when stale cleanup runs during extraction', async () => {
+    jest.useFakeTimers();
+    const source = makeSource();
+    let savedText: string | undefined;
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.refreshProcessingHeartbeat.mockImplementation(async () => {
+      if (source.status !== SourceStatus.PROCESSING) return false;
+      source.processingStartedAt = new Date();
+      return true;
+    });
+    sourceRepository.saveTextSource.mockImplementation(async (_, content) => {
+      savedText = content.text;
+      return source;
+    });
+    sourceRepository.updateStatusConditionally.mockImplementation(async () => {
+      source.status = SourceStatus.READY;
+      return true;
+    });
+    retrieveFileContentUseCase.execute.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                pages: [
+                  { text: 'Email body and extracted attachment content' },
+                ],
+              }),
+            16 * 60 * 1000,
+          ),
+        ),
+    );
+    const cleanup = new StaleProcessingCleanupTask(
+      {
+        findStaleProcessingSourceIds: async (cutoff: Date) =>
+          source.status === SourceStatus.PROCESSING &&
+          source.processingStartedAt! < cutoff
+            ? [SOURCE_ID]
+            : [],
+      } as never,
+      {
+        execute: async () => {
+          source.status = SourceStatus.FAILED;
+        },
+      } as never,
+    );
+    const cleanupTimer = setTimeout(
+      () => {
+        void cleanup.handleCleanup();
+      },
+      15.5 * 60 * 1000,
+    );
+    try {
+      const processing = consumer.process(
+        makeJob({
+          data: makeJobData({
+            fileName: 'meeting.eml',
+            fileType: 'message/rfc822',
+          }),
+        }),
+      );
+      await jest.advanceTimersByTimeAsync(16 * 60 * 1000);
+      await processing;
+      expect(source.status).toBe(SourceStatus.READY);
+      expect(savedText).toBe('Email body and extracted attachment content');
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      clearTimeout(cleanupTimer);
+      jest.useRealTimers();
+    }
+  });
+
+  it('saves the fresh source state rather than the pre-extraction snapshot', async () => {
+    const initial = makeSource();
+    const fresh = makeSource();
+    fresh.processingStartedAt = new Date(
+      initial.processingStartedAt!.getTime() + 16 * 60 * 1000,
+    );
+    sourceRepository.findById
+      .mockResolvedValueOnce(initial)
+      .mockResolvedValueOnce(fresh);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const [saved] = sourceRepository.saveTextSource.mock.calls[0];
+    expect((saved as FileSource).processingStartedAt).toEqual(
+      fresh.processingStartedAt,
+    );
+  });
+
+  it.each([SourceStatus.FAILED, SourceStatus.READY])(
+    'preserves a source changed to %s during extraction',
+    async (status) => {
+      sourceRepository.findById
+        .mockResolvedValueOnce(makeSource())
+        .mockResolvedValueOnce(makeSource(status));
+      await consumer.process(makeJob());
+      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+    },
+  );
+
+  it('flattens a workbook to text and never calls the file retriever', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    spreadsheetParser.parseWorkbook.mockResolvedValue([
+      { sheetName: 'Fees', headers: ['Permit', 'Cost'], rows: [['Use', '50']] },
+      { sheetName: 'Rooms', headers: ['Room'], rows: [['A1']] },
+    ]);
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          fileName: 'fees.xlsx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      }),
+    );
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(splitTextUseCase.execute.mock.calls[0][0].text).toBe(
+      '## Fees\nPermit: Use | Cost: 50\n\n## Rooms\nRoom: A1',
+    );
+  });
+
+  it('flattens CSV without a sheet title', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    spreadsheetParser.parseCsv.mockResolvedValue({
+      headers: ['Permit', 'Cost'],
+      rows: [['Use', '50']],
+    });
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({ fileName: 'fees.csv', fileType: 'text/csv' }),
+      }),
+    );
+
+    expect(splitTextUseCase.execute.mock.calls[0][0].text).toBe(
+      'Permit: Use | Cost: 50',
+    );
   });
 });

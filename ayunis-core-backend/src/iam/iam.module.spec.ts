@@ -12,6 +12,8 @@ import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 import { AcademyCertificateGuard } from './academy-access/application/guards/academy-certificate.guard';
+import { AuthenticationModule } from 'src/iam/authentication/authentication.module';
+import { SsoModule } from 'src/iam/sso/sso.module';
 
 type GuardRef = abstract new (...args: never[]) => unknown;
 
@@ -89,5 +91,19 @@ describe('IamModule global guard order', () => {
     expect(order.indexOf(AcademyCertificateGuard)).toBeLessThan(
       order.indexOf(RateLimitGuard),
     );
+  });
+
+  it('shares the registered authentication module with SSO', () => {
+    const { imports = [] } = IamModule.register();
+    const authenticationModule = imports.find(
+      (entry) =>
+        typeof entry === 'object' && entry.module === AuthenticationModule,
+    );
+    const ssoModule = imports.find(
+      (entry) => typeof entry === 'object' && entry.module === SsoModule,
+    );
+
+    expect(authenticationModule).toBeDefined();
+    expect(ssoModule).toMatchObject({ imports: [authenticationModule] });
   });
 });

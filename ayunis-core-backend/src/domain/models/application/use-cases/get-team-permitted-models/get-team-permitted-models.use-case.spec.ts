@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetTeamPermittedModelsUseCase } from './get-team-permitted-models.use-case';
 import { GetTeamPermittedModelsQuery } from './get-team-permitted-models.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
@@ -10,13 +10,13 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { TeamNotFoundInOrgError } from '../../models.errors';
+import { TeamNotFoundInOrgError } from 'src/domain/models/application/models.errors';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { randomUUID } from 'crypto';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
 describe('GetTeamPermittedModelsUseCase', () => {
   let useCase: GetTeamPermittedModelsUseCase;
@@ -25,6 +25,8 @@ describe('GetTeamPermittedModelsUseCase', () => {
   let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
+
+  const userId = randomUUID();
   const teamId = randomUUID();
 
   beforeEach(async () => {
@@ -62,6 +64,7 @@ describe('GetTeamPermittedModelsUseCase', () => {
 
   function setAdminContext(): void {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.ADMIN;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
@@ -80,6 +83,7 @@ describe('GetTeamPermittedModelsUseCase', () => {
       canUseTools: true,
       isReasoning: false,
       canVision: true,
+      contextWindowSize: 128_000,
       isArchived: false,
     });
     const permittedModel = new PermittedLanguageModel({
@@ -104,6 +108,7 @@ describe('GetTeamPermittedModelsUseCase', () => {
 
   it('should throw UnauthorizedAccessError for non-admin users', async () => {
     contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.USER;
       if (key === 'systemRole') return SystemRole.CUSTOMER;

@@ -1,0 +1,91 @@
+import { useMemo } from 'react';
+import {
+  useCreditLimitsControllerGetDefaultUserLimit,
+  useCreditLimitsControllerGetTeamLimits,
+  useCreditLimitsControllerGetUserLimits,
+  useCreditLimitsControllerGetUserUsage,
+  useUsageControllerGetCreditUsage,
+} from '@/shared/api';
+
+export function useCreditLimitBudget() {
+  const query = useUsageControllerGetCreditUsage();
+  return {
+    ...query,
+    hasBudget: typeof query.data?.monthlyCredits === 'number',
+  };
+}
+
+export function useUserLimitOverview(enabled: boolean) {
+  const query = useCreditLimitsControllerGetUserLimits({
+    query: {
+      enabled,
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: 'always',
+      refetchInterval: 5000,
+    },
+  });
+  const limits = useMemo(
+    () => new Map(query.data?.map((limit) => [limit.userId, limit])),
+    [query.data],
+  );
+  return {
+    ...query,
+    isPending: query.isPending || (enabled && !query.isFetchedAfterMount),
+    limits,
+  };
+}
+
+export function useTeamLimitOverview(enabled: boolean) {
+  const query = useCreditLimitsControllerGetTeamLimits({
+    query: {
+      enabled,
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: 'always',
+      refetchInterval: 5000,
+    },
+  });
+  const limits = useMemo(
+    () => new Map(query.data?.map((limit) => [limit.teamId, limit])),
+    [query.data],
+  );
+  return {
+    ...query,
+    isPending: query.isPending || (enabled && !query.isFetchedAfterMount),
+    limits,
+  };
+}
+
+export function useDefaultUserLimit(enabled: boolean) {
+  const query = useCreditLimitsControllerGetDefaultUserLimit({
+    query: { enabled },
+  });
+  return { ...query, defaultLimit: query.data?.monthlyCredits ?? null };
+}
+
+export function useUserCreditUsage(userIds: string[], enabled: boolean) {
+  const query = useCreditLimitsControllerGetUserUsage(
+    { userIds },
+    {
+      query: {
+        enabled: enabled && userIds.length > 0,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: 'always',
+        refetchInterval: 5000,
+      },
+    },
+  );
+  const usage = useMemo(
+    () => new Map(query.data?.map((item) => [item.userId, item.creditsUsed])),
+    [query.data],
+  );
+  return {
+    ...query,
+    isPending:
+      query.isPending ||
+      (enabled && userIds.length > 0 && !query.isFetchedAfterMount),
+    usage,
+  };
+}

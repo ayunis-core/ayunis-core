@@ -1,9 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { Tiktoken, get_encoding } from 'tiktoken';
 import {
   TokenCounterHandler,
   TokenCounterType,
-} from '../../application/ports/token-counter.handler.port';
+} from 'src/common/token-counter/application/ports/token-counter.handler.port';
 
 @Injectable()
 export class TiktokenHandler
@@ -11,8 +11,13 @@ export class TiktokenHandler
   implements OnModuleDestroy
 {
   private readonly logger = new Logger(TiktokenHandler.name);
+
   readonly type = TokenCounterType.TIKTOKEN;
   private encoder: Tiktoken | null = null;
+
+  constructor() {
+    super();
+  }
 
   isAvailable(): boolean {
     return true;

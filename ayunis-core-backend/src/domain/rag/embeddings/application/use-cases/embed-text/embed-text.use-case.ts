@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EmbedTextCommand } from './embed-text.command';
-import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
-import { EmbeddingsThrottleService } from '../../services/embeddings-throttle.service';
+import { EmbeddingsHandlerRegistry } from 'src/domain/rag/embeddings/application/embeddings-handler.registry';
+import { EmbeddingsThrottleService } from 'src/domain/rag/embeddings/application/services/embeddings-throttle.service';
 import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -17,9 +17,7 @@ export class EmbedTextUseCase {
   ) {}
 
   async execute(command: EmbedTextCommand): Promise<Embedding[]> {
-    this.logger.log('execute', {
-      model: command.model,
-    });
+    this.logger.log({ model: command.model }, 'execute');
     try {
       const handler = this.providerRegistry.getHandler(command.model.provider);
 
@@ -45,15 +43,13 @@ export class EmbedTextUseCase {
         modelId: command.model.name,
       });
       if (providerError) {
-        this.logger.error('Embeddings provider unavailable', {
-          code: providerError.code,
-          ...providerError.context,
-        });
+        this.logger.error(
+          { code: providerError.code, ...providerError.context },
+          'Embeddings provider unavailable',
+        );
         throw providerError;
       }
-      this.logger.error('Error embedding text', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error embedding text');
       throw error;
     }
   }

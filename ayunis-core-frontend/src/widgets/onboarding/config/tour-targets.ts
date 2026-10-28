@@ -15,6 +15,14 @@ export const TOUR_TARGET = {
   systemPrompt: 'system-prompt',
   themeSettings: 'theme-settings',
   sendMessage: 'send-message',
+  createWorkspace: 'create-workspace',
+  favoriteWorkspace: 'favorite-workspace',
+  chatComposer: 'chat-composer',
+  selectWorkspaceInChat: 'select-workspace-in-chat',
+  assignChatToWorkspace: 'assign-chat-to-workspace',
+  workspaceInstruction: 'workspace-instruction',
+  workspaceKnowledge: 'workspace-knowledge',
+  workspaceSkill: 'workspace-skill',
 } as const;
 
 export type TourTargetName = (typeof TOUR_TARGET)[keyof typeof TOUR_TARGET];

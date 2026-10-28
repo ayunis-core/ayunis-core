@@ -11,7 +11,7 @@ import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-aud
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
+import { REQUIRE_PERMISSION_KEY } from 'src/iam/authorization/application/decorators/permissions.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -35,10 +35,13 @@ export class PermissionsGuard implements CanActivate {
     const user = request.user as ActiveUser | undefined;
 
     if (!user) {
-      this.logger.warn('Access denied: no principal for permission check', {
-        ...buildAccessDeniedAuditContext(request, user),
-        requiredPermissions,
-      });
+      this.logger.warn(
+        {
+          ...buildAccessDeniedAuditContext(request, user),
+          requiredPermissions,
+        },
+        'Access denied: no principal for permission check',
+      );
       return false;
     }
 
@@ -52,11 +55,14 @@ export class PermissionsGuard implements CanActivate {
     const allowed = grants.includes(true);
 
     if (!allowed) {
-      this.logger.warn('Access denied: missing permission', {
-        ...buildAccessDeniedAuditContext(request, user),
-        userRole: user.role,
-        requiredPermissions,
-      });
+      this.logger.warn(
+        {
+          ...buildAccessDeniedAuditContext(request, user),
+          userRole: user.role,
+          requiredPermissions,
+        },
+        'Access denied: missing permission',
+      );
     }
 
     return allowed;

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { UnexpectedAddonError } from '../../addons.errors';
+import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
+import { UnexpectedAddonError } from 'src/iam/addons/application/addons.errors';
 import { IsAddonActiveQuery } from './is-addon-active.query';
 
 @Injectable()
@@ -11,10 +11,13 @@ export class IsAddonActiveUseCase {
   constructor(private readonly orgAddonRepository: OrgAddonRepository) {}
 
   async execute(query: IsAddonActiveQuery): Promise<boolean> {
-    this.logger.log('Checking if addon is active', {
-      orgId: query.orgId,
-      type: query.type,
-    });
+    this.logger.log(
+      {
+        orgId: query.orgId,
+        type: query.type,
+      },
+      'Checking if addon is active',
+    );
 
     try {
       const addon = await this.orgAddonRepository.findByOrgAndType(
@@ -24,9 +27,10 @@ export class IsAddonActiveUseCase {
       return addon !== null;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error checking if addon is active', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Error checking if addon is active',
+      );
       throw new UnexpectedAddonError('check', { error: error as Error });
     }
   }

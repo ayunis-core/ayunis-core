@@ -6,6 +6,8 @@ import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
 import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
+import { SubscriptionMonthlyCreditsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-monthly-credits-updated.webhook-event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
@@ -20,24 +22,37 @@ import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import type { User } from 'src/iam/users/domain/user.entity';
-import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
-import { UserCreatedWebhookEvent } from '../domain/webhook-events/user-created.webhook-event';
-import { UserUpdatedWebhookEvent } from '../domain/webhook-events/user-updated.webhook-event';
-import { UserDeletedWebhookEvent } from '../domain/webhook-events/user-deleted.webhook-event';
-import { OrgCreatedWebhookEvent } from '../domain/webhook-events/org-created.webhook-event';
-import { SubscriptionCreatedWebhookEvent } from '../domain/webhook-events/subscription-created.webhook-events';
-import { SubscriptionCancelledWebhookEvent } from '../domain/webhook-events/subscription-cancelled.webhook-event';
-import { SubscriptionUncancelledWebhookEvent } from '../domain/webhook-events/subscription-uncancelled.webhook-event';
-import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-seats-updated.webhook-event';
-import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
-import { UsageCollectedWebhookEvent } from '../domain/webhook-events/usage-collected.webhook-event';
-import { ChatSentWebhookEvent } from '../domain/webhook-events/chat-sent.webhook-event';
-import { AddonActivatedWebhookEvent } from '../domain/webhook-events/addon-activated.webhook-event';
-import { AddonDeactivatedWebhookEvent } from '../domain/webhook-events/addon-deactivated.webhook-event';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { UserCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-created.webhook-event';
+import { UserUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-updated.webhook-event';
+import { UserDeletedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-deleted.webhook-event';
+import { OrgCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/org-created.webhook-event';
+import { SubscriptionCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-created.webhook-events';
+import { SubscriptionCancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
+import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
+import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
+import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { UsageCollectedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/usage-collected.webhook-event';
+import { ChatSentWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/chat-sent.webhook-event';
+import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-activated.webhook-event';
+import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
-import type { WebhookEvent } from '../domain/webhook-event.entity';
+import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { SkillUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-used.webhook-event';
+import { SkillInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/skill-installed.webhook-event';
+import { IntegrationUsedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-used.webhook-event';
+import { IntegrationInstalledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/integration-installed.webhook-event';
+import { WebhookDeliverySequencer } from 'src/integrations/webhooks/infrastructure/services/webhook-delivery-sequencer.service';
+import { InviteCreatedEvent } from 'src/iam/invites/application/events/invite-created.event';
+import { UserInvitedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-invited.webhook-event';
+import { OnboardingUpdatedEvent } from 'src/iam/onboarding/application/events/onboarding-updated.event';
+import { OnboardingUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/onboarding-updated.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -53,6 +68,7 @@ export class WebhookDispatchListener {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly configService: ConfigService,
+    private readonly webhookDeliverySequencer: WebhookDeliverySequencer,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
@@ -69,6 +85,11 @@ export class WebhookDispatchListener {
         orgName,
       }),
     );
+  }
+
+  @OnEvent(InviteCreatedEvent.EVENT_NAME)
+  async handleInviteCreated(event: InviteCreatedEvent): Promise<void> {
+    await this.dispatch(new UserInvitedWebhookEvent(event.invite));
   }
 
   @OnEvent(UserUpdatedEvent.EVENT_NAME)
@@ -96,8 +117,21 @@ export class WebhookDispatchListener {
   async handleSubscriptionCreated(
     event: SubscriptionCreatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCreatedWebhookEvent(
+        mapSubscriptionToWebhookPayload(event.payload),
+      ),
+    );
+  }
+
+  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME)
+  async handleSubscriptionMonthlyCreditsUpdated(
+    event: SubscriptionMonthlyCreditsUpdatedEvent,
+  ): Promise<void> {
+    await this.dispatchSubscription(
+      event.orgId,
+      new SubscriptionMonthlyCreditsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
@@ -107,7 +141,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionCancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -118,7 +153,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionUncancelled(
     event: SubscriptionUncancelledEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionUncancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -129,7 +165,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionSeatsUpdated(
     event: SubscriptionSeatsUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionSeatsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -140,7 +177,8 @@ export class WebhookDispatchListener {
   async handleSubscriptionBillingInfoUpdated(
     event: SubscriptionBillingInfoUpdatedEvent,
   ): Promise<void> {
-    await this.dispatch(
+    await this.dispatchSubscription(
+      event.orgId,
       new SubscriptionBillingInfoUpdatedWebhookEvent(
         mapBillingInfoToWebhookPayload(event.payload),
       ),
@@ -176,6 +214,86 @@ export class WebhookDispatchListener {
     await this.dispatch(new ChatSentWebhookEvent(event, user));
   }
 
+  @OnEvent(SkillUsedEvent.EVENT_NAME)
+  async handleSkillUsed(event: SkillUsedEvent): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new SkillUsedWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(MarketplaceSkillInstalledEvent.EVENT_NAME)
+  async handleMarketplaceSkillInstalled(
+    event: MarketplaceSkillInstalledEvent,
+  ): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new SkillInstalledWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(ToolUsedEvent.EVENT_NAME)
+  async handleToolUsed(event: ToolUsedEvent): Promise<void> {
+    if (!event.integrationId || !event.integrationName) return;
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new IntegrationUsedWebhookEvent({
+        userId: event.userId,
+        orgId: event.orgId,
+        integrationId: event.integrationId,
+        integrationName: event.integrationName,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(MarketplaceIntegrationInstalledEvent.EVENT_NAME)
+  async handleMarketplaceIntegrationInstalled(
+    event: MarketplaceIntegrationInstalledEvent,
+  ): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new IntegrationInstalledWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(OnboardingUpdatedEvent.EVENT_NAME)
+  async handleOnboardingUpdated(event: OnboardingUpdatedEvent): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new OnboardingUpdatedWebhookEvent({
+        ...event,
+        orgId: user.orgId,
+        userEmail: user.email,
+        userName: user.name,
+        userRole: user.role,
+      }),
+    );
+  }
+
   @OnEvent(AddonActivatedEvent.EVENT_NAME)
   async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
     await this.dispatch(
@@ -202,6 +320,10 @@ export class WebhookDispatchListener {
     return !!this.configService.get<string>('app.orgEventsWebhookUrl');
   }
 
+  private async resolveWebhookUser(userId: UUID): Promise<User | null> {
+    return this.webhookConfigured() ? this.resolveUser(userId) : null;
+  }
+
   /**
    * Best-effort user lookup for payload enrichment. Returns null instead of
    * throwing so a missing user (e.g. deleted in the same tick) degrades to a
@@ -213,10 +335,13 @@ export class WebhookDispatchListener {
         new FindUserByIdQuery(userId),
       );
     } catch (error) {
-      this.logger.error('Failed to resolve user for webhook enrichment', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to resolve user for webhook enrichment',
+      );
       return null;
     }
   }
@@ -233,12 +358,24 @@ export class WebhookDispatchListener {
       );
       return org.name;
     } catch (error) {
-      this.logger.error('Failed to resolve org for webhook enrichment', {
-        orgId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          orgId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to resolve org for webhook enrichment',
+      );
       return undefined;
     }
+  }
+
+  private dispatchSubscription(
+    orgId: UUID,
+    webhookEvent: WebhookEvent,
+  ): Promise<void> {
+    return this.webhookDeliverySequencer.enqueue(orgId, () =>
+      this.dispatch(webhookEvent),
+    );
   }
 
   private async dispatch(webhookEvent: WebhookEvent): Promise<void> {
@@ -247,10 +384,13 @@ export class WebhookDispatchListener {
         new SendWebhookCommand(webhookEvent),
       );
     } catch (error) {
-      this.logger.error('Webhook dispatch failed', {
-        eventType: webhookEvent.eventType,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          eventType: webhookEvent.eventType,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Webhook dispatch failed',
+      );
     }
   }
 }

@@ -6,15 +6,22 @@ import type {
   ToolNameCodec,
 } from '@ayunis/inference';
 
+/** The SDK's stream event union plus the `ping` keep-alive it filters out. */
+export type AnthropicStreamEvent =
+  Anthropic.Messages.MessageStreamEvent | { type: 'ping' };
+
 /**
  * Converts one Anthropic stream event to a provider-agnostic chunk.
- * Returns null for events that carry nothing (ping, block stops).
+ * Returns null for events that carry nothing (block stops). A `ping` becomes
+ * an empty chunk: it carries nothing, but proves the stream is alive.
  */
 export const convertChunk = (
-  event: Anthropic.Messages.MessageStreamEvent,
+  event: AnthropicStreamEvent,
   codec: ToolNameCodec,
 ): ProviderChunk | null => {
   switch (event.type) {
+    case 'ping':
+      return {};
     case 'content_block_delta':
       return convertContentBlockDelta(event);
     case 'content_block_start':
@@ -102,6 +109,7 @@ const mapStopReason = (
       return 'tool_calls';
     case 'pause_turn':
     case 'refusal':
+      return reason;
     case null:
     default:
       return null;

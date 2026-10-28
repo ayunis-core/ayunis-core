@@ -1,3 +1,5 @@
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { GetUsageConfigUseCase } from 'src/domain/usage/application/use-cases/get-usage-config/get-usage-config.use-case';
 import { Module } from '@nestjs/common';
 import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { CollectUsageUseCase } from './application/use-cases/collect-usage/collect-usage.use-case';
@@ -8,9 +10,13 @@ import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/ge
 import { GetMonthlyCreditUsageUseCase } from './application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
 import { GetMonthlyCreditUsageForUserUseCase } from './application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from './application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
-import { GetMonthlyCreditUsageForTeamUseCase } from './application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
+import { GetMonthlyCreditUsageForApiKeyUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.use-case';
+import { GetMonthlyCreditUsageForApiKeysUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-keys/get-monthly-credit-usage-for-api-keys.use-case';
+import { GetMonthlyCreditUsageForTeamsUseCase } from './application/use-cases/get-monthly-credit-usage-for-teams/get-monthly-credit-usage-for-teams.use-case';
 import { GetCreditUsageUseCase } from './application/use-cases/get-credit-usage/get-credit-usage.use-case';
+import { GetApiKeyUsageUseCase } from './application/use-cases/get-api-key-usage/get-api-key-usage.use-case';
 import { UsageController } from './presenters/http/usage.controller';
+import { ApiKeyUsageController } from './presenters/http/api-key-usage.controller';
 import { SuperAdminUsageController } from './presenters/http/super-admin-usage.controller';
 import { SuperAdminUsageDataController } from './presenters/http/super-admin-usage-data.controller';
 import { LocalUsageRepositoryModule } from './infrastructure/persistence/local-usage/local-usage-repository.module';
@@ -19,21 +25,24 @@ import { ProviderUsageResponseDtoMapper } from './presenters/http/mappers/provid
 import { ProviderUsageChartResponseDtoMapper } from './presenters/http/mappers/provider-usage-chart-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './presenters/http/mappers/model-distribution-response-dto.mapper';
 import { UserUsageResponseDtoMapper } from './presenters/http/mappers/user-usage-response-dto.mapper';
+import { ApiKeyUsageResponseDtoMapper } from './presenters/http/mappers/api-key-usage-response-dto.mapper';
 import { UsageResponseMapper } from './presenters/http/mappers/usage-response.mapper';
 import { UsageUseCasesFacade } from './presenters/http/usage-use-cases.facade';
-import { PlatformConfigModule } from '../../iam/platform-config/platform-config.module';
-import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.module';
-import { TeamsModule } from '../../iam/teams/teams.module';
+import { PlatformConfigModule } from 'src/iam/platform-config/platform-config.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
     LocalUsageRepositoryModule,
+    OrgsModule,
     PlatformConfigModule,
     SubscriptionsModule,
     TeamsModule,
   ],
   controllers: [
     UsageController,
+    ApiKeyUsageController,
     SuperAdminUsageController,
     SuperAdminUsageDataController,
   ],
@@ -45,12 +54,16 @@ import { TeamsModule } from '../../iam/teams/teams.module';
     GetProviderUsageUseCase,
     GetModelDistributionUseCase,
     GetUserUsageUseCase,
+    GetUsageConfigUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,
     GetMonthlyCreditUsageForUsersUseCase,
-    GetMonthlyCreditUsageForTeamUseCase,
+    GetMonthlyCreditUsageForApiKeyUseCase,
+    GetMonthlyCreditUsageForApiKeysUseCase,
+    GetMonthlyCreditUsageForTeamsUseCase,
     GetCreditUsageUseCase,
+    GetApiKeyUsageUseCase,
 
     // Mappers
     UsageStatsResponseDtoMapper,
@@ -58,6 +71,7 @@ import { TeamsModule } from '../../iam/teams/teams.module';
     ProviderUsageChartResponseDtoMapper,
     ModelDistributionResponseDtoMapper,
     UserUsageResponseDtoMapper,
+    ApiKeyUsageResponseDtoMapper,
     UsageResponseMapper,
     UsageUseCasesFacade,
   ],
@@ -67,11 +81,14 @@ import { TeamsModule } from '../../iam/teams/teams.module';
     GetProviderUsageUseCase,
     GetModelDistributionUseCase,
     GetUserUsageUseCase,
+    GetUsageConfigUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,
     GetMonthlyCreditUsageForUsersUseCase,
-    GetMonthlyCreditUsageForTeamUseCase,
+    GetMonthlyCreditUsageForApiKeyUseCase,
+    GetMonthlyCreditUsageForApiKeysUseCase,
+    GetMonthlyCreditUsageForTeamsUseCase,
     GetCreditUsageUseCase,
   ],
 })

@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 interface DeleteKnowledgeBaseParams {
   id: string;
@@ -23,7 +24,9 @@ export function useDeleteKnowledgeBase(onSuccess?: () => void) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: getKnowledgeBasesControllerFindAllQueryKey(),
+        queryKey: getKnowledgeBasesControllerFindAllQueryKey(
+          personalKnowledgeBaseListParams,
+        ),
       });
       void router.invalidate();
       showSuccess(t('delete.success'));

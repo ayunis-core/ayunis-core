@@ -7,7 +7,6 @@ export enum MfaErrorCode {
   MFA_ALREADY_ENABLED = 'MFA_ALREADY_ENABLED',
   MFA_NOT_ENABLED = 'MFA_NOT_ENABLED',
   MFA_REQUIRED_BY_ORG = 'MFA_REQUIRED_BY_ORG',
-  MFA_PENDING_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
   MFA_ENROLLMENT_NOT_ALLOWED = 'MFA_ENROLLMENT_NOT_ALLOWED',
   MFA_SELF_RESET_NOT_ALLOWED = 'MFA_SELF_RESET_NOT_ALLOWED',
   UNEXPECTED_MFA_ERROR = 'UNEXPECTED_MFA_ERROR',
@@ -68,21 +67,6 @@ export class MfaRequiredByOrgError extends ApplicationError {
   }
 }
 
-/**
- * 403 (not 401) on purpose: 401 responses are intercepted by the token
- * refresh filter, which must never run for MFA pending-state failures.
- */
-export class InvalidMfaPendingTokenError extends ApplicationError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'The login attempt has expired. Please sign in again.',
-      MfaErrorCode.MFA_PENDING_TOKEN_INVALID,
-      403,
-      metadata,
-    );
-  }
-}
-
 export class MfaEnrollmentNotAllowedError extends ApplicationError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -112,7 +96,7 @@ export class UnexpectedMfaError extends ApplicationError {
       MfaErrorCode.UNEXPECTED_MFA_ERROR,
       500,
       {
-        error: error instanceof Error ? error.message : String(error),
+        error,
         ...metadata,
       },
     );

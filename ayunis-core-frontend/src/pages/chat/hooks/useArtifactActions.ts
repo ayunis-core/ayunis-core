@@ -1,38 +1,45 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useArtifact } from '../api/useArtifact';
-import { useUpdateArtifact } from '../api/useUpdateArtifact';
-import { useRevertArtifact } from '../api/useRevertArtifact';
-import { useExportArtifact } from '../api/useExportArtifact';
+import { useArtifact } from '@/pages/chat/api/useArtifact';
+import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
+import { useRevertArtifact } from '@/pages/chat/api/useRevertArtifact';
+import { useExportArtifact } from '@/pages/chat/api/useExportArtifact';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
-export function useArtifactActions(threadId: string) {
+export function useArtifactActions(
+  threadId: string,
+  initialArtifactId?: string,
+  workspaceId?: string | null,
+) {
   const { t } = useTranslation('chat');
-  const [openArtifactId, setOpenArtifactId] = useState<string | null>(null);
+  const openArtifactId = initialArtifactId ?? null;
 
-  const { artifact: openArtifact } = useArtifact(openArtifactId);
+  const {
+    artifact: openArtifact,
+    isLoading: isArtifactLoading,
+    error: artifactError,
+    refetch: refetchArtifact,
+  } = useArtifact(openArtifactId);
 
   const { updateArtifactAsync: saveArtifactAsync } = useUpdateArtifact({
     artifactId: openArtifactId ?? '',
     threadId,
+    workspaceId,
     onSuccess: () => showSuccess(t('chat.artifactSaved')),
   });
 
   const { revertArtifact } = useRevertArtifact({
     artifactId: openArtifactId ?? '',
     threadId,
+    workspaceId,
   });
 
   const { exportArtifact, isExporting } = useExportArtifact({
     artifactId: openArtifactId ?? '',
     title: openArtifact?.title ?? 'document',
   });
-
-  const handleOpenArtifact = useCallback((artifactId: string) => {
-    setOpenArtifactId(artifactId);
-  }, []);
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
@@ -71,17 +78,22 @@ export function useArtifactActions(threadId: string) {
     [exportArtifact, saveArtifactAsync],
   );
 
-  const handleCloseArtifact = useCallback(() => {
-    setOpenArtifactId(null);
-  }, []);
+  const handleRetryArtifact = useCallback(() => {
+    void refetchArtifact();
+  }, [refetchArtifact]);
+
+  const artifactPanel = {
+    artifact: openArtifact,
+    isLoading: isArtifactLoading,
+    error: artifactError,
+    onRetry: handleRetryArtifact,
+  };
 
   return {
-    openArtifact,
+    artifactPanel,
     isExporting,
-    handleOpenArtifact,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
-    handleCloseArtifact,
   };
 }

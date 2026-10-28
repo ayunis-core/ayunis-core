@@ -1,0 +1,320 @@
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
+import type { UseFormReturn } from 'react-hook-form';
+import type { SsoConnectionFormFields } from '@/pages/super-admin-settings/org/model/types';
+import SsoSection from '@/pages/super-admin-settings/org/ui/SsoSection';
+
+const {
+  configure,
+  setEnabled,
+  setJit,
+  setLocalPasswordLogin,
+  connectionState,
+  formState,
+} = vi.hoisted(() => ({
+  configure: vi.fn(),
+  setEnabled: vi.fn(),
+  setJit: vi.fn(),
+  setLocalPasswordLogin: vi.fn(),
+  connectionState: { enabled: true, localPasswordLoginEnabled: true },
+  formState: {
+    form: null as UseFormReturn<SsoConnectionFormFields> | null,
+  },
+}));
+
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useConfigureSuperAdminSso',
+  () => ({
+    useConfigureSuperAdminSso: (
+      _orgId: string,
+      form: UseFormReturn<SsoConnectionFormFields>,
+    ) => {
+      formState.form = form;
+      return { configure, isPending: false };
+    },
+  }),
+);
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useSetSuperAdminSsoEnabled',
+  () => ({
+    useSetSuperAdminSsoEnabled: () => ({
+      mutate: setEnabled,
+      isPending: false,
+    }),
+  }),
+);
+vi.mock('@/pages/super-admin-settings/org/api/useSetSuperAdminSsoJit', () => ({
+  useSetSuperAdminSsoJit: () => ({ mutate: setJit, isPending: false }),
+}));
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useSetSuperAdminLocalPasswordLogin',
+  () => ({
+    useSetSuperAdminLocalPasswordLogin: () => ({
+      mutate: setLocalPasswordLogin,
+      isPending: false,
+    }),
+  }),
+);
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useSuperAdminSsoConnection',
+  () => ({
+    useSuperAdminSsoConnection: () => ({
+      connection: {
+        orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+        emailDomains: [
+          {
+            emailDomain: 'example.com',
+            verifiedAt: '2026-08-27T12:00:00.000Z',
+          },
+        ],
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: null,
+        enabled: connectionState.enabled,
+        jitProvisioningEnabled: false,
+        localPasswordLoginEnabled: connectionState.localPasswordLoginEnabled,
+      },
+      isLoading: false,
+      isError: false,
+    }),
+  }),
+);
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+vi.mock('@/pages/super-admin-settings/org/ui/EnableSsoDialog', () => ({
+  default: () => null,
+}));
+
+describe(SsoSection.name, () => {
+  beforeAll(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+  });
+  afterAll(() => vi.unstubAllGlobals());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    connectionState.enabled = true;
+    connectionState.localPasswordLoginEnabled = true;
+    formState.form = null;
+  });
+
+  it('renders the direct identity provider input', () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    expect(screen.getByTestId('sso-zitadel-idp-id')).toBeTruthy();
+  });
+
+  it('requires explicit review before enforcing SSO-only login', async () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    fireEvent.click(screen.getByTestId('sso-required'));
+    const confirm = await screen.findByTestId('sso-required-confirm');
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+
+    fireEvent.click(screen.getByTestId('sso-required-reviewed'));
+    fireEvent.click(confirm);
+
+    await waitFor(() => {
+      expect(setLocalPasswordLogin).toHaveBeenCalledWith({
+        orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+        data: {
+          enabled: false,
+          confirmed: true,
+          reviewedEmailDomains: ['example.com'],
+          reviewedZitadelOrgId: '385820595704561666',
+          reviewedZitadelIdpId: null,
+        },
+      });
+    });
+  });
+
+  it('locks identity provider changes while SSO-only is enforced', () => {
+    connectionState.localPasswordLoginEnabled = false;
+
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    expect(
+      screen.getByTestId('sso-zitadel-idp-id').hasAttribute('disabled'),
+    ).toBe(true);
+    expect(
+      screen.getByTestId('sso-connection-save').hasAttribute('disabled'),
+    ).toBe(true);
+  });
+
+  it('discards unsaved identity provider changes when SSO becomes required', async () => {
+    const { rerender } = render(
+      <SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />,
+    );
+    const idpInput = screen.getByTestId('sso-zitadel-idp-id');
+
+    fireEvent.change(idpInput, { target: { value: 'unsaved-idp' } });
+    connectionState.localPasswordLoginEnabled = false;
+    rerender(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    await waitFor(() => {
+      expect(idpInput).toHaveProperty('value', '');
+      expect(idpInput.hasAttribute('disabled')).toBe(true);
+    });
+  });
+
+  it('requires an identity provider before saving direct routing', async () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    fireEvent.click(screen.getByTestId('sso-connection-save'));
+
+    expect(
+      await screen.findByText('sso.validation.zitadelIdpId.required'),
+    ).toBeTruthy();
+    expect(configure).not.toHaveBeenCalled();
+  });
+
+  it('saves a normalized identity provider ID', async () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    fireEvent.change(screen.getByTestId('sso-zitadel-idp-id'), {
+      target: { value: ' 388145187060187138 ' },
+    });
+    fireEvent.click(screen.getByTestId('sso-connection-save'));
+
+    await waitFor(() => {
+      expect(configure).toHaveBeenCalledWith({
+        emailDomains: [{ value: 'example.com' }],
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: '388145187060187138',
+        domainVerified: false,
+        updateMapping: false,
+      });
+    });
+  });
+
+  it('adds and submits another verified domain', async () => {
+    connectionState.enabled = false;
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    fireEvent.click(screen.getByTestId('sso-add-email-domain'));
+    fireEvent.change(screen.getByTestId('sso-email-domain-1'), {
+      target: { value: ' Other.Example ' },
+    });
+    fireEvent.change(screen.getByTestId('sso-zitadel-idp-id'), {
+      target: { value: '388145187060187138' },
+    });
+    fireEvent.click(screen.getByTestId('sso-domain-verified'));
+    fireEvent.click(screen.getByTestId('sso-connection-save'));
+
+    await waitFor(() => {
+      expect(configure).toHaveBeenCalledWith({
+        emailDomains: [{ value: 'example.com' }, { value: 'Other.Example' }],
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: '388145187060187138',
+        domainVerified: true,
+        updateMapping: true,
+      });
+    });
+  });
+
+  it('adds a verified domain while SSO-only stays active, including a legacy mapping without an IdP hint', async () => {
+    connectionState.localPasswordLoginEnabled = false;
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    expect(
+      screen.getByTestId('sso-email-domain-0').hasAttribute('disabled'),
+    ).toBe(true);
+    expect(
+      screen.getByTestId('sso-remove-email-domain-0').hasAttribute('disabled'),
+    ).toBe(true);
+    expect(
+      screen.getByTestId('sso-zitadel-org-id').hasAttribute('disabled'),
+    ).toBe(true);
+    fireEvent.click(screen.getByTestId('sso-add-email-domain'));
+    fireEvent.change(screen.getByTestId('sso-email-domain-1'), {
+      target: { value: 'new.example' },
+    });
+    expect(
+      screen.getByTestId('sso-connection-save').hasAttribute('disabled'),
+    ).toBe(true);
+    fireEvent.click(screen.getByTestId('sso-domain-verified'));
+    fireEvent.click(screen.getByTestId('sso-connection-save'));
+    await waitFor(() =>
+      expect(configure).toHaveBeenCalledWith({
+        emailDomains: [{ value: 'example.com' }, { value: 'new.example' }],
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: '',
+        domainVerified: true,
+        updateMapping: true,
+      }),
+    );
+    expect(setEnabled).not.toHaveBeenCalled();
+    expect(setLocalPasswordLogin).not.toHaveBeenCalled();
+  });
+
+  it('keeps active domain additions separate from identity provider changes', () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+    fireEvent.change(screen.getByTestId('sso-zitadel-idp-id'), {
+      target: { value: 'unsaved-idp' },
+    });
+    expect(
+      screen.getByTestId('sso-add-email-domain').hasAttribute('disabled'),
+    ).toBe(true);
+    fireEvent.change(screen.getByTestId('sso-zitadel-idp-id'), {
+      target: { value: '' },
+    });
+    fireEvent.click(screen.getByTestId('sso-add-email-domain'));
+    expect(
+      screen.getByTestId('sso-zitadel-idp-id').hasAttribute('disabled'),
+    ).toBe(true);
+    fireEvent.click(screen.getByTestId('sso-remove-email-domain-1'));
+    expect(
+      screen.getByTestId('sso-zitadel-idp-id').hasAttribute('disabled'),
+    ).toBe(false);
+  });
+
+  it('clears a domain-list error after correction and allows resubmission', async () => {
+    connectionState.enabled = false;
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    act(() => {
+      formState.form?.setError('emailDomains', {
+        message: 'sso.validation.emailDomains.arrayUnique',
+      });
+    });
+
+    expect(
+      await screen.findByText('sso.validation.emailDomains.arrayUnique'),
+    ).toBeTruthy();
+
+    fireEvent.change(screen.getByTestId('sso-email-domain-0'), {
+      target: { value: 'corrected.example' },
+    });
+    expect(
+      screen.queryByText('sso.validation.emailDomains.arrayUnique'),
+    ).toBeNull();
+
+    fireEvent.change(screen.getByTestId('sso-zitadel-idp-id'), {
+      target: { value: '388145187060187138' },
+    });
+    fireEvent.click(screen.getByTestId('sso-domain-verified'));
+    fireEvent.click(screen.getByTestId('sso-connection-save'));
+
+    await waitFor(() => expect(configure).toHaveBeenCalledOnce());
+  });
+});

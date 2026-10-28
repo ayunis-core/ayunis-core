@@ -1,8 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from './list-usage-based-subscription-org-ids.use-case';
 
 describe('ListUsageBasedSubscriptionOrgIdsUseCase', () => {

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindUsersByIdsUseCase } from './find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from './find-users-by-ids.query';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { ContextService } from 'src/common/context/services/context.service';

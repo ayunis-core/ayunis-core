@@ -1,11 +1,10 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { CleanupSourceProcessingUseCase } from './cleanup-source-processing.use-case';
 import { CleanupSourceProcessingCommand } from './cleanup-source-processing.command';
-import { DocumentProcessingPort } from '../../ports/document-processing.port';
-import { UrlCrawlProcessingPort } from '../../ports/url-crawl-processing.port';
+import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
+import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 
 describe('CleanupSourceProcessingUseCase', () => {
@@ -42,8 +41,6 @@ describe('CleanupSourceProcessingUseCase', () => {
     }).compile();
 
     useCase = module.get(CleanupSourceProcessingUseCase);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

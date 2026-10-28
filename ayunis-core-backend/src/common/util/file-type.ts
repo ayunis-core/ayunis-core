@@ -13,9 +13,14 @@ export const MIME_TYPES = {
   // PowerPoint
   PPTX: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 
+  // OpenDocument (LibreOffice) — text and presentation
+  ODT: 'application/vnd.oasis.opendocument.text',
+  ODP: 'application/vnd.oasis.opendocument.presentation',
+
   // Excel
   XLSX: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   XLS: 'application/vnd.ms-excel',
+  ODS: 'application/vnd.oasis.opendocument.spreadsheet',
 
   // CSV
   CSV: 'text/csv',
@@ -25,6 +30,12 @@ export const MIME_TYPES = {
 
   // Markdown
   MD: 'text/markdown',
+
+  // Email (RFC 822 message, .eml)
+  EML: 'message/rfc822',
+
+  // Outlook message (.msg)
+  MSG: 'application/vnd.ms-outlook',
 
   // Audio — formats supported by the STT pipeline (Mistral voxtral).
   // Keep this list in sync with TranscribeUseCase's supportedMimeTypes.
@@ -42,11 +53,16 @@ export const FILE_EXTENSIONS = {
   PDF: '.pdf',
   DOCX: '.docx',
   PPTX: '.pptx',
+  ODT: '.odt',
+  ODP: '.odp',
   XLSX: '.xlsx',
   XLS: '.xls',
+  ODS: '.ods',
   CSV: '.csv',
   TXT: '.txt',
   MD: '.md',
+  EML: '.eml',
+  MSG: '.msg',
   MP3: '.mp3',
   M4A: '.m4a',
   WAV: '.wav',
@@ -58,10 +74,15 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'PDF',
   'DOCX',
   'PPTX',
+  'ODT',
+  'ODP',
   'TXT',
+  'EML',
+  'MSG',
   'CSV',
   'XLSX',
   'XLS',
+  'ODS',
   'MP3',
   'M4A',
   'WAV',
@@ -72,10 +93,15 @@ export type DetectedFileType =
   | 'pdf'
   | 'docx'
   | 'pptx'
+  | 'odt'
+  | 'odp'
   | 'xlsx'
   | 'xls'
+  | 'ods'
   | 'csv'
   | 'txt'
+  | 'eml'
+  | 'msg'
   | 'mp3'
   | 'm4a'
   | 'wav'
@@ -87,11 +113,16 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.PDF]: 'pdf',
   [MIME_TYPES.DOCX]: 'docx',
   [MIME_TYPES.PPTX]: 'pptx',
+  [MIME_TYPES.ODT]: 'odt',
+  [MIME_TYPES.ODP]: 'odp',
   [MIME_TYPES.XLSX]: 'xlsx',
+  [MIME_TYPES.ODS]: 'ods',
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
   [MIME_TYPES.MD]: 'txt',
+  [MIME_TYPES.EML]: 'eml',
+  [MIME_TYPES.MSG]: 'msg',
   [MIME_TYPES.MP3]: 'mp3',
   [MIME_TYPES.M4A]: 'm4a',
   [MIME_TYPES.M4A_ALT]: 'm4a',
@@ -104,11 +135,16 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.PDF]: 'pdf',
   [FILE_EXTENSIONS.DOCX]: 'docx',
   [FILE_EXTENSIONS.PPTX]: 'pptx',
+  [FILE_EXTENSIONS.ODT]: 'odt',
+  [FILE_EXTENSIONS.ODP]: 'odp',
   [FILE_EXTENSIONS.XLSX]: 'xlsx',
   [FILE_EXTENSIONS.XLS]: 'xls',
+  [FILE_EXTENSIONS.ODS]: 'ods',
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
+  [FILE_EXTENSIONS.EML]: 'eml',
+  [FILE_EXTENSIONS.MSG]: 'msg',
   [FILE_EXTENSIONS.MP3]: 'mp3',
   [FILE_EXTENSIONS.M4A]: 'm4a',
   [FILE_EXTENSIONS.WAV]: 'wav',
@@ -145,17 +181,32 @@ export function isPlainTextFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is a document (PDF, Word, PowerPoint)
+ * Office formats that reach the text pipeline by way of a LibreOffice
+ * conversion to PDF. Callers of the converter must gate on this rather than on
+ * their own literal list, so an added format cannot be accepted on upload and
+ * then rejected during retrieval.
  */
-export function isDocumentFile(fileType: DetectedFileType): boolean {
-  return fileType === 'pdf' || fileType === 'docx' || fileType === 'pptx';
+export function isOfficeDocumentFile(fileType: DetectedFileType): boolean {
+  return (
+    fileType === 'docx' ||
+    fileType === 'pptx' ||
+    fileType === 'odt' ||
+    fileType === 'odp'
+  );
 }
 
 /**
- * Check if the file type is a spreadsheet (Excel)
+ * Check if the file type is a document (PDF, Word, PowerPoint, OpenDocument)
+ */
+export function isDocumentFile(fileType: DetectedFileType): boolean {
+  return fileType === 'pdf' || isOfficeDocumentFile(fileType);
+}
+
+/**
+ * Check if the file type is a spreadsheet (Excel, OpenDocument)
  */
 export function isSpreadsheetFile(fileType: DetectedFileType): boolean {
-  return fileType === 'xlsx' || fileType === 'xls';
+  return fileType === 'xlsx' || fileType === 'xls' || fileType === 'ods';
 }
 
 /**
@@ -163,6 +214,13 @@ export function isSpreadsheetFile(fileType: DetectedFileType): boolean {
  */
 export function isCSVFile(fileType: DetectedFileType): boolean {
   return fileType === 'csv';
+}
+
+/**
+ * Check if the file type is an email message (.eml, RFC 822, or Outlook .msg)
+ */
+export function isEmailFile(fileType: DetectedFileType): boolean {
+  return fileType === 'eml' || fileType === 'msg';
 }
 
 /**
@@ -177,6 +235,21 @@ export function isAudioFile(fileType: DetectedFileType): boolean {
   );
 }
 
+/**
+ * Files that flow through the single-page document processing path — the ones
+ * whose extracted content becomes one text/file source. This is the inverse of
+ * the tabular data sources ({@link isCSVFile} / {@link isSpreadsheetFile}),
+ * which fan out into one data source per sheet.
+ */
+export function isDocumentSourceFile(fileType: DetectedFileType): boolean {
+  return (
+    isDocumentFile(fileType) ||
+    isPlainTextFile(fileType) ||
+    isEmailFile(fileType) ||
+    isAudioFile(fileType)
+  );
+}
+
 const CANONICAL_MIME_BY_FILE_TYPE: Record<
   Exclude<DetectedFileType, 'unknown'>,
   string
@@ -184,10 +257,15 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   pdf: MIME_TYPES.PDF,
   docx: MIME_TYPES.DOCX,
   pptx: MIME_TYPES.PPTX,
+  odt: MIME_TYPES.ODT,
+  odp: MIME_TYPES.ODP,
   xlsx: MIME_TYPES.XLSX,
   xls: MIME_TYPES.XLS,
+  ods: MIME_TYPES.ODS,
   csv: MIME_TYPES.CSV,
   txt: MIME_TYPES.TXT,
+  eml: MIME_TYPES.EML,
+  msg: MIME_TYPES.MSG,
   mp3: MIME_TYPES.MP3,
   m4a: MIME_TYPES.M4A,
   wav: MIME_TYPES.WAV,

@@ -22,6 +22,16 @@ const config = {
   analytics: {
     gtmContainerId: runtimeEnv('VITE_GTM_CONTAINER_ID'),
     usercentricsSettingsId: runtimeEnv('VITE_USERCENTRICS_SETTINGS_ID'),
+    openPanelApiUrl: runtimeEnv('VITE_OPENPANEL_API_URL'),
+    openPanelClientId: runtimeEnv('VITE_OPENPANEL_CLIENT_ID'),
+  },
+  map: {
+    tileUrl:
+      runtimeEnv('VITE_MAP_BASEMAP_TILE_URL')?.trim() ||
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution:
+      runtimeEnv('VITE_MAP_BASEMAP_ATTRIBUTION')?.trim() ||
+      '© OpenStreetMap contributors',
   },
 } as const;
 

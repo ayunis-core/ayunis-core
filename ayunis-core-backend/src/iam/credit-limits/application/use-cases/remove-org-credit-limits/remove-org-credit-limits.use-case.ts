@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
+import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { RemoveOrgCreditLimitsCommand } from './remove-org-credit-limits.command';
 
 /**
@@ -16,17 +16,21 @@ export class RemoveOrgCreditLimitsUseCase {
   constructor(private readonly creditLimitRepository: CreditLimitRepository) {}
 
   async execute(command: RemoveOrgCreditLimitsCommand): Promise<void> {
-    this.logger.log('Removing all credit limits for org', {
-      orgId: command.orgId,
-    });
+    this.logger.log(
+      {
+        orgId: command.orgId,
+      },
+      'Removing all credit limits for org',
+    );
 
     try {
       await this.creditLimitRepository.deleteByOrg(command.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to remove org credit limits', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Failed to remove org credit limits',
+      );
       throw new UnexpectedCreditLimitError(error);
     }
   }

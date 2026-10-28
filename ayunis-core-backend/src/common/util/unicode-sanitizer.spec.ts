@@ -15,6 +15,23 @@ describe('sanitizeUnicodeEscapes', () => {
     expect(sanitizeUnicodeEscapes('abc\\u0')).toBe('abc');
   });
 
+  // A tool result scraped from the web can arrive with a UTF-16 surrogate pair
+  // broken in half. JSON.stringify escapes the survivor as \udXXX, which
+  // Postgres rejects when the messages.content jsonb row is written ("invalid
+  // input syntax for type json"), failing the whole run (AYC-902).
+  it('replaces a lone surrogate with the replacement character', () => {
+    expect(sanitizeUnicodeEscapes(`ok${String.fromCharCode(0xd83d)} end`)).toBe(
+      'ok\uFFFD end',
+    );
+    expect(sanitizeUnicodeEscapes(`ok${String.fromCharCode(0xdc00)} end`)).toBe(
+      'ok\uFFFD end',
+    );
+  });
+
+  it('keeps an intact emoji unchanged', () => {
+    expect(sanitizeUnicodeEscapes('done \u{1F600}')).toBe('done \u{1F600}');
+  });
+
   it('preserves ordinary strings, paths, and valid escapes', () => {
     expect(sanitizeUnicodeEscapes('C:\\Users\\name')).toBe('C:\\Users\\name');
     expect(sanitizeUnicodeEscapes('emoji \\u1F600 ok')).toBe(
@@ -66,6 +83,12 @@ describe('sanitizeObject', () => {
     );
 
     expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
+  });
+
+  it('replaces lone surrogates in nested tool params', () => {
+    expect(
+      sanitizeObject({ query: { terms: [`a${String.fromCharCode(0xd83d)}`] } }),
+    ).toEqual({ query: { terms: ['a\uFFFD'] } });
   });
 
   it('is idempotent over nested structures', () => {

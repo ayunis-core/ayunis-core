@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
   CreditLimitTargetNotFoundError,
   InvalidCreditLimitError,
   UnexpectedCreditLimitError,
-} from '../../credit-limits.errors';
+} from 'src/iam/credit-limits/application/credit-limits.errors';
 import { isNonNegativeFinite } from 'src/common/util/number.util';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class SetUserCreditLimitUseCase {
@@ -25,10 +25,7 @@ export class SetUserCreditLimitUseCase {
   ) {}
 
   async execute(command: SetUserCreditLimitCommand): Promise<UserCreditLimit> {
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    const orgId = getRequiredOrgId(this.contextService);
     if (!isNonNegativeFinite(command.monthlyCredits)) {
       throw new InvalidCreditLimitError(
         'monthlyCredits must be a number greater than or equal to 0',
@@ -36,11 +33,14 @@ export class SetUserCreditLimitUseCase {
       );
     }
 
-    this.logger.log('Setting user credit limit', {
-      orgId,
-      userId: command.userId,
-      monthlyCredits: command.monthlyCredits,
-    });
+    this.logger.log(
+      {
+        orgId,
+        userId: command.userId,
+        monthlyCredits: command.monthlyCredits,
+      },
+      'Setting user credit limit',
+    );
 
     try {
       const members = await this.findUsersByIdsUseCase.execute(
@@ -68,9 +68,10 @@ export class SetUserCreditLimitUseCase {
       return await this.creditLimitRepository.save(limit);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to set user credit limit', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Failed to set user credit limit',
+      );
       throw new UnexpectedCreditLimitError(error);
     }
   }

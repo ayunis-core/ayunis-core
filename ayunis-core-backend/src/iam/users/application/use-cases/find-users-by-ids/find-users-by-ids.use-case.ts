@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { FindUsersByIdsQuery } from './find-users-by-ids.query';
 import { User } from 'src/iam/users/domain/user.entity';
-import { UserError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserError,
+  UserUnexpectedError,
+} from 'src/iam/users/application/users.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
 export class FindUsersByIdsUseCase {
@@ -16,13 +19,9 @@ export class FindUsersByIdsUseCase {
   ) {}
 
   async execute(query: FindUsersByIdsQuery): Promise<User[]> {
-    const orgId = this.contextService.get('orgId');
+    const orgId = getRequiredOrgId(this.contextService);
 
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('execute', { idCount: query.ids.length, orgId });
+    this.logger.log({ idCount: query.ids.length, orgId }, 'execute');
 
     try {
       return await this.usersRepository.findManyByIdsAndOrgId(query.ids, orgId);

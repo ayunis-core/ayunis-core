@@ -6,7 +6,7 @@ import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
 import KnowledgeBaseCard from './KnowledgeBaseCard';
 import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import type { KnowledgeBase } from '../model/openapi';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '@/features/permissions';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -38,10 +38,10 @@ export default function KnowledgeBasesPage({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const headerAction = (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="knowledge-collections/" />
       <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
-        <CreateKnowledgeBaseDialog />
+        <CreateKnowledgeBaseDialog buttonClassName="max-sm:max-w-full" />
       </OnboardingTourTarget>
     </div>
   );
@@ -76,7 +76,12 @@ export default function KnowledgeBasesPage({
           <Tabs defaultValue="personal" className="w-full">
             <TabsList>
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              <TabsTrigger
+                value="shared"
+                data-testid="knowledge-base-tab-shared"
+              >
+                {t('tabs.shared')}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="personal" className="mt-4">
               {personalKnowledgeBases.length === 0 ? (

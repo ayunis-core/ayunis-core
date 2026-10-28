@@ -14,13 +14,14 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgOverviewResponseDto } from '@/shared/api';
+import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
 import type { ReactNode } from 'react';
 
 interface OrgsTableProps {
-  orgs: SuperAdminOrgResponseDto[];
+  orgs: SuperAdminOrgOverviewResponseDto[];
   searchSlot?: ReactNode;
 }
 
@@ -51,6 +52,7 @@ export default function OrgsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>{t('table.name')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
                 <TableHead>{t('table.createdAt')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -58,6 +60,7 @@ export default function OrgsTable({
               {orgs.map((org) => (
                 <TableRow
                   key={org.id}
+                  data-testid={`org-row-${org.id}`}
                   className="cursor-pointer"
                   onClick={() => {
                     void router.navigate({
@@ -67,6 +70,9 @@ export default function OrgsTable({
                   }}
                 >
                   <TableCell className="font-medium">{org.name}</TableCell>
+                  <TableCell>
+                    <OrgLifecycleBadge status={org.lifecycleStatus} />
+                  </TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>
               ))}

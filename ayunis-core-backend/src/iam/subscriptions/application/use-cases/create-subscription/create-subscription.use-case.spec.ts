@@ -1,16 +1,24 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
+import { isActive } from 'src/iam/subscriptions/application/util/is-active';
+import { classifySubscriptionStatus } from 'src/iam/subscriptions/application/util/classify-subscription-status';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { CreateSubscriptionUseCase } from './create-subscription.use-case';
 import { CreateSubscriptionCommand } from './create-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SubscriptionFactory } from '../../services/subscription-factory.service';
+import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
@@ -20,10 +28,14 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   SubscriptionAlreadyExistsError,
   InvalidSubscriptionDataError,
+  InvalidSubscriptionAccessEndError,
   TooManyUsedSeatsError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
@@ -51,6 +63,10 @@ describe('CreateSubscriptionUseCase', () => {
       providers: [
         CreateSubscriptionUseCase,
         SubscriptionFactory,
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: { execute: jest.fn() },
+        },
         {
           provide: SubscriptionRepository,
           useValue: {
@@ -88,11 +104,6 @@ describe('CreateSubscriptionUseCase', () => {
     configService = module.get(ConfigService);
     contextService = module.get(ContextService);
     eventEmitter = module.get(EventEmitter2);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -101,6 +112,7 @@ describe('CreateSubscriptionUseCase', () => {
 
   function setupSuperAdminContext(): void {
     contextService.get.mockImplementation(((key: string) => {
+      if (key === 'userId') return requestingUserId;
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.USER;
       if (key === 'orgId') return randomUUID();
@@ -130,6 +142,96 @@ describe('CreateSubscriptionUseCase', () => {
       }),
     );
   }
+
+  describe('optional access end', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-10-22T12:00:00Z'));
+      setupSuperAdminContext();
+      mockNoExistingSubscription();
+      mockInvitesAndUsers(0, 0);
+      configService.get.mockReturnValue(100);
+    });
+    afterEach(() => jest.useRealTimers());
+
+    function boundedCommand(type: SubscriptionType, endsAt?: Date) {
+      return new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type,
+        noOfSeats: 5,
+        monthlyCredits: 1000,
+        ...baseBillingParams,
+        startsAt: new Date('2026-11-01T00:00:00Z'),
+        ...{ endsAt },
+      });
+    }
+
+    it.each([SubscriptionType.SEAT_BASED, SubscriptionType.USAGE_BASED])(
+      'ends %s access at the exclusive boundary without cancelling',
+      async (type) => {
+        const end = new Date('2026-12-01T00:00:00Z');
+        const result = await useCase.execute(boundedCommand(type, end));
+        expect(result.endsAt).toEqual(end);
+        expect(result).toMatchObject({ originalEndsAt: end });
+        expect(result.cancelledAt).toBeNull();
+        expect(classifySubscriptionStatus(result)).toBe('SCHEDULED');
+        jest.setSystemTime(new Date('2026-11-15T00:00:00Z'));
+        expect(isActive(result)).toBe(true);
+        expect(classifySubscriptionStatus(result)).toBe('ACTIVE');
+        jest.setSystemTime(end);
+        expect(isActive(result)).toBe(false);
+        expect(classifySubscriptionStatus(result)).toBe('HISTORICAL');
+      },
+    );
+    it.each([SubscriptionType.SEAT_BASED, SubscriptionType.USAGE_BASED])(
+      'keeps %s open-ended when the end is omitted',
+      async (type) => {
+        expect((await useCase.execute(boundedCommand(type))).endsAt).toBeNull();
+      },
+    );
+    it.each(['2026-10-31T00:00:00Z', '2026-11-01T00:00:00Z', 'invalid'])(
+      'rejects an invalid end (%s) before persistence',
+      async (end) => {
+        await expect(
+          useCase.execute(
+            boundedCommand(SubscriptionType.USAGE_BASED, new Date(end)),
+          ),
+        ).rejects.toThrow(InvalidSubscriptionAccessEndError);
+        expect(subscriptionRepository.create).not.toHaveBeenCalled();
+        expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+      },
+    );
+    it('rejects an elapsed end when start is omitted', async () => {
+      const command = boundedCommand(
+        SubscriptionType.USAGE_BASED,
+        new Date('2026-10-22T12:00:00Z'),
+      );
+      Object.assign(command, { startsAt: undefined });
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidSubscriptionAccessEndError,
+      );
+      expect(subscriptionRepository.create).not.toHaveBeenCalled();
+    });
+    it('allows a period that ends exactly when the next subscription starts', async () => {
+      const next = await useCase.execute(
+        boundedCommand(SubscriptionType.USAGE_BASED),
+      );
+      Object.assign(next, { startsAt: new Date('2026-12-01T00:00:00Z') });
+      subscriptionRepository.findByOrgId.mockResolvedValue([next]);
+      const result = await useCase.execute(
+        boundedCommand(SubscriptionType.USAGE_BASED, next.startsAt),
+      );
+      expect(result.endsAt).toEqual(next.startsAt);
+      await expect(
+        useCase.execute(
+          boundedCommand(
+            SubscriptionType.USAGE_BASED,
+            new Date('2026-12-02T00:00:00Z'),
+          ),
+        ),
+      ).rejects.toThrow(SubscriptionAlreadyExistsError);
+    });
+  });
 
   describe('usage-based subscription creation', () => {
     it('should create a UsageBasedSubscription when type is USAGE_BASED', async () => {
@@ -258,7 +360,10 @@ describe('CreateSubscriptionUseCase', () => {
 
       expect(result).toBeInstanceOf(SeatBasedSubscription);
       expect((result as SeatBasedSubscription).noOfSeats).toBe(5);
-      expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
+      expect((result as SeatBasedSubscription).pricePerSeat).toBeCloseTo(
+        99.99,
+        10,
+      );
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         SubscriptionCreatedEvent.EVENT_NAME,
         expect.objectContaining({
@@ -340,7 +445,12 @@ describe('CreateSubscriptionUseCase', () => {
     it('should reject creation when a non-cancelled subscription exists', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        { cancelledAt: null } as unknown as Subscription,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
+          startsAt: new Date('2025-01-01T00:00:00.000Z'),
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({
@@ -360,10 +470,12 @@ describe('CreateSubscriptionUseCase', () => {
     it('should reject creation when a non-cancelled future-dated subscription already exists', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        {
-          cancelledAt: null,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
           startsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-        } as unknown as Subscription,
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({
@@ -379,10 +491,45 @@ describe('CreateSubscriptionUseCase', () => {
       );
     });
 
+    it('rejects creation while a cancelled seat subscription still grants access', async () => {
+      setupSuperAdminContext();
+      const existing = new SeatBasedSubscription({
+        orgId,
+        startsAt: new Date('2026-01-01T00:00:00.000Z'),
+        cancelledAt: new Date('2026-06-15T00:00:00.000Z'),
+        endsAt: new Date('2027-01-01T00:00:00.000Z'),
+        renewalCycleAnchor: new Date('2026-01-01T00:00:00.000Z'),
+        renewalCycle: RenewalCycle.YEARLY,
+        noOfSeats: 50,
+        pricePerSeat: 120,
+        billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+      });
+      subscriptionRepository.findByOrgId.mockResolvedValue([existing]);
+
+      await expect(
+        useCase.execute(
+          new CreateSubscriptionCommand({
+            orgId,
+            requestingUserId,
+            type: SubscriptionType.USAGE_BASED,
+            monthlyCredits: 500,
+            ...baseBillingParams,
+          }),
+        ),
+      ).rejects.toThrow(SubscriptionAlreadyExistsError);
+      expect(subscriptionRepository.create).not.toHaveBeenCalled();
+    });
+
     it('should allow creation when only cancelled subscriptions exist', async () => {
       setupSuperAdminContext();
       subscriptionRepository.findByOrgId.mockResolvedValue([
-        { cancelledAt: new Date() } as unknown as Subscription,
+        new UsageBasedSubscription({
+          orgId,
+          monthlyCredits: 500,
+          startsAt: new Date('2025-01-01T00:00:00.000Z'),
+          cancelledAt: new Date(),
+          billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+        }),
       ]);
 
       const command = new CreateSubscriptionCommand({

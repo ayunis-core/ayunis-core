@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import { CreateImageGenerationModelCommand } from './create-image-generation-model.command';
 
 @Injectable()
@@ -47,9 +47,12 @@ export class CreateImageGenerationModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error creating image-generation model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error creating image-generation model',
+      );
       throw new UnexpectedModelError(error as Error);
     }
   }

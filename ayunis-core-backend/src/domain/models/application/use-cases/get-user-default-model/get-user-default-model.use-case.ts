@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetUserDefaultModelQuery } from './get-user-default-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import { ModelError } from '../../models.errors';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { ModelError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class GetUserDefaultModelUseCase {
@@ -15,25 +15,34 @@ export class GetUserDefaultModelUseCase {
   async execute(
     query: GetUserDefaultModelQuery,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.log('execute', {
-      userId: query.userId,
-    });
+    this.logger.log(
+      {
+        userId: query.userId,
+      },
+      'execute',
+    );
 
     try {
       const userDefaultModel =
         await this.userDefaultModelsRepository.findByUserId(query.userId);
 
       if (userDefaultModel) {
-        this.logger.debug('User default model found', {
-          userId: query.userId,
-          modelId: userDefaultModel.id,
-          modelName: userDefaultModel.model.name,
-          modelProvider: userDefaultModel.model.provider,
-        });
+        this.logger.debug(
+          {
+            userId: query.userId,
+            modelId: userDefaultModel.id,
+            modelName: userDefaultModel.model.name,
+            modelProvider: userDefaultModel.model.provider,
+          },
+          'User default model found',
+        );
       } else {
-        this.logger.debug('No user default model found', {
-          userId: query.userId,
-        });
+        this.logger.debug(
+          {
+            userId: query.userId,
+          },
+          'No user default model found',
+        );
       }
 
       return userDefaultModel;
@@ -41,10 +50,13 @@ export class GetUserDefaultModelUseCase {
       if (error instanceof ModelError) {
         throw error;
       }
-      this.logger.error('Failed to get user default model', {
-        userId: query.userId,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      this.logger.error(
+        {
+          userId: query.userId,
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Failed to get user default model',
+      );
       throw error;
     }
   }

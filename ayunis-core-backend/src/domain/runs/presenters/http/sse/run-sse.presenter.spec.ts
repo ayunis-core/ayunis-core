@@ -1,10 +1,13 @@
 import { EventEmitter } from 'events';
+import { setNamespace } from '@appsignal/nodejs';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
-import type { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
+import type { RunEventResponseMapper } from 'src/domain/runs/presenters/http/mappers/run-event-response.mapper';
 import { RunSsePresenter } from './run-sse.presenter';
+
+jest.mock('@appsignal/nodejs', () => ({ setNamespace: jest.fn() }));
 
 const THREAD_ID = 'f4b2e1d0-3c5a-4b7e-9d8f-1a2b3c4d5e6f' as UUID;
 
@@ -22,6 +25,14 @@ class QuotaExceededError extends ApplicationError {
   constructor() {
     super('Quota exceeded', 'QUOTA_EXCEEDED', 403, {
       retryAfterSeconds: 120,
+    });
+  }
+}
+
+class UnexpectedRunError extends ApplicationError {
+  constructor() {
+    super('database connection string leaked', 'UNEXPECTED_RUN', 500, {
+      connectionString: 'postgres://user:secret@database/internal',
     });
   }
 }
@@ -56,6 +67,12 @@ describe('RunSsePresenter', () => {
 
   const stream = (events: AsyncGenerator<RunEvent>) =>
     presenter.stream(response as unknown as Response, THREAD_ID, () => events);
+
+  it('reports the request under the streaming namespace, not web', async () => {
+    await stream(eventsOf());
+
+    expect(setNamespace).toHaveBeenCalledWith('streaming');
+  });
 
   it('sends sse headers and a connection comment before any event', async () => {
     await stream(eventsOf());
@@ -163,6 +180,27 @@ describe('RunSsePresenter', () => {
     expect(response.end).toHaveBeenCalledTimes(1);
   });
 
+  it('does not expose domain server-error details', async () => {
+    // eslint-disable-next-line require-yield, sonarjs/generator-without-yield
+    async function* failingSource(): AsyncGenerator<RunEvent> {
+      throw new UnexpectedRunError();
+    }
+
+    await stream(failingSource());
+
+    const errorFrame = response.write.mock.calls
+      .map(([chunk]: [string]) => chunk)
+      .find((chunk) => chunk.startsWith('id: execution-error'));
+    const payload = JSON.parse(
+      (errorFrame as string).split('data: ')[1],
+    ) as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      code: 'UNEXPECTED_RUN',
+      message: 'Internal server error',
+    });
+    expect(payload.details).toBeUndefined();
+  });
+
   it('falls back to EXECUTION_ERROR for unexpected errors', async () => {
     // eslint-disable-next-line require-yield, sonarjs/generator-without-yield
     async function* failingSource(): AsyncGenerator<RunEvent> {
@@ -178,6 +216,7 @@ describe('RunSsePresenter', () => {
       (errorFrame as string).split('data: ')[1],
     ) as Record<string, unknown>;
     expect(payload.code).toBe('EXECUTION_ERROR');
+    expect(payload.message).toBe('Internal server error');
   });
 
   it('does not abort the event source after normal completion', async () => {

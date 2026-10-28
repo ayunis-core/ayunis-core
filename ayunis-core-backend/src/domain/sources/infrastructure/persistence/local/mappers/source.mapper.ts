@@ -5,15 +5,15 @@ import {
 import {
   FileSourceDetailsRecord,
   TextSourceDetailsRecord,
-} from '../schema/text-source-details.record';
-import { UrlSourceDetailsRecord } from '../schema/text-source-details.record';
-import { Injectable, Logger } from '@nestjs/common';
+  UrlSourceDetailsRecord,
+} from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
+import { Injectable } from '@nestjs/common';
 import { SourceContentChunkMapper } from './source-content-chunk.mapper';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import {
   CSVDataSourceDetailsRecord,
   DataSourceDetailsRecord,
-} from '../schema/data-source-details.record';
+} from 'src/domain/sources/infrastructure/persistence/local/schema/data-source-details.record';
 import {
   CSVDataSource,
   DataSource,
@@ -23,14 +23,14 @@ import {
   DataSourceRecord,
   SourceRecord,
   TextSourceRecord,
-} from '../schema/source.record';
+} from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
-import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
+import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { toWellFormedText } from 'src/common/util/unicode-sanitizer';
 
 @Injectable()
 export class SourceMapper {
-  private readonly logger = new Logger(SourceMapper.name);
   constructor(
     private readonly sourceContentChunkMapper: SourceContentChunkMapper,
   ) {}
@@ -55,8 +55,10 @@ export class SourceMapper {
         return new FileSource({
           id: record.id,
           fileType: record.fileType!,
+          url: record.url,
           name: record.name,
           type: TextType.FILE,
+          processingErrorCode: record.processingErrorCode,
           knowledgeBaseId: record.knowledgeBaseId,
           status: record.status,
           processingError: record.processingError,
@@ -71,6 +73,7 @@ export class SourceMapper {
           url: record.url!,
           name: record.name,
           type: TextType.WEB,
+          processingErrorCode: record.processingErrorCode,
           maxDepth: record.maxDepth ?? 0,
           knowledgeBaseId: record.knowledgeBaseId,
           status: record.status,
@@ -90,6 +93,7 @@ export class SourceMapper {
     return new CSVDataSource({
       id: record.id,
       data: details.data,
+      processingErrorCode: record.processingErrorCode,
       name: record.name,
       knowledgeBaseId: record.knowledgeBaseId,
       status: record.status,
@@ -158,9 +162,13 @@ export class SourceMapper {
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
     record.knowledgeBaseId = source.knowledgeBaseId;
+    record.processingErrorCode = source.processingErrorCode;
     record.textType = source.textType;
     record.fileType = source instanceof FileSource ? source.fileType : null;
-    record.url = source instanceof UrlSource ? source.url : null;
+    record.url =
+      source instanceof UrlSource || source instanceof FileSource
+        ? source.url
+        : null;
     record.maxDepth = source instanceof UrlSource ? source.maxDepth : null;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
@@ -237,13 +245,14 @@ export class SourceMapper {
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
     record.knowledgeBaseId = source.knowledgeBaseId;
+    record.processingErrorCode = source.processingErrorCode;
     record.dataType = source.dataType;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 
     const details = new CSVDataSourceDetailsRecord();
     details.id = source.id;
-    details.data = source.data;
+    details.data = this.toStoredCsvData(source.data);
     details.source = record;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
@@ -252,5 +261,20 @@ export class SourceMapper {
     record.dataSourceDetails = details;
 
     return { source: record, details };
+  }
+
+  /**
+   * PostgreSQL rejects NUL and lone UTF-16 surrogates inside jsonb (22P05),
+   * so every write of CSV cells — full saves and the processing update —
+   * goes through here instead of trusting the caller.
+   */
+  toStoredCsvData(data: { headers: string[]; rows: string[][] }): {
+    headers: string[];
+    rows: string[][];
+  } {
+    return {
+      headers: data.headers.map(toWellFormedText),
+      rows: data.rows.map((row) => row.map(toWellFormedText)),
+    };
   }
 }

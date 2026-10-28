@@ -11,6 +11,8 @@ export interface TourRequest {
 export interface OnboardingTourContextValue {
   launchTour: (request: TourRequest) => void;
   isTourActive: boolean;
+  /** `data-tour` name of the running spotlight, or null. */
+  activeTarget: string | null;
   isReturnActive: boolean;
   armReturn: () => void;
 }

@@ -1,3 +1,5 @@
+import type { PdfLink } from './pdf-link';
+
 /**
  * A single page visited during a crawl.
  */
@@ -16,7 +18,10 @@ export class UrlCrawlPage {
  * same-domain pages in breadth-first order.
  */
 export class UrlCrawlResult {
-  constructor(public readonly pages: UrlCrawlPage[]) {}
+  constructor(
+    public readonly pages: UrlCrawlPage[],
+    public readonly pdfLinks: PdfLink[] = [],
+  ) {}
 
   get rootPage(): UrlCrawlPage {
     return this.pages[0];

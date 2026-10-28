@@ -1,20 +1,25 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { PurgeStoragePrefixesUseCase } from './purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from './purge-storage-prefixes.command';
-import { ListObjectsUseCase } from '../list-objects/list-objects.use-case';
-import { DeleteObjectUseCase } from '../delete-object/delete-object.use-case';
-import { ObjectNotFoundError } from '../../storage.errors';
+import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 
 describe('PurgeStoragePrefixesUseCase', () => {
   let useCase: PurgeStoragePrefixesUseCase;
   let listObjectsUseCase: { execute: jest.Mock };
   let deleteObjectUseCase: { execute: jest.Mock };
+  let logger: LoggerMock;
 
   beforeEach(async () => {
     listObjectsUseCase = { execute: jest.fn().mockResolvedValue([]) };
     deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+    logger = createLoggerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -25,10 +30,6 @@ describe('PurgeStoragePrefixesUseCase', () => {
     }).compile();
 
     useCase = module.get(PurgeStoragePrefixesUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -85,16 +86,21 @@ describe('PurgeStoragePrefixesUseCase', () => {
     expect(result).toEqual({ deletedCount: 1, failedCount: 0 });
   });
 
-  it('skips a prefix that fails to list and still purges the other prefixes', async () => {
+  it('logs a prefix-list failure with structured error metadata and continues', async () => {
+    const error = new Error('storage unavailable');
     listObjectsUseCase.execute
-      .mockRejectedValueOnce(new Error('storage unavailable'))
+      .mockRejectedValueOnce(error)
       .mockResolvedValueOnce(['letterheads/org-1/letterhead.pdf']);
 
     const result = await useCase.execute(
       new PurgeStoragePrefixesCommand(['org-1/', 'letterheads/org-1/']),
     );
 
-    expect(result).toEqual({ deletedCount: 1, failedCount: 0 });
+    expect(result).toEqual({ deletedCount: 1, failedCount: 1 });
+    expect(logger.error).toHaveBeenCalledWith(
+      { err: error, prefix: 'org-1/' },
+      'Failed to list storage prefix',
+    );
     expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         objectName: 'letterheads/org-1/letterhead.pdf',

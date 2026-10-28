@@ -1,12 +1,12 @@
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
+} from 'src/domain/tools/application/ports/execution.handler';
 import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolUseCase } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
-import { McpIntegrationTool } from '../../domain/tools/mcp-integration-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { ExecuteMcpToolCommand } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command';
-import { ToolExecutionFailedError } from '../tools.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -21,20 +21,20 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const result = await this.executeMcpToolUseCase.execute(
         new ExecuteMcpToolCommand(
           tool.integrationId,
-          tool.name,
+          tool.originalName,
           validatedInput,
         ),
       );
       return JSON.stringify(result.content);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('error', error);
+      this.logger.error({ err: error }, 'error');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message:

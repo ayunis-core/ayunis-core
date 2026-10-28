@@ -1,30 +1,39 @@
+import { Logger } from '@nestjs/common';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { DeleteMcpIntegrationUseCase } from './delete-mcp-integration.use-case';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('DeleteMcpIntegrationUseCase', () => {
+  let logger: LoggerMock;
   let useCase: DeleteMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let userConfigRepository: McpIntegrationUserConfigRepositoryPort;
   let contextService: ContextService;
   let capabilityCache: McpCapabilityCacheService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
+  let mcpClientService: jest.Mocked<
+    Pick<McpClientService, 'invalidateConnections'>
+  >;
+  let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockIntegrationId = randomUUID();
@@ -50,10 +59,15 @@ describe('DeleteMcpIntegrationUseCase', () => {
     });
 
   beforeAll(async () => {
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteMcpIntegrationUseCase,
         McpCapabilityCacheService,
+        {
+          provide: McpClientService,
+          useValue: { invalidateConnections: jest.fn() },
+        },
         {
           provide: McpIntegrationsRepositoryPort,
           useValue: {
@@ -65,6 +79,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
           provide: McpIntegrationUserConfigRepositoryPort,
           useValue: {
             deleteByIntegrationId: jest.fn(),
+            removeKeysByIntegrationId: jest.fn(),
           },
         },
         {
@@ -89,10 +104,12 @@ describe('DeleteMcpIntegrationUseCase', () => {
     capabilityCache = module.get<McpCapabilityCacheService>(
       McpCapabilityCacheService,
     );
+    mcpClientService = module.get(McpClientService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    decoratorErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
   });
 
   afterEach(() => {
@@ -118,9 +135,15 @@ describe('DeleteMcpIntegrationUseCase', () => {
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
       expect(repository.delete).toHaveBeenCalledWith(mockIntegrationId);
-      expect(loggerLogSpy).toHaveBeenCalledWith('deleteMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
+        mockIntegration,
+      );
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'deleteMcpIntegration',
+      );
     });
 
     it('should delete associated user config records when deleting an integration', async () => {
@@ -249,9 +272,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedMcpError,
       );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(decoratorErrorSpy).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected use-case error',
-        expect.any(String),
       );
     });
 
@@ -267,7 +290,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
@@ -284,7 +307,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -301,9 +324,12 @@ describe('DeleteMcpIntegrationUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('deleteMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.log).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'deleteMcpIntegration',
+      );
     });
   });
 });

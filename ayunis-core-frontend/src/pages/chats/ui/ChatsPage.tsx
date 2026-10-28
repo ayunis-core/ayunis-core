@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { ListToolbar } from '@/widgets/list-toolbar';
 import ChatsFilters from './ChatsFilters';
 import ChatCard from './ChatCard';
 import ChatsEmptyState from './ChatsEmptyState';
@@ -8,7 +9,8 @@ import ChatsPagination from './ChatsPagination';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import type { ChatListItem } from '../model/types';
+import type { ChatListItem } from '@/pages/chats/model/types';
+import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
@@ -26,6 +28,8 @@ export default function ChatsPage({
   currentPage,
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
+  const { favorites } = useFavorites();
+  const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
 
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 20;
@@ -54,17 +58,21 @@ export default function ChatsPage({
         contentHeader={
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
-            action={<HelpLink path="chat/" />}
+            action={
+              <ListToolbar data-testid="chats-toolbar">
+                <ChatsFilters search={search} />
+                <HelpLink path="chat/" />
+              </ListToolbar>
+            }
           />
         }
         contentArea={
           <>
-            <ChatsFilters search={search} />
             {chats.length === 0 ? (
               <ChatsEmptyState hasFilters={hasFilters} />
             ) : (
               <div className="space-y-3">
-                {chats.map((chat) => (
+                {sortedChats.map((chat) => (
                   <ChatCard key={chat.id} chat={chat} />
                 ))}
               </div>

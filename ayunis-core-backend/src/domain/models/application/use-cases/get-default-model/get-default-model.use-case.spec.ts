@@ -2,15 +2,19 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetDefaultModelUseCase } from './get-default-model.use-case';
 import { GetDefaultModelQuery } from './get-default-model.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { DefaultModelNotFoundError } from '../../models.errors';
-import type { UUID } from 'crypto';
+import { DefaultModelNotFoundError } from 'src/domain/models/application/models.errors';
+import { randomUUID, type UUID } from 'crypto';
+import { GetEffectiveLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.query';
+import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 describe('GetDefaultModelUseCase', () => {
   let useCase: GetDefaultModelUseCase;
@@ -34,6 +38,7 @@ describe('GetDefaultModelUseCase', () => {
       isArchived: false,
       canUseTools: true,
       canVision: false,
+      contextWindowSize: 128_000,
     });
   }
 
@@ -44,6 +49,7 @@ describe('GetDefaultModelUseCase', () => {
       scope?: PermittedModelScope;
       scopeId?: UUID | null;
       isDefault?: boolean;
+      anonymousOnly?: boolean;
     },
   ): PermittedLanguageModel {
     return new PermittedLanguageModel({
@@ -53,6 +59,7 @@ describe('GetDefaultModelUseCase', () => {
       scope: overrides?.scope ?? PermittedModelScope.ORG,
       scopeId: overrides?.scopeId ?? null,
       isDefault: overrides?.isDefault ?? false,
+      anonymousOnly: overrides?.anonymousOnly ?? false,
     });
   }
 
@@ -64,7 +71,7 @@ describe('GetDefaultModelUseCase', () => {
           provide: PermittedModelsRepository,
           useValue: {
             findOrgDefaultLanguage: jest.fn(),
-            findTeamDefaultLanguage: jest.fn(),
+            findManyTeamDefaultLanguage: jest.fn(),
           },
         },
         {
@@ -92,7 +99,91 @@ describe('GetDefaultModelUseCase', () => {
     // Default: no user default
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
     permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(null);
-    permittedModelsRepository.findTeamDefaultLanguage.mockResolvedValue(null);
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([]);
+  });
+
+  it('prefers an eligible organization default when requested', async () => {
+    const orgDefault = makePermittedLanguageModel(
+      makeLanguageModel('municipal-standard'),
+    );
+    const userDefault = makePermittedLanguageModel(
+      makeLanguageModel('personal-preference'),
+    );
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [orgDefault, userDefault],
+      overrideTeamIds: [],
+    });
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(
+      orgDefault,
+    );
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({
+        orgId,
+        userId,
+        preferOrganizationDefault: true,
+      }),
+    );
+    expect(result).toBe(orgDefault);
+  });
+
+  it('falls back to the team default when the user default is anonymous-only', async () => {
+    const userDefault = makePermittedLanguageModel(
+      makeLanguageModel('anonymous-preference'),
+      {
+        anonymousOnly: true,
+      },
+    );
+    const fallback = makePermittedLanguageModel(
+      makeLanguageModel('alphabetically-first'),
+    );
+    const teamDefault = makePermittedLanguageModel(
+      makeLanguageModel('team-standard'),
+      {
+        scope: PermittedModelScope.TEAM,
+        scopeId: teamAId,
+        isDefault: true,
+      },
+    );
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [fallback, userDefault, teamDefault],
+      overrideTeamIds: [teamAId],
+    });
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([
+      teamDefault,
+    ]);
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({
+        orgId,
+        userId,
+        excludeAnonymousOnly: true,
+        preferOrganizationDefault: true,
+      }),
+    );
+    expect(result).toBe(teamDefault);
+  });
+
+  it('distinguishes anonymous-only availability from having no permitted models', async () => {
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [
+        makePermittedLanguageModel(makeLanguageModel('private-drafts'), {
+          anonymousOnly: true,
+        }),
+      ],
+      overrideTeamIds: [],
+    });
+    await expect(
+      useCase.execute(
+        new GetDefaultModelQuery({
+          orgId,
+          userId,
+          excludeAnonymousOnly: true,
+        }),
+      ),
+    ).rejects.toMatchObject({ code: 'ONLY_ANONYMOUS_MODELS_AVAILABLE' });
   });
 
   it('should return user default when it is in the effective set', async () => {
@@ -183,15 +274,54 @@ describe('GetDefaultModelUseCase', () => {
       overrideTeamIds: [teamAId],
     });
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
-    permittedModelsRepository.findTeamDefaultLanguage.mockResolvedValue(
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([
       teamDefault,
-    );
+    ]);
 
     const result = await useCase.execute(
       new GetDefaultModelQuery({ orgId, userId }),
     );
 
     expect(result.model.name).toBe('claude-3-sonnet');
+  });
+
+  it('should ignore an excluded team default instead of mapping it onto another team grant', async () => {
+    const claude = makeLanguageModel('claude-3-sonnet');
+    const gpt4 = makeLanguageModel('gpt-4');
+    const excludedTeamADefault = makePermittedLanguageModel(claude, {
+      id: randomUUID(),
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamAId,
+      isDefault: true,
+    });
+    const teamBClaude = makePermittedLanguageModel(claude, {
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamBId,
+    });
+    const teamBDefault = makePermittedLanguageModel(gpt4, {
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamBId,
+      isDefault: true,
+    });
+
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [teamBClaude, teamBDefault],
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([
+      excludedTeamADefault,
+      teamBDefault,
+    ]);
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({
+        orgId,
+        userId,
+        excludedPermittedModelIds: [excludedTeamADefault.id],
+      }),
+    );
+
+    expect(result.id).toBe(teamBDefault.id);
   });
 
   it('should pick alphabetically first team default across multiple override teams', async () => {
@@ -223,16 +353,22 @@ describe('GetDefaultModelUseCase', () => {
       models: effectiveModels,
       overrideTeamIds: [teamAId, teamBId],
     });
-    permittedModelsRepository.findTeamDefaultLanguage
-      .mockResolvedValueOnce(teamADefault) // team A default: gpt-4
-      .mockResolvedValueOnce(teamBDefault); // team B default: claude-3-sonnet
+    permittedModelsRepository.findManyTeamDefaultLanguage.mockResolvedValue([
+      teamADefault,
+      teamBDefault,
+    ]);
 
     const result = await useCase.execute(
       new GetDefaultModelQuery({ orgId, userId }),
     );
 
-    // claude-3-sonnet < gpt-4 alphabetically
     expect(result.model.name).toBe('claude-3-sonnet');
+    expect(
+      permittedModelsRepository.findManyTeamDefaultLanguage,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      permittedModelsRepository.findManyTeamDefaultLanguage,
+    ).toHaveBeenCalledWith([teamAId, teamBId], orgId);
   });
 
   it('should return org default when in effective set and no user/team defaults', async () => {
@@ -336,18 +472,23 @@ describe('GetDefaultModelUseCase', () => {
     await expect(
       useCase.execute(new GetDefaultModelQuery({ orgId, userId })),
     ).rejects.toThrow(DefaultModelNotFoundError);
+    expect(userDefaultModelsRepository.findByUserId).not.toHaveBeenCalled();
+    expect(
+      permittedModelsRepository.findManyTeamDefaultLanguage,
+    ).not.toHaveBeenCalled();
+    expect(
+      permittedModelsRepository.findOrgDefaultLanguage,
+    ).not.toHaveBeenCalled();
   });
 
-  it('should skip blacklisted models using catalog model ID', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const claude = makeLanguageModel('claude-3-sonnet');
-    const gpt4Permitted = makePermittedLanguageModel(gpt4);
-    const claudePermitted = makePermittedLanguageModel(claude);
-
-    const effectiveModels = [gpt4Permitted, claudePermitted];
+  it('should resolve effective models without the excluded permits', async () => {
+    const gpt4Permitted = makePermittedLanguageModel(
+      makeLanguageModel('gpt-4'),
+    );
+    const excludedPermitId = randomUUID();
 
     getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
-      models: effectiveModels,
+      models: [gpt4Permitted],
       overrideTeamIds: [],
     });
 
@@ -355,10 +496,13 @@ describe('GetDefaultModelUseCase', () => {
       new GetDefaultModelQuery({
         orgId,
         userId,
-        blacklistedModelIds: [claudePermitted.model.id],
+        excludedPermittedModelIds: [excludedPermitId],
       }),
     );
 
+    expect(getEffectiveLanguageModelsUseCase.execute).toHaveBeenCalledWith(
+      new GetEffectiveLanguageModelsQuery(orgId, userId, [excludedPermitId]),
+    );
     expect(result.model.name).toBe('gpt-4');
   });
 
@@ -392,7 +536,7 @@ describe('GetDefaultModelUseCase', () => {
     await useCase.execute(new GetDefaultModelQuery({ orgId, userId }));
 
     expect(
-      permittedModelsRepository.findTeamDefaultLanguage,
+      permittedModelsRepository.findManyTeamDefaultLanguage,
     ).not.toHaveBeenCalled();
   });
 
@@ -408,5 +552,70 @@ describe('GetDefaultModelUseCase', () => {
     expect(getEffectiveLanguageModelsUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ orgId, userId }),
     );
+  });
+});
+
+describe('GetDefaultModelUseCase with real effective model resolution', () => {
+  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
+
+  it('resolves a default when excludedPermittedModelIds is omitted', async () => {
+    const orgModel = new PermittedLanguageModel({
+      model: new LanguageModel({
+        id: randomUUID(),
+        name: 'gpt-4',
+        displayName: 'gpt-4',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+        contextWindowSize: 128_000,
+      }),
+      orgId,
+      scope: PermittedModelScope.ORG,
+      isDefault: true,
+    });
+    const module = await Test.createTestingModule({
+      providers: [
+        GetDefaultModelUseCase,
+        GetEffectiveLanguageModelsUseCase,
+        {
+          provide: PermittedModelsRepository,
+          useValue: {
+            findManyLanguage: jest.fn().mockResolvedValue([orgModel]),
+            findOrgDefaultLanguage: jest.fn().mockResolvedValue(orgModel),
+            findManyTeamDefaultLanguage: jest.fn().mockResolvedValue([]),
+          },
+        },
+        {
+          provide: UserDefaultModelsRepository,
+          useValue: { findByUserId: jest.fn().mockResolvedValue(null) },
+        },
+        {
+          provide: EffectiveModelScopeResolverService,
+          useValue: {
+            resolve: jest
+              .fn()
+              .mockResolvedValue({ orgId, overrideTeamIds: [] }),
+          },
+        },
+        {
+          provide: ContextService,
+          useValue: {
+            get: jest.fn((key: string) =>
+              key === 'orgId' ? orgId : SystemRole.CUSTOMER,
+            ),
+          },
+        },
+      ],
+    }).compile();
+
+    const result = await module
+      .get(GetDefaultModelUseCase)
+      .execute(new GetDefaultModelQuery({ orgId, userId }));
+
+    expect(result.id).toBe(orgModel.id);
   });
 });

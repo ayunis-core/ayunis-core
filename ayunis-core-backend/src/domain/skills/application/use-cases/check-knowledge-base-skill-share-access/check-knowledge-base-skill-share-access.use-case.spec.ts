@@ -1,12 +1,13 @@
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from './check-knowledge-base-skill-share-access.use-case';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-skill-share-access.query';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { Share } from 'src/domain/shares/domain/share.entity';
-import type { Skill } from '../../../domain/skill.entity';
+
 import type { UUID } from 'crypto';
 
 describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
@@ -37,8 +38,6 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
     useCase = module.get(CheckKnowledgeBaseSkillShareAccessUseCase);
     skillRepository = module.get(SkillRepository);
     findSharesByScopeUseCase = module.get(FindSharesByScopeUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -53,8 +52,8 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
 
   it('should return true when the KB owner linked it to a skill of theirs that is shared with the user', async () => {
     skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      { id: unsharedSkillId } as Skill,
-      { id: sharedSkillId } as Skill,
+      { id: unsharedSkillId } as PersonalSkill,
+      { id: sharedSkillId } as PersonalSkill,
     ]);
     findSharesByScopeUseCase.execute.mockResolvedValue([
       { entityId: sharedSkillId } as Share,
@@ -78,7 +77,7 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
 
   it("should return false when the KB owner's linked skills are not shared with the user", async () => {
     skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      { id: unsharedSkillId } as Skill,
+      { id: unsharedSkillId } as PersonalSkill,
     ]);
     findSharesByScopeUseCase.execute.mockResolvedValue([
       { entityId: sharedSkillId } as Share,

@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
@@ -8,7 +7,7 @@ import {
   EmailConfirmationJwtService,
   EMAIL_CONFIRMATION_TOKEN_TYPE,
 } from './email-confirmation-jwt.service';
-import { InvalidEmailConfirmationTokenError } from '../users.errors';
+import { InvalidEmailConfirmationTokenError } from 'src/iam/users/application/users.errors';
 
 describe('EmailConfirmationJwtService', () => {
   let service: EmailConfirmationJwtService;
@@ -33,10 +32,6 @@ describe('EmailConfirmationJwtService', () => {
     service = module.get(EmailConfirmationJwtService);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

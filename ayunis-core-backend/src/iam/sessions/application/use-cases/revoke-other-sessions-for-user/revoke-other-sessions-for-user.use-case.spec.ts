@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { RevokeOtherSessionsForUserUseCase } from './revoke-other-sessions-for-user.use-case';
 import { RevokeOtherSessionsForUserCommand } from './revoke-other-sessions-for-user.command';
 import {
@@ -6,7 +5,7 @@ import {
   createMockRefreshTokensRepository,
   TEST_FAMILY_ID,
   TEST_USER_ID,
-} from '../../testing/refresh-token.fixtures';
+} from 'src/iam/sessions/application/testing/refresh-token.fixtures';
 
 describe('RevokeOtherSessionsForUserUseCase', () => {
   let useCase: RevokeOtherSessionsForUserUseCase;
@@ -15,7 +14,6 @@ describe('RevokeOtherSessionsForUserUseCase', () => {
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
     useCase = new RevokeOtherSessionsForUserUseCase(repository);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

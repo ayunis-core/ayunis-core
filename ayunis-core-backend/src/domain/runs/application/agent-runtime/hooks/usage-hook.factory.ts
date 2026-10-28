@@ -1,46 +1,98 @@
-import type { Hook } from '@ayunis/agent-runtime';
-import { Injectable } from '@nestjs/common';
+import type { AfterModelCallContext, Hook } from '@ayunis/agent-runtime';
+import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import { assistantMessageId } from '../message-id';
+import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
-/**
- * Builds the usage-metering hook: after each model call it records billed
- * tokens against the org's fair-use + credit budgets. Cached prompt tokens are
- * folded into billed input exactly as the legacy streaming path does — the
- * provider's `inputTokens` excludes cache-covered tokens, so without this the
- * billed input collapses to the uncached remainder.
- */
+type ModelCallOutcome = AfterModelCallContext['outcome'];
+
 @Injectable()
 export class UsageHookFactory {
-  constructor(private readonly inferenceUsageGuard: InferenceUsageGuard) {}
+  private readonly logger = new Logger(UsageHookFactory.name);
 
-  create(params: { model: LanguageModel }): Hook {
+  constructor(
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
+  ) {}
+
+  create(params: { resolveModel: RuntimeLanguageModelResolver }): Hook {
     return {
       name: 'ayunis-usage',
-      afterModelCall: (ctx) => {
-        const usage = ctx.usage;
-        const hasReportedUsage = [
-          usage.inputTokens,
-          usage.outputTokens,
-          usage.cacheReadInputTokens,
-          usage.cacheWriteInputTokens,
-        ].some((value) => value !== undefined);
-        if (!hasReportedUsage) {
+      inheritToChildRuns: true,
+      afterModelCallFailureMode: 'critical',
+      afterModelCall: async (ctx) => {
+        const model = params.resolveModel(ctx.model);
+        const usage = ctx.outcome.usage;
+        if (!hasReportedUsage(usage)) {
+          this.handleMissingUsage(ctx, model);
           return;
         }
-        this.inferenceUsageGuard.collectUsage(
-          params.model,
-          {
-            inputTokens:
-              (usage.inputTokens ?? 0) +
-              (usage.cacheReadInputTokens ?? 0) +
-              (usage.cacheWriteInputTokens ?? 0),
-            outputTokens: usage.outputTokens ?? 0,
-          },
-          assistantMessageId(ctx.context.runId, ctx.iteration),
+
+        await this.collectUsageAsyncService.collectCritical(
+          model,
+          (usage.inputTokens ?? 0) +
+            (usage.cacheReadInputTokens ?? 0) +
+            (usage.cacheWriteInputTokens ?? 0),
+          usage.outputTokens ?? 0,
+          ctx.modelCallId as UUID,
+          'agent_runtime',
         );
       },
     };
   }
+
+  private handleMissingUsage(
+    ctx: AfterModelCallContext,
+    model: LanguageModel,
+  ): void {
+    if (!model.consumesCredits || !requiresReportedUsage(ctx.outcome)) {
+      return;
+    }
+    if (!endedByConsumer(ctx.outcome)) {
+      throw new Error('Paid model call completed without reporting usage');
+    }
+    // The run is already over for the user, so failing the hook would only
+    // turn a closed tab into an incident without recovering the usage.
+    this.logger.warn(
+      {
+        execution_path: 'agent_runtime',
+        modelCallId: ctx.modelCallId,
+        provider: model.provider,
+        model: model.name,
+        trigger: ctx.trigger,
+        callSequence: ctx.callSequence,
+        outcome: ctx.outcome.type,
+        providerConsumptionStarted: ctx.outcome.providerConsumptionStarted,
+        producedOutput: ctx.outcome.producedOutput,
+      },
+      'Usage unknown for a model call the consumer ended',
+    );
+  }
+}
+
+function hasReportedUsage(usage: ModelCallOutcome['usage']): boolean {
+  return [
+    usage.inputTokens,
+    usage.outputTokens,
+    usage.cacheReadInputTokens,
+    usage.cacheWriteInputTokens,
+  ].some((value) => value !== undefined);
+}
+
+function endedByConsumer(outcome: ModelCallOutcome): boolean {
+  return outcome.type === 'consumer_abandoned' || outcome.type === 'aborted';
+}
+
+function requiresReportedUsage(outcome: ModelCallOutcome): boolean {
+  if (outcome.providerConsumptionStarted || outcome.outputState === 'final') {
+    return true;
+  }
+  // Azure can report a token rate limit on an already-open stream. The request
+  // was refused before inference, so there is no usage to account for and the
+  // call stays retryable.
+  return (
+    outcome.type === 'provider_failure' &&
+    outcome.providerFailure.stage === 'stream_consumption' &&
+    outcome.providerFailure.kind !== 'rate_limit'
+  );
 }

@@ -1,20 +1,20 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { UUID } from 'crypto';
 import { RevokeApiKeyUseCase } from './revoke-api-key.use-case';
 import { RevokeApiKeyCommand } from './revoke-api-key.command';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
-import { ApiKeyNotFoundError } from '../../api-keys.errors';
+import { ApiKeyNotFoundError } from 'src/iam/api-keys/application/api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('RevokeApiKeyUseCase', () => {
   let useCase: RevokeApiKeyUseCase;
   let apiKeysRepository: jest.Mocked<ApiKeysRepository>;
   let contextService: jest.Mocked<Pick<ContextService, 'get'>>;
-  let warnSpy: jest.SpyInstance;
+  let logger: ReturnType<typeof createLoggerMock>;
 
   const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
@@ -37,6 +37,7 @@ describe('RevokeApiKeyUseCase', () => {
       ),
     };
 
+    logger = createLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RevokeApiKeyUseCase,
@@ -48,11 +49,6 @@ describe('RevokeApiKeyUseCase', () => {
     useCase = module.get(RevokeApiKeyUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   function buildKey(overrides: Partial<{ orgId: UUID }> = {}): ApiKey {
@@ -92,13 +88,13 @@ describe('RevokeApiKeyUseCase', () => {
       useCase.execute(new RevokeApiKeyCommand(apiKeyId)),
     ).rejects.toThrow(ApiKeyNotFoundError);
     expect(apiKeysRepository.revoke).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Cross-org API key revoke attempt',
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         apiKeyId,
         keyOrgId: otherOrgId,
         callerOrgId: orgId,
       }),
+      'Cross-org API key revoke attempt',
     );
   });
 

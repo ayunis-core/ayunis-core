@@ -24,11 +24,14 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   async save(
     config: McpIntegrationUserConfig,
   ): Promise<McpIntegrationUserConfig> {
-    this.logger.log('save', {
-      configId: config.id,
-      integrationId: config.integrationId,
-      userId: config.userId,
-    });
+    this.logger.log(
+      {
+        configId: config.id,
+        integrationId: config.integrationId,
+        userId: config.userId,
+      },
+      'save',
+    );
 
     const record = this.toRecord(config);
     const saved = await this.repository.save(record);
@@ -39,7 +42,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationId: UUID,
     userId: UUID,
   ): Promise<McpIntegrationUserConfig | null> {
-    this.logger.log('findByIntegrationAndUser', { integrationId, userId });
+    this.logger.log({ integrationId, userId }, 'findByIntegrationAndUser');
 
     const record = await this.repository.findOne({
       where: { integrationId, userId },
@@ -56,10 +59,13 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationIds: UUID[],
     userId: UUID,
   ): Promise<McpIntegrationUserConfig[]> {
-    this.logger.log('findByIntegrationIdsAndUser', {
-      count: integrationIds.length,
-      userId,
-    });
+    this.logger.log(
+      {
+        count: integrationIds.length,
+        userId,
+      },
+      'findByIntegrationIdsAndUser',
+    );
 
     if (integrationIds.length === 0) {
       return [];
@@ -73,9 +79,28 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   }
 
   async deleteByIntegrationId(integrationId: UUID): Promise<void> {
-    this.logger.log('deleteByIntegrationId', { integrationId });
+    this.logger.log({ integrationId }, 'deleteByIntegrationId');
 
     await this.repository.delete({ integrationId });
+  }
+
+  async removeKeysByIntegrationId(
+    integrationId: UUID,
+    keys: string[],
+  ): Promise<void> {
+    if (keys.length === 0) return;
+
+    this.logger.log({ integrationId, keys }, 'removeKeysByIntegrationId');
+    await this.repository
+      .createQueryBuilder()
+      .update()
+      .set({
+        configValues: () => '"config_values" - :keys::text[]',
+        updatedAt: () => 'CURRENT_TIMESTAMP',
+      })
+      .where('"integration_id" = :integrationId', { integrationId })
+      .setParameter('keys', keys)
+      .execute();
   }
 
   private toRecord(

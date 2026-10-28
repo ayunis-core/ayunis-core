@@ -1,19 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSubscriptionCommand } from './create-subscription.command';
-import { SubscriptionRepository } from '../../ports/subscription.repository';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import {
   SubscriptionAlreadyExistsError,
   UnexpectedSubscriptionError,
-} from '../../subscription.errors';
+} from 'src/iam/subscriptions/application/subscription.errors';
 
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
-import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { toSubscriptionEventData } from 'src/iam/subscriptions/application/mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
-import { SubscriptionFactory } from '../../services/subscription-factory.service';
+import { validateSubscriptionAccess } from 'src/iam/subscriptions/application/util/validate-subscription-access';
+import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
+import { accessPeriodsOverlap } from 'src/iam/subscriptions/application/util/access-periods-overlap';
+import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -24,8 +28,10 @@ export class CreateSubscriptionUseCase {
     private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: CreateSubscriptionCommand): Promise<Subscription> {
     try {
       validateSubscriptionAccess(
@@ -33,45 +39,37 @@ export class CreateSubscriptionUseCase {
         command.requestingUserId,
         command.orgId,
       );
-
-      await this.ensureNoExistingSubscription(command.orgId);
+      await this.acquireAllocationLock.execute(command.orgId);
 
       const subscription = await this.subscriptionFactory.build(command);
+      await this.ensureNoOverlappingSubscription(subscription);
 
       const createdSubscription =
         await this.subscriptionRepository.create(subscription);
 
-      this.logger.debug('Subscription created successfully', {
-        subscriptionId: createdSubscription.id,
-        orgId: command.orgId,
-        type: command.type,
-      });
+      this.logger.debug(
+        {
+          subscriptionId: createdSubscription.id,
+          orgId: command.orgId,
+          type: command.type,
+        },
+        'Subscription created successfully',
+      );
 
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionCreatedEvent.EVENT_NAME,
-          new SubscriptionCreatedEvent(
-            command.orgId,
-            toSubscriptionEventData(createdSubscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
-
+      this.emitCreatedEvent(command, createdSubscription);
       return createdSubscription;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Subscription creation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        },
+        'Subscription creation failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during subscription creation',
         { error: error as Error },
@@ -79,16 +77,49 @@ export class CreateSubscriptionUseCase {
     }
   }
 
-  private async ensureNoExistingSubscription(
-    orgId: Subscription['orgId'],
-  ): Promise<void> {
-    const subscriptions = await this.subscriptionRepository.findByOrgId(orgId);
-    const hasNonCancelled = subscriptions.some((s) => !s.cancelledAt);
-    if (hasNonCancelled) {
-      this.logger.warn('Subscription already exists for organization', {
-        orgId,
+  private emitCreatedEvent(
+    command: CreateSubscriptionCommand,
+    subscription: Subscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionCreatedEvent.EVENT_NAME,
+        new SubscriptionCreatedEvent(
+          command.orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId: command.orgId },
+          'Failed to emit SubscriptionCreatedEvent',
+        );
       });
-      throw new SubscriptionAlreadyExistsError(orgId);
+  }
+
+  private async ensureNoOverlappingSubscription(
+    candidate: Subscription,
+  ): Promise<void> {
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      candidate.orgId,
+    );
+    const hasOverlap = subscriptions.some((subscription) => {
+      return accessPeriodsOverlap(
+        {
+          startsAt: subscription.startsAt,
+          endsAt: getEffectiveAccessEnd(subscription),
+        },
+        candidate,
+      );
+    });
+    if (hasOverlap) {
+      this.logger.warn(
+        {
+          orgId: candidate.orgId,
+        },
+        'Subscription already exists for organization',
+      );
+      throw new SubscriptionAlreadyExistsError(candidate.orgId);
     }
   }
 }

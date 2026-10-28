@@ -15,6 +15,19 @@ describe('SystemPromptBuilderService', () => {
     service = new SystemPromptBuilderService();
   });
 
+  it('always includes workspace instructions independently of skill activation', () => {
+    const prompt = service.build({
+      tools: [],
+      currentTime: new Date(),
+      workspaceInstructions: 'Use <local> terminology.',
+      skills: [],
+    });
+    expect(prompt).toContain('<workspace_instructions>');
+    expect(prompt).toContain('Use &lt;local&gt; terminology.');
+    expect(prompt).toContain('</workspace_instructions>');
+    expect(prompt).not.toContain('<project_instructions>');
+  });
+
   describe('context preamble', () => {
     it('includes the date without time of day, keeping the prompt cache prefix stable', () => {
       const prompt = service.build({
@@ -80,6 +93,81 @@ describe('SystemPromptBuilderService', () => {
       expect(result).toContain('<knowledge_boundaries>');
       expect(result).toContain('time-sensitive facts');
       expect(result).toContain('web search');
+    });
+  });
+
+  it('instructs URL references only in chat with safe complete URLs', () => {
+    const prompt = service.build({ tools: [], currentTime: new Date() });
+    expect(prompt).toContain('{{url:<url>}}');
+    expect(prompt).toContain('Only use complete http:// or https:// URLs');
+    expect(prompt).toContain(
+      'Never put URL reference markers in tool-call arguments or generated content',
+    );
+    expect(prompt).toContain('Never invent URLs');
+  });
+
+  describe('source citation markers', () => {
+    it('requires exact chunk IDs from retrieval tools in plain-text markers', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('{{source:<chunk UUID>|<plain-text label>}}');
+      expect(result).toContain(
+        'Use only chunkId values returned by source_query or knowledge_query',
+      );
+      expect(result).toContain(
+        'Never cite a result marked citable=false or a system-only source',
+      );
+      expect(result).toContain(
+        'Never put source citation markers in tool-call arguments or generated content',
+      );
+    });
+  });
+
+  describe('legal reference markers', () => {
+    it('requires structured markers instead of plain German legal citations', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('<legal_references>');
+      expect(result).toContain(
+        'Use structured legal-reference markers instead of plain citations when citing German law.',
+      );
+      expect(result).toContain('{{legal:SCOPE/CODE/LOCATOR[/PARAGRAPH]}}');
+      expect(result).toContain('{{legal:DE/BGB/sec_433/par_2}}');
+      expect(result).toContain('{{legal:DE-BY/POG/art_1}}');
+    });
+
+    it('defines the valid German scopes and supported locator hierarchy', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain(
+        'Valid scopes: DE, DE-BW, DE-BY, DE-BE, DE-BB, DE-HB, DE-HH, DE-HE, DE-MV, DE-NI, DE-NW, DE-RP, DE-SL, DE-SN, DE-ST, DE-SH, and DE-TH.',
+      );
+      expect(result).toContain(
+        'Use sec for sections, art for articles, and optionally append par for a paragraph (Absatz).',
+      );
+    });
+
+    it('limits legal markers to assistant chat text', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain(
+        'Use these markers only in assistant text shown directly in the chat.',
+      );
+      expect(result).toContain(
+        'Never put them in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams.',
+      );
     });
   });
 
@@ -452,4 +540,18 @@ describe('SystemPromptBuilderService', () => {
       );
     });
   });
+});
+
+it('routes downloadable text files separately from prose documents', () => {
+  const prompt = new SystemPromptBuilderService().build({
+    tools: [],
+    currentTime: new Date('2026-10-15'),
+  });
+  expect(prompt).toContain(
+    'Use create_file for downloadable XML, JSON and plain-text (TXT) files',
+  );
+  expect(prompt).toContain(
+    'Do not use create_document or markdown links for these files',
+  );
+  expect(prompt).toContain('Word/PDF');
 });

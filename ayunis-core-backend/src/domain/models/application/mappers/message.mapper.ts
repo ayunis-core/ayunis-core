@@ -1,3 +1,4 @@
+import { getImageReferenceLabel } from 'src/domain/messages/application/utils/image-reference-label.util';
 import type {
   Message as InferenceMessage,
   MessageContent as InferenceMessageContent,
@@ -88,17 +89,23 @@ async function toUserContent(
     return [{ type: 'text', text: content.text }];
   }
   if (content instanceof ImageMessageContent) {
-    const { base64, contentType } =
-      await imageContentService.convertImageToBase64(content, context);
+    const { buffer, contentType } = await imageContentService.loadImage(
+      content,
+      context,
+    );
     // The label gives the model a stable handle to pass this image to the
     // generate_image tool (reference_uploaded_image_ids); the neutral image
     // block itself carries no identifier.
     return [
       {
         type: 'text',
-        text: `[image ref: ${context.messageId}:${content.index}]`,
+        text: getImageReferenceLabel(content, context.messageId),
       },
-      { type: 'image', data: base64, mediaType: contentType },
+      {
+        type: 'image',
+        data: buffer.toString('base64'),
+        mediaType: contentType,
+      },
     ];
   }
   throw new InferenceFailedError(

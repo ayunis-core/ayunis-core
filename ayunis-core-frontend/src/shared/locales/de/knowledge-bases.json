@@ -100,11 +100,20 @@
   },
   "create": {
     "success": "Wissenssammlung erfolgreich erstellt!",
-    "error": "Wissenssammlung konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    "error": "Wissenssammlung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "validationError": "Bitte überprüfen Sie die Angaben zur Wissenssammlung und versuchen Sie es erneut."
   },
   "delete": {
     "success": "Wissenssammlung erfolgreich gelöscht!",
     "error": "Wissenssammlung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "activation": {
+    "activeLabel": "Aktiv",
+    "inactiveLabel": "Inaktiv",
+    "tooltip": "Aktive Wissenssammlungen stehen KI-Chats zur Verfügung. Inaktive Wissenssammlungen werden erst wieder verwendet, wenn sie aktiviert werden.",
+    "success": "Status der Wissenssammlung aktualisiert.",
+    "error": "Status der Wissenssammlung konnte nicht aktualisiert werden.",
     "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."
   },
   "detail": {
@@ -139,9 +148,9 @@
     },
     "documents": {
       "title": "Dokumente",
-      "description": "Verwalten Sie die Dokumente in dieser Wissenssammlung. Unterstützte Formate: PDF, DOCX.",
+      "description": "Verwalten Sie die Dokumente in dieser Wissenssammlung. Unterstützte Formate: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG und Audio.",
       "upload": "Hochladen",
-      "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF- oder DOCX-Datei hoch, um zu beginnen.",
+      "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF-, DOCX- oder ODT-Datei hoch, um zu beginnen.",
       "uploadSuccess": "Dokument erfolgreich hochgeladen!",
       "uploadAccepted": "Dokument hochgeladen — wird im Hintergrund verarbeitet...",
       "uploadError": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
@@ -166,6 +175,7 @@
       "retryUpload": "Entfernen und erneut hochladen",
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "removeNotFound": "Das Dokument wurde bereits aus dieser Wissenssammlung entfernt.",
       "urlDialogCancel": "Abbrechen"
     }
   },

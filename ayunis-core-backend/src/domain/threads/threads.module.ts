@@ -6,8 +6,8 @@ import { ThreadMcpIntegrationsController } from './presenters/http/thread-mcp-in
 import { ThreadsRepository } from './application/ports/threads.repository';
 import { GeneratedImagesRepository } from './application/ports/generated-images.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
-import { SourcesModule } from '../sources/sources.module';
-import { ModelsModule } from '../models/models.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { ModelsModule } from 'src/domain/models/models.module';
 import { SourceDtoMapper } from './presenters/http/mappers/source.mapper';
 import { GetThreadDtoMapper } from './presenters/http/mappers/get-thread.mapper';
 import { MessageDtoMapper } from './presenters/http/mappers/message.mapper';
@@ -15,7 +15,10 @@ import { MessageDtoMapper } from './presenters/http/mappers/message.mapper';
 // Import all use cases
 import { CreateThreadUseCase } from './application/use-cases/create-thread/create-thread.use-case';
 import { FindThreadUseCase } from './application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadContextRefsUseCase } from './application/use-cases/find-thread-context-refs/find-thread-context-refs.use-case';
+import { FindThreadCitationContextUseCase } from './application/use-cases/find-thread-citation-context/find-thread-citation-context.use-case';
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
+import { FindThreadsByIdsUseCase } from './application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
 import { AddMessageToThreadUseCase } from './application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
@@ -23,6 +26,7 @@ import { AddFileSourceToThreadUseCase } from './application/use-cases/add-file-s
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from './application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { UpdateThreadTitleUseCase } from './application/use-cases/update-thread-title/update-thread-title.use-case';
+import { AssignThreadToWorkspaceUseCase } from './application/use-cases/assign-thread-to-workspace/assign-thread-to-workspace.use-case';
 import { GenerateAndSetThreadTitleUseCase } from './application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import { LocalThreadsRepository } from './infrastructure/persistence/local/local-threads.repository';
 import { LocalGeneratedImagesRepository } from './infrastructure/persistence/local/local-generated-images.repository';
@@ -46,16 +50,19 @@ import { MessageImagesController } from './presenters/http/message-images.contro
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { ThreadsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
+import { ThreadsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
 import { RecordThreadActivityUseCase } from './application/use-cases/record-thread-activity/record-thread-activity.use-case';
 import { FindExpiredThreadRefsByOrgUseCase } from './application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 import { StaleThreadSourcesCleanupTask } from './infrastructure/tasks/stale-thread-sources-cleanup.task';
-import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
-import { StorageModule } from '../storage/storage.module';
-import { MessagesModule } from '../messages/messages.module';
-import { SharesModule } from '../shares/shares.module';
-import { ThreadPiiMasksModule } from '../thread-pii-masks/thread-pii-masks.module';
-import { McpModule } from '../mcp/mcp.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { FavoritesModule } from 'src/domain/favorites/favorites.module';
+import { MessagesModule } from 'src/domain/messages/messages.module';
+import { SharesModule } from 'src/domain/shares/shares.module';
+import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
+import { McpModule } from 'src/domain/mcp/mcp.module';
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
@@ -65,6 +72,10 @@ import { McpModule } from '../mcp/mcp.module';
     MessagesModule,
     OrgsModule,
     StorageModule,
+    // Both sit on the favorites↔{threads,workspaces} module cycle — see the
+    // note in favorites.module.ts.
+    forwardRef(() => WorkspacesModule),
+    forwardRef(() => FavoritesModule),
     SharesModule,
     ThreadPiiMasksModule,
     McpModule,
@@ -89,7 +100,10 @@ import { McpModule } from '../mcp/mcp.module';
     // Use cases
     CreateThreadUseCase,
     FindThreadUseCase,
+    FindThreadContextRefsUseCase,
+    FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
+    FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
@@ -97,6 +111,7 @@ import { McpModule } from '../mcp/mcp.module';
     RemoveSourceFromThreadUseCase,
     GetThreadSourcesUseCase,
     UpdateThreadTitleUseCase,
+    AssignThreadToWorkspaceUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
@@ -118,6 +133,7 @@ import { McpModule } from '../mcp/mcp.module';
     ShareDeletedListener,
     ThreadActivityListener,
     ThreadsUserDeletionRequestedListener,
+    ThreadsWorkspaceDeletionRequestedListener,
     // Services
     // Tasks
     StaleThreadSourcesCleanupTask,
@@ -130,7 +146,10 @@ import { McpModule } from '../mcp/mcp.module';
   exports: [
     // Export use cases
     FindThreadUseCase,
+    FindThreadContextRefsUseCase,
+    FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
+    FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,

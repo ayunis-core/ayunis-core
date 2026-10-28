@@ -1,23 +1,32 @@
 import type { TestingModule } from '@nestjs/testing';
+import {
+  createLoggerMock,
+  type LoggerMock,
+} from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { DeleteThreadUseCase } from './delete-thread.use-case';
 import { DeleteThreadCommand } from './delete-thread.command';
-import { ThreadsRepository } from '../../ports/threads.repository';
+import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
+  let eventEmitter: { emitAsync: jest.Mock };
+  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
+    logger = createLoggerMock();
     const mockThreadsRepository = {
       findOne: jest.fn(),
       delete: jest.fn(),
@@ -36,6 +45,9 @@ describe('DeleteThreadUseCase', () => {
     purgeStoragePrefixesUseCase = {
       execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
     };
+    eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,15 +58,15 @@ describe('DeleteThreadUseCase', () => {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,
         },
+        {
+          provide: EventEmitter2,
+          useValue: eventEmitter,
+        },
       ],
     }).compile();
 
     useCase = module.get<DeleteThreadUseCase>(DeleteThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -89,6 +101,14 @@ describe('DeleteThreadUseCase', () => {
         mockThreadId,
         mockUserId,
       );
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        ThreadDeletionRequestedEvent.EVENT_NAME,
+        expect.objectContaining({
+          threadId: mockThreadId,
+          userId: mockUserId,
+          orgId: mockOrgId,
+        }),
+      );
       expect(purgeStoragePrefixesUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           prefixes: [
@@ -106,25 +126,28 @@ describe('DeleteThreadUseCase', () => {
 
       expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
       expect(threadsRepository.delete).not.toHaveBeenCalled();
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
     });
 
     it('should propagate repository errors and not purge storage', async () => {
       threadsRepository.findOne.mockResolvedValue(existingThread as never);
-      threadsRepository.delete.mockRejectedValue(
-        new Error('Database connection failed'),
-      );
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
+      const repositoryError = new Error('Database connection failed');
+      threadsRepository.delete.mockRejectedValue(repositoryError);
 
       await expect(
         useCase.execute(new DeleteThreadCommand(mockThreadId)),
       ).rejects.toThrow('Database connection failed');
 
       expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to delete thread', {
-        threadId: mockThreadId,
-        userId: mockUserId,
-        error: 'Database connection failed',
-      });
+      expect(eventEmitter.emitAsync).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        {
+          threadId: mockThreadId,
+          userId: mockUserId,
+          err: repositoryError,
+        },
+        'Failed to delete thread',
+      );
     });
 
     it('should swallow purge failures after a successful delete', async () => {

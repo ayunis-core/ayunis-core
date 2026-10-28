@@ -15,15 +15,27 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
+import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
+import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import { tableToText } from 'src/domain/sources/application/util/table-to-text';
+import {
+  detectFileType,
+  isCSVFile,
+  isSpreadsheetFile,
+} from 'src/common/util/file-type';
+import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
+import { observeJob, processingStage } from './job-telemetry';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
-} from '../../application/util/minio-processing-file.helpers';
+} from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
-@Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
+@Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 4 })
 export class DocumentProcessingConsumer extends WorkerHost {
   private readonly logger = new Logger(DocumentProcessingConsumer.name);
 
@@ -35,59 +47,94 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
+    private readonly spreadsheetParser: SpreadsheetParserPort,
+    private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
+    private readonly heartbeat: SourceProcessingHeartbeatService,
   ) {
     super();
   }
 
   async process(job: Job<DocumentProcessingJobData>): Promise<void> {
-    const { sourceId, orgId, userId, minioPath, fileName } = job.data;
+    const { sourceId, fileName } = job.data;
+    this.logger.log(
+      {
+        sourceId,
+        fileName,
+        jobId: job.id,
+      },
+      'Processing document',
+    );
+    return observeJob(job, () => this.processDocument(job));
+  }
 
-    this.logger.log('Processing document', {
-      sourceId,
-      fileName,
-      jobId: job.id,
-    });
+  private async processDocument(
+    job: Job<DocumentProcessingJobData>,
+  ): Promise<void> {
+    const { sourceId, orgId, userId, minioPath } = job.data;
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
       this.validateAndSetContext(orgId, userId);
+      if (!(await this.isAdmitted(job))) return;
 
       try {
-        const source = await this.loadSourceOrSkip(sourceId, minioPath);
-        if (!source) return;
+        if (!(await this.loadSourceOrSkip(sourceId, minioPath))) return;
 
-        const { text, chunks } = await this.downloadAndExtractText(job.data);
+        const { text, chunks } = await this.heartbeat.run(sourceId, () =>
+          this.downloadAndExtractText(job.data),
+        );
 
         // Guard: re-check the source still exists and is PROCESSING
         // before writing content. Prevents resurrection of deleted sources.
-        if (!(await this.isSourceStillProcessing(sourceId, minioPath))) return;
+        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+        if (!source) return;
 
         await this.updateSourceWithContent(source, text, chunks);
-        await this.helper.index(sourceId, orgId, chunks);
+        await processingStage('document.indexing', () =>
+          this.helper.index(sourceId, orgId, chunks),
+        );
         await this.markSourceReady(sourceId, minioPath);
 
-        this.logger.log('Document processing complete', {
-          sourceId,
-          chunks: chunks.length,
-        });
+        this.logger.log(
+          {
+            sourceId,
+            chunks: chunks.length,
+          },
+          'Document processing complete',
+        );
       } catch (error) {
-        this.logger.error('Document processing failed', {
-          sourceId,
-          error: error as Error,
-        });
+        this.logger.error(
+          {
+            sourceId,
+            err: error as Error,
+          },
+          'Document processing failed',
+        );
 
         const { final, rethrow } = classifyJobFailure(job, error);
         if (final) {
-          await this.helper.markFailed(
-            sourceId,
-            error instanceof Error ? error.message : 'Unknown processing error',
-          );
+          await this.helper.markFailed(sourceId, error);
           await this.helper.cleanupIndex(sourceId);
           await this.cleanupMinioFile(minioPath);
         }
         if (rethrow) throw rethrow;
       }
     });
+  }
+
+  private async isAdmitted(
+    job: Job<DocumentProcessingJobData>,
+  ): Promise<boolean> {
+    const admitted = await this.admitOrgProcessing.execute(
+      new AdmitOrgProcessingQuery(job.data.orgId),
+    );
+    if (!admitted) {
+      this.logger.warn(
+        { jobId: job.id, orgId: job.data.orgId },
+        'Organisation deleted',
+      );
+    }
+    return admitted;
   }
 
   private validateAndSetContext(
@@ -109,8 +156,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
     minioPath: string,
   ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
-    if (!source) {
-      this.logger.warn('Source not found, skipping', { sourceId });
+    if (source?.status !== SourceStatus.PROCESSING) {
+      this.logger.warn(
+        { sourceId, found: !!source },
+        'Source missing or no longer processing, skipping',
+      );
       await this.cleanupMinioFile(minioPath);
       return null;
     }
@@ -119,10 +169,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
       throw new Error(`Source ${sourceId} is not a TextSource`);
     }
 
-    // Reset processingStartedAt on every attempt so the stale-cleanup
-    // cron doesn't race with BullMQ retries on long-running jobs.
-    source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
+    const processingStartedAt = new Date();
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      await this.cleanupMinioFile(minioPath);
+      return null;
+    }
+    source.processingStartedAt = processingStartedAt;
 
     return source;
   }
@@ -132,21 +187,20 @@ export class DocumentProcessingConsumer extends WorkerHost {
   ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
     const { minioPath, fileName, fileType } = jobData;
 
-    const fileBuffer = await this.downloadFile(minioPath);
-    const result = await this.retrieveFileContentUseCase.execute(
-      new RetrieveFileContentCommand({
-        fileData: fileBuffer,
-        fileName,
-        fileType,
-      }),
+    const fileBuffer = await processingStage('document.download', () =>
+      this.downloadFile(minioPath),
     );
-    const text = result.pages.map((page) => page.text).join('\n');
+    const text = await processingStage('document.extraction', () =>
+      this.extractText(fileBuffer, fileName, fileType),
+    );
 
-    const splitResult = this.splitTextUseCase.execute(
-      new SplitTextCommand(text, SplitterType.RECURSIVE, {
-        chunkSize: 2000,
-        chunkOverlap: 200,
-      }),
+    const splitResult = processingStage('document.splitting', () =>
+      this.splitTextUseCase.execute(
+        new SplitTextCommand(text, SplitterType.RECURSIVE, {
+          chunkSize: 2000,
+          chunkOverlap: 200,
+        }),
+      ),
     );
     const chunks = splitResult.chunks.map(
       (chunk) =>
@@ -159,20 +213,60 @@ export class DocumentProcessingConsumer extends WorkerHost {
     return { text, chunks };
   }
 
-  private async isSourceStillProcessing(
+  private async extractText(
+    fileBuffer: Buffer,
+    fileName: string,
+    fileType: string,
+  ): Promise<string> {
+    const detected = detectFileType(fileType, fileName);
+    if (isCSVFile(detected)) {
+      const csv = await this.spreadsheetParser.parseCsv(
+        fileBuffer.toString('utf8').replace(/^\uFEFF/, ''),
+      );
+      return this.requireRows(
+        tableToText([{ sheetName: '', ...csv }], false),
+        fileName,
+      );
+    }
+    if (isSpreadsheetFile(detected)) {
+      const sheets = await this.spreadsheetParser.parseWorkbook(fileBuffer);
+      return this.requireRows(tableToText(sheets, sheets.length > 1), fileName);
+    }
+    const result = await this.retrieveFileContentUseCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: fileBuffer,
+        fileName,
+        fileType,
+      }),
+    );
+    return result.pages.map((page) => page.text).join('\n');
+  }
+
+  private requireRows(text: string, fileName: string): string {
+    if (text === '') throw new EmptyFileDataError(fileName);
+    return text;
+  }
+
+  private async reloadIfStillProcessing(
     sourceId: UUID,
     minioPath: string,
-  ): Promise<boolean> {
+  ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
-      this.logger.warn('Source deleted or status changed mid-processing', {
-        sourceId,
-        found: !!source,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          found: !!source,
+        },
+        'Source deleted or status changed mid-processing',
+      );
       await this.cleanupMinioFile(minioPath);
-      return false;
+      return null;
     }
-    return true;
+    if (!(source instanceof TextSource)) {
+      throw new Error(`Source ${sourceId} is not a TextSource`);
+    }
+    return source;
   }
 
   private async updateSourceWithContent(
@@ -195,8 +289,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
     if (!updated) {
       this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
+        'Conditional update to READY failed — source was deleted or status changed',
       );
       await this.helper.cleanupIndex(sourceId);
     }

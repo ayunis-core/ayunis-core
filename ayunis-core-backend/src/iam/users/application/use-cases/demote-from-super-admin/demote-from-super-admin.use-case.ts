@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { DemoteFromSuperAdminCommand } from './demote-from-super-admin.command';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import {
@@ -9,7 +9,7 @@ import {
   UserUnexpectedError,
   UserSelfDemotionNotAllowedError,
   UserLastSuperAdminError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -20,10 +20,13 @@ export class DemoteFromSuperAdminUseCase {
 
   @Transactional()
   async execute(command: DemoteFromSuperAdminCommand): Promise<void> {
-    this.logger.log('execute', {
-      userId: command.userId,
-      requestingUserId: command.requestingUserId,
-    });
+    this.logger.log(
+      {
+        userId: command.userId,
+        requestingUserId: command.requestingUserId,
+      },
+      'execute',
+    );
 
     try {
       if (command.userId === command.requestingUserId) {
@@ -52,9 +55,12 @@ export class DemoteFromSuperAdminUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error demoting user from super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error demoting user from super admin',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }

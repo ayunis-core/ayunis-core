@@ -12,31 +12,81 @@
     "cancelText": "Cancel",
     "errorDeleteThread": "Failed to delete chat",
     "artifactSaved": "Document saved successfully",
+    "artifactPanel": {
+      "title": "Created content",
+      "openList": "Open created content",
+      "emptyTitle": "No content created yet",
+      "listLoadError": "Created content could not be loaded",
+      "type": {
+        "document": "Document",
+        "spreadsheet": "Table",
+        "diagram": "Diagram"
+      },
+      "loadErrorTitle": "Content could not be loaded",
+      "loadErrorDescription": "The content could not be loaded. Please try again.",
+      "notFoundTitle": "Content not found",
+      "notFoundDescription": "This content may no longer exist.",
+      "retry": "Try again"
+    },
+    "sidePanel": {
+      "open": "Open side panel",
+      "close": "Close side panel"
+    },
+    "context": {
+      "tab": "Context",
+      "workspaceScope": "Workspace",
+      "hint": {
+        "personal": "Personal context",
+        "workspace": "Workspace: {{name}}",
+        "open": "Open chat context",
+        "skills_one": "{{count}} skill",
+        "skills_other": "{{count}} skills",
+        "knowledgeBases_one": "{{count}} knowledge base",
+        "knowledgeBases_other": "{{count}} knowledge bases"
+      },
+      "loadError": "Context could not be loaded",
+      "retry": "Try again",
+      "skills": {
+        "title": "Skills",
+        "empty": "No skills available"
+      },
+      "knowledgeBases": {
+        "title": "Knowledge bases",
+        "empty": "No knowledge bases available",
+        "documents_one": "{{count}} document",
+        "documents_other": "{{count}} documents"
+      }
+    },
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
     "errorImageTooLarge": "The image is too large for the selected model. Please reduce its size (e.g. lower the resolution) and try again.",
     "errorInferenceTimeout": "The model stopped responding and the connection was closed. Please try again.",
+    "errorMalformedToolCallTokenLimit": "The model's response was cut off because it was too long. Please make a smaller request or split the task.",
+    "errorMalformedToolCall": "The model produced an invalid tool call. Please try again.",
     "errorUnexpected": "An unexpected error occurred",
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
     "errorToolNotFound": "Tool not found",
     "errorToolExecutionFailed": "A tool failed repeatedly. Please adjust your request and try again.",
     "errorAnonymizationUnavailable": "Anonymization is currently unavailable. Your message was not sent to protect your data.",
+    "errorAnonymizationInputTooLong": "Your message exceeds the 60,000-character anonymization limit and was not sent. Please shorten it and try again.",
     "errorContextBudgetExceeded": "The latest conversation turn is too large for the model context window.",
+    "errorThreadBusy": "The previous answer is still being stopped. Please send your message again in a moment.",
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
     "errorRestoreFailedSubmission": "Your previous message and attachments couldn't be restored because the input already contains a draft.",
     "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
+    "imageUploadsBusy": "Too many images are being uploaded right now. Please try again in a moment.",
     "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
     "errorCreditBudgetExceeded": "You have reached the credit limit for this month. Please contact your administrator.",
     "errorUserCreditLimitExceeded": "You have reached your monthly credit limit. Please contact your administrator.",
     "errorTeamCreditLimitExceeded": "Your team has reached its monthly credit limit. Please contact your administrator.",
     "errorAddKnowledgeBase": "Failed to add knowledge base. Please try again.",
     "errorRemoveKnowledgeBase": "Failed to remove knowledge base. Please try again.",
+    "errorKnowledgeBaseUnavailable": "This knowledge base or chat is no longer available.",
     "errorAddIntegration": "Failed to add integration",
     "errorRemoveIntegration": "Failed to remove integration",
     "errorIntegrationNotFound": "This integration no longer exists",
-    "errorDownloadSource": "Failed to download source. Please try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
     "errorRemoveAgent": "Agent could not be removed",
@@ -46,7 +96,8 @@
       "working": "Working…",
       "thoughtProcess": "Thought process",
       "preparingToolCall": "Preparing tool call…",
-      "invalidToolCall": "Invalid tool call",
+      "invalidToolCall": "Tool call failed",
+      "invalidToolCallHint": "The model produced a malformed tool call. Try again or choose a different model.",
       "summary_one": "{{count}} step",
       "summary_other": "{{count}} steps",
       "errorStep": "Stopped",
@@ -60,11 +111,13 @@
         "create_spreadsheet": "Created spreadsheet",
         "update_spreadsheet": "Updated spreadsheet",
         "chart": "Created chart",
+        "map": "Created map",
         "generate_image": "Generated image",
         "send_email": "Drafted email",
         "create_calendar_event": "Created calendar event",
         "create_skill": "Created skill",
         "edit_skill": "Edited skill",
+        "install_marketplace_skill": "Offered skill install",
         "activate_skill": "Activated skill",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
@@ -72,11 +125,18 @@
         "knowledge_query": "Searched knowledge base",
         "code_execution": "Calculated",
         "http": "Made HTTP request",
-        "use_tool": "Used {{tool}}"
+        "use_tool": "Used {{tool}}",
+        "create_file": "Created file"
       }
+    },
+    "map": {
+      "loading": "Preparing map…",
+      "invalid": "This map cannot be displayed because its data is empty or invalid.",
+      "ariaLabel": "Interactive map: {{title}}"
     },
     "tools": {
       "internet_search": "Search the internet",
+      "marketplace_search": "Search the marketplace",
       "website_content": "Query website",
       "source_query": "Query file",
       "source_get_text": "Query file",
@@ -84,7 +144,13 @@
       "activate_skill": "Activate skill",
       "knowledge_query": "Search knowledge base",
       "knowledge_get_text": "Read knowledge base document",
-      "read_document": "Read document",
+      "read_document": {
+        "title": "Document",
+        "reading": "Reading document…",
+        "available": "Document available",
+        "unavailable": "Document could not be opened",
+        "openInEditor": "Open in editor"
+      },
       "send_email": {
         "subject": "Subject",
         "body": "Body",
@@ -124,6 +190,21 @@
         "error": "Failed to update skill",
         "errorDuplicate": "A skill with this name already exists",
         "skillNotFound": "Could not find this skill. It may have been deleted."
+      },
+      "install_marketplace_skill": {
+        "title": "Install skill from the marketplace",
+        "install": "Install skill",
+        "installing": "Installing…",
+        "installed": "Skill installed",
+        "success": "Skill installed successfully",
+        "error": "Failed to install the skill",
+        "notFound": "This skill is no longer available in the marketplace",
+        "unavailable": "The marketplace is currently unavailable",
+        "noPermission": "You are not allowed to install skills. Ask an administrator.",
+        "loading": "Loading catalog entry…",
+        "entryUnavailable": "This skill is not available in the marketplace right now, so it cannot be installed from here.",
+        "alreadyInstalled": "Already installed",
+        "openSkill": "Open skill"
       },
       "create_document": {
         "title": "Document",
@@ -194,6 +275,11 @@
         "altFallback": "Generated image",
         "openPreview": "Open image preview",
         "download": "Download image"
+      },
+      "create_file": {
+        "preparing": "Preparing file…",
+        "description": "XML, JSON or text file",
+        "download": "Download"
       }
     },
     "charts": {
@@ -201,11 +287,30 @@
     },
     "modelUnavailableTitle": "AI model no longer available",
     "modelUnavailableDescription": "The AI model used in this chat is no longer available, so this conversation cannot be continued. Start a new chat to keep working.",
-    "longChatWarningTitle": "Conversation too long",
-    "longChatWarningDescription": "For better results, consider starting a new chat.",
+    "modelProviderFaultWarning": "The model ‘{{modelName}}’ currently has a known provider issue. You can continue this conversation, but responses may fail.",
+    "longChatWarningTitle": "This chat has reached your model's limit",
+    "longChatWarningDescription": "Every message sends the entire conversation so far, including all attached files, to the model again. Your selected model has a fixed limit for this, and this chat has almost reached it. That is a property of the model, not an Ayunis setting. If you would like to keep working, start a new chat.",
+    "longChatWarningDismiss": "Dismiss warning",
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
+    "sourceCitation": {
+      "title": "Source citation",
+      "loading": "Loading source…",
+      "unavailable": "This source is unavailable or you do not have access.",
+      "line": "Line {{line}}",
+      "lines": "Lines {{start}}–{{end}}",
+      "excerpt": "Cited excerpt",
+      "close": "Close"
+    },
     "piiMask": {
       "tooltip": "{{category}} — anonymized before being sent to the AI model",
+      "tooltipClickable": "{{category}} — anonymized before being sent to the AI model. Click to unmask.",
+      "unmaskTitle": "Unmask \"{{value}}\"?",
+      "unmaskDescription": "The term will be sent to the AI model in its original form from now on in this chat, including in the previous conversation. This action cannot be undone and does not change your organization's anonymization settings.",
+      "unmaskConfirm": "Unmask",
+      "unmaskCancel": "Cancel",
+      "unmaskSuccess": "Term unmasked for this chat",
+      "unmaskNotFound": "This term could not be found in this chat",
+      "unmaskError": "Failed to unmask the term",
       "categories": {
         "person_name": "Person name",
         "organization": "Organization",
@@ -220,7 +325,7 @@
         "other": "Personal data"
       }
     },
-    "academyCertificateRequiredError": "Your organization requires the AI certificate before you can send messages. Complete the academy to unlock chat."
+    "academyCertificateRequiredError": "Your organization requires the EU AI Act training before you can send messages. Complete the academy to unlock chat."
   },
   "newChat": {
     "newChat": "New Chat",

@@ -6,17 +6,24 @@ import type {
   BeforeSaveDataDetails,
   CellTemplateProp,
   ColumnRegular,
+  InitialHeaderClick,
 } from '@revolist/react-datagrid';
 import { useTranslation } from 'react-i18next';
 import { Empty, EmptyDescription } from '@ayunis/ui/components/empty';
 import './spreadsheet-grid.css';
-import type { RowOperation } from '../model/spreadsheet-grid-operations';
+import type { RowOperation } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-operations';
 import {
   isFormulaValue,
   isSpreadsheetErrorValue,
-} from '../model/formula-values';
-import type { GridRow } from '../model/spreadsheet-grid-state';
-import { columnKey } from '../model/spreadsheet-grid-state';
+} from '@/widgets/spreadsheet-editor/model/formula-values';
+import type { GridRow } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
+import { columnKey } from '@/widgets/spreadsheet-editor/model/spreadsheet-grid-state';
+import { columnIndexToLetter } from '@/widgets/spreadsheet-editor/model/formula-references';
+import { attachGridClipboardWrite } from '@/widgets/spreadsheet-editor/lib/grid-clipboard';
+import {
+  fitColumnWidth,
+  readElementMetrics,
+} from '@/widgets/spreadsheet-editor/lib/column-auto-fit';
 
 const DISPLAY_VALUES_KEY = Symbol('spreadsheetDisplayValues');
 
@@ -46,6 +53,61 @@ function FormulaCell(props: Readonly<CellTemplateProp>) {
       {display}
     </span>
   );
+}
+
+function readFormulaMetrics(cell: Element) {
+  const probe = document.createElement('span');
+  probe.className = 'rv-cell-formula';
+  cell.appendChild(probe);
+  const metrics = readElementMetrics(probe);
+  probe.remove();
+  return metrics;
+}
+
+function measureHeaderWidth(header: HTMLElement): number | undefined {
+  const content = header.querySelector('.header-content') ?? header;
+  const metrics = readElementMetrics(content);
+  if (!metrics) {
+    return undefined;
+  }
+  const controls = header.querySelector('.header-controls');
+  const headerStyle = getComputedStyle(header);
+  return (
+    metrics.measure(content.textContent) +
+    metrics.padding +
+    (parseFloat(headerStyle.paddingLeft) || 0) +
+    (parseFloat(headerStyle.paddingRight) || 0) +
+    (controls?.getBoundingClientRect().width ?? 0)
+  );
+}
+
+function measureAutoFitWidth(
+  grid: HTMLElement,
+  header: HTMLElement,
+  colIndex: number,
+  rows: GridSourceRow[],
+): number | undefined {
+  const headerWidth = measureHeaderWidth(header);
+  if (headerWidth === undefined) {
+    return undefined;
+  }
+  // A sheet without rows renders no data cell; fit the header alone.
+  const cell = grid.querySelector('revogr-data[col-type="rgCol"] .rgCell');
+  const cellMetrics = cell ? readElementMetrics(cell) : undefined;
+  const formulaMetrics = cell ? readFormulaMetrics(cell) : undefined;
+  if (!cellMetrics || !formulaMetrics) {
+    return fitColumnWidth(headerWidth, [], 0);
+  }
+  const textWidths = rows.map((row) => {
+    const raw = row[columnKey(colIndex)];
+    if (!raw) {
+      return 0;
+    }
+    return isFormulaValue(raw)
+      ? formulaMetrics.measure(row[DISPLAY_VALUES_KEY][colIndex] ?? '')
+      : cellMetrics.measure(raw);
+  });
+  return fitColumnWidth(headerWidth, textWidths, cellMetrics.padding);
 }
 
 function normalizeCellValue(value: unknown): string | null {
@@ -230,11 +292,53 @@ export function SpreadsheetGrid({
     return () => grid.removeEventListener('beforecolumndragend', handleDragEnd);
   }, [isEmpty]);
 
+  useEffect(() => {
+    const grid = gridRef.current;
+    return grid ? attachGridClipboardWrite(grid) : undefined;
+  }, [isEmpty]);
+
+  // Double-clicking a column's resize handle fits it to its content, like
+  // Excel. RevoGrid's own autoSizeColumn plugin is not used: it measures raw
+  // formulas instead of their computed values and never shrinks or caps.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) {
+      return;
+    }
+    const handleHeaderDblClick = (event: CustomEvent<InitialHeaderClick>) => {
+      const handle = event.detail.originalEvent.target;
+      const header =
+        handle instanceof HTMLElement &&
+        handle.classList.contains('resizable-r')
+          ? handle.closest<HTMLElement>('.rgHeaderCell')
+          : null;
+      if (!header) {
+        return;
+      }
+      const colIndex = event.detail.index;
+      const width = measureAutoFitWidth(
+        grid,
+        header,
+        colIndex,
+        sourceRef.current,
+      );
+      if (width !== undefined) {
+        setColumnWidths((previous) => ({
+          ...previous,
+          [columnKey(colIndex)]: width,
+        }));
+      }
+    };
+    grid.addEventListener('headerdblclick', handleHeaderDblClick);
+    return () =>
+      grid.removeEventListener('headerdblclick', handleHeaderDblClick);
+  }, [isEmpty]);
+
   const gridColumns = useMemo<ColumnRegular[]>(
     () =>
       columns.map((label, index) => ({
         prop: columnKey(index),
-        name: label,
+        name: `${columnIndexToLetter(index)} · ${label}`,
         size: columnWidths[columnKey(index)] ?? 160,
         minSize: 60,
         cellTemplate: Template(FormulaCell as Parameters<typeof Template>[0]),

@@ -1,10 +1,13 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { FindTeamsByIdsAndOrgIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-ids-and-org-id/find-teams-by-ids-and-org-id.use-case';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { CreateInviteCommand } from './create-invite.command';
 import { ConfigService } from '@nestjs/config';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
@@ -15,14 +18,13 @@ import {
   InvalidSeatsError,
   UnexpectedInviteError,
   UserAlreadyExistsError,
-} from '../../invites.errors';
-import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
-import { ApplicationError } from 'src/common/errors/base.error';
+} from 'src/iam/invites/application/invites.errors';
+import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
-import { getInviteExpiresAt } from '../../services/invite-expiration.util';
+import { getInviteExpiresAt } from 'src/iam/invites/application/services/invite-expiration.util';
 
 interface CreateInviteResult {
   token: string;
@@ -41,54 +43,69 @@ export class CreateInviteUseCase {
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly configService: ConfigService,
+    private readonly findTeams: FindTeamsByIdsAndOrgIdUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
-    this.logger.log('execute', {
-      email: command.email,
-      orgId: command.orgId,
-      userId: command.userId,
-    });
-    try {
-      this.validateEmailProvider(command.email);
-      await this.ensureEmailAvailable(command.email, command.orgId);
-      await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
-
-      const validDuration = this.configService.get<string>(
-        'auth.jwt.inviteExpiresIn',
-        '7d',
-      );
-
-      const invite = new Invite({
+    this.logger.log(
+      {
         email: command.email,
         orgId: command.orgId,
-        role: command.role,
-        inviterId: command.userId,
-        expiresAt: getInviteExpiresAt(validDuration),
-      });
-      this.logger.debug('Invite to be created', { invite });
+        userId: command.userId,
+      },
+      'execute',
+    );
+    this.validateEmailProvider(command.email);
+    await this.ensureEmailAvailable(command.email, command.orgId);
+    await this.validateTeams(command);
+    await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
 
-      await this.invitesRepository.create(invite);
+    const invite = this.buildInvite(command);
+    this.logger.debug({ invite }, 'Invite to be created');
 
-      const inviteToken = this.inviteJwtService.generateInviteToken({
-        inviteId: invite.id,
-      });
+    await this.invitesRepository.create(invite);
 
-      this.logger.debug('Invite created successfully', {
+    const inviteToken = this.inviteJwtService.generateInviteToken({
+      inviteId: invite.id,
+    });
+
+    this.logger.debug(
+      {
         inviteId: invite.id,
         email: invite.email,
-      });
+      },
+      'Invite created successfully',
+    );
 
-      return { token: inviteToken, invite };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating invite', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedInviteError(error as Error);
-    }
+    return { token: inviteToken, invite };
+  }
+
+  private buildInvite(command: CreateInviteCommand): Invite {
+    const validDuration = this.configService.get<string>(
+      'auth.jwt.inviteExpiresIn',
+      '7d',
+    );
+    return new Invite({
+      email: command.email,
+      orgId: command.orgId,
+      role: command.role,
+      inviterId: command.userId,
+      expiresAt: getInviteExpiresAt(validDuration),
+      teamIds: command.teamIds,
+    });
+  }
+
+  private async validateTeams(command: CreateInviteCommand): Promise<void> {
+    const teamIds = [...new Set(command.teamIds ?? [])];
+    if (teamIds.length === 0) return;
+    const teams = await this.findTeams.execute({
+      teamIds,
+      orgId: command.orgId,
+    });
+    const availableIds = new Set(teams.map((team) => team.id));
+    const missingId = teamIds.find((id) => !availableIds.has(id));
+    if (missingId) throw new TeamNotFoundError(missingId);
   }
 
   private validateEmailProvider(email: string): void {
@@ -105,24 +122,26 @@ export class CreateInviteUseCase {
     email: string,
     orgId: UUID,
   ): Promise<void> {
-    const existingInvite = await this.invitesRepository.findOneByEmailAndOrg(
-      email,
-      orgId,
-    );
-    if (existingInvite) {
-      throw new EmailNotAvailableError();
-    }
-
     const existingUser = await this.findUserByEmailUseCase.execute(
       new FindUserByEmailQuery(email),
     );
-    if (!existingUser) {
-      return;
+    if (existingUser) {
+      if (existingUser.orgId === orgId) {
+        throw new UserAlreadyExistsError();
+      }
+      throw new EmailNotAvailableError();
     }
-    if (existingUser.orgId === orgId) {
-      throw new UserAlreadyExistsError();
+
+    // invites.email carries a GLOBAL unique constraint, so at most one invite
+    // row can exist per email across all orgs. Any pre-existing invite — a
+    // pending invite in another org, or an orphaned accepted invite — is
+    // invisible to an org-scoped lookup yet still makes the insert fail with a
+    // DB unique violation, surfacing as a generic 500 instead of a clear
+    // error. Check globally and reject up front (AYC-734).
+    const existingInvite = await this.invitesRepository.findOneByEmail(email);
+    if (existingInvite) {
+      throw new EmailNotAvailableError();
     }
-    throw new EmailNotAvailableError();
   }
 
   private async ensureCloudSeatsAvailable(
@@ -180,9 +199,12 @@ export class CreateInviteUseCase {
       );
     } catch (error) {
       if (error instanceof SubscriptionNotFoundError) {
-        this.logger.debug('No active subscription found, proceeding', {
-          orgId,
-        });
+        this.logger.debug(
+          {
+            orgId,
+          },
+          'No active subscription found, proceeding',
+        );
         return null;
       }
       throw error;

@@ -1,12 +1,12 @@
 import {
   Body,
   Controller,
-  Logger,
   Post,
   Req,
   Res,
   UseInterceptors,
   UploadedFiles,
+  Logger,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -37,7 +37,7 @@ import {
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto as ToolResultContentDto,
   ThinkingMessageContentResponseDto,
-} from '../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
   RunSessionResponseDto,
@@ -47,14 +47,17 @@ import {
   RunMasksResponseDto,
 } from './dto/run-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
-import { SendMessageUseCase } from '../../application/use-cases/send-message/send-message.use-case';
-import { SendMessageCommand } from '../../application/use-cases/send-message/send-message.command';
+import { SendMessageUseCase } from 'src/domain/runs/application/use-cases/send-message/send-message.use-case';
+import { SendMessageCommand } from 'src/domain/runs/application/use-cases/send-message/send-message.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Response } from 'express';
 
 import { MAX_IMAGES } from './image-upload.constants';
-import { IMAGE_UPLOAD_OPTIONS } from './image-upload.options';
+import {
+  IMAGE_UPLOAD_ADMISSION,
+  IMAGE_UPLOAD_OPTIONS,
+} from './image-upload.options';
 import {
   SEND_MESSAGE_API_BODY,
   SEND_MESSAGE_API_OPERATION,
@@ -105,6 +108,7 @@ export class RunsController {
   @ApiResponse(SEND_MESSAGE_SSE_RESPONSE)
   @ApiResponse({ status: 400, description: 'Invalid request payload' })
   @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({ status: 429, description: 'Image uploads busy' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
@@ -114,39 +118,67 @@ export class RunsController {
     @Res() response: Response,
   ): Promise<void> {
     const uploadedFiles = files ?? [];
+    this.logRequest(userId, sendMessageDto, uploadedFiles.length);
+    const releaseUploads = IMAGE_UPLOAD_ADMISSION.transfer(request);
+    try {
+      this.requestValidator.validate(sendMessageDto, uploadedFiles);
+      await this.ssePresenter.stream(
+        response,
+        sendMessageDto.threadId,
+        (signal) =>
+          this.sendMessageUseCase.execute(
+            this.createCommand(sendMessageDto, uploadedFiles, {
+              consumeTrialMessage: Boolean(
+                request.subscriptionContext?.hasRemainingTrialMessages,
+              ),
+              signal,
+              releaseUploads,
+            }),
+          ),
+      );
+    } finally {
+      releaseUploads();
+    }
+  }
 
-    this.logger.log('sendMessage', {
-      userId,
-      threadId: sendMessageDto.threadId,
-      streaming: sendMessageDto.streaming,
-      fileCount: uploadedFiles.length,
-      hasText: !!sendMessageDto.text?.trim(),
-      hasToolResult: !!sendMessageDto.toolResult,
+  private logRequest(
+    userId: UUID,
+    dto: SendMessageDto,
+    fileCount: number,
+  ): void {
+    this.logger.log(
+      {
+        userId,
+        threadId: dto.threadId,
+        streaming: dto.streaming,
+        fileCount,
+        hasText: !!dto.text?.trim(),
+        hasToolResult: !!dto.toolResult,
+      },
+      'sendMessage',
+    );
+  }
+
+  private createCommand(
+    dto: SendMessageDto,
+    files: Express.Multer.File[],
+    run: {
+      consumeTrialMessage: boolean;
+      signal: AbortSignal;
+      releaseUploads: () => void;
+    },
+  ): SendMessageCommand {
+    return new SendMessageCommand({
+      threadId: dto.threadId,
+      input: RunInputMapper.toCommand(
+        dto,
+        files,
+        dto.skillId,
+        run.releaseUploads,
+      ),
+      streaming: dto.streaming ?? true,
+      consumeTrialMessage: run.consumeTrialMessage,
+      signal: run.signal,
     });
-
-    this.requestValidator.validate(sendMessageDto, uploadedFiles);
-    const input = RunInputMapper.toCommand(
-      sendMessageDto,
-      uploadedFiles,
-      sendMessageDto.skillId,
-    );
-    const consumeTrialMessage = Boolean(
-      request.subscriptionContext?.hasRemainingTrialMessages,
-    );
-
-    await this.ssePresenter.stream(
-      response,
-      sendMessageDto.threadId,
-      (signal) =>
-        this.sendMessageUseCase.execute(
-          new SendMessageCommand({
-            threadId: sendMessageDto.threadId,
-            input,
-            streaming: sendMessageDto.streaming ?? true,
-            consumeTrialMessage,
-            signal,
-          }),
-        ),
-    );
   }
 }

@@ -1,7 +1,7 @@
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { QueryFailedError } from 'typeorm';
-import { ApiKeysRepository } from '../../ports/api-keys.repository';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
 import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { CreateApiKeyCommand } from './create-api-key.command';
 import { CreateApiKeyResult } from './create-api-key.result';
@@ -9,16 +9,15 @@ import {
   ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,
   UnexpectedApiKeyError,
-} from '../../api-keys.errors';
+} from 'src/iam/api-keys/application/api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import type { UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 const SECRET_BYTES = 32;
-const PG_UNIQUE_VIOLATION = '23505';
 const MAX_PREFIX_COLLISION_RETRIES = 1;
 
 @Injectable()
@@ -32,16 +31,11 @@ export class CreateApiKeyUseCase {
   ) {}
 
   async execute(command: CreateApiKeyCommand): Promise<CreateApiKeyResult> {
-    const orgId = this.contextService.get('orgId');
-    const userId = this.contextService.get('userId');
-
-    if (!orgId || !userId) {
-      throw new UnauthorizedAccessError();
-    }
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     const trimmedName = command.name.trim();
 
-    this.logger.log('execute', { orgId });
+    this.logger.log({ orgId }, 'execute');
 
     if (!trimmedName) {
       throw new ApiKeyInvalidInputError('Name cannot be empty');
@@ -54,6 +48,7 @@ export class CreateApiKeyUseCase {
     try {
       return await this.persistWithCollisionRetry({
         name: trimmedName,
+        description: command.description?.trim() || null,
         expiresAt: command.expiresAt,
         orgId,
         userId,
@@ -62,13 +57,14 @@ export class CreateApiKeyUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to create API key', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Failed to create API key');
       throw new UnexpectedApiKeyError();
     }
   }
 
   private async persistWithCollisionRetry(params: {
     name: string;
+    description: string | null;
     expiresAt: Date | null;
     orgId: UUID;
     userId: UUID;
@@ -77,6 +73,7 @@ export class CreateApiKeyUseCase {
       const { secret, prefix, hash } = await this.generateSecretAndHash();
       const apiKey = new ApiKey({
         name: params.name,
+        description: params.description,
         prefix,
         hash,
         expiresAt: params.expiresAt,
@@ -86,17 +83,23 @@ export class CreateApiKeyUseCase {
 
       try {
         const created = await this.apiKeysRepository.create(apiKey);
-        this.logger.debug('API key created', {
-          id: created.id,
-          orgId: params.orgId,
-        });
+        this.logger.debug(
+          {
+            id: created.id,
+            orgId: params.orgId,
+          },
+          'API key created',
+        );
         return { apiKey: created, secret };
       } catch (error) {
-        if (!isUniquePrefixViolation(error)) throw error;
-        this.logger.warn('API key prefix collision, retrying', {
-          orgId: params.orgId,
-          attempt,
-        });
+        if (!isUniqueConstraintViolation(error)) throw error;
+        this.logger.warn(
+          {
+            orgId: params.orgId,
+            attempt,
+          },
+          'API key prefix collision, retrying',
+        );
       }
     }
 
@@ -116,12 +119,4 @@ export class CreateApiKeyUseCase {
     );
     return { secret, prefix, hash };
   }
-}
-
-function isUniquePrefixViolation(error: unknown): boolean {
-  return (
-    error instanceof QueryFailedError &&
-    (error.driverError as { code?: string } | undefined)?.code ===
-      PG_UNIQUE_VIOLATION
-  );
 }

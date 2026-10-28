@@ -173,18 +173,70 @@ describe('the agent loop', () => {
     });
   });
 
-  it('acknowledges a display-only tool before exiting', async () => {
-    const displayOnly = echoTool({ name: 'show_chart', execute: undefined });
+  it('sends tool results up to 200,000 characters without truncation', async () => {
+    const toolResult = 'x'.repeat(200_000);
     const model = new MockProvider([
-      toolCallTurn({ id: 'call-1', name: 'show_chart', input: { value: 'x' } }),
+      toolCallTurn({ id: 'call-1', name: 'large_result', input: {} }),
+      textTurn('Done'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [echoTool({ name: 'large_result', execute: () => toolResult })],
+      }),
+    );
+
+    expect(model.requests[1].messages.at(-1)).toMatchObject({
+      content: [expect.objectContaining({ result: toolResult })],
+    });
+  });
+
+  it('retains the first 200,000 characters of oversized tool results', async () => {
+    const retainedResult = 'x'.repeat(200_000);
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'large_result', input: {} }),
+      textTurn('Done'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({
+            name: 'large_result',
+            execute: () => `${retainedResult}discarded`,
+          }),
+        ],
+      }),
+    );
+
+    expect(model.requests[1].messages.at(-1)).toMatchObject({
+      content: [
+        expect.objectContaining({
+          result: `${retainedResult}\n[result truncated]`,
+        }),
+      ],
+    });
+  });
+
+  it('records an externally handled tool before exiting', async () => {
+    const externallyHandled = echoTool({
+      name: 'request_approval',
+      execute: undefined,
+    });
+    const model = new MockProvider([
+      toolCallTurn({
+        id: 'call-1',
+        name: 'request_approval',
+        input: { value: 'x' },
+      }),
     ]);
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     expect(events.find((event) => event.type === 'tool_result')).toMatchObject({
       toolCallId: 'call-1',
-      result: 'Tool has been displayed successfully',
+      result: 'Tool execution is handled externally',
       isError: false,
     });
     expect(events.at(-1)).toMatchObject({
@@ -194,9 +246,9 @@ describe('the agent loop', () => {
     expect(model.requests).toHaveLength(1);
   });
 
-  it('returns the validation error and keeps looping when a display-only call has invalid input (AYC-675)', async () => {
-    const displayOnly = echoTool({
-      name: 'show_event',
+  it('returns the validation error and keeps looping when an externally handled call has invalid input', async () => {
+    const externallyHandled = echoTool({
+      name: 'schedule_approval',
       execute: undefined,
       validateInput: (input) => {
         if (input.start === 'not-a-date') {
@@ -209,18 +261,18 @@ describe('the agent loop', () => {
     const model = new MockProvider([
       toolCallTurn({
         id: 'call-1',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: 'not-a-date' },
       }),
       toolCallTurn({
         id: 'call-2',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: '2026-01-31T14:30:00Z' },
       }),
     ]);
 
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     const toolResults = events.filter((event) => event.type === 'tool_result');
@@ -232,7 +284,7 @@ describe('the agent loop', () => {
     });
     expect(toolResults[1]).toMatchObject({
       toolCallId: 'call-2',
-      result: 'Tool has been displayed successfully',
+      result: 'Tool execution is handled externally',
       isError: false,
     });
     // The invalid call must not end the run — the model sees the error,
@@ -269,9 +321,9 @@ describe('the agent loop', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('keeps looping when a valid display-only sibling accompanies an invalid one (AYC-675)', async () => {
-    const displayOnly = echoTool({
-      name: 'show_event',
+  it('keeps looping when a valid external sibling accompanies an invalid one', async () => {
+    const externallyHandled = echoTool({
+      name: 'schedule_approval',
       execute: undefined,
       validateInput: (input) => {
         if (input.start === 'not-a-date') {
@@ -286,13 +338,13 @@ describe('the agent loop', () => {
             {
               index: 0,
               id: 'call-1',
-              name: 'show_event',
+              name: 'schedule_approval',
               argumentsDelta: '{"start":"2026-01-31T14:30:00Z"}',
             },
             {
               index: 1,
               id: 'call-2',
-              name: 'show_event',
+              name: 'schedule_approval',
               argumentsDelta: '{"start":"not-a-date"}',
             },
           ],
@@ -301,13 +353,13 @@ describe('the agent loop', () => {
       ],
       toolCallTurn({
         id: 'call-3',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: '2026-02-01T09:00:00Z' },
       }),
     ]);
 
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     // The valid sibling must not end the turn while the invalid call still
@@ -319,7 +371,52 @@ describe('the agent loop', () => {
     });
   });
 
-  it('settles executable siblings in the originating display-only turn', async () => {
+  it('keeps looping when an external sibling accompanies an invalid executable call', async () => {
+    const executeChart = vi.fn(() => 'acknowledged');
+    const guardedChart = echoTool({
+      name: 'chart_data',
+      execute: executeChart,
+      validateInput: () => {
+        throw new Error('invalid chart data');
+      },
+    });
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'approval-1',
+              name: 'request_approval',
+              argumentsDelta: '{}',
+            },
+            {
+              index: 1,
+              id: 'chart-1',
+              name: 'chart_data',
+              argumentsDelta: '{}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+      textTurn('Please provide corrected chart data.'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({ name: 'request_approval', execute: undefined }),
+          guardedChart,
+        ],
+      }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(executeChart).not.toHaveBeenCalled();
+  });
+
+  it('settles executable siblings in the externally handled turn', async () => {
     const executeLookup = vi.fn(() => 'Berlin budget results');
     const model = new MockProvider([
       [
@@ -328,7 +425,7 @@ describe('the agent loop', () => {
             {
               index: 0,
               id: 'chart-1',
-              name: 'show_chart',
+              name: 'request_approval',
               argumentsDelta: '{"value":"budget"}',
             },
             {
@@ -346,7 +443,7 @@ describe('the agent loop', () => {
     const events = await collectEvents(
       baseInput(model, {
         tools: [
-          echoTool({ name: 'show_chart', execute: undefined }),
+          echoTool({ name: 'request_approval', execute: undefined }),
           echoTool({ name: 'budget_lookup', execute: executeLookup }),
         ],
       }),
@@ -356,7 +453,7 @@ describe('the agent loop', () => {
       expect.arrayContaining([
         expect.objectContaining({
           toolCallId: 'chart-1',
-          result: 'Tool has been displayed successfully',
+          result: 'Tool execution is handled externally',
           isError: false,
         }),
         expect.objectContaining({
@@ -652,11 +749,256 @@ describe('the agent loop', () => {
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
   });
 
-  it('rejects a provider response without assistant content', async () => {
-    const model = new MockProvider([[]]);
+  it('retries an empty provider response before failing the run', async () => {
+    const model = new MockProvider([[], textTurn('Recovered')]);
 
     const events = await collectEvents(baseInput(model));
 
+    expect(model.requests).toHaveLength(2);
+    expect(
+      events.find((event) => event.type === 'assistant_message'),
+    ).toMatchObject({
+      message: {
+        content: [{ type: 'text', text: 'Recovered' }],
+      },
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('retries after research ends with thinking but no answer', async () => {
+    const researchTurns = Array.from({ length: 8 }, (_, index) =>
+      toolCallTurn({
+        id: `research-${index}`,
+        name: 'echo',
+        input: { value: `result-${index}` },
+      }),
+    );
+    const model = new MockProvider([
+      ...researchTurns,
+      [
+        { thinkingDelta: 'I have enough research to answer.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      textTurn('The research supports this answer.'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(events.filter((event) => event.type === 'tool_result')).toHaveLength(
+      8,
+    );
+    expect(model.requests).toHaveLength(10);
+    expect(model.requests.at(-1)?.tools).toEqual([]);
+    expect(model.requests.at(-1)?.instructions).toContain(
+      'Do not call tools. Respond with a final answer for the user.',
+    );
+    expect(
+      events.filter((event) => event.type === 'assistant_message').at(-1),
+    ).toEqual(
+      expect.objectContaining({
+        message: expect.objectContaining({
+          content: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'text',
+              text: 'The research supports this answer.',
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('rejects tool calls during answer-only recovery', async () => {
+    const model = new MockProvider([
+      [
+        { thinkingDelta: 'I should answer now.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      [
+        { thinkingDelta: 'Maybe I should use another tool.' },
+        ...toolCallTurn({
+          id: 'unexpected-research',
+          name: 'echo',
+          input: { value: 'keep researching' },
+        }),
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.some((event) => event.type === 'tool_call_snapshot')).toBe(
+      false,
+    );
+    expect(events.some((event) => event.type === 'tool_result')).toBe(false);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('does not re-enable tools after malformed answer-only output', async () => {
+    const model = new MockProvider([
+      [
+        { thinkingDelta: 'I should answer now.' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 5 } },
+      ],
+      [
+        {
+          toolCallDeltas: [
+            { index: 0, id: 'malformed-research', name: 'echo' },
+            { index: 0, argumentsDelta: '{invalid' },
+          ],
+        },
+        {
+          finishReason: 'tool_calls',
+          usage: { inputTokens: 12, outputTokens: 5 },
+        },
+      ],
+      textTurn('Tools were incorrectly restored'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('fails instead of completing after repeated thinking-only responses', async () => {
+    const thinkingOnlyTurn = [
+      { thinkingDelta: 'I am still considering the research.' },
+      {
+        finishReason: 'stop' as const,
+        usage: { inputTokens: 12, outputTokens: 5 },
+      },
+    ];
+    const model = new MockProvider([
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+      thinkingOnlyTurn,
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(4);
+    expect(events.some((event) => event.type === 'assistant_message')).toBe(
+      false,
+    );
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_FAILED',
+      message: 'Model provider returned no answer',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+      usage: { inputTokens: 48, outputTokens: 20 },
+    });
+  });
+
+  it('retries a whitespace-only response before completing', async () => {
+    const model = new MockProvider([
+      [
+        { textDelta: '   ' },
+        { finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 1 } },
+      ],
+      textTurn('Recovered'),
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('retains usage from an empty attempt that recovers', async () => {
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+      textTurn('Recovered', { inputTokens: 15, outputTokens: 4 }),
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+      usage: { inputTokens: 27, outputTokens: 4 },
+    });
+  });
+
+  it('retains empty-attempt usage when the retry fails', async () => {
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+    ]);
+    const firstStream = model.stream.bind(model);
+    model.stream = (request) => {
+      if (model.requests.length === 0) return firstStream(request);
+      throw new Error('retry failed');
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'usage-observer', afterModelCall }],
+      }),
+    );
+
+    expect(afterModelCall).toHaveBeenCalledWith(
+      expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
+    );
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+      usage: { inputTokens: 12, outputTokens: 0 },
+    });
+  });
+
+  it('records an empty attempt without retrying after cancellation', async () => {
+    const controller = new AbortController();
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+    ]);
+    const firstStream = model.stream.bind(model);
+    model.stream = async function* (request) {
+      yield* firstStream(request);
+      controller.abort();
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'usage-observer', afterModelCall }],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(model.requests).toHaveLength(1);
+    expect(afterModelCall).toHaveBeenCalledWith(
+      expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
+    );
+    expect(eventTypes(events)).toEqual(['run_start', 'run_end']);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'aborted' });
+  });
+
+  it('rejects provider responses without assistant content after the shared retry budget', async () => {
+    const model = new MockProvider([[], [], [], []]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(4);
     expect(eventTypes(events)).toEqual(['run_start', 'error', 'run_end']);
     expect(events.find((event) => event.type === 'error')).toMatchObject({
       code: 'PROVIDER_FAILED',
@@ -720,8 +1062,9 @@ describe('the agent loop', () => {
       }),
     );
 
-    expect(afterModelCall).toHaveBeenCalledTimes(1);
-    expect(afterModelCall).toHaveBeenCalledWith(
+    expect(afterModelCall).toHaveBeenCalledTimes(4);
+    expect(afterModelCall).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
     );
     expect(events.at(-1)).toMatchObject({

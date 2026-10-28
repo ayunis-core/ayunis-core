@@ -5,13 +5,13 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
-import { CreditLimitRepository } from '../../ports/credit-limit.repository';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import {
   aUserCreditLimit,
   createMockCreditLimitRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
-} from '../../testing/credit-limit.fixtures';
+} from 'src/iam/credit-limits/application/testing/credit-limit.fixtures';
 import { GetUserCreditLimitsOverviewUseCase } from './get-user-credit-limits-overview.use-case';
 import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 

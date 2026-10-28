@@ -21,14 +21,14 @@ export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRe
   ) {}
 
   async findOne(id: UUID): Promise<AcademyCourseModule | null> {
-    this.logger.log('findOne', { id });
+    this.logger.log({ id }, 'findOne');
     const record = await this.repository.findOne({ where: { id } });
     if (!record) return null;
     return this.mapper.courseModuleToDomain(record);
   }
 
   async findIdsByChapterId(chapterId: UUID): Promise<UUID[]> {
-    this.logger.log('findIdsByChapterId', { chapterId });
+    this.logger.log({ chapterId }, 'findIdsByChapterId');
     const records = await this.repository.find({
       select: { id: true },
       where: { chapterId },
@@ -37,14 +37,14 @@ export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRe
   }
 
   async findMaxPosition(chapterId: UUID): Promise<number | null> {
-    this.logger.log('findMaxPosition', { chapterId });
+    this.logger.log({ chapterId }, 'findMaxPosition');
     return this.repository.maximum('position', { chapterId });
   }
 
   async create(
     courseModule: AcademyCourseModule,
   ): Promise<AcademyCourseModule> {
-    this.logger.log('create', { title: courseModule.title });
+    this.logger.log({ title: courseModule.title }, 'create');
     const record = this.mapper.courseModuleToRecord(courseModule);
     const saved = await this.repository.save(record);
     return this.mapper.courseModuleToDomain(saved);
@@ -53,14 +53,14 @@ export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRe
   async update(
     courseModule: AcademyCourseModule,
   ): Promise<AcademyCourseModule> {
-    this.logger.log('update', { id: courseModule.id });
+    this.logger.log({ id: courseModule.id }, 'update');
     const record = this.mapper.courseModuleToRecord(courseModule);
     const saved = await this.repository.save(record);
     return this.mapper.courseModuleToDomain(saved);
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.log({ id }, 'delete');
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new CourseModuleNotFoundError(id);
@@ -68,10 +68,13 @@ export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRe
   }
 
   async updatePositions(chapterId: UUID, orderedIds: UUID[]): Promise<void> {
-    this.logger.log('updatePositions', {
-      chapterId,
-      count: orderedIds.length,
-    });
+    this.logger.log(
+      {
+        chapterId,
+        count: orderedIds.length,
+      },
+      'updatePositions',
+    );
     await this.dataSource.transaction(async (manager) => {
       for (const [index, id] of orderedIds.entries()) {
         await manager.update(

@@ -1,8 +1,11 @@
+import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillNameResolutionError } from '../../skills.errors';
+
+import { SkillNameResolutionError } from 'src/domain/skills/application/skills.errors';
 import type { UUID } from 'crypto';
 
 const MAX_NAME_RESOLUTION_ATTEMPTS = 100;
@@ -16,15 +19,21 @@ export class CreateSkillWithUniqueNameUseCase {
     private readonly skillRepository: SkillRepository,
   ) {}
 
-  async execute(command: CreateSkillWithUniqueNameCommand): Promise<Skill> {
-    this.logger.log('Creating skill with unique name resolution', {
-      baseName: command.name,
-      userId: command.userId,
-    });
+  @HandleUnexpectedErrors(UnexpectedSkillError)
+  async execute(
+    command: CreateSkillWithUniqueNameCommand,
+  ): Promise<PersonalSkill> {
+    this.logger.log(
+      {
+        name: command.name,
+        userId: command.userId,
+      },
+      'Creating skill with unique name resolution',
+    );
 
     const name = await this.resolveUniqueName(command.name, command.userId);
 
-    const skill = new Skill({
+    const skill = new PersonalSkill({
       name,
       shortDescription: command.shortDescription,
       instructions: command.instructions,
@@ -44,13 +53,16 @@ export class CreateSkillWithUniqueNameUseCase {
       await this.skillRepository.pinSkill(created.id, command.userId);
     }
 
-    this.logger.debug('Skill created', {
-      skillId: created.id,
-      name: created.name,
-      userId: command.userId,
-      isActive: command.isActive,
-      isPinned: command.isPinned,
-    });
+    this.logger.debug(
+      {
+        skillId: created.id,
+        name: created.name,
+        userId: command.userId,
+        isActive: command.isActive,
+        isPinned: command.isPinned,
+      },
+      'Skill created',
+    );
 
     return created;
   }

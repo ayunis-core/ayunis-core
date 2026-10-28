@@ -10,7 +10,7 @@ import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.comma
 import {
   BudgetWarningEmailRenderingFailedError,
   BudgetWarningEmailSendingFailedError,
-} from '../../budget-alerts.errors';
+} from 'src/iam/budget-alerts/application/budget-alerts.errors';
 
 describe('SendBudgetWarningEmailUseCase', () => {
   let useCase: SendBudgetWarningEmailUseCase;

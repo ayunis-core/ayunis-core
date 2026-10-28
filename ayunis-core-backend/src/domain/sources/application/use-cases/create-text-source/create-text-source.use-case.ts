@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
   FileSource,
@@ -15,7 +15,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   InvalidSourceTypeError,
   UnexpectedSourceError,
-} from '../../sources.errors';
+} from 'src/domain/sources/application/sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
@@ -29,10 +29,10 @@ import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-ca
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
-import { SourceRepository } from '../../ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
-import { MIME_TYPES } from 'src/common/util/file-type';
+import { fileTypeFromMimeType } from 'src/domain/sources/application/util/source-file-type.helpers';
 
 interface TextSourceWithContent {
   source: TextSource;
@@ -72,7 +72,7 @@ export class CreateTextSourceUseCase {
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug('Saving source', { sourceId: result.source.id });
+      this.logger.debug({ sourceId: result.source.id }, 'Saving source');
       const saved = await this.sourceRepository.saveTextSource(result.source, {
         text: result.text,
         chunks: result.chunks,
@@ -85,9 +85,12 @@ export class CreateTextSourceUseCase {
       return saved;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating text source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating text source',
+      );
       throw new UnexpectedSourceError('Error creating text source', {
         error: error as Error,
       });
@@ -140,27 +143,15 @@ export class CreateTextSourceUseCase {
   }
 
   private getFileType(mimeType: string): FileType {
-    switch (mimeType) {
-      case MIME_TYPES.PDF:
-        return FileType.PDF;
-      case MIME_TYPES.DOCX:
-        return FileType.DOCX;
-      case MIME_TYPES.PPTX:
-        return FileType.PPTX;
-      case MIME_TYPES.TXT:
-        return FileType.TXT;
-      case MIME_TYPES.MP3:
-      case MIME_TYPES.M4A:
-      case MIME_TYPES.WAV:
-      case MIME_TYPES.WEBM:
-        return FileType.AUDIO;
-      default:
-        // This is a programming error - caller should validate/route file types before calling this use case
-        throw new Error(
-          `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-            `This use case only handles PDF, DOCX, PPTX, TXT, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
-        );
+    const fileType = fileTypeFromMimeType(mimeType);
+    if (!fileType) {
+      // This is a programming error - caller should validate/route file types before calling this use case
+      throw new Error(
+        `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
+          `This use case only handles PDF, DOCX, PPTX, ODT, ODP, TXT, EML, MSG, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+      );
     }
+    return fileType;
   }
 
   /**
@@ -207,7 +198,7 @@ export class CreateTextSourceUseCase {
     chunks: TextSourceContentChunk[];
     orgId: UUID;
   }): Promise<void> {
-    this.logger.debug(`Indexing content for source: ${params.sourceId}`);
+    this.logger.debug({ sourceId: params.sourceId }, 'Indexing source content');
 
     // Step 1: Delete any existing index entries for this source
     // (handles re-upload/re-index scenarios, no-op for new sources)
@@ -229,7 +220,8 @@ export class CreateTextSourceUseCase {
     );
 
     this.logger.debug(
-      `Successfully indexed ${params.chunks.length} content blocks for source: ${params.sourceId}`,
+      { sourceId: params.sourceId, chunkCount: params.chunks.length },
+      'Successfully indexed source content',
     );
   }
 }

@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SetOrgDefaultLanguageModelCommand } from './set-org-default-language-model.command';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import {
+  ModelError,
+  PermittedModelNotFoundError,
+} from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { isSuperAdmin } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -19,79 +22,77 @@ export class SetOrgDefaultLanguageModelUseCase {
   async execute(
     command: SetOrgDefaultLanguageModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.log('execute', {
-      permittedModelId: command.permittedModelId,
-      orgId: command.orgId,
-    });
-
+    this.logger.log(
+      { permittedModelId: command.permittedModelId, orgId: command.orgId },
+      'execute',
+    );
     try {
-      // Check if the user is authorized to set the organization default model
-      const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isFromOrg = orgId === command.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
-
-      // Only language models may participate in org-default flows.
-      const permittedModel =
-        await this.permittedModelsRepository.findOneLanguage({
-          id: command.permittedModelId,
-          orgId: command.orgId,
-        });
-
-      if (!permittedModel) {
-        this.logger.error('Permitted model not found', {
-          permittedModelId: command.permittedModelId,
-          orgId: command.orgId,
-        });
-        throw new PermittedModelNotFoundError(command.permittedModelId);
-      }
-
-      // Check if there's already a default model
-      const existingDefault =
-        await this.permittedModelsRepository.findOrgDefaultLanguage(
-          command.orgId,
-        );
-
-      const action = existingDefault ? 'updating' : 'setting';
-      this.logger.debug(
-        `Permitted model found, ${action} organization default`,
-        {
-          permittedModelId: command.permittedModelId,
-          orgId: command.orgId,
-          modelName: permittedModel.model.name,
-          modelProvider: permittedModel.model.provider,
-          existingDefaultId: existingDefault?.id,
-        },
-      );
-
-      // Set the model as the organization's default (handles both create and update)
-      const orgDefaultModel = await this.permittedModelsRepository.setAsDefault(
-        {
-          id: command.permittedModelId,
-          orgId: command.orgId,
-        },
-      );
-
-      this.logger.debug(`Organization default model ${action} successfully`, {
-        orgId: command.orgId,
-        modelId: orgDefaultModel.id,
-        action,
-      });
-
-      return orgDefaultModel;
+      return await this.setDefault(command);
     } catch (error) {
-      if (error instanceof ModelError) {
-        throw error;
-      }
-      this.logger.error('Failed to set organization default model', {
-        permittedModelId: command.permittedModelId,
-        orgId: command.orgId,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      if (error instanceof ModelError) throw error;
+      this.logger.error(
+        {
+          permittedModelId: command.permittedModelId,
+          orgId: command.orgId,
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Failed to set organization default model',
+      );
       throw error;
     }
+  }
+
+  private async setDefault(
+    command: SetOrgDefaultLanguageModelCommand,
+  ): Promise<PermittedLanguageModel> {
+    this.assertAuthorized(command.orgId);
+    const permittedModel = await this.findPermittedModel(command);
+    const existingDefault =
+      await this.permittedModelsRepository.findOrgDefaultLanguage(
+        command.orgId,
+      );
+    const action = existingDefault ? 'updating' : 'setting';
+    this.logger.debug(
+      {
+        permittedModelId: command.permittedModelId,
+        orgId: command.orgId,
+        modelName: permittedModel.model.name,
+        modelProvider: permittedModel.model.provider,
+        existingDefaultId: existingDefault?.id,
+        action,
+      },
+      'Permitted model found for organization default',
+    );
+    const result = await this.permittedModelsRepository.setAsDefault({
+      id: command.permittedModelId,
+      orgId: command.orgId,
+    });
+    this.logger.debug(
+      { orgId: command.orgId, modelId: result.id, action },
+      'Organization default model changed successfully',
+    );
+    return result;
+  }
+
+  private assertAuthorized(orgId: string): void {
+    const isFromOrg = this.contextService.get('orgId') === orgId;
+    if (!isFromOrg && !isSuperAdmin(this.contextService)) {
+      throw new UnauthorizedAccessError();
+    }
+  }
+
+  private async findPermittedModel(
+    command: SetOrgDefaultLanguageModelCommand,
+  ): Promise<PermittedLanguageModel> {
+    const model = await this.permittedModelsRepository.findOneLanguage({
+      id: command.permittedModelId,
+      orgId: command.orgId,
+    });
+    if (model) return model;
+    this.logger.error(
+      { permittedModelId: command.permittedModelId, orgId: command.orgId },
+      'Permitted model not found',
+    );
+    throw new PermittedModelNotFoundError(command.permittedModelId);
   }
 }

@@ -15,12 +15,15 @@ import {
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { SkillEntry } from 'src/common/util/skill-slug';
 
+import { LEGAL_REFERENCE_INSTRUCTIONS } from './legal-reference-instructions';
+import { escapeXml } from './xml-escape';
 export interface SystemPromptBuildParams {
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  workspaceInstructions?: string | null;
   orgSystemPrompt?: string;
   userSystemPrompt?: string;
   isAnonymous?: boolean;
@@ -35,6 +38,7 @@ export class SystemPromptBuilderService {
       sources = [],
       skills = [],
       knowledgeBases = [],
+      workspaceInstructions,
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous = false,
@@ -47,9 +51,13 @@ export class SystemPromptBuilderService {
       this.buildSkillsSection(skills),
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
+      workspaceInstructions
+        ? this.buildWorkspaceInstructionsSection(workspaceInstructions)
+        : '',
       this.buildDataHandlingSection(),
       isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
+      LEGAL_REFERENCE_INSTRUCTIONS,
       this.buildPlatformSection(),
       orgSystemPrompt ? this.buildOrgInstructionsSection(orgSystemPrompt) : '',
       userSystemPrompt
@@ -137,10 +145,14 @@ When using tools:
 4. **Verify before actions** — For consequential actions (sending emails, creating events), confirm with the user first
 </tool_guidelines>
 
+<file_usage>
+Use create_file for downloadable XML, JSON and plain-text (TXT) files, including requests such as "eine XML-Datei zum Download". Do not use create_document or markdown links for these files. Supply the complete content as a string, the format (xml, json or txt), and a filename without extension. The file widget offers the download; you may continue your answer after creating it. Keep ordinary answers and code snippets inline unless the user requests a file.
+</file_usage>
+
 <document_usage>
 **Default to inline responses.** Respond directly in the chat for questions, explanations, summaries, brainstorming, code snippets, and general conversation — even if the response is long or uses formatting.
 
-Only use create_document when the user explicitly asks for a document they intend to edit, export, or download — for example: "Write me a letter", "Create a report I can export as PDF", "Draft a formal document". Keywords like "document", "letter", "report", "draft", "Schreiben", "Dokument", "Brief", or "Vorlage" are strong signals.
+Only use create_document when the user explicitly asks for a prose document (Word/PDF) they intend to edit, export, or download — for example: "Write me a letter", "Create a report I can export as PDF", "Draft a formal document". Keywords like "document", "letter", "report", "draft", "Schreiben", "Dokument", "Brief", or "Vorlage" are strong signals.
 
 If in doubt, respond inline. The user can always ask you to turn a response into a document.
 </document_usage>
@@ -222,8 +234,20 @@ When your response draws on specific sources (uploaded documents, web pages, too
 
 - Reference where information came from
 - If citing documents, mention the document name or relevant section
+- For source_query and knowledge_query results, cite with the exact plain-text marker {{source:<chunk UUID>|<plain-text label>}}
+- Use only chunkId values returned by source_query or knowledge_query; never invent or alter a chunk ID
+- Never cite a result marked citable=false or a system-only source; keep the label plain text
+- Never put source citation markers in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams; use them only in assistant chat text
 - This helps users verify information and understand your sources
 </citations>
+
+<url_references>
+- When referring to a web page in assistant chat text, use the plain-text marker {{url:<url>}} instead of a bare URL or Markdown link, e.g. {{url:https://www.muenchen.de/rathaus}}
+- Only use complete http:// or https:// URLs without embedded credentials; preserve the full path, query string, and fragment
+- Never invent URLs; use URLs supplied by the user or returned by tools
+- Never put URL reference markers in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams; use ordinary URLs there
+- Keep source citation and legal reference markers for their respective sources
+</url_references>
 
 <uncertainty>
 Express appropriate uncertainty:
@@ -265,18 +289,15 @@ For technical questions about the platform, configuration, or deployment, users 
     return `
 <organization_instructions>
 The following instructions were set by the user's organization administrator and apply to all members of the organization:
-
 ${orgSystemPrompt}
-</organization_instructions>
-`;
+</organization_instructions>`;
   }
 
   private buildUserInstructionsSection(userSystemPrompt: string): string {
     return `
 <user_instructions>
 ${userSystemPrompt}
-</user_instructions>
-`;
+</user_instructions>`;
   }
 
   private buildSkillsSection(skills: SkillEntry[]): string {
@@ -287,7 +308,7 @@ ${userSystemPrompt}
     const skillEntries = skills
       .map(
         (skill) =>
-          `  <skill>\n    <name>${this.escapeXml(skill.slug)}</name>\n    <description>${this.escapeXml(skill.description)}</description>\n  </skill>`,
+          `  <skill>\n    <name>${escapeXml(skill.slug)}</name>\n    <description>${escapeXml(skill.description)}</description>\n  </skill>`,
       )
       .join('\n');
 
@@ -297,6 +318,10 @@ Use the activate_skill tool to load a skill when the task matches its descriptio
 
 ${skillEntries}
 </available_skills>`;
+  }
+
+  private buildWorkspaceInstructionsSection(instruction: string): string {
+    return `<workspace_instructions>\nThese instructions apply to every chat in this workspace.\n\n${escapeXml(instruction)}\n</workspace_instructions>`;
   }
 
   private buildFilesSection(sources: Source[]): string {
@@ -349,7 +374,7 @@ ${skillEntries}
 
     const formatFile = (source: Source): string => {
       const type = this.getFileTypeLabel(source);
-      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+      return `<file id="${source.id}" name="${escapeXml(source.name)}" type="${type}" />`;
     };
 
     let section = `<available_files>
@@ -389,7 +414,7 @@ ${systemFiles.map(formatFile).join('\n')}
   private buildDataSourcesSection(sources: Source[]): string {
     const formatFile = (source: Source): string => {
       const type = this.getFileTypeLabel(source);
-      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+      return `<file id="${source.id}" name="${escapeXml(source.name)}" type="${type}" />`;
     };
 
     return `<available_data_sources>
@@ -404,7 +429,7 @@ ${sources.map(formatFile).join('\n')}
     const files = sources
       .map(
         (s) =>
-          `<file id="${s.id}" name="${this.escapeXml(s.name)}" status="processing" />`,
+          `<file id="${s.id}" name="${escapeXml(s.name)}" status="processing" />`,
       )
       .join('\n');
 
@@ -419,7 +444,7 @@ ${files}
     const files = sources
       .map(
         (s) =>
-          `<file id="${s.id}" name="${this.escapeXml(s.name)}" error="${this.escapeXml(s.processingError ?? 'Unknown error')}" />`,
+          `<file id="${s.id}" name="${escapeXml(s.name)}" error="${escapeXml(s.processingError ?? 'Unknown error')}" />`,
       )
       .join('\n');
 
@@ -457,8 +482,7 @@ ${files}
 
     const entries = knowledgeBases
       .map(
-        (kb) =>
-          `<knowledge_base id="${kb.id}" name="${this.escapeXml(kb.name)}" />`,
+        (kb) => `<knowledge_base id="${kb.id}" name="${escapeXml(kb.name)}" />`,
       )
       .join('\n');
 
@@ -467,14 +491,5 @@ The following knowledge bases are available. Use the knowledge_query tool to sea
 
 ${entries}
 </available_knowledge_bases>`;
-  }
-
-  private escapeXml(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
   }
 }

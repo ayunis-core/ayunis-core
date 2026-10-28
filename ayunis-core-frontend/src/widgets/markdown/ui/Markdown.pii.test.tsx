@@ -1,16 +1,20 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Markdown from './Markdown';
-import { PiiMaskProvider } from '../model/pii-mask-context';
-import type { PiiMaskEntry } from '../model/pii-mask-context';
+import { PiiMaskProvider } from '@/widgets/markdown/model/pii-mask-context';
+import type { PiiMaskEntry } from '@/widgets/markdown/model/pii-mask-context';
 
 const masks: PiiMaskEntry[] = [
   {
+    id: '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c',
     token: '{{pii:PERSON_NAME_1}}',
     value: 'Max Mustermann',
     category: 'person_name',
+    unmasked: false,
   },
 ];
+
+const unmaskedMasks: PiiMaskEntry[] = [{ ...masks[0], unmasked: true }];
 
 describe('Markdown PII mask rendering', () => {
   it('renders the original value highlighted for known tokens', () => {
@@ -61,5 +65,41 @@ describe('Markdown PII mask rendering', () => {
 
     expect(screen.getByText('{{pii:PERSON_NAME_1}}')).toBeTruthy();
     expect(screen.queryByText('Max Mustermann')).toBeNull();
+  });
+
+  it('renders manually unmasked entries as plain text', () => {
+    render(
+      <PiiMaskProvider masks={unmaskedMasks}>
+        <Markdown>{'Schreib an {{pii:PERSON_NAME_1}} bitte'}</Markdown>
+      </PiiMaskProvider>,
+    );
+
+    const value = screen.getByText('Max Mustermann');
+    expect(value).toBeTruthy();
+    expect(value.className).not.toContain('bg-brand/15');
+    expect(screen.queryByTestId('pii-mask')).toBeNull();
+  });
+
+  it('requests an unmask on click when a handler is provided', () => {
+    const onUnmaskRequest = vi.fn();
+    render(
+      <PiiMaskProvider masks={masks} onUnmaskRequest={onUnmaskRequest}>
+        <Markdown>{'Schreib an {{pii:PERSON_NAME_1}} bitte'}</Markdown>
+      </PiiMaskProvider>,
+    );
+
+    fireEvent.click(screen.getByTestId('pii-mask'));
+
+    expect(onUnmaskRequest).toHaveBeenCalledWith(masks[0]);
+  });
+
+  it('is not clickable without an unmask handler', () => {
+    render(
+      <PiiMaskProvider masks={masks}>
+        <Markdown>{'Schreib an {{pii:PERSON_NAME_1}} bitte'}</Markdown>
+      </PiiMaskProvider>,
+    );
+
+    expect(screen.getByTestId('pii-mask').tagName).toBe('SPAN');
   });
 });

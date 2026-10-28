@@ -4,9 +4,9 @@ import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrieve
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
-} from '../ports/execution.handler';
-import { InternetSearchTool } from '../../domain/tools/internet-search-tool.entity';
-import { ToolExecutionFailedError } from '../tools.errors';
+} from 'src/domain/tools/application/ports/execution.handler';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 @Injectable()
 export class InternetSearchToolHandler extends ToolExecutionHandler {
@@ -22,7 +22,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const results = await this.searchWebUseCase.execute(
@@ -33,7 +33,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

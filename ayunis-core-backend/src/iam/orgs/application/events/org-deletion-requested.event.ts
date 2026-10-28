@@ -8,13 +8,12 @@ import { DeferredCleanupEvent } from 'src/common/events/deferred-cleanup.event';
  * object-storage assets (MinIO) live outside the database and must be purged
  * explicitly.
  *
- * Listeners must not perform irreversible side effects while handling this
- * event — the row delete can still fail. They may read rows to resolve cleanup
- * targets and must register the destructive work via `deferCleanup`; the
- * emitting use case runs the deferred tasks (each error-swallowed) only after
- * the row delete succeeds. A failed delete therefore loses nothing, and a
- * failed cleanup leaks orphaned blobs instead of destroying data of a
- * still-existing org.
+ * Listeners may perform read-only preflight checks and throw to reject the
+ * deletion before any rows are removed. They must register irreversible work
+ * via `deferCleanup`; the emitting use case runs those tasks only after the row
+ * delete succeeds. A deferred cleanup failure cannot restore the deleted rows,
+ * so callers that require complete cleanup receive an error describing the
+ * remaining external data.
  */
 export class OrgDeletionRequestedEvent extends DeferredCleanupEvent {
   static readonly EVENT_NAME = 'org.deletion-requested';

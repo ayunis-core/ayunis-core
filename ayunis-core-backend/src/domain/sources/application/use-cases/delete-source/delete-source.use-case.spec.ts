@@ -13,12 +13,12 @@ import { randomUUID } from 'crypto';
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
-import { SourceRepository } from '../../ports/source.repository';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { UnexpectedSourceError } from '../../sources.errors';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 
 function makeProcessingSource(id: UUID): FileSource {
   return new FileSource({

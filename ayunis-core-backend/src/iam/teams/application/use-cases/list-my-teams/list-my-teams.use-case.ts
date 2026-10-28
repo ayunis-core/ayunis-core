@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TeamsRepository } from '../../ports/teams.repository';
+import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { UnexpectedTeamError } from '../../teams.errors';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
 export class ListMyTeamsUseCase {
@@ -16,30 +16,32 @@ export class ListMyTeamsUseCase {
   ) {}
 
   async execute(): Promise<Team[]> {
-    const userId = this.contextService.get('userId');
+    const { userId } = getRequiredUserContext(this.contextService);
 
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('listMyTeams', { userId });
+    this.logger.log({ userId }, 'listMyTeams');
 
     try {
       const teams = await this.teamsRepository.findByUserId(userId);
-      this.logger.debug('User teams retrieved successfully', {
-        userId,
-        count: teams.length,
-      });
+      this.logger.debug(
+        {
+          userId,
+          count: teams.length,
+        },
+        'User teams retrieved successfully',
+      );
 
       return teams;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to retrieve user teams', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          userId,
+        },
+        'Failed to retrieve user teams',
+      );
       throw new UnexpectedTeamError(error);
     }
   }

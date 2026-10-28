@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 
 /** Sources stuck in PROCESSING for longer than this are marked FAILED */
@@ -13,6 +14,7 @@ const MAX_SOURCES_PER_RUN = 100;
 @Injectable()
 export class StaleProcessingCleanupTask {
   private readonly logger = new Logger(StaleProcessingCleanupTask.name);
+
   private isRunning = false;
 
   constructor(
@@ -31,9 +33,12 @@ export class StaleProcessingCleanupTask {
     try {
       await this.failStaleSources();
     } catch (error) {
-      this.logger.error('Stale processing cleanup failed', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Stale processing cleanup failed',
+      );
     } finally {
       this.isRunning = false;
     }
@@ -53,8 +58,8 @@ export class StaleProcessingCleanupTask {
     }
 
     this.logger.warn(
-      `Found ${staleSourceIds.length} stale processing sources`,
-      { sourceIds: staleSourceIds },
+      { sourceIds: staleSourceIds, sourceCount: staleSourceIds.length },
+      'Found stale processing sources',
     );
 
     for (const sourceId of staleSourceIds) {
@@ -68,14 +73,18 @@ export class StaleProcessingCleanupTask {
         new MarkSourceFailedCommand({
           sourceId,
           errorMessage: 'Processing timed out',
+          errorCode: SourceProcessingErrorCode.PROCESSING_TIMEOUT,
         }),
       );
-      this.logger.warn('Marked stale source as failed', { sourceId });
+      this.logger.warn({ sourceId }, 'Marked stale source as failed');
     } catch (error) {
-      this.logger.error('Failed to mark stale source as failed', {
-        sourceId,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: error as Error,
+        },
+        'Failed to mark stale source as failed',
+      );
     }
   }
 }
