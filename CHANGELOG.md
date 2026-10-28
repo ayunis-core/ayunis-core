@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.62.0](https://github.com/ayunis-core/ayunis-core/compare/v2.61.1...v2.62.0) (2026-10-28)
+
+
+### Features
+
+* **chat:** add clickable url reference tokens (AYC-1475) ([#2113](https://github.com/ayunis-core/ayunis-core/issues/2113)) ([b97986c](https://github.com/ayunis-core/ayunis-core/commit/b97986cbf7c36b023708b1b3714b1874a9fe21c4))
+* **subscriptions:** allow an optional fixed end on creation (AYC-1429) ([#2068](https://github.com/ayunis-core/ayunis-core/issues/2068)) ([ca88238](https://github.com/ayunis-core/ayunis-core/commit/ca882388763e6d4b67a64491a5b21f0f809ec7f7))
+* **subscriptions:** announce expired fixed terms to listeners (AYC-1429) ([#2108](https://github.com/ayunis-core/ayunis-core/issues/2108)) ([43f7e54](https://github.com/ayunis-core/ayunis-core/commit/43f7e5490607a76afe86d405f2b68155def8eb09))
+
+
+### Bug Fixes
+
+* **artifacts:** preserve formatted list text in word exports (AYC-1461) ([#2107](https://github.com/ayunis-core/ayunis-core/issues/2107)) ([fc01e14](https://github.com/ayunis-core/ayunis-core/commit/fc01e1495aae6a7fc87fbdd7077622225e9b2187))
+* **observability:** report to appsignal only with an explicit environment (AYC-000) ([#2111](https://github.com/ayunis-core/ayunis-core/issues/2111)) ([970bbbf](https://github.com/ayunis-core/ayunis-core/commit/970bbbf22c21a33db3dbc8cf6abf512fe52962a7))
+* **openai-compat:** make one provider call per completion request (AYC-1050) ([#1777](https://github.com/ayunis-core/ayunis-core/issues/1777)) ([e6efa73](https://github.com/ayunis-core/ayunis-core/commit/e6efa73bd620952bf6fd84ab40567dd2995932e5))
+
+
+### Code Refactoring
+
+* **models:** collapse duplicate inference handlers into provider factories (AYC-1050) ([#1778](https://github.com/ayunis-core/ayunis-core/issues/1778)) ([1dd1263](https://github.com/ayunis-core/ayunis-core/commit/1dd1263bfc44c5ac3dc3650350ac245325bdf09e))
+
+
+### Miscellaneous
+
+* **runtime:** move the node runtime to node 26 (AYC-1009) ([#2110](https://github.com/ayunis-core/ayunis-core/issues/2110)) ([14215ed](https://github.com/ayunis-core/ayunis-core/commit/14215edd04e14ee58af767a245fb2fd05608e6d1))
+
 ## [2.61.1](https://github.com/ayunis-core/ayunis-core/compare/v2.61.0...v2.61.1) (2026-10-27)
 
 
