@@ -132,8 +132,8 @@ updates:
       - "dependencies"
       - "docker"
     ignore:
-      # node:26 caused severe request slowness (connection stalls); runtime is
-      # pinned to node 24 (alpine). Do not remove without re-validating — see AYC-423.
+      # Node majors are adopted deliberately (LTS lines only): a major once
+      # caused provider connection stalls in production (AYC-423, AYC-1009).
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
     groups:
