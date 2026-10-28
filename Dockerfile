@@ -1,14 +1,12 @@
 # Multi-stage build for production deployment (pnpm workspaces)
 
 # ---- Stage 1: Build — install workspace, build FE + BE, create prod bundle ----
-# Pinned back to node 24 to bisect the production outbound-connection stalls
-# that started with the node 26 bump (AYC-423). Revert to 26 once exonerated
-# or once the stall mechanism is identified and mitigated.
-FROM node:24.22.1-alpine AS build
+# Node 26 re-attempt after the AYC-423 rollback (AYC-1009). Smoke-tested
+# locally, not load-soaked: roll back here if provider streams stall again.
+FROM node:26.12.1-alpine AS build
 
 # pnpm via corepack (version pinned by root package.json "packageManager").
-# Installed explicitly (node:26-alpine dropped the bundled corepack; harmless
-# on node:24, and keeps this line stable across the 24↔26 A/B).
+# Installed explicitly: node:26-alpine no longer bundles corepack.
 RUN npm install -g corepack@latest && corepack enable
 # Native build deps for bcrypt (node-pre-gyp builds from source on musl/alpine)
 RUN apk add --no-cache python3 make g++ gcc
@@ -59,7 +57,7 @@ RUN pnpm --filter core-backend run build
 RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 
 # ---- Stage 2: Production runtime ----
-FROM node:24.22.1-alpine AS production
+FROM node:26.12.1-alpine AS production
 
 # Chromium for Puppeteer PDF export
 RUN apk add --no-cache chromium
