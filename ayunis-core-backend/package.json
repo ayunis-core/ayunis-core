@@ -155,7 +155,7 @@
     "@types/jest": "^30.0.0",
     "@types/mailparser": "^3.4.6",
     "@types/minio": "^7.1.0",
-    "@types/mjml": "^5.0.0",
+    "@types/mjml": "^5.4.1",
     "@types/mjml-core": "^5.0.0",
     "@types/ms": "^2.1.0",
     "@types/multer": "^2.3.0",
