@@ -2853,13 +2853,6 @@ export interface AssignThreadWorkspaceDto {
   workspaceId: string | null;
 }
 
-export interface GeneratedImageUrlResponseDto {
-  /** Presigned URL to access the generated image */
-  url: string;
-  /** ISO 8601 timestamp when the URL expires */
-  expiresAt: string;
-}
-
 export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwnerType[keyof typeof CreateKnowledgeBaseDtoOwnerType];
 
 

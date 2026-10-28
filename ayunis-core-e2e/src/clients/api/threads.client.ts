@@ -48,6 +48,16 @@ export function getThreadSourceCitationResponse(
   );
 }
 
+export function getGeneratedImageResponse(
+  api: APIRequestContext,
+  threadId: string,
+  imageId: string,
+): Promise<APIResponse> {
+  return api.get(
+    `${config.apiURL}/api/threads/${threadId}/generated-images/${imageId}`,
+  );
+}
+
 export async function deleteThread(
   api: APIRequestContext,
   threadId: string,

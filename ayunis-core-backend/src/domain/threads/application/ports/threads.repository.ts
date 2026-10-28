@@ -48,6 +48,7 @@ export interface ThreadContextRefs {
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
+  abstract existsForUser(id: UUID, userId: UUID): Promise<boolean>;
   abstract findContextRefs(
     id: UUID,
     userId: UUID,
