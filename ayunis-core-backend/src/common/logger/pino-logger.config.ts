@@ -160,7 +160,14 @@ function buildTransport(
     };
   }
 
-  if (!environment.APPSIGNAL_PUSH_API_KEY) {
+  // Same rule as appsignal.cjs: only an explicitly named AppSignal environment
+  // ships logs, so a local production-mode run cannot report as production.
+  const appsignalEnvironment = environment.APPSIGNAL_APP_ENV;
+  if (
+    !environment.APPSIGNAL_PUSH_API_KEY ||
+    !appsignalEnvironment ||
+    appsignalEnvironment === 'development'
+  ) {
     return undefined;
   }
 
