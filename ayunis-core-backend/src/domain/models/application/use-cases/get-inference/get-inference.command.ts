@@ -1,4 +1,4 @@
-import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';

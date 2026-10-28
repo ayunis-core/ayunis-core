@@ -1,15 +1,11 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
-import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider as ModelProviderName } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { AyunisOllamaInferenceHandler } from 'src/domain/models/infrastructure/inference/ayunis-ollama.inference';
-import { LocalOllamaInferenceHandler } from 'src/domain/models/infrastructure/inference/local-ollama.inference';
-import { SynaforceInferenceHandler } from 'src/domain/models/infrastructure/inference/synaforce.inference';
-import { AyunisOllamaStreamInferenceHandler } from 'src/domain/models/infrastructure/stream-inference/ayunis-ollama.stream-inference';
-import { LocalOllamaStreamInferenceHandler } from 'src/domain/models/infrastructure/stream-inference/local-ollama.stream-inference';
-import { SynaforceStreamInferenceHandler } from 'src/domain/models/infrastructure/stream-inference/synaforce.stream-inference';
+import { AyunisOllamaInferenceProviderFactory } from 'src/domain/models/infrastructure/inference-providers/ayunis-ollama.inference-provider';
+import { LocalOllamaInferenceProviderFactory } from 'src/domain/models/infrastructure/inference-providers/local-ollama.inference-provider';
+import { SynaforceInferenceProviderFactory } from 'src/domain/models/infrastructure/inference-providers/synaforce.inference-provider';
 
 const ollamaMock = jest.fn<ModelProvider, [unknown]>();
 
@@ -17,24 +13,12 @@ jest.mock('@ayunis/provider-ollama', () => ({
   ollama: (options: unknown) => ollamaMock(options),
 }));
 
-type HandlerConstructor = new (
-  configService: ConfigService,
-  imageContentService: ImageContentService,
-) => object;
+type HandlerConstructor = new (configService: ConfigService) => object;
 
 const ollamaHandlers: Array<{ name: string; Handler: HandlerConstructor }> = [
-  {
-    name: 'local Ollama streaming',
-    Handler: LocalOllamaStreamInferenceHandler,
-  },
-  {
-    name: 'Ayunis Ollama streaming',
-    Handler: AyunisOllamaStreamInferenceHandler,
-  },
-  { name: 'Synaforce streaming', Handler: SynaforceStreamInferenceHandler },
-  { name: 'local Ollama', Handler: LocalOllamaInferenceHandler },
-  { name: 'Ayunis Ollama', Handler: AyunisOllamaInferenceHandler },
-  { name: 'Synaforce', Handler: SynaforceInferenceHandler },
+  { name: 'local Ollama', Handler: LocalOllamaInferenceProviderFactory },
+  { name: 'Ayunis Ollama', Handler: AyunisOllamaInferenceProviderFactory },
+  { name: 'Synaforce', Handler: SynaforceInferenceProviderFactory },
 ];
 
 function languageModel(contextWindowSize: number): LanguageModel {
@@ -52,12 +36,9 @@ function languageModel(contextWindowSize: number): LanguageModel {
 }
 
 function createProvider(Handler: HandlerConstructor, model: Model): void {
-  const handler = new Handler(
-    {
-      get: jest.fn().mockReturnValue('configured-value'),
-    } as unknown as ConfigService,
-    {} as ImageContentService,
-  );
+  const handler = new Handler({
+    get: jest.fn().mockReturnValue('configured-value'),
+  } as unknown as ConfigService);
   (
     handler as unknown as { createProvider: (model: Model) => ModelProvider }
   ).createProvider(model);
