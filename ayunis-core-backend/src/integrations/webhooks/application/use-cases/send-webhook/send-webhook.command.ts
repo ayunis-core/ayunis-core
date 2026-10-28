@@ -3,7 +3,10 @@ import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-even
 export class SendWebhookCommand {
   event: WebhookEvent;
 
-  constructor(event: WebhookEvent) {
+  constructor(
+    event: WebhookEvent,
+    public readonly propagateFailure = false,
+  ) {
     this.event = event;
   }
 }

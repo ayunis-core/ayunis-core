@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
 import { toSubscriptionEventData } from './to-subscription-event-data.mapper';
-import { SeatBasedSubscription } from '../../domain/seat-based-subscription.entity';
-import { UsageBasedSubscription } from '../../domain/usage-based-subscription.entity';
-import { SubscriptionBillingInfo } from '../../domain/subscription-billing-info.entity';
-import { RenewalCycle } from '../../domain/value-objects/renewal-cycle.enum';
-import { SubscriptionType } from '../../domain/value-objects/subscription-type.enum';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -32,6 +32,7 @@ describe('toSubscriptionEventData', () => {
         renewalCycleAnchor: anchor,
         startsAt,
         cancelledAt,
+        endsAt: null,
         billingInfo: createBillingInfo(),
       });
 
@@ -42,6 +43,7 @@ describe('toSubscriptionEventData', () => {
         orgId,
         type: SubscriptionType.SEAT_BASED,
         cancelledAt,
+        endsAt: null,
         startsAt,
         createdAt: sub.createdAt,
         updatedAt: sub.updatedAt,
@@ -97,6 +99,7 @@ describe('toSubscriptionEventData', () => {
         monthlyCredits: 500,
         startsAt,
         cancelledAt,
+        endsAt: null,
         billingInfo: createBillingInfo(),
       });
 
@@ -107,6 +110,7 @@ describe('toSubscriptionEventData', () => {
         orgId,
         type: SubscriptionType.USAGE_BASED,
         cancelledAt,
+        endsAt: null,
         startsAt,
         createdAt: sub.createdAt,
         updatedAt: sub.updatedAt,

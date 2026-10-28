@@ -1,18 +1,18 @@
-import type { Subscription } from '../../domain/subscription.entity';
-import type { SeatBasedSubscription } from '../../domain/seat-based-subscription.entity';
-import type { UsageBasedSubscription } from '../../domain/usage-based-subscription.entity';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import type { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import type { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import {
   isSeatBased,
   isUsageBased,
-} from '../../domain/subscription-type-guards';
-import { SubscriptionType } from '../../domain/value-objects/subscription-type.enum';
+} from 'src/iam/subscriptions/domain/subscription-type-guards';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { assertNever } from 'src/common/util/assert-never';
 import type {
   SeatBasedSubscriptionEventData,
   UsageBasedSubscriptionEventData,
   SubscriptionEventData,
   SubscriptionEventDataBase,
-} from '../events/subscription-event-data.types';
+} from 'src/iam/subscriptions/application/events/subscription-event-data.types';
 
 /**
  * Maps a {@link Subscription} entity to {@link SubscriptionEventData}
@@ -36,6 +36,7 @@ export function toSubscriptionEventData(
     orgId: subscription.orgId,
     type: subscription.type,
     cancelledAt: subscription.cancelledAt,
+    endsAt: subscription.endsAt,
     startsAt: subscription.startsAt,
     createdAt: subscription.createdAt,
     updatedAt: subscription.updatedAt,

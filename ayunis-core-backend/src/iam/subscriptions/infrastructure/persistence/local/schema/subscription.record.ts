@@ -35,6 +35,10 @@ export abstract class SubscriptionRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   originalEndsAt: Date | null;
 
+  // Persistence bookkeeping for the expiry sweep, not a domain attribute.
+  @Column({ type: 'timestamp', nullable: true })
+  expiryProcessedAt: Date | null;
+
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;
 

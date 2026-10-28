@@ -1,12 +1,13 @@
 import type { UUID } from 'crypto';
-import type { RenewalCycle } from '../../domain/value-objects/renewal-cycle.enum';
-import type { SubscriptionType } from '../../domain/value-objects/subscription-type.enum';
+import type { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import type { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 export interface SubscriptionEventDataBase {
   id: UUID;
   orgId: UUID;
   type: SubscriptionType;
   cancelledAt: Date | null;
+  endsAt: Date | null;
   startsAt: Date;
   createdAt: Date;
   updatedAt: Date;

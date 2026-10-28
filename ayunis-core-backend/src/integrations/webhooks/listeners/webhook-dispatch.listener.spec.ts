@@ -1,3 +1,5 @@
+import { Test } from '@nestjs/testing';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
@@ -7,6 +9,7 @@ import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.eve
 import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
 import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import { SubscriptionExpiredEvent } from 'src/iam/subscriptions/application/events/subscription-expired.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
@@ -74,6 +77,7 @@ function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
     orgId: ORG_ID,
     type: SubscriptionType.SEAT_BASED,
     cancelledAt: null,
+    endsAt: new Date('2025-12-31T23:00:00Z'),
     startsAt: new Date('2025-01-01T00:00:00Z'),
     createdAt: new Date('2025-01-01T00:00:00Z'),
     updatedAt: new Date('2025-01-02T00:00:00Z'),
@@ -115,6 +119,51 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUserCreated', () => {
+    it('propagates expiry delivery failure and keeps a stable event id on retry', async () => {
+      const event = new SubscriptionExpiredEvent(
+        ORG_ID,
+        makeSeatBasedPayload(),
+      );
+      sendWebhookUseCase.execute.mockRejectedValueOnce(
+        new Error('receiver down'),
+      );
+      await expect(listener.handleSubscriptionExpired(event)).rejects.toThrow(
+        'receiver down',
+      );
+      await listener.handleSubscriptionExpired(event);
+      const commands = sendWebhookUseCase.execute.mock.calls.map(
+        ([command]) => command,
+      );
+      expect(commands.map(({ event: webhook }) => webhook.id)).toEqual([
+        SUB_ID,
+        SUB_ID,
+      ]);
+      expect(commands.every((command) => command.propagateFailure)).toBe(true);
+    });
+
+    it('exposes expiry failures through the registered Nest event handler', async () => {
+      const module = await Test.createTestingModule({
+        imports: [EventEmitterModule.forRoot()],
+        providers: [{ provide: WebhookDispatchListener, useValue: listener }],
+      }).compile();
+      await module.init();
+      try {
+        sendWebhookUseCase.execute.mockRejectedValueOnce(
+          new Error('receiver down'),
+        );
+        await expect(
+          module
+            .get(EventEmitter2)
+            .emitAsync(
+              SubscriptionExpiredEvent.EVENT_NAME,
+              new SubscriptionExpiredEvent(ORG_ID, makeSeatBasedPayload()),
+            ),
+        ).rejects.toThrow('receiver down');
+      } finally {
+        await module.close();
+      }
+    });
+
     it('should dispatch UserCreatedWebhookEvent enriched with orgName', async () => {
       const user = makeUser();
       await listener.handleUserCreated(
@@ -330,6 +379,26 @@ describe('WebhookDispatchListener', () => {
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(
         WebhookEventType.SUBSCRIPTION_CANCELLED,
+      );
+    });
+  });
+
+  describe('handleSubscriptionExpired', () => {
+    it('should dispatch SubscriptionExpiredWebhookEvent with the access end', async () => {
+      await listener.handleSubscriptionExpired(
+        new SubscriptionExpiredEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_EXPIRED,
+      );
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          cancelledAt: null,
+          endsAt: '2025-12-31T23:00:00.000Z',
+        }),
       );
     });
   });

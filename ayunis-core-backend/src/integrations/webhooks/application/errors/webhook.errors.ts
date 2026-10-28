@@ -1,8 +1,9 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
+import type { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 export enum WebhookErrorCode {
+  UNEXPECTED_WEBHOOK_ERROR = 'UNEXPECTED_WEBHOOK_ERROR',
   WEBHOOK_DELIVERY_FAILED = 'WEBHOOK_DELIVERY_FAILED',
   WEBHOOK_INVALID_URL = 'WEBHOOK_INVALID_URL',
   WEBHOOK_TIMEOUT = 'WEBHOOK_TIMEOUT',
@@ -68,6 +69,17 @@ export class WebhookTimeoutError extends WebhookError {
       WebhookErrorCode.WEBHOOK_TIMEOUT,
       500,
       { eventType, timeoutMs, ...metadata },
+    );
+  }
+}
+
+export class UnexpectedWebhookError extends WebhookError {
+  constructor(error: Error) {
+    super(
+      'Unexpected webhook error',
+      WebhookErrorCode.UNEXPECTED_WEBHOOK_ERROR,
+      500,
+      { error },
     );
   }
 }

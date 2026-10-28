@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedWebhookError } from 'src/integrations/webhooks/application/errors/webhook.errors';
 import { SendWebhookCommand } from './send-webhook.command';
 import { WebhookHandler } from 'src/integrations/webhooks/application/ports/webhook.handler';
 
@@ -8,6 +10,7 @@ export class SendWebhookUseCase {
 
   constructor(private readonly webhookHandler: WebhookHandler) {}
 
+  @HandleUnexpectedErrors(UnexpectedWebhookError)
   async execute(command: SendWebhookCommand): Promise<void> {
     this.logger.log({ eventType: command.event.eventType }, 'Sending webhook');
 
@@ -18,6 +21,7 @@ export class SendWebhookUseCase {
         'Webhook sent successfully',
       );
     } catch (error) {
+      if (command.propagateFailure) throw error;
       // Log error but don't fail the main operation
       this.logger.warn(
         {

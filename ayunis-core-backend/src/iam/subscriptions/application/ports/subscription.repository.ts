@@ -38,6 +38,13 @@ export abstract class SubscriptionRepository {
    * access immediately).
    */
   abstract findActiveUsageBasedOrgIds(now: Date): Promise<UUID[]>;
+  // Atomically marks every uncancelled subscription whose access end has
+  // passed and was not announced yet, returning only the ones this call marked.
+  abstract findUnprocessedExpiryIds(now: Date): Promise<UUID[]>;
+  abstract claimUnprocessedExpiry(
+    id: UUID,
+    now: Date,
+  ): Promise<Subscription | null>;
   abstract create(subscription: Subscription): Promise<Subscription>;
   abstract update(subscription: Subscription): Promise<Subscription>;
   abstract updateStartDate(

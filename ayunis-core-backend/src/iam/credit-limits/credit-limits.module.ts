@@ -8,7 +8,8 @@ import { UsageModule } from 'src/domain/usage/usage.module';
 import { ApiKeysModule } from 'src/iam/api-keys/api-keys.module';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { UsersModule } from 'src/iam/users/users.module';
-import { SubscriptionCancelledListener } from './application/listeners/subscription-cancelled.listener';
+import { SubscriptionEndedListener } from './application/listeners/subscription-ended.listener';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { CreditLimitRepository } from './application/ports/credit-limit.repository';
 import { GetDefaultUserCreditLimitUseCase } from './application/use-cases/get-default-user-credit-limit/get-default-user-credit-limit.use-case';
 import { RemoveDefaultUserCreditLimitUseCase } from './application/use-cases/remove-default-user-credit-limit/remove-default-user-credit-limit.use-case';
@@ -65,6 +66,7 @@ const apiKeyCreditLimitUseCases = [
     UsersModule,
     UsageModule,
     OrgsModule,
+    SubscriptionsModule,
   ],
   controllers: [CreditLimitsController, SuperAdminTeamCreditLimitsController],
   providers: [
@@ -85,7 +87,7 @@ const apiKeyCreditLimitUseCases = [
     GetUserCreditUsageUseCase,
     GetTeamCreditLimitsOverviewUseCase,
     RemoveOrgCreditLimitsUseCase,
-    SubscriptionCancelledListener,
+    SubscriptionEndedListener,
     ...apiKeyCreditLimitUseCases,
     ...defaultUserCreditLimitUseCases,
   ],

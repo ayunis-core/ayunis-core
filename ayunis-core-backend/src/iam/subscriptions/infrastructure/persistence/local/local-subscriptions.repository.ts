@@ -139,6 +139,37 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     }
   }
 
+  async findUnprocessedExpiryIds(now: Date): Promise<UUID[]> {
+    const rows = await this.subscriptions
+      .createQueryBuilder('subscription')
+      .select('subscription.id', 'id')
+      .where('subscription.cancelledAt IS NULL')
+      .andWhere('subscription.endsAt <= :now', { now })
+      .andWhere('subscription.expiryProcessedAt IS NULL')
+      .orderBy('subscription.id', 'ASC')
+      .getRawMany<{ id: UUID }>();
+    return rows.map(({ id }) => id);
+  }
+
+  async claimUnprocessedExpiry(
+    id: UUID,
+    now: Date,
+  ): Promise<Subscription | null> {
+    const claimed = await this.subscriptions
+      .createQueryBuilder()
+      .update()
+      .set({ expiryProcessedAt: now })
+      .where({ id })
+      .andWhere('"cancelledAt" IS NULL')
+      .andWhere('"endsAt" <= :now', { now })
+      .andWhere('"expiryProcessedAt" IS NULL')
+      .returning('id')
+      .execute();
+    if (claimed.affected === 0) return null;
+    const record = await this.subscriptions.findOneByOrFail({ id });
+    return this.subscriptionMapper.toDomain(record);
+  }
+
   async applyAccessEndAdjustments(
     params: ApplyAccessEndAdjustmentsParams,
   ): Promise<void> {
