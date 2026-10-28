@@ -76,6 +76,7 @@ export class OpenAIExceptionFilter extends BaseExceptionFilter {
       return;
     }
 
+    if (mapped.headers) response.set(mapped.headers);
     response.status(mapped.status).json(mapped.body);
   }
 

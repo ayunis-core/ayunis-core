@@ -3,6 +3,7 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
+import type { InferenceCallTerminalHandler } from 'src/domain/models/application/models/inference-call-terminal';
 
 export class GetInferenceCommand {
   model: LanguageModel;
@@ -12,6 +13,7 @@ export class GetInferenceCommand {
   instructions?: string;
   acceptTokenLimitCompletion: boolean;
   onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
+  onCallTerminal?: InferenceCallTerminalHandler;
 
   constructor(params: {
     model: LanguageModel;
@@ -21,6 +23,7 @@ export class GetInferenceCommand {
     instructions?: string;
     acceptTokenLimitCompletion?: boolean;
     onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
+    onCallTerminal?: InferenceCallTerminalHandler;
   }) {
     this.model = params.model;
     this.onUsage = params.onUsage;
@@ -30,5 +33,6 @@ export class GetInferenceCommand {
     this.instructions = params.instructions;
     this.acceptTokenLimitCompletion =
       params.acceptTokenLimitCompletion ?? false;
+    this.onCallTerminal = params.onCallTerminal;
   }
 }

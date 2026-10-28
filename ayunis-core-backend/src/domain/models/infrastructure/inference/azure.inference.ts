@@ -6,7 +6,7 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 import { RuntimeInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
+import { PROVIDER_SDK_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class AzureInferenceHandler extends RuntimeInferenceHandler {
@@ -24,7 +24,7 @@ export class AzureInferenceHandler extends RuntimeInferenceHandler {
       model: model.name,
       reasoningEffort:
         model instanceof LanguageModel && model.isReasoning ? 'low' : undefined,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      maxRetries: PROVIDER_SDK_MAX_RETRIES,
     });
   }
 }

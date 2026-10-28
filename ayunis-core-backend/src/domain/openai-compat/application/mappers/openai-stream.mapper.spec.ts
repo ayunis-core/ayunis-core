@@ -47,6 +47,27 @@ describe('OpenAIStreamMapper', () => {
     expect(result).toBeNull();
   });
 
+  it.each([
+    ['thinking-only', { thinking: 'pondering...' }],
+    ['empty', {}],
+  ])(
+    'opens the stream with a role-only frame when the first chunk is %s',
+    (_kind, params) => {
+      const result = mapper.toChunk({
+        id: 'chatcmpl-1',
+        modelName: 'gpt-4o',
+        chunk: make(params),
+        isFirst: true,
+        session: newSession(),
+      });
+      expect(result?.choices[0]).toEqual({
+        index: 0,
+        delta: { role: 'assistant' },
+        finish_reason: null,
+      });
+    },
+  );
+
   it('emits content delta with role on the first non-null chunk', () => {
     const result = mapper.toChunk({
       id: 'chatcmpl-1',

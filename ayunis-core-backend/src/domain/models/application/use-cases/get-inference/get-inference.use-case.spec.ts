@@ -387,6 +387,36 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
       params: { name: 'x', date: null },
     });
   });
+
+  it('forwards the caller-supplied call-terminal handler to the provider call', async () => {
+    let received: InferenceInput | undefined;
+    const registry = {
+      getHandler: () => ({
+        answer: (input: InferenceInput) => {
+          received = input;
+          return Promise.resolve(new InferenceResponse([], {}));
+        },
+      }),
+    };
+    const contextService = { get: () => randomUUID() };
+    const useCase = new GetInferenceUseCase(
+      registry as never,
+      contextService as never,
+    );
+    const onCallTerminal = jest.fn();
+
+    await useCase.execute(
+      new GetInferenceCommand({
+        model,
+        messages: [],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+        onCallTerminal,
+      }),
+    );
+
+    expect(received?.onCallTerminal).toBe(onCallTerminal);
+  });
 });
 
 describe('GetInferenceUseCase completed-response accounting', () => {
@@ -445,7 +475,7 @@ describe('GetInferenceUseCase completed-response accounting', () => {
   });
 });
 
-describe('GetInferenceUseCase rate-limit retry', () => {
+describe('GetInferenceUseCase caller-owned retries', () => {
   const response = new InferenceResponse(
     [new TextMessageContent('Generated prompt')],
     { inputTokens: 10, outputTokens: 5 },
@@ -461,60 +491,25 @@ describe('GetInferenceUseCase rate-limit retry', () => {
     jest.useRealTimers();
   });
 
-  it('waits the advertised delay and returns the retried response', async () => {
-    const { useCase, answer } = useCaseWithAttempts(
-      rateLimitError(6_000),
-      response,
-    );
-    const command = makeCommand();
-    const onUsage = jest.fn();
-    command.onUsage = onUsage;
+  it.each([0, 1_000, 6_000])(
+    'surfaces a rate limit with retry-after %s without retrying or accounting',
+    async (retryAfterMs) => {
+      const { useCase, answer } = useCaseWithAttempts(
+        rateLimitError(retryAfterMs),
+        response,
+      );
+      const command = makeCommand();
+      const onUsage = jest.fn();
+      command.onUsage = onUsage;
 
-    const result = useCase.execute(command);
-    await jest.advanceTimersByTimeAsync(5_999);
-    expect(answer).toHaveBeenCalledTimes(1);
-    await jest.advanceTimersByTimeAsync(1);
-
-    await expect(result).resolves.toBe(response);
-    expect(answer).toHaveBeenCalledTimes(2);
-    expect(onUsage).toHaveBeenCalledTimes(1);
-    expect(onUsage).toHaveBeenCalledWith(response.meta);
-  });
-
-  it('logs the retry without prompt contents', async () => {
-    const logger = createLoggerMock();
-    const { useCase } = useCaseWithAttempts(rateLimitError(6_000), response);
-
-    const result = useCase.execute(makeCommand());
-    await jest.advanceTimersByTimeAsync(6_000);
-    await result;
-
-    expect(logger.warn).toHaveBeenCalledWith(
-      {
-        provider: 'mistral',
-        modelId: 'mistral-large-latest',
-        retryAfterMs: 6_000,
-      },
-      'Provider rate limited inference; retrying once',
-    );
-    expect(logger.error).not.toHaveBeenCalled();
-  });
-
-  it('throws the rate-limit rejection when the retry is rate limited again', async () => {
-    const { useCase, answer } = useCaseWithAttempts(
-      rateLimitError(6_000),
-      rateLimitError(6_000),
-    );
-
-    const result = useCase.execute(makeCommand());
-    const settled = expect(result).rejects.toBeInstanceOf(
-      ProviderRequestRejectedError,
-    );
-    await jest.runAllTimersAsync();
-
-    await settled;
-    expect(answer).toHaveBeenCalledTimes(2);
-  });
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        context: { retryAfterMs },
+      });
+      await jest.runAllTimersAsync();
+      expect(answer).toHaveBeenCalledTimes(1);
+      expect(onUsage).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     ['above the wait cap', DEFAULT_RETRY_CONFIG.retryAfter.maxWaitMs + 1],
