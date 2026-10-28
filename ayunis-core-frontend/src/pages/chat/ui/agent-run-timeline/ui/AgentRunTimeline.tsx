@@ -96,7 +96,7 @@ function RunBlock({
   }
   return (
     <div data-copyable="true">
-      <Markdown renderLegalReferences renderSourceCitations>
+      <Markdown renderLegalReferences renderSourceCitations renderUrlReferences>
         {block.content.text}
       </Markdown>
     </div>

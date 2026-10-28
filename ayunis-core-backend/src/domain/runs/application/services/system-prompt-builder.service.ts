@@ -241,6 +241,14 @@ When your response draws on specific sources (uploaded documents, web pages, too
 - This helps users verify information and understand your sources
 </citations>
 
+<url_references>
+- When referring to a web page in assistant chat text, use the plain-text marker {{url:<url>}} instead of a bare URL or Markdown link, e.g. {{url:https://www.muenchen.de/rathaus}}
+- Only use complete http:// or https:// URLs without embedded credentials; preserve the full path, query string, and fragment
+- Never invent URLs; use URLs supplied by the user or returned by tools
+- Never put URL reference markers in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams; use ordinary URLs there
+- Keep source citation and legal reference markers for their respective sources
+</url_references>
+
 <uncertainty>
 Express appropriate uncertainty:
 

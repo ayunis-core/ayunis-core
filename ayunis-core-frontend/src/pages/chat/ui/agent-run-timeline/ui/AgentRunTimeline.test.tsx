@@ -15,15 +15,18 @@ vi.mock('@/widgets/markdown', () => ({
     children,
     renderLegalReferences,
     renderSourceCitations,
+    renderUrlReferences,
   }: {
     children: string;
     renderLegalReferences?: boolean;
     renderSourceCitations?: boolean;
+    renderUrlReferences?: boolean;
   }) => (
     <div
       data-testid={`text-${children}`}
       data-legal-references={renderLegalReferences ? 'true' : 'false'}
       data-source-citations={renderSourceCitations ? 'true' : 'false'}
+      data-url-references={renderUrlReferences ? 'true' : 'false'}
     >
       {children}
     </div>
@@ -36,7 +39,7 @@ vi.mock('./AgentRunTimelineRow', () => ({
   ),
 }));
 
-vi.mock('../lib/render-rich-tool-card', () => ({
+vi.mock('@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card', () => ({
   renderRichToolCard: vi.fn(() => <div data-testid="rich-card" />),
 }));
 
@@ -97,27 +100,17 @@ const unit: AgentRunUnit = {
 };
 
 describe('AgentRunTimeline', () => {
-  it('enables legal references for assistant text blocks', () => {
-    render(<AgentRunTimeline unit={unit} />);
-
-    expect(
-      screen.getByTestId('text-before').getAttribute('data-legal-references'),
-    ).toBe('true');
-    expect(
-      screen.getByTestId('text-after').getAttribute('data-legal-references'),
-    ).toBe('true');
-  });
-
-  it('enables source citations for assistant text blocks', () => {
-    render(<AgentRunTimeline unit={unit} />);
-
-    expect(
-      screen.getByTestId('text-before').getAttribute('data-source-citations'),
-    ).toBe('true');
-    expect(
-      screen.getByTestId('text-after').getAttribute('data-source-citations'),
-    ).toBe('true');
-  });
+  it.each(['legal-references', 'source-citations', 'url-references'])(
+    'enables %s for assistant text blocks',
+    (reference) => {
+      render(<AgentRunTimeline unit={unit} />);
+      for (const block of ['before', 'after']) {
+        expect(
+          screen.getByTestId(`text-${block}`).getAttribute(`data-${reference}`),
+        ).toBe('true');
+      }
+    },
+  );
 
   it('renders a rich tool row and card inline between surrounding text', () => {
     render(<AgentRunTimeline unit={unit} />);
