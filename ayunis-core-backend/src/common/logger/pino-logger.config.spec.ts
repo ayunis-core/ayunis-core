@@ -60,10 +60,27 @@ describe('createPinoLoggerConfig', () => {
     expect(options.transport).toBeUndefined();
   });
 
+  it.each([
+    ['without an explicit AppSignal environment', undefined],
+    ['when the AppSignal environment is development', 'development'],
+  ])(
+    'keeps production logs out of AppSignal %s',
+    (_case, appsignalEnvironment) => {
+      const options = getOptions({
+        NODE_ENV: 'production',
+        APPSIGNAL_PUSH_API_KEY: 'configured',
+        APPSIGNAL_APP_ENV: appsignalEnvironment,
+      });
+
+      expect(options.transport).toBeUndefined();
+    },
+  );
+
   it('writes production logs to stdout and AppSignal when configured', () => {
     const options = getOptions({
       NODE_ENV: 'production',
       APPSIGNAL_PUSH_API_KEY: 'configured',
+      APPSIGNAL_APP_ENV: 'production',
     });
 
     expect(options.transport).toMatchObject({
