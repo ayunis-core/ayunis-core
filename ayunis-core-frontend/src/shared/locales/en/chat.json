@@ -270,11 +270,11 @@
       },
       "generate_image": {
         "generating": "Generating image…",
-        "loading": "Loading image…",
         "error": "Could not load generated image",
         "altFallback": "Generated image",
         "openPreview": "Open image preview",
-        "download": "Download image"
+        "download": "Download image",
+        "retry": "Try again"
       },
       "create_file": {
         "preparing": "Preparing file…",

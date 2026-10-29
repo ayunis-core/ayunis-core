@@ -42,7 +42,7 @@ import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/re
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from './application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from './application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
 import { SaveGeneratedImageUseCase } from './application/use-cases/save-generated-image/save-generated-image.use-case';
-import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
+import { DownloadGeneratedImageUseCase } from './application/use-cases/download-generated-image/download-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
 import { DownloadMessageImageUseCase } from './application/use-cases/download-message-image/download-message-image.use-case';
 import { DownloadReferenceImagesUseCase } from './application/use-cases/download-reference-images/download-reference-images.use-case';
@@ -123,7 +123,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
-    ResolveGeneratedImageUseCase,
+    DownloadGeneratedImageUseCase,
     DownloadMessageImageUseCase,
     DownloadReferenceImagesUseCase,
     CleanupStaleThreadSourcesUseCase,

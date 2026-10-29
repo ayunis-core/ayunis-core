@@ -100,6 +100,10 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.threadMapper.toDomain(threadEntity);
   }
 
+  existsForUser(id: UUID, userId: UUID): Promise<boolean> {
+    return this.threadRepository.exists({ where: { id, userId } });
+  }
+
   async findContextRefs(
     id: UUID,
     userId: UUID,

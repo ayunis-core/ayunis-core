@@ -4,14 +4,12 @@ import * as Minio from 'minio';
 import { Readable } from 'stream';
 import {
   ObjectStoragePort,
-  type PresignedUrlResponseOverrides,
   type StorageObjectSummary,
 } from 'src/domain/storage/application/ports/object-storage.port';
 import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
-import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
 import { StorageBucket } from 'src/domain/storage/domain/storage-bucket.entity';
 import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 
@@ -196,38 +194,6 @@ export class MinioObjectStorageProvider
       }
       throw error;
     }
-  }
-
-  async getPresignedUrl(
-    storageUrl: StorageUrl,
-    expiresIn = 60 * 60,
-    responseOverrides?: PresignedUrlResponseOverrides,
-  ): Promise<PresignedUrl> {
-    const bucketName = storageUrl.bucket || this.defaultBucket;
-    const respHeaders: Record<string, string> = {};
-    if (responseOverrides?.contentType) {
-      respHeaders['response-content-type'] = responseOverrides.contentType;
-    }
-    if (responseOverrides?.contentDisposition) {
-      respHeaders['response-content-disposition'] =
-        responseOverrides.contentDisposition;
-    }
-    const hasOverrides = Object.keys(respHeaders).length > 0;
-
-    const url = hasOverrides
-      ? await this.client.presignedGetObject(
-          bucketName,
-          storageUrl.objectName,
-          expiresIn,
-          respHeaders,
-        )
-      : await this.client.presignedGetObject(
-          bucketName,
-          storageUrl.objectName,
-          expiresIn,
-        );
-
-    return new PresignedUrl(url, expiresIn, storageUrl);
   }
 
   async listBuckets(): Promise<StorageBucket[]> {

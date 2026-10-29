@@ -1530,7 +1530,12 @@
             "in": "query",
             "description": "Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan",
             "schema": {
-              "$ref": "#/components/schemas/OrgLifecycleFilter"
+              "default": "all",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/OrgLifecycleFilter"
+                }
+              ]
             }
           },
           {
@@ -5385,7 +5390,7 @@
     },
     "/threads/{threadId}/generated-images/{imageId}": {
       "get": {
-        "operationId": "GeneratedImagesController_resolve",
+        "operationId": "GeneratedImagesController_download",
         "parameters": [
           {
             "name": "threadId",
@@ -5408,20 +5413,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Presigned URL for the generated image",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GeneratedImageUrlResponseDto"
-                }
-              }
-            }
+            "description": "Image streamed successfully"
           },
           "404": {
             "description": "Thread or image not found"
           }
         },
-        "summary": "Get presigned URL for a generated image",
+        "summary": "Download a generated image",
         "tags": ["threads"]
       }
     },
@@ -8265,7 +8263,8 @@
             "description": "Field to sort users by. Defaults to credits.",
             "schema": {
               "enum": ["credits", "requests", "lastActivity", "userName"],
-              "type": "string"
+              "type": "string",
+              "example": "credits"
             }
           },
           {
@@ -8275,7 +8274,8 @@
             "description": "Sort order (ascending or descending). Defaults to desc.",
             "schema": {
               "enum": ["asc", "desc"],
-              "type": "string"
+              "type": "string",
+              "example": "desc"
             }
           }
         ],
@@ -10119,7 +10119,8 @@
             "description": "Export format",
             "schema": {
               "enum": ["docx", "pdf", "xlsx", "csv"],
-              "type": "string"
+              "type": "string",
+              "example": "docx"
             }
           },
           {
@@ -17069,21 +17070,6 @@
           }
         },
         "required": ["workspaceId"]
-      },
-      "GeneratedImageUrlResponseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "Presigned URL to access the generated image"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "ISO 8601 timestamp when the URL expires",
-            "example": "2026-04-10T12:00:00.000Z"
-          }
-        },
-        "required": ["url", "expiresAt"]
       },
       "CreateKnowledgeBaseDto": {
         "type": "object",
