@@ -58,7 +58,7 @@ export default function NewChatPage({
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages, setPendingSkillId } = useChatContext();
+  const { setPendingSkillId } = useChatContext();
   const {
     hasSystemPrompt,
     isLoading: isSystemPromptLoading,
@@ -205,11 +205,11 @@ export default function NewChatPage({
 
     setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
 
-    setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
     void initiateChat({
       message,
+      images: imageFiles ?? [],
       modelId,
       sources,
       knowledgeBases: selectedKnowledgeBases,

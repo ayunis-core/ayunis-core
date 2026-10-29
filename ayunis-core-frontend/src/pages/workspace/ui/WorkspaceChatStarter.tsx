@@ -70,7 +70,7 @@ export function WorkspaceChatStarter({
   });
   const { models } = usePermittedModels();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const { setPendingImages, setPendingSkillId } = useChatContext();
+  const { setPendingSkillId } = useChatContext();
 
   const [modelId, setModelId] = useState(selectedModelId);
   const { isAnonymousByDefault } = useAnonymousModeDefault();
@@ -115,11 +115,11 @@ export function WorkspaceChatStarter({
       return;
     }
 
-    setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
     void initiateChat({
       message,
+      images: imageFiles ?? [],
       modelId,
       sources,
       knowledgeBases: selectedKnowledgeBases,
