@@ -14,6 +14,7 @@ import {
   type UserUsageResult,
   type ApiKeyUsageParams,
   ApiKeyUsageItem,
+  type OrganizationCreditTotal,
 } from 'src/domain/usage/application/ports/usage.repository';
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
@@ -308,6 +309,25 @@ export class LocalUsageRepository extends UsageRepository {
       .getRawOne<{ total: string }>();
 
     return parseFloat(result?.total ?? '0') || 0;
+  }
+
+  async getCreditTotalsByOrganization(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<OrganizationCreditTotal[]> {
+    const rows = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('usage.organizationId', 'organizationId')
+      .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'creditsConsumed')
+      .where('usage.createdAt >= :startDate', { startDate })
+      .andWhere('usage.createdAt < :endDate', { endDate })
+      .groupBy('usage.organizationId')
+      .getRawMany<{ organizationId: UUID; creditsConsumed: string }>();
+
+    return rows.map((row) => ({
+      organizationId: row.organizationId,
+      creditsConsumed: parseFloat(row.creditsConsumed) || 0,
+    }));
   }
 
   async getTotalMonthlyCreditUsageForUser(
