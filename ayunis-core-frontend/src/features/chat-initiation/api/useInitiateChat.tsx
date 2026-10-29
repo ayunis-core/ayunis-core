@@ -48,8 +48,11 @@ export type SourceUploadStatus =
   | { kind: 'processing' }
   | { kind: 'failed'; message: string };
 
+type PendingImageFile = { file: File; altText?: string };
+
 interface InitiateChatParams {
   message: string;
+  images: PendingImageFile[];
   modelId?: string;
   sources: PendingSource[];
   knowledgeBases: KnowledgeBaseSummary[];
@@ -101,7 +104,7 @@ export const useInitiateChat = (options?: {
 }) => {
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
-  const { setPendingMessage } = useChatContext();
+  const { setPendingMessage, setPendingImages } = useChatContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate();
@@ -232,6 +235,7 @@ export const useInitiateChat = (options?: {
 
   async function initiateChat({
     message,
+    images,
     modelId,
     sources,
     knowledgeBases,
@@ -273,7 +277,7 @@ export const useInitiateChat = (options?: {
       knowledgeBases.length === 0 &&
       mcpIntegrations.length === 0
     ) {
-      await finalizeAndNavigate(thread.id, message, workspaceId);
+      await finalizeAndNavigate(thread.id, message, images, workspaceId);
       return;
     }
 
@@ -320,7 +324,7 @@ export const useInitiateChat = (options?: {
         return;
       }
 
-      await finalizeAndNavigate(thread.id, message, workspaceId);
+      await finalizeAndNavigate(thread.id, message, images, workspaceId);
     } finally {
       setIsAttachingResources(false);
     }
@@ -329,6 +333,7 @@ export const useInitiateChat = (options?: {
   async function finalizeAndNavigate(
     threadId: string,
     message: string,
+    images: PendingImageFile[],
     workspaceId?: string,
   ): Promise<void> {
     if (cancelledRef.current) {
@@ -360,7 +365,11 @@ export const useInitiateChat = (options?: {
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
     }
+    // Images are handed off only now, with the text: the chat page sends
+    // whatever is pending on mount, so a cancelled or failed initiation must
+    // not leave images behind for the next chat that opens.
     setPendingMessage(message);
+    setPendingImages(images);
     options?.onSuccess?.();
 
     // Keep settling state until unmount — avoids snapping back to --idle transform.

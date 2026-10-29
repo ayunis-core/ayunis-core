@@ -3,7 +3,7 @@ import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
-import type { PendingImage } from '../api/useMessageSend';
+import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 
 interface UsePendingMessageParams {
   sendTextMessage: (params: {
@@ -38,7 +38,9 @@ export function usePendingMessage({
   } = useChatContext();
 
   useEffect(() => {
-    if (!pendingMessage || sentRef.current) return;
+    if ((!pendingMessage && pendingImages.length === 0) || sentRef.current) {
+      return;
+    }
     sentRef.current = true;
 
     const text = pendingMessage;
