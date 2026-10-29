@@ -1,0 +1,82 @@
+name: Report production release
+
+on:
+  repository_dispatch:
+    types: [production-deploy-completed]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.deployment.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: infra-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ayunis-core
+          repositories: ayunis-infra
+          permission-contents: read
+      - name: Validate production deployment result
+        id: deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INFRA_READ_TOKEN: ${{ steps.infra-token.outputs.token }}
+          REPORT_FILE: ${{ runner.temp }}/production-release.json
+        run: python3 scripts/production-release.py prepare
+
+  report:
+    needs: validate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: production-release-${{ needs.validate.outputs.version }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: infra-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ayunis-core
+          repositories: ayunis-infra
+          permission-contents: read
+      - name: Recheck deployment and completed reporting
+        id: deployment
+        env:
+          INFRA_READ_TOKEN: ${{ steps.infra-token.outputs.token }}
+          REPORT_FILE: ${{ runner.temp }}/production-release.json
+        run: |
+          python3 scripts/production-release.py prepare
+          echo "REPORT_FILE=$REPORT_FILE" >> "$GITHUB_ENV"
+          # Preserve the current reporting code when checkout switches to the deployed tag.
+          cp scripts/production-release.py "$RUNNER_TEMP/production-release.py"
+      - name: Check out the deployed release for Linear commit scanning
+        if: steps.deployment.outputs.report == 'true' && steps.deployment.outputs.status == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.deployment.outputs.version }}
+          fetch-depth: 0
+      - name: Sync deployed release with Linear
+        if: steps.deployment.outputs.report == 'true' && steps.deployment.outputs.status == 'success'
+        uses: linear/linear-release-action@v0
+        with:
+          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
+          name: ${{ steps.deployment.outputs.version }}
+          version: ${{ steps.deployment.outputs.version }}
+      - name: Report deployment result to Slack
+        if: ${{ !cancelled() && steps.deployment.outputs.report == 'true' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python3 "$RUNNER_TEMP/production-release.py" notify
+      - name: Record completed release reporting
+        if: steps.deployment.outputs.report == 'true' && steps.deployment.outputs.status == 'success'
+        run: python3 "$RUNNER_TEMP/production-release.py" complete

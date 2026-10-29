@@ -7,6 +7,8 @@ on:
       - 'scripts/deploy-core-images.test.sh'
       - '.github/workflows/deploy-*.yml'
       - '.github/workflows/release-please.yml'
+      - '.github/workflows/production-release.yml'
+      - 'scripts/production-release*'
   push:
     branches: [main]
     paths:
@@ -14,6 +16,8 @@ on:
       - 'scripts/deploy-core-images.test.sh'
       - '.github/workflows/deploy-*.yml'
       - '.github/workflows/release-please.yml'
+      - '.github/workflows/production-release.yml'
+      - 'scripts/production-release*'
 
 permissions:
   contents: read
@@ -25,3 +29,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Test deploy behavior
         run: bash scripts/deploy-core-images.test.sh
+
+      - name: Test production release reporting
+        run: python3 scripts/production-release.test.py
