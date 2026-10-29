@@ -13,7 +13,14 @@
     "skipLibCheck": true,
     "declaration": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
-  "include": ["src", "vitest.config.ts", "tsup.config.ts"]
+  "include": [
+    "src",
+    "vitest.config.ts",
+    "tsup.config.ts",
+    "orval.config.ts",
+    "scripts"
+  ]
 }

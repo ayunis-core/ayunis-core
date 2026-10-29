@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiHeader,
   ApiExcludeController,
   ApiOperation,
   ApiResponse,
@@ -62,6 +63,11 @@ export class ExternalSubscriptionsController {
   @Post('organizations/:orgId/state')
   @HttpCode(200)
   @ApiOperation({ operationId: 'applyExternalSubscription' })
+  @ApiHeader({
+    name: 'x-webhook-id',
+    required: false,
+    schema: { type: 'string', maxLength: 200 },
+  })
   @ApiResponse({ status: 200, type: ExternalSubscriptionResultDto })
   @ApiResponse({
     status: 409,
