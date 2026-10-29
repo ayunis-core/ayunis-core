@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     contracts: "src/contracts/index.ts",
     "event-types": "src/contracts/event-types.ts",
+    client: "src/client/index.ts",
   },
   format: ["esm", "cjs"],
   dts: {
