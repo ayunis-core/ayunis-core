@@ -99,6 +99,32 @@ sudo nginx -t && sudo systemctl reload nginx
 Without the access, nginx logs `stat() ... failed (13: Permission denied)` and
 serves its plain 502 instead of the page.
 
+### Request body size for chat image uploads
+
+A chat message with images is sent as one multipart request. Each image may be
+up to 20 MiB and a message up to 80 MiB in total (AYC-1377), enforced in
+`ayunis-core-backend/src/domain/runs/presenters/http/image-upload.constants.ts`.
+A reverse proxy in front of the app must accept request bodies of at least that
+size, or it rejects the upload with its own 413 before the request reaches the
+app.
+
+- **Caddy** (internal and production) has no request body limit by default, so
+  nothing to configure there.
+- **nginx** (staging and self-hosted) defaults `client_max_body_size` to 1 MB.
+  Set it to at least `100m` (100 MiB, headroom above the 80 MiB limit plus the
+  multipart overhead) in the `server` or `location` block that proxies to the
+  app, then check and reload:
+
+```nginx
+client_max_body_size 100m;
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Any other proxy or load balancer in front of the app needs the same minimum.
+
 ### Prerequisites
 
 - Node.js 24 or higher
