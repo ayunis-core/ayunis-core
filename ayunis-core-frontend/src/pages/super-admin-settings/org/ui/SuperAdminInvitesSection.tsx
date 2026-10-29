@@ -94,7 +94,7 @@ function InvitesHeader({
       </CardTitle>
       <CardAction>
         <Button
-          variant="outline"
+          variant="destructive"
           size="sm"
           onClick={onDeleteAll}
           disabled={disabled}
