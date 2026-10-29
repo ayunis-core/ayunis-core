@@ -1,22 +1,18 @@
-import type { UUID } from 'crypto';
+import type { AddonPayload as AddonWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
-import type { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 
-export interface AddonWebhookPayload {
-  orgId: UUID;
-  addonType: AddonType;
-  actorUserId: UUID | null;
-}
+export type { AddonPayload as AddonWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 
-export class AddonActivatedWebhookEvent extends WebhookEvent<AddonWebhookPayload> {
-  readonly eventType: WebhookEventType;
+export class AddonActivatedWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.ADDON_ACTIVATED
+> {
+  readonly eventType = WebhookEventType.ADDON_ACTIVATED;
   readonly data: AddonWebhookPayload;
   readonly timestamp: Date;
 
   constructor(payload: AddonWebhookPayload) {
     super();
-    this.eventType = WebhookEventType.ADDON_ACTIVATED;
     this.data = payload;
     this.timestamp = new Date();
   }

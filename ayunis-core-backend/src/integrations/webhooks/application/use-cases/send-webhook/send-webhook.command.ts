@@ -1,10 +1,10 @@
-import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import type { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 
 export class SendWebhookCommand {
-  event: WebhookEvent;
+  event: AnyWebhookEvent;
 
   constructor(
-    event: WebhookEvent,
+    event: AnyWebhookEvent,
     public readonly propagateFailure = false,
   ) {
     this.event = event;

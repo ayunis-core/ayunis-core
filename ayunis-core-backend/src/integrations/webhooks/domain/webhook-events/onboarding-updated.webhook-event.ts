@@ -1,21 +1,12 @@
-import type { UUID } from 'crypto';
-import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { OnboardingUpdatedPayload as OnboardingUpdatedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
-export interface OnboardingUpdatedWebhookPayload {
-  userId: UUID;
-  orgId: UUID;
-  userEmail: string;
-  userName: string;
-  userRole: UserRole;
-  previousCompletedStepIds: string[];
-  completedStepIds: string[];
-  previousHidden: boolean;
-  hidden: boolean;
-}
+export type { OnboardingUpdatedPayload as OnboardingUpdatedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 
-export class OnboardingUpdatedWebhookEvent extends WebhookEvent<OnboardingUpdatedWebhookPayload> {
+export class OnboardingUpdatedWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.ONBOARDING_UPDATED
+> {
   readonly eventType = WebhookEventType.ONBOARDING_UPDATED;
   readonly timestamp = new Date();
 

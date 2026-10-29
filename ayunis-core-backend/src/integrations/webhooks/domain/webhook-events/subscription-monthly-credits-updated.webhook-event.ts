@@ -2,7 +2,9 @@ import type { UsageBasedWebhookPayload } from 'src/integrations/webhooks/domain/
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 
-export class SubscriptionMonthlyCreditsUpdatedWebhookEvent extends WebhookEvent<UsageBasedWebhookPayload> {
+export class SubscriptionMonthlyCreditsUpdatedWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.SUBSCRIPTION_MONTHLY_CREDITS_UPDATED
+> {
   readonly eventType = WebhookEventType.SUBSCRIPTION_MONTHLY_CREDITS_UPDATED;
   readonly timestamp = new Date();
 

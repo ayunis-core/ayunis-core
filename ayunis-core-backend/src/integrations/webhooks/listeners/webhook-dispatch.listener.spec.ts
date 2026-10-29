@@ -3,7 +3,7 @@ import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { localBillingEventContext } from 'src/common/events/durable-event-context';
 import type { UUID } from 'crypto';
 import { EVENT_LISTENER_METADATA } from '@nestjs/event-emitter';
-import { WebhookDispatchListener } from './webhook-dispatch.listener';
+import { WebhookDispatchListener } from 'src/integrations/webhooks/listeners/webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
@@ -381,14 +381,19 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleOrgCreated', () => {
-    it('should dispatch OrgCreatedWebhookEvent with the bare Org payload', async () => {
+    it('should dispatch OrgCreatedWebhookEvent with the organization wire payload', async () => {
       const org = makeOrg();
       await listener.handleOrgCreated(new OrgCreatedEvent(ORG_ID, org));
 
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(WebhookEventType.ORG_CREATED);
-      expect(command.event.data).toBe(org);
+      expect(command.event.data).toMatchObject({
+        id: org.id,
+        name: org.name,
+        createdAt: org.createdAt.toISOString(),
+        updatedAt: org.updatedAt.toISOString(),
+      });
       // No userEmail / userName leaked from the previous payload shape.
       expect(command.event.data).not.toHaveProperty('userEmail');
       expect(command.event.data).not.toHaveProperty('userName');

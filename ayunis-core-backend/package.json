@@ -9,7 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build:deps": "pnpm --filter @ayunis/inference --filter @ayunis/provider-anthropic --filter @ayunis/provider-openai --filter @ayunis/provider-mistral --filter @ayunis/provider-gemini --filter @ayunis/provider-ollama --filter @ayunis/agent-runtime run build",
+    "build:deps": "pnpm --filter @ayunis-core/connect-sdk --filter @ayunis/inference --filter @ayunis/provider-anthropic --filter @ayunis/provider-openai --filter @ayunis/provider-mistral --filter @ayunis/provider-gemini --filter @ayunis/provider-ollama --filter @ayunis/agent-runtime run build",
     "prebuild": "pnpm run build:deps",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -48,7 +48,8 @@
     "seed:clean": "node dist/src/db/scripts/seed-minimal/seed-manager.js --clean",
     "seed:ts": "pnpm run seed:minimal:ts",
     "seed": "pnpm run seed:minimal",
-    "test:external-subscriptions-lifecycle": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-external-subscriptions-lifecycle.cjs --runInBand"
+    "test:external-subscriptions-lifecycle": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-external-subscriptions-lifecycle.cjs --runInBand",
+    "contracts:fixtures": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-fixtures.ts"
   },
   "dependencies": {
     "@appsignal/nodejs": "^3.8.1",
@@ -139,7 +140,8 @@
     "typeorm": "^0.3.25",
     "undici": "^7.29.0",
     "xlsx": "^0.18.5",
-    "zod": "^4.5.4"
+    "zod": "^4.5.4",
+    "@ayunis-core/connect-sdk": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

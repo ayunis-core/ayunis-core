@@ -1,0 +1,348 @@
+[
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "org.created",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "name": "Municipality",
+      "archived": false,
+      "hideIndividualUsage": false,
+      "sessionVersion": 0,
+      "users": [
+        {
+          "id": "00000000-0000-4000-8000-000000000004",
+          "email": "admin@municipality.example",
+          "emailVerified": true,
+          "passwordHash": "",
+          "role": "admin",
+          "systemRole": "customer",
+          "orgId": "00000000-0000-4000-8000-000000000004",
+          "name": "Municipal Admin",
+          "hasAcceptedMarketing": false,
+          "createdAt": "2026-10-29T12:00:00.000Z",
+          "updatedAt": "2026-10-29T12:00:00.000Z"
+        }
+      ],
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "user.created",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "email": "admin@municipality.example",
+      "emailVerified": true,
+      "passwordHash": "",
+      "role": "admin",
+      "systemRole": "customer",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "name": "Municipal Admin",
+      "hasAcceptedMarketing": false,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z",
+      "orgName": "Municipality"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "user.updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "email": "admin@municipality.example",
+      "emailVerified": true,
+      "passwordHash": "",
+      "role": "admin",
+      "systemRole": "customer",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "name": "Municipal Admin",
+      "hasAcceptedMarketing": false,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "user.invited",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "email": "admin@municipality.example",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "name": "admin@municipality.example"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "user.deleted",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "email": "admin@municipality.example",
+      "orgId": "00000000-0000-4000-8000-000000000004"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.created",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "type": "USAGE_BASED",
+      "monthlyCredits": 1000,
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": "2026-10-29T12:00:00.000Z",
+      "cancelledAt": null,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.cancelled",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "type": "USAGE_BASED",
+      "monthlyCredits": 1000,
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": "2026-10-29T12:00:00.000Z",
+      "cancelledAt": "2026-10-29T12:00:00.000Z",
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.uncancelled",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "type": "USAGE_BASED",
+      "monthlyCredits": 1000,
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": "2026-10-29T12:00:00.000Z",
+      "cancelledAt": null,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.expired",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "type": "USAGE_BASED",
+      "monthlyCredits": 1000,
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": "2026-10-29T12:00:00.000Z",
+      "cancelledAt": null,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.seats_updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": null,
+      "cancelledAt": null,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z",
+      "type": "SEAT_BASED",
+      "noOfSeats": 5,
+      "pricePerSeat": 25,
+      "renewalCycle": "monthly",
+      "renewalCycleAnchor": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.monthly_credits_updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "type": "USAGE_BASED",
+      "monthlyCredits": 1000,
+      "startsAt": "2026-10-29T12:00:00.000Z",
+      "endsAt": "2026-10-29T12:00:00.000Z",
+      "cancelledAt": null,
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "updatedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "subscription.billing_info_updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "companyName": "Municipality",
+      "street": "Town Hall",
+      "houseNumber": "1",
+      "postalCode": "10115",
+      "city": "Berlin",
+      "country": "DE",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "subscriptionId": "00000000-0000-4000-8000-000000000004"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "usage.monthly_credits_snapshot",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "organizationId": "00000000-0000-4000-8000-000000000004",
+      "periodStart": "2026-10-29T12:00:00.000Z",
+      "periodEnd": "2026-10-29T12:00:00.000Z",
+      "creditsConsumed": 10000
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "usage.collected",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "organizationId": "00000000-0000-4000-8000-000000000004",
+      "modelId": "00000000-0000-4000-8000-000000000004",
+      "modelName": "Municipal Model",
+      "provider": "openai",
+      "inputTokens": 10,
+      "outputTokens": 5,
+      "totalTokens": 15,
+      "requestId": "00000000-0000-4000-8000-000000000004",
+      "createdAt": "2026-10-29T12:00:00.000Z",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "chat.sent",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "threadId": "00000000-0000-4000-8000-000000000004",
+      "messageId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "skill.used",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "skillId": "00000000-0000-4000-8000-000000000004",
+      "skillName": "Minutes"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "skill.installed",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "identifier": "municipal-minutes"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "integration.used",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "integrationId": "00000000-0000-4000-8000-000000000004",
+      "integrationName": "Documents"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "integration.installed",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "identifier": "municipal-documents"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "academy.progress_updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "started": true,
+      "participationConfirmedAt": "2026-10-29T12:00:00.000Z"
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "onboarding.updated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "userId": "00000000-0000-4000-8000-000000000004",
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "userEmail": "admin@municipality.example",
+      "userName": "Municipal Admin",
+      "userRole": "admin",
+      "previousCompletedStepIds": [],
+      "completedStepIds": [
+        "welcome"
+      ],
+      "previousHidden": false,
+      "hidden": false
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "addon.activated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "addonType": "ayunis_core_academy",
+      "actorUserId": null
+    }
+  },
+  {
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "eventType": "addon.deactivated",
+    "timestamp": "2026-10-29T12:00:00.000Z",
+    "data": {
+      "orgId": "00000000-0000-4000-8000-000000000004",
+      "addonType": "ayunis_core_academy",
+      "actorUserId": null
+    }
+  }
+]

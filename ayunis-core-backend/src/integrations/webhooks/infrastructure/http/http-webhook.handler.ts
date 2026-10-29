@@ -1,8 +1,9 @@
+import { webhookEnvelopeSchema } from '@ayunis-core/connect-sdk/contracts';
 import { createHmac } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WebhookHandler } from 'src/integrations/webhooks/application/ports/webhook.handler';
-import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import {
   WebhookDeliveryFailedError,
   WebhookTimeoutError,
@@ -22,7 +23,7 @@ export class HttpWebhookHandler extends WebhookHandler {
     super();
   }
 
-  async sendWebhook(event: WebhookEvent): Promise<void> {
+  async sendWebhook(event: AnyWebhookEvent): Promise<void> {
     const webhookUrl = this.configService.get<string>(
       'app.orgEventsWebhookUrl',
     );
@@ -40,10 +41,16 @@ export class HttpWebhookHandler extends WebhookHandler {
       'Attempting webhook delivery',
     );
 
+    const body = this.prepareBody(event);
     const maxAttempts = this.maxAttemptsFor(event);
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await this.deliverWebhook(event, webhookUrl, this.timeoutFor(event));
+        await this.deliverWebhook(
+          event,
+          webhookUrl,
+          this.timeoutFor(event),
+          body,
+        );
         this.logger.debug(
           { eventType: event.eventType, eventId: event.id, attempt },
           'Webhook delivered successfully',
@@ -56,7 +63,7 @@ export class HttpWebhookHandler extends WebhookHandler {
   }
 
   private async handleDeliveryFailure(
-    event: WebhookEvent,
+    event: AnyWebhookEvent,
     error: unknown,
     attempt: number,
     maxAttempts: number,
@@ -90,7 +97,7 @@ export class HttpWebhookHandler extends WebhookHandler {
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
-  private maxAttemptsFor(event: WebhookEvent): number {
+  private maxAttemptsFor(event: AnyWebhookEvent): number {
     if (
       event.eventType === WebhookEventType.USAGE_COLLECTED ||
       event.eventType === WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT
@@ -100,17 +107,13 @@ export class HttpWebhookHandler extends WebhookHandler {
     return this.defaultMaxAttempts;
   }
 
-  private timeoutFor(event: WebhookEvent): number {
+  private timeoutFor(event: AnyWebhookEvent): number {
     return event.eventType === WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT
       ? this.reconciliationTimeoutMs
       : this.defaultTimeoutMs;
   }
 
-  private async deliverWebhook(
-    event: WebhookEvent,
-    webhookUrl: string,
-    timeoutMs: number,
-  ): Promise<void> {
+  private prepareBody(event: AnyWebhookEvent): string {
     const payload = {
       eventId: event.id,
       eventType: event.eventType,
@@ -121,7 +124,17 @@ export class HttpWebhookHandler extends WebhookHandler {
     // Serialize the body exactly once. The signature must be computed
     // over the same bytes that are sent on the wire.
     const body = JSON.stringify(payload);
+    webhookEnvelopeSchema.parse(JSON.parse(body));
 
+    return body;
+  }
+
+  private async deliverWebhook(
+    event: AnyWebhookEvent,
+    webhookUrl: string,
+    timeoutMs: number,
+    body: string,
+  ): Promise<void> {
     const headers = this.buildHeaders(event, body);
 
     const controller = new AbortController();
@@ -160,7 +173,7 @@ export class HttpWebhookHandler extends WebhookHandler {
   }
 
   private buildHeaders(
-    event: WebhookEvent,
+    event: AnyWebhookEvent,
     body: string,
   ): Record<string, string> {
     const headers: Record<string, string> = {
