@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.63.0](https://github.com/ayunis-core/ayunis-core/compare/v2.62.0...v2.63.0) (2026-10-29)
+
+
+### Features
+
+* **chat:** stream generated images through the app instead of presigned urls (AYC-1228) ([#2112](https://github.com/ayunis-core/ayunis-core/issues/2112)) ([59ac34c](https://github.com/ayunis-core/ayunis-core/commit/59ac34cdc1ac0547bba92f840d5292d57a9ce8c8))
+
+
+### Bug Fixes
+
+* **chat:** send image-only messages from a new chat (AYC-1496) ([#2116](https://github.com/ayunis-core/ayunis-core/issues/2116)) ([0b97bd0](https://github.com/ayunis-core/ayunis-core/commit/0b97bd0c8fa20306d4d85d45c5010b9b11f65bd6))
+* **releases:** report releases after production deployment (AYC-1494) ([#2117](https://github.com/ayunis-core/ayunis-core/issues/2117)) ([74316ee](https://github.com/ayunis-core/ayunis-core/commit/74316ee17c7fdac0f428bc6331fd5cad7fd8fead))
+* **usage:** reconcile Startdeliver credits (AYC-1203) ([#1868](https://github.com/ayunis-core/ayunis-core/issues/1868)) ([ca46dec](https://github.com/ayunis-core/ayunis-core/commit/ca46deccb3ceaceba31e6ec3e8423cd6c8c93554))
+
+
+### Documentation
+
+* **deploy:** note the 80 MiB image upload body size for reverse proxies (AYC-000) ([#2100](https://github.com/ayunis-core/ayunis-core/issues/2100)) ([df2376f](https://github.com/ayunis-core/ayunis-core/commit/df2376fcc045cc7a65167facd7d1722567773d63))
+
+
+### Miscellaneous
+
+* **bugbot:** reassess architecture when assumptions change (AYC-000) ([#2114](https://github.com/ayunis-core/ayunis-core/issues/2114)) ([6430e0d](https://github.com/ayunis-core/ayunis-core/commit/6430e0d8a51ff7e0a0fe7133bf8b6cb2df43c6f3))
+
 ## [2.62.0](https://github.com/ayunis-core/ayunis-core/compare/v2.61.1...v2.62.0) (2026-10-28)
 
 
