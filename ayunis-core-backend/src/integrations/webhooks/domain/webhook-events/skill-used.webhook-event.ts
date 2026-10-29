@@ -1,17 +1,12 @@
-import type { UUID } from 'crypto';
-import { WebhookEvent } from '../webhook-event.entity';
-import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
+import type { SkillUsedPayload as SkillUsedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
-export interface SkillUsedWebhookPayload {
-  userId: UUID;
-  orgId: UUID;
-  skillId: UUID;
-  skillName: string;
-  userEmail: string;
-  userName: string;
-}
+export type { SkillUsedPayload as SkillUsedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 
-export class SkillUsedWebhookEvent extends WebhookEvent<SkillUsedWebhookPayload> {
+export class SkillUsedWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.SKILL_USED
+> {
   readonly eventType = WebhookEventType.SKILL_USED;
   readonly timestamp = new Date();
 
