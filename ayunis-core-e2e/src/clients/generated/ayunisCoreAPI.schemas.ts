@@ -4434,6 +4434,11 @@ export interface UpdateApiKeyDto {
      * @nullable
      */
   description?: string | null;
+  /**
+     * New expiry date (ISO 8601, must be in the future). Omit to keep it, send null to let the key never expire.
+     * @nullable
+     */
+  expiresAt?: string | null;
 }
 
 export interface ApiKeyResponseDto {
