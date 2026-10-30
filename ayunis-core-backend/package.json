@@ -49,7 +49,9 @@
     "seed:ts": "pnpm run seed:minimal:ts",
     "seed": "pnpm run seed:minimal",
     "test:external-subscriptions-lifecycle": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-external-subscriptions-lifecycle.cjs --runInBand",
-    "contracts:fixtures": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-fixtures.ts"
+    "contracts:fixtures": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-fixtures.ts",
+    "contracts:openapi": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-openapi.ts",
+    "contracts:test-openapi": "ts-node -r tsconfig-paths/register scripts/core-connect-openapi.test.ts"
   },
   "dependencies": {
     "@appsignal/nodejs": "^3.8.1",

@@ -1,21 +1,23 @@
 {
   "name": "@ayunis-core/connect-sdk",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Core webhook contracts and internal API client for Ayunis Connect",
   "type": "module",
   "engines": {
-    "node": ">=20.12"
+    "node": ">=24"
   },
-  "main": "./dist/contracts.cjs",
-  "module": "./dist/contracts.js",
-  "types": "./dist/contracts.d.ts",
   "exports": {
     "./contracts": {
       "types": "./dist/contracts.d.ts",
       "import": "./dist/contracts.js",
       "require": "./dist/contracts.cjs"
     },
-    "./fixtures/core-webhooks.json": "./fixtures/core-webhooks.json"
+    "./fixtures/core-webhooks.json": "./fixtures/core-webhooks.json",
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs"
+    }
   },
   "files": [
     "dist",
@@ -30,12 +32,15 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "deps:check": "madge --circular --extensions ts src"
+    "deps:check": "madge --circular --extensions ts src",
+    "generate": "orval --config orval.config.ts",
+    "check:generated": "pnpm run generate && git diff --exit-code -- src/client/generated.ts",
+    "test:package": "node --experimental-strip-types scripts/check-package.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.2",
+    "@types/semver": "7.8.0",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.5.5",
@@ -44,7 +49,9 @@
     "globals": "^16.0.0",
     "knip": "^6.24.0",
     "madge": "^8.0.0",
+    "orval": "8.28.1",
     "prettier": "^3.9.4",
+    "semver": "7.8.5",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
@@ -62,5 +69,8 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "sdkCompatibility": {
+    "baselineVersion": "0.2.0-preview.4.1"
   }
 }

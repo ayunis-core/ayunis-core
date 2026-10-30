@@ -7,6 +7,9 @@ on:
       - 'ayunis-core-backend/scripts/generate-core-connect-fixtures.ts'
       - '.github/workflows/core-connect-contracts.yml'
       - 'pnpm-lock.yaml'
+      - 'contracts/**'
+      - 'ayunis-core-backend/scripts/*core-connect*'
+      - 'ayunis-core-backend/src/integrations/external-subscriptions/presenters/http/**'
   push:
     branches: [main]
     paths:
@@ -14,6 +17,9 @@ on:
       - 'ayunis-core-backend/src/integrations/webhooks/**'
 permissions:
   contents: read
+  packages: read
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   compatibility:
     runs-on: ubuntu-latest
@@ -21,9 +27,17 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm --filter @ayunis-core/connect-sdk build
+      - run: pnpm --filter @ayunis-core/connect-sdk check:generated
       - run: pnpm --filter @ayunis-core/connect-sdk typecheck
       - run: pnpm --filter @ayunis-core/connect-sdk lint
       - run: pnpm --filter @ayunis-core/connect-sdk test
       - run: pnpm --filter core-backend contracts:fixtures
       - run: git diff --exit-code -- packages/core-connect-sdk/fixtures/
       - run: pnpm --filter core-backend test --runInBand --testPathPatterns=integrations/webhooks
+      - run: pnpm --filter core-backend contracts:test-openapi
+      - run: pnpm --filter core-backend contracts:openapi
+      - run: git diff --exit-code -- contracts/core-connect.openapi.json
+      - name: Pack and verify supported SDK consumers
+        run: |
+          pnpm --filter @ayunis-core/connect-sdk pack --pack-destination "$RUNNER_TEMP/connect-sdk"
+          pnpm --filter @ayunis-core/connect-sdk test:package "$RUNNER_TEMP/connect-sdk"

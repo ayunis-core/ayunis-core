@@ -884,6 +884,9 @@ importers:
       '@types/node':
         specifier: ^24.12.2
         version: 24.19.2
+      '@types/semver':
+        specifier: 7.8.0
+        version: 7.8.0
       eslint:
         specifier: ^10.6.0
         version: 10.9.1(jiti@2.7.0)
@@ -908,9 +911,15 @@ importers:
       madge:
         specifier: ^8.0.0
         version: 8.0.0(typescript@6.0.3)
+      orval:
+        specifier: 8.28.1
+        version: 8.28.1(prettier@3.9.6)(typescript@6.0.3)
       prettier:
         specifier: ^3.9.4
         version: 3.9.6
+      semver:
+        specifier: 7.8.5
+        version: 7.8.5
       tsup:
         specifier: ^9.0.0
         version: 9.0.0(@swc/core@1.16.1)(jiti@2.7.0)(postcss@8.5.31)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.1)
@@ -7104,6 +7113,9 @@ packages:
 
   '@types/sanitize-html@2.16.1':
     resolution: {integrity: sha512-n9wjs8bCOTyN/ynwD8s/nTcTreIHB1vf31vhLMGqUPNHaweKC4/fAl4Dj+hUlCTKYgm4P3k83fmiFfzkZ6sgMA==}
+
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/send@1.2.1':
     resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
@@ -20559,6 +20571,8 @@ snapshots:
   '@types/sanitize-html@2.16.1':
     dependencies:
       htmlparser2: 10.1.0
+
+  '@types/semver@7.8.0': {}
 
   '@types/send@1.2.1':
     dependencies:

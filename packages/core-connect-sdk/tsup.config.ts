@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: { contracts: "src/contracts/index.ts" },
+  entry: { contracts: "src/contracts/index.ts", client: "src/client/index.ts" },
   format: ["esm", "cjs"],
   dts: {
     // tsup's DTS worker injects baseUrl, which TypeScript 6 rejects
