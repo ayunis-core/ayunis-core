@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.64.0](https://github.com/ayunis-core/ayunis-core/compare/v2.63.0...v2.64.0) (2026-10-30)
+
+
+### Features
+
+* **models:** choose auto and max modes in the chat composer (AYC-441) ([#2098](https://github.com/ayunis-core/ayunis-core/issues/2098)) ([649c788](https://github.com/ayunis-core/ayunis-core/commit/649c7881cf28b8bc9c2c02fa6d9b9b6f06e91213))
+* **webhooks:** emit academy progress for startdeliver kpis (AYC-919) ([#1785](https://github.com/ayunis-core/ayunis-core/issues/1785)) ([e192650](https://github.com/ayunis-core/ayunis-core/commit/e19265029c3c3c1ef6a6830978d3d5dff37d8d93))
+
+
+### Bug Fixes
+
+* **storage:** pin object operations to internal minio endpoint (AYC-885) ([#1661](https://github.com/ayunis-core/ayunis-core/issues/1661)) ([76df20b](https://github.com/ayunis-core/ayunis-core/commit/76df20bf3b0fc7cdb57ffe69f4e61e40ec55a91a))
+* **super-admin:** make delete all invites button destructive red (AYC-000) ([#2120](https://github.com/ayunis-core/ayunis-core/issues/2120)) ([0389ea1](https://github.com/ayunis-core/ayunis-core/commit/0389ea1fe9b313708bf93854632060cd0c04aac1))
+
+
+### Miscellaneous
+
+* **deps:** bump @types/mjml from 5.0.0 to 5.4.1 in the typescript group across 1 directory ([#2105](https://github.com/ayunis-core/ayunis-core/issues/2105)) ([836d93f](https://github.com/ayunis-core/ayunis-core/commit/836d93fa04152f5ee2a37342f5d1156e5b7773d0))
+* **deps:** bump vite from 8.3.4 to 8.3.5 in the vite group across 1 directory ([#2106](https://github.com/ayunis-core/ayunis-core/issues/2106)) ([e8f4944](https://github.com/ayunis-core/ayunis-core/commit/e8f4944c5c9103fbf2a7e3c2eed5e0255d81f962))
+
 ## [2.63.0](https://github.com/ayunis-core/ayunis-core/compare/v2.62.0...v2.63.0) (2026-10-29)
 
 
