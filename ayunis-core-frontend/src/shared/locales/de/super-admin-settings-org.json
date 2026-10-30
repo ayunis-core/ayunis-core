@@ -571,6 +571,24 @@
       "active": "Aktiv",
       "archived": "Archiviert"
     },
+    "modes": {
+      "auto": {
+        "title": "Auto Modus",
+        "description": "Für den Alltag. Ayunis Core nimmt das erste Modell der Liste, das die Organisation freigegeben hat und das nicht gestört ist. Gilt für alle Organisationen."
+      },
+      "max": {
+        "title": "Max Modus",
+        "description": "Für anspruchsvolle Aufgaben. Ayunis Core nimmt das erste Modell der Liste, das die Organisation freigegeben hat und das nicht gestört ist. Gilt für alle Organisationen."
+      },
+      "add": "Modell hinzufügen",
+      "empty": "Noch keine Modelle in der Liste.",
+      "dragToReorder": "Zum Sortieren ziehen",
+      "remove": "Aus der Liste entfernen",
+      "toggle": "{{name}} im Modus verwenden",
+      "tierNotAllowed": "Nur Modelle der Stufe „Leistungsstark“ können zum Max Modus hinzugefügt werden.",
+      "modelNotFound": "Dieses Modell existiert nicht mehr im Katalog.",
+      "saveError": "Die Liste konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
     "emptyArchived": "Keine archivierten Modelle",
     "emptyArchivedDescription": "Archivierte Modelle werden hier angezeigt.",
     "catalog": {

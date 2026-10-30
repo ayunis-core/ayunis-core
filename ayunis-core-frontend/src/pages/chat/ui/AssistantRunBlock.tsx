@@ -3,6 +3,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
+import ModelAttribution, { type AnsweringModel } from './ModelAttribution';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -10,6 +11,8 @@ interface AssistantRunBlockProps {
   isGroupedWithPrevious: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
+  /** Set for chats started via a mode. */
+  answeringModel?: AnsweringModel;
 }
 
 export default function AssistantRunBlock({
@@ -17,6 +20,7 @@ export default function AssistantRunBlock({
   isGroupedWithPrevious,
   threadId,
   onOpenArtifact,
+  answeringModel,
 }: Readonly<AssistantRunBlockProps>) {
   const contentRef = useRef<HTMLDivElement>(null);
   const hasText = unit.blocks.some((block) => block.kind === 'text');
@@ -41,6 +45,7 @@ export default function AssistantRunBlock({
           />
         </div>
         {hasText && <CopyAssistantTextButton contentRef={contentRef} />}
+        {answeringModel && <ModelAttribution model={answeringModel} />}
       </div>
     </div>
   );

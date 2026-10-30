@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getTeamsControllerListTeamsQueryKey,
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
+  getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
 } from '@/shared/api';
@@ -28,7 +28,7 @@ describe(invalidateTeamModelAccessQueries.name, () => {
 
     await invalidateTeamModelAccessQueries(queryClient, teamId);
 
-    expect(invalidateQueries).toHaveBeenCalledTimes(5);
+    expect(invalidateQueries).toHaveBeenCalledTimes(6);
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey:
         getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(teamId),
@@ -43,7 +43,7 @@ describe(invalidateTeamModelAccessQueries.name, () => {
       queryKey: getModelsControllerGetPermittedLanguageModelsQueryKey(),
     });
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+      queryKey: getModelModeDefaultsControllerGetDefaultSelectionQueryKey(),
     });
   });
 });

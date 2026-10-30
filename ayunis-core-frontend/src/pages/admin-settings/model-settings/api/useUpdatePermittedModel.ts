@@ -7,6 +7,7 @@ import {
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   type ModelWithConfigResponseDto,
 } from '@/shared/api';
+import { modelModeQueryKeys } from './modelModeQueryKeys';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -65,6 +66,7 @@ export function useUpdatePermittedModel() {
           ...availabilityQueryKeys,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
+          ...modelModeQueryKeys(),
         ];
         await Promise.all(
           queryKeys.map((qk) =>

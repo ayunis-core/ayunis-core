@@ -40,6 +40,29 @@ export async function createLanguageCatalogModel(
   );
 }
 
+/** For a model with recorded usage, which can no longer be deleted. */
+export async function archiveLanguageCatalogModel(
+  api: APIRequestContext,
+  model: LanguageModelResponseDto,
+): Promise<void> {
+  await generatedApi.superAdminLanguageCatalogModelsControllerUpdateLanguageModel(
+    model.id,
+    {
+      name: model.name,
+      displayName: model.displayName,
+      provider: model.provider,
+      contextWindowSize: model.contextWindowSize,
+      canStream: model.canStream,
+      canUseTools: model.canUseTools,
+      isReasoning: model.isReasoning,
+      canVision: model.canVision,
+      hasProviderFault: false,
+      isArchived: true,
+    },
+    { api },
+  );
+}
+
 export async function deleteCatalogModel(
   api: APIRequestContext,
   modelId: string,

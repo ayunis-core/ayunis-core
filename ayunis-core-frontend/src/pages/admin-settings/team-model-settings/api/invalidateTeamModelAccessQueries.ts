@@ -2,10 +2,11 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getTeamsControllerListTeamsQueryKey,
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
+  getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
 } from '@/shared/api';
+import { getModelModeDefaultQueryKey } from '@/features/model-mode-defaults';
 
 export async function invalidateTeamModelAccessQueries(
   queryClient: QueryClient,
@@ -18,7 +19,9 @@ export async function invalidateTeamModelAccessQueries(
       teamId,
     ),
     getModelsControllerGetPermittedLanguageModelsQueryKey(),
-    getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+    getModelModeDefaultsControllerGetDefaultSelectionQueryKey(),
+    // Setting the team model default clears the team's mode default.
+    getModelModeDefaultQueryKey({ level: 'team', teamId }),
   ];
 
   await Promise.all(

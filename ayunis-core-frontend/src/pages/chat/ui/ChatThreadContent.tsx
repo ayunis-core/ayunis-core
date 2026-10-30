@@ -4,6 +4,7 @@ import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
 import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
 import type { RenderUnit } from '@/pages/chat/ui/agent-run-timeline';
 import type { Message } from '@/pages/chat/model/openapi';
+import type { AnsweringModel } from '@/pages/chat/ui/ModelAttribution';
 
 interface ChatThreadContentProps {
   readonly renderUnits: readonly RenderUnit[];
@@ -12,6 +13,7 @@ interface ChatThreadContentProps {
   readonly contextHint: ReactNode;
   readonly showLoadingPlaceholder: boolean;
   readonly onOpenArtifact: (artifactId: string) => void;
+  readonly answeringModel?: AnsweringModel;
 }
 
 export function ChatThreadContent({
@@ -21,6 +23,7 @@ export function ChatThreadContent({
   contextHint,
   showLoadingPlaceholder,
   onOpenArtifact,
+  answeringModel,
 }: ChatThreadContentProps) {
   const showPendingUserBubble = pendingSubmission !== null;
   const firstUserUnitIndex = renderUnits.findIndex(
@@ -47,6 +50,7 @@ export function ChatThreadContent({
             isGroupedWithPrevious={isGroupedWithPrevious}
             threadId={threadId}
             onOpenArtifact={onOpenArtifact}
+            answeringModel={answeringModel}
           />
         );
       })}
