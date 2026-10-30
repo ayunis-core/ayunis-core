@@ -288,6 +288,17 @@ jobs:
           timeout 60 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done' \
             || { echo '--- backend.log ---'; cat backend.log; exit 1; }
 
+      - name: Start backend with externally managed subscriptions
+        working-directory: ayunis-core-backend
+        env:
+          PORT: 3002
+          APP_ENVIRONMENT: cloud
+          FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: 'true'
+        run: |
+          nohup node dist/src/main > backend-external-subscriptions.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3002/api/health; do sleep 2; done' \
+            || { cat backend-external-subscriptions.log; exit 1; }
+
       - name: Cache Playwright browsers
         uses: actions/cache@v6
         with:
@@ -306,6 +317,7 @@ jobs:
       - name: Run e2e tests
         run: pnpm --filter ayunis-core-e2e test
         env:
+          E2E_EXTERNAL_SUBSCRIPTIONS_BASE_URL: http://localhost:3002
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
@@ -404,6 +416,7 @@ jobs:
           name: backend-log
           path: |
             ayunis-core-backend/backend.log
+            ayunis-core-backend/backend-external-subscriptions.log
           retention-days: 7
 
   publish-pr-media:

@@ -15,6 +15,7 @@ import SubscriptionStartDateUpdateDialog from './SubscriptionStartDateUpdateDial
 interface SubscriptionCancellationSectionProps {
   subscription: SubscriptionResponseDto;
   orgId: string;
+  readOnly?: boolean;
 }
 
 function formatDate(value: string): string {
@@ -24,6 +25,7 @@ function formatDate(value: string): string {
 export default function SubscriptionCancellationSection({
   subscription,
   orgId,
+  readOnly = false,
 }: Readonly<SubscriptionCancellationSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { cancelSubscription } = useSuperAdminSubscriptionCancel(orgId);
@@ -42,6 +44,7 @@ export default function SubscriptionCancellationSection({
 
   return (
     <SharedSubscriptionCancellationSection
+      readOnly={readOnly}
       subscription={subscription}
       actions={{ cancelSubscription, uncancelSubscription }}
       t={t}

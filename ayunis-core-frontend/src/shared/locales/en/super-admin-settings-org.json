@@ -89,7 +89,11 @@
     "changeErrorAccessOverlap": "The new subscription would overlap another subscription's access period. Adjust its start date or end the other subscription first.",
     "changeErrorUnexpected": "An unexpected error occurred",
     "createErrorEndDate": "End date must be after the start date (or after now if no start date is set).",
-    "endsAt": "Access ends: {{date}}"
+    "endsAt": "Access ends: {{date}}",
+    "managedExternally": "Managed by an external billing system. Contact Sales to change the subscription or Academy add-on.",
+    "managementUnavailable": "Could not load billing management settings. Editing is temporarily disabled.",
+    "managementLoading": "Loading billing management settings…",
+    "retryManagement": "Retry"
   },
   "subscriptionHistory": {
     "title": "Subscription history",

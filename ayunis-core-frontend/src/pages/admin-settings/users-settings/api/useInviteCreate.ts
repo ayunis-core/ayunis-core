@@ -49,6 +49,9 @@ export function useInviteCreate(
             case 'RATE_LIMIT_EXCEEDED':
               showError(t('inviteCreate.rateLimitExceeded'));
               break;
+            case 'INSUFFICIENT_SEATS':
+              showError(t('inviteCreate.insufficientSeats'));
+              break;
             case 'MULTIPLE_ACTIVE_SUBSCRIPTIONS':
               showError(t('inviteCreate.multipleActiveSubscriptions'));
               break;

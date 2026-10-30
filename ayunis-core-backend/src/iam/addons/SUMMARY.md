@@ -38,3 +38,5 @@ Standard hexagonal: `domain/` (entity, `AddonType` enum, `AddonStatus`),
 `application/` (repository port, use-cases, events, errors), `infrastructure/`
 (Postgres record + mapper + repository), `presenters/http/` (super-admin
 controller + DTO).
+
+With cloud Fynn management enabled, the super-admin HTTP guard rejects activation/deactivation of Academy. Listing remains available; other add-on types and internal sync use cases are unaffected.

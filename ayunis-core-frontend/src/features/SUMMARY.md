@@ -2,6 +2,8 @@
 
 Self-contained business logic modules shared across multiple pages and widgets.
 
+The `feature-toggles/` feature exposes `useFeatureToggles`, including `externalSubscriptionsEnabled` for billing controls. It exposes loading, error, and retry state. Controls stay blocked until configuration resolves, while a distinct loading or retry notice avoids claiming Fynn ownership during a configuration failure.
+
 Feature modules and standalone hooks provide cross-cutting concerns: theme management (dark/light mode persistence), language switching (German/English via i18next), model/provider configuration with provider icon utilities, usage analytics data hooks for statistics, charts, and distribution metrics, skill action hooks for toggling skill active/pinned state, marketplace configuration for exposing marketplace availability and destination URLs, fair use limit editing for shared limit validation and edit state, permission gating for hiding UI controls the current user lacks access to, super-admin user mutations, and active thread-run cancellation.
 
 The `super-admin-user-actions/` feature centralizes password-reset and deletion mutations, including cache invalidation and error handling, for super-admin user tables.

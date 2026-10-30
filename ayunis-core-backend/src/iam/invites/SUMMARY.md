@@ -14,3 +14,5 @@ Single invitations accept optional organization-scoped team IDs, validated befor
 **Invite deletion and resend (AYC-1245).** Deleting or resending a single invite is admin-only and scoped to the caller's organization; an invite of another organization is reported as not found so its existence is not leaked.
 
 Super Admins can manually delete selected-organization pending invites individually or in bulk. Single deletion uses one conditional database delete matching invite ID, organization, and unaccepted status; missing, foreign, and accepted invites return 404. Both deletion endpoints require the super-admin system role.
+
+**Fynn management (AYC-1365).** In cloud with `FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED=true`, single and bulk invitations reject insufficient paid-seat capacity instead of expanding seats. Existing organization reservation locks cover the check and creation. Expired pending invites continue to reserve seats; resend replaces them inside the same allocation lock and transaction so it cannot expose a temporary vacancy. Toggle-off, trial, usage-based and self-hosted behavior stay unchanged.
