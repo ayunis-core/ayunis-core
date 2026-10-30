@@ -15,6 +15,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **SuperAdminEmbeddingCatalogModelsController** (`presenters/http/super-admin-embedding-catalog-models.controller.ts`): Super admin endpoints for creating and updating embedding models in the catalog.
 - **SuperAdminImageGenerationCatalogModelsController** (`presenters/http/super-admin-image-generation-catalog-models.controller.ts`): Super admin endpoints for creating and updating image-generation models in the catalog.
 - **SuperAdminModelModesController** (`presenters/http/super-admin-model-modes.controller.ts`): Super admin endpoints to read (`GET /super-admin/model-modes/:mode`) and replace (`PUT`) the ordered model list of a model mode (`auto`, `max`). A replace submits the complete ordered list, so adding, removing, reordering and disabling an entry are all one request (AYC-441).
+- **ModelModesController** (`presenters/http/model-modes.controller.ts`): `GET /models/modes` returns, per mode, the permit a new chat would bind for the current user with anonymous mode off and on.
 - **TeamPermittedModelsController** (`presenters/http/team-permitted-models.controller.ts`): Admin endpoints for managing team-scoped permitted models — listing (language via `GET /`, image-generation via `GET /image-generation`), creating, deleting, and setting team defaults. Language and image-generation models are team-restrictable; embedding models are intentionally excluded so document processing stays available to every team. All operations go through use-case layer with team ownership and org-scoping validation.
 
 ## Application Services
@@ -38,6 +39,8 @@ The models module is the central registry for AI model configuration. The abstra
 
 `ModelModeEntry` (`domain/model-mode-entry.entity.ts`) places a catalog language model at a position in a mode's ordered preference list, with an `enabled` switch that skips the entry without losing its position. Lists are global and maintained by super admins; per-organization ordering would need an org reference and its own migration, so no placeholder column is kept for it. Entries cascade-delete with their catalog model. Max mode accepts only `high`-tier models (`ModelTierNotAllowedForModeError`).
 
+`resolveModelMode` (`application/helpers/resolve-model-mode.helper.ts`) walks a mode's list and returns the first enabled entry whose catalog model is not archived, is still `high` tier (Max only, since a model can be re-tiered after it was added), is permitted in the caller's effective org/team set, and is not `hasProviderFault`. Anonymous-only grants qualify only when anonymous mode is on. If no healthy entry qualifies, Auto falls back to the first qualifying faulted entry; Max resolves to nothing. `ResolveModelModesUseCase` loads the caller's effective grants once and returns, per mode, the resolution with anonymous mode off and on. `ModelModesController` (`GET /models/modes`) exposes those resolutions as permit IDs so clients can preview a mode and hide one that resolves to nothing.
+
 ## Use Cases
 
 - **CreateLanguageModelUseCase** (`application/use-cases/create-language-model`): Creates a new language model in the catalog.
@@ -59,6 +62,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
 - **GetModelModeEntriesUseCase** (`application/use-cases/get-model-mode-entries`): Returns a mode's entries ordered by preference.
 - **ReplaceModelModeEntriesUseCase** (`application/use-cases/replace-model-mode-entries`): Validates every submitted model against the catalog (exists, is a language model, tier allowed for the mode) and replaces the mode's list in one transaction.
+- **ResolveModelModesUseCase** (`application/use-cases/resolve-model-modes`): Resolves every mode for the current user against their effective org/team grants (one grants read), with anonymous mode off and on.
 - **GetAllModelsUseCase** (`application/use-cases/get-all-models`): Retrieves all models from the catalog.
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.

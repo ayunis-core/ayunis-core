@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 
 /**
  * Thread fields that both the list and the single-thread response carry.
@@ -23,6 +24,15 @@ export class ThreadMetadataResponseDto {
     example: false,
   })
   isAnonymous: boolean;
+
+  @ApiProperty({
+    enum: ModelMode,
+    enumName: 'ModelMode',
+    nullable: true,
+    description:
+      'Mode the chat was started with; null when an individual model was chosen',
+  })
+  mode: ModelMode | null;
 
   @ApiProperty({
     type: String,

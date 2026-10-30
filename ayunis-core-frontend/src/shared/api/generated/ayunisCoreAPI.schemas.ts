@@ -1702,6 +1702,28 @@ export interface ReplaceModelModeEntriesDto {
   entries: ModelModeEntryDto[];
 }
 
+export type ModelMode = typeof ModelMode[keyof typeof ModelMode];
+
+
+export const ModelMode = {
+  auto: 'auto',
+  max: 'max',
+} as const;
+
+export interface ModelModeResolutionResponseDto {
+  mode: ModelMode;
+  /**
+     * Permitted model a new chat in this mode binds with anonymous mode off; null when the mode is unusable
+     * @nullable
+     */
+  permittedModelId: string | null;
+  /**
+     * Same, with anonymous mode on
+     * @nullable
+     */
+  anonymousPermittedModelId: string | null;
+}
+
 /**
  * The provider of the model
  */
@@ -2132,6 +2154,8 @@ export interface GrantCrawlDomainRequestDto {
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
+  /** Start the chat in a mode instead of with a specific model; mutually exclusive with modelId */
+  mode?: ModelMode;
   /** Enable anonymous mode for this thread */
   isAnonymous?: boolean;
   /** File the new thread under this workspace */
@@ -2804,6 +2828,8 @@ export interface GetThreadResponseDto {
   updatedAt: string;
   /** Whether the thread is in anonymous mode (PII redaction enabled) */
   isAnonymous: boolean;
+  /** Mode the chat was started with; null when an individual model was chosen */
+  mode: ModelMode | null;
   /**
      * The workspace this thread is filed under, if any
      * @nullable
@@ -2838,6 +2864,8 @@ export interface GetThreadsResponseDtoItem {
   updatedAt: string;
   /** Whether the thread is in anonymous mode (PII redaction enabled) */
   isAnonymous: boolean;
+  /** Mode the chat was started with; null when an individual model was chosen */
+  mode: ModelMode | null;
   /**
      * The workspace this thread is filed under, if any
      * @nullable

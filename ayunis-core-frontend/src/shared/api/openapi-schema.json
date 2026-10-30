@@ -3774,6 +3774,29 @@
         "tags": ["Super Admin Models"]
       }
     },
+    "/models/modes": {
+      "get": {
+        "operationId": "ModelModesController_getModelModes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelModeResolutionResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Which model each mode currently resolves to for the current user",
+        "tags": ["models"]
+      }
+    },
     "/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
@@ -15502,6 +15525,35 @@
         },
         "required": ["entries"]
       },
+      "ModelMode": {
+        "type": "string",
+        "enum": ["auto", "max"]
+      },
+      "ModelModeResolutionResponseDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          },
+          "permittedModelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Permitted model a new chat in this mode binds with anonymous mode off; null when the mode is unusable"
+          },
+          "anonymousPermittedModelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Same, with anonymous mode on"
+          }
+        },
+        "required": ["mode", "permittedModelId", "anonymousPermittedModelId"]
+      },
       "CreateLanguageModelRequestDto": {
         "type": "object",
         "properties": {
@@ -16161,6 +16213,14 @@
             "description": "The id of the model",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "mode": {
+            "description": "Start the chat in a mode instead of with a specific model; mutually exclusive with modelId",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
           },
           "isAnonymous": {
             "type": "boolean",
@@ -16981,6 +17041,15 @@
             "description": "Whether the thread is in anonymous mode (PII redaction enabled)",
             "example": false
           },
+          "mode": {
+            "nullable": true,
+            "description": "Mode the chat was started with; null when an individual model was chosen",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          },
           "workspaceId": {
             "type": "string",
             "description": "The workspace this thread is filed under, if any",
@@ -17065,6 +17134,7 @@
           "createdAt",
           "updatedAt",
           "isAnonymous",
+          "mode",
           "workspaceId",
           "id",
           "userId",
@@ -17095,6 +17165,15 @@
             "description": "Whether the thread is in anonymous mode (PII redaction enabled)",
             "example": false
           },
+          "mode": {
+            "nullable": true,
+            "description": "Mode the chat was started with; null when an individual model was chosen",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
+          },
           "workspaceId": {
             "type": "string",
             "description": "The workspace this thread is filed under, if any",
@@ -17116,6 +17195,7 @@
           "createdAt",
           "updatedAt",
           "isAnonymous",
+          "mode",
           "workspaceId",
           "id"
         ]

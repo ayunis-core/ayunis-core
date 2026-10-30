@@ -1,3 +1,5 @@
+import { ModelModesController } from './presenters/http/model-modes.controller';
+import { ResolveModelModesUseCase } from './application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
 import { SuperAdminModelModesController } from './presenters/http/super-admin-model-modes.controller';
 import { LocalModelModeEntriesRepositoryModule } from './infrastructure/persistence/local-model-mode-entries/local-model-mode-entries-repository.module';
 import { GetModelModeEntriesUseCase } from './application/use-cases/get-model-mode-entries/get-model-mode-entries.use-case';
@@ -119,6 +121,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     SuperAdminPermittedModelsController,
     SuperAdminCatalogModelsController,
     SuperAdminModelModesController,
+    ModelModesController,
     SuperAdminLanguageCatalogModelsController,
     SuperAdminEmbeddingCatalogModelsController,
     SuperAdminImageGenerationCatalogModelsController,
@@ -268,10 +271,12 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     GetModelByIdUseCase,
     GetModelModeEntriesUseCase,
     ReplaceModelModeEntriesUseCase,
+    ResolveModelModesUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
   ],
   exports: [
+    ResolveModelModesUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,

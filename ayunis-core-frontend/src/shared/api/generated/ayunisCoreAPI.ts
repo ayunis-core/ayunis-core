@@ -147,6 +147,7 @@ import type {
   MfaStatusResponseDto,
   ModelDistributionResponseDto,
   ModelModeEntryDto,
+  ModelModeResolutionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   MyPermissionsResponseDto,
@@ -8009,6 +8010,99 @@ export const useSuperAdminModelModesControllerReplaceEntries = <TError = void,
       > => {
       return useMutation(getSuperAdminModelModesControllerReplaceEntriesMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Which model each mode currently resolves to for the current user
+ */
+export const modelModesControllerGetModelModes = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelModeResolutionResponseDto[]>(
+      {url: `/models/modes`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getModelModesControllerGetModelModesQueryKey = () => {
+    return [
+    `/models/modes`
+    ] as const;
+    }
+
+
+export const getModelModesControllerGetModelModesQueryOptions = <TData = Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelModesControllerGetModelModesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>> = ({ signal }) => modelModesControllerGetModelModes(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelModesControllerGetModelModesQueryResult = NonNullable<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>>
+export type ModelModesControllerGetModelModesQueryError = unknown
+
+
+export function useModelModesControllerGetModelModes<TData = Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModesControllerGetModelModes>>,
+          TError,
+          Awaited<ReturnType<typeof modelModesControllerGetModelModes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModesControllerGetModelModes<TData = Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelModesControllerGetModelModes>>,
+          TError,
+          Awaited<ReturnType<typeof modelModesControllerGetModelModes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelModesControllerGetModelModes<TData = Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Which model each mode currently resolves to for the current user
+ */
+
+export function useModelModesControllerGetModelModes<TData = Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelModesControllerGetModelModes>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelModesControllerGetModelModesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * Create a new language model in the master catalog. This endpoint is only accessible to super admins.

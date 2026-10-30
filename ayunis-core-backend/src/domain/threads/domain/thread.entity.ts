@@ -2,6 +2,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { SourceAssignment } from './thread-source-assignment.entity';
 import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
@@ -10,6 +11,8 @@ export class Thread {
   id: UUID;
   userId: UUID;
   model?: PermittedLanguageModel;
+  /** Mode the chat was started with; null when an individual model was picked. */
+  mode: ModelMode | null;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
   knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
@@ -25,6 +28,7 @@ export class Thread {
     id?: UUID;
     userId: UUID;
     model?: PermittedLanguageModel;
+    mode?: ModelMode | null;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
     knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
@@ -39,6 +43,7 @@ export class Thread {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
     this.model = params.model;
+    this.mode = params.mode ?? null;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.knowledgeBaseAssignments = params.knowledgeBaseAssignments;
