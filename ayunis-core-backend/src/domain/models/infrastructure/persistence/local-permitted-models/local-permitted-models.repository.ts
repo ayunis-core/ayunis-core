@@ -24,8 +24,6 @@ import {
   DuplicatePermittedModelError,
   DuplicateTeamPermittedModelError,
   MultipleTeamImageGenerationModelsNotAllowedError,
-  NotALanguageModelError,
-  PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { PermittedModelFinder } from './permitted-model-finder';
@@ -72,70 +70,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     );
   }
 
-  async findOrgDefaultLanguage(
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel | null> {
-    this.logger.log({ orgId }, 'findDefault');
-    const permittedModel = await this.permittedModelRepository.findOne({
-      where: {
-        orgId,
-        isDefault: true,
-        scope: PermittedModelScope.ORG,
-        // `type` is TypeORM's discriminator column (see @TableInheritance on
-        // ModelRecord); FindOptionsWhere doesn't expose it, so cast.
-        model: { isArchived: false, type: ModelType.LANGUAGE },
-      } as FindOptionsWhere<PermittedModelRecord>,
-      relations: {
-        model: true,
-      },
-    });
-    if (
-      !permittedModel ||
-      !(permittedModel.model instanceof LanguageModelRecord)
-    ) {
-      return null;
-    }
-    this.logger.debug(
-      {
-        permittedModel,
-      },
-      'Default model found',
-    );
-    return this.permittedModelMapper.toDomain(
-      permittedModel,
-    ) as PermittedLanguageModel;
-  }
-
-  async findTeamDefaultLanguage(
-    teamId: UUID,
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel | null> {
-    this.logger.log({ teamId, orgId }, 'findTeamDefaultLanguage');
-    const permittedModel = await this.permittedModelRepository.findOne({
-      where: {
-        scopeId: teamId,
-        orgId,
-        isDefault: true,
-        scope: PermittedModelScope.TEAM,
-        model: { isArchived: false, type: ModelType.LANGUAGE },
-      } as FindOptionsWhere<PermittedModelRecord>,
-      relations: {
-        model: true,
-      },
-    });
-    if (
-      !permittedModel ||
-      !(permittedModel.model instanceof LanguageModelRecord)
-    ) {
-      return null;
-    }
-    return this.permittedModelMapper.toDomain(
-      permittedModel,
-    ) as PermittedLanguageModel;
-  }
-  async findManyTeamDefaultLanguage(teamIds: UUID[], orgId: UUID) {
-    return this.finder.findManyTeamDefaultLanguage(teamIds, orgId);
-  }
   async findOne(params: FindOneParams): Promise<PermittedModel | null> {
     const where =
       'id' in params
@@ -308,91 +242,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     }
   }
 
-  async setAsDefault(params: {
-    id: UUID;
-    orgId: UUID;
-    teamId?: UUID;
-  }): Promise<PermittedLanguageModel> {
-    this.logger.log(
-      {
-        id: params.id,
-        orgId: params.orgId,
-        teamId: params.teamId,
-      },
-      'setAsDefault',
-    );
-
-    const unsetWhere = this.buildUnsetDefaultWhere(params);
-    const setWhere = this.buildSetDefaultWhere(params);
-    const targetModel = await this.permittedModelRepository.findOne({
-      where: {
-        ...setWhere,
-        model: { isArchived: false },
-      },
-      relations: {
-        model: true,
-      },
-    });
-
-    if (!targetModel) {
-      throw new PermittedModelNotFoundError(params.id);
-    }
-    if (!(targetModel.model instanceof LanguageModelRecord)) {
-      throw new NotALanguageModelError(targetModel.model.id);
-    }
-
-    return await this.permittedModelRepository.manager.transaction((manager) =>
-      this.applyDefaultInTransaction(manager, params, unsetWhere, setWhere),
-    );
-  }
-
-  private async applyDefaultInTransaction(
-    manager: EntityManager,
-    params: { id: UUID; orgId: UUID; teamId?: UUID },
-    unsetWhere: FindOptionsWhere<PermittedModelRecord>,
-    setWhere: FindOptionsWhere<PermittedModelRecord>,
-  ): Promise<PermittedLanguageModel> {
-    await manager.update(PermittedModelRecord, unsetWhere, {
-      isDefault: false,
-    });
-
-    const updateResult = await manager.update(PermittedModelRecord, setWhere, {
-      isDefault: true,
-    });
-
-    if (updateResult.affected === 0) {
-      throw new Error(
-        `Permitted model with id ${params.id} and orgId ${params.orgId} not found`,
-      );
-    }
-
-    const updatedModel = await manager.findOne(PermittedModelRecord, {
-      where: { id: params.id, orgId: params.orgId },
-      relations: ['model'],
-    });
-
-    if (!updatedModel) {
-      throw new Error(
-        `Failed to retrieve updated permitted model with id ${params.id}`,
-      );
-    }
-
-    this.logger.debug(
-      {
-        id: params.id,
-        orgId: params.orgId,
-        teamId: params.teamId,
-        modelName: updatedModel.model.name,
-        modelProvider: updatedModel.model.provider,
-      },
-      'Model set as default',
-    );
-
-    return this.permittedModelMapper.toDomain(
-      updatedModel,
-    ) as PermittedLanguageModel;
-  }
-
   async update(permittedModel: PermittedModel): Promise<PermittedModel> {
     this.logger.log(
       {
@@ -441,59 +290,5 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     );
 
     return permittedModels.map((pm) => this.permittedModelMapper.toDomain(pm));
-  }
-
-  async unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void> {
-    this.logger.log({ catalogModelId }, 'unsetDefaultsByCatalogModelId');
-
-    const result = await this.permittedModelRepository.update(
-      { modelId: catalogModelId, isDefault: true },
-      { isDefault: false },
-    );
-
-    this.logger.debug(
-      {
-        catalogModelId,
-        affected: result.affected,
-      },
-      'Unset defaults for catalog model',
-    );
-  }
-
-  private buildUnsetDefaultWhere(params: {
-    orgId: UUID;
-    teamId?: UUID;
-  }): FindOptionsWhere<PermittedModelRecord> {
-    return params.teamId
-      ? {
-          orgId: params.orgId,
-          scopeId: params.teamId,
-          scope: PermittedModelScope.TEAM,
-          isDefault: true,
-        }
-      : {
-          orgId: params.orgId,
-          scope: PermittedModelScope.ORG,
-          isDefault: true,
-        };
-  }
-
-  private buildSetDefaultWhere(params: {
-    id: UUID;
-    orgId: UUID;
-    teamId?: UUID;
-  }): FindOptionsWhere<PermittedModelRecord> {
-    return params.teamId
-      ? {
-          id: params.id,
-          orgId: params.orgId,
-          scopeId: params.teamId,
-          scope: PermittedModelScope.TEAM,
-        }
-      : {
-          id: params.id,
-          orgId: params.orgId,
-          scope: PermittedModelScope.ORG,
-        };
   }
 }

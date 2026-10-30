@@ -4,14 +4,14 @@ import {
   PermittedLanguageModel,
   PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelRecord } from '../schema/permitted-model.record';
+import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { Injectable } from '@nestjs/common';
-import { ModelMapper } from '../../local-models/mappers/model.mapper';
+import { ModelMapper } from 'src/domain/models/infrastructure/persistence/local-models/mappers/model.mapper';
 import {
   EmbeddingModelRecord,
   ImageGenerationModelRecord,
   LanguageModelRecord,
-} from '../../local-models/schema/model.record';
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 
@@ -25,7 +25,7 @@ export class PermittedModelMapper {
         id: record.id,
         model: this.modelMapper.toDomain(record.model) as LanguageModel,
         orgId: record.orgId,
-        isDefault: record.isDefault,
+        isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         scope: record.scope,
         scopeId: record.scopeId,
@@ -38,7 +38,7 @@ export class PermittedModelMapper {
         id: record.id,
         model: this.modelMapper.toDomain(record.model) as EmbeddingModel,
         orgId: record.orgId,
-        isDefault: record.isDefault,
+        isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         scope: record.scope,
         scopeId: record.scopeId,
@@ -51,7 +51,7 @@ export class PermittedModelMapper {
         id: record.id,
         model: this.modelMapper.toDomain(record.model),
         orgId: record.orgId,
-        isDefault: record.isDefault,
+        isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         scope: record.scope,
         scopeId: record.scopeId,
@@ -68,7 +68,6 @@ export class PermittedModelMapper {
     record.modelId = domain.model.id;
     record.model = this.modelMapper.toRecord(domain.model);
     record.orgId = domain.orgId;
-    record.isDefault = domain.isDefault;
     record.anonymousOnly = domain.anonymousOnly;
     record.scope = domain.scope;
     record.scopeId = domain.scopeId;

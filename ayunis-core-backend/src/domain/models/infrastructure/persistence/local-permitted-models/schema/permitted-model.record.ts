@@ -2,8 +2,16 @@ import { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { ModelRecord } from '../../local-models/schema/model.record';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  VirtualColumn,
+} from 'typeorm';
+import { ModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 
@@ -27,9 +35,16 @@ export class PermittedModelRecord extends BaseRecord {
   @Column({ nullable: false })
   modelId: UUID;
 
-  // default for organization
-  @Column({ nullable: false })
-  isDefault: boolean;
+  /**
+   * Whether this permit is its org's or team's default. Stored in
+   * default_model_selections; a user's personal default does not count.
+   */
+  @VirtualColumn({
+    type: 'boolean',
+    query: (alias) =>
+      `SELECT EXISTS (SELECT 1 FROM default_model_selections d WHERE d."permittedModelId" = ${alias}.id AND (d."orgId" IS NOT NULL OR d."teamId" IS NOT NULL))`,
+  })
+  isDefault?: boolean;
 
   @Column({ nullable: false, default: false })
   anonymousOnly: boolean;

@@ -5,13 +5,15 @@ import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enu
 
 /**
  * First enabled entry the caller may use right now. Auto degrades to a
- * faulted model rather than failing; Max does not.
+ * faulted model rather than failing; Max does not. Previews that must show
+ * only healthy models pass `allowFaultedFallback: false`.
  */
 export function resolveModelMode(
   mode: ModelMode,
   entries: ModelModeEntry[],
   permits: PermittedLanguageModel[],
   isAnonymous: boolean,
+  { allowFaultedFallback = mode === ModelMode.AUTO } = {},
 ): PermittedLanguageModel | null {
   const permitByModelId = new Map(permits.map((p) => [p.model.id, p]));
   const candidates = entries
@@ -26,5 +28,5 @@ export function resolveModelMode(
 
   const healthy = candidates.find((p) => !p.model.hasProviderFault);
   if (healthy) return healthy;
-  return mode === ModelMode.AUTO ? (candidates[0] ?? null) : null;
+  return allowFaultedFallback ? (candidates[0] ?? null) : null;
 }
