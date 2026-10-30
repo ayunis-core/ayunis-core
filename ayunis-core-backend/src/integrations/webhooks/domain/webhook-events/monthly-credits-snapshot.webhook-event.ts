@@ -1,16 +1,13 @@
-import type { UUID } from 'crypto';
+import type { MonthlyCreditsSnapshotPayload as MonthlyCreditsSnapshotWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 import type { MonthlyCreditsSnapshotEvent } from 'src/domain/usage/application/events/monthly-credits-snapshot.event';
 import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
-export interface MonthlyCreditsSnapshotWebhookPayload {
-  organizationId: UUID;
-  periodStart: string;
-  periodEnd: string;
-  creditsConsumed: number;
-}
+export type { MonthlyCreditsSnapshotPayload as MonthlyCreditsSnapshotWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 
-export class MonthlyCreditsSnapshotWebhookEvent extends WebhookEvent<MonthlyCreditsSnapshotWebhookPayload> {
+export class MonthlyCreditsSnapshotWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT
+> {
   readonly eventType = WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT;
   readonly data: MonthlyCreditsSnapshotWebhookPayload;
   readonly timestamp = new Date();

@@ -93,6 +93,7 @@ jobs:
           name: e2e-backend-build
           path: |
             ayunis-core-backend/dist
+            packages/core-connect-sdk/dist
             packages/agent-runtime/dist
             packages/inference/dist
             packages/provider-anthropic/dist

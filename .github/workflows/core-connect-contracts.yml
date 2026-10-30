@@ -1,0 +1,29 @@
+name: Core Connect contracts
+on:
+  pull_request:
+    paths:
+      - 'packages/core-connect-sdk/**'
+      - 'ayunis-core-backend/src/integrations/webhooks/**'
+      - 'ayunis-core-backend/scripts/generate-core-connect-fixtures.ts'
+      - '.github/workflows/core-connect-contracts.yml'
+      - 'pnpm-lock.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/core-connect-sdk/**'
+      - 'ayunis-core-backend/src/integrations/webhooks/**'
+permissions:
+  contents: read
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ayunis-core/connect-sdk build
+      - run: pnpm --filter @ayunis-core/connect-sdk typecheck
+      - run: pnpm --filter @ayunis-core/connect-sdk lint
+      - run: pnpm --filter @ayunis-core/connect-sdk test
+      - run: pnpm --filter core-backend contracts:fixtures
+      - run: git diff --exit-code -- packages/core-connect-sdk/fixtures/
+      - run: pnpm --filter core-backend test --runInBand --testPathPatterns=integrations/webhooks

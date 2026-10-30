@@ -1,22 +1,28 @@
+import { createContractEvents } from 'src/integrations/webhooks/testing/contract-fixtures';
 import { createHmac, randomBytes } from 'crypto';
 import type { ConfigService } from '@nestjs/config';
-import { HttpWebhookHandler } from './http-webhook.handler';
-import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { HttpWebhookHandler } from 'src/integrations/webhooks/infrastructure/http/http-webhook.handler';
+import {
+  WebhookEvent,
+  type AnyWebhookEvent,
+} from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
-class TestWebhookEvent extends WebhookEvent<{ hello: string }> {
-  readonly eventType = WebhookEventType.USER_CREATED;
-  readonly data = { hello: 'world' };
+class TestWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.USER_INVITED
+> {
+  readonly eventType = WebhookEventType.USER_INVITED;
+  readonly data = {
+    id: '00000000-0000-4000-8000-000000000004',
+    orgId: '00000000-0000-4000-8000-000000000004',
+    email: 'invitee@municipality.example',
+    name: 'Invitee',
+  };
   readonly timestamp = new Date('2026-04-07T12:00:00.000Z');
 }
 
-class CreditWebhookEvent extends WebhookEvent<{ creditsConsumed: number }> {
-  readonly data = { creditsConsumed: 10 };
-  readonly timestamp = new Date('2026-04-07T12:00:00.000Z');
-
-  constructor(readonly eventType: WebhookEventType) {
-    super();
-  }
+function creditWebhookEvent(eventType: WebhookEventType): AnyWebhookEvent {
+  return createContractEvents().find((event) => event.eventType === eventType)!;
 }
 
 interface CapturedRequest {
@@ -68,6 +74,23 @@ describe('HttpWebhookHandler signing', () => {
     jest.restoreAllMocks();
   });
 
+  it('rejects an invalid contract without scheduling delivery retries', async () => {
+    jest.useFakeTimers();
+    const handler = new HttpWebhookHandler(
+      makeConfigService({ 'app.orgEventsWebhookUrl': webhookUrl }),
+    );
+    const event = {
+      ...new TestWebhookEvent(),
+      data: {},
+    } as unknown as AnyWebhookEvent;
+    const started = Date.now();
+    const pending = handler.sendWebhook(event);
+    const assertion = expect(pending).rejects.toThrow();
+    await jest.runAllTimersAsync();
+    await assertion;
+    expect(fetchMock.captured).toHaveLength(0);
+    expect(Date.now() - started).toBe(0);
+  });
   it('signs the body with HMAC-SHA256 when a secret is configured', async () => {
     const secret = randomBytes(32).toString('hex');
     const handler = new HttpWebhookHandler(
@@ -173,7 +196,7 @@ describe('HttpWebhookHandler signing', () => {
     );
 
     await expect(
-      handler.sendWebhook(new CreditWebhookEvent(eventType)),
+      handler.sendWebhook(creditWebhookEvent(eventType)),
     ).rejects.toThrow('network uncertain');
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -212,7 +235,7 @@ describe('HttpWebhookHandler signing', () => {
       makeConfigService({ 'app.orgEventsWebhookUrl': webhookUrl }),
     );
     const delivery = handler.sendWebhook(
-      new CreditWebhookEvent(WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT),
+      creditWebhookEvent(WebhookEventType.USAGE_MONTHLY_CREDITS_SNAPSHOT),
     );
     const rejection = expect(delivery).rejects.toThrow(
       'timed out after 60000ms',

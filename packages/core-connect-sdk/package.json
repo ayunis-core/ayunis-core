@@ -1,0 +1,66 @@
+{
+  "name": "@ayunis-core/connect-sdk",
+  "version": "0.1.0",
+  "description": "Core webhook contracts and internal API client for Ayunis Connect",
+  "type": "module",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "main": "./dist/contracts.cjs",
+  "module": "./dist/contracts.js",
+  "types": "./dist/contracts.d.ts",
+  "exports": {
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js",
+      "require": "./dist/contracts.cjs"
+    },
+    "./fixtures/core-webhooks.json": "./fixtures/core-webhooks.json"
+  },
+  "files": [
+    "dist",
+    "fixtures",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "deps:check": "madge --circular --extensions ts src"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.12.2",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-sonarjs": "^4.2.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.0.0",
+    "knip": "^6.24.0",
+    "madge": "^8.0.0",
+    "prettier": "^3.9.4",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0",
+    "vitest": "^4.1.9",
+    "zod": "4.5.4"
+  },
+  "peerDependencies": {
+    "zod": ">=4.3.6 <5"
+  },
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayunis-core/ayunis-core.git",
+    "directory": "packages/core-connect-sdk"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

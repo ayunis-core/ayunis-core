@@ -44,7 +44,7 @@ import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/web
 import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from 'src/integrations/webhooks/application/mappers/subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from 'src/integrations/webhooks/application/mappers/billing-info-payload.mapper';
-import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import type { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
@@ -423,7 +423,7 @@ export class WebhookDispatchListener {
 
   private dispatchSubscription(
     orgId: UUID,
-    webhookEvent: WebhookEvent,
+    webhookEvent: AnyWebhookEvent,
   ): Promise<void> {
     if (localBillingEventContext.getStore()) return Promise.resolve();
     return this.webhookDeliverySequencer.enqueue(orgId, () =>
@@ -431,7 +431,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  private async dispatch(webhookEvent: WebhookEvent): Promise<void> {
+  private async dispatch(webhookEvent: AnyWebhookEvent): Promise<void> {
     if (localBillingEventContext.getStore()) return;
     try {
       await this.sendWebhookUseCase.execute(

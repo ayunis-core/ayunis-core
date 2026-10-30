@@ -15,11 +15,11 @@ import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/web
 import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
 import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
 import type { PendingDomainEvent } from 'src/common/events/pending-domain-event';
-import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import type { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
 
-export function mapBillingEvent(pending: PendingDomainEvent): WebhookEvent {
+export function mapBillingEvent(pending: PendingDomainEvent): AnyWebhookEvent {
   switch (pending.name) {
     case SubscriptionCreatedEvent.EVENT_NAME:
       return new SubscriptionCreatedWebhookEvent(
