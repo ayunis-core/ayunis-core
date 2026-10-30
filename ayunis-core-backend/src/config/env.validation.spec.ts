@@ -17,6 +17,7 @@ function prodEnv(
   return baseEnv({
     NODE_ENV: 'production',
     COOKIE_SECURE: 'true',
+    MINIO_INTERNAL_ENDPOINT: 'minio',
     MINIO_ROOT_USER: 'minio-user',
     MINIO_ROOT_PASSWORD: 'minio-password',
     REDIS_PASSWORD: 'redis-password',
@@ -267,6 +268,12 @@ describe('validateEnv', () => {
 
       expect(() => validateEnv(env)).toThrow(/MINIO_ACCESS_KEY/);
       expect(() => validateEnv(env)).toThrow(/MINIO_SECRET_KEY/);
+    });
+
+    it('requires the internal MinIO endpoint', () => {
+      const env = without(prodEnv(), 'MINIO_INTERNAL_ENDPOINT');
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_INTERNAL_ENDPOINT/);
     });
 
     it('accepts MINIO_ACCESS_KEY / MINIO_SECRET_KEY as the credentials', () => {
