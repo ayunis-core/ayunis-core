@@ -553,6 +553,7 @@ it('calibrates each actual recovery request after its instructions and tools cha
     tokenEstimator: {
       exact: false,
       tokensPerImage: 1600,
+      minTokensPerImage: 53,
       tokensPerMessage: 0,
       countText: (text) => text.length,
       countTools: (tools) => tools.length * 10,
