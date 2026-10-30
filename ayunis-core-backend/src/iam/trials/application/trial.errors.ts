@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum TrialErrorCode {
   TRIAL_NOT_FOUND = 'TRIAL_NOT_FOUND',
@@ -90,7 +90,7 @@ export class TrialCapacityExceededError extends TrialError {
 export class TrialCreationFailedError extends TrialError {
   constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Trial creation failed for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
+      `Trial creation failed for organization '${orgId}'${reason ? ': ' + reason : ''}`,
       TrialErrorCode.TRIAL_CREATION_FAILED,
       500,
       {
@@ -108,7 +108,7 @@ export class TrialCreationFailedError extends TrialError {
 export class TrialUpdateFailedError extends TrialError {
   constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Trial update failed for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
+      `Trial update failed for organization '${orgId}'${reason ? ': ' + reason : ''}`,
       TrialErrorCode.TRIAL_UPDATE_FAILED,
       500,
       {
@@ -126,7 +126,7 @@ export class TrialUpdateFailedError extends TrialError {
 export class UnexpectedTrialError extends TrialError {
   constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Unexpected trial error for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
+      `Unexpected trial error for organization '${orgId}'${reason ? ': ' + reason : ''}`,
       TrialErrorCode.UNEXPECTED_ERROR,
       500,
       {
@@ -134,6 +134,17 @@ export class UnexpectedTrialError extends TrialError {
         reason,
         ...metadata,
       },
+    );
+  }
+}
+
+export class UnexpectedTrialSyncError extends TrialError {
+  constructor(error: Error) {
+    super(
+      'Unexpected error ending a trial during subscription sync',
+      TrialErrorCode.UNEXPECTED_ERROR,
+      500,
+      { error },
     );
   }
 }

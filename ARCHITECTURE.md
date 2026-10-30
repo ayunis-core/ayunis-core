@@ -120,15 +120,15 @@ none of these packages implements the Agent Plugins standard.
 
 ### Infrastructure & Support
 
-| Module                                                          | Summary               | Detail                                           |
-| --------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
-| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns  |
-| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Metrics, webhooks, and Connect service auth      |
-| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management       |
-| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                       |
-| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                       |
-| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup              |
-| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                            |
+| Module                                                          | Summary               | Detail                                                                 |
+| --------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------- |
+| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns                        |
+| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | External subscription synchronization, metrics, webhooks, Connect auth |
+| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management                             |
+| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                                             |
+| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                                             |
+| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup                                    |
+| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                                                  |
 
 ---
 
@@ -239,3 +239,12 @@ the admin-settings sidebar + route guard. The backend still 403s regardless.
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
 
 Backend transaction enrollment and review checklist: [TRANSACTIONS.md](ayunis-core-backend/TRANSACTIONS.md).
+
+Billing providers are isolated behind Ayunis Connect. Connect reads and translates
+canonical provider state and reconciles missed notifications. Core's
+`integrations/external-subscriptions` accepts validated, provider-neutral access
+snapshots through its service-authenticated SDK API. It owns local subscription,
+trial and Academy rules, transactional ownership and revision fencing, plus durable
+outbound Core events. Generic expiring leases coordinate Connect reconciliation
+workers without introducing a second database. Historical physical table names
+are retained for data compatibility; runtime policy contains no provider names.

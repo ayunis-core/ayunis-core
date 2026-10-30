@@ -294,6 +294,7 @@ jobs:
           PORT: 3002
           APP_ENVIRONMENT: cloud
           FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: 'true'
+          CORE_CONNECT_SERVICE_TOKEN: e2e-connect-service-token
         run: |
           nohup node dist/src/main > backend-external-subscriptions.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3002/api/health; do sleep 2; done' \

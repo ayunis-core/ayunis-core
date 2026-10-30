@@ -1,3 +1,4 @@
+import { DeliverBillingWebhookUseCase } from './application/use-cases/deliver-billing-webhook/deliver-billing-webhook.use-case';
 import { Module, type OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersModule } from 'src/iam/users/users.module';
@@ -10,12 +11,14 @@ import { WebhookDeliverySequencer } from './infrastructure/services/webhook-deli
 
 @Module({
   imports: [UsersModule, OrgsModule],
+  exports: [DeliverBillingWebhookUseCase],
   providers: [
     {
       provide: WebhookHandler,
       useClass: HttpWebhookHandler,
     },
     SendWebhookUseCase,
+    DeliverBillingWebhookUseCase,
     WebhookDeliverySequencer,
     WebhookDispatchListener,
   ],
