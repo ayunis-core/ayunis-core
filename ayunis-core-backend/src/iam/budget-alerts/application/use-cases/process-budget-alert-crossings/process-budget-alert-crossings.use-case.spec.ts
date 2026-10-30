@@ -1,3 +1,5 @@
+import { ApiKeyBudgetAlertNotification } from 'src/iam/budget-alerts/domain/budget-alert-notification.entity';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -159,5 +161,29 @@ describe('ProcessBudgetAlertCrossingsUseCase', () => {
     expect(notificationKey(BudgetAlertScope.ORG, orgId, 80)).toBe(
       `org:${orgId}:80`,
     );
+  });
+
+  it('records API key crossings as API key notifications', async () => {
+    const apiKeyId = '44444444-4444-4444-4444-444444444444' as UUID;
+
+    await run([
+      {
+        scope: BudgetAlertScope.API_KEY,
+        targetId: apiKeyId,
+        name: 'Citizen portal',
+        monthlyCredits: 100,
+        creditsUsed: 85,
+      },
+    ]);
+
+    expect(sendEmail.execute.mock.calls[0][0]).toMatchObject({
+      scope: BudgetWarningScope.API_KEY,
+      targetId: apiKeyId,
+      targetName: 'Citizen portal',
+      threshold: 80,
+    });
+    const [notification] = repository.recordMany.mock.calls[0][0];
+    expect(notification).toBeInstanceOf(ApiKeyBudgetAlertNotification);
+    expect(notification).toMatchObject({ apiKeyId, threshold: 80 });
   });
 });

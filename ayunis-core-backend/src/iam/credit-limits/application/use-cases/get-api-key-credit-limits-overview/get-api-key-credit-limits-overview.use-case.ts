@@ -8,6 +8,7 @@ import { ListApiKeysByOrgUseCase } from 'src/iam/api-keys/application/use-cases/
 import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
+import type { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import type { ApiKeyCreditLimitOverviewItem } from './api-key-credit-limit.view';
 import { GetApiKeyCreditLimitsOverviewQuery } from './get-api-key-credit-limits-overview.query';
 import { getRequiredOrgId } from 'src/common/context/required-context';
@@ -37,16 +38,22 @@ export class GetApiKeyCreditLimitsOverviewUseCase {
       return [];
     }
 
-    return this.enrich(orgId, limits, query.since);
+    return this.enrich(orgId, limits, query);
   }
 
   private async enrich(
     orgId: UUID,
-    limits: ApiKeyCreditLimit[],
-    since?: Date,
+    allLimits: ApiKeyCreditLimit[],
+    { since, onlyActiveKeys }: GetApiKeyCreditLimitsOverviewQuery,
   ): Promise<ApiKeyCreditLimitOverviewItem[]> {
     const apiKeys = await this.listApiKeysByOrgUseCase.execute();
     const apiKeyById = new Map(apiKeys.map((apiKey) => [apiKey.id, apiKey]));
+    const now = new Date();
+    const limits = onlyActiveKeys
+      ? allLimits.filter((limit) =>
+          isActive(apiKeyById.get(limit.apiKeyId), now),
+        )
+      : allLimits;
     const existingIds = limits
       .map((limit) => limit.apiKeyId)
       .filter((apiKeyId) => apiKeyById.has(apiKeyId));
@@ -66,4 +73,11 @@ export class GetApiKeyCreditLimitsOverviewUseCase {
         : 0,
     }));
   }
+}
+
+function isActive(apiKey: ApiKey | undefined, now: Date): boolean {
+  return (
+    apiKey?.revokedAt === null &&
+    (apiKey.expiresAt === null || apiKey.expiresAt > now)
+  );
 }
