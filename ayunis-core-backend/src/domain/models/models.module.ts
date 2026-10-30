@@ -1,3 +1,7 @@
+import { SuperAdminModelModesController } from './presenters/http/super-admin-model-modes.controller';
+import { LocalModelModeEntriesRepositoryModule } from './infrastructure/persistence/local-model-mode-entries/local-model-mode-entries-repository.module';
+import { GetModelModeEntriesUseCase } from './application/use-cases/get-model-mode-entries/get-model-mode-entries.use-case';
+import { ReplaceModelModeEntriesUseCase } from './application/use-cases/replace-model-mode-entries/replace-model-mode-entries.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
 import { ModelsDefaultsController } from './presenters/http/models-defaults.controller';
@@ -97,6 +101,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
   imports: [
     LocalPermittedModelsRepositoryModule,
     LocalUserDefaultModelsRepositoryModule,
+    LocalModelModeEntriesRepositoryModule,
     LocalModelsRepositoryModule,
     UsageReferencesModule,
     OrgsModule,
@@ -113,6 +118,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     TeamPermittedModelsController,
     SuperAdminPermittedModelsController,
     SuperAdminCatalogModelsController,
+    SuperAdminModelModesController,
     SuperAdminLanguageCatalogModelsController,
     SuperAdminEmbeddingCatalogModelsController,
     SuperAdminImageGenerationCatalogModelsController,
@@ -260,6 +266,8 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
+    GetModelModeEntriesUseCase,
+    ReplaceModelModeEntriesUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
   ],

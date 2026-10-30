@@ -146,6 +146,7 @@ import type {
   MfaSetupResponseDto,
   MfaStatusResponseDto,
   ModelDistributionResponseDto,
+  ModelModeEntryDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   MyPermissionsResponseDto,
@@ -179,6 +180,7 @@ import type {
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
   ReorderFavoritesDto,
+  ReplaceModelModeEntriesDto,
   ResendEmailConfirmationDto,
   ResetPasswordDto,
   ResolveSubscriptionOverlapDto,
@@ -7843,6 +7845,169 @@ export const useSuperAdminCatalogModelsControllerDeleteCatalogModel = <TError = 
         TContext
       > => {
       return useMutation(getSuperAdminCatalogModelsControllerDeleteCatalogModelMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the ordered model list of a mode
+ */
+export const superAdminModelModesControllerGetEntries = (
+    mode: 'auto' | 'max',
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ModelModeEntryDto[]>(
+      {url: `/super-admin/model-modes/${mode}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminModelModesControllerGetEntriesQueryKey = (mode: 'auto' | 'max',) => {
+    return [
+    `/super-admin/model-modes/${mode}`
+    ] as const;
+    }
+
+
+export const getSuperAdminModelModesControllerGetEntriesQueryOptions = <TData = Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError = unknown>(mode: 'auto' | 'max', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminModelModesControllerGetEntriesQueryKey(mode);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>> = ({ signal }) => superAdminModelModesControllerGetEntries(mode, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mode !== null && mode !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminModelModesControllerGetEntriesQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>>
+export type SuperAdminModelModesControllerGetEntriesQueryError = unknown
+
+
+export function useSuperAdminModelModesControllerGetEntries<TData = Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError = unknown>(
+ mode: 'auto' | 'max', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminModelModesControllerGetEntries<TData = Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError = unknown>(
+ mode: 'auto' | 'max', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminModelModesControllerGetEntries<TData = Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError = unknown>(
+ mode: 'auto' | 'max', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the ordered model list of a mode
+ */
+
+export function useSuperAdminModelModesControllerGetEntries<TData = Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError = unknown>(
+ mode: 'auto' | 'max', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelModesControllerGetEntries>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminModelModesControllerGetEntriesQueryOptions(mode,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Max mode only accepts high-tier language models. Applies to chats created afterwards.
+ * @summary Replace the ordered model list of a mode
+ */
+export const superAdminModelModesControllerReplaceEntries = (
+    mode: 'auto' | 'max',
+    replaceModelModeEntriesDto: ReplaceModelModeEntriesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/model-modes/${mode}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: replaceModelModeEntriesDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminModelModesControllerReplaceEntriesMutationKey = () => ['superAdminModelModesControllerReplaceEntries'] as const;
+
+export const getSuperAdminModelModesControllerReplaceEntriesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>, TError,SuperAdminModelModesControllerReplaceEntriesMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>, TError,SuperAdminModelModesControllerReplaceEntriesMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminModelModesControllerReplaceEntriesMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>, SuperAdminModelModesControllerReplaceEntriesMutationVariables> = (props) => {
+          const {mode,data} = props ?? {};
+
+          return  superAdminModelModesControllerReplaceEntries(mode,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminModelModesControllerReplaceEntriesMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>>
+    export type SuperAdminModelModesControllerReplaceEntriesMutationBody = ReplaceModelModeEntriesDto
+    export type SuperAdminModelModesControllerReplaceEntriesMutationError = void
+    export type SuperAdminModelModesControllerReplaceEntriesMutationVariables = {mode: 'auto' | 'max';data: ReplaceModelModeEntriesDto}
+
+    /**
+ * @summary Replace the ordered model list of a mode
+ */
+export const useSuperAdminModelModesControllerReplaceEntries = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>, TError,SuperAdminModelModesControllerReplaceEntriesMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminModelModesControllerReplaceEntries>>,
+        TError,
+        SuperAdminModelModesControllerReplaceEntriesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminModelModesControllerReplaceEntriesMutationOptions(options), queryClient);
     }
 
 /**

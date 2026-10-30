@@ -3706,6 +3706,74 @@
         "tags": ["Super Admin Models"]
       }
     },
+    "/super-admin/model-modes/{mode}": {
+      "get": {
+        "operationId": "SuperAdminModelModesController_getEntries",
+        "parameters": [
+          {
+            "name": "mode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["auto", "max"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelModeEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the ordered model list of a mode",
+        "tags": ["Super Admin Models"]
+      },
+      "put": {
+        "description": "Max mode only accepts high-tier language models. Applies to chats created afterwards.",
+        "operationId": "SuperAdminModelModesController_replaceEntries",
+        "parameters": [
+          {
+            "name": "mode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["auto", "max"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceModelModeEntriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Unknown, non-language or disallowed-tier model"
+          }
+        },
+        "summary": "Replace the ordered model list of a mode",
+        "tags": ["Super Admin Models"]
+      }
+    },
     "/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
@@ -15405,6 +15473,34 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "ModelModeEntryDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Catalog language model ID"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Disabled entries keep their position but are skipped"
+          }
+        },
+        "required": ["modelId", "enabled"]
+      },
+      "ReplaceModelModeEntriesDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "Complete ordered list, highest preference first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelModeEntryDto"
+            }
+          }
+        },
+        "required": ["entries"]
       },
       "CreateLanguageModelRequestDto": {
         "type": "object",
