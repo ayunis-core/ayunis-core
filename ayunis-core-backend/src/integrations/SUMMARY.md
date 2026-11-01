@@ -1,4 +1,9 @@
 External Integrations
 Operational monitoring, Prometheus metrics, and outbound webhook delivery.
 
+`core-connect/` authenticates incoming service requests from Ayunis Core Connect.
+Its reusable guard uses a dedicated bearer credential and does not grant
+browser-session, organization, or super-admin access. The module exposes no HTTP
+routes of its own.
+
 The integrations module groups operational infrastructure and connections to external systems. `metrics/` exposes Prometheus counters and histograms for monitoring LLM inference, message throughput, and user activity at `/metrics` with optional basic auth. `queue-inspection/` exposes a protected, read-only Bull Board dashboard for the three source-processing queues at `/api/internal/queues`; it authorizes only `SUPER_ADMIN` sessions and projects job payloads to non-sensitive operational identifiers. `webhooks/` delivers lifecycle events (org, user, and subscription changes) as outbound HTTP POST calls to a configured URL using a port/adapter pattern. Monitoring and outbound delivery must not disrupt core business operations.
