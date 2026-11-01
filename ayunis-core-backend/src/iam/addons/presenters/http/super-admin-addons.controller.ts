@@ -1,3 +1,4 @@
+import { RequireManualSubscriptionEditing } from 'src/common/guards/manual-subscription-edit.guard';
 import {
   Controller,
   Delete,
@@ -32,6 +33,7 @@ import { DeactivateAddonUseCase } from 'src/iam/addons/application/use-cases/dea
 import { DeactivateAddonCommand } from 'src/iam/addons/application/use-cases/deactivate-addon/deactivate-addon.command';
 import { AddonStatusResponseDto } from './dto/addon-status-response.dto';
 
+@RequireManualSubscriptionEditing(AddonType.AYUNIS_CORE_ACADEMY)
 @ApiTags('Super Admin Addons')
 @Controller('super-admin/addons')
 @SystemRoles(SystemRole.SUPER_ADMIN)

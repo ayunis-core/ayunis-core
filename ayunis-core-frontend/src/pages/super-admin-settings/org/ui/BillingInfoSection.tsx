@@ -5,23 +5,29 @@ import BillingInfoUpdateDialog from './BillingInfoUpdateDialog';
 interface BillingInfoSectionProps {
   subscription: SubscriptionResponseDto;
   orgId: string;
+  readOnly?: boolean;
 }
 
 export default function BillingInfoSection({
   subscription,
   orgId,
+  readOnly = false,
 }: Readonly<BillingInfoSectionProps>) {
   return (
     <SharedBillingInfoSection
       subscription={subscription}
       translationNamespace="super-admin-settings-org"
-      renderUpdateDialog={(trigger) => (
-        <BillingInfoUpdateDialog
-          currentBillingInfo={subscription.billingInfo}
-          orgId={orgId}
-          trigger={trigger}
-        />
-      )}
+      renderUpdateDialog={
+        readOnly
+          ? undefined
+          : (trigger) => (
+              <BillingInfoUpdateDialog
+                currentBillingInfo={subscription.billingInfo}
+                orgId={orgId}
+                trigger={trigger}
+              />
+            )
+      }
     />
   );
 }

@@ -101,7 +101,8 @@
     "emailProviderBlacklisted": "Private email addresses (e.g. Gmail, GMX, Web.de, t-online) are not allowed for security reasons. Please use a work email address.",
     "rateLimitExceeded": "You've created a lot of invitations in a short time. Please wait a few minutes before creating more.",
     "multipleActiveSubscriptions": "This organization's subscriptions overlap. A super admin must resolve the overlap before users can be invited.",
-    "teamNotFound": "A selected team no longer exists. Please select the teams again."
+    "teamNotFound": "A selected team no longer exists. Please select the teams again.",
+    "insufficientSeats": "No seats are available for these invitations. Contact Sales to increase the seat count."
   },
   "inviteResend": {
     "success": "Invite resent successfully!",

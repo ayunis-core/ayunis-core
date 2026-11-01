@@ -37,6 +37,22 @@ function without(
 }
 
 describe('validateEnv', () => {
+  it.each(['yes', 'TRUE', '1'])(
+    'rejects invalid external subscription flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),
+      ).toThrow('FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED');
+    },
+  );
+  it.each(['', 'true', 'false'])(
+    'accepts the external subscription flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),
+      ).not.toThrow();
+    },
+  );
   it('returns the config unchanged when valid', () => {
     const env = baseEnv({ PORT: '3000' });
 

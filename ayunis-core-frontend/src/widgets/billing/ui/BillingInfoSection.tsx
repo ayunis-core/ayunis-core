@@ -14,7 +14,7 @@ import type { ReactNode } from 'react';
 interface BillingInfoSectionProps {
   subscription: SubscriptionResponseDto;
   translationNamespace: string;
-  renderUpdateDialog: (trigger: ReactNode) => ReactNode;
+  renderUpdateDialog?: (trigger: ReactNode) => ReactNode;
 }
 
 export default function BillingInfoSection({
@@ -31,7 +31,7 @@ export default function BillingInfoSection({
           {t('billingInfo.title')}
         </CardTitle>
         <CardAction>
-          {renderUpdateDialog(
+          {renderUpdateDialog?.(
             <Button size="sm" variant="outline">
               {t('billingInfo.update')}
             </Button>,

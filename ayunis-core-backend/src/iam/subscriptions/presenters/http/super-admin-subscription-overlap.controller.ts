@@ -1,3 +1,4 @@
+import { RequireManualSubscriptionEditing } from 'src/common/guards/manual-subscription-edit.guard';
 import {
   Body,
   Controller,
@@ -24,6 +25,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { ResolveSubscriptionOverlapDto } from './dto/resolve-subscription-overlap.dto';
 import { OrgIdParam } from './super-admin-subscriptions.decorators';
 
+@RequireManualSubscriptionEditing()
 @ApiTags('Super Admin Subscriptions')
 @Controller('super-admin/subscriptions')
 @SystemRoles(SystemRole.SUPER_ADMIN)

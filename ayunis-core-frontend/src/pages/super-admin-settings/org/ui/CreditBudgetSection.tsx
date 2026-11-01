@@ -8,17 +8,19 @@ import {
 import { Button } from '@ayunis/ui/components/button';
 import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useTranslation } from 'react-i18next';
-import useSuperAdminCreditUsage from '../api/useSuperAdminCreditUsage';
+import useSuperAdminCreditUsage from '@/pages/super-admin-settings/org/api/useSuperAdminCreditUsage';
 import { computeUsagePercent } from '@/shared/lib/computeUsagePercent';
 import CreditBudgetUpdateDialog from './CreditBudgetUpdateDialog';
 
 interface CreditBudgetSectionProps {
   orgId: string;
+  readOnly?: boolean;
   monthlyCredits: number;
 }
 
 export default function CreditBudgetSection({
   orgId,
+  readOnly = false,
   monthlyCredits,
 }: Readonly<CreditBudgetSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
@@ -36,17 +38,19 @@ export default function CreditBudgetSection({
         <CardTitle className="flex items-center gap-2">
           {t('creditBudget.title')}
         </CardTitle>
-        <CardAction>
-          <CreditBudgetUpdateDialog
-            orgId={orgId}
-            monthlyCredits={monthlyCredits}
-            trigger={
-              <Button variant="outline" size="sm">
-                {t('creditBudget.edit')}
-              </Button>
-            }
-          />
-        </CardAction>
+        {!readOnly && (
+          <CardAction>
+            <CreditBudgetUpdateDialog
+              orgId={orgId}
+              monthlyCredits={monthlyCredits}
+              trigger={
+                <Button variant="outline" size="sm">
+                  {t('creditBudget.edit')}
+                </Button>
+              }
+            />
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <CreditBudgetDisplay

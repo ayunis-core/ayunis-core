@@ -14,7 +14,7 @@ import type { ReactNode } from 'react';
 interface LicenseSeatsSectionProps {
   subscription: SubscriptionResponseDto;
   translationNamespace: string;
-  renderUpdateDialog: (trigger: ReactNode) => ReactNode;
+  renderUpdateDialog?: (trigger: ReactNode) => ReactNode;
 }
 
 export default function LicenseSeatsSection({
@@ -42,7 +42,7 @@ export default function LicenseSeatsSection({
           {t('licenseSeats.title')}
         </CardTitle>
         <CardAction>
-          {renderUpdateDialog(
+          {renderUpdateDialog?.(
             <Button size="sm" variant="outline">
               {t('licenseSeats.manage')}
             </Button>,
