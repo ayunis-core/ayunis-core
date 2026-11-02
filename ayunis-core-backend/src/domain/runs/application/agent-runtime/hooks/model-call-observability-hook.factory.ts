@@ -155,7 +155,7 @@ export class ModelCallObservabilityHookFactory {
     };
     if (isProviderUnavailable(outcome.providerFailure.kind)) {
       this.logger.error(
-        context,
+        { ...context, err: source },
         'Provider unavailable during runtime inference',
       );
       return;
