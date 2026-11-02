@@ -25,6 +25,13 @@ const CONNECTION_UNAVAILABLE_CODES = new Set([
   'ETIMEDOUT',
 ]);
 
+// pg-pool raises these without a code; match its exact messages only, so a
+// generic "database unavailable" message is still not treated as an outage.
+const POOL_TIMEOUT_MESSAGES = new Set([
+  'timeout exceeded when trying to connect',
+  'Connection terminated due to connection timeout',
+]);
+
 export function isDatabaseUnavailableError(error: unknown): boolean {
   const queue = [error];
   const visited = new Set<object>();
@@ -35,6 +42,12 @@ export function isDatabaseUnavailableError(error: unknown): boolean {
     visited.add(current);
 
     if (isUnavailableCode(current.code)) return true;
+    if (
+      current instanceof Error &&
+      POOL_TIMEOUT_MESSAGES.has(current.message)
+    ) {
+      return true;
+    }
     queue.push(
       current.cause,
       current.driverError,

@@ -12,6 +12,7 @@ import { IsAddonActiveUseCase } from './application/use-cases/is-addon-active/is
 
 import { SuperAdminAddonsController } from './presenters/http/super-admin-addons.controller';
 import { AddonsController } from './presenters/http/addons.controller';
+import { SyncAcademyAddonUseCase } from 'src/iam/addons/application/use-cases/sync-academy-addon/sync-academy-addon.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OrgAddonRecord])],
@@ -25,8 +26,13 @@ import { AddonsController } from './presenters/http/addons.controller';
     ActivateAddonUseCase,
     DeactivateAddonUseCase,
     IsAddonActiveUseCase,
+    SyncAcademyAddonUseCase,
   ],
   // Exported so future feature modules can gate behavior on active add-ons.
-  exports: [ListOrgAddonsUseCase, IsAddonActiveUseCase],
+  exports: [
+    ListOrgAddonsUseCase,
+    IsAddonActiveUseCase,
+    SyncAcademyAddonUseCase,
+  ],
 })
 export class AddonsModule {}

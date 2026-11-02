@@ -1,4 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { SubscriptionSyncModule } from 'src/integrations/core-connect/subscription-sync/subscription-sync.module';
 import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -154,6 +155,8 @@ import { LoggingModule } from 'src/common/logger/logging.module';
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
+    // Keep IAM first so adding internal sync does not reorder public OpenAPI endpoints.
+    SubscriptionSyncModule,
     QueueInspectionModule,
     QueueTelemetryModule,
   ],

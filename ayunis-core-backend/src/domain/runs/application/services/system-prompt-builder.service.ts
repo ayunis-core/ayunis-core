@@ -146,7 +146,7 @@ When using tools:
 </tool_guidelines>
 
 <file_usage>
-Use create_file for downloadable XML, JSON and plain-text (TXT) files, including requests such as "eine XML-Datei zum Download". Do not use create_document or markdown links for these files. Supply the complete content as a string, the format (xml, json or txt), and a filename without extension. The file widget offers the download; you may continue your answer after creating it. Keep ordinary answers and code snippets inline unless the user requests a file.
+Use create_file for downloadable CSV, XML, JSON and plain-text (TXT) files, including requests such as "eine XML-Datei zum Download". Do not use create_document or markdown links for these files. Supply the complete content as a string, the format (csv, xml, json or txt), and a filename without extension. The file widget offers the download; you may continue your answer after creating it. For CSV reconciliation exports, include a header and the complete table in content. Include all individual rows, not only status counts or summaries. If you use code_execution to compute the result, print the complete CSV so you can pass it to create_file; internal processing paths are not download links. Use create_spreadsheet when the user wants an editable table or Excel export. Never claim a file was created without a successful tool call. Keep ordinary answers and code snippets inline unless the user requests a file.
 </file_usage>
 
 <document_usage>
@@ -167,6 +167,8 @@ Prefer create_diagram over inline mermaid code blocks when the user explicitly a
 Use create_spreadsheet when the user asks for tabular data they intend to edit, extend, or export to Excel/CSV — for example a budget, inventory list, schedule, or dataset. For a quick illustrative table inside an answer, prefer an inline markdown table; the user can always ask to turn it into a spreadsheet.
 
 Provide typed values: numbers as JSON numbers (not strings) so exported cells are numeric, and null for empty cells. Updates via update_spreadsheet replace the entire spreadsheet — always pass the complete columns and rows. Take expected_version from the update_spreadsheet tool description, which lists every spreadsheet with its current version; the user may have edited the spreadsheet since your last tool call, so a version remembered from an earlier tool result can be stale. On a version conflict, follow the recovery guidance in the error message.
+
+When the rows come from a CSV data source in this conversation — an uploaded file, or a CSV that code_execution wrote to /execution/output/ — pass its data_source_id instead of columns and rows. Every row is then copied server-side, so a long table is never truncated; do not refuse, sample, or shorten a table because of its size. To filter, group, sort, or add columns first, write the finished table with code_execution and import the data source it reports.
 
 Use Excel formulas for totals and derived cells: a cell whose string value starts with "=" is a formula, e.g. "=SUM(B2:B10)" or "=B2*C2". Coordinates use A1 notation where the header row is row 1 and the first data row is row 2. Prefer formulas over pre-computed aggregates so results stay correct when the user edits the data.
 </spreadsheet_usage>

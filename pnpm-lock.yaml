@@ -626,6 +626,9 @@ importers:
       mermaid:
         specifier: ^11.17.2
         version: 11.17.2
+      papaparse:
+        specifier: ^5.7.0
+        version: 5.7.0
       pdfjs-dist:
         specifier: ^5.5.207
         version: 5.7.284
@@ -687,6 +690,9 @@ importers:
       '@types/geojson':
         specifier: ^7946.0.16
         version: 7946.0.16
+      '@types/papaparse':
+        specifier: ^5.5.2
+        version: 5.5.2
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0

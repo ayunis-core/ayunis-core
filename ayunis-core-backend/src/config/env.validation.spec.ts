@@ -37,8 +37,25 @@ function without(
 }
 
 describe('validateEnv', () => {
+  it.each(['-1', '1.5', 'not-a-number', '1000ms', '1e3', '0x10', '2147483648'])(
+    'rejects invalid database connection timeout %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ POSTGRES_CONNECTION_TIMEOUT_MS: value })),
+      ).toThrow('POSTGRES_CONNECTION_TIMEOUT_MS');
+    },
+  );
+  it.each(['', '0', '2500', '2147483647'])(
+    'accepts database connection timeout %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ POSTGRES_CONNECTION_TIMEOUT_MS: value })),
+      ).not.toThrow();
+    },
+  );
+
   it.each(['yes', 'TRUE', '1'])(
-    'rejects invalid external subscription flag %s',
+    'rejects invalid external subscription management flag %s',
     (value) => {
       expect(() =>
         validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),

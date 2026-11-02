@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 
 const codeExecutionToolParameters = {
@@ -56,7 +56,7 @@ export class CodeExecutionTool extends Tool {
       descriptionLong:
         `Output visibility: You see printed output, but the user does NOT see it directly - you must relay results in your response.
 
-Output files: Write CSV files to /execution/output/ to save as thread data sources. Only CSV is supported - for other formats, include content in your response instead.
+Output files: Write CSV files to /execution/output/ to save as thread data sources. Only CSV is supported - for other formats, include content in your response instead. To turn a computed table into an editable spreadsheet, write it here and pass the reported data source ID to create_spreadsheet as data_source_id instead of copying rows from the printed output.
 ${csvLongDescription}`.trim(),
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
