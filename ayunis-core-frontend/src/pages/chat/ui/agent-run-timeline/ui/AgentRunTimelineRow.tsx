@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronRight,
@@ -28,7 +28,9 @@ export default function AgentRunTimelineRow({
   step,
 }: Readonly<AgentRunTimelineRowProps>) {
   const { t } = useTranslation('chat');
-  const [open, setOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  const open =
+    userOpen ?? (step.kind === 'thinking' && step.status === 'in_progress');
   const { label, hasDetails, details, expandable } = getStepView(step, t);
 
   const integration =
@@ -72,7 +74,7 @@ export default function AgentRunTimelineRow({
     );
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible open={open} onOpenChange={setUserOpen}>
       <CollapsibleTrigger asChild>
         <button
           type="button"
@@ -133,11 +135,10 @@ function getStepView(
       hasDetails: step.transcript.length > 0,
       expandable: true,
       details: (
-        <div className="max-h-40 overflow-y-auto">
-          <div className="text-xs text-muted-foreground whitespace-pre-wrap">
-            <PiiText>{step.transcript}</PiiText>
-          </div>
-        </div>
+        <ThinkingTranscript
+          transcript={step.transcript}
+          streaming={step.status === 'in_progress'}
+        />
       ),
     };
   }
@@ -200,4 +201,33 @@ function getStepView(
       </>
     ),
   };
+}
+
+interface ThinkingTranscriptProps {
+  transcript: string;
+  streaming: boolean;
+}
+
+function ThinkingTranscript({
+  transcript,
+  streaming,
+}: Readonly<ThinkingTranscriptProps>) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (streaming && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [transcript, streaming]);
+
+  return (
+    <div
+      ref={scrollRef}
+      className={cn('max-h-40 overflow-y-auto', streaming && 'min-h-24')}
+    >
+      <div className="text-xs text-muted-foreground whitespace-pre-wrap">
+        <PiiText>{transcript}</PiiText>
+      </div>
+    </div>
+  );
 }

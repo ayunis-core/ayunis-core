@@ -22,4 +22,14 @@ describe('CreateSpreadsheetTool', () => {
       ],
     });
   });
+
+  it('accepts a data source import without columns and rows', () => {
+    const tool = new CreateSpreadsheetTool();
+    const input = {
+      title: 'Bookings',
+      data_source_id: '6f1c2a9e-2f9b-4c55-9d0e-7c1a3b4d5e6f',
+    };
+
+    expect(tool.validateParams(input)).toEqual(input);
+  });
 });

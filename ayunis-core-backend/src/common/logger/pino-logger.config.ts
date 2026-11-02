@@ -68,6 +68,12 @@ const ERROR_SUMMARIES = new Map<string, string>([
   ['ETIMEDOUT', 'Connection timed out'],
   ['ENOTFOUND', 'DNS lookup failed'],
   ['EAI_AGAIN', 'DNS lookup temporarily unavailable'],
+  ['UND_ERR_SOCKET', 'Socket connection failed'],
+  ['UND_ERR_CONNECT_TIMEOUT', 'Connection timed out'],
+  ['UND_ERR_HEADERS_TIMEOUT', 'Response headers timed out'],
+  ['UND_ERR_BODY_TIMEOUT', 'Response body timed out'],
+  ['UND_ERR_CLOSED', 'HTTP client closed'],
+  ['UND_ERR_DESTROYED', 'HTTP client destroyed'],
 ]);
 
 interface SerializedError {

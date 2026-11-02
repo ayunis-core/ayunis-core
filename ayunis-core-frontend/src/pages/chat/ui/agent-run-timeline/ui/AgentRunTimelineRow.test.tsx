@@ -63,6 +63,59 @@ describe('AgentRunTimelineRow', () => {
   });
 });
 
+describe('thinking steps', () => {
+  function thinkingStep(
+    status: 'in_progress' | 'done',
+    transcript = 'Weighing options',
+  ): TimelineStep {
+    return { kind: 'thinking', key: 'thinking-1', status, transcript };
+  }
+
+  function renderThinking(step: TimelineStep) {
+    const i18n = createInstance();
+    void i18n.init({ lng: 'en', resources: { en: { chat: en } } });
+    const view = (s: TimelineStep) => (
+      <I18nextProvider i18n={i18n}>
+        <AgentRunTimelineRow step={s} />
+      </I18nextProvider>
+    );
+    const result = render(view(step));
+    return { rerender: (s: TimelineStep) => result.rerender(view(s)) };
+  }
+
+  it('shows the transcript while thinking is still streaming', () => {
+    renderThinking(thinkingStep('in_progress'));
+
+    expect(screen.getByText('Weighing options')).toBeTruthy();
+  });
+
+  it('collapses the transcript once thinking is done', () => {
+    const { rerender } = renderThinking(thinkingStep('in_progress'));
+
+    rerender(thinkingStep('done', 'Weighing options\nDecided'));
+
+    expect(screen.queryByText(/Decided/)).toBeNull();
+  });
+
+  it('keeps finished thinking collapsed until expanded', () => {
+    renderThinking(thinkingStep('done'));
+    expect(screen.queryByText('Weighing options')).toBeNull();
+
+    fireEvent.click(screen.getByText(en.chat.timeline.thoughtProcess));
+
+    expect(screen.getByText('Weighing options')).toBeTruthy();
+  });
+
+  it('keeps thinking collapsed by the user while more tokens stream', () => {
+    const { rerender } = renderThinking(thinkingStep('in_progress'));
+
+    fireEvent.click(screen.getByText(en.chat.timeline.thoughtProcess));
+    rerender(thinkingStep('in_progress', 'Weighing options\nStill going'));
+
+    expect(screen.queryByText(/Weighing options/)).toBeNull();
+  });
+});
+
 const invalidCallCopy = [
   [
     'de',
