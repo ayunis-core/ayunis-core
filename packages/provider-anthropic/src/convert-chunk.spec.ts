@@ -110,6 +110,7 @@ describe('convertChunk', () => {
     ['end_turn', 'stop'],
     ['stop_sequence', 'stop'],
     ['max_tokens', 'length'],
+    ['model_context_window_exceeded', 'length'],
     ['tool_use', 'tool_calls'],
     ['refusal', 'refusal'],
     ['pause_turn', 'pause_turn'],
