@@ -8,7 +8,6 @@ import { CreateInviteCommand } from './create-invite.command';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -34,7 +33,6 @@ describe('CreateInviteUseCase', () => {
   let configService: jest.Mocked<ConfigService>;
   let inviteJwtService: jest.Mocked<InviteJwtService>;
   let getActiveSubscriptionUseCase: jest.Mocked<GetActiveSubscriptionUseCase>;
-  let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let findUserByEmailUseCase: jest.Mocked<FindUserByEmailUseCase>;
 
@@ -65,10 +63,6 @@ describe('CreateInviteUseCase', () => {
       execute: jest.fn(),
     };
 
-    const mockUpdateSeatsUseCase = {
-      execute: jest.fn(),
-    };
-
     const mockSendInvitationEmailUseCase = {
       execute: jest.fn(),
     };
@@ -91,7 +85,6 @@ describe('CreateInviteUseCase', () => {
           provide: GetActiveSubscriptionUseCase,
           useValue: mockGetActiveSubscriptionUseCase,
         },
-        { provide: UpdateSeatsUseCase, useValue: mockUpdateSeatsUseCase },
         {
           provide: SendInvitationEmailUseCase,
           useValue: mockSendInvitationEmailUseCase,
@@ -108,7 +101,6 @@ describe('CreateInviteUseCase', () => {
     configService = module.get(ConfigService);
     inviteJwtService = module.get(InviteJwtService);
     getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
-    updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     findUserByEmailUseCase = module.get(FindUserByEmailUseCase);
 
@@ -201,7 +193,6 @@ describe('CreateInviteUseCase', () => {
 
       // Assert
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalled();
     });
 
@@ -247,7 +238,6 @@ describe('CreateInviteUseCase', () => {
 
       // Assert
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalled();
     });
 
@@ -293,7 +283,6 @@ describe('CreateInviteUseCase', () => {
 
       // Assert
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           email: mockEmail,
@@ -302,74 +291,54 @@ describe('CreateInviteUseCase', () => {
       );
     });
 
-    it.each([false, true])(
-      'handles a full cloud subscription with external subscription management=%s',
-      async (managed) => {
-        // Arrange
-        const command = new CreateInviteCommand({
-          email: mockEmail,
+    it('should reject the invite and leave the subscription untouched when no seats are available in cloud instance', async () => {
+      // Regression for AYC-1131: reserving a seat beyond the ordered seat count
+      // used to raise noOfSeats automatically, which orders a paid service
+      // without an order from the customer.
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      const mockSubscription = {
+        availableSeats: 0,
+        nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        subscription: new SeatBasedSubscription({
+          id: 'sub-id' as UUID,
           orgId: mockOrgId,
-          role: UserRole.USER,
-          userId: mockUserId,
-        });
-
-        const mockSubscription = {
-          availableSeats: 0,
-          nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          subscription: new SeatBasedSubscription({
-            id: 'sub-id' as UUID,
-            orgId: mockOrgId,
-            noOfSeats: 10,
-            pricePerSeat: 0,
-            renewalCycle: RenewalCycle.MONTHLY,
-            renewalCycleAnchor: new Date(),
-            billingInfo: new SubscriptionBillingInfo({
-              companyName: 'Test',
-              street: 'Test St',
-              houseNumber: '1',
-              postalCode: '12345',
-              city: 'Test',
-              country: 'DE',
-            }),
+          noOfSeats: 10,
+          pricePerSeat: 0,
+          renewalCycle: RenewalCycle.MONTHLY,
+          renewalCycleAnchor: new Date(),
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Test',
+            street: 'Test St',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Test',
+            country: 'DE',
           }),
-        };
+        }),
+      };
 
-        findUserByEmailUseCase.execute.mockResolvedValue(null);
-        configService.get
-          .mockReturnValueOnce([]) // auth.emailProviderBlacklist
-          .mockReturnValueOnce(true) // app.isCloudHosted
-          .mockReturnValueOnce(managed)
-          .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
-          .mockReturnValueOnce(true); // emails.hasConfig
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(true) // app.isCloudHosted
+        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+        .mockReturnValueOnce(true); // emails.hasConfig
 
-        getActiveSubscriptionUseCase.execute.mockResolvedValue(
-          mockSubscription,
-        );
-        inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      getActiveSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
-        if (managed) {
-          await expect(useCase.execute(command)).rejects.toThrow(
-            InsufficientSeatsError,
-          );
-          expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
-          expect(invitesRepository.create).not.toHaveBeenCalled();
-          return;
-        }
-
-        // Act
-        await useCase.execute(command);
-
-        // Assert
-        expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
-          expect.objectContaining({
-            orgId: mockOrgId,
-            requestingUserId: mockUserId,
-            noOfSeats: 11,
-          }),
-        );
-        expect(invitesRepository.create).toHaveBeenCalled();
-      },
-    );
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InsufficientSeatsError,
+      );
+      expect(invitesRepository.create).not.toHaveBeenCalled();
+      expect(sendInvitationEmailUseCase.execute).not.toHaveBeenCalled();
+    });
 
     it('should throw EmailNotAvailableError when user already exists', async () => {
       // Arrange
