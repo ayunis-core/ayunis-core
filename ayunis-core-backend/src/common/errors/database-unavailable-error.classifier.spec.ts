@@ -10,6 +10,16 @@ describe(isDatabaseUnavailableError.name, () => {
     },
   );
 
+  it.each([
+    'timeout exceeded when trying to connect',
+    'Connection terminated due to connection timeout',
+  ])('recognizes the pg-pool acquisition timeout "%s"', (message) => {
+    expect(isDatabaseUnavailableError(new Error(message))).toBe(true);
+    expect(
+      isDatabaseUnavailableError({ driverError: new Error(message) }),
+    ).toBe(true);
+  });
+
   it('walks TypeORM driver errors', () => {
     const error = {
       driverError: Object.assign(new Error('connect ECONNREFUSED'), {
