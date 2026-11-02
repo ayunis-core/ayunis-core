@@ -4,7 +4,7 @@ export function mockCreateFileResponse(
   request: ProviderRequest,
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
-  const format = /^E2E create file (xml|json|txt)$/.exec(userText)?.[1];
+  const format = /^E2E create file (xml|json|txt|csv)$/.exec(userText)?.[1];
   if (!format) return null;
   const acknowledged = request.messages.some(
     (message) =>
@@ -32,7 +32,10 @@ async function* fileResponse(
   const args = JSON.stringify({
     filename: `Bürgerbericht.${format}`,
     format,
-    content: 'Grüße aus Köln\n',
+    content:
+      format === 'csv'
+        ? 'Artikel,Bestand,Status\r\n"Stuhl, groß",12,grün\r\n"Regal ""Nord""",4,orange\r\n'
+        : 'Grüße aus Köln\n',
   });
   yield {
     toolCallDeltas: [

@@ -10,13 +10,12 @@ import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ChangeSubscriptionUseCase } from './change-subscription.use-case';
 import { ChangeSubscriptionCommand } from './change-subscription.command';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { SubscriptionFactory } from 'src/iam/subscriptions/application/services/subscription-factory.service';
-import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
-import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
+import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -39,8 +38,8 @@ import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/applicat
 describe('ChangeSubscriptionUseCase', () => {
   let useCase: ChangeSubscriptionUseCase;
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
-  let getInvitesByOrgUseCase: jest.Mocked<GetInvitesByOrgUseCase>;
-  let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
+  let countInvites: jest.Mocked<CountPendingInvitesByOrgIdUseCase>;
+  let countUsers: jest.Mocked<CountUsersByOrgIdUseCase>;
   let configService: jest.Mocked<ConfigService>;
   let contextService: jest.Mocked<ContextService>;
   let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
@@ -91,8 +90,11 @@ describe('ChangeSubscriptionUseCase', () => {
             ),
           },
         },
-        { provide: GetInvitesByOrgUseCase, useValue: { execute: jest.fn() } },
-        { provide: FindUsersByOrgIdUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: CountPendingInvitesByOrgIdUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        { provide: CountUsersByOrgIdUseCase, useValue: { execute: jest.fn() } },
         {
           provide: EventEmitter2,
           useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
@@ -104,8 +106,8 @@ describe('ChangeSubscriptionUseCase', () => {
 
     useCase = module.get(ChangeSubscriptionUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
-    getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
-    findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
+    countInvites = module.get(CountPendingInvitesByOrgIdUseCase);
+    countUsers = module.get(CountUsersByOrgIdUseCase);
     configService = module.get(ConfigService);
     contextService = module.get(ContextService);
     eventEmitter = module.get(EventEmitter2);
@@ -130,12 +132,8 @@ describe('ChangeSubscriptionUseCase', () => {
   }
 
   function mockInvitesAndUsers(openInvites: number, userCount: number): void {
-    getInvitesByOrgUseCase.execute.mockResolvedValue(
-      new Paginated({ data: [], limit: 1000, offset: 0, total: openInvites }),
-    );
-    findUsersByOrgIdUseCase.execute.mockResolvedValue(
-      new Paginated({ data: [], limit: 1000, offset: 0, total: userCount }),
-    );
+    countInvites.execute.mockResolvedValue(openInvites);
+    countUsers.execute.mockResolvedValue(userCount);
   }
 
   function seatToUsageCommand(

@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { AddonType } from '../../domain/value-objects/addon-type.enum';
+import type { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 
 export class AddonActivatedEvent {
   static readonly EVENT_NAME = 'addon.activated';
@@ -7,6 +7,6 @@ export class AddonActivatedEvent {
   constructor(
     public readonly orgId: UUID,
     public readonly addonType: AddonType,
-    public readonly actorUserId: UUID,
+    public readonly actorUserId: UUID | null,
   ) {}
 }

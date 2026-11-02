@@ -217,6 +217,19 @@ describe('RefreshTokenUseCase', () => {
     expect(mockRevokeSessionFamilyUseCase.execute).not.toHaveBeenCalled();
   });
 
+  it('maps a database pool acquisition timeout to service unavailable', async () => {
+    mockPrepareSessionRotationUseCase.execute.mockRejectedValue(
+      new UnexpectedSessionsError(
+        new Error('timeout exceeded when trying to connect'),
+      ),
+    );
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(ServiceUnavailableError);
+    expect(mockRevokeSessionFamilyUseCase.execute).not.toHaveBeenCalled();
+  });
+
   it('keeps non-database rotation failures as unexpected errors', async () => {
     mockRotateSessionUseCase.execute.mockRejectedValue(
       new UnexpectedSessionsError(new Error('boom')),

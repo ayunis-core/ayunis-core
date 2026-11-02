@@ -1,0 +1,50 @@
+[
+  {
+    "name": "subscription.created",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyICaWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIEdHlwZSILVVNBR0VfQkFTRUQiDm1vbnRobHlDcmVkaXRzSYCV9SoiCHN0YXJ0c0F0RAAAgLlpFXpCIgljcmVhdGVkQXReAiIJdXBkYXRlZEF0XgIiBmVuZHNBdDAiC2NhbmNlbGxlZEF0MHsJewI=",
+    "expected": "subscription.created",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "subscription.cancelled",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyICaWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIEdHlwZSILVVNBR0VfQkFTRUQiDm1vbnRobHlDcmVkaXRzSYCV9SoiCHN0YXJ0c0F0RAAAgLlpFXpCIgljcmVhdGVkQXReAiIJdXBkYXRlZEF0XgIiBmVuZHNBdDAiC2NhbmNlbGxlZEF0MHsJewI=",
+    "expected": "subscription.cancelled",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "subscription.uncancelled",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyICaWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIEdHlwZSILVVNBR0VfQkFTRUQiDm1vbnRobHlDcmVkaXRzSYCV9SoiCHN0YXJ0c0F0RAAAgLlpFXpCIgljcmVhdGVkQXReAiIJdXBkYXRlZEF0XgIiBmVuZHNBdDAiC2NhbmNlbGxlZEF0MHsJewI=",
+    "expected": "subscription.uncancelled",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "subscription.seats-updated",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyICaWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIEdHlwZSIKU0VBVF9CQVNFRCIObW9udGhseUNyZWRpdHNJgJX1KiIIc3RhcnRzQXREAACAuWkVekIiCWNyZWF0ZWRBdF4CIgl1cGRhdGVkQXReAiIGZW5kc0F0MCILY2FuY2VsbGVkQXQwIglub09mU2VhdHNJMiIMcHJpY2VQZXJTZWF0SSQiDHJlbmV3YWxDeWNsZSIGeWVhcmx5IhJyZW5ld2FsQ3ljbGVBbmNob3JeAnsNewI=",
+    "expected": "subscription.seats_updated",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "subscription.monthly-credits-updated",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyICaWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIEdHlwZSILVVNBR0VfQkFTRUQiDm1vbnRobHlDcmVkaXRzSYCV9SoiCHN0YXJ0c0F0RAAAgLlpFXpCIgljcmVhdGVkQXReAiIJdXBkYXRlZEF0XgIiBmVuZHNBdDAiC2NhbmNlbGxlZEF0MHsJewI=",
+    "expected": "subscription.monthly_credits_updated",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "subscription.billing-info-updated",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIgdwYXlsb2FkbyIFb3JnSWQiJDQzZTNkMDZkLTVlYTEtNGMwZi1iZTg4LTBkZGIzZWI1OWVlYyIOc3Vic2NyaXB0aW9uSWQiJGQ5ZWY4Mzk4LTk0ZWMtNDg0Ny1iNWJiLTIyMjcwMTcyZDQxNyILY29tcGFueU5hbWUiFEV4YW1wbGUgTXVuaWNpcGFsaXR5IgZzdHJlZXQiEFRvd24gSGFsbCBTdHJlZXQiC2hvdXNlTnVtYmVyIgExIgpwb3N0YWxDb2RlIgUxMDExNSIEY2l0eSIGQmVybGluIgdjb3VudHJ5IgJERXsIewI=",
+    "expected": "subscription.billing_info_updated",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "addon.activated",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIglhZGRvblR5cGUiE2F5dW5pc19jb3JlX2FjYWRlbXkiC2FjdG9yVXNlcklkMHsD",
+    "expected": "addon.activated",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  },
+  {
+    "name": "addon.deactivated",
+    "payload": "/w9vIgVvcmdJZCIkNDNlM2QwNmQtNWVhMS00YzBmLWJlODgtMGRkYjNlYjU5ZWVjIglhZGRvblR5cGUiE2F5dW5pc19jb3JlX2FjYWRlbXkiC2FjdG9yVXNlcklkMHsD",
+    "expected": "addon.deactivated",
+    "orgId": "43e3d06d-5ea1-4c0f-be88-0ddb3eb59eec"
+  }
+]

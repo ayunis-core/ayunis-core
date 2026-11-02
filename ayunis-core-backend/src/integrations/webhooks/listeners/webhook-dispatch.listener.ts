@@ -1,3 +1,4 @@
+import { isWebhookDeliveryDeferred } from 'src/integrations/webhooks/application/context/webhook-delivery-context';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -41,8 +42,8 @@ import { MonthlyCreditsSnapshotWebhookEvent } from 'src/integrations/webhooks/do
 import { ChatSentWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/chat-sent.webhook-event';
 import { AddonActivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-activated.webhook-event';
 import { AddonDeactivatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/addon-deactivated.webhook-event';
-import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
-import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
+import { mapSubscriptionToWebhookPayload } from 'src/integrations/webhooks/application/mappers/subscription-payload.mapper';
+import { mapBillingInfoToWebhookPayload } from 'src/integrations/webhooks/application/mappers/billing-info-payload.mapper';
 import type { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
@@ -119,48 +120,50 @@ export class WebhookDispatchListener {
     await this.dispatch(new OrgCreatedWebhookEvent(event.org));
   }
 
-  @OnEvent(SubscriptionCreatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionCreatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionCreated(
     event: SubscriptionCreatedEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionCreatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
   }
 
-  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME, {
+    suppressErrors: false,
+  })
   async handleSubscriptionMonthlyCreditsUpdated(
     event: SubscriptionMonthlyCreditsUpdatedEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionMonthlyCreditsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
   }
 
-  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME)
+  @OnEvent(SubscriptionCancelledEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionCancelled(
     event: SubscriptionCancelledEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionCancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
   }
 
-  @OnEvent(SubscriptionUncancelledEvent.EVENT_NAME)
+  @OnEvent(SubscriptionUncancelledEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionUncancelled(
     event: SubscriptionUncancelledEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionUncancelledWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
@@ -179,24 +182,26 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(SubscriptionSeatsUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionSeatsUpdatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleSubscriptionSeatsUpdated(
     event: SubscriptionSeatsUpdatedEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionSeatsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
   }
 
-  @OnEvent(SubscriptionBillingInfoUpdatedEvent.EVENT_NAME)
+  @OnEvent(SubscriptionBillingInfoUpdatedEvent.EVENT_NAME, {
+    suppressErrors: false,
+  })
   async handleSubscriptionBillingInfoUpdated(
     event: SubscriptionBillingInfoUpdatedEvent,
   ): Promise<void> {
     await this.dispatchSubscription(
-      event.orgId,
+      event,
       new SubscriptionBillingInfoUpdatedWebhookEvent(
         mapBillingInfoToWebhookPayload(event.payload),
       ),
@@ -341,7 +346,7 @@ export class WebhookDispatchListener {
     );
   }
 
-  @OnEvent(AddonActivatedEvent.EVENT_NAME)
+  @OnEvent(AddonActivatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
     await this.dispatch(
       new AddonActivatedWebhookEvent({
@@ -349,10 +354,11 @@ export class WebhookDispatchListener {
         addonType: event.addonType,
         actorUserId: event.actorUserId,
       }),
+      event,
     );
   }
 
-  @OnEvent(AddonDeactivatedEvent.EVENT_NAME)
+  @OnEvent(AddonDeactivatedEvent.EVENT_NAME, { suppressErrors: false })
   async handleAddonDeactivated(event: AddonDeactivatedEvent): Promise<void> {
     await this.dispatch(
       new AddonDeactivatedWebhookEvent({
@@ -360,6 +366,7 @@ export class WebhookDispatchListener {
         addonType: event.addonType,
         actorUserId: event.actorUserId,
       }),
+      event,
     );
   }
 
@@ -417,15 +424,20 @@ export class WebhookDispatchListener {
   }
 
   private dispatchSubscription(
-    orgId: UUID,
+    source: { orgId: UUID },
     webhookEvent: WebhookEvent,
   ): Promise<void> {
-    return this.webhookDeliverySequencer.enqueue(orgId, () =>
+    if (isWebhookDeliveryDeferred(source)) return Promise.resolve();
+    return this.webhookDeliverySequencer.enqueue(source.orgId, () =>
       this.dispatch(webhookEvent),
     );
   }
 
-  private async dispatch(webhookEvent: WebhookEvent): Promise<void> {
+  private async dispatch(
+    webhookEvent: WebhookEvent,
+    source?: object,
+  ): Promise<void> {
+    if (source && isWebhookDeliveryDeferred(source)) return;
     try {
       await this.sendWebhookUseCase.execute(
         new SendWebhookCommand(webhookEvent),
