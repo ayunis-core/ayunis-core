@@ -1,9 +1,12 @@
+import { DefaultModelSelectionService } from 'src/domain/models/application/services/default-model-selection.service';
+import { DefaultModelSelectionsRepository } from 'src/domain/models/application/ports/default-model-selections.repository';
+import type { DefaultModelSelectionOwner } from 'src/domain/models/domain/default-model-selection';
+import { ModelModeEntriesRepository } from 'src/domain/models/application/ports/model-mode-entries.repository';
 import { Test } from '@nestjs/testing';
 import { randomUUID, type UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DefaultModelNotFoundError } from 'src/domain/models/application/models.errors';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
@@ -66,6 +69,26 @@ describe('SkillTextModelResolver with real model selection', () => {
       providers: [
         SkillTextModelResolver,
         GetDefaultModelUseCase,
+        DefaultModelSelectionService,
+        {
+          provide: DefaultModelSelectionsRepository,
+          useValue: {
+            find: async (owner: DefaultModelSelectionOwner) => {
+              let model: PermittedLanguageModel | null | undefined = null;
+              if ('userId' in owner) model = userDefaults.get(owner.userId);
+              if ('orgId' in owner) model = orgDefault;
+              return model ? { kind: 'model', permittedModel: model } : null;
+            },
+            findForTeams: async () =>
+              teamModels
+                .filter((model) => model.isDefault)
+                .map((model) => ({ kind: 'model', permittedModel: model })),
+          },
+        },
+        {
+          provide: ModelModeEntriesRepository,
+          useValue: { findByMode: jest.fn().mockResolvedValue([]) },
+        },
         GetEffectiveLanguageModelsUseCase,
         EffectiveModelScopeResolverService,
         { provide: ContextService, useValue: { get: () => orgId } },
@@ -81,19 +104,10 @@ describe('SkillTextModelResolver with real model selection', () => {
           },
         },
         {
-          provide: UserDefaultModelsRepository,
-          useValue: {
-            findByUserId: async (id: UUID) => userDefaults.get(id) ?? null,
-          },
-        },
-        {
           provide: PermittedModelsRepository,
           useValue: {
             findManyLanguage: async () => orgModels,
-            findOrgDefaultLanguage: async () => orgDefault,
             findManyLanguageByTeams: async () => teamModels,
-            findManyTeamDefaultLanguage: async () =>
-              teamModels.filter((model) => model.isDefault),
           },
         },
       ],

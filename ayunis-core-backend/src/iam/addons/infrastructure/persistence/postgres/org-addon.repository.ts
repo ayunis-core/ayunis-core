@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { OrgAddonRepository } from 'src/iam/addons/application/ports/org-addon.repository';
 import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
-import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
+import type { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { OrgAddonRecord } from './schema/org-addon.record';
 import { OrgAddonMapper } from './mappers/org-addon.mapper';
 
@@ -13,10 +14,13 @@ export class PostgresOrgAddonRepository extends OrgAddonRepository {
   private readonly logger = new Logger(PostgresOrgAddonRepository.name);
 
   constructor(
-    @InjectRepository(OrgAddonRecord)
-    private readonly repository: Repository<OrgAddonRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<OrgAddonRecord> {
+    return this.txHost.tx.getRepository(OrgAddonRecord);
   }
 
   async findAllByOrgId(orgId: UUID): Promise<OrgAddon[]> {

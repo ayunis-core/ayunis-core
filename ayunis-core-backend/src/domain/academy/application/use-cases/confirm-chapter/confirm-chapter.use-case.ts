@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
@@ -25,25 +27,41 @@ export interface ChapterConfirmationResult {
   readonly academyCompleted: boolean;
 }
 
+interface AcademyCompletionState {
+  readonly academyCompleted: boolean;
+  readonly participationConfirmedAt: Date | null;
+}
+
 @Injectable()
 export class ConfirmChapterUseCase {
   private readonly logger = new Logger(ConfirmChapterUseCase.name);
 
+  // eslint-disable-next-line max-params -- NestJS injects the confirmation repositories, policy, and event bus.
   constructor(
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly confirmationRepository: AcademyChapterConfirmationRepository,
     private readonly completionRepository: AcademyCompletionRepository,
     private readonly viewTimeRepository: AcademyModuleViewTimeRepository,
     private readonly getMinimumModuleSeconds: GetAcademyMinimumModuleSecondsUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAcademyError)
-  // Completion and the page-time reset must commit together: a completion
-  // saved without its reset would let the next cycle reuse the old credit.
-  @Transactional()
   async execute(
     command: ConfirmChapterCommand,
   ): Promise<ChapterConfirmationResult> {
+    const { participationConfirmedAt, ...result } =
+      await this.confirmChapter(command);
+    this.emitAcademyProgress(command.userId, participationConfirmedAt);
+    return result;
+  }
+
+  // Completion and the page-time reset must commit together: a completion
+  // saved without its reset would let the next cycle reuse the old credit.
+  @Transactional()
+  private async confirmChapter(
+    command: ConfirmChapterCommand,
+  ): Promise<ChapterConfirmationResult & AcademyCompletionState> {
     this.logger.log(
       { userId: command.userId, chapterId: command.chapterId },
       'Confirming academy chapter',
@@ -59,13 +77,13 @@ export class ConfirmChapterUseCase {
     const confirmation =
       (await this.findReplayedConfirmation(command)) ??
       (await this.recordConfirmation(chapter, command.userId));
-    const academyCompleted = await this.completeAcademyIfEligible(
+    const completionState = await this.completeAcademyIfEligible(
       command.userId,
     );
     return {
       chapterId: confirmation.chapterId,
       confirmedAt: confirmation.confirmedAt,
-      academyCompleted,
+      ...completionState,
     };
   }
 
@@ -127,7 +145,9 @@ export class ConfirmChapterUseCase {
     }
   }
 
-  private async completeAcademyIfEligible(userId: UUID): Promise<boolean> {
+  private async completeAcademyIfEligible(
+    userId: UUID,
+  ): Promise<AcademyCompletionState> {
     const [chapterIds, confirmations, completion] = await Promise.all([
       this.chapterRepository.findAllIds(),
       this.confirmationRepository.findAllByUser(userId),
@@ -145,7 +165,10 @@ export class ConfirmChapterUseCase {
       chapterIds.length > 0 &&
       chapterIds.every((chapterId) => validConfirmations.has(chapterId));
     if (!completed) {
-      return false;
+      return {
+        academyCompleted: false,
+        participationConfirmedAt: completion?.completedAt ?? null,
+      };
     }
 
     const startsNewCycle =
@@ -158,12 +181,44 @@ export class ConfirmChapterUseCase {
         );
       });
     if (startsNewCycle) {
-      await this.completionRepository.upsert(
-        new AcademyCompletion({ userId, completedAt: now }),
-      );
-      // A renewal must earn the minimum time on every video page again.
-      await this.viewTimeRepository.deleteAllByUser(userId);
+      await this.stampCompletion(userId, now);
     }
-    return true;
+    return {
+      academyCompleted: true,
+      participationConfirmedAt: startsNewCycle ? now : completion.completedAt,
+    };
+  }
+
+  private async stampCompletion(
+    userId: UUID,
+    completedAt: Date,
+  ): Promise<void> {
+    await this.completionRepository.upsert(
+      new AcademyCompletion({ userId, completedAt }),
+    );
+    // A renewal must earn the minimum time on every video page again.
+    await this.viewTimeRepository.deleteAllByUser(userId);
+  }
+
+  private emitAcademyProgress(
+    userId: UUID,
+    participationConfirmedAt: Date | null,
+  ): void {
+    Promise.resolve()
+      .then(() =>
+        this.eventEmitter.emitAsync(
+          AcademyProgressUpdatedEvent.EVENT_NAME,
+          new AcademyProgressUpdatedEvent(userId, participationConfirmedAt),
+        ),
+      )
+      .catch((error: unknown) => {
+        this.logger.warn(
+          {
+            userId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Academy progress publication failed',
+        );
+      });
   }
 }

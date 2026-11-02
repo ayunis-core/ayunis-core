@@ -12,3 +12,9 @@ Anonymization also supports the optional AYC-1434 reuse study: bounded, expiring
 `util/network-address-policy.ts` shares special-purpose IP ranges, hostname resolution, and connection-lookup helpers between MCP and discovered-PDF transport. Callers retain their own access policy; the helper does not make tenant or grant decisions.
 
 `util/undici-fetch.util.ts` is the only way to fetch through a dispatcher created from the `undici` dependency. Node's built-in fetch runs on its embedded undici and must not receive these dispatchers; the helper also returns a global `Response` for consumers that check `instanceof Response`.
+
+`RequireManualSubscriptionEditing` applies the cloud external-management policy at manual HTTP entry points, allowing reads and optionally restricting only a named add-on type. It does not restrict internal sync use cases.
+
+The `IsFiniteDate` class-validator decorator lives in `validators/`; billing event catalogs, their runtime shape readers and the webhook delivery context belong to their owning IAM and webhook application modules.
+
+`http/Http2TransportDiagnostics`, owned by `LoggingModule`, passively observes Node HTTP2 provider streams. It emits privacy-safe reset/session/runtime facts only for failed streams to known/configured provider hosts, with originating trace correlation; it changes no transport or retry policy. Session listeners are cleaned on connection close and module shutdown. See `docs/runbooks/http2-provider-diagnostics.md` for scope, fields, and deployment verification.

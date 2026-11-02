@@ -18,8 +18,21 @@ vi.mock('@/features/chat-initiation', () => ({
   }),
 }));
 vi.mock('@/features/usePermittedModels', () => ({
-  usePermittedModels: () => ({ models: [] }),
+  usePermittedModels: () => ({ models: [{ id: 'balanced' }] }),
 }));
+vi.mock('@/features/useModelModes', () => ({
+  useModelModes: () => ({
+    resolutions: [
+      {
+        mode: 'auto',
+        permittedModelId: 'balanced',
+        anonymousPermittedModelId: 'balanced',
+      },
+      { mode: 'max', permittedModelId: null, anonymousPermittedModelId: null },
+    ],
+  }),
+}));
+vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 vi.mock('@/features/anonymous-mode-default', () => ({
   useAnonymousModeDefault: () => ({ isAnonymousByDefault: false }),
 }));
@@ -125,5 +138,21 @@ describe('new chat model selection', () => {
     const { rerender } = setup('medium');
     rerender(<NewChatPage isEmbeddingModelEnabled={false} />);
     expect(screen.getByTestId('selected-model').textContent).toBe('');
+  });
+
+  it('starts a chat in a mode by sending the mode, not a model id', () => {
+    setup('mode:auto');
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    const [params] = mocks.initiateChat.mock.calls[0] as [
+      Record<string, unknown>,
+    ];
+    expect(params.mode).toBe('auto');
+    expect(params).not.toHaveProperty('modelId');
+  });
+
+  it('does not start a chat in a mode that resolves to no model', () => {
+    setup('mode:max');
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(mocks.initiateChat).not.toHaveBeenCalled();
   });
 });

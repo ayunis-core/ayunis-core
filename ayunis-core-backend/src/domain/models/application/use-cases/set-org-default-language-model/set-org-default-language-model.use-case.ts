@@ -1,3 +1,5 @@
+import { DefaultModelSelectionsRepository } from 'src/domain/models/application/ports/default-model-selections.repository';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { Injectable, Logger } from '@nestjs/common';
 import { SetOrgDefaultLanguageModelCommand } from './set-org-default-language-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -17,6 +19,7 @@ export class SetOrgDefaultLanguageModelUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
+    private readonly defaultModelSelectionsRepository: DefaultModelSelectionsRepository,
   ) {}
 
   async execute(
@@ -47,31 +50,16 @@ export class SetOrgDefaultLanguageModelUseCase {
   ): Promise<PermittedLanguageModel> {
     this.assertAuthorized(command.orgId);
     const permittedModel = await this.findPermittedModel(command);
-    const existingDefault =
-      await this.permittedModelsRepository.findOrgDefaultLanguage(
-        command.orgId,
-      );
-    const action = existingDefault ? 'updating' : 'setting';
-    this.logger.debug(
-      {
-        permittedModelId: command.permittedModelId,
-        orgId: command.orgId,
-        modelName: permittedModel.model.name,
-        modelProvider: permittedModel.model.provider,
-        existingDefaultId: existingDefault?.id,
-        action,
-      },
-      'Permitted model found for organization default',
+    // Replaces an org mode default too: one default per org.
+    await this.defaultModelSelectionsRepository.setModel(
+      { orgId: command.orgId },
+      permittedModel.id,
     );
-    const result = await this.permittedModelsRepository.setAsDefault({
-      id: command.permittedModelId,
-      orgId: command.orgId,
-    });
     this.logger.debug(
-      { orgId: command.orgId, modelId: result.id, action },
+      { orgId: command.orgId, modelId: permittedModel.id },
       'Organization default model changed successfully',
     );
-    return result;
+    return new PermittedLanguageModel({ ...permittedModel, isDefault: true });
   }
 
   private assertAuthorized(orgId: string): void {
@@ -88,7 +76,10 @@ export class SetOrgDefaultLanguageModelUseCase {
       id: command.permittedModelId,
       orgId: command.orgId,
     });
-    if (model) return model;
+    // An org default must be an active, organization-wide grant.
+    if (model?.scope === PermittedModelScope.ORG && !model.model.isArchived) {
+      return model;
+    }
     this.logger.error(
       { permittedModelId: command.permittedModelId, orgId: command.orgId },
       'Permitted model not found',

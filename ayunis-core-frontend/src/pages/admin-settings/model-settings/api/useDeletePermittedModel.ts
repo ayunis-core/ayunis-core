@@ -8,6 +8,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   type ModelWithConfigResponseDto,
 } from '@/shared/api';
+import { modelModeQueryKeys } from './modelModeQueryKeys';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -64,6 +65,7 @@ export function useDeletePermittedModel() {
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
           getThreadsControllerFindAllQueryKey(),
+          ...modelModeQueryKeys(),
         ];
         queryKeys.forEach((qk) => {
           void queryClient.invalidateQueries({ queryKey: qk });

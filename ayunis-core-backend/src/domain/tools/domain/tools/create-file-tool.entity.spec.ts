@@ -8,7 +8,7 @@ describe('CreateFileTool', () => {
     content: '<betrag>42</betrag>',
   };
 
-  it.each(['xml', 'json', 'txt'])(
+  it.each(['xml', 'json', 'txt', 'csv'])(
     'accepts %s without interpreting its content',
     (format) => {
       const input = { ...params, format, content: 'Unvalidated text ä\n' };

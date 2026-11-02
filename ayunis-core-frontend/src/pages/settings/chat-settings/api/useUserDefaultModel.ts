@@ -3,14 +3,18 @@ import {
   useModelsDefaultsControllerManageUserDefaultModel,
   useModelsDefaultsControllerDeleteUserDefaultModel,
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
-  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
+  getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
   PermittedLanguageModelResponseDtoNullable,
   SetUserDefaultModelDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useQueryClient } from '@tanstack/react-query';
-import type { UserDefaultModel } from '../model/openapi';
+import {
+  clearModelModeDefaultCache,
+  getModelModeDefaultQueryKey,
+} from '@/features/model-mode-defaults';
+import type { UserDefaultModel } from '@/pages/settings/chat-settings/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +28,9 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   const router = useRouter();
   const queryKeys = [
     getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
-    getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+    getModelModeDefaultsControllerGetDefaultSelectionQueryKey(),
+    // Setting or deleting a model default clears the personal mode default.
+    getModelModeDefaultQueryKey({ level: 'user' }),
   ];
 
   // Get user default model
@@ -63,7 +69,10 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             );
           }
 
-          return { previousData };
+          const restoreMode = await clearModelModeDefaultCache(queryClient, {
+            level: 'user',
+          });
+          return { previousData, restoreMode };
         },
         onSettled: async () => {
           await Promise.all(
@@ -77,7 +86,10 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           err: unknown,
           _: unknown,
           context:
-            | { previousData?: PermittedLanguageModelResponseDtoNullable }
+            | {
+                previousData?: PermittedLanguageModelResponseDtoNullable;
+                restoreMode?: () => void;
+              }
             | undefined,
         ) => {
           console.error('Error managing user default model', err);
@@ -86,6 +98,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
           );
+          context?.restoreMode?.();
         },
       },
     });
@@ -110,7 +123,10 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             { permittedLanguageModel: null },
           );
-          return { previousData };
+          const restoreMode = await clearModelModeDefaultCache(queryClient, {
+            level: 'user',
+          });
+          return { previousData, restoreMode };
         },
         onSuccess: async () => {
           await Promise.all(
@@ -124,7 +140,10 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           err: unknown,
           _: unknown,
           context:
-            | { previousData?: PermittedLanguageModelResponseDtoNullable }
+            | {
+                previousData?: PermittedLanguageModelResponseDtoNullable;
+                restoreMode?: () => void;
+              }
             | undefined,
         ) => {
           console.error('Error deleting user default model', err);
@@ -133,6 +152,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
           );
+          context?.restoreMode?.();
         },
       },
     });

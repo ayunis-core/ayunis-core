@@ -26,17 +26,6 @@ export abstract class PermittedModelsRepository {
       modelId?: UUID;
     },
   ): Promise<PermittedModel[]>;
-  abstract findOrgDefaultLanguage(
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel | null>;
-  abstract findTeamDefaultLanguage(
-    teamId: UUID,
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel | null>;
-  abstract findManyTeamDefaultLanguage(
-    teamIds: UUID[],
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel[]>;
   abstract findOne(params: FindOneParams): Promise<PermittedModel | null>;
   abstract findOneLanguage(
     params: FindOneParams,
@@ -69,14 +58,8 @@ export abstract class PermittedModelsRepository {
     permittedModel: PermittedModel,
   ): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
-  abstract setAsDefault(params: {
-    id: UUID;
-    orgId: UUID;
-    teamId?: UUID;
-  }): Promise<PermittedLanguageModel>;
   abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract findAllByCatalogModelId(
     catalogModelId: UUID,
   ): Promise<PermittedModel[]>;
-  abstract unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void>;
 }

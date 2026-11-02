@@ -1,5 +1,7 @@
+import { parseNonNegativeIntWithDefault } from 'src/common/util/number.util';
+import { validateSubscriptionSyncRules } from './subscription-sync-env.validation';
 import 'reflect-metadata';
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -9,6 +11,7 @@ import {
   IsOptional,
   IsUrl,
   Min,
+  Max,
   validateSync,
   type ValidationError,
 } from 'class-validator';
@@ -49,6 +52,10 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   HTTP_KEEP_ALIVE_TIMEOUT_MS?: number;
+
+  @IsOptional()
+  @IsIn(BOOLEAN_STRINGS)
+  FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED?: string;
 
   // Auth — JWT_SECRET / COOKIE_SECRET are required in every environment; there
   // is no insecure default fallback (a shared default would let anyone forge
@@ -113,6 +120,16 @@ export class EnvironmentVariables {
   @Min(1)
   POSTGRES_POOL_SIZE?: number;
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string'
+      ? parseNonNegativeIntWithDefault(value, NaN)
+      : value,
+  )
+  @IsInt()
+  @Min(0)
+  @Max(2_147_483_647)
+  POSTGRES_CONNECTION_TIMEOUT_MS?: number;
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
@@ -123,9 +140,13 @@ export class EnvironmentVariables {
   @Min(0)
   POSTGRES_IDLE_TX_TIMEOUT_MS?: number;
 
-  // Storage (MinIO) — production requires credentials (see production rules).
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) MINIO_PORT?: number;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_USE_SSL?: string;
+  // Storage (MinIO) — production requires the internal endpoint and credentials.
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  MINIO_INTERNAL_PORT?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_INTERNAL_USE_SSL?: string;
 
   // Redis — production requires REDIS_PASSWORD (see production rules).
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) REDIS_PORT?: number;
@@ -240,6 +261,9 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
       'MINIO_SECRET_KEY (or MINIO_ROOT_PASSWORD) is required in production',
     );
   }
+  if (!env.MINIO_INTERNAL_ENDPOINT) {
+    messages.push('MINIO_INTERNAL_ENDPOINT is required in production');
+  }
   if (!env.REDIS_PASSWORD) {
     messages.push(
       'REDIS_PASSWORD is required in production (Redis must run with ' +
@@ -316,6 +340,7 @@ export function validateEnv(
     ...validateProductionRules(env),
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
+    ...validateSubscriptionSyncRules(env),
   ];
   if (messages.length > 0) {
     messages.sort((a, b) => a.localeCompare(b));

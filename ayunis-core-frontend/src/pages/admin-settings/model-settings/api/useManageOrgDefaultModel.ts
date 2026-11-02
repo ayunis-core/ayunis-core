@@ -6,6 +6,10 @@ import {
   type ModelWithConfigResponseDto,
   useModelsDefaultsControllerManageOrgDefaultModel,
 } from '@/shared/api';
+import {
+  clearModelModeDefaultCache,
+  getModelModeDefaultQueryKey,
+} from '@/features/model-mode-defaults';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +20,7 @@ interface ManageOrgDefaultModelContext {
   queryKey: ReturnType<
     typeof getModelsControllerGetAvailableLanguageModelsQueryKey
   >;
+  restoreMode?: () => void;
 }
 
 export function useManageOrgDefaultModel() {
@@ -55,7 +60,10 @@ export function useManageOrgDefaultModel() {
             },
           );
 
-          return { previousModels, queryKey };
+          const restoreMode = await clearModelModeDefaultCache(queryClient, {
+            level: 'org',
+          });
+          return { previousModels, queryKey, restoreMode };
         },
         onSuccess: () => {
           showSuccess(t('models.defaultModel.success'));
@@ -71,6 +79,7 @@ export function useManageOrgDefaultModel() {
           if (context?.previousModels) {
             queryClient.setQueryData(context.queryKey, context.previousModels);
           }
+          context?.restoreMode?.();
         },
         onSettled: async () => {
           const queryKeys = [
@@ -78,6 +87,8 @@ export function useManageOrgDefaultModel() {
             getModelsControllerGetAvailableEmbeddingModelsQueryKey(),
             getModelsControllerGetAvailableImageGenerationModelsQueryKey(),
             getModelsControllerGetPermittedLanguageModelsQueryKey(),
+            // Setting the org model default clears the org's mode default.
+            getModelModeDefaultQueryKey({ level: 'org' }),
           ];
 
           await Promise.all(

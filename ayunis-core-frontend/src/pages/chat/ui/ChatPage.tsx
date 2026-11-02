@@ -385,6 +385,7 @@ export default function ChatPage({
       }
       showLoadingPlaceholder={showLoadingPlaceholder}
       onOpenArtifact={sidePanelTransitions.openArtifactPanel}
+      answeringModel={thread.mode ? selectedModel : undefined}
     />
   );
 

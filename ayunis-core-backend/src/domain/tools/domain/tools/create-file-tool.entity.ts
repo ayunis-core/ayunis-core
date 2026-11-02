@@ -12,7 +12,7 @@ const createFileParameters = {
       description:
         'The filename without an extension (at most 200 characters).',
     },
-    format: { type: 'string', enum: ['xml', 'json', 'txt'] },
+    format: { type: 'string', enum: ['xml', 'json', 'txt', 'csv'] },
     content: {
       type: 'string',
       maxLength: 100000,
@@ -31,7 +31,7 @@ export class CreateFileTool extends Tool {
     super({
       name: ToolType.CREATE_FILE,
       description:
-        'Create a downloadable XML, JSON or plain-text file. Use this instead of markdown download links. The file is displayed in chat and you can continue your answer afterwards. For Word/PDF prose documents, use create_document.',
+        'Create a downloadable CSV, XML, JSON or plain-text file. For CSV, include all individual data rows with a header, and quote fields containing delimiters, quotes or newlines. Use this instead of markdown download links. The file is displayed in chat and you can continue your answer afterwards. For Word/PDF prose documents, use create_document.',
       parameters: createFileParameters,
       type: ToolType.CREATE_FILE,
     });

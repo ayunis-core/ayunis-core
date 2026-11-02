@@ -57,7 +57,7 @@ test('provider fault status follows a model from catalog to an existing chat', a
 
         const selector = page.getByTestId('chat-model-selector');
         await selector.click();
-        const modelOption = page.getByRole('option', {
+        const modelOption = page.getByRole('menuitem', {
           name: new RegExp(displayName),
         });
         const indicator = modelOption.getByTestId(
@@ -79,7 +79,7 @@ test('provider fault status follows a model from catalog to an existing chat', a
           page.getByTestId('model-provider-fault-tooltip'),
         ).toBeVisible();
 
-        await modelOption.click();
+        await modelOption.press('Enter');
         await expect(modelOption).toBeHidden();
         await expect(
           selector.getByTestId('model-provider-fault-indicator'),

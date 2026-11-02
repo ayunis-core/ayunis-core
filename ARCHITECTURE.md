@@ -75,7 +75,7 @@ none of these packages implements the Agent Plugins standard.
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                  | Chat History   | Message storage and retrieval                                                                                  |
 | [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking, streaming, and chat image upload validation                                              |
 | [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                      | LLM Config     | Multi-provider model management                                                                                |
-| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema                                                                        |
+| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema and CSV/text downloads                                                 |
 | [prompts](ayunis-core-backend/src/domain/prompts/SUMMARY.md)                    | Templates      | Reusable prompt library                                                                                        |
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal and workspace instruction bundles                                                         |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal and workspace document collections                                                        |
@@ -120,15 +120,15 @@ none of these packages implements the Agent Plugins standard.
 
 ### Infrastructure & Support
 
-| Module                                                          | Summary               | Detail                                           |
-| --------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
-| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns  |
-| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Prometheus metrics and outbound webhook delivery |
-| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management       |
-| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                       |
-| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                       |
-| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup              |
-| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                            |
+| Module                                                          | Summary               | Detail                                                                 |
+| --------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------- |
+| [common](ayunis-core-backend/src/common/SUMMARY.md)             | Shared Infrastructure | Base classes, utilities, cross-cutting concerns                        |
+| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | External subscription synchronization, metrics, webhooks, Connect auth |
+| [admin](ayunis-core-backend/src/admin/SUMMARY.md)               | Platform Admin        | Super admin routes for platform management                             |
+| [app](ayunis-core-backend/src/app/SUMMARY.md)                   | Bootstrap             | Application initialization                                             |
+| [config](ayunis-core-backend/src/config/SUMMARY.md)             | Configuration         | Environment config modules                                             |
+| [db](ayunis-core-backend/src/db/SUMMARY.md)                     | Database              | Migrations, fixtures, TypeORM setup                                    |
+| [cli](ayunis-core-backend/src/cli/SUMMARY.md)                   | Commands              | CLI utilities for ops                                                  |
 
 ---
 
@@ -239,3 +239,12 @@ the admin-settings sidebar + route guard. The backend still 403s regardless.
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
 
 Backend transaction enrollment and review checklist: [TRANSACTIONS.md](ayunis-core-backend/TRANSACTIONS.md).
+
+Billing providers are isolated behind Ayunis Connect. Connect reads and translates
+canonical provider state and reconciles missed notifications. Core's
+`integrations/core-connect/subscription-sync` accepts validated, provider-neutral access
+snapshots through its service-authenticated SDK API. It owns local subscription,
+trial and Academy rules, transactional ownership and revision fencing, plus durable
+outbound Core events. Generic expiring leases coordinate Connect reconciliation
+workers without introducing a second database. Authentication is a separate sibling module at `integrations/core-connect/auth`.
+The sync records use provider-neutral `subscription_sync_*` table names.

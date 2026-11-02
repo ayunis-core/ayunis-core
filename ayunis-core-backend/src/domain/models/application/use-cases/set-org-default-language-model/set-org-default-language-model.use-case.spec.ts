@@ -1,3 +1,5 @@
+import { DefaultModelSelectionsRepository } from 'src/domain/models/application/ports/default-model-selections.repository';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetOrgDefaultLanguageModelUseCase } from './set-org-default-language-model.use-case';
@@ -12,7 +14,11 @@ import { PermittedModelNotFoundError } from 'src/domain/models/application/model
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
+const selectionsRepository = { setModel: jest.fn() };
+
 describe('SetOrgDefaultLanguageModelUseCase', () => {
+  afterEach(() => jest.clearAllMocks());
+
   let useCase: SetOrgDefaultLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let contextService: jest.Mocked<ContextService>;
@@ -24,8 +30,6 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
     permittedModelsRepository = {
       findOne: jest.fn(),
       findOneLanguage: jest.fn(),
-      findOrgDefaultLanguage: jest.fn(),
-      setAsDefault: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
 
     contextService = {
@@ -40,6 +44,10 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
           useValue: permittedModelsRepository,
         },
         { provide: ContextService, useValue: contextService },
+        {
+          provide: DefaultModelSelectionsRepository,
+          useValue: selectionsRepository,
+        },
       ],
     }).compile();
 
@@ -77,13 +85,6 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
     permittedModelsRepository.findOneLanguage.mockResolvedValue(
       permittedLanguageModel,
     );
-    permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(null);
-    permittedModelsRepository.setAsDefault.mockResolvedValue(
-      new PermittedLanguageModel({
-        ...permittedLanguageModel,
-        isDefault: true,
-      }),
-    );
 
     const result = await useCase.execute(
       new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
@@ -93,10 +94,10 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
       id: permittedModelId,
       orgId,
     });
-    expect(permittedModelsRepository.setAsDefault).toHaveBeenCalledWith({
-      id: permittedModelId,
-      orgId,
-    });
+    expect(selectionsRepository.setModel).toHaveBeenCalledWith(
+      { orgId },
+      permittedModelId,
+    );
     expect(result.isDefault).toBe(true);
   });
 
@@ -110,7 +111,7 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
       ),
     ).rejects.toThrow(PermittedModelNotFoundError);
 
-    expect(permittedModelsRepository.setAsDefault).not.toHaveBeenCalled();
+    expect(selectionsRepository.setModel).not.toHaveBeenCalled();
   });
 
   it('rejects users outside the target org unless they are super admins', async () => {
@@ -127,5 +128,58 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
     ).rejects.toThrow(UnauthorizedAccessError);
 
     expect(permittedModelsRepository.findOneLanguage).not.toHaveBeenCalled();
+  });
+
+  const languagePermit = (params: {
+    scope: PermittedModelScope;
+    isArchived: boolean;
+  }) =>
+    new PermittedLanguageModel({
+      id: permittedModelId,
+      orgId,
+      scope: params.scope,
+      scopeId:
+        params.scope === PermittedModelScope.TEAM
+          ? '123e4567-e89b-12d3-a456-426614174055'
+          : null,
+      model: new LanguageModel({
+        name: 'gpt-4o',
+        displayName: 'GPT-4o',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        contextWindowSize: 128_000,
+        isArchived: params.isArchived,
+      }),
+    });
+
+  it('rejects a team-scoped permit as the org default', async () => {
+    setAdminContext();
+    permittedModelsRepository.findOneLanguage.mockResolvedValue(
+      languagePermit({ scope: PermittedModelScope.TEAM, isArchived: false }),
+    );
+
+    await expect(
+      useCase.execute(
+        new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
+      ),
+    ).rejects.toThrow(PermittedModelNotFoundError);
+    expect(selectionsRepository.setModel).not.toHaveBeenCalled();
+  });
+
+  it('rejects an archived model as the org default', async () => {
+    setAdminContext();
+    permittedModelsRepository.findOneLanguage.mockResolvedValue(
+      languagePermit({ scope: PermittedModelScope.ORG, isArchived: true }),
+    );
+
+    await expect(
+      useCase.execute(
+        new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
+      ),
+    ).rejects.toThrow(PermittedModelNotFoundError);
+    expect(selectionsRepository.setModel).not.toHaveBeenCalled();
   });
 });

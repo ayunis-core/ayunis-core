@@ -258,6 +258,34 @@ describe('createPinoLoggerConfig', () => {
     expect(JSON.stringify(entry)).not.toContain('private.example');
   });
 
+  it.each([
+    ['UND_ERR_SOCKET', 'Socket connection failed'],
+    ['UND_ERR_CONNECT_TIMEOUT', 'Connection timed out'],
+    ['UND_ERR_HEADERS_TIMEOUT', 'Response headers timed out'],
+    ['UND_ERR_BODY_TIMEOUT', 'Response body timed out'],
+    ['UND_ERR_CLOSED', 'HTTP client closed'],
+    ['UND_ERR_DESTROYED', 'HTTP client destroyed'],
+  ])(
+    'preserves %s in a wrapped fetch failure without request data',
+    (code, message) => {
+      const cause = Object.assign(new Error('private.example token=private'), {
+        code,
+        socket: { remoteAddress: '192.0.2.1' },
+      });
+      const entry = captureLog(getOptions({ NODE_ENV: 'production' }), {
+        err: new Error('Unable to make request', {
+          cause: new TypeError('fetch failed', { cause }),
+        }),
+      });
+
+      expect(entry.err).toMatchObject({
+        cause: { cause: { type: 'Error', code, message } },
+      });
+      expect(JSON.stringify(entry)).not.toContain('private');
+      expect(JSON.stringify(entry)).not.toContain('192.0.2.1');
+    },
+  );
+
   it('does not trust error names or arbitrary diagnostic codes', () => {
     const error = Object.assign(new Error('private message'), {
       name: 'resident@example.org',

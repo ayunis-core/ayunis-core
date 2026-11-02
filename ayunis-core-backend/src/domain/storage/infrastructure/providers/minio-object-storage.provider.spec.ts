@@ -1,31 +1,50 @@
 import type { ConfigType } from '@nestjs/config';
+import * as Minio from 'minio';
 import type storageConfig from 'src/config/storage.config';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import { MinioObjectStorageProvider } from './minio-object-storage.provider';
 
+interface InspectableMinioClient {
+  host: string;
+  port: number;
+}
+
+function endpointOf(client: unknown): { host: string; port: number } {
+  const inspected = client as InspectableMinioClient;
+  return { host: inspected.host, port: inspected.port };
+}
+
 describe('MinioObjectStorageProvider', () => {
+  const config = {
+    provider: 'minio',
+    defaultBucket: 'generated-images',
+    minio: {
+      internal: {
+        endPoint: 'minio.internal',
+        port: 443,
+        useSSL: true,
+      },
+      accessKey: 'storage-access-key',
+      secretKey: 'storage-secret-key',
+      bucket: 'generated-images',
+    },
+  } satisfies ConfigType<typeof storageConfig>;
+
   let provider: MinioObjectStorageProvider;
   let statObject: jest.Mock;
 
   beforeEach(() => {
-    const config = {
-      minio: {
-        endPoint: 'storage.example.com',
-        port: 443,
-        useSSL: true,
-        accessKey: 'storage-access-key',
-        secretKey: 'storage-secret-key',
-        bucket: 'generated-images',
-      },
-    } as ConfigType<typeof storageConfig>;
-
     provider = new MinioObjectStorageProvider(config);
     statObject = jest.fn();
     (
       provider as unknown as {
-        client: { statObject: typeof statObject };
+        internalClient: { statObject: typeof statObject };
       }
-    ).client.statObject = statObject;
+    ).internalClient.statObject = statObject;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('exists', () => {
@@ -53,7 +72,7 @@ describe('MinioObjectStorageProvider', () => {
 
     it('preserves genuine storage failures', async () => {
       const storageFailure = Object.assign(
-        new Error('connect ECONNREFUSED storage.example.com'),
+        new Error('connect ECONNREFUSED minio.internal'),
         { code: 'ECONNREFUSED' },
       );
       statObject.mockRejectedValue(storageFailure);
@@ -68,6 +87,28 @@ describe('MinioObjectStorageProvider', () => {
       statObject.mockRejectedValue(accessError);
 
       await expect(provider.exists(storageUrl)).rejects.toBe(accessError);
+    });
+  });
+
+  it('deletes through the internal endpoint', async () => {
+    const removeObject = jest
+      .spyOn(Minio.Client.prototype, 'removeObject')
+      .mockResolvedValue(undefined);
+
+    await provider.delete(
+      new StorageUrl(
+        'generated-images/org/thread/image.png',
+        'generated-images',
+      ),
+    );
+
+    expect(removeObject).toHaveBeenCalledWith(
+      'generated-images',
+      'generated-images/org/thread/image.png',
+    );
+    expect(endpointOf(removeObject.mock.instances[0])).toEqual({
+      host: 'minio.internal',
+      port: 443,
     });
   });
 });

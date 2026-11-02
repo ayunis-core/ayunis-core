@@ -15,7 +15,16 @@ import {
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useUserDefaultModel } from '@/pages/settings/chat-settings/api/useUserDefaultModel';
-import { ModelSelectOptions } from '@/widgets/model-select-options';
+import { useModelModes } from '@/features/useModelModes';
+import { useModelModeDefault } from '@/features/model-mode-defaults';
+import {
+  MODEL_MODES,
+  ModelSelectOptions,
+  getModeFromValue,
+  getModeValue,
+  resolveModeModel,
+  type ModeOption,
+} from '@/widgets/model-select-options';
 import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 
 export function ChatSettingsCard() {
@@ -25,19 +34,40 @@ export function ChatSettingsCard() {
 
   const { userDefaultModel, manageUserDefaultModel, deleteUserDefaultModel } =
     useUserDefaultModel({ allModels: permittedModels });
+  const {
+    mode: defaultMode,
+    setMode,
+    isLoading: modeLoading,
+  } = useModelModeDefault({ level: 'user' });
+  const { resolutions } = useModelModes();
+
+  // Offer a mode only while it resolves, but keep a saved one visible.
+  const modes: ModeOption[] = MODEL_MODES.map((mode) => ({
+    mode,
+    resolvedModel: resolveModeModel(mode, permittedModels, resolutions),
+  })).filter(
+    ({ mode, resolvedModel }) =>
+      resolvedModel !== undefined || mode === defaultMode,
+  );
+
+  // Until the mode default is known, a leftover model default would flash.
+  let selectedValue: string | undefined;
+  if (!modeLoading) {
+    selectedValue = defaultMode
+      ? getModeValue(defaultMode)
+      : (userDefaultModel?.id ?? 'null');
+  }
 
   const handleDefaultSettingChange = (value: string) => {
-    if (value === 'null') {
-      // Delete the default model (set to null)
+    const mode = getModeFromValue(value);
+    if (mode) {
+      setMode(mode);
+    } else if (value === 'null') {
       deleteUserDefaultModel();
     } else {
-      // Set/update the default model
       manageUserDefaultModel(value);
     }
   };
-
-  // Get current selected value
-  const selectedValue = userDefaultModel?.id ?? 'null';
 
   return (
     <Card>
@@ -57,7 +87,7 @@ export function ChatSettingsCard() {
           <Select
             value={selectedValue}
             onValueChange={handleDefaultSettingChange}
-            disabled={modelsLoading}
+            disabled={modelsLoading || modeLoading}
           >
             <SelectTrigger
               id="default-settings-select"
@@ -75,6 +105,7 @@ export function ChatSettingsCard() {
                 models={permittedModels}
                 showFlag
                 showHeading={false}
+                modes={modes}
               />
             </SelectContent>
           </Select>

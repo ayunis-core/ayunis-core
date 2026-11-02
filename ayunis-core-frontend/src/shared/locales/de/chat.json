@@ -325,7 +325,8 @@
         "other": "Personenbezogene Daten"
       }
     },
-    "academyCertificateRequiredError": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
+    "academyCertificateRequiredError": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten.",
+    "errorModeUnavailable": "Für diesen Modus ist gerade kein Modell verfügbar. Bitte wählen Sie ein Modell unter „Weitere Modelle“."
   },
   "newChat": {
     "newChat": "Neuer Chat",

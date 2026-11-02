@@ -161,26 +161,6 @@ export class PermittedModelFinder {
       ) as PermittedLanguageModel[];
   }
 
-  async findManyTeamDefaultLanguage(
-    teamIds: UUID[],
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel[]> {
-    if (teamIds.length === 0) return [];
-    const permittedModels = await this.findTeamModels(
-      teamIds,
-      orgId,
-      ModelType.LANGUAGE,
-      true,
-    );
-    return permittedModels
-      .filter(
-        (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
-      )
-      .map((permittedModel) =>
-        this.permittedModelMapper.toDomain(permittedModel),
-      ) as PermittedLanguageModel[];
-  }
-
   async findManyImageGenerationByTeam(
     teamId: UUID,
     orgId: UUID,
@@ -212,7 +192,6 @@ export class PermittedModelFinder {
     teamIds: UUID[],
     orgId: UUID,
     modelType: ModelType,
-    isDefault?: boolean,
   ): Promise<PermittedModelRecord[]> {
     return this.permittedModelRepository.find(
       this.buildActiveScopedQuery({
@@ -220,7 +199,6 @@ export class PermittedModelFinder {
         scope: PermittedModelScope.TEAM,
         teamIds: [...new Set(teamIds)],
         modelType,
-        isDefault,
       }),
     );
   }
@@ -231,16 +209,14 @@ export class PermittedModelFinder {
     modelType?: ModelType;
     scopeId?: UUID;
     teamIds?: UUID[];
-    isDefault?: boolean;
   }): FindManyOptions<PermittedModelRecord> {
-    const { orgId, scope, modelType, scopeId, teamIds, isDefault } = params;
+    const { orgId, scope, modelType, scopeId, teamIds } = params;
     return {
       where: {
         orgId,
         scope,
         ...(scopeId && { scopeId }),
         ...(teamIds && { scopeId: In(teamIds) }),
-        ...(isDefault !== undefined && { isDefault }),
         model: {
           isArchived: false,
           ...(modelType && { type: modelType }),

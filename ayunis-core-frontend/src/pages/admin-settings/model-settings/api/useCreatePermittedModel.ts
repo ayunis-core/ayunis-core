@@ -14,6 +14,7 @@ import {
   prepareOptimisticUpdate,
   rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
+import { modelModeQueryKeys } from './modelModeQueryKeys';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 
@@ -66,6 +67,7 @@ export function useCreatePermittedModel() {
           ...availabilityQueryKeys,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
+          ...modelModeQueryKeys(),
         ];
         await Promise.all(
           queryKeys.map((qk) =>

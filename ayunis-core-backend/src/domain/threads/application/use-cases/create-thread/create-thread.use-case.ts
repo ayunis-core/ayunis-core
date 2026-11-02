@@ -3,6 +3,8 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
 import {
+  ConflictingModelSelectionError,
+  ModelModeUnavailableError,
   NoModelProvidedError,
   ThreadCreationError,
   UnexpecteThreadError,
@@ -12,6 +14,8 @@ import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/us
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 
 @Injectable()
@@ -22,6 +26,7 @@ export class CreateThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
+    private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
     private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
   ) {}
 
@@ -47,6 +52,7 @@ export class CreateThreadUseCase {
       const thread = new Thread({
         userId,
         model,
+        mode: command.mode,
         isAnonymous,
         workspaceId: command.workspaceId,
         messages: [],
@@ -71,6 +77,12 @@ export class CreateThreadUseCase {
     command: CreateThreadCommand,
     userId: string,
   ): Promise<PermittedLanguageModel> {
+    if (command.modelId && command.mode) {
+      throw new ConflictingModelSelectionError();
+    }
+    if (command.mode) {
+      return this.resolveMode(command.mode, command.isAnonymous ?? false);
+    }
     if (!command.modelId) {
       throw new NoModelProvidedError(userId);
     }
@@ -79,5 +91,20 @@ export class CreateThreadUseCase {
         id: command.modelId,
       }),
     );
+  }
+
+  private async resolveMode(
+    mode: ModelMode,
+    isAnonymous: boolean,
+  ): Promise<PermittedLanguageModel> {
+    const resolutions = await this.resolveModelModesUseCase.execute();
+    const resolution = resolutions.find((r) => r.mode === mode);
+    const model = isAnonymous
+      ? resolution?.anonymousPermittedModel
+      : resolution?.permittedModel;
+    if (!model) {
+      throw new ModelModeUnavailableError(mode);
+    }
+    return model;
   }
 }

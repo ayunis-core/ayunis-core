@@ -11,7 +11,10 @@ import {
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
-import { effectiveDefaultModelQueryOptions } from './-effective-default-model-query';
+import {
+  defaultModelSelectionQueryOptions,
+  toComposerValue,
+} from './-default-model-selection-query';
 
 function handleDefaultModelLoadError(error: unknown): null {
   let code: string | undefined;
@@ -52,10 +55,10 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     if (modelId) {
       selectedModelId = modelId;
     } else {
-      const defaultModelResponse = await queryClient
-        .query(effectiveDefaultModelQueryOptions())
+      const defaultSelection = await queryClient
+        .query(defaultModelSelectionQueryOptions())
         .catch(handleDefaultModelLoadError);
-      selectedModelId = defaultModelResponse?.permittedLanguageModel?.id;
+      selectedModelId = toComposerValue(defaultSelection);
     }
     const { isEmbeddingModelEnabled } = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),

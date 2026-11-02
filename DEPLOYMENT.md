@@ -232,6 +232,15 @@ These variables MUST be configured before deployment:
   Optionally override the app-side credentials independently of the container
   root user with `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`.
 
+- `MINIO_INTERNAL_ENDPOINT`: Hostname used for every server-side object and
+  bucket operation. The bundled Docker Compose deployment fixes this to the
+  local `minio` service and does not inherit it from shared secrets.
+- `MINIO_INTERNAL_PORT` / `MINIO_INTERNAL_USE_SSL`: Internal connection port
+  and TLS setting (defaults: `9000` / `false`).
+
+Browsers never connect to MinIO directly; file downloads are streamed through
+the application after its normal access checks.
+
 #### Redis (Queues)
 
 > **Note:** Redis must run with authentication in production. The application
@@ -273,8 +282,9 @@ At least one must be configured:
 - `DISABLE_REGISTRATION`: Set to `true` to disable new user registration
 - `SMTP_*`: Email configuration (see README.md)
 - `BRAVE_SEARCH_*`: Web search functionality
-- `MINIO_ENDPOINT` / `MINIO_PORT` / `MINIO_USE_SSL` / `MINIO_BUCKET`: MinIO
-  connection settings (credentials themselves are required — see above)
+- `MINIO_BUCKET`: MinIO bucket name. The internal connection settings are
+  described above; its endpoint hostname and credentials are required in
+  production.
 - `REDIS_HOST` / `REDIS_PORT`: Redis connection settings (the password itself is
   required — see above)
 
@@ -286,6 +296,7 @@ Before starting the application:
 - [ ] `COOKIE_SECRET` is a secure random string
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
 - [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
+- [ ] `MINIO_INTERNAL_ENDPOINT` targets this deployment's own MinIO service
 - [ ] `REDIS_PASSWORD` is set to a secure random string
 - [ ] `POSTGRES_*` variables point to valid database
 - [ ] `FRONTEND_BASEURL` is set correctly

@@ -17,6 +17,7 @@ function prodEnv(
   return baseEnv({
     NODE_ENV: 'production',
     COOKIE_SECURE: 'true',
+    MINIO_INTERNAL_ENDPOINT: 'minio',
     MINIO_ROOT_USER: 'minio-user',
     MINIO_ROOT_PASSWORD: 'minio-password',
     REDIS_PASSWORD: 'redis-password',
@@ -36,6 +37,39 @@ function without(
 }
 
 describe('validateEnv', () => {
+  it.each(['-1', '1.5', 'not-a-number', '1000ms', '1e3', '0x10', '2147483648'])(
+    'rejects invalid database connection timeout %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ POSTGRES_CONNECTION_TIMEOUT_MS: value })),
+      ).toThrow('POSTGRES_CONNECTION_TIMEOUT_MS');
+    },
+  );
+  it.each(['', '0', '2500', '2147483647'])(
+    'accepts database connection timeout %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ POSTGRES_CONNECTION_TIMEOUT_MS: value })),
+      ).not.toThrow();
+    },
+  );
+
+  it.each(['yes', 'TRUE', '1'])(
+    'rejects invalid external subscription management flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),
+      ).toThrow('FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED');
+    },
+  );
+  it.each(['', 'true', 'false'])(
+    'accepts the external subscription flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: value })),
+      ).not.toThrow();
+    },
+  );
   it('returns the config unchanged when valid', () => {
     const env = baseEnv({ PORT: '3000' });
 
@@ -267,6 +301,12 @@ describe('validateEnv', () => {
 
       expect(() => validateEnv(env)).toThrow(/MINIO_ACCESS_KEY/);
       expect(() => validateEnv(env)).toThrow(/MINIO_SECRET_KEY/);
+    });
+
+    it('requires the internal MinIO endpoint', () => {
+      const env = without(prodEnv(), 'MINIO_INTERNAL_ENDPOINT');
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_INTERNAL_ENDPOINT/);
     });
 
     it('accepts MINIO_ACCESS_KEY / MINIO_SECRET_KEY as the credentials', () => {

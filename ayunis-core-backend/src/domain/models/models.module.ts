@@ -1,3 +1,16 @@
+import { ModelModeDefaultsController } from './presenters/http/model-mode-defaults.controller';
+import { LocalDefaultModelSelectionsRepositoryModule } from './infrastructure/persistence/local-default-model-selections/local-default-model-selections-repository.module';
+import { DefaultModelSelectionService } from './application/services/default-model-selection.service';
+import { ModelModeDefaultScopeService } from './application/services/model-mode-default-scope.service';
+import { GetDefaultModelSelectionUseCase } from './application/use-cases/get-default-model-selection/get-default-model-selection.use-case';
+import { GetModelModeDefaultUseCase } from './application/use-cases/get-model-mode-default/get-model-mode-default.use-case';
+import { SetModelModeDefaultUseCase } from './application/use-cases/set-model-mode-default/set-model-mode-default.use-case';
+import { ModelModesController } from './presenters/http/model-modes.controller';
+import { ResolveModelModesUseCase } from './application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
+import { SuperAdminModelModesController } from './presenters/http/super-admin-model-modes.controller';
+import { LocalModelModeEntriesRepositoryModule } from './infrastructure/persistence/local-model-mode-entries/local-model-mode-entries-repository.module';
+import { GetModelModeEntriesUseCase } from './application/use-cases/get-model-mode-entries/get-model-mode-entries.use-case';
+import { ReplaceModelModeEntriesUseCase } from './application/use-cases/replace-model-mode-entries/replace-model-mode-entries.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
 import { ModelsDefaultsController } from './presenters/http/models-defaults.controller';
@@ -17,7 +30,6 @@ import { ModelResponseDtoMapper } from './presenters/http/mappers/model-response
 import { ModelWithConfigResponseDtoMapper } from './presenters/http/mappers/model-with-config-response-dto.mapper';
 import { CatalogModelResponseDtoMapper } from './presenters/http/mappers/catalog-model-response-dto.mapper';
 import { LocalPermittedModelsRepositoryModule } from './infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
-import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persistence/local-user-default-models/local-user-default-models-repository.module';
 import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
 import { CreatePermittedModelUseCase } from './application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelUseCase } from './application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
@@ -96,7 +108,8 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
 @Module({
   imports: [
     LocalPermittedModelsRepositoryModule,
-    LocalUserDefaultModelsRepositoryModule,
+    LocalModelModeEntriesRepositoryModule,
+    LocalDefaultModelSelectionsRepositoryModule,
     LocalModelsRepositoryModule,
     UsageReferencesModule,
     OrgsModule,
@@ -113,6 +126,9 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     TeamPermittedModelsController,
     SuperAdminPermittedModelsController,
     SuperAdminCatalogModelsController,
+    SuperAdminModelModesController,
+    ModelModesController,
+    ModelModeDefaultsController,
     SuperAdminLanguageCatalogModelsController,
     SuperAdminEmbeddingCatalogModelsController,
     SuperAdminImageGenerationCatalogModelsController,
@@ -260,10 +276,19 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
+    GetModelModeEntriesUseCase,
+    ReplaceModelModeEntriesUseCase,
+    ResolveModelModesUseCase,
+    DefaultModelSelectionService,
+    ModelModeDefaultScopeService,
+    GetDefaultModelSelectionUseCase,
+    GetModelModeDefaultUseCase,
+    SetModelModeDefaultUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
   ],
   exports: [
+    ResolveModelModesUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,
@@ -308,7 +333,6 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     // TODO: These modules should be part of this module and not separate
     LocalModelsRepositoryModule, // Export repository for seeding
     LocalPermittedModelsRepositoryModule, // Export repository for seeding
-    LocalUserDefaultModelsRepositoryModule, // Export repository for seeding
   ],
 })
 export class ModelsModule {}

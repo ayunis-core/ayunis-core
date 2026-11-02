@@ -18,8 +18,13 @@ import { useMemo } from 'react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {
   ModelSelectOptions,
+  getModeFromValue,
+  getModeValue,
+  type ModelMode,
   type ModelOption,
 } from '@/widgets/model-select-options';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
+import { modeOptionsForLevel } from '@/widgets/org-default-model-card/lib/mode-options';
 
 interface OrgDefaultModelCardWidgetProps {
   models: ModelWithConfigResponseDto[];
@@ -28,6 +33,15 @@ interface OrgDefaultModelCardWidgetProps {
   onDefaultModelChange: (permittedModelId: string) => void;
   selectId?: string;
   translationNamespace?: string;
+  /** Omit to offer individual models only. */
+  modeDefault?: {
+    mode: ModelMode | null;
+    currentPermittedModelId: string | null;
+    availableModes: ModelMode[];
+    isLoading: boolean;
+    isSaving: boolean;
+    onModeChange: (mode: ModelMode) => void;
+  };
 }
 
 export function OrgDefaultModelCardWidget({
@@ -37,8 +51,10 @@ export function OrgDefaultModelCardWidget({
   onDefaultModelChange,
   selectId = 'org-default-model-select',
   translationNamespace = 'admin-settings-models',
+  modeDefault,
 }: Readonly<OrgDefaultModelCardWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
+  const { t: tCommon } = useTranslation('common');
 
   const permittedModels = useMemo(
     () =>
@@ -62,13 +78,36 @@ export function OrgDefaultModelCardWidget({
     [permittedModels],
   );
 
-  const isDisabled = isLoading || isSaving || permittedModels.length === 0;
+  const isDisabled =
+    isLoading ||
+    isSaving ||
+    Boolean(modeDefault?.isSaving) ||
+    Boolean(modeDefault?.isLoading) ||
+    permittedModels.length === 0;
+
+  const selectedMode = modeDefault?.mode ?? null;
+  // Until the mode default is known, a leftover model default would flash.
+  let selectedValue: string | undefined;
+  if (!modeDefault?.isLoading) {
+    selectedValue = selectedMode
+      ? getModeValue(selectedMode)
+      : (defaultModel?.permittedModelId ?? undefined);
+  }
+  const modeModel = modelOptions.find(
+    (model) => model.id === modeDefault?.currentPermittedModelId,
+  );
+  const modes = modeDefault
+    ? modeOptionsForLevel(modeDefault.availableModes, selectedMode, modeModel)
+    : [];
 
   const handleChange = (value: string) => {
-    if (value === defaultModel?.permittedModelId) {
-      return;
+    if (value === selectedValue) return;
+    const mode = getModeFromValue(value);
+    if (mode) {
+      modeDefault?.onModeChange(mode);
+    } else {
+      onDefaultModelChange(value);
     }
-    onDefaultModelChange(value);
   };
 
   return (
@@ -92,7 +131,7 @@ export function OrgDefaultModelCardWidget({
             tooltip={t('models.defaultModel.empty')}
           >
             <Select
-              value={defaultModel?.permittedModelId ?? undefined}
+              value={selectedValue}
               onValueChange={handleChange}
               disabled={isDisabled}
             >
@@ -110,11 +149,29 @@ export function OrgDefaultModelCardWidget({
                   models={modelOptions}
                   showFlag
                   showHeading={false}
+                  modes={modes}
                 />
               </SelectContent>
             </Select>
           </TooltipIf>
         </div>
+        {selectedMode && !modeDefault?.isSaving && (
+          <p
+            className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
+            data-testid="default-model-mode-current"
+          >
+            {tCommon('models.modes.adminHint')}
+            {modeModel ? (
+              <span className="inline-flex items-center gap-1.5">
+                {tCommon('models.modes.current')}
+                <ProviderFlag provider={modeModel.provider} />
+                <span className="text-foreground">{modeModel.displayName}</span>
+              </span>
+            ) : (
+              <span>{tCommon('models.modes.noneAvailable')}</span>
+            )}
+          </p>
+        )}
         {permittedModels.length === 0 && !isLoading && (
           <div className="text-sm text-muted-foreground">
             {t('models.defaultModel.empty')}

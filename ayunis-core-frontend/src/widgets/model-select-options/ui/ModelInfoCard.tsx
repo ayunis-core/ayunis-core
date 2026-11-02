@@ -42,7 +42,7 @@ export default function ModelInfoCard({ model }: Readonly<ModelInfoCardProps>) {
         </div>
       )}
       {hostingDetail && (
-        <div className="border-t pt-3 text-xs text-muted-foreground">
+        <div className="-mx-4 border-t px-4 pt-3 text-xs text-muted-foreground">
           <p className="flex items-center gap-1.5">
             <ProviderFlag provider={model.provider} />
             {hostingDetail}

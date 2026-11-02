@@ -9,9 +9,11 @@ import { LocalThreadsRepository } from 'src/domain/threads/infrastructure/persis
 import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
 import type { ThreadMapper } from 'src/domain/threads/infrastructure/persistence/local/mappers/thread.mapper';
 import type { LocalThreadAssignmentsRepository } from 'src/domain/threads/infrastructure/persistence/local/local-thread-assignments.repository';
-import { LocalUserDefaultModelsRepository } from 'src/domain/models/infrastructure/persistence/local-user-default-models/local-user-default-models.repository';
-import { UserDefaultModelRecord } from 'src/domain/models/infrastructure/persistence/local-user-default-models/schema/user-default-model.record';
-import type { UserDefaultModelMapper } from 'src/domain/models/infrastructure/persistence/local-user-default-models/mappers/user-default-model.mapper';
+import { LocalDefaultModelSelectionsRepository } from 'src/domain/models/infrastructure/persistence/local-default-model-selections/local-default-model-selections.repository';
+import {
+  DefaultModelSelectionKind,
+  DefaultModelSelectionRecord,
+} from 'src/domain/models/infrastructure/persistence/local-default-model-selections/schema/default-model-selection.record';
 import { LocalPermittedModelsRepository } from './local-permitted-models.repository';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import type { PermittedModelMapper } from './mappers/permitted-model.mapper';
@@ -23,17 +25,15 @@ const modelSchema = new EntitySchema<PermittedModelRecord>({
   tableName: 'models',
   columns: { id: { type: 'uuid', primary: true }, orgId: { type: 'uuid' } },
 });
-const defaultSchema = new EntitySchema<UserDefaultModelRecord>({
-  name: 'UserDefaultModelRecord',
-  target: UserDefaultModelRecord,
+const defaultSchema = new EntitySchema<DefaultModelSelectionRecord>({
+  name: 'DefaultModelSelectionRecord',
+  target: DefaultModelSelectionRecord,
   tableName: 'defaults',
-  columns: { id: { type: 'uuid', primary: true }, userId: { type: 'uuid' } },
-  relations: {
-    model: {
-      type: 'many-to-one',
-      target: 'PermittedModelRecord',
-      joinColumn: { name: 'modelId' },
-    },
+  columns: {
+    id: { type: 'uuid', primary: true },
+    userId: { type: 'uuid', nullable: true },
+    kind: { type: 'varchar' },
+    permittedModelId: { type: 'uuid', nullable: true },
   },
 });
 const threadSchema = new EntitySchema<ThreadRecord>({
@@ -52,7 +52,7 @@ describe('Model deletion transaction across repositories', () => {
   let schema: string;
   let txHost: TransactionHost<TransactionalAdapterTypeOrm>;
   let models: LocalPermittedModelsRepository;
-  let defaults: LocalUserDefaultModelsRepository;
+  let defaults: LocalDefaultModelSelectionsRepository;
   let threads: LocalThreadsRepository;
   const orgId = randomUUID();
   const userId = randomUUID();
@@ -95,9 +95,9 @@ describe('Model deletion transaction across repositories', () => {
       {} as PermittedModelFinder,
       txHost,
     );
-    defaults = new LocalUserDefaultModelsRepository(
-      db.getRepository(UserDefaultModelRecord),
-      {} as UserDefaultModelMapper,
+    defaults = new LocalDefaultModelSelectionsRepository(
+      db.getRepository(DefaultModelSelectionRecord),
+      {} as PermittedModelMapper,
       txHost,
     );
     threads = new LocalThreadsRepository(
@@ -116,9 +116,12 @@ describe('Model deletion transaction across repositories', () => {
       { id: modelId, orgId },
       { id: replacementId, orgId },
     ]);
-    await db
-      .getRepository(UserDefaultModelRecord)
-      .insert({ id: randomUUID(), userId, model: { id: modelId } });
+    await db.getRepository(DefaultModelSelectionRecord).insert({
+      id: randomUUID(),
+      userId,
+      kind: DefaultModelSelectionKind.MODEL,
+      permittedModelId: modelId,
+    });
     await db
       .getRepository(ThreadRecord)
       .insert({ id: threadId, userId, modelId });
@@ -133,7 +136,7 @@ describe('Model deletion transaction across repositories', () => {
   }, 30_000);
 
   async function deleteAndReplace(): Promise<void> {
-    await defaults.deleteByModelId(modelId);
+    await defaults.deleteByPermittedModelIds([modelId]);
     await threads.updateModel({
       threadId,
       userId,
@@ -154,8 +157,8 @@ describe('Model deletion transaction across repositories', () => {
     ).toBe(1);
     expect(
       await db
-        .getRepository(UserDefaultModelRecord)
-        .countBy({ model: { id: modelId } }),
+        .getRepository(DefaultModelSelectionRecord)
+        .countBy({ permittedModelId: modelId }),
     ).toBe(1);
     expect(
       await db.getRepository(ThreadRecord).findOneBy({ id: threadId }),
@@ -169,8 +172,8 @@ describe('Model deletion transaction across repositories', () => {
     ).toBe(0);
     expect(
       await db
-        .getRepository(UserDefaultModelRecord)
-        .countBy({ model: { id: modelId } }),
+        .getRepository(DefaultModelSelectionRecord)
+        .countBy({ permittedModelId: modelId }),
     ).toBe(0);
     expect(
       await db.getRepository(ThreadRecord).findOneBy({ id: threadId }),

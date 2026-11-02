@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (_target: unknown, _key: string, descriptor: PropertyDescriptor) =>
@@ -26,6 +28,8 @@ import { ConfirmChapterUseCase } from './confirm-chapter.use-case';
 
 describe('ConfirmChapterUseCase', () => {
   let useCase: ConfirmChapterUseCase;
+  let eventEmitter: EventEmitter2;
+  let progressEvents: AcademyProgressUpdatedEvent[];
   let chapterRepository: jest.Mocked<AcademyChapterRepository>;
   let confirmationRepository: jest.Mocked<AcademyChapterConfirmationRepository>;
   let completionRepository: jest.Mocked<AcademyCompletionRepository>;
@@ -40,9 +44,18 @@ describe('ConfirmChapterUseCase', () => {
   });
 
   beforeEach(async () => {
+    progressEvents = [];
+    eventEmitter = new EventEmitter2();
+    eventEmitter.on(
+      AcademyProgressUpdatedEvent.EVENT_NAME,
+      (event: AcademyProgressUpdatedEvent) => {
+        progressEvents.push(event);
+      },
+    );
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConfirmChapterUseCase,
+        { provide: EventEmitter2, useValue: eventEmitter },
         {
           provide: AcademyChapterRepository,
           useValue: { findOne: jest.fn(), findAllIds: jest.fn() },
@@ -100,6 +113,76 @@ describe('ConfirmChapterUseCase', () => {
   function confirm(chapterId = chapter.id) {
     return useCase.execute(new ConfirmChapterCommand({ userId, chapterId }));
   }
+
+  it('reports started activity without a participation confirmation for an incomplete academy', async () => {
+    chapterRepository.findAllIds.mockResolvedValue([chapter.id, randomUUID()]);
+    const confirmation = confirmationOf(chapter.id);
+    confirmationRepository.findAllByUser.mockResolvedValue([confirmation]);
+    await confirm();
+    expect(progressEvents).toEqual([
+      new AcademyProgressUpdatedEvent(userId, null),
+    ]);
+  });
+
+  it('reports the saved participation confirmation after whole-academy completion', async () => {
+    const confirmation = confirmationOf(chapter.id);
+    confirmationRepository.findAllByUser.mockResolvedValue([confirmation]);
+    await confirm();
+    expect(progressEvents).toEqual([
+      new AcademyProgressUpdatedEvent(
+        userId,
+        completionRepository.upsert.mock.calls[0][0].completedAt,
+      ),
+    ]);
+  });
+
+  it('preserves a previous participation confirmation during incomplete renewal', async () => {
+    const previous = new AcademyCompletion({
+      userId,
+      completedAt: new Date('2026-01-01T12:00:00.000Z'),
+    });
+    completionRepository.findByUser.mockResolvedValue(previous);
+    chapterRepository.findAllIds.mockResolvedValue([chapter.id, randomUUID()]);
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      confirmationOf(chapter.id),
+    ]);
+    await confirm();
+    expect(progressEvents).toEqual([
+      new AcademyProgressUpdatedEvent(userId, previous.completedAt),
+    ]);
+  });
+
+  it('does not report progress when completion reset fails', async () => {
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      confirmationOf(chapter.id),
+    ]);
+    viewTimeRepository.deleteAllByUser.mockRejectedValueOnce(
+      new Error('reset failed'),
+    );
+    await expect(confirm()).rejects.toThrow();
+    expect(progressEvents).toEqual([]);
+  });
+
+  it('keeps confirmation successful when progress publication fails', async () => {
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      confirmationOf(chapter.id),
+    ]);
+    const emit = jest
+      .spyOn(eventEmitter, 'emitAsync')
+      .mockRejectedValueOnce(new Error('telemetry unavailable'));
+    await expect(confirm()).resolves.toMatchObject({ academyCompleted: true });
+    expect(emit).toHaveBeenCalled();
+  });
+
+  it('keeps confirmation successful when a progress listener throws synchronously', async () => {
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      confirmationOf(chapter.id),
+    ]);
+    jest.spyOn(eventEmitter, 'emitAsync').mockImplementationOnce(() => {
+      throw new Error('listener failed');
+    });
+    await expect(confirm()).resolves.toMatchObject({ academyCompleted: true });
+  });
 
   it('stores the first chapter confirmation', async () => {
     const confirmation = confirmationOf(chapter.id);
@@ -159,6 +242,7 @@ describe('ConfirmChapterUseCase', () => {
       ChapterNotFoundError,
     );
     expect(confirmationRepository.upsert).not.toHaveBeenCalled();
+    expect(progressEvents).toEqual([]);
   });
 
   it('does not complete the academy while another chapter is unconfirmed', async () => {
@@ -334,6 +418,7 @@ describe('ConfirmChapterUseCase', () => {
         },
       });
       expect(confirmationRepository.upsert).not.toHaveBeenCalled();
+      expect(progressEvents).toEqual([]);
     });
 
     it('confirms once every module has reached the minimum', async () => {
@@ -362,9 +447,11 @@ describe('ConfirmChapterUseCase', () => {
         new Date(Date.now() - 60 * 1000),
       );
       confirmationRepository.findAllByUser.mockResolvedValue([recent]);
-      completionRepository.findByUser.mockResolvedValue(
-        new AcademyCompletion({ userId, completedAt: new Date() }),
-      );
+      const completion = new AcademyCompletion({
+        userId,
+        completedAt: new Date(),
+      });
+      completionRepository.findByUser.mockResolvedValue(completion);
 
       const result = await confirm(chapterWithModules.id);
 
@@ -373,6 +460,9 @@ describe('ConfirmChapterUseCase', () => {
         confirmedAt: recent.confirmedAt,
       });
       expect(confirmationRepository.upsert).not.toHaveBeenCalled();
+      expect(progressEvents).toEqual([
+        new AcademyProgressUpdatedEvent(userId, completion.completedAt),
+      ]);
       expect(viewTimeRepository.deleteAllByUser).not.toHaveBeenCalled();
     });
 
@@ -388,6 +478,7 @@ describe('ConfirmChapterUseCase', () => {
         ChapterModulesBelowMinimumTimeError,
       );
       expect(confirmationRepository.upsert).not.toHaveBeenCalled();
+      expect(progressEvents).toEqual([]);
     });
 
     it('keeps a chapter without modules confirmable', async () => {

@@ -20,6 +20,12 @@ import {
 } from 'src/domain/threads/application/threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
+import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import {
+  ConflictingModelSelectionError,
+  ModelModeUnavailableError,
+} from 'src/domain/threads/application/threads.errors';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -31,6 +37,8 @@ describe('CreateThreadUseCase', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
+
+  const resolveModelModes = { execute: jest.fn() };
 
   beforeEach(async () => {
     logger = createLoggerMock();
@@ -66,6 +74,7 @@ describe('CreateThreadUseCase', () => {
           useValue: mockGetPermittedLanguageModelUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        { provide: ResolveModelModesUseCase, useValue: resolveModelModes },
         {
           provide: AssertWorkspaceReadAccessUseCase,
           useValue: mockAssertWorkspaceReadAccessUseCase,
@@ -280,6 +289,93 @@ describe('CreateThreadUseCase', () => {
         'Failed to create thread',
       );
       expect(getModelExecuteSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('with a mode', () => {
+    const permit = (anonymousOnly: boolean) =>
+      new PermittedLanguageModel({
+        model: new LanguageModel({
+          name: 'mistral-large',
+          provider: ModelProvider.MISTRAL,
+          displayName: 'Mistral Large',
+          canStream: true,
+          isReasoning: false,
+          isArchived: false,
+          canUseTools: true,
+          canVision: false,
+          contextWindowSize: 128_000,
+        }),
+        orgId: mockOrgId,
+        anonymousOnly,
+      });
+    const standard = permit(false);
+    const anonymousOnly = permit(true);
+
+    beforeEach(() => {
+      resolveModelModes.execute.mockResolvedValue([
+        {
+          mode: ModelMode.AUTO,
+          permittedModel: standard,
+          anonymousPermittedModel: anonymousOnly,
+        },
+        {
+          mode: ModelMode.MAX,
+          permittedModel: null,
+          anonymousPermittedModel: null,
+        },
+      ]);
+      threadsRepository.create.mockImplementation((t: Thread) =>
+        Promise.resolve(t),
+      );
+    });
+
+    it('binds the resolved model and stores the mode on the thread', async () => {
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ mode: ModelMode.AUTO }),
+      );
+
+      expect(thread.model?.id).toBe(standard.id);
+      expect(thread.mode).toBe(ModelMode.AUTO);
+      expect(thread.isAnonymous).toBe(false);
+      expect(getPermittedLanguageModelUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('uses the anonymous resolution when anonymous mode is on', async () => {
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ mode: ModelMode.AUTO, isAnonymous: true }),
+      );
+
+      expect(thread.model?.id).toBe(anonymousOnly.id);
+      expect(thread.isAnonymous).toBe(true);
+    });
+
+    it('rejects a mode that resolves to no model', async () => {
+      await expect(
+        useCase.execute(new CreateThreadCommand({ mode: ModelMode.MAX })),
+      ).rejects.toThrow(ModelModeUnavailableError);
+      expect(threadsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a request carrying both a model and a mode', async () => {
+      await expect(
+        useCase.execute(
+          new CreateThreadCommand({
+            modelId: mockModelId,
+            mode: ModelMode.AUTO,
+          }),
+        ),
+      ).rejects.toThrow(ConflictingModelSelectionError);
+    });
+
+    it('leaves mode empty when an individual model is chosen', async () => {
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(standard);
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ modelId: mockModelId }),
+      );
+
+      expect(thread.mode).toBeNull();
     });
   });
 });

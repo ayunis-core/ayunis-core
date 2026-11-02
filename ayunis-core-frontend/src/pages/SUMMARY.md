@@ -29,3 +29,5 @@ Organisation management in `super-admin-settings/org/` includes archive/restore 
 **Usage visibility (AYC-1342).** Hiding individual usage does not restrict team management, membership, team limits, user deletion or invitation team assignments. Normal role and organization ownership checks still apply. Super-admin team management endpoints remain available.
 
 The super-admin organization Users tab includes per-invite deletion and organization-wide pending-invite cleanup with destructive confirmation dialogs. Bulk confirmation explicitly covers invitations outside the current search/page; successful cleanup refreshes the list and resets invite pagination.
+
+Super-admin organization subscription and Academy controls become read-only when the backend advertises external subscription management. Details and subscription history remain visible, trials remain editable, and a notice directs commercial changes to Sales. The page-specific `org/lib/useSubscriptionReadOnly` hook keeps manual controls blocked while configuration is unresolved or failed, and allows editing only when external management is explicitly disabled.

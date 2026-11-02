@@ -1,3 +1,4 @@
+import { DefaultModelSelectionsRepository } from 'src/domain/models/application/ports/default-model-selections.repository';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetTeamDefaultModelUseCase } from './set-team-default-model.use-case';
@@ -23,7 +24,11 @@ import { PermittedModelScope } from 'src/domain/models/domain/value-objects/perm
 import { randomUUID } from 'crypto';
 import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 
+const selectionsRepository = { setModel: jest.fn() };
+
 describe('SetTeamDefaultModelUseCase', () => {
+  afterEach(() => jest.clearAllMocks());
+
   let useCase: SetTeamDefaultModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getTeamUseCase: jest.Mocked<GetTeamUseCase>;
@@ -61,7 +66,6 @@ describe('SetTeamDefaultModelUseCase', () => {
   beforeEach(async () => {
     permittedModelsRepository = {
       findOne: jest.fn(),
-      setAsDefault: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
 
     getTeamUseCase = {
@@ -86,6 +90,10 @@ describe('SetTeamDefaultModelUseCase', () => {
         },
         { provide: GetTeamUseCase, useValue: getTeamUseCase },
         { provide: ContextService, useValue: contextService },
+        {
+          provide: DefaultModelSelectionsRepository,
+          useValue: selectionsRepository,
+        },
       ],
     }).compile();
 
@@ -106,12 +114,6 @@ describe('SetTeamDefaultModelUseCase', () => {
     setAdminContext();
     const permittedModel = makeTeamPermittedModel();
     permittedModelsRepository.findOne.mockResolvedValue(permittedModel);
-    const defaultModel = new PermittedLanguageModel({
-      ...permittedModel,
-      model: languageModel,
-      isDefault: true,
-    });
-    permittedModelsRepository.setAsDefault.mockResolvedValue(defaultModel);
 
     const command = new SetTeamDefaultModelCommand(
       permittedModelId,
@@ -121,11 +123,10 @@ describe('SetTeamDefaultModelUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.isDefault).toBe(true);
-    expect(permittedModelsRepository.setAsDefault).toHaveBeenCalledWith({
-      id: permittedModelId,
-      orgId,
-      teamId,
-    });
+    expect(selectionsRepository.setModel).toHaveBeenCalledWith(
+      { teamId },
+      permittedModelId,
+    );
   });
 
   it('should throw UnauthorizedAccessError for non-admin users', async () => {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadRecord } from '../schema/thread.record';
+import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
 import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/local/mappers/message.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
@@ -29,6 +29,7 @@ export class ThreadMapper {
       : undefined;
     record.title = thread.title;
     record.isAnonymous = thread.isAnonymous;
+    record.mode = thread.mode;
     record.workspaceId = thread.workspaceId ?? null;
     record.messages = thread.messages.map((message) =>
       this.messageMapper.toRecord(message),
@@ -60,6 +61,7 @@ export class ThreadMapper {
       knowledgeBaseAssignments: this.mapKnowledgeBaseAssignments(threadEntity),
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
+      mode: threadEntity.mode,
       workspaceId: threadEntity.workspaceId,
       messages: this.mapMessages(threadEntity),
       lastActivityAt: threadEntity.lastActivityAt ?? threadEntity.createdAt,

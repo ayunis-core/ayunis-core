@@ -3,18 +3,18 @@ name: Backend Tests
 on:
   pull_request:
     paths:
-      - 'ayunis-core-backend/**'
-      - '.github/workflows/backend-tests.yml'
-      - '.github/actions/setup-node-pnpm/action.yml'
-      - '.github/actions/start-minio/action.yml'
-      - 'docker-compose.yml'
+      - "ayunis-core-backend/**"
+      - ".github/workflows/backend-tests.yml"
+      - ".github/actions/setup-node-pnpm/action.yml"
+      - ".github/actions/start-minio/action.yml"
+      - "docker-compose.yml"
   push:
     branches: [main]
     paths:
-      - 'ayunis-core-backend/**'
+      - "ayunis-core-backend/**"
       # Seeds the shared ESLint cache below: pull requests can only restore
       # caches saved on main, and the cache key includes the lockfile hash.
-      - 'pnpm-lock.yaml'
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
@@ -140,9 +140,9 @@ jobs:
           COOKIE_SAME_SITE=lax
 
           # MinIO
-          MINIO_ENDPOINT=localhost
-          MINIO_PORT=9000
-          MINIO_USE_SSL=false
+          MINIO_INTERNAL_ENDPOINT=localhost
+          MINIO_INTERNAL_PORT=9000
+          MINIO_INTERNAL_USE_SSL=false
           MINIO_ROOT_USER=ayunis-ci
           MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret
           MINIO_BUCKET=ayunis-test-uploads
@@ -157,6 +157,12 @@ jobs:
 
       - name: Run migrations
         run: pnpm run migration:run:dev
+        env:
+          NODE_ENV: test
+
+      - name: Test external subscription lifecycle with production record metadata
+        if: matrix.shard == 1
+        run: pnpm run test:subscription-sync-lifecycle
         env:
           NODE_ENV: test
 

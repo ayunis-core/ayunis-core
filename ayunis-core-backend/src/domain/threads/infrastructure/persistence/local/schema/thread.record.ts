@@ -18,6 +18,8 @@ import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
   @Column()
@@ -34,6 +36,9 @@ export class ThreadRecord extends BaseRecord {
 
   @ManyToOne(() => PermittedModelRecord, { onDelete: 'SET NULL' })
   model?: PermittedModelRecord;
+
+  @Column({ type: 'enum', enum: ModelMode, nullable: true })
+  mode: ModelMode | null;
 
   @Column({ nullable: true })
   title?: string;

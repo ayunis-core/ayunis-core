@@ -102,7 +102,8 @@
     "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse.",
     "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen.",
     "multipleActiveSubscriptions": "Die Abonnements dieser Organisation überschneiden sich. Ein Superadmin muss die Überschneidung beheben, bevor Benutzer eingeladen werden können.",
-    "teamNotFound": "Ein ausgewähltes Team existiert nicht mehr. Bitte wählen Sie die Teams erneut aus."
+    "teamNotFound": "Ein ausgewähltes Team existiert nicht mehr. Bitte wählen Sie die Teams erneut aus.",
+    "insufficientSeats": "Für diese Einladungen sind nicht genügend Plätze verfügbar. Wenden Sie sich an den Vertrieb, um die Anzahl der Plätze zu erhöhen."
   },
   "inviteResend": {
     "success": "Einladung erfolgreich erneut gesendet!",

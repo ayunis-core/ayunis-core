@@ -56,6 +56,16 @@ it per chapter as `replayable` so the UI does not block that retry.
 `confirmationValid`, and `confirmedAt` fields, the whole-academy completion
 and expiry dates, per-module `visibleSeconds`, and `minimumModuleSeconds`.
 
+## Usage telemetry
+
+After chapter confirmation commits, `ConfirmChapterUseCase` emits
+`AcademyProgressUpdatedEvent` with `started: true` and the committed whole-academy
+participation-confirmation timestamp (or null). Partial renewal and replayed
+confirmations preserve an existing completion timestamp. The confirmation,
+completion and page-time reset remain atomic; rollback emits no event. Event
+publication is best effort and cannot fail a successful confirmation. The
+webhooks module enriches this fact for Startdeliver; calculated KPIs stay downstream.
+
 ## Completion validity and access
 
 `application/util/certificate-validity.ts` owns the 12-month period and derives

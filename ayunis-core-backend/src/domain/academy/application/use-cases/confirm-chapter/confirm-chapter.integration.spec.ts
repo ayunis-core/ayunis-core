@@ -1,3 +1,5 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AcademyProgressUpdatedEvent } from 'src/domain/academy/application/events/academy-progress-updated.event';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntitySchema } from 'typeorm';
@@ -66,6 +68,16 @@ describe('ConfirmChapterUseCase transaction', () => {
   let useCase: ConfirmChapterUseCase;
   let viewTimeRepository: LocalAcademyModuleViewTimeRepository;
   let txHost: TransactionHost<TransactionalAdapterTypeOrm>;
+  const eventEmitter = new EventEmitter2();
+  const progressEvents: AcademyProgressUpdatedEvent[] = [];
+  const transactionActiveAtPublication: boolean[] = [];
+  eventEmitter.on(
+    AcademyProgressUpdatedEvent.EVENT_NAME,
+    (event: AcademyProgressUpdatedEvent) => {
+      progressEvents.push(event);
+      transactionActiveAtPublication.push(txHost.isTransactionActive());
+    },
+  );
   const courseModule = new AcademyCourseModule({
     chapterId: randomUUID(),
     title: 'Was ein Sprachmodell tut',
@@ -121,6 +133,7 @@ describe('ConfirmChapterUseCase transaction', () => {
       {
         execute: jest.fn().mockResolvedValue(60),
       } as unknown as GetAcademyMinimumModuleSecondsUseCase,
+      eventEmitter,
     );
   }, 30_000);
 
@@ -150,6 +163,9 @@ describe('ConfirmChapterUseCase transaction', () => {
       );
 
     await expect(confirm()).rejects.toBeInstanceOf(UnexpectedAcademyError);
+    expect(progressEvents.filter((event) => event.userId === userId)).toEqual(
+      [],
+    );
     await expect(
       dataSource.getRepository(AcademyCompletionRecord).countBy({ userId }),
     ).resolves.toBe(0);
@@ -160,6 +176,13 @@ describe('ConfirmChapterUseCase transaction', () => {
     ).resolves.toBe(0);
 
     await expect(confirm()).resolves.toMatchObject({ academyCompleted: true });
+    const committed = await dataSource
+      .getRepository(AcademyCompletionRecord)
+      .findOneByOrFail({ userId });
+    expect(progressEvents.filter((event) => event.userId === userId)).toEqual([
+      new AcademyProgressUpdatedEvent(userId, committed.completedAt),
+    ]);
+    expect(transactionActiveAtPublication).not.toContain(true);
     await expect(
       dataSource.getRepository(AcademyCompletionRecord).countBy({ userId }),
     ).resolves.toBe(1);
@@ -303,6 +326,7 @@ describe('ConfirmChapterUseCase transaction', () => {
       {
         execute: jest.fn().mockResolvedValue(60),
       } as unknown as GetAcademyMinimumModuleSecondsUseCase,
+      eventEmitter,
     );
 
     await Promise.all(
