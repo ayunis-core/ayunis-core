@@ -278,6 +278,47 @@ describe('ModelCallObservabilityHookFactory', () => {
     );
   });
 
+  it('retains the fetch cause chain for unavailable-provider diagnostics', async () => {
+    const logger = createLoggerMock();
+    const socketError = Object.assign(new Error('other side closed'), {
+      code: 'UND_ERR_SOCKET',
+    });
+    const failure = new ModelProviderError({
+      kind: 'connection',
+      stage: 'stream_establishment',
+      cause: new TypeError('fetch failed', { cause: socketError }),
+    });
+    const provider: ModelProvider = {
+      name: 'mistral:mistral-large-latest',
+      stream: () => {
+        throw failure;
+      },
+    };
+    const { hook } = buildHook(provider, jest.fn().mockResolvedValue([]));
+
+    await collect(
+      run({
+        instructions: 'Assist a municipal clerk.',
+        model: provider,
+        messages,
+        hooks: [hook],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureKind: 'connection',
+        err: expect.objectContaining({
+          cause: expect.objectContaining({
+            cause: expect.objectContaining({ code: 'UND_ERR_SOCKET' }),
+          }),
+        }),
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
+
   it('logs that a terminal mid-stream rate limit had already reached the user', async () => {
     const logger = createLoggerMock();
     let calls = 0;
