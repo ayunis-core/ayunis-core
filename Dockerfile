@@ -46,7 +46,7 @@ RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
 # orders @ayunis/inference ahead of @ayunis/agent-runtime (which depends on it).
 # The backend's `prebuild` hook also runs this, but doing it explicitly keeps
 # the build order legible.
-RUN pnpm --filter "@ayunis/inference" --filter "@ayunis/provider-anthropic" --filter "@ayunis/provider-openai" --filter "@ayunis/agent-runtime" run build
+RUN pnpm --filter "@ayunis-core/connect-sdk" --filter "@ayunis/inference" --filter "@ayunis/provider-anthropic" --filter "@ayunis/provider-openai" --filter "@ayunis/agent-runtime" run build
 RUN pnpm --filter core-backend run build
 
 # Produce a self-contained, production-only deploy bundle for the backend
