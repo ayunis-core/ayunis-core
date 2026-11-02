@@ -1,6 +1,8 @@
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, type EntityManager } from 'typeorm';
 import type { UUID } from 'crypto';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
@@ -21,18 +23,56 @@ import { CreditLimitMapper } from './mappers/credit-limit.mapper';
 export class LocalCreditLimitRepository extends CreditLimitRepository {
   constructor(
     @InjectRepository(CreditLimitRecord)
-    private readonly repository: Repository<CreditLimitRecord>,
+    private readonly defaultRepository: Repository<CreditLimitRecord>,
     @InjectRepository(UserCreditLimitRecord)
-    private readonly userRepository: Repository<UserCreditLimitRecord>,
+    private readonly defaultUserLimitRepository: Repository<UserCreditLimitRecord>,
     @InjectRepository(TeamCreditLimitRecord)
-    private readonly teamRepository: Repository<TeamCreditLimitRecord>,
+    private readonly defaultTeamRepository: Repository<TeamCreditLimitRecord>,
     @InjectRepository(ApiKeyCreditLimitRecord)
-    private readonly apiKeyRepository: Repository<ApiKeyCreditLimitRecord>,
+    private readonly defaultApiKeyRepository: Repository<ApiKeyCreditLimitRecord>,
     @InjectRepository(DefaultUserCreditLimitRecord)
-    private readonly defaultUserRepository: Repository<DefaultUserCreditLimitRecord>,
+    private readonly defaultOrgUserRepository: Repository<DefaultUserCreditLimitRecord>,
     private readonly mapper: CreditLimitMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<CreditLimitRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager?.getRepository(CreditLimitRecord) ?? this.defaultRepository;
+  }
+
+  private get userRepository(): Repository<UserCreditLimitRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(UserCreditLimitRecord) ??
+      this.defaultUserLimitRepository
+    );
+  }
+
+  private get teamRepository(): Repository<TeamCreditLimitRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(TeamCreditLimitRecord) ??
+      this.defaultTeamRepository
+    );
+  }
+
+  private get apiKeyRepository(): Repository<ApiKeyCreditLimitRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ApiKeyCreditLimitRecord) ??
+      this.defaultApiKeyRepository
+    );
+  }
+
+  private get defaultUserRepository(): Repository<DefaultUserCreditLimitRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(DefaultUserCreditLimitRecord) ??
+      this.defaultOrgUserRepository
+    );
   }
 
   async save<T extends CreditLimit>(limit: T): Promise<T> {

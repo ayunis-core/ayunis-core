@@ -7,4 +7,4 @@ import { CoreConnectAuthGuard } from './core-connect-auth.guard';
   providers: [CoreConnectAuthGuard],
   exports: [CoreConnectAuthGuard],
 })
-export class CoreConnectModule {}
+export class CoreConnectAuthModule {}
