@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
+import { mapSubscriptionToWebhookPayload } from 'src/integrations/webhooks/application/mappers/subscription-payload.mapper';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 

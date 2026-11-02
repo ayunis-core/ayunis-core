@@ -1,12 +1,12 @@
 import type { UUID } from 'crypto';
-import { WebhookEvent } from '../webhook-event.entity';
-import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 import type { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 
 export interface AddonWebhookPayload {
   orgId: UUID;
   addonType: AddonType;
-  actorUserId: UUID;
+  actorUserId: UUID | null;
 }
 
 export class AddonActivatedWebhookEvent extends WebhookEvent<AddonWebhookPayload> {

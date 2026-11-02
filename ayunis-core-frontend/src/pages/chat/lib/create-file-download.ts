@@ -1,3 +1,4 @@
+import { parse, unparse } from 'papaparse';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { resolvePiiTokens } from '@/widgets/markdown';
 
@@ -7,6 +8,7 @@ const MIME_TYPES = {
   xml: 'application/xml',
   json: 'application/json',
   txt: 'text/plain',
+  csv: 'text/csv',
 } as const;
 
 type FileFormat = keyof typeof MIME_TYPES;
@@ -39,12 +41,12 @@ export function parseFileDownload(
 }
 
 function isFileFormat(format: unknown): format is FileFormat {
-  return format === 'xml' || format === 'json' || format === 'txt';
+  return typeof format === 'string' && Object.hasOwn(MIME_TYPES, format);
 }
 
 function sanitizeFilename(filename: string, format: FileFormat): string {
   const cleaned = filename.replace(/[/\\:*?"<>|]/g, '').trim();
-  const base = cleaned.replace(/(?:\.(?:xml|json|txt))+$/i, '');
+  const base = cleaned.replace(/(?:\.(?:xml|json|txt|csv))+$/i, '');
   const boundedBase = [...base.trim()].slice(0, MAX_FILENAME_LENGTH).join('');
   return `${boundedBase || 'datei'}.${format}`;
 }
@@ -60,6 +62,7 @@ export function resolveFileContent(
   file: FileDownload,
   masks: ReadonlyMap<string, { value: string }>,
 ): string {
+  if (file.format === 'csv') return resolveCsvContent(file.content, masks);
   const escapedMasks = new Map(
     [...masks].map(([token, entry]) => [
       token,
@@ -78,4 +81,27 @@ function escapeValue(value: string, format: FileFormat): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;');
+}
+
+function resolveCsvContent(
+  content: string,
+  masks: ReadonlyMap<string, { value: string }>,
+): string {
+  if (![...masks.keys()].some((token) => content.includes(token)))
+    return content;
+  // A trailing line break parses as an extra empty row, which makes PapaParse
+  // give up guessing a non-comma delimiter on short two-column files.
+  const trailingLinebreak = /\r?\n$/.exec(content)?.[0] ?? '';
+  const parsed = parse<string[]>(
+    content.slice(0, content.length - trailingLinebreak.length),
+  );
+  const rows = parsed.data.map((row) =>
+    row.map((cell) => resolvePiiTokens(cell, masks)),
+  );
+  return (
+    unparse(rows, {
+      delimiter: parsed.meta.delimiter,
+      newline: parsed.meta.linebreak,
+    }) + trailingLinebreak
+  );
 }

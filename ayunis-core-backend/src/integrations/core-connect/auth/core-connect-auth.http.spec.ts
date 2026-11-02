@@ -14,7 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
-import { CoreConnectModule } from 'src/integrations/core-connect/core-connect.module';
+import { CoreConnectAuthModule } from 'src/integrations/core-connect/auth/core-connect-auth.module';
 import { JwtAuthGuard } from 'src/iam/authentication/application/guards/jwt-auth.guard';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
 
@@ -63,7 +63,7 @@ describe('Core Connect authentication over HTTP', () => {
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true }),
-        CoreConnectModule,
+        CoreConnectAuthModule,
       ],
       controllers: [ServiceProtectedController, ProtectedController],
       providers: [

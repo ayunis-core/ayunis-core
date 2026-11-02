@@ -1,5 +1,7 @@
+import { parseNonNegativeIntWithDefault } from 'src/common/util/number.util';
+import { validateSubscriptionSyncRules } from './subscription-sync-env.validation';
 import 'reflect-metadata';
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -9,6 +11,7 @@ import {
   IsOptional,
   IsUrl,
   Min,
+  Max,
   validateSync,
   type ValidationError,
 } from 'class-validator';
@@ -116,6 +119,16 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   POSTGRES_POOL_SIZE?: number;
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string'
+      ? parseNonNegativeIntWithDefault(value, NaN)
+      : value,
+  )
+  @IsInt()
+  @Min(0)
+  @Max(2_147_483_647)
+  POSTGRES_CONNECTION_TIMEOUT_MS?: number;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -327,6 +340,7 @@ export function validateEnv(
     ...validateProductionRules(env),
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
+    ...validateSubscriptionSyncRules(env),
   ];
   if (messages.length > 0) {
     messages.sort((a, b) => a.localeCompare(b));

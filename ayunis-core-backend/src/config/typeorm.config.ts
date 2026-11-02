@@ -16,6 +16,10 @@ const baseConfig: DataSourceOptions = {
   synchronize: false,
   poolSize: parsePositiveIntWithDefault(process.env.POSTGRES_POOL_SIZE, 20),
   extra: {
+    connectionTimeoutMillis: parseNonNegativeIntWithDefault(
+      process.env.POSTGRES_CONNECTION_TIMEOUT_MS,
+      10_000,
+    ),
     statement_timeout: parseNonNegativeIntWithDefault(
       process.env.POSTGRES_STATEMENT_TIMEOUT_MS,
       60_000,

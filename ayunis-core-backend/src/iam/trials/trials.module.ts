@@ -9,6 +9,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
 import { TrialRecord } from './infrastructure/persistence/local/schema/trial.record';
 import { SuperAdminTrialsController } from './presenters/http/super-admin-trials.controller';
 import { SuperAdminTrialResponseDtoMapper } from './presenters/http/mappers/super-admin-trial-response-dto.mapper';
+import { EndTrialUseCase } from 'src/iam/trials/application/use-cases/end-trial/end-trial.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TrialRecord])],
@@ -22,6 +23,7 @@ import { SuperAdminTrialResponseDtoMapper } from './presenters/http/mappers/supe
     GetTrialUseCase,
     IncrementTrialMessagesUseCase,
     UpdateTrialUseCase,
+    EndTrialUseCase,
     SuperAdminTrialResponseDtoMapper,
   ],
   exports: [
@@ -30,6 +32,7 @@ import { SuperAdminTrialResponseDtoMapper } from './presenters/http/mappers/supe
     GetTrialUseCase,
     IncrementTrialMessagesUseCase,
     UpdateTrialUseCase,
+    EndTrialUseCase,
   ],
 })
 export class TrialsModule {}
