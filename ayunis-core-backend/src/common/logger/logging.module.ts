@@ -1,4 +1,6 @@
+import { Http2TransportDiagnostics } from 'src/common/http/http2-transport-diagnostics';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
 
@@ -8,6 +10,7 @@ import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
  * the Pino adapter exported here.
  */
 @Module({
-  imports: [LoggerModule.forRoot(createPinoLoggerConfig())],
+  imports: [ConfigModule, LoggerModule.forRoot(createPinoLoggerConfig())],
+  providers: [Http2TransportDiagnostics],
 })
 export class LoggingModule {}

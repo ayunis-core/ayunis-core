@@ -62,6 +62,7 @@ describe('CreateFileWidget', () => {
     ['xml', 'application/xml'],
     ['json', 'application/json'],
     ['txt', 'text/plain'],
+    ['csv', 'text/csv'],
   ])('downloads %s with exact UTF-8 content', async (format, mime) => {
     render(<CreateFileWidget content={content({ ...params, format })} />);
     expect(screen.getByText(`Bürgerbericht.${format}`)).toBeDefined();

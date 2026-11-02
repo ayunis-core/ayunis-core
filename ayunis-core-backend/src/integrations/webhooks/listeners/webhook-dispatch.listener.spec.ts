@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { runWithDeferredWebhookDelivery } from 'src/integrations/webhooks/application/context/webhook-delivery-context';
 import type { UUID } from 'crypto';
 import { EVENT_LISTENER_METADATA } from '@nestjs/event-emitter';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
@@ -122,6 +123,44 @@ describe('WebhookDispatchListener', () => {
     );
   });
 
+  it('still sends unrelated user events while billing events are deferred', async () => {
+    await runWithDeferredWebhookDelivery(
+      [new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload())],
+      () =>
+        listener.handleUserUpdated(
+          new UserUpdatedEvent(USER_ID, ORG_ID, makeUser()),
+        ),
+    );
+    expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+  it('leaves billing HTTP delivery to the outbox while applying local effects', async () => {
+    const event = new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload());
+    await runWithDeferredWebhookDelivery([event], () =>
+      listener.handleSubscriptionCreated(event),
+    );
+    expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+  });
+  it('still sends a different billing event that was not queued in this context', async () => {
+    const queued = new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload());
+    const immediate = new SubscriptionCreatedEvent(
+      ORG_ID,
+      makeSeatBasedPayload(),
+    );
+    await runWithDeferredWebhookDelivery([queued], () =>
+      listener.handleSubscriptionCreated(immediate),
+    );
+    expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+  it('preserves mapping failures inside the transaction when HTTP is deferred', async () => {
+    const payload = { ...makeSeatBasedPayload(), startsAt: new Date(NaN) };
+    const event = new SubscriptionCreatedEvent(ORG_ID, payload);
+    await expect(
+      runWithDeferredWebhookDelivery([event], () =>
+        listener.handleSubscriptionCreated(event),
+      ),
+    ).rejects.toThrow(RangeError);
+    expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+  });
   describe('handleUserCreated', () => {
     it('propagates expiry delivery failure and keeps a stable event id on retry', async () => {
       const event = new SubscriptionExpiredEvent(

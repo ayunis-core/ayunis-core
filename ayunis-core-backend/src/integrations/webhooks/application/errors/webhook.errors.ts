@@ -3,10 +3,11 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import type { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
 export enum WebhookErrorCode {
-  UNEXPECTED_WEBHOOK_ERROR = 'UNEXPECTED_WEBHOOK_ERROR',
+  INVALID_PERSISTED_BILLING_EVENT = 'INVALID_PERSISTED_BILLING_EVENT',
   WEBHOOK_DELIVERY_FAILED = 'WEBHOOK_DELIVERY_FAILED',
   WEBHOOK_INVALID_URL = 'WEBHOOK_INVALID_URL',
   WEBHOOK_TIMEOUT = 'WEBHOOK_TIMEOUT',
+  UNEXPECTED_WEBHOOK_ERROR = 'UNEXPECTED_WEBHOOK_ERROR',
 }
 
 /**
@@ -80,6 +81,15 @@ export class UnexpectedWebhookError extends WebhookError {
       WebhookErrorCode.UNEXPECTED_WEBHOOK_ERROR,
       500,
       { error },
+    );
+  }
+}
+
+export class InvalidPersistedBillingEventError extends WebhookError {
+  constructor() {
+    super(
+      'Persisted billing event is unsupported or malformed',
+      WebhookErrorCode.INVALID_PERSISTED_BILLING_EVENT,
     );
   }
 }

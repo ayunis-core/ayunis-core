@@ -1,5 +1,5 @@
 import type { BillingInfoEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
-import type { BillingInfoPayload } from '../domain/subscription-webhook-payload.types';
+import type { BillingInfoPayload } from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
 
 /**
  * Maps domain-level {@link BillingInfoEventData} to the webhook-specific
