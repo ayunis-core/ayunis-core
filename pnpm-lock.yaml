@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@mistralai/mistralai':
-      specifier: ^2.6.4
-      version: 2.6.4
+      specifier: ^3.4.0
+      version: 3.4.0
     '@modelcontextprotocol/client':
       specifier: ^2.0.0
       version: 2.0.0
@@ -111,7 +111,7 @@ importers:
         version: 1.28.0
       '@mistralai/mistralai':
         specifier: 'catalog:'
-        version: 2.6.4(@opentelemetry/api@1.9.1)
+        version: 3.4.0(@opentelemetry/api@1.9.1)
       '@modelcontextprotocol/client':
         specifier: 'catalog:'
         version: 2.0.0
@@ -1051,7 +1051,7 @@ importers:
         version: link:../inference
       '@mistralai/mistralai':
         specifier: 'catalog:'
-        version: 2.6.4(@opentelemetry/api@1.9.1)
+        version: 3.4.0(@opentelemetry/api@1.9.1)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -2850,14 +2850,36 @@ packages:
   '@microsoft/tsdoc@0.17.1':
     resolution: {integrity: sha512-VHyYyyoH63jFoO3shpw9Zfijk5v/9p/VrClW35z0/q6ooK7sSmxpzOkS4iZPxs3vO4XtBW4H38HRAKkAMIK7DA==}
 
-  '@mistralai/mistralai@2.6.4':
-    resolution: {integrity: sha512-PPt4GyJqs2hEsWrYCJZK5f0ORmT+L2MSm75LVGD7kBLf6ZKsoDpld/FRBQXr8xG6iFCBOFJFYzvGYhUb+UCkbw==}
+  '@mistralai/mistralai@3.4.0':
+    resolution: {integrity: sha512-zgfg+ppFm8F99jog31dUehktW2tLEq9HG7/tDxAve+Lett/MTYRiPcWwdN5bUo/NRRhI60OVQAQvtR6AotPhZQ==}
     peerDependencies:
+      '@aws-sdk/client-s3': ^3.300.0
+      '@azure/identity': ^4.0.0
+      '@azure/storage-blob': ^12.24.0
+      '@google-cloud/storage': ^7.0.0 || ^8.0.0
+      '@hpcc-js/wasm-zstd': ^1.16.0
+      '@livekit/rtc-node': ^0.13.28
+      '@msgpack/msgpack': ^3.0.0
       '@opentelemetry/api': ^1.9.0
       '@opentelemetry/exporter-trace-otlp-http': ^0.220.0
       '@opentelemetry/resources': ^2.9.0
       '@opentelemetry/sdk-trace-base': ^2.9.0
+      livekit-client: ^2.19.0
     peerDependenciesMeta:
+      '@aws-sdk/client-s3':
+        optional: true
+      '@azure/identity':
+        optional: true
+      '@azure/storage-blob':
+        optional: true
+      '@google-cloud/storage':
+        optional: true
+      '@hpcc-js/wasm-zstd':
+        optional: true
+      '@livekit/rtc-node':
+        optional: true
+      '@msgpack/msgpack':
+        optional: true
       '@opentelemetry/api':
         optional: true
       '@opentelemetry/exporter-trace-otlp-http':
@@ -2865,6 +2887,8 @@ packages:
       '@opentelemetry/resources':
         optional: true
       '@opentelemetry/sdk-trace-base':
+        optional: true
+      livekit-client:
         optional: true
 
   '@modelcontextprotocol/client@2.0.0':
@@ -15594,7 +15618,6 @@ snapshots:
   '@hono/node-server@1.19.17(hono@4.13.14)':
     dependencies:
       hono: 4.13.14
-    optional: true
 
   '@hookform/resolvers@6.0.0(@sinclair/typebox@0.34.49)(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(class-transformer@0.5.1)(class-validator@0.15.1)(react-hook-form@7.87.0(react@19.3.1))(valibot@1.5.0(typescript@6.0.3))(zod@4.5.4)':
     dependencies:
@@ -16210,8 +16233,9 @@ snapshots:
 
   '@microsoft/tsdoc@0.17.1': {}
 
-  '@mistralai/mistralai@2.6.4(@opentelemetry/api@1.9.1)':
+  '@mistralai/mistralai@3.4.0(@opentelemetry/api@1.9.1)':
     dependencies:
+      '@modelcontextprotocol/sdk': 1.29.0(zod@4.5.4)
       '@opentelemetry/semantic-conventions': 1.41.1
       ws: 8.21.3
       zod: 4.5.4
@@ -16219,7 +16243,9 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
     transitivePeerDependencies:
+      - '@cfworker/json-schema'
       - bufferutil
+      - supports-color
       - utf-8-validate
 
   '@modelcontextprotocol/client@2.0.0':
@@ -16257,7 +16283,6 @@ snapshots:
       zod-to-json-schema: 3.25.2(zod@4.5.4)
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
@@ -22010,8 +22035,7 @@ snapshots:
 
   content-disposition@2.0.1: {}
 
-  content-type@1.0.5:
-    optional: true
+  content-type@1.0.5: {}
 
   content-type@2.1.0: {}
 
@@ -23184,7 +23208,6 @@ snapshots:
       ip-address: 10.7.5
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   express@5.3.0:
     dependencies:
@@ -23831,8 +23854,7 @@ snapshots:
 
   highlightjs-vue@1.0.0: {}
 
-  hono@4.13.14:
-    optional: true
+  hono@4.13.14: {}
 
   html-encoding-sniffer@6.0.0:
     dependencies:
@@ -24728,8 +24750,7 @@ snapshots:
 
   json-schema-traverse@1.0.0: {}
 
-  json-schema-typed@8.0.2:
-    optional: true
+  json-schema-typed@8.0.2: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 

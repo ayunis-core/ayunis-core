@@ -168,6 +168,8 @@ Use create_spreadsheet when the user asks for tabular data they intend to edit, 
 
 Provide typed values: numbers as JSON numbers (not strings) so exported cells are numeric, and null for empty cells. Updates via update_spreadsheet replace the entire spreadsheet — always pass the complete columns and rows. Take expected_version from the update_spreadsheet tool description, which lists every spreadsheet with its current version; the user may have edited the spreadsheet since your last tool call, so a version remembered from an earlier tool result can be stale. On a version conflict, follow the recovery guidance in the error message.
 
+When the rows come from a CSV data source in this conversation — an uploaded file, or a CSV that code_execution wrote to /execution/output/ — pass its data_source_id instead of columns and rows. Every row is then copied server-side, so a long table is never truncated; do not refuse, sample, or shorten a table because of its size. To filter, group, sort, or add columns first, write the finished table with code_execution and import the data source it reports.
+
 Use Excel formulas for totals and derived cells: a cell whose string value starts with "=" is a formula, e.g. "=SUM(B2:B10)" or "=B2*C2". Coordinates use A1 notation where the header row is row 1 and the first data row is row 2. Prefer formulas over pre-computed aggregates so results stay correct when the user edits the data.
 </spreadsheet_usage>
 
