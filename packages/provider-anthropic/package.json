@@ -43,8 +43,8 @@
     "deps:check": "madge --circular --extensions ts src"
   },
   "dependencies": {
-    "@anthropic-ai/bedrock-sdk": "^0.32.0",
-    "@anthropic-ai/sdk": "^0.110.0",
+    "@anthropic-ai/bedrock-sdk": "^1.1.0",
+    "@anthropic-ai/sdk": "^1.3.0",
     "@ayunis/inference": "workspace:*"
   },
   "devDependencies": {

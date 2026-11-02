@@ -50,7 +50,9 @@ export const markCacheBreakpoint = (
   messages: Anthropic.MessageParam[],
 ): Anthropic.MessageParam[] => {
   const lastMessage = messages.at(-1);
-  if (!lastMessage) {
+  // convertMessages only emits user/assistant; narrowing keeps the rebuilt
+  // message a valid MessageParam (system content cannot hold non-text blocks).
+  if (!lastMessage || lastMessage.role === 'system') {
     return messages;
   }
   const blocks = asBlocks(lastMessage.content);

@@ -104,6 +104,7 @@ const mapStopReason = (
     case 'stop_sequence':
       return 'stop';
     case 'max_tokens':
+    case 'model_context_window_exceeded':
       return 'length';
     case 'tool_use':
       return 'tool_calls';
