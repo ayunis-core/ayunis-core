@@ -1,4 +1,5 @@
 import { ListSubscriptionSyncLinksUseCase } from './application/use-cases/list-subscription-sync-links/list-subscription-sync-links.use-case';
+import { SubscriptionSyncOutboxTask } from './infrastructure/tasks/subscription-sync-outbox.task';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -61,6 +62,7 @@ import { SubscriptionSyncController } from './presenters/http/subscription-sync.
       useClass: PostgresSubscriptionSyncLease,
     },
     SubscriptionSyncEventsService,
+    SubscriptionSyncOutboxTask,
     ApplySubscriptionSyncStateUseCase,
     PrepareSubscriptionSyncUseCase,
     SubscriptionSyncCoordinationUseCase,
