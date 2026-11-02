@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.65.0](https://github.com/ayunis-core/ayunis-core/compare/v2.64.0...v2.65.0) (2026-11-02)
+
+
+### Features
+
+* **chat:** stream thinking transcript while the model thinks (AYC-1491) ([#2137](https://github.com/ayunis-core/ayunis-core/issues/2137)) ([11ee1e5](https://github.com/ayunis-core/ayunis-core/commit/11ee1e525c2643634082bed91ef4a8ba4b26c0b6))
+
+
+### Bug Fixes
+
+* **chat:** provide downloadable csv files (AYC-1487) ([#2133](https://github.com/ayunis-core/ayunis-core/issues/2133)) ([465cc2c](https://github.com/ayunis-core/ayunis-core/commit/465cc2ced14276386d07447c699a24aa7e6c8da5))
+* **db:** return 503 when database pool acquisition times out (AYC-1530) ([#2136](https://github.com/ayunis-core/ayunis-core/issues/2136)) ([e19d684](https://github.com/ayunis-core/ayunis-core/commit/e19d68471f6c62c8bd6443e62c32bff780dd90a3))
+* **invites:** reject invites beyond the ordered seats (AYC-1131) ([#1814](https://github.com/ayunis-core/ayunis-core/issues/1814)) ([e0d45f0](https://github.com/ayunis-core/ayunis-core/commit/e0d45f04694792d007a163a7c955e861abdf4486))
+* **tools:** import csv data sources into spreadsheets (AYC-1445) ([#2138](https://github.com/ayunis-core/ayunis-core/issues/2138)) ([368b9b5](https://github.com/ayunis-core/ayunis-core/commit/368b9b5043f2764c5dbc5e19d33769652880f817))
+
+
+### Code Refactoring
+
+* **api:** publish provider-neutral connect sdk operations (AYC-1239) ([#2119](https://github.com/ayunis-core/ayunis-core/issues/2119)) ([49c891a](https://github.com/ayunis-core/ayunis-core/commit/49c891a723a27841ffa02fe567a594d08a19d7a5))
+* **webhooks:** share core connect sdk contracts (AYC-1239) ([#2118](https://github.com/ayunis-core/ayunis-core/issues/2118)) ([2c6e163](https://github.com/ayunis-core/ayunis-core/commit/2c6e16391bcb31a332b016a5d988e0479bd7f1a1))
+
+
+### Miscellaneous
+
+* **deps:** bump @mistralai/mistralai from 2.6.4 to 3.4.0 ([#2129](https://github.com/ayunis-core/ayunis-core/issues/2129)) ([97d7958](https://github.com/ayunis-core/ayunis-core/commit/97d795874c4bdab639add4235b2653e54c91cfbd))
+* **observability:** capture scoped http2 provider failures (AYC-1522) ([#2134](https://github.com/ayunis-core/ayunis-core/issues/2134)) ([b9896d5](https://github.com/ayunis-core/ayunis-core/commit/b9896d58c0ab3909524d28d1f10828865b08dd95))
+
 ## [2.64.0](https://github.com/ayunis-core/ayunis-core/compare/v2.63.0...v2.64.0) (2026-11-01)
 
 
