@@ -19,7 +19,7 @@ catalog:
   lucide-react: ^1.55.0
   tailwindcss: ^4.3.3
   '@tailwindcss/vite': ^4.3.3
-  '@mistralai/mistralai': ^2.6.4
+  '@mistralai/mistralai': ^3.4.0
   openai: ^7.12.1
   ollama: ^0.6.3
   '@modelcontextprotocol/client': ^2.0.0
