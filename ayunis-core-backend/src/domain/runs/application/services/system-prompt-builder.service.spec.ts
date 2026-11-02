@@ -548,10 +548,19 @@ it('routes downloadable text files separately from prose documents', () => {
     currentTime: new Date('2026-10-15'),
   });
   expect(prompt).toContain(
-    'Use create_file for downloadable XML, JSON and plain-text (TXT) files',
+    'Use create_file for downloadable CSV, XML, JSON and plain-text (TXT) files',
   );
   expect(prompt).toContain(
     'Do not use create_document or markdown links for these files',
   );
   expect(prompt).toContain('Word/PDF');
+});
+
+it('requires complete tabular file content instead of internal paths or counts', () => {
+  const prompt = new SystemPromptBuilderService().build({
+    tools: [],
+    currentTime: new Date('2026-11-02'),
+  });
+  expect(prompt).toContain('Include all individual rows');
+  expect(prompt).toContain('internal processing paths are not download links');
 });

@@ -10,11 +10,15 @@ async function expectDownload(page: Page, format: string) {
   expect(download.suggestedFilename()).toBe(`Bürgerbericht.${format}`);
   const path = await download.path();
   expect(path).not.toBeNull();
-  expect(await readFile(path!, "utf8")).toBe("Grüße aus Köln\n");
+  expect(await readFile(path!, "utf8")).toBe(
+    format === "csv"
+      ? 'Artikel,Bestand,Status\r\n"Stuhl, groß",12,grün\r\n"Regal ""Nord""",4,orange\r\n'
+      : "Grüße aus Köln\n",
+  );
 }
 
 test.describe("downloadable text files", () => {
-  for (const format of ["xml", "json", "txt"]) {
+  for (const format of ["xml", "json", "txt", "csv"]) {
     test(`downloads ${format}, continues the answer and survives reload`, async ({
       page,
     }) => {
