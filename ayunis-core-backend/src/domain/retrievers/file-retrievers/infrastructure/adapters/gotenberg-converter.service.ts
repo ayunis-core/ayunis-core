@@ -98,6 +98,17 @@ export class GotenbergConverterService extends DocumentConverterPort {
       return new FileRetrievalFailedError('Gotenberg service is unreachable');
     }
 
+    // A Gotenberg 500 body is only a generic hint naming the upload; the
+    // LibreOffice cause is in Gotenberg's own logs, keyed by this id (AYC-1458).
+    this.logger.error(
+      {
+        fileName,
+        status,
+        gotenbergTrace: error.response.headers['gotenberg-trace'] as
+          string | undefined,
+      },
+      'Gotenberg conversion failed',
+    );
     return new FileRetrievalFailedError(
       `Gotenberg conversion failed for ${fileName} (HTTP ${status})`,
     );

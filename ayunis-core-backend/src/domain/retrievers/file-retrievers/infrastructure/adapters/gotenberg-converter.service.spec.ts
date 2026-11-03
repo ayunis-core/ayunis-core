@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import axios from 'axios';
@@ -15,7 +16,7 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 function axiosErrorWithStatus(status: number) {
-  return { isAxiosError: true, response: { status } };
+  return { isAxiosError: true, response: { status, headers: {} } };
 }
 
 describe('GotenbergConverterService', () => {
@@ -100,6 +101,25 @@ describe('GotenbergConverterService', () => {
     const result = convert();
     await expect(result).rejects.toBeInstanceOf(FileRetrievalFailedError);
     await expect(result).rejects.toMatchObject({ statusCode: 500 });
+  });
+
+  // A Gotenberg 500 body is only a generic hint; the correlation id is what
+  // links the failure to the cause in Gotenberg's own logs (AYC-1458).
+  it('logs the Gotenberg-Trace correlation id for an unexpected status', async () => {
+    const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    mockedAxios.post.mockRejectedValue({
+      isAxiosError: true,
+      response: {
+        status: 500,
+        headers: { 'gotenberg-trace': 'trace-123' },
+      },
+    });
+
+    await expect(convert()).rejects.toBeInstanceOf(FileRetrievalFailedError);
+    expect(errorSpy).toHaveBeenCalledWith(
+      { fileName: 'report.docx', status: 500, gotenbergTrace: 'trace-123' },
+      'Gotenberg conversion failed',
+    );
   });
 
   it('rethrows non-axios failures untouched', async () => {
