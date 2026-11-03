@@ -20,6 +20,8 @@ import {
 } from 'src/iam/orgs/application/models/org-lifecycle-status';
 import { orgLifecycleStatusSql } from './org-lifecycle-sql';
 import { OrgMapper } from './mappers/org.mapper';
+import { isDatabaseUnavailableError } from 'src/common/errors/database-unavailable-error.classifier';
+import { ServiceUnavailableError } from 'src/common/errors/service-unavailable.error';
 import { UUID } from 'crypto';
 import {
   OrgNotFoundError,
@@ -75,6 +77,9 @@ export class LocalOrgsRepository extends OrgsRepository {
 
       const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error({ err, id }, 'Error finding organization');
+      if (isDatabaseUnavailableError(err)) {
+        throw new ServiceUnavailableError(err);
+      }
       throw new OrgRetrievalFailedError(err.message);
     }
   }

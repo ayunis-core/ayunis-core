@@ -32,6 +32,16 @@ describe('LocalOrgsRepository.findById error classification', () => {
     },
   );
 
+  it('reports a pool connect timeout as service unavailable', async () => {
+    records.findOne.mockRejectedValue(
+      new Error('timeout exceeded when trying to connect'),
+    );
+    await expect(access.execute({ orgId })).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      statusCode: 503,
+    });
+  });
+
   it('still denies access when the organisation does not exist', async () => {
     records.findOne.mockResolvedValue(null);
     await expect(access.execute({ orgId })).rejects.toMatchObject({
