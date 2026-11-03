@@ -1,42 +1,20 @@
-import type { UUID } from 'crypto';
+import type { UsageCollectedPayload as UsageCollectedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 import type { Usage } from 'src/domain/usage/domain/usage.entity';
-import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { User } from 'src/iam/users/domain/user.entity';
-import { WebhookEvent } from '../webhook-event.entity';
-import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
+import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
+import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 
-export interface UsageCollectedWebhookPayload {
-  id: UUID;
-  userId: UUID | null;
-  apiKeyId?: UUID;
-  organizationId: UUID;
-  modelId: UUID;
-  modelName: string;
-  provider: ModelProvider;
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  cost?: number;
-  creditsConsumed?: number;
-  requestId: UUID;
-  createdAt: string;
-  /**
-   * Present when the usage was triggered by a user (not an API key) and the
-   * user could be resolved. Lets receivers lazily create the user in
-   * external systems without calling back into Ayunis Core.
-   */
-  userEmail?: string;
-  userName?: string;
-}
+export type { UsageCollectedPayload as UsageCollectedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
 
-export class UsageCollectedWebhookEvent extends WebhookEvent<UsageCollectedWebhookPayload> {
-  readonly eventType: WebhookEventType;
+export class UsageCollectedWebhookEvent extends WebhookEvent<
+  typeof WebhookEventType.USAGE_COLLECTED
+> {
+  readonly eventType = WebhookEventType.USAGE_COLLECTED;
   readonly data: UsageCollectedWebhookPayload;
   readonly timestamp: Date;
 
   constructor(usage: Usage, modelName: string, user?: User | null) {
     super();
-    this.eventType = WebhookEventType.USAGE_COLLECTED;
     this.data = {
       id: usage.id,
       userId: usage.userId,

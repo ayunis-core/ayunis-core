@@ -1,5 +1,5 @@
-import type { WebhookEvent } from '../../domain/webhook-event.entity';
+import type { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 
 export abstract class WebhookHandler {
-  abstract sendWebhook(event: WebhookEvent): Promise<void>;
+  abstract sendWebhook(event: AnyWebhookEvent): Promise<void>;
 }

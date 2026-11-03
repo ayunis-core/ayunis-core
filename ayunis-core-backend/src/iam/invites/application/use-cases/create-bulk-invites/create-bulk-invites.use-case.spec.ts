@@ -14,7 +14,6 @@ import { InvitesRepository } from 'src/iam/invites/application/ports/invites.rep
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
@@ -47,7 +46,6 @@ describe('CreateBulkInvitesUseCase', () => {
   let configService: jest.Mocked<ConfigService>;
   let inviteJwtService: jest.Mocked<InviteJwtService>;
   let getActiveSubscriptionUseCase: jest.Mocked<GetActiveSubscriptionUseCase>;
-  let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let acquireAllocationLock: jest.Mocked<AcquireSeatAllocationLockUseCase>;
   let teamResolver: jest.Mocked<BulkInviteTeamResolverService>;
@@ -79,10 +77,6 @@ describe('CreateBulkInvitesUseCase', () => {
     };
 
     const mockGetActiveSubscriptionUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockUpdateSeatsUseCase = {
       execute: jest.fn(),
     };
 
@@ -119,7 +113,6 @@ describe('CreateBulkInvitesUseCase', () => {
           provide: GetActiveSubscriptionUseCase,
           useValue: mockGetActiveSubscriptionUseCase,
         },
-        { provide: UpdateSeatsUseCase, useValue: mockUpdateSeatsUseCase },
         {
           provide: SendInvitationEmailUseCase,
           useValue: mockSendInvitationEmailUseCase,
@@ -145,7 +138,6 @@ describe('CreateBulkInvitesUseCase', () => {
     configService = module.get(ConfigService);
     inviteJwtService = module.get(InviteJwtService);
     getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
-    updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
     teamResolver = module.get(BulkInviteTeamResolverService);
@@ -157,7 +149,6 @@ describe('CreateBulkInvitesUseCase', () => {
   });
 
   const setupDefaultConfigMocks = (overrides?: {
-    externallyManaged?: boolean;
     emailProviderBlacklist?: string[];
     isCloudHosted?: boolean;
     inviteExpiresIn?: string;
@@ -166,7 +157,6 @@ describe('CreateBulkInvitesUseCase', () => {
     inviteAcceptEndpoint?: string;
   }) => {
     const defaults = {
-      externallyManaged: false,
       emailProviderBlacklist: [],
       isCloudHosted: false,
       inviteExpiresIn: '7d',
@@ -179,8 +169,6 @@ describe('CreateBulkInvitesUseCase', () => {
     // eslint-disable-next-line sonarjs/function-return-type -- the config mock intentionally returns each key's configured type
     configService.get.mockImplementation((key: string) => {
       switch (key) {
-        case 'features.externalSubscriptionsEnabled':
-          return defaults.externallyManaged;
         case 'auth.emailProviderBlacklist':
           return defaults.emailProviderBlacklist;
         case 'app.isCloudHosted':
@@ -739,7 +727,6 @@ describe('CreateBulkInvitesUseCase', () => {
 
       expect(result.totalCount).toBe(2);
       expect(result.successCount).toBe(2);
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
@@ -780,53 +767,63 @@ describe('CreateBulkInvitesUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
-    it.each([false, true])(
-      'handles insufficient bulk capacity with external subscription management=%s',
-      async (managed) => {
-        const command = new CreateBulkInvitesCommand({
-          invites: [
-            { email: 'user1@example.com', role: UserRole.USER },
-            { email: 'user2@example.com', role: UserRole.USER },
-            { email: 'user3@example.com', role: UserRole.USER },
-          ],
-          orgId: mockOrgId,
-          userId: mockUserId,
-        });
+    // Regression for AYC-1131: the batch used to raise noOfSeats to cover the
+    // shortfall, ordering paid seats without an order from the customer.
+    it('should reject the whole batch and leave the subscription untouched when not enough seats are available in cloud instance', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          { email: 'user1@example.com', role: UserRole.USER },
+          { email: 'user2@example.com', role: UserRole.USER },
+          { email: 'user3@example.com', role: UserRole.USER },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
 
-        setupDefaultConfigMocks({
-          isCloudHosted: true,
-          externallyManaged: managed,
-        });
-        invitesRepository.findByEmails.mockResolvedValue([]);
-        usersRepository.findManyByEmails.mockResolvedValue([]);
-        inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
-        getActiveSubscriptionUseCase.execute.mockResolvedValue(
-          createMockSubscription(1, 10),
-        );
+      setupDefaultConfigMocks({ isCloudHosted: true });
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      getActiveSubscriptionUseCase.execute.mockResolvedValue(
+        createMockSubscription(1, 10),
+      );
 
-        if (managed) {
-          await expect(useCase.execute(command)).rejects.toThrow(
-            InsufficientSeatsError,
-          );
-          expect(invitesRepository.createMany).not.toHaveBeenCalled();
-          expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
-          return;
-        }
-        await useCase.execute(command);
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InsufficientSeatsError,
+      );
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
+      expect(sendInvitationEmailUseCase.execute).not.toHaveBeenCalled();
+    });
 
-        expect(updateSeatsUseCase.execute).toHaveBeenCalledWith(
-          expect.objectContaining({
-            orgId: mockOrgId,
-            requestingUserId: mockUserId,
-            noOfSeats: 12, // 10 + (3 - 1) = 12
-          }),
-        );
-      },
-    );
+    it('should report the shortfall on the seat error', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          { email: 'user1@example.com', role: UserRole.USER },
+          { email: 'user2@example.com', role: UserRole.USER },
+          { email: 'user3@example.com', role: UserRole.USER },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      setupDefaultConfigMocks({ isCloudHosted: true });
+      invitesRepository.findByEmails.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      getActiveSubscriptionUseCase.execute.mockResolvedValue(
+        createMockSubscription(1, 10),
+      );
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'INSUFFICIENT_SEATS',
+        metadata: expect.objectContaining({
+          availableSeats: 1,
+          requiredSeats: 3,
+        }),
+      });
+    });
 
     it('should proceed when no subscription found in cloud instance', async () => {
       const command = new CreateBulkInvitesCommand({
@@ -845,7 +842,6 @@ describe('CreateBulkInvitesUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
