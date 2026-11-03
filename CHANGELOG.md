@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.65.1](https://github.com/ayunis-core/ayunis-core/compare/v2.65.0...v2.65.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **inference:** bound tiktoken encode to fixed-size chunks (AYC-1550) ([#2140](https://github.com/ayunis-core/ayunis-core/issues/2140)) ([e02cd20](https://github.com/ayunis-core/ayunis-core/commit/e02cd2029acc6741c127648cdc05600aeef3cd95))
+* **orgs:** return 503 when the org lookup hits a pool connect timeout (AYC-1552) ([#2141](https://github.com/ayunis-core/ayunis-core/issues/2141)) ([5f1d768](https://github.com/ayunis-core/ayunis-core/commit/5f1d7683588ce71d8609fcc482079331efcf088b))
+* **retrievers:** log gotenberg correlation id on unexpected conversion failures (AYC-1458) ([#2145](https://github.com/ayunis-core/ayunis-core/issues/2145)) ([73a0db3](https://github.com/ayunis-core/ayunis-core/commit/73a0db35a54a678a52b50937b308505a82432554))
+* **teams:** paginate team member overview (AYC-1473) ([#2146](https://github.com/ayunis-core/ayunis-core/issues/2146)) ([f7472ff](https://github.com/ayunis-core/ayunis-core/commit/f7472ff1442cd22f7c81ada9819cfe2cd0352e63))
+
+
+### Reverts
+
+* **anonymize:** restore python 3.12 base image (AYC-000) ([#2144](https://github.com/ayunis-core/ayunis-core/issues/2144)) ([8fbcf82](https://github.com/ayunis-core/ayunis-core/commit/8fbcf826e532d1b361ac338c434aa2d3050940e0))
+
+
+### Miscellaneous
+
+* **deps-docker:** bump python in /ayunis-core-anonymize ([#2123](https://github.com/ayunis-core/ayunis-core/issues/2123)) ([5d12f40](https://github.com/ayunis-core/ayunis-core/commit/5d12f40fe69ed879090f315eb411ee18947d4d55))
+* **deps-docker:** bump python in /ayunis-core-code-execution/sandbox ([#2124](https://github.com/ayunis-core/ayunis-core/issues/2124)) ([b2d1c86](https://github.com/ayunis-core/ayunis-core/commit/b2d1c86765d8668210daf217696a794f65da3187))
+* **deps:** bump globals from 16.5.0 to 17.13.0 ([#2080](https://github.com/ayunis-core/ayunis-core/issues/2080)) ([97aa4e2](https://github.com/ayunis-core/ayunis-core/commit/97aa4e2a89e6a265280790f97c55d54ecb238788))
+
+
+### CI/CD
+
+* **releases:** drop the production release receiver now reported from infra (AYC-1494) ([#2131](https://github.com/ayunis-core/ayunis-core/issues/2131)) ([8fee92d](https://github.com/ayunis-core/ayunis-core/commit/8fee92d1511244e8130e42efc50b1213756323f4))
+
 ## [2.65.0](https://github.com/ayunis-core/ayunis-core/compare/v2.64.0...v2.65.0) (2026-11-02)
 
 
