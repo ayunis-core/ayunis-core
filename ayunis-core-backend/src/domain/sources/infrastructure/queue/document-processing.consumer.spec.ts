@@ -1,3 +1,4 @@
+import { StoredFileMismatchError } from 'src/domain/sources/application/sources.errors';
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -5,7 +6,10 @@ import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
-import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
+import {
+  FileTooLargeError,
+  TooManyPagesError,
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
@@ -70,18 +74,18 @@ const retrieveFileContentUseCase = {
   execute: jest.fn().mockResolvedValue({ pages: [{ text: 'hello world' }] }),
 };
 
+const preflightCheckUseCase = {
+  execute: jest.fn().mockResolvedValue(undefined),
+};
+
 const splitTextUseCase = {
   execute: jest.fn().mockReturnValue({
     chunks: [{ text: 'hello world', metadata: { start: 0 } }],
   }),
 };
 
-const downloadObjectUseCase = {
-  execute: jest.fn().mockResolvedValue(
-    (async function* () {
-      yield Buffer.from('pdf-bytes');
-    })(),
-  ),
+const storedFiles = {
+  read: jest.fn().mockResolvedValue(Buffer.from('pdf-bytes')),
 };
 
 const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
@@ -135,8 +139,9 @@ describe('DocumentProcessingConsumer', () => {
     consumer = new DocumentProcessingConsumer(
       contextService as never,
       retrieveFileContentUseCase as never,
+      preflightCheckUseCase as never,
       splitTextUseCase as never,
-      downloadObjectUseCase as never,
+      storedFiles as never,
       deleteObjectUseCase as never,
       sourceRepository as never,
       helper as never,
@@ -170,9 +175,7 @@ describe('DocumentProcessingConsumer', () => {
   it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
     sourceRepository.findById.mockResolvedValue(source);
-    downloadObjectUseCase.execute.mockRejectedValueOnce(
-      new Error('MinIO object not found'),
-    );
+    storedFiles.read.mockRejectedValueOnce(new Error('MinIO object not found'));
 
     await expect(consumer.process(makeJob())).rejects.toMatchObject({
       name: 'JobRetryScheduledError',
@@ -184,9 +187,7 @@ describe('DocumentProcessingConsumer', () => {
   it('rethrows the original error on the final attempt', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
     sourceRepository.findById.mockResolvedValue(source);
-    downloadObjectUseCase.execute.mockRejectedValueOnce(
-      new Error('MinIO object not found'),
-    );
+    storedFiles.read.mockRejectedValueOnce(new Error('MinIO object not found'));
 
     await expect(
       consumer.process(makeJob({ attemptsMade: 2 } as never)),
@@ -208,6 +209,90 @@ describe('DocumentProcessingConsumer', () => {
     await expect(consumer.process(makeJob())).resolves.toBeUndefined();
     expect(helper.markFailed).toHaveBeenCalled();
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('fails the source before OCR when the preflight rejects the file', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    preflightCheckUseCase.execute.mockRejectedValueOnce(
+      new TooManyPagesError({ fileName: 'doc.pdf', pageCount: 2, maxPages: 1 }),
+    );
+
+    await expect(consumer.process(makeJob())).resolves.toBeUndefined();
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(helper.markFailed).toHaveBeenCalledWith(
+      SOURCE_ID,
+      expect.any(TooManyPagesError),
+    );
+  });
+
+  it('reads the original at the size and identity verified at completion', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          retainFile: true,
+          expectedSize: 1234,
+          expectedETag: 'verified',
+        }),
+      } as never),
+    );
+
+    expect(storedFiles.read).toHaveBeenCalledWith(MINIO_PATH, 1234, 'verified');
+  });
+
+  it('fails the source without OCR when the stored file no longer matches', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    storedFiles.read.mockRejectedValueOnce(
+      new StoredFileMismatchError(MINIO_PATH),
+    );
+
+    await expect(
+      consumer.process(
+        makeJob({
+          data: makeJobData({ retainFile: true, expectedSize: 1234 }),
+        } as never),
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(helper.markFailed).toHaveBeenCalledWith(
+      SOURCE_ID,
+      expect.any(StoredFileMismatchError),
+    );
+  });
+
+  it('keeps a directly uploaded original in storage after processing', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(
+      makeJob({ data: makeJobData({ retainFile: true }) } as never),
+    );
+
+    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps a directly uploaded original when processing fails for good', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    retrieveFileContentUseCase.execute.mockRejectedValueOnce(
+      new FileTooLargeError(),
+    );
+
+    await consumer.process(
+      makeJob({ data: makeJobData({ retainFile: true }) } as never),
+    );
+
+    expect(helper.markFailed).toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should skip saving and clean up when source is deleted mid-processing', async () => {

@@ -30,6 +30,8 @@ import { DeleteKnowledgeBaseUseCase } from './application/use-cases/delete-knowl
 import { FindKnowledgeBaseUseCase } from './application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
 import { ListKnowledgeBasesUseCase } from './application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
 import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { CreateKnowledgeBaseUploadUseCase } from './application/use-cases/create-knowledge-base-upload/create-knowledge-base-upload.use-case';
+import { CompleteKnowledgeBaseUploadUseCase } from './application/use-cases/complete-knowledge-base-upload/complete-knowledge-base-upload.use-case';
 import { AddUrlToKnowledgeBaseUseCase } from './application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
@@ -40,6 +42,7 @@ import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-ac
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
+import { KnowledgeBaseUploadsController } from './presenters/http/knowledge-base-uploads.controller';
 import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base-dto.mapper';
 
 @Module({
@@ -70,6 +73,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
     AddDocumentToKnowledgeBaseUseCase,
+    CreateKnowledgeBaseUploadUseCase,
+    CompleteKnowledgeBaseUploadUseCase,
     AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
@@ -90,7 +95,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
       useExisting: KnowledgeBaseShareAuthorizationStrategy,
     },
   ],
-  controllers: [KnowledgeBasesController],
+  controllers: [KnowledgeBasesController, KnowledgeBaseUploadsController],
   exports: [
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,

@@ -5,6 +5,12 @@ export interface StorageConfig {
   defaultBucket: string;
   minio: {
     internal: MinioConnectionConfig;
+    /**
+     * Browser-reachable endpoint used only to sign direct-upload URLs. Falls
+     * back to the internal endpoint, which is what browsers reach in local
+     * development and CI.
+     */
+    public: MinioConnectionConfig;
     accessKey: string;
     secretKey: string;
     bucket: string;
@@ -36,18 +42,36 @@ function resolveMinioCredentials(): { accessKey: string; secretKey: string } {
   return { accessKey: accessKey ?? '', secretKey: secretKey ?? '' };
 }
 
+function resolvePublicEndpoint(
+  internal: MinioConnectionConfig,
+): MinioConnectionConfig {
+  const endPoint = process.env.MINIO_PUBLIC_ENDPOINT;
+  if (!endPoint) return internal;
+  const useSSL = process.env.MINIO_PUBLIC_USE_SSL === 'true';
+  return {
+    endPoint,
+    port: parseInt(
+      process.env.MINIO_PUBLIC_PORT || (useSSL ? '443' : '80'),
+      10,
+    ),
+    useSSL,
+  };
+}
+
 export default registerAs('storage', (): StorageConfig => {
   const defaultBucket = process.env.MINIO_BUCKET || 'ayunis';
   const { accessKey, secretKey } = resolveMinioCredentials();
+  const internal: MinioConnectionConfig = {
+    endPoint: process.env.MINIO_INTERNAL_ENDPOINT || 'localhost',
+    port: parseInt(process.env.MINIO_INTERNAL_PORT || '9000', 10),
+    useSSL: process.env.MINIO_INTERNAL_USE_SSL === 'true',
+  };
   return {
     provider: 'minio',
     defaultBucket,
     minio: {
-      internal: {
-        endPoint: process.env.MINIO_INTERNAL_ENDPOINT || 'localhost',
-        port: parseInt(process.env.MINIO_INTERNAL_PORT || '9000', 10),
-        useSSL: process.env.MINIO_INTERNAL_USE_SSL === 'true',
-      },
+      internal,
+      public: resolvePublicEndpoint(internal),
       accessKey,
       secretKey,
       bucket: process.env.MINIO_BUCKET || defaultBucket,

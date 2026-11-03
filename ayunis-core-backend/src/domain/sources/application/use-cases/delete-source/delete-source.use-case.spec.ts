@@ -122,4 +122,43 @@ describe('DeleteSourceUseCase', () => {
 
     expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
   });
+
+  it('releases the uploaded original after the row is deleted', async () => {
+    const sourceId = randomUUID();
+    const storageKey = `${orgId}/uploads/session/doc.pdf`;
+    const source = makeReadySource(sourceId);
+    source.storageKey = storageKey;
+    mockSourceRepository.findById.mockResolvedValue(source);
+
+    await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
+
+    expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+    expect(mockCleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceIds: [],
+        orgId,
+        storageKeys: [storageKey],
+      }),
+    );
+    const deleteOrder = mockSourceRepository.delete.mock.invocationCallOrder[0];
+    const releaseOrder =
+      mockCleanupSourceProcessingUseCase.execute.mock.invocationCallOrder[0];
+    expect(releaseOrder).toBeGreaterThan(deleteOrder);
+  });
+
+  it('keeps the original when deleting the row fails', async () => {
+    const sourceId = randomUUID();
+    const source = makeReadySource(sourceId);
+    source.storageKey = `${orgId}/uploads/session/doc.pdf`;
+    mockSourceRepository.findById.mockResolvedValue(source);
+    mockSourceRepository.delete.mockRejectedValue(
+      new Error('Repository error'),
+    );
+
+    await expect(
+      useCase.execute(new DeleteSourceCommand(sourceId, orgId)),
+    ).rejects.toBeInstanceOf(UnexpectedSourceError);
+
+    expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
+  });
 });

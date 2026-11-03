@@ -147,6 +147,12 @@ export class EnvironmentVariables {
   @Min(1)
   MINIO_INTERNAL_PORT?: number;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_INTERNAL_USE_SSL?: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  MINIO_PUBLIC_PORT?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_PUBLIC_USE_SSL?: string;
 
   // Redis — production requires REDIS_PASSWORD (see production rules).
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) REDIS_PORT?: number;

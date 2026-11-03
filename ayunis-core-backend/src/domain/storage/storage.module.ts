@@ -14,7 +14,16 @@ import { PurgeStoragePrefixesUseCase } from './application/use-cases/purge-stora
 import { SweepOrphanStorageUseCase } from './application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 import { StorageOrgDeletionRequestedListener } from './application/listeners/org-deletion-requested.listener';
 import { OrphanStorageSweepTask } from './infrastructure/tasks/orphan-storage-sweep.task';
+import { PresignUploadRequestUseCase } from './application/use-cases/presign-upload-request/presign-upload-request.use-case';
+import { AbortMultipartUploadUseCase } from './application/use-cases/abort-multipart-upload/abort-multipart-upload.use-case';
+import { ListIncompleteUploadsUseCase } from './application/use-cases/list-incomplete-uploads/list-incomplete-uploads.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+
+const DIRECT_UPLOAD_USE_CASES = [
+  PresignUploadRequestUseCase,
+  AbortMultipartUploadUseCase,
+  ListIncompleteUploadsUseCase,
+];
 
 @Module({
   imports: [ConfigModule.forFeature(storageConfig), OrgsModule],
@@ -34,6 +43,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     SweepOrphanStorageUseCase,
     StorageOrgDeletionRequestedListener,
     OrphanStorageSweepTask,
+    ...DIRECT_UPLOAD_USE_CASES,
   ],
   exports: [
     ObjectStoragePort,
@@ -44,6 +54,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     ListObjectsUseCase,
     PurgeOrgStorageUseCase,
     PurgeStoragePrefixesUseCase,
+    ...DIRECT_UPLOAD_USE_CASES,
   ],
 })
 export class StorageModule {}

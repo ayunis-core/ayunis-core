@@ -238,8 +238,19 @@ These variables MUST be configured before deployment:
 - `MINIO_INTERNAL_PORT` / `MINIO_INTERNAL_USE_SSL`: Internal connection port
   and TLS setting (defaults: `9000` / `false`).
 
-Browsers never connect to MinIO directly; file downloads are streamed through
-the application after its normal access checks.
+- `MINIO_PUBLIC_ENDPOINT` / `MINIO_PUBLIC_PORT` / `MINIO_PUBLIC_USE_SSL`:
+  Browser-reachable MinIO host used only to sign direct source-upload URLs
+  (AYC-1541). The application never sends requests to it. When unset, the
+  internal endpoint is used, which is what browsers reach in local development
+  and CI. Deployments behind a reverse proxy set it to the public MinIO host
+  (port defaults to `443` with SSL, `80` without) and must allow that host's
+  CORS for the app origin (`MINIO_API_CORS_ALLOW_ORIGIN` on the MinIO service),
+  including the `PUT` method and the `ETag` response header multipart uploads
+  read.
+
+File downloads are streamed through the application after its normal access
+checks. Browsers connect to MinIO directly only to upload source files via
+short-lived pre-signed URLs issued per upload session.
 
 #### Redis (Queues)
 
@@ -297,6 +308,7 @@ Before starting the application:
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
 - [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
 - [ ] `MINIO_INTERNAL_ENDPOINT` targets this deployment's own MinIO service
+- [ ] `MINIO_PUBLIC_ENDPOINT` is the browser-reachable MinIO host and its CORS allows the app origin
 - [ ] `REDIS_PASSWORD` is set to a secure random string
 - [ ] `POSTGRES_*` variables point to valid database
 - [ ] `FRONTEND_BASEURL` is set correctly

@@ -6,12 +6,16 @@ import { CleanupSourceProcessingCommand } from './cleanup-source-processing.comm
 import { DocumentProcessingPort } from 'src/domain/sources/application/ports/document-processing.port';
 import { UrlCrawlProcessingPort } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { SourceUploadStorageCleanupService } from 'src/domain/sources/application/services/source-upload-storage-cleanup.service';
 
 describe('CleanupSourceProcessingUseCase', () => {
   let useCase: CleanupSourceProcessingUseCase;
   let documentProcessingPort: { cancelJob: jest.Mock };
   let urlCrawlProcessingPort: { cancelJob: jest.Mock };
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
+  let sourceRepository: { findReferencedStorageKeys: jest.Mock };
+  let uploadStorageCleanup: { remove: jest.Mock };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const sourceA = '00000000-0000-0000-0000-0000000000b1' as UUID;
@@ -27,6 +31,10 @@ describe('CleanupSourceProcessingUseCase', () => {
     purgeStoragePrefixesUseCase = {
       execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
     };
+    sourceRepository = {
+      findReferencedStorageKeys: jest.fn().mockResolvedValue([]),
+    };
+    uploadStorageCleanup = { remove: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -36,6 +44,11 @@ describe('CleanupSourceProcessingUseCase', () => {
         {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,
+        },
+        { provide: SourceRepository, useValue: sourceRepository },
+        {
+          provide: SourceUploadStorageCleanupService,
+          useValue: uploadStorageCleanup,
         },
       ],
     }).compile();
@@ -91,5 +104,44 @@ describe('CleanupSourceProcessingUseCase', () => {
     ).resolves.toBeUndefined();
 
     expect(purgeStoragePrefixesUseCase.execute).toHaveBeenCalled();
+  });
+
+  describe('uploaded originals', () => {
+    const sharedKey = `${orgId}/uploads/s1/workbook.xlsx`;
+    const ownKey = `${orgId}/uploads/s2/doc.pdf`;
+
+    it('removes keys no remaining source references and keeps shared ones', async () => {
+      sourceRepository.findReferencedStorageKeys.mockResolvedValue([sharedKey]);
+
+      await useCase.execute(
+        new CleanupSourceProcessingCommand([], orgId, [
+          sharedKey,
+          ownKey,
+          ownKey,
+        ]),
+      );
+
+      expect(sourceRepository.findReferencedStorageKeys).toHaveBeenCalledWith([
+        sharedKey,
+        ownKey,
+      ]);
+      expect(uploadStorageCleanup.remove).toHaveBeenCalledTimes(1);
+      expect(uploadStorageCleanup.remove).toHaveBeenCalledWith(ownKey);
+      expect(documentProcessingPort.cancelJob).not.toHaveBeenCalled();
+    });
+
+    it('keeps every original when the reference lookup fails', async () => {
+      sourceRepository.findReferencedStorageKeys.mockRejectedValue(
+        new Error('db down'),
+      );
+
+      await expect(
+        useCase.execute(
+          new CleanupSourceProcessingCommand([], orgId, [ownKey]),
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(uploadStorageCleanup.remove).not.toHaveBeenCalled();
+    });
   });
 });

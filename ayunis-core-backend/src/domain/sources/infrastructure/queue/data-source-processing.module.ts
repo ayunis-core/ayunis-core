@@ -1,5 +1,6 @@
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
+import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { BullModule } from '@nestjs/bullmq';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { ContextModule } from 'src/common/context/context.module';
@@ -23,6 +24,7 @@ import { DataSourceProcessingConsumer } from './data-source-processing.consumer'
     SpreadsheetParsingModule,
   ],
   providers: [
+    StoredSourceFileService,
     DataSourceProcessingProducer,
     {
       provide: DataSourceProcessingPort,

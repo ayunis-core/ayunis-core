@@ -2,16 +2,24 @@ import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
+import type { IncomingMessage } from 'http';
 import {
   ObjectStoragePort,
   type StorageObjectSummary,
 } from 'src/domain/storage/application/ports/object-storage.port';
+import type {
+  IncompleteUpload,
+  UploadRequest,
+} from 'src/domain/storage/domain/multipart-upload.object';
 import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import { StorageBucket } from 'src/domain/storage/domain/storage-bucket.entity';
-import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
+import {
+  ObjectChangedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 
 /**
  * S3 error codes minio raises for a key that is not there. `NotFound` comes
@@ -32,6 +40,14 @@ export class MinioObjectStorageProvider
   private readonly logger = new Logger(MinioObjectStorageProvider.name);
 
   private readonly internalClient: Minio.Client;
+  /**
+   * Signs browser-facing upload URLs against the public endpoint. It is
+   * pinned to the bucket's region (resolved once through the internal
+   * client) so signing is local and never sends a request to the public
+   * host; every object and bucket operation stays on the internal client
+   * (AYC-885).
+   */
+  private signingClient: Promise<Minio.Client> | null = null;
   private defaultBucket: string;
 
   constructor(
@@ -42,9 +58,34 @@ export class MinioObjectStorageProvider
     this.defaultBucket = this.config.minio.bucket;
     this.internalClient = new Minio.Client({
       ...this.config.minio.internal,
+      ...this.credentials(),
+    });
+  }
+
+  private credentials(): { accessKey: string; secretKey: string } {
+    return {
       accessKey: this.config.minio.accessKey,
       secretKey: this.config.minio.secretKey,
-    });
+    };
+  }
+
+  private getSigningClient(bucket: string): Promise<Minio.Client> {
+    this.signingClient ??= this.internalClient
+      .getBucketRegionAsync(bucket)
+      .then(
+        (region) =>
+          new Minio.Client({
+            ...this.config.minio.public,
+            ...this.credentials(),
+            region,
+          }),
+      )
+      .catch((error: unknown) => {
+        // Leave the next call free to retry instead of caching the failure.
+        this.signingClient = null;
+        throw error;
+      });
+    return this.signingClient;
   }
 
   async onModuleInit(): Promise<void> {
@@ -135,13 +176,23 @@ export class MinioObjectStorageProvider
     );
   }
 
-  async download(storageUrl: StorageUrl): Promise<NodeJS.ReadableStream> {
+  async download(
+    storageUrl: StorageUrl,
+    expectedETag?: string,
+  ): Promise<NodeJS.ReadableStream> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
     try {
-      return await this.internalClient.getObject(
+      const response = await this.internalClient.getObject(
         bucketName,
         storageUrl.objectName,
       );
+      // Bind verification to this GET, not a separate HEAD that could race a PUT.
+      const etag = (response as Partial<IncomingMessage>).headers?.etag;
+      if (expectedETag !== undefined && etag !== `"${expectedETag}"`) {
+        response.destroy();
+        throw new ObjectChangedError();
+      }
+      return response;
     } catch (error) {
       // Without this translation a missing object is indistinguishable from
       // storage being unreachable, and callers turn both into a 500.
@@ -173,11 +224,11 @@ export class MinioObjectStorageProvider
         stat.lastModified,
       );
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        throw new Error(
-          `Object '${storageUrl.objectName}' not found in bucket '${bucketName}'`,
-          { cause: error },
-        );
+      if (isMissingObjectError(error)) {
+        throw new ObjectNotFoundError({
+          objectName: storageUrl.objectName,
+          bucket: bucketName,
+        });
       }
       throw error;
     }
@@ -251,6 +302,54 @@ export class MinioObjectStorageProvider
       stream.on('end', () => {
         resolve(objects);
       });
+    });
+  }
+
+  async presignUploadRequest(
+    storageUrl: StorageUrl,
+    request: UploadRequest,
+    expiresInSeconds: number,
+  ): Promise<string> {
+    const bucketName = storageUrl.bucket || this.defaultBucket;
+    const client = await this.getSigningClient(bucketName);
+    return client.presignedUrl(
+      request.method,
+      bucketName,
+      storageUrl.objectName,
+      expiresInSeconds,
+      request.query,
+    );
+  }
+
+  async abortMultipartUpload(
+    storageUrl: StorageUrl,
+    uploadId: string,
+  ): Promise<void> {
+    await this.internalClient.abortMultipartUpload(
+      storageUrl.bucket || this.defaultBucket,
+      storageUrl.objectName,
+      uploadId,
+    );
+  }
+
+  async listIncompleteUploads(
+    prefix: string,
+    bucket?: string,
+  ): Promise<IncompleteUpload[]> {
+    const bucketName = bucket ?? this.defaultBucket;
+    const uploads: IncompleteUpload[] = [];
+
+    return new Promise((resolve, reject) => {
+      const stream = this.internalClient.listIncompleteUploads(
+        bucketName,
+        prefix,
+        true,
+      );
+      stream.on('data', (item) => {
+        uploads.push({ objectName: item.key, uploadId: item.uploadId });
+      });
+      stream.on('error', reject);
+      stream.on('end', () => resolve(uploads));
     });
   }
 }

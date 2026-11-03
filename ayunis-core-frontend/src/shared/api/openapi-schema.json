@@ -4877,6 +4877,85 @@
         "tags": ["super-admin-teams"]
       }
     },
+    "/source-uploads/{id}/sign": {
+      "post": {
+        "description": "Returns a short-lived pre-signed URL for the given S3 request on the upload's server-chosen key. Call again to retry after the URL expired.",
+        "operationId": "SourceUploadsController_sign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The upload id returned when the upload was created",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignSourceUploadRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedUploadUrlResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request does not fit the upload's transfer mode"
+          },
+          "404": {
+            "description": "Upload not found"
+          },
+          "410": {
+            "description": "Upload expired or aborted"
+          }
+        },
+        "summary": "Sign one storage request of a direct upload",
+        "tags": ["source-uploads"]
+      }
+    },
+    "/source-uploads/{id}": {
+      "delete": {
+        "description": "A no-op for uploads that were already completed.",
+        "operationId": "SourceUploadsController_abort",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The upload id returned when the upload was created",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Upload aborted"
+          },
+          "404": {
+            "description": "Upload not found"
+          }
+        },
+        "summary": "Abort an upload and discard what was transferred",
+        "tags": ["source-uploads"]
+      }
+    },
     "/transcriptions": {
       "post": {
         "description": "Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.",
@@ -5456,6 +5535,121 @@
           }
         },
         "summary": "Add a file source to a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{id}/uploads": {
+      "post": {
+        "description": "Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /threads/{id}/uploads/{uploadId}/complete.",
+        "operationId": "ThreadSourcesController_createUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported file type"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "413": {
+            "description": "File exceeds the upload limit"
+          }
+        },
+        "summary": "Create a direct file upload for a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{id}/uploads/{uploadId}/complete": {
+      "post": {
+        "description": "Verifies the stored file, creates the processing source(s) and queues them. Safe to repeat: a second call returns the same sources.",
+        "operationId": "ThreadSourcesController_completeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The upload id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The sources created from the upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CSVDataSourceResponseDto"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread or upload not found"
+          },
+          "409": {
+            "description": "The file was not fully transferred"
+          },
+          "410": {
+            "description": "The upload expired"
+          }
+        },
+        "summary": "Complete a direct file upload and attach its sources",
         "tags": ["threads"]
       }
     },
@@ -6131,6 +6325,108 @@
         "tags": ["knowledge-bases"]
       }
     },
+    "/knowledge-bases/{id}/uploads": {
+      "post": {
+        "description": "Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /knowledge-bases/{id}/uploads/{uploadId}/complete.",
+        "operationId": "KnowledgeBaseUploadsController_createUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported file type"
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          },
+          "413": {
+            "description": "File exceeds the upload limit"
+          }
+        },
+        "summary": "Create a direct document upload for a knowledge base",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/{id}/uploads/{uploadId}/complete": {
+      "post": {
+        "description": "Verifies the stored file, creates the processing document and queues it. Safe to repeat: a second call returns the same document.",
+        "operationId": "KnowledgeBaseUploadsController_completeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The upload id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base or upload not found"
+          },
+          "409": {
+            "description": "The file was not fully transferred"
+          },
+          "410": {
+            "description": "The upload expired"
+          }
+        },
+        "summary": "Complete a direct document upload",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/shares/skills": {
       "post": {
         "operationId": "SharesController_createSkillShare",
@@ -6745,6 +7041,108 @@
           }
         },
         "summary": "Add a file source to a skill",
+        "tags": ["skills"]
+      }
+    },
+    "/skills/{id}/uploads": {
+      "post": {
+        "description": "Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /skills/{id}/uploads/{uploadId}/complete.",
+        "operationId": "SkillSourcesController_createUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported file type"
+          },
+          "404": {
+            "description": "Skill not found"
+          },
+          "413": {
+            "description": "File exceeds the upload limit"
+          }
+        },
+        "summary": "Create a direct file upload for a skill",
+        "tags": ["skills"]
+      }
+    },
+    "/skills/{id}/uploads/{uploadId}/complete": {
+      "post": {
+        "description": "Verifies the stored file, creates the processing source(s), queues them and returns the updated skill. Safe to repeat.",
+        "operationId": "SkillSourcesController_completeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The upload id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill or upload not found"
+          },
+          "409": {
+            "description": "The file was not fully transferred"
+          },
+          "410": {
+            "description": "The upload expired"
+          }
+        },
+        "summary": "Complete a direct file upload and attach its sources",
         "tags": ["skills"]
       }
     },
@@ -16410,6 +16808,41 @@
         },
         "required": ["userIds"]
       },
+      "SignSourceUploadRequestDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "S3 request to sign: PUT (whole object, or a part with uploadId and partNumber), POST (initiate without uploadId, complete with uploadId), GET (list parts), DELETE (abort).",
+            "enum": ["PUT", "POST", "GET", "DELETE"]
+          },
+          "uploadId": {
+            "type": "string",
+            "description": "S3 multipart upload id, for every multipart step after initiation"
+          },
+          "partNumber": {
+            "type": "number",
+            "description": "1-based part number",
+            "minimum": 1
+          }
+        },
+        "required": ["method"]
+      },
+      "SignedUploadUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Pre-signed URL the browser PUTs the bytes to"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "The URL stops working after this time; sign again to retry",
+            "example": "2026-01-15T12:00:00.000Z"
+          }
+        },
+        "required": ["url", "expiresAt"]
+      },
       "TranscriptionResponseDto": {
         "type": "object",
         "properties": {
@@ -17495,6 +17928,54 @@
           }
         },
         "required": ["workspaceId"]
+      },
+      "CreateSourceUploadDto": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "description": "Original file name, including its extension",
+            "example": "Protokoll_Stadtrat_2025-03.pdf",
+            "maxLength": 255
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type reported by the browser; may be empty when unknown. The server derives the canonical type from it and the file name.",
+            "example": "application/pdf"
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "Exact size of the file in bytes",
+            "example": 1048576,
+            "minimum": 1
+          }
+        },
+        "required": ["fileName", "mimeType", "fileSize"]
+      },
+      "SourceUploadSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Upload id. Used for the transfer endpoints under /source-uploads and for completing the upload on its target.",
+            "format": "uuid"
+          },
+          "multipart": {
+            "type": "boolean",
+            "description": "True when the file must be transferred as an S3 multipart upload (part URLs signed per part); false for a single signed PUT."
+          },
+          "partSizeBytes": {
+            "type": "number",
+            "description": "Size of every part except the last, in bytes",
+            "example": 8388608
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "The transfer must be completed before this time",
+            "example": "2026-01-15T12:00:00.000Z"
+          }
+        },
+        "required": ["id", "multipart", "partSizeBytes", "expiresAt"]
       },
       "CreateKnowledgeBaseDto": {
         "type": "object",

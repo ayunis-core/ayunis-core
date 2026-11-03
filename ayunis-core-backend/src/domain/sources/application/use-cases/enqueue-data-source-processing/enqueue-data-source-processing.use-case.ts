@@ -30,6 +30,9 @@ export class EnqueueDataSourceProcessingUseCase {
       fileName: command.fileName,
       kind: command.kind,
       targets: command.targets,
+      retainFile: command.retainFile,
+      expectedSize: command.expectedSize,
+      expectedETag: command.expectedETag,
     });
   }
 }

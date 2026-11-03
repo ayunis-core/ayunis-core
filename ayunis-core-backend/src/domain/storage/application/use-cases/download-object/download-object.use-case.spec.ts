@@ -1,3 +1,4 @@
+import { ObjectChangedError } from 'src/domain/storage/application/storage.errors';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
@@ -93,6 +94,17 @@ describe('DownloadObjectUseCase', () => {
       );
     });
 
+    it('preserves identity mismatches instead of reporting a storage outage', async () => {
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(new ObjectChangedError());
+      await expect(
+        useCase.execute(
+          new DownloadObjectCommand('document.pdf', undefined, 'verified'),
+        ),
+      ).rejects.toBeInstanceOf(ObjectChangedError);
+    });
+
     it('should use default bucket when no bucket specified', async () => {
       const command = new DownloadObjectCommand('test-file.txt');
       jest
@@ -103,6 +115,7 @@ describe('DownloadObjectUseCase', () => {
 
       expect(mockObjectStorage.download).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: 'test-bucket' }),
+        undefined,
       );
     });
 
@@ -116,6 +129,7 @@ describe('DownloadObjectUseCase', () => {
 
       expect(mockObjectStorage.download).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: 'custom' }),
+        undefined,
       );
     });
 

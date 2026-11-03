@@ -14,6 +14,9 @@ describe('storageConfig', () => {
     delete process.env.MINIO_INTERNAL_ENDPOINT;
     delete process.env.MINIO_INTERNAL_PORT;
     delete process.env.MINIO_INTERNAL_USE_SSL;
+    delete process.env.MINIO_PUBLIC_ENDPOINT;
+    delete process.env.MINIO_PUBLIC_PORT;
+    delete process.env.MINIO_PUBLIC_USE_SSL;
     delete process.env.MINIO_ENDPOINT;
     delete process.env.MINIO_PORT;
     delete process.env.MINIO_USE_SSL;
@@ -66,6 +69,32 @@ describe('storageConfig', () => {
       port: 443,
       useSSL: true,
       endPoint: 'minio.internal',
+    });
+  });
+
+  describe('public endpoint', () => {
+    it('falls back to the internal endpoint when unset', () => {
+      process.env.MINIO_INTERNAL_ENDPOINT = 'minio';
+      process.env.MINIO_INTERNAL_PORT = '9000';
+
+      const config = storageConfig();
+
+      expect(config.minio.public).toEqual(config.minio.internal);
+    });
+
+    it('reads the browser-facing endpoint separately', () => {
+      process.env.MINIO_INTERNAL_ENDPOINT = 'minio';
+      process.env.MINIO_PUBLIC_ENDPOINT = 'cdn.example.org';
+      process.env.MINIO_PUBLIC_USE_SSL = 'true';
+
+      const config = storageConfig();
+
+      expect(config.minio.public).toEqual({
+        endPoint: 'cdn.example.org',
+        port: 443,
+        useSSL: true,
+      });
+      expect(config.minio.internal.endPoint).toBe('minio');
     });
   });
 });

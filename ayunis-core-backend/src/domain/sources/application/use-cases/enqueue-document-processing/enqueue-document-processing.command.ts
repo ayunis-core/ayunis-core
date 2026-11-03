@@ -7,6 +7,9 @@ export class EnqueueDocumentProcessingCommand {
   readonly minioPath: string;
   readonly fileName: string;
   readonly fileType: string;
+  readonly retainFile: boolean;
+  readonly expectedSize?: number;
+  readonly expectedETag?: string;
 
   constructor(params: {
     sourceId: UUID;
@@ -15,6 +18,9 @@ export class EnqueueDocumentProcessingCommand {
     minioPath: string;
     fileName: string;
     fileType: string;
+    retainFile?: boolean;
+    expectedSize?: number;
+    expectedETag?: string;
   }) {
     this.sourceId = params.sourceId;
     this.orgId = params.orgId;
@@ -22,5 +28,8 @@ export class EnqueueDocumentProcessingCommand {
     this.minioPath = params.minioPath;
     this.fileName = params.fileName;
     this.fileType = params.fileType;
+    this.retainFile = params.retainFile ?? false;
+    this.expectedSize = params.expectedSize;
+    this.expectedETag = params.expectedETag;
   }
 }

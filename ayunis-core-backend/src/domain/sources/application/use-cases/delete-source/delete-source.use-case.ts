@@ -20,25 +20,17 @@ export class DeleteSourceUseCase {
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
   ) {}
 
-  @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
     this.logger.debug({ sourceId: command.sourceId }, 'Deleting source');
     try {
-      const source = await this.sourceRepository.findById(command.sourceId);
-
-      if (source?.status === SourceStatus.PROCESSING) {
+      const storageKey = await this.deleteRecords(command);
+      // The original is released after commit: a rolled-back delete must
+      // not lose the file its surviving source still points at.
+      if (storageKey !== null) {
         await this.cleanupSourceProcessingUseCase.execute(
-          new CleanupSourceProcessingCommand([command.sourceId], command.orgId),
+          new CleanupSourceProcessingCommand([], command.orgId, [storageKey]),
         );
       }
-
-      // Delete indexed content first
-      const deleteContentCommand = new DeleteContentCommand({
-        documentId: command.sourceId,
-      });
-
-      await this.deleteContentUseCase.execute(deleteContentCommand);
-      await this.sourceRepository.delete(command.sourceId);
 
       this.logger.debug(
         { sourceId: command.sourceId },
@@ -58,5 +50,26 @@ export class DeleteSourceUseCase {
         error: error as Error,
       });
     }
+  }
+
+  /** Returns the deleted source's storage key, if it had an uploaded original. */
+  @Transactional()
+  private async deleteRecords(
+    command: DeleteSourceCommand,
+  ): Promise<string | null> {
+    const source = await this.sourceRepository.findById(command.sourceId);
+
+    if (source?.status === SourceStatus.PROCESSING) {
+      await this.cleanupSourceProcessingUseCase.execute(
+        new CleanupSourceProcessingCommand([command.sourceId], command.orgId),
+      );
+    }
+
+    // Delete indexed content first
+    await this.deleteContentUseCase.execute(
+      new DeleteContentCommand({ documentId: command.sourceId }),
+    );
+    await this.sourceRepository.delete(command.sourceId);
+    return source?.storageKey ?? null;
   }
 }

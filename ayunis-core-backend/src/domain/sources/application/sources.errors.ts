@@ -10,6 +10,13 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  SOURCE_UPLOAD_NOT_FOUND = 'SOURCE_UPLOAD_NOT_FOUND',
+  SOURCE_UPLOAD_EXPIRED = 'SOURCE_UPLOAD_EXPIRED',
+  SOURCE_UPLOAD_INCOMPLETE = 'SOURCE_UPLOAD_INCOMPLETE',
+  SOURCE_UPLOAD_TARGET_MISMATCH = 'SOURCE_UPLOAD_TARGET_MISMATCH',
+  SOURCE_UPLOAD_REQUEST_NOT_ALLOWED = 'SOURCE_UPLOAD_REQUEST_NOT_ALLOWED',
+  STORED_FILE_MISMATCH = 'STORED_FILE_MISMATCH',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -121,6 +128,90 @@ export class UnsupportedSourceFileTypeError extends SourceError {
       SourceErrorCode.UNSUPPORTED_SOURCE_FILE_TYPE,
       400,
       metadata,
+    );
+  }
+}
+
+export class FileTooLargeError extends SourceError {
+  constructor(maxFileSizeBytes: number, metadata?: ErrorMetadata) {
+    super(
+      `File exceeds the ${Math.floor(maxFileSizeBytes / (1024 * 1024))} MB upload limit`,
+      SourceErrorCode.FILE_TOO_LARGE,
+      413,
+      { maxFileSizeBytes, ...metadata },
+    );
+  }
+}
+
+/** Also raised for sessions owned by someone else, so existence never leaks. */
+export class SourceUploadNotFoundError extends SourceError {
+  constructor(uploadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Upload '${uploadId}' not found`,
+      SourceErrorCode.SOURCE_UPLOAD_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class SourceUploadExpiredError extends SourceError {
+  constructor(uploadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Upload '${uploadId}' has expired or was aborted`,
+      SourceErrorCode.SOURCE_UPLOAD_EXPIRED,
+      410,
+      metadata,
+    );
+  }
+}
+
+/** The object is missing or its size differs from what the session announced. */
+export class SourceUploadIncompleteError extends SourceError {
+  constructor(uploadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Upload '${uploadId}' has not been fully transferred`,
+      SourceErrorCode.SOURCE_UPLOAD_INCOMPLETE,
+      409,
+      metadata,
+    );
+  }
+}
+
+export class SourceUploadTargetMismatchError extends SourceError {
+  constructor(uploadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Upload '${uploadId}' was created for a different target`,
+      SourceErrorCode.SOURCE_UPLOAD_TARGET_MISMATCH,
+      400,
+      metadata,
+    );
+  }
+}
+
+/** The requested S3 operation does not fit the session's transfer mode. */
+export class SourceUploadRequestNotAllowedError extends SourceError {
+  constructor(uploadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Upload '${uploadId}' does not allow this request`,
+      SourceErrorCode.SOURCE_UPLOAD_REQUEST_NOT_ALLOWED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * The stored object is not the one upload completion verified (its size
+ * differs), so processing must not read it.
+ */
+export class StoredFileMismatchError extends SourceError {
+  constructor(storageKey: string, metadata?: ErrorMetadata) {
+    super(
+      'The stored file no longer matches the verified upload',
+      SourceErrorCode.STORED_FILE_MISMATCH,
+      409,
+      { storageKey, ...metadata },
     );
   }
 }
