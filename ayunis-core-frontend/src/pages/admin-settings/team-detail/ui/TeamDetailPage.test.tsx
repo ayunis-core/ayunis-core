@@ -32,6 +32,21 @@ vi.mock('@/widgets/onboarding', () => ({
   OnboardingTourTarget: ({ children }: { children: ReactNode }) => children,
   TOUR_TARGET: {},
 }));
+vi.mock('@/widgets/pagination', () => ({
+  PaginationWidget: ({
+    currentPage,
+    totalPages,
+  }: {
+    currentPage: number;
+    totalPages: number;
+  }) => (
+    <div
+      data-testid="team-members-pagination"
+      data-current-page={currentPage}
+      data-total-pages={totalPages}
+    />
+  ),
+}));
 vi.mock('./TeamMembersList', () => ({
   TeamMembersList: () => <p>Team members</p>,
 }));
@@ -89,5 +104,21 @@ describe('team policy shortcuts', () => {
     expect(screen.getByText('Team members')).toBeTruthy();
     expect(screen.queryByTestId('team-manage-models')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Credit limit' })).toBeNull();
+  });
+
+  it('lets admins reach team members beyond the first page', () => {
+    render(
+      <TeamDetailPage
+        {...props}
+        membersResponse={{
+          data: [],
+          pagination: { limit: 50, offset: 50, total: 111 },
+        }}
+      />,
+    );
+
+    const pagination = screen.getByTestId('team-members-pagination');
+    expect(pagination.getAttribute('data-current-page')).toBe('2');
+    expect(pagination.getAttribute('data-total-pages')).toBe('3');
   });
 });

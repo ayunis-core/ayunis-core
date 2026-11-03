@@ -47,6 +47,26 @@ function createQueryBuilderFixture(): QueryBuilderFixture {
 }
 
 describe(LocalTeamMembersRepository.name, () => {
+  it('uses a stable order when listing paginated team members', async () => {
+    const records = {
+      findAndCount: jest.fn().mockResolvedValue([[], 0]),
+    } as unknown as Repository<TeamMemberRecord>;
+    const manager = {
+      getRepository: jest.fn().mockReturnValue(records),
+    } as unknown as EntityManager;
+    const repository = new LocalTeamMembersRepository({
+      tx: manager,
+    } as TransactionHost<TransactionalAdapterTypeOrm>);
+
+    await repository.findByTeamId(randomUUID(), { limit: 50, offset: 50 });
+
+    expect(records.findAndCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        order: { createdAt: 'DESC', id: 'DESC' },
+      }),
+    );
+  });
+
   it('inserts all memberships in one idempotent query', async () => {
     const execute = jest.fn().mockResolvedValue(undefined);
     const queryBuilder = {

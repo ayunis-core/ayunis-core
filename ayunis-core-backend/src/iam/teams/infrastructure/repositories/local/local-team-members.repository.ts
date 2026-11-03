@@ -37,7 +37,7 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     const [records, total] = await this.teamMembers.findAndCount({
       where: { teamId },
       relations: ['user'],
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
       skip: pagination.offset,
       take: pagination.limit,
     });

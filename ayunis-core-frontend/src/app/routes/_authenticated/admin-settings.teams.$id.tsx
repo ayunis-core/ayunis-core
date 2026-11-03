@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { z } from 'zod';
 import { TeamDetailPage } from '@/pages/admin-settings/team-detail';
 import {
   teamsControllerGetTeam,
@@ -7,11 +8,24 @@ import {
   getTeamsControllerListTeamMembersQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
+const TEAM_MEMBERS_PER_PAGE = 50;
+
+const searchSchema = z.object({
+  page: z.number().min(1).optional().catch(1),
+});
+
 export const Route = createFileRoute(
   '/_authenticated/admin-settings/teams/$id',
 )({
+  validateSearch: searchSchema,
+  loaderDeps: ({ search }) => search,
   component: RouteComponent,
-  loader: async ({ context: { queryClient }, params: { id } }) => {
+  loader: async ({
+    deps: { page = 1 },
+    context: { queryClient },
+    params: { id },
+  }) => {
+    const offset = (page - 1) * TEAM_MEMBERS_PER_PAGE;
     const [team, membersResponse] = await Promise.all([
       queryClient.query({
         queryKey: getTeamsControllerGetTeamQueryKey(id),
@@ -19,13 +33,30 @@ export const Route = createFileRoute(
       }),
       queryClient.query({
         queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
-          limit: 50,
-          offset: 0,
+          limit: TEAM_MEMBERS_PER_PAGE,
+          offset,
         }),
         queryFn: () =>
-          teamsControllerListTeamMembers(id, { limit: 50, offset: 0 }),
+          teamsControllerListTeamMembers(id, {
+            limit: TEAM_MEMBERS_PER_PAGE,
+            offset,
+          }),
       }),
     ]);
+    const lastPage = Math.max(
+      1,
+      Math.ceil(
+        (membersResponse.pagination.total ?? 0) / TEAM_MEMBERS_PER_PAGE,
+      ),
+    );
+    if (page > lastPage) {
+      throw redirect({
+        to: '/admin-settings/teams/$id',
+        params: { id },
+        search: { page: lastPage === 1 ? undefined : lastPage },
+      });
+    }
+
     return { team, membersResponse };
   },
 });
