@@ -24,6 +24,7 @@ import type {
   PaginatedTeamMembers,
 } from '@/pages/admin-settings/team-detail/model/types';
 import { PermissionGate, useAuthorization } from '@/features/permissions';
+import { PaginationWidget } from '@/widgets/pagination';
 
 interface TeamDetailPageProps {
   team: TeamDetail;
@@ -68,6 +69,9 @@ export function TeamDetailPage({
   const { hasRole } = useAuthorization();
   const isAdmin = hasRole(MeResponseDtoRole.admin);
   const hasCreditBudget = useHasCreditBudget(isAdmin);
+  const { limit, offset, total = 0 } = membersResponse.pagination;
+  const currentPage = Math.floor(offset / limit) + 1;
+  const totalPages = Math.ceil(total / limit);
   const headerActions = (
     <PermissionGate permission="assign_users_to_teams">
       <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
@@ -107,6 +111,13 @@ export function TeamDetailPage({
           </CardHeader>
           <CardContent>
             <TeamMembersList teamId={team.id} members={membersResponse.data} />
+            <PaginationWidget
+              currentPage={currentPage}
+              totalPages={totalPages}
+              to="/admin-settings/teams/$id"
+              params={{ id: team.id }}
+              buildSearchParams={(page) => ({ page })}
+            />
           </CardContent>
         </Card>
         {isAdmin && <TeamModelSummary team={team} />}
