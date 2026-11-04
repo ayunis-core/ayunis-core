@@ -1,8 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Inbox } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { ItemGroup } from '@ayunis/ui/components/item';
-import { allTeams, findPerson } from '@/widgets/sharing-prototype/model/access';
+import { findPerson, findTeam } from '@/widgets/sharing-prototype/model/access';
 import { useKnowledgeItems } from '@/widgets/sharing-prototype/model/prototype-knowledge';
 import { usePrototypeSkills } from '@/widgets/sharing-prototype/model/prototype-store';
 import type {
@@ -32,6 +31,12 @@ function useOpenItem(): (request: TransferRequest) => void {
   };
 }
 
+function targetLabel(request: TransferRequest): string {
+  return request.target.kind === 'org'
+    ? 'an die Organisation'
+    : `an Team ${findTeam(request.target.teamId).name}`;
+}
+
 function RequestRow({
   request,
   item,
@@ -43,7 +48,7 @@ function RequestRow({
   return (
     <ListRow
       title={item.name}
-      description={`Von ${findPerson(request.requestedBy).name} · ${request.requestedAt}`}
+      description={`Von ${findPerson(request.requestedBy).name} ${targetLabel(request)} · ${request.requestedAt}`}
       onClick={() => openItem(request)}
       actions={
         <>
@@ -66,54 +71,6 @@ function RequestRow({
   );
 }
 
-interface RequestEntry {
-  request: TransferRequest;
-  item: OwnedItem;
-}
-
-function RequestRows({ entries }: Readonly<{ entries: RequestEntry[] }>) {
-  return (
-    <>
-      {entries.map(({ request, item }) => (
-        <RequestRow key={item.id} request={request} item={item} />
-      ))}
-    </>
-  );
-}
-
-function requestSections(entries: RequestEntry[]) {
-  const org = {
-    key: 'org',
-    title: 'Organisation',
-    entries: entries.filter(({ request }) => request.target.kind === 'org'),
-  };
-  const teams = allTeams().map((team) => ({
-    key: team.id,
-    title: `Team ${team.name}`,
-    entries: entries.filter(
-      ({ request }) =>
-        request.target.kind === 'team' && request.target.teamId === team.id,
-    ),
-  }));
-  return [org, ...teams].filter((section) => section.entries.length > 0);
-}
-
-function GroupedRequests({ entries }: Readonly<{ entries: RequestEntry[] }>) {
-  return (
-    <div className="space-y-6">
-      {requestSections(entries).map((section) => (
-        <SkillPanelSection
-          key={section.key}
-          title={section.title}
-          count={section.entries.length}
-        >
-          <RequestRows entries={section.entries} />
-        </SkillPanelSection>
-      ))}
-    </div>
-  );
-}
-
 const EMPTY_DESCRIPTION: Record<ResourceKind, string> = {
   skill:
     'Hier erscheinen Fähigkeiten, die Mitarbeitende an ein Team oder die Organisation übergeben möchten.',
@@ -124,11 +81,9 @@ const EMPTY_DESCRIPTION: Record<ResourceKind, string> = {
 export function TransferRequestList({
   requests,
   resource,
-  isGrouped,
 }: Readonly<{
   requests: TransferRequest[];
   resource: ResourceKind;
-  isGrouped: boolean;
 }>) {
   const skills = usePrototypeSkills();
   const knowledge = useKnowledgeItems();
@@ -146,10 +101,11 @@ export function TransferRequestList({
       />
     );
   }
-  if (isGrouped) return <GroupedRequests entries={entries} />;
   return (
-    <ItemGroup className="gap-2">
-      <RequestRows entries={entries} />
-    </ItemGroup>
+    <SkillPanelSection title="Offene Anfragen" count={entries.length}>
+      {entries.map(({ request, item }) => (
+        <RequestRow key={item.id} request={request} item={item} />
+      ))}
+    </SkillPanelSection>
   );
 }

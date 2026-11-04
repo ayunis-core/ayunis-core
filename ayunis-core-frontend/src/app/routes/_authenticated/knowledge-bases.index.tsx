@@ -1,9 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { PrototypeKnowledgePage } from '@/pages/skill-sharing-prototype';
+import {
+  PrototypeKnowledgePage,
+  type ListFilter,
+} from '@/pages/skill-sharing-prototype';
 
 const searchSchema = z.object({
-  tab: z.enum(['own', 'shared', 'requests']).optional().catch(undefined),
+  filter: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
@@ -12,6 +15,8 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
 });
 
 function RouteComponent() {
-  const { tab = 'own' } = Route.useSearch();
-  return <PrototypeKnowledgePage key={tab} initialTab={tab} />;
+  const { filter = 'all' } = Route.useSearch();
+  return (
+    <PrototypeKnowledgePage key={filter} initialFilter={filter as ListFilter} />
+  );
 }

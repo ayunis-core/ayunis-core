@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { BookOpen, Building2, Search } from 'lucide-react';
-import { Badge } from '@ayunis/ui/components/badge';
+import { BookOpen } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { ItemGroup } from '@ayunis/ui/components/item';
-import { Tabs, TabsList, TabsTrigger } from '@ayunis/ui/components/tabs';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -13,32 +10,31 @@ import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   personForRole,
   reviewableTeamIds,
-  skillGroupFor,
 } from '@/widgets/sharing-prototype/model/access';
 import { useKnowledgeItems } from '@/widgets/sharing-prototype/model/prototype-knowledge';
-import { isSharedWithPerson } from '@/widgets/sharing-prototype/model/prototype-shares';
+import { sharedTargetFor } from '@/widgets/sharing-prototype/model/prototype-shares';
 import { usePrototypeState } from '@/widgets/sharing-prototype/model/prototype-store';
 import type {
   Person,
   PrototypeKnowledge,
 } from '@/widgets/sharing-prototype/model/types';
 import { documentCountLabel } from '@/pages/skill-sharing-prototype/lib/document-count';
+import {
+  filterOptions,
+  listSections,
+  resolveFilter,
+  type ListFilter,
+} from '@/pages/skill-sharing-prototype/lib/list-sections';
 import { ownerOptionsFor } from '@/pages/skill-sharing-prototype/lib/owner-options';
 import { reviewableRequests } from '@/pages/skill-sharing-prototype/lib/requests';
-import {
-  isOwnSkill,
-  sharedSections,
-  sharedSkillLabel,
-} from '@/pages/skill-sharing-prototype/lib/skill-meta';
+import { sharedSkillLabel } from '@/pages/skill-sharing-prototype/lib/skill-meta';
 import { CreateKnowledgeItemDialog } from './CreateKnowledgeItemDialog';
 import { EmptyHint } from './EmptyHint';
 import { KnowledgeActiveSwitch } from './ActiveSwitch';
+import { ListFilterSelect } from './ListFilterSelect';
 import { ListRow } from './ListRow';
-import { RequestCountBadge } from './RequestCountBadge';
-import { SkillPanelSection } from './SkillPanelSection';
+import { SectionedList } from './SectionedList';
 import { TransferRequestList } from './TransferRequestList';
-
-export type KnowledgeTab = 'own' | 'shared' | 'requests';
 
 function matches(item: PrototypeKnowledge, query: string): boolean {
   const needle = query.trim().toLowerCase();
@@ -73,149 +69,84 @@ function KnowledgeRow({
   );
 }
 
-function OwnKnowledge({
-  items,
-  query,
-}: Readonly<{ items: PrototypeKnowledge[]; query: string }>) {
-  if (items.length === 0) {
-    return (
-      <EmptyHint
-        icon={query ? <Search /> : <BookOpen />}
-        title={
-          query
-            ? 'Keine Wissenssammlung gefunden'
-            : 'Noch keine eigenen Wissenssammlungen'
-        }
-      />
-    );
-  }
-  return (
-    <ItemGroup className="gap-2">
-      {items.map((item) => (
-        <KnowledgeRow key={item.id} item={item} />
-      ))}
-    </ItemGroup>
-  );
-}
-
-function SharedKnowledge({
-  items,
-  person,
-  query,
-}: Readonly<{ items: PrototypeKnowledge[]; person: Person; query: string }>) {
-  const sections = sharedSections(items, person);
-  if (sections.length === 0) {
-    return (
-      <EmptyHint
-        icon={query ? <Search /> : <Building2 />}
-        title={
-          query
-            ? 'Keine Wissenssammlung gefunden'
-            : 'Noch nichts von Team oder Organisation'
-        }
-      />
-    );
-  }
-  return (
-    <div className="space-y-6">
-      {sections.map((section) => (
-        <SkillPanelSection
-          key={section.key}
-          title={section.title}
-          count={section.skills.length}
-        >
-          {section.skills.map((item) => (
-            <KnowledgeRow
-              key={item.id}
-              item={item}
-              label={sharedSkillLabel(item, person)}
-            />
-          ))}
-        </SkillPanelSection>
-      ))}
-    </div>
-  );
-}
-
-function useKnowledgeLists(person: Person, query: string) {
+function useKnowledgeList(person: Person) {
   const state = usePrototypeState();
-  const items = useKnowledgeItems()
-    .filter((item) => matches(item, query))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const items = [...useKnowledgeItems()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const sharedTargetOf = (item: PrototypeKnowledge) =>
+    sharedTargetFor(state, item, 'knowledge', person);
+  const canReview =
+    state.iteration === 2 &&
+    reviewableTeamIds(person, state.role, 'knowledge').length > 0;
   return {
-    own: items.filter((item) => isOwnSkill(item, person)),
-    shared: items.filter(
-      (item) =>
-        !isOwnSkill(item, person) &&
-        (skillGroupFor(item, person) !== null ||
-          isSharedWithPerson(state, item, 'knowledge', person)),
+    canReview,
+    inbox: reviewableRequests(state.requests, 'knowledge', person, state.role),
+    options: filterOptions(
+      listSections(items, person, sharedTargetOf),
+      canReview,
     ),
+    sectionsFor: (query: string) =>
+      listSections(
+        items.filter((item) => matches(item, query)),
+        person,
+        sharedTargetOf,
+      ),
   };
 }
 
+type KnowledgeList = ReturnType<typeof useKnowledgeList>;
+
 function KnowledgeContent({
-  tab,
+  person,
+  filter,
   query,
-  onTabChange,
+  list,
 }: Readonly<{
-  tab: KnowledgeTab;
+  person: Person;
+  filter: ListFilter;
   query: string;
-  onTabChange: (tab: KnowledgeTab) => void;
+  list: KnowledgeList;
 }>) {
-  const { role, requests, iteration } = usePrototypeState();
-  const person = personForRole(role);
-  const lists = useKnowledgeLists(person, query);
-  const teamIds = reviewableTeamIds(person, role, 'knowledge');
-  const inbox = reviewableRequests(requests, 'knowledge', person, role);
-  const canReview = iteration === 2 && teamIds.length > 0;
-  const shown = tab === 'requests' && !canReview ? 'own' : tab;
+  const showRequests =
+    list.canReview &&
+    (filter === 'requests' ||
+      (filter === 'all' && !query && list.inbox.length > 0));
 
   return (
-    <div className="space-y-4">
-      <Tabs
-        value={shown}
-        onValueChange={(value) => onTabChange(value as KnowledgeTab)}
-      >
-        <TabsList>
-          <TabsTrigger value="own">
-            Eigene Wissenssammlungen
-            <Badge variant="secondary">{lists.own.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="shared">
-            Team und Organisation
-            <Badge variant="secondary">{lists.shared.length}</Badge>
-          </TabsTrigger>
-          {canReview && (
-            <TabsTrigger value="requests">
-              Anfragen
-              <RequestCountBadge count={inbox.length} />
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </Tabs>
-      {shown === 'own' && <OwnKnowledge items={lists.own} query={query} />}
-      {shown === 'shared' && (
-        <SharedKnowledge items={lists.shared} person={person} query={query} />
-      )}
-      {shown === 'requests' && (
-        <TransferRequestList
-          requests={inbox}
-          resource="knowledge"
-          isGrouped={teamIds.length > 1}
+    <SectionedList
+      sections={list.sectionsFor(query)}
+      filter={filter}
+      query={query}
+      requests={
+        showRequests ? (
+          <TransferRequestList requests={list.inbox} resource="knowledge" />
+        ) : undefined
+      }
+      ownEmpty={
+        <EmptyHint
+          icon={<BookOpen />}
+          title="Noch keine eigenen Wissenssammlungen"
         />
+      }
+      notFoundTitle="Keine Wissenssammlung gefunden"
+      renderRow={(item) => (
+        <KnowledgeRow item={item} label={sharedSkillLabel(item, person)} />
       )}
-    </div>
+    />
   );
 }
 
 export function PrototypeKnowledgePage({
-  initialTab = 'own',
-}: Readonly<{ initialTab?: KnowledgeTab }>) {
+  initialFilter = 'all',
+}: Readonly<{ initialFilter?: ListFilter }>) {
   const { role } = usePrototypeState();
   const person = personForRole(role);
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<KnowledgeTab>(initialTab);
+  const [filter, setFilter] = useState<ListFilter>(initialFilter);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const list = useKnowledgeList(person);
+  const shownFilter = resolveFilter(filter, list.options);
 
   return (
     <AppLayout>
@@ -230,6 +161,11 @@ export function PrototypeKnowledgePage({
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                 />
+                <ListFilterSelect
+                  value={shownFilter}
+                  options={list.options}
+                  onChange={setFilter}
+                />
                 <HelpLink path="knowledge-collections/" />
                 <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                   Wissenssammlung erstellen
@@ -240,15 +176,18 @@ export function PrototypeKnowledgePage({
         }
         contentArea={
           <>
-            <KnowledgeContent tab={tab} query={query} onTabChange={setTab} />
+            <KnowledgeContent
+              person={person}
+              filter={shownFilter}
+              query={query}
+              list={list}
+            />
             <CreateKnowledgeItemDialog
               key={isCreateOpen ? `open-${role}` : 'closed'}
               open={isCreateOpen}
               onOpenChange={setIsCreateOpen}
               options={ownerOptionsFor(person, role, 'knowledge')}
-              onCreated={(owner) => {
-                if (owner.kind !== 'user') setTab('shared');
-              }}
+              onCreated={() => setFilter('all')}
             />
           </>
         }

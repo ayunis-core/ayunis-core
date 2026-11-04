@@ -1,6 +1,7 @@
 export { PrototypeModelPage } from './ui/PrototypeModelPage';
 export { PrototypeSkillPage } from './ui/PrototypeSkillPage';
-export { PrototypeSkillsPage, type SkillsTab } from './ui/PrototypeSkillsPage';
+export { PrototypeSkillsPage } from './ui/PrototypeSkillsPage';
+export type { ListFilter } from './lib/list-sections';
 export {
   PrototypeWorkspacePage,
   type PrototypeWorkspaceTab,
@@ -10,8 +11,5 @@ export { PrototypeRolesSettings } from './ui/PrototypeRolesSettings';
 export { PrototypeTeamsSettings } from './ui/PrototypeTeamsSettings';
 export { PrototypeTeamDetail } from './ui/PrototypeTeamDetail';
 export { AddTeamMembersButton } from './ui/TeamSettingsCards';
-export {
-  PrototypeKnowledgePage,
-  type KnowledgeTab,
-} from './ui/PrototypeKnowledgePage';
+export { PrototypeKnowledgePage } from './ui/PrototypeKnowledgePage';
 export { PrototypeKnowledgeDetailPage } from './ui/PrototypeKnowledgeDetailPage';

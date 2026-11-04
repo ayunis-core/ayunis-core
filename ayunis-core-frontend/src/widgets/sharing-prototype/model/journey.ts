@@ -28,7 +28,7 @@ const ITERATION_1_JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Admin: Fähigkeit für die Organisation erstellen',
-    hint: 'Unter „Selbst erstellen“ wählt Sabine „Organisation“. Die Fähigkeit landet nicht bei ihren eigenen, sondern unter „Team und Organisation“.',
+    hint: 'Unter „Selbst erstellen“ wählt Sabine „Organisation“. Die Fähigkeit steht dann nicht unter „Eigene“, sondern unter „Organisation“.',
     role: 'orgAdmin',
     path: '/skills',
   },
@@ -57,10 +57,10 @@ const ITERATION_1_JOURNEY: JourneyStep[] = [
     path: '/skills/mail-antworten?tab=share',
   },
   {
-    label: 'Mitarbeiterin: Team und Organisation',
-    hint: 'Hier steht, was Lenas Teams und der Organisation gehört. Was andere mit ihr geteilt haben, steht darunter unter „Mit Ihnen geteilt“.',
+    label: 'Mitarbeiterin: alles in einer Liste',
+    hint: 'Lena sieht ihre eigenen Fähigkeiten, die ihrer Teams und die der Organisation in einer Liste. Was andere mit einem Team geteilt haben, steht unter dem Team mit „Geteilt von …“. Der Filter oben blendet den Rest aus.',
     role: 'member',
-    path: '/skills?tab=shared',
+    path: '/skills',
   },
 ];
 
@@ -72,16 +72,16 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
     path: '/skills/so-funktioniert-es',
   },
   {
-    label: 'Mitarbeiterin: eigene Fähigkeiten',
-    hint: 'Lena sieht nur, was ihr gehört. Ihre Anfrage an Team Bauamt ist noch offen.',
+    label: 'Mitarbeiterin: alles in einer Liste',
+    hint: 'Oben steht, was Lena gehört, darunter ihre Teams und die Organisation. Ihre Anfrage an Team Bauamt ist noch offen.',
     role: 'member',
     path: '/skills',
   },
   {
-    label: 'Mitarbeiterin: Team und Organisation',
-    hint: 'Was dem Team oder der Organisation gehört, steht im zweiten Tab. Lena kann es nutzen, aber nicht ändern.',
+    label: 'Mitarbeiterin: nach Team filtern',
+    hint: 'Über den Filter zeigt Lena nur Team Bauamt. Was dem Team gehört, kann sie nutzen, aber nicht ändern.',
     role: 'member',
-    path: '/skills?tab=shared',
+    path: '/skills?filter=team:bauamt',
   },
   {
     label: 'Mitarbeiterin: Fähigkeit übergeben',
@@ -91,9 +91,9 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Team-Admin: Anfragen prüfen',
-    hint: 'Jonas ist Team-Admin von Bauamt und Bürgerservice. Er sieht die Anfragen pro Team und gibt sie frei oder lehnt sie ab.',
+    hint: 'Jonas ist Team-Admin von Bauamt und Bürgerservice. Offene Anfragen stehen bei ihm ganz oben in der Liste, mit dem Team, an das sie gehen. Er gibt sie frei oder lehnt sie ab.',
     role: 'teamAdmin',
-    path: '/skills?tab=requests',
+    path: '/skills',
   },
   {
     label: 'Team-Admin: Fähigkeit für das Team erstellen',
@@ -109,7 +109,7 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Admin: Fähigkeit für die Organisation erstellen',
-    hint: 'Sabine erstellt sie für alle. Sie landet nicht bei ihren eigenen, sondern unter „Organisation“.',
+    hint: 'Sabine erstellt sie für alle. Sie steht dann nicht unter „Eigene“, sondern unter „Organisation“.',
     role: 'orgAdmin',
     path: '/skills',
   },
@@ -123,7 +123,7 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
     label: 'Admin: alle Anfragen',
     hint: 'Sabine prüft Anfragen an die Organisation und kann auch Anfragen jedes Teams freigeben. Jonas möchte seine Fähigkeit an die Organisation übergeben.',
     role: 'orgAdmin',
-    path: '/skills?tab=requests',
+    path: '/skills?filter=requests',
   },
   {
     label: 'Admin: Rollen und Berechtigungen',
@@ -133,7 +133,7 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
   },
   {
     label: 'Admin: Team-Admins ernennen',
-    hint: 'Sabine macht Lena im Bürgerservice zur Team-Admin. Wechselt man danach zu Lena, hat sie den Tab „Anfragen“ für dieses Team.',
+    hint: 'Sabine macht Lena im Bürgerservice zur Team-Admin. Wechselt man danach zu Lena, stehen bei ihr oben „Offene Anfragen“ für dieses Team.',
     role: 'orgAdmin',
     path: '/admin-settings/teams/buergerservice',
   },
@@ -147,7 +147,7 @@ const ITERATION_2_JOURNEY: JourneyStep[] = [
     label: 'Wissen: Anfragen prüfen',
     hint: 'Tobias möchte „Unterlagen Kassenprüfung“ an Team Kämmerei übergeben. Sabine gibt frei oder lehnt ab.',
     role: 'orgAdmin',
-    path: '/knowledge-bases?tab=requests',
+    path: '/knowledge-bases?filter=requests',
   },
   {
     label: 'Arbeitsbereiche',

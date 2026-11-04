@@ -41,6 +41,20 @@ export function isSharedWithPerson(
   );
 }
 
+export function sharedTargetFor(
+  current: PrototypeState,
+  item: OwnedItem,
+  resource: ResourceKind,
+  person: Person,
+): TransferTarget | null {
+  if (!isSharedWithPerson(current, item, resource, person)) return null;
+  const teamTarget = itemSharesOf(current, resource, item.id).find(
+    (target) =>
+      target.kind === 'team' && person.teamIds.includes(target.teamId),
+  );
+  return teamTarget ?? { kind: 'org' };
+}
+
 export function setItemShared(
   resource: ResourceKind,
   itemId: string,

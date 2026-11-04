@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Badge } from '@ayunis/ui/components/badge';
-import { Tabs, TabsList, TabsTrigger } from '@ayunis/ui/components/tabs';
+import { useNavigate } from '@tanstack/react-router';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -8,9 +7,8 @@ import { ListToolbar, ListToolbarSearch } from '@/widgets/list-toolbar';
 import {
   personForRole,
   reviewableTeamIds,
-  skillGroupFor,
 } from '@/widgets/sharing-prototype/model/access';
-import { isSharedWithPerson } from '@/widgets/sharing-prototype/model/prototype-shares';
+import { sharedTargetFor } from '@/widgets/sharing-prototype/model/prototype-shares';
 import {
   useHasPermission,
   usePrototypeSkills,
@@ -20,17 +18,23 @@ import type {
   Person,
   PrototypeSkill,
 } from '@/widgets/sharing-prototype/model/types';
+import {
+  filterOptions,
+  listSections,
+  resolveFilter,
+  type ListFilter,
+} from '@/pages/skill-sharing-prototype/lib/list-sections';
 import { ownerOptionsFor } from '@/pages/skill-sharing-prototype/lib/owner-options';
 import { reviewableRequests } from '@/pages/skill-sharing-prototype/lib/requests';
-import { isOwnSkill } from '@/pages/skill-sharing-prototype/lib/skill-meta';
+import { sharedSkillLabel } from '@/pages/skill-sharing-prototype/lib/skill-meta';
 import { CreateSkillDialog } from './CreateSkillDialog';
 import { CreateSkillMenu } from './CreateSkillMenu';
-import { RequestCountBadge } from './RequestCountBadge';
-import { OwnSkills, SharedSkills } from './SkillLists';
+import { ListFilterSelect } from './ListFilterSelect';
 import { MarketplacePromoBanner } from './MarketplacePromoBanner';
+import { SectionedList } from './SectionedList';
+import { SkillListRow } from './SkillListRow';
+import { SkillStarterCard } from './SkillStarterCard';
 import { TransferRequestList } from './TransferRequestList';
-
-export type SkillsTab = 'own' | 'shared' | 'requests';
 
 function matches(skill: PrototypeSkill, query: string): boolean {
   const needle = query.trim().toLowerCase();
@@ -40,114 +44,94 @@ function matches(skill: PrototypeSkill, query: string): boolean {
     .includes(needle);
 }
 
-function useSkillLists(person: Person, query: string) {
+function useSkillList(person: Person) {
   const state = usePrototypeState();
-  const skills = usePrototypeSkills();
-  const found = skills
-    .filter((skill) => matches(skill, query))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const skills = [...usePrototypeSkills()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const sharedTargetOf = (skill: PrototypeSkill) =>
+    sharedTargetFor(state, skill, 'skill', person);
+  const canReview =
+    state.iteration === 2 &&
+    reviewableTeamIds(person, state.role, 'skill').length > 0;
   return {
-    own: found.filter((skill) => isOwnSkill(skill, person)),
-    shared: found.filter(
-      (skill) =>
-        !isOwnSkill(skill, person) &&
-        (skillGroupFor(skill, person) !== null ||
-          isSharedWithPerson(state, skill, 'skill', person)),
+    canReview,
+    inbox: reviewableRequests(state.requests, 'skill', person, state.role),
+    options: filterOptions(
+      listSections(skills, person, sharedTargetOf),
+      canReview,
     ),
+    sectionsFor: (query: string) =>
+      listSections(
+        skills.filter((skill) => matches(skill, query)),
+        person,
+        sharedTargetOf,
+      ),
   };
 }
 
-function SkillsTabList({
-  counts,
-  canReview,
-}: Readonly<{
-  counts: Record<SkillsTab, number>;
-  canReview: boolean;
-}>) {
-  return (
-    <TabsList>
-      <TabsTrigger value="own">
-        Eigene Fähigkeiten
-        <Badge variant="secondary">{counts.own}</Badge>
-      </TabsTrigger>
-      <TabsTrigger value="shared">
-        Team und Organisation
-        <Badge variant="secondary">{counts.shared}</Badge>
-      </TabsTrigger>
-      {canReview && (
-        <TabsTrigger value="requests">
-          Anfragen
-          <RequestCountBadge count={counts.requests} />
-        </TabsTrigger>
-      )}
-    </TabsList>
-  );
-}
+type SkillList = ReturnType<typeof useSkillList>;
 
 function SkillsContent({
-  tab,
-  initialTab,
+  person,
+  filter,
   query,
-  onTabChange,
+  list,
 }: Readonly<{
-  tab: SkillsTab;
-  initialTab: SkillsTab;
+  person: Person;
+  filter: ListFilter;
   query: string;
-  onTabChange: (tab: SkillsTab) => void;
+  list: SkillList;
 }>) {
-  const { role, requests, iteration } = usePrototypeState();
-  const person = personForRole(role);
-  const lists = useSkillLists(person, query);
-  const teamIds = reviewableTeamIds(person, role, 'skill');
-  const inbox = reviewableRequests(requests, 'skill', person, role);
-  const canReview = iteration === 2 && teamIds.length > 0;
+  const { role } = usePrototypeState();
+  const navigate = useNavigate();
   const mayUseMarketplace = useHasPermission(
     role,
     'install_marketplace_skills',
   );
-  const shown = tab === 'requests' && !canReview ? initialTab : tab;
+  const showRequests =
+    list.canReview &&
+    (filter === 'requests' ||
+      (filter === 'all' && !query && list.inbox.length > 0));
 
   return (
     <div className="space-y-4">
-      <Tabs
-        value={shown}
-        onValueChange={(value) => onTabChange(value as SkillsTab)}
-      >
-        <SkillsTabList
-          counts={{
-            own: lists.own.length,
-            shared: lists.shared.length,
-            requests: inbox.length,
-          }}
-          canReview={canReview}
-        />
-      </Tabs>
-      {mayUseMarketplace && shown !== 'requests' && !query && (
-        <MarketplacePromoBanner />
-      )}
-      {shown === 'own' && <OwnSkills skills={lists.own} query={query} />}
-      {shown === 'shared' && (
-        <SharedSkills skills={lists.shared} person={person} query={query} />
-      )}
-      {shown === 'requests' && (
-        <TransferRequestList
-          requests={inbox}
-          resource="skill"
-          isGrouped={teamIds.length > 1}
-        />
-      )}
+      {mayUseMarketplace && <MarketplacePromoBanner />}
+      <SectionedList
+        sections={list.sectionsFor(query)}
+        filter={filter}
+        query={query}
+        requests={
+          showRequests ? (
+            <TransferRequestList requests={list.inbox} resource="skill" />
+          ) : undefined
+        }
+        ownEmpty={<SkillStarterCard />}
+        notFoundTitle="Keine Fähigkeit gefunden"
+        renderRow={(skill) => (
+          <SkillListRow
+            skill={skill}
+            label={sharedSkillLabel(skill, person)}
+            onOpen={() =>
+              void navigate({ to: '/skills/$id', params: { id: skill.id } })
+            }
+          />
+        )}
+      />
     </div>
   );
 }
 
 export function PrototypeSkillsPage({
-  initialTab = 'own',
-}: Readonly<{ initialTab?: SkillsTab }>) {
+  initialFilter = 'all',
+}: Readonly<{ initialFilter?: ListFilter }>) {
   const { role } = usePrototypeState();
   const person = personForRole(role);
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<SkillsTab>(initialTab);
+  const [filter, setFilter] = useState<ListFilter>(initialFilter);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const list = useSkillList(person);
+  const shownFilter = resolveFilter(filter, list.options);
 
   return (
     <AppLayout>
@@ -162,6 +146,11 @@ export function PrototypeSkillsPage({
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                 />
+                <ListFilterSelect
+                  value={shownFilter}
+                  options={list.options}
+                  onChange={setFilter}
+                />
                 <CreateSkillMenu
                   onCreateYourself={() => setIsCreateOpen(true)}
                 />
@@ -172,19 +161,17 @@ export function PrototypeSkillsPage({
         contentArea={
           <>
             <SkillsContent
-              tab={tab}
-              initialTab={initialTab === 'requests' ? 'own' : initialTab}
+              person={person}
+              filter={shownFilter}
               query={query}
-              onTabChange={setTab}
+              list={list}
             />
             <CreateSkillDialog
               key={isCreateOpen ? `open-${role}` : 'closed'}
               open={isCreateOpen}
               onOpenChange={setIsCreateOpen}
               options={ownerOptionsFor(person, role)}
-              onCreated={(owner) => {
-                if (owner.kind !== 'user') setTab('shared');
-              }}
+              onCreated={() => setFilter('all')}
             />
           </>
         }

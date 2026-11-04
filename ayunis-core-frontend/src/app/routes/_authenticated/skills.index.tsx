@@ -1,9 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { PrototypeSkillsPage } from '@/pages/skill-sharing-prototype';
+import {
+  PrototypeSkillsPage,
+  type ListFilter,
+} from '@/pages/skill-sharing-prototype';
 
 const searchSchema = z.object({
-  tab: z.enum(['own', 'shared', 'requests']).optional().catch(undefined),
+  filter: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/skills/')({
@@ -12,6 +15,8 @@ export const Route = createFileRoute('/_authenticated/skills/')({
 });
 
 function RouteComponent() {
-  const { tab = 'own' } = Route.useSearch();
-  return <PrototypeSkillsPage key={tab} initialTab={tab} />;
+  const { filter = 'all' } = Route.useSearch();
+  return (
+    <PrototypeSkillsPage key={filter} initialFilter={filter as ListFilter} />
+  );
 }
