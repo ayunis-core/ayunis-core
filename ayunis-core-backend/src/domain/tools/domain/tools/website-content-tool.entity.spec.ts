@@ -31,4 +31,12 @@ describe('WebsiteContentTool', () => {
       }),
     ).toThrow(/must be <= 2000/);
   });
+  it('accepts a 500-line page', () => {
+    expect(
+      tool.validateParams({
+        url: 'https://municipality.example/meeting',
+        numLines: 500,
+      }).numLines,
+    ).toBe(500);
+  });
 });

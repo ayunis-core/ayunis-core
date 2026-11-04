@@ -115,12 +115,14 @@ describe('WebsiteContentToolHandler', () => {
     );
 
     expect(result).toMatchObject({
-      actualEndLine: 600,
+      actualEndLine: 594,
       truncated: true,
       truncationReasons: ['max_chars'],
-      nextPage: { section: 'content', startLine: 601 },
+      nextPage: { section: 'content', startLine: 595 },
     });
-    expect(result.content.length).toBeLessThanOrEqual(60_000);
+    expect(JSON.stringify(result.content).length - 2).toBeLessThanOrEqual(
+      60_000,
+    );
   });
 
   it('returns the first content page and an actionable next-page input', async () => {

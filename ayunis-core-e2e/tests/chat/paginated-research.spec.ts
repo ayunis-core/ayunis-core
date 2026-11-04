@@ -82,7 +82,7 @@ test("completes multi-document and multi-website research with bounded tool resu
     expect(result.actualStartLine).toBe(1);
     expect(result.nextPage.startLine).toBeGreaterThan(1);
     expect(content.result.length).toBeLessThan(
-      content.toolName === "website_content" ? 62_000 : 7_000,
+      content.toolName === "website_content" ? 62_000 : 30_000,
     );
   }
 });

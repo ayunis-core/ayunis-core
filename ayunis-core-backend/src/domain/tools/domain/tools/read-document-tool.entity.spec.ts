@@ -40,13 +40,13 @@ describe('ReadDocumentTool', () => {
       expect(result).toMatchObject({ startLine: 201, numLines: 50 });
     });
 
-    it('should reject requests for more than 200 lines', () => {
+    it('should reject requests for more than 500 lines', () => {
       expect(() =>
         tool.validateParams({
           artifact_id: '550e8400-e29b-41d4-a716-446655440000',
-          numLines: 201,
+          numLines: 501,
         }),
-      ).toThrow(/must be <= 200/);
+      ).toThrow(/must be <= 500/);
     });
 
     it('should reject parameters missing artifact_id', () => {
@@ -65,5 +65,12 @@ describe('ReadDocumentTool', () => {
 
   it('should not return PII', () => {
     expect(tool.returnsPii).toBe(false);
+  });
+  it('accepts the shared 500-line page size', () => {
+    const result = new ReadDocumentTool().validateParams({
+      artifact_id: '550e8400-e29b-41d4-a716-446655440000',
+      numLines: 500,
+    });
+    expect(result.numLines).toBe(500);
   });
 });

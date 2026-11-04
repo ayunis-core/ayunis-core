@@ -15,13 +15,13 @@ const parseIntWithDefault = (
   defaultValue: number,
 ): number => {
   const parsed = parseInt(value || String(defaultValue), 10);
-  return Number.isNaN(parsed) ? defaultValue : parsed;
+  return Number.isNaN(parsed) || parsed <= 0 ? defaultValue : parsed;
 };
 
 export default registerAs('tools', (): ToolsConfig => ({
   sourceGetText: {
-    maxLines: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_LINES, 200),
-    maxChars: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_CHARS, 5000),
+    maxLines: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_LINES, 500),
+    maxChars: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_CHARS, 20000),
   },
   // Cleaned web pages up to ~15k tokens come back in one call; the line limit
   // is set high enough that the character limit is what bounds a page.
