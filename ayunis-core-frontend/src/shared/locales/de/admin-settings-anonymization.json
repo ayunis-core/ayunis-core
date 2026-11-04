@@ -78,7 +78,7 @@
       },
       "government_id": {
         "label": "Amtliche Kennnummern",
-        "description": "Sozialversicherungs-, Pass-, Führerschein- und Approbationsnummern",
+        "description": "Personal-, Sozialversicherungs-, Pass-, Führerschein- und Approbationsnummern",
         "placeholder": ".*muster.*",
         "example": "nimmt alle Werte aus, die „muster“ enthalten. Mit der Tastatureingabe | mehrere Werte angeben."
       },

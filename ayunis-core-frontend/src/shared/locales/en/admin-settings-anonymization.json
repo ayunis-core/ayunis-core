@@ -78,7 +78,7 @@
       },
       "government_id": {
         "label": "Government IDs",
-        "description": "Social security, passport, driver's license, and medical license numbers",
+        "description": "Personnel, social security, passport, driver's license, and medical license numbers",
         "placeholder": ".*muster.*",
         "example": "exempts all values containing “muster”. Use the | key to list several values."
       },
