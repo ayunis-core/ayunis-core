@@ -42,6 +42,31 @@ We normally need:
 - the client ID; and
 - the client secret.
 
+### Microsoft Entra ID (OIDC)
+
+Your IT team manages the Microsoft tenant and app registration. Ayunis manages
+the corresponding connection in our SSO broker. For Entra, please provide:
+
+| Value | Where to find it in your app registration |
+| --- | --- |
+| Application (client) ID | **Overview**. This is the client ID; do not send the Object ID or a Secret ID in its place. |
+| Directory (tenant) ID | **Overview**. It identifies your Microsoft directory, not an Ayunis organization. |
+| Client secret **value** and expiry | **Certificates & secrets**. Send the value securely; the Secret ID cannot authenticate the application. |
+| Issuer or discovery URL | Your tenant's OpenID Connect configuration. |
+
+Use a registration restricted to your intended tenant for this customer-specific
+connection. Register the exact callback supplied by Ayunis as a **Web** redirect
+URI. Callback URLs differ between SSO login versions and environments, so please
+confirm the supplied value rather than deriving it from the Ayunis website URL.
+See [Microsoft's app registration guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app).
+
+For our Microsoft provider integration, retain the **delegated** Microsoft
+Graph permissions `openid`, `profile`, `email`, and `User.Read`. Your IT team
+handles consent according to your tenant policy and makes the test users
+eligible to sign in. No application permissions or directory-wide read access
+are required for this setup. Follow the email and name claim configuration in
+[Zitadel's Microsoft integration guide](https://zitadel.com/docs/guides/integrate/identity-providers/azure-ad-oidc).
+
 ### SAML
 
 We normally need:
@@ -61,6 +86,12 @@ your IT team must register. Staging and production use separate values.
 For a successful login, the identity provider must return the user's work email
 address and confirm that the address is verified. The email domain must match
 one of the domains approved for your organization.
+
+For Microsoft connections, Ayunis configures the broker's email verification
+handling after reviewing the trusted tenant and domains. Your IT team does not
+need to find an equivalent Zitadel setting in Entra. Together we verify the
+result for both new users and users who tried signing in before setup was
+complete.
 
 Access to Ayunis Core remains subject to the available licenses or seats in your
 organization.
@@ -97,6 +128,8 @@ change and recovery options with your technical contact before enabling it.
 - [ ] Invite-only or automatic onboarding selected
 - [ ] Test users named
 - [ ] OIDC or SAML configuration prepared
+- [ ] For Entra: Application (client) ID and Directory (tenant) ID confirmed,
+      secret value exchanged securely, Web callback and delegated permissions checked
 - [ ] Secure channel agreed for sensitive information
 - [ ] Staging test completed, if applicable
 - [ ] Production acceptance test scheduled
@@ -105,3 +138,10 @@ change and recovery options with your technical contact before enabling it.
 
 Contact your Ayunis representative or [help@ayunis.com](mailto:help@ayunis.com).
 Please do not include credentials or other secrets in your message.
+
+If sign-in fails, send the attempt time and timezone, the Microsoft error code
+and request/correlation IDs if shown, and the final Ayunis error-page URL
+(`/sso/error?code=...`). Do not send intermediate authentication URLs containing
+authorization codes or tokens. A private browser window can help isolate a
+saved session, but an incorrect client ID or tenant must be corrected in the
+configuration.
