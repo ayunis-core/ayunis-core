@@ -9,8 +9,10 @@ import {
   type PermissionKey,
   type TeamAdminPermissionKey,
 } from './permissions';
+import { INITIAL_SHARES } from './share-fixtures';
 import { withDetails } from './skill-details';
 import type {
+  Iteration,
   LinkedKnowledge,
   LinkedSkill,
   OwnedItem,
@@ -27,6 +29,7 @@ import type {
 import { FAVORITE_WORKSPACE_ID, WORKSPACES } from './workspace-fixtures';
 
 export interface PrototypeState {
+  iteration: Iteration;
   role: Role;
   step: number;
   inactiveSkillIds: string[];
@@ -37,6 +40,7 @@ export interface PrototypeState {
   createdSkills: PrototypeSkill[];
   requests: TransferRequest[];
   transfers: Partial<Record<string, TransferTarget>>;
+  shares: Partial<Record<string, TransferTarget[]>>;
   permissions: Record<EditableOrgRole, PermissionKey[]>;
   deletedSkillIds: string[];
   createdKnowledgeItems: PrototypeKnowledge[];
@@ -51,10 +55,11 @@ export interface PrototypeState {
   mandatorySkillIds: string[];
 }
 
-const STORAGE_KEY = 'ayunis-sharing-prototype-v17';
+const STORAGE_KEY = 'ayunis-sharing-prototype-v18';
 
-function initialState(): PrototypeState {
+function initialState(iteration: Iteration = 1): PrototypeState {
   return {
+    iteration,
     role: 'member',
     step: 0,
     inactiveSkillIds: ['bebauungsplan', 'terminanfragen'],
@@ -110,6 +115,7 @@ function initialState(): PrototypeState {
       },
     ],
     transfers: {},
+    shares: INITIAL_SHARES,
     permissions: DEFAULT_PERMISSIONS,
     deletedSkillIds: [],
     createdKnowledgeItems: [],
@@ -181,6 +187,10 @@ export function setPrototypeRole(role: Role) {
 
 export function setPrototypeStep(step: number, role: Role) {
   update({ step, role });
+}
+
+export function setPrototypeIteration(iteration: Iteration, role: Role) {
+  update({ ...initialState(iteration), role });
 }
 
 export function toggleSkillActive(skillId: string) {
@@ -424,5 +434,9 @@ export function usePrototypeSkills(): PrototypeSkill[] {
 }
 
 export function resetPrototype() {
-  update(initialState());
+  update({
+    ...initialState(state.iteration),
+    step: state.step,
+    role: state.role,
+  });
 }

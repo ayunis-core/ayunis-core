@@ -11,6 +11,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { usePrototypeState } from '@/widgets/sharing-prototype/model/prototype-store';
 
 interface Home {
   owner: string;
@@ -47,6 +48,33 @@ const HOMES: Home[] = [
   },
 ];
 
+const ITERATION_1_HOMES: Home[] = [
+  {
+    owner: 'Organisation',
+    createdBy: 'Admins und alle mit dem Recht dazu',
+    usableBy: 'Alle in der Organisation',
+    editableBy: 'Admins und alle mit dem Recht dazu',
+  },
+  {
+    owner: 'Team',
+    createdBy: 'Team-Admins',
+    usableBy: 'Alle im Team',
+    editableBy: 'Team-Admins und Admins',
+  },
+  {
+    owner: 'Person',
+    createdBy: 'Jede Person',
+    usableBy: 'Sie selbst und alle, mit denen sie teilt',
+    editableBy: 'Nur sie',
+  },
+];
+
+const SHARE_FLOW = [
+  'Eine Person erstellt eine Fähigkeit. Sie gehört ihr.',
+  'Sie teilt sie im Tab „Freigaben“ mit ihren Teams oder der Organisation, wenn ihre Rolle das erlaubt.',
+  'Alle, mit denen sie geteilt ist, finden sie unter „Team und Organisation“ bei „Mit Ihnen geteilt“. Ändern kann sie weiterhin nur die Person.',
+];
+
 const REQUEST_FLOW = [
   'Eine Person erstellt eine Fähigkeit. Nur sie nutzt sie.',
   'Sie fragt an, die Fähigkeit an ihr Team oder an die Organisation zu übergeben.',
@@ -60,7 +88,7 @@ const WORKSPACE_FLOW = [
   'Alle Mitglieder nutzen sie. Ändern kann sie weiterhin nur, wem sie gehört.',
 ];
 
-function HomesTable() {
+function HomesTable({ homes }: Readonly<{ homes: Home[] }>) {
   return (
     <div className="rounded-lg border">
       <Table>
@@ -73,7 +101,7 @@ function HomesTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {HOMES.map((home) => (
+          {homes.map((home) => (
             <TableRow key={home.owner}>
               <TableCell className="font-medium">{home.owner}</TableCell>
               <TableCell>{home.createdBy}</TableCell>
@@ -102,6 +130,40 @@ function Flow({ title, steps }: Readonly<{ title: string; steps: string[] }>) {
   );
 }
 
+function ModelContent() {
+  const { iteration } = usePrototypeState();
+  if (iteration === 1) {
+    return (
+      <>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">So funktioniert es</h1>
+          <p className="text-muted-foreground">
+            Jede Fähigkeit gehört einer Person, einem Team oder der
+            Organisation. Wem sie gehört, bestimmt, wer sie nutzen und ändern
+            kann. Eigene Fähigkeiten lassen sich weiter teilen.
+          </p>
+        </div>
+        <HomesTable homes={ITERATION_1_HOMES} />
+        <Flow title="Teilen" steps={SHARE_FLOW} />
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">So funktioniert es</h1>
+        <p className="text-muted-foreground">
+          Jede Fähigkeit gehört genau einer Stelle. Wem sie gehört, bestimmt,
+          wer sie nutzen kann. Direkt geteilt wird nicht mehr.
+        </p>
+      </div>
+      <HomesTable homes={HOMES} />
+      <Flow title="Übergeben" steps={REQUEST_FLOW} />
+      <Flow title="Im Arbeitsbereich" steps={WORKSPACE_FLOW} />
+    </>
+  );
+}
+
 export function PrototypeModelPage() {
   return (
     <AppLayout>
@@ -116,16 +178,7 @@ export function PrototypeModelPage() {
         }
         contentArea={
           <div className="space-y-8">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold">So funktioniert es</h1>
-              <p className="text-muted-foreground">
-                Jede Fähigkeit gehört genau einer Stelle. Wem sie gehört,
-                bestimmt, wer sie nutzen kann. Direkt geteilt wird nicht mehr.
-              </p>
-            </div>
-            <HomesTable />
-            <Flow title="Übergeben" steps={REQUEST_FLOW} />
-            <Flow title="Im Arbeitsbereich" steps={WORKSPACE_FLOW} />
+            <ModelContent />
             <Button variant="outline" asChild>
               <Link to="/skills">Zu den Fähigkeiten</Link>
             </Button>

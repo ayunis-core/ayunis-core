@@ -37,7 +37,9 @@ import { isOwnSkill } from '@/pages/skill-sharing-prototype/lib/skill-meta';
 import { useDeleteKnowledgeWithConfirmation } from '@/pages/skill-sharing-prototype/model/useDeleteKnowledgeWithConfirmation';
 import { KnowledgeActiveSwitch } from './ActiveSwitch';
 import { DeleteSkillButton } from './DeleteSkillButton';
+import { ItemSharePanel } from './ItemSharePanel';
 import { LinkedWorkspacesSection } from './LinkedWorkspacesSection';
+import { OwnItemTabs, type OwnItemTab } from './OwnItemTabs';
 import { ReadOnlyBadge } from './ReadOnlyBadge';
 import { SkillAccessOverview } from './SkillAccessOverview';
 import { RequestStatus, ReviewBanner, TransferButton } from './SkillTransfer';
@@ -83,9 +85,9 @@ function RequestArea({
   item,
   person,
 }: Readonly<{ item: PrototypeKnowledge; person: Person }>) {
-  const { role, requests } = usePrototypeState();
+  const { role, requests, iteration } = usePrototypeState();
   const request = requestFor(requests, 'knowledge', item.id);
-  if (!request) return null;
+  if (!request || iteration === 1) return null;
   if (request.requestedBy === person.id) {
     return <RequestStatus request={request} />;
   }
@@ -104,18 +106,20 @@ function HeaderActions({
   isEditable: boolean;
 }>) {
   const navigate = useNavigate();
-  const { role, requests } = usePrototypeState();
+  const { role, requests, iteration } = usePrototypeState();
   const mayManageOwn = useHasPermission(role, 'manage_own_knowledge');
   const deleteAndLeave = useDeleteKnowledgeWithConfirmation(
     () => void navigate({ to: '/knowledge-bases' }),
   );
   const canTransfer =
-    isOwnSkill(item, person) && !requestFor(requests, 'knowledge', item.id);
+    iteration === 2 &&
+    isOwnSkill(item, person) &&
+    !requestFor(requests, 'knowledge', item.id);
   const canDelete = isEditable && (item.owner.kind !== 'user' || mayManageOwn);
   return (
     <>
       <HelpLink path="knowledge-collections/" />
-      {canUseSkill(item, person) && (
+      {canUseSkill(item, person, 'knowledge') && (
         <KnowledgeActiveSwitch knowledgeId={item.id} />
       )}
       {canTransfer && (
@@ -126,11 +130,62 @@ function HeaderActions({
   );
 }
 
+function KnowledgeBody({
+  item,
+  isEditable,
+}: Readonly<{ item: PrototypeKnowledge; isEditable: boolean }>) {
+  return (
+    <>
+      {isEditable && (
+        <KnowledgeBasePropertiesCard
+          key={item.id}
+          knowledgeBase={{ name: item.name, description: item.description }}
+          onUpdate={() => {
+            showSuccess('Änderungen gespeichert.');
+            return Promise.resolve();
+          }}
+        />
+      )}
+      <DocumentsCard item={item} isEditable={isEditable} />
+    </>
+  );
+}
+
+function KnowledgeMain({
+  item,
+  person,
+  isEditable,
+  initialTab,
+}: Readonly<{
+  item: PrototypeKnowledge;
+  person: Person;
+  isEditable: boolean;
+  initialTab?: OwnItemTab;
+}>) {
+  const { iteration } = usePrototypeState();
+  const body = <KnowledgeBody item={item} isEditable={isEditable} />;
+  if (iteration === 2 || !isOwnSkill(item, person)) return body;
+  return (
+    <OwnItemTabs
+      initialTab={initialTab}
+      config={body}
+      share={
+        <ItemSharePanel item={item} resource="knowledge" person={person} />
+      }
+    />
+  );
+}
+
 function KnowledgeDetail({
   item,
   person,
-}: Readonly<{ item: PrototypeKnowledge; person: Person }>) {
-  const { role } = usePrototypeState();
+  initialTab,
+}: Readonly<{
+  item: PrototypeKnowledge;
+  person: Person;
+  initialTab?: OwnItemTab;
+}>) {
+  const { role, iteration } = usePrototypeState();
   const isEditable = canEditSkill(item, person, role, 'knowledge');
 
   return (
@@ -161,18 +216,13 @@ function KnowledgeDetail({
             />
             <RequestArea item={item} person={person} />
           </div>
-          {isEditable && (
-            <KnowledgeBasePropertiesCard
-              key={item.id}
-              knowledgeBase={{ name: item.name, description: item.description }}
-              onUpdate={() => {
-                showSuccess('Änderungen gespeichert.');
-                return Promise.resolve();
-              }}
-            />
-          )}
-          <DocumentsCard item={item} isEditable={isEditable} />
-          {item.owner.kind !== 'workspace' && (
+          <KnowledgeMain
+            item={item}
+            person={person}
+            isEditable={isEditable}
+            initialTab={initialTab}
+          />
+          {iteration === 2 && item.owner.kind !== 'workspace' && (
             <LinkedWorkspacesSection
               resource="knowledge"
               itemId={item.id}
@@ -187,7 +237,8 @@ function KnowledgeDetail({
 
 export function PrototypeKnowledgeDetailPage({
   itemId,
-}: Readonly<{ itemId: string }>) {
+  initialTab,
+}: Readonly<{ itemId: string; initialTab?: OwnItemTab }>) {
   const { role } = usePrototypeState();
   const item = useKnowledgeItems().find((candidate) => candidate.id === itemId);
   const person = personForRole(role);
@@ -195,7 +246,7 @@ export function PrototypeKnowledgeDetailPage({
   return (
     <AppLayout>
       {item ? (
-        <KnowledgeDetail item={item} person={person} />
+        <KnowledgeDetail item={item} person={person} initialTab={initialTab} />
       ) : (
         <ContentAreaLayout
           contentHeader={

@@ -1,4 +1,4 @@
-import type { Role } from './types';
+import type { Iteration, Role } from './types';
 
 export interface JourneyStep {
   label: string;
@@ -7,7 +7,64 @@ export interface JourneyStep {
   path: string;
 }
 
-export const JOURNEY: JourneyStep[] = [
+const ITERATION_1_JOURNEY: JourneyStep[] = [
+  {
+    label: 'So funktioniert es',
+    hint: 'Fähigkeiten gehören einer Person, einem Team oder der Organisation. Eigene Fähigkeiten lassen sich weiter teilen, wie heute.',
+    role: 'member',
+    path: '/skills/so-funktioniert-es',
+  },
+  {
+    label: 'Admin: Rollen und Berechtigungen',
+    hint: 'Teilen ist jetzt nach Ziel getrennt: mit eigenen Teams oder mit der Organisation. Neu sind das Marketplace-Recht, „Arbeitsbereiche erstellen“ und eine eigene Card für Team-Admins.',
+    role: 'orgAdmin',
+    path: '/admin-settings/roles',
+  },
+  {
+    label: 'Admin: Team-Admins ernennen',
+    hint: 'Sabine macht Lena im Bürgerservice zur Team-Admin. Den letzten Team-Admin eines Teams können nur Admins ändern.',
+    role: 'orgAdmin',
+    path: '/admin-settings/teams/buergerservice',
+  },
+  {
+    label: 'Admin: Fähigkeit für die Organisation erstellen',
+    hint: 'Unter „Selbst erstellen“ wählt Sabine „Organisation“. Die Fähigkeit landet nicht bei ihren eigenen, sondern unter „Team und Organisation“.',
+    role: 'orgAdmin',
+    path: '/skills',
+  },
+  {
+    label: 'Admin: Fähigkeit für alle verpflichtend',
+    hint: 'Sabine macht den „Datenschutz-Check“ für alle verpflichtend. Bei allen anderen steht dann „Immer aktiv“ statt des Schalters. Das gilt in allen Chats, auch in Arbeitsbereichen.',
+    role: 'orgAdmin',
+    path: '/skills/datenschutz',
+  },
+  {
+    label: 'Team-Admin: eigenes Team verwalten',
+    hint: 'Über „Organisation“ im Avatar-Menü sieht Jonas dieselbe Teamverwaltung wie Admins, aber nur Bauamt und Bürgerservice.',
+    role: 'teamAdmin',
+    path: '/admin-settings/teams/bauamt',
+  },
+  {
+    label: 'Team-Admin: Fähigkeit für das Team erstellen',
+    hint: 'Unter „Selbst erstellen“ wählt Jonas, ob die Fähigkeit ihm oder einem seiner Teams gehört. Team-Fähigkeiten haben keine Integrationen.',
+    role: 'teamAdmin',
+    path: '/skills',
+  },
+  {
+    label: 'Mitarbeiterin: eigene Fähigkeit teilen',
+    hint: 'Wie heute teilt Lena eine eigene Fähigkeit im Tab „Freigaben“ mit ihren Teams oder der Organisation. Sie bleibt ihre, ändern kann sie nur Lena.',
+    role: 'member',
+    path: '/skills/mail-antworten?tab=share',
+  },
+  {
+    label: 'Mitarbeiterin: Team und Organisation',
+    hint: 'Hier steht, was Lenas Teams und der Organisation gehört. Was andere mit ihr geteilt haben, steht darunter unter „Mit Ihnen geteilt“.',
+    role: 'member',
+    path: '/skills?tab=shared',
+  },
+];
+
+const ITERATION_2_JOURNEY: JourneyStep[] = [
   {
     label: 'So funktioniert es',
     hint: 'Wem eine Fähigkeit gehört, bestimmt, wer sie nutzt. Geteilt wird nicht mehr direkt.',
@@ -141,3 +198,12 @@ export const JOURNEY: JourneyStep[] = [
     path: '/workspaces/haushalt-2027?tab=skills&dialog=transfer',
   },
 ];
+
+export const ITERATION_LABEL: Record<Iteration, string> = {
+  1: 'Iteration 1',
+  2: 'Iteration 2',
+};
+
+export function journeyFor(iteration: Iteration): JourneyStep[] {
+  return iteration === 1 ? ITERATION_1_JOURNEY : ITERATION_2_JOURNEY;
+}

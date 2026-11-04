@@ -29,6 +29,7 @@ import {
   workspaceDetailsOverride,
   workspaceSharesOverride,
 } from './prototype-store';
+import { isSharedWithPerson } from './prototype-shares';
 import { WORKSPACES } from './workspace-fixtures';
 
 export function personForRole(role: Role): Person {
@@ -183,9 +184,15 @@ export function linkedWorkspaceCount(
   ).length;
 }
 
-export function canUseSkill(item: OwnedItem, person: Person): boolean {
+export function canUseSkill(
+  item: OwnedItem,
+  person: Person,
+  resource: ResourceKind = 'skill',
+): boolean {
   return (
-    item.owner.kind === 'workspace' || skillGroupFor(item, person) !== null
+    item.owner.kind === 'workspace' ||
+    skillGroupFor(item, person) !== null ||
+    isSharedWithPerson(readState(), item, resource, person)
   );
 }
 

@@ -31,8 +31,10 @@ import { requestFor } from '@/pages/skill-sharing-prototype/lib/requests';
 import { useDeleteWithConfirmation } from '@/pages/skill-sharing-prototype/model/useDeleteWithConfirmation';
 import { ActiveSwitch } from './ActiveSwitch';
 import { DeleteSkillButton } from './DeleteSkillButton';
+import { ItemSharePanel } from './ItemSharePanel';
 import { LinkedWorkspacesSection } from './LinkedWorkspacesSection';
 import { MandatorySkillControl } from './MandatorySkillControl';
+import { OwnItemTabs, type OwnItemTab } from './OwnItemTabs';
 import { ReadOnlyBadge } from './ReadOnlyBadge';
 import { SkillAccessOverview } from './SkillAccessOverview';
 import { SkillReadOnlyContent } from './SkillReadOnlyContent';
@@ -164,14 +166,45 @@ function SkillBody({
   );
 }
 
+function SkillMain({
+  skill,
+  person,
+  isEditable,
+  initialTab,
+}: Readonly<{
+  skill: PrototypeSkill;
+  person: Person;
+  isEditable: boolean;
+  initialTab?: OwnItemTab;
+}>) {
+  const { iteration } = usePrototypeState();
+  const body = (
+    <SkillBody skill={skill} person={person} isEditable={isEditable} />
+  );
+  if (iteration === 2 || !isOwnSkill(skill, person)) return body;
+  return (
+    <OwnItemTabs
+      initialTab={initialTab}
+      config={body}
+      share={<ItemSharePanel item={skill} resource="skill" person={person} />}
+    />
+  );
+}
+
 function SkillDetail({
   skill,
   person,
-}: Readonly<{ skill: PrototypeSkill; person: Person }>) {
-  const { role, requests } = usePrototypeState();
+  initialTab,
+}: Readonly<{
+  skill: PrototypeSkill;
+  person: Person;
+  initialTab?: OwnItemTab;
+}>) {
+  const { role, requests, iteration } = usePrototypeState();
   const isEditable = canEditSkill(skill, person, role);
-  const request = requestFor(requests, 'skill', skill.id);
-  const canTransfer = isOwnSkill(skill, person) && !request;
+  const request =
+    iteration === 2 ? requestFor(requests, 'skill', skill.id) : undefined;
+  const canTransfer = iteration === 2 && isOwnSkill(skill, person) && !request;
   const mayManageOwn = useHasPermission(role, 'manage_own_skills');
   const canDelete = isEditable && (skill.owner.kind !== 'user' || mayManageOwn);
 
@@ -206,8 +239,13 @@ function SkillDetail({
               request={request}
             />
           </div>
-          <SkillBody skill={skill} person={person} isEditable={isEditable} />
-          {skill.owner.kind !== 'workspace' && (
+          <SkillMain
+            skill={skill}
+            person={person}
+            isEditable={isEditable}
+            initialTab={initialTab}
+          />
+          {iteration === 2 && skill.owner.kind !== 'workspace' && (
             <LinkedWorkspacesSection
               resource="skill"
               itemId={skill.id}
@@ -223,7 +261,10 @@ function SkillDetail({
   );
 }
 
-export function PrototypeSkillPage({ skillId }: Readonly<{ skillId: string }>) {
+export function PrototypeSkillPage({
+  skillId,
+  initialTab,
+}: Readonly<{ skillId: string; initialTab?: OwnItemTab }>) {
   const { role } = usePrototypeState();
   const skills = usePrototypeSkills();
   const skill = findSkill(skills, skillId);
@@ -232,7 +273,7 @@ export function PrototypeSkillPage({ skillId }: Readonly<{ skillId: string }>) {
   return (
     <AppLayout>
       {skill ? (
-        <SkillDetail skill={skill} person={person} />
+        <SkillDetail skill={skill} person={person} initialTab={initialTab} />
       ) : (
         <ContentAreaLayout
           contentHeader={

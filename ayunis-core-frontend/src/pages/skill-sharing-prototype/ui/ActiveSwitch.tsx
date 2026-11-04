@@ -12,6 +12,7 @@ import {
 } from '@/widgets/sharing-prototype/model/prototype-store';
 
 function AlwaysActiveBadge() {
+  const { iteration } = usePrototypeState();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -19,7 +20,9 @@ function AlwaysActiveBadge() {
       </TooltipTrigger>
       <TooltipContent>
         Ihre Verwaltung hat diese Fähigkeit für alle verpflichtend aktiviert.
-        Das gilt in allen Chats außerhalb von Arbeitsbereichen.
+        {iteration === 1
+          ? ' Das gilt in allen Chats, auch in Arbeitsbereichen.'
+          : ' Das gilt in allen Chats außerhalb von Arbeitsbereichen.'}
       </TooltipContent>
     </Tooltip>
   );

@@ -55,6 +55,7 @@ import {
   WorkspaceInstructionsPanel,
 } from './WorkspaceSimpleTabs';
 import { WorkspaceSkillsPanel } from './WorkspaceSkillsPanel';
+import { WorkspacesIterationNotice } from './WorkspacesIterationNotice';
 
 interface OpenDialog {
   target: AddTarget;
@@ -388,15 +389,26 @@ function NoAccess() {
   );
 }
 
-export function PrototypeWorkspacePage({
-  workspaceId,
-  tab,
-  dialog,
-}: Readonly<{
+interface WorkspacePageProps {
   workspaceId: string;
   tab: PrototypeWorkspaceTab;
   dialog?: WorkspaceDialog;
-}>) {
+}
+
+export function PrototypeWorkspacePage(props: Readonly<WorkspacePageProps>) {
+  const { iteration } = usePrototypeState();
+  return iteration === 1 ? (
+    <WorkspacesIterationNotice />
+  ) : (
+    <WorkspaceDetailPage {...props} />
+  );
+}
+
+function WorkspaceDetailPage({
+  workspaceId,
+  tab,
+  dialog,
+}: Readonly<WorkspacePageProps>) {
   const { role } = usePrototypeState();
   const person = personForRole(role);
   const workspace = allWorkspaces().find(

@@ -32,6 +32,7 @@ import type {
   PrototypeWorkspace,
 } from '@/widgets/sharing-prototype/model/types';
 import { WorkspaceFavoriteButton } from './WorkspaceFavoriteButton';
+import { WorkspacesIterationNotice } from './WorkspacesIterationNotice';
 
 function plural(count: number, singular: string, pluralForm: string): string {
   return `${count} ${count === 1 ? singular : pluralForm}`;
@@ -87,6 +88,11 @@ function WorkspaceListRow({
 }
 
 export function PrototypeWorkspacesPage() {
+  const { iteration } = usePrototypeState();
+  return iteration === 1 ? <WorkspacesIterationNotice /> : <WorkspacesList />;
+}
+
+function WorkspacesList() {
   const { role } = usePrototypeState();
   const mayCreate = useHasPermission(role, 'create_workspaces');
   const person = personForRole(role);

@@ -20,28 +20,86 @@ import {
 import { cn } from '@ayunis/ui/lib/cn';
 import { personForRole } from '@/widgets/sharing-prototype/model/access';
 import { ROLE_LABEL } from '@/widgets/sharing-prototype/model/fixtures';
-import { JOURNEY } from '@/widgets/sharing-prototype/model/journey';
+import {
+  ITERATION_LABEL,
+  journeyFor,
+} from '@/widgets/sharing-prototype/model/journey';
 import {
   resetPrototype,
+  setPrototypeIteration,
   setPrototypeRole,
   setPrototypeStep,
   usePrototypeState,
 } from '@/widgets/sharing-prototype/model/prototype-store';
-import type { Role } from '@/widgets/sharing-prototype/model/types';
+import type { Iteration, Role } from '@/widgets/sharing-prototype/model/types';
 
-const ROLES: Role[] = ['member', 'teamAdmin', 'orgAdmin', 'workspaceOwner'];
+const ITERATIONS: Iteration[] = [1, 2];
+
+const ITERATION_HINT: Record<Iteration, string> = {
+  1: 'Rollen, Team-Admins, Fähigkeiten für Team und Organisation. Teilen bleibt wie heute.',
+  2: 'Dazu Übergeben statt Teilen und Arbeitsbereiche mit Verknüpfen und Freigaben.',
+};
+
+function rolesFor(iteration: Iteration): Role[] {
+  return iteration === 1
+    ? ['member', 'teamAdmin', 'orgAdmin']
+    : ['member', 'teamAdmin', 'orgAdmin', 'workspaceOwner'];
+}
+
+function useJourney() {
+  const { iteration } = usePrototypeState();
+  return journeyFor(iteration);
+}
 
 function useGoToStep(): (step: number) => void {
   const router = useRouter();
+  const journey = useJourney();
   return (step) => {
-    const target = JOURNEY[step];
+    const target = journey[step];
     setPrototypeStep(step, target.role);
     router.history.push(target.path);
   };
 }
 
+function IterationSwitch() {
+  const router = useRouter();
+  const { iteration } = usePrototypeState();
+
+  const switchTo = (next: Iteration) => {
+    if (next === iteration) return;
+    const first = journeyFor(next)[0];
+    setPrototypeIteration(next, first.role);
+    router.history.push(first.path);
+  };
+
+  return (
+    <div className="space-y-2">
+      <span className="text-xs font-medium text-muted-foreground">Umfang</span>
+      <div className="grid grid-cols-2 gap-1">
+        {ITERATIONS.map((candidate) => (
+          <Button
+            key={candidate}
+            size="sm"
+            variant={candidate === iteration ? 'secondary' : 'ghost'}
+            className={cn(
+              'justify-start',
+              candidate === iteration && 'ring-1 ring-border',
+            )}
+            onClick={() => switchTo(candidate)}
+          >
+            {ITERATION_LABEL[candidate]}
+          </Button>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {ITERATION_HINT[iteration]}
+      </p>
+    </div>
+  );
+}
+
 function RoleSwitch() {
-  const { role } = usePrototypeState();
+  const { role, iteration } = usePrototypeState();
   const person = personForRole(role);
 
   return (
@@ -50,7 +108,7 @@ function RoleSwitch() {
         Ansicht als
       </span>
       <div className="grid grid-cols-2 gap-1">
-        {ROLES.map((candidate) => (
+        {rolesFor(iteration).map((candidate) => (
           <Button
             key={candidate}
             size="sm"
@@ -75,6 +133,7 @@ function RoleSwitch() {
 function StepMenu() {
   const { step } = usePrototypeState();
   const goToStep = useGoToStep();
+  const journey = useJourney();
 
   return (
     <DropdownMenu>
@@ -84,7 +143,7 @@ function StepMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        {JOURNEY.map((candidate, index) => (
+        {journey.map((candidate, index) => (
           <DropdownMenuItem
             key={candidate.label}
             onSelect={() => goToStep(index)}
@@ -106,13 +165,14 @@ function StepMenu() {
 function StepNavigation() {
   const { step } = usePrototypeState();
   const goToStep = useGoToStep();
-  const current = JOURNEY[step];
+  const journey = useJourney();
+  const current = journey[step];
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground">
-          Schritt {step + 1} von {JOURNEY.length}
+          Schritt {step + 1} von {journey.length}
         </span>
         <div className="flex items-center gap-1">
           <StepMenu />
@@ -129,7 +189,7 @@ function StepNavigation() {
             variant="outline"
             size="icon-sm"
             aria-label="Nächster Schritt"
-            disabled={step === JOURNEY.length - 1}
+            disabled={step === journey.length - 1}
             onClick={() => goToStep(step + 1)}
           >
             <ChevronRight />
@@ -146,7 +206,8 @@ function StepNavigation() {
 
 export function PresentationCard() {
   const [isOpen, setIsOpen] = useState(true);
-  const { step, role } = usePrototypeState();
+  const { step, role, iteration } = usePrototypeState();
+  const journey = journeyFor(iteration);
 
   return (
     <Card className="fixed right-4 bottom-4 z-50 w-[22rem] gap-0 p-3 shadow-lg">
@@ -154,7 +215,7 @@ export function PresentationCard() {
         <span className="truncate text-sm font-medium">
           {isOpen
             ? 'Präsentation'
-            : `${step + 1}. ${JOURNEY[step].label} · ${ROLE_LABEL[role]}`}
+            : `${ITERATION_LABEL[iteration]} · ${step + 1}. ${journey[step].label} · ${ROLE_LABEL[role]}`}
         </span>
         <Button
           variant="ghost"
@@ -167,7 +228,10 @@ export function PresentationCard() {
       </div>
       {isOpen && (
         <div className="mt-3 space-y-4">
-          <StepNavigation />
+          <IterationSwitch />
+          <div className="border-t pt-3">
+            <StepNavigation />
+          </div>
           <div className="border-t pt-3">
             <RoleSwitch />
           </div>

@@ -11,10 +11,13 @@ import {
   orgMemberCount,
   teamMemberCount,
 } from '@/widgets/sharing-prototype/model/access';
+import { itemSharesOf } from '@/widgets/sharing-prototype/model/prototype-shares';
+import { usePrototypeState } from '@/widgets/sharing-prototype/model/prototype-store';
 import type {
   Person,
   OwnedItem,
   ResourceKind,
+  TransferTarget,
 } from '@/widgets/sharing-prototype/model/types';
 import {
   orgEditorsSentence,
@@ -64,12 +67,36 @@ function submittedSentence(item: OwnedItem, person: Person): string | null {
     : `Eingereicht von ${findPerson(item.submittedBy).name}.`;
 }
 
+function joinGerman(parts: string[]): string {
+  if (parts.length < 2) return parts.join('');
+  return `${parts.slice(0, -1).join(', ')} und ${parts[parts.length - 1]}`;
+}
+
+function sharedTargetName(target: TransferTarget): string {
+  return target.kind === 'org'
+    ? 'der Organisation'
+    : `Team ${findTeam(target.teamId).name}`;
+}
+
+function useSharedSentence(
+  item: OwnedItem,
+  resource: ResourceKind,
+): string | null {
+  const state = usePrototypeState();
+  if (state.iteration !== 1 || item.owner.kind !== 'user') return null;
+  const targets = itemSharesOf(state, resource, item.id);
+  if (targets.length === 0) return null;
+  return `Geteilt mit ${joinGerman(targets.map(sharedTargetName))}.`;
+}
+
 export function SkillAccessOverview({
   skill,
   resource,
   person,
 }: Readonly<{ skill: OwnedItem; resource: ResourceKind; person: Person }>) {
+  const sharedSentence = useSharedSentence(skill, resource);
   const description = [
+    sharedSentence,
     accessSentence(skill, person, resource),
     submittedSentence(skill, person),
   ]

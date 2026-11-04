@@ -13,5 +13,6 @@ export const Route = createFileRoute('/_authenticated/skills/$id')({
 
 function RouteComponent() {
   const { id } = Route.useParams();
-  return <PrototypeSkillPage key={id} skillId={id} />;
+  const { tab } = Route.useSearch();
+  return <PrototypeSkillPage key={id} skillId={id} initialTab={tab} />;
 }

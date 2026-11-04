@@ -16,15 +16,16 @@ import type { PrototypeSkill } from '@/widgets/sharing-prototype/model/types';
 export function MandatorySkillControl({
   skill,
 }: Readonly<{ skill: PrototypeSkill }>) {
-  const { mandatorySkillIds } = usePrototypeState();
+  const { mandatorySkillIds, iteration } = usePrototypeState();
   const isMandatory = mandatorySkillIds.includes(skill.id);
   return (
     <Item variant="outline">
       <ItemContent>
         <ItemTitle>Für alle verpflichtend</ItemTitle>
         <ItemDescription>
-          Die Fähigkeit ist dann für alle in allen Chats außerhalb von
-          Arbeitsbereichen aktiv und lässt sich nicht ausschalten.
+          {iteration === 1
+            ? 'Die Fähigkeit ist dann für alle in allen Chats aktiv, auch in Arbeitsbereichen, und lässt sich nicht ausschalten.'
+            : 'Die Fähigkeit ist dann für alle in allen Chats außerhalb von Arbeitsbereichen aktiv und lässt sich nicht ausschalten.'}
         </ItemDescription>
       </ItemContent>
       <ItemActions>

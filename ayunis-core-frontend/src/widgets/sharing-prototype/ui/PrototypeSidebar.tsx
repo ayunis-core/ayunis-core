@@ -84,10 +84,12 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function useOpenRequestCount(): (resource: ResourceKind) => number {
-  const { role, requests } = usePrototypeState();
+  const { role, requests, iteration } = usePrototypeState();
   const person = personForRole(role);
   return (resource) =>
-    reviewableRequests(requests, resource, person, role).length;
+    iteration === 2
+      ? reviewableRequests(requests, resource, person, role).length
+      : 0;
 }
 
 function RequestBadge({ count }: Readonly<{ count: number }>) {

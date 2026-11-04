@@ -17,8 +17,8 @@ import {
 } from '@ayunis/ui/components/item';
 import { EmptyState } from '@/widgets/empty-state';
 import {
-  PERMISSION_GROUPS,
-  TEAM_ADMIN_PERMISSIONS,
+  permissionGroupsFor,
+  teamAdminPermissionsFor,
   type EditableOrgRole,
   type PermissionDef,
 } from '@/widgets/sharing-prototype/model/permissions';
@@ -130,7 +130,7 @@ function OrgPermissionRow({
 }
 
 function OrgRolesCard() {
-  const { permissions } = usePrototypeState();
+  const { permissions, iteration } = usePrototypeState();
   return (
     <Card>
       <CardHeader>
@@ -142,7 +142,7 @@ function OrgRolesCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <PermissionTable columns={ORG_COLUMNS}>
-          {PERMISSION_GROUPS.map((group) => (
+          {permissionGroupsFor(iteration).map((group) => (
             <Fragment key={group.title}>
               <PermissionGroupRow label={group.title} columns={4} />
               {group.permissions.map((permission) => (
@@ -161,7 +161,7 @@ function OrgRolesCard() {
 }
 
 function TeamAdminRolesCard() {
-  const { teamAdminPermissions } = usePrototypeState();
+  const { teamAdminPermissions, iteration } = usePrototypeState();
   return (
     <Card>
       <CardHeader>
@@ -172,7 +172,7 @@ function TeamAdminRolesCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <PermissionTable columns={TEAM_ADMIN_COLUMNS}>
-          {TEAM_ADMIN_PERMISSIONS.map((permission) => (
+          {teamAdminPermissionsFor(iteration).map((permission) => (
             <PermissionRow
               key={permission.key}
               label={

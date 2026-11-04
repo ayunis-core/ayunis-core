@@ -10,6 +10,7 @@ import {
   reviewableTeamIds,
   skillGroupFor,
 } from '@/widgets/sharing-prototype/model/access';
+import { isSharedWithPerson } from '@/widgets/sharing-prototype/model/prototype-shares';
 import {
   useHasPermission,
   usePrototypeSkills,
@@ -40,6 +41,7 @@ function matches(skill: PrototypeSkill, query: string): boolean {
 }
 
 function useSkillLists(person: Person, query: string) {
+  const state = usePrototypeState();
   const skills = usePrototypeSkills();
   const found = skills
     .filter((skill) => matches(skill, query))
@@ -48,7 +50,9 @@ function useSkillLists(person: Person, query: string) {
     own: found.filter((skill) => isOwnSkill(skill, person)),
     shared: found.filter(
       (skill) =>
-        !isOwnSkill(skill, person) && skillGroupFor(skill, person) !== null,
+        !isOwnSkill(skill, person) &&
+        (skillGroupFor(skill, person) !== null ||
+          isSharedWithPerson(state, skill, 'skill', person)),
     ),
   };
 }
@@ -91,12 +95,12 @@ function SkillsContent({
   query: string;
   onTabChange: (tab: SkillsTab) => void;
 }>) {
-  const { role, requests } = usePrototypeState();
+  const { role, requests, iteration } = usePrototypeState();
   const person = personForRole(role);
   const lists = useSkillLists(person, query);
   const teamIds = reviewableTeamIds(person, role, 'skill');
   const inbox = reviewableRequests(requests, 'skill', person, role);
-  const canReview = teamIds.length > 0;
+  const canReview = iteration === 2 && teamIds.length > 0;
   const mayUseMarketplace = useHasPermission(
     role,
     'install_marketplace_skills',

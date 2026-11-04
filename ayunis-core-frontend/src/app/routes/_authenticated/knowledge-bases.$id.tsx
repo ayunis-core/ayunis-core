@@ -13,5 +13,6 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
 
 function RouteComponent() {
   const { id } = Route.useParams();
-  return <PrototypeKnowledgeDetailPage key={id} itemId={id} />;
+  const { tab } = Route.useSearch();
+  return <PrototypeKnowledgeDetailPage key={id} itemId={id} initialTab={tab} />;
 }

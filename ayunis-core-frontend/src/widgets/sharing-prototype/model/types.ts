@@ -1,5 +1,7 @@
 export type Role = 'orgAdmin' | 'teamAdmin' | 'member' | 'workspaceOwner';
 
+export type Iteration = 1 | 2;
+
 export type WorkspaceAccess = 'owner' | 'manage' | 'edit' | 'use';
 
 export type MemberAccess = Exclude<WorkspaceAccess, 'owner'>;

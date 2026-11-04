@@ -1,7 +1,9 @@
 import { linkedWorkspaceCount } from '@/widgets/sharing-prototype/model/access';
+import { readState } from '@/widgets/sharing-prototype/model/prototype-store';
 import type { ResourceKind } from '@/widgets/sharing-prototype/model/types';
 
 export function linkedWarning(resource: ResourceKind, itemId: string): string {
+  if (readState().iteration === 1) return '';
   const count = linkedWorkspaceCount(resource, itemId);
   if (count === 0) return '';
   const places =

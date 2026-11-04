@@ -16,6 +16,7 @@ import {
   skillGroupFor,
 } from '@/widgets/sharing-prototype/model/access';
 import { useKnowledgeItems } from '@/widgets/sharing-prototype/model/prototype-knowledge';
+import { isSharedWithPerson } from '@/widgets/sharing-prototype/model/prototype-shares';
 import { usePrototypeState } from '@/widgets/sharing-prototype/model/prototype-store';
 import type {
   Person,
@@ -137,6 +138,7 @@ function SharedKnowledge({
 }
 
 function useKnowledgeLists(person: Person, query: string) {
+  const state = usePrototypeState();
   const items = useKnowledgeItems()
     .filter((item) => matches(item, query))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -144,7 +146,9 @@ function useKnowledgeLists(person: Person, query: string) {
     own: items.filter((item) => isOwnSkill(item, person)),
     shared: items.filter(
       (item) =>
-        !isOwnSkill(item, person) && skillGroupFor(item, person) !== null,
+        !isOwnSkill(item, person) &&
+        (skillGroupFor(item, person) !== null ||
+          isSharedWithPerson(state, item, 'knowledge', person)),
     ),
   };
 }
@@ -158,12 +162,12 @@ function KnowledgeContent({
   query: string;
   onTabChange: (tab: KnowledgeTab) => void;
 }>) {
-  const { role, requests } = usePrototypeState();
+  const { role, requests, iteration } = usePrototypeState();
   const person = personForRole(role);
   const lists = useKnowledgeLists(person, query);
   const teamIds = reviewableTeamIds(person, role, 'knowledge');
   const inbox = reviewableRequests(requests, 'knowledge', person, role);
-  const canReview = teamIds.length > 0;
+  const canReview = iteration === 2 && teamIds.length > 0;
   const shown = tab === 'requests' && !canReview ? 'own' : tab;
 
   return (

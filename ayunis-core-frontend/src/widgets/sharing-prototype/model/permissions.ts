@@ -1,4 +1,4 @@
-import type { Role } from './types';
+import type { Iteration, Role } from './types';
 
 export type OrgRole = 'user' | 'manager' | 'admin';
 
@@ -220,6 +220,67 @@ export const DEFAULT_PERMISSIONS: Record<EditableOrgRole, PermissionKey[]> = {
     'share_workspaces',
   ],
 };
+
+const ITERATION_2_ONLY: string[] = [
+  'request_skill_transfer_other_teams',
+  'review_all_skill_requests',
+  'request_knowledge_transfer_other_teams',
+  'review_all_knowledge_requests',
+  'share_workspaces',
+  'share_workspaces_org',
+  'team_review_requests',
+  'team_share_workspaces',
+];
+
+const ITERATION_1_COPY: Partial<
+  Record<PermissionKey, Omit<PermissionDef, 'key'>>
+> = {
+  request_skill_transfer: {
+    label: 'Mit eigenen Teams teilen',
+    hint: 'Eine eigene Fähigkeit mit Teams teilen, in denen man Mitglied ist. Alle im Team können sie dann nutzen. Ändern kann sie weiterhin nur, wem sie gehört.',
+  },
+  request_skill_transfer_org: {
+    label: 'Mit der Organisation teilen',
+    hint: 'Eine eigene Fähigkeit mit allen in der Organisation teilen. Ändern kann sie weiterhin nur, wem sie gehört.',
+  },
+  request_knowledge_transfer: {
+    label: 'Mit eigenen Teams teilen',
+    hint: 'Eine eigene Wissenssammlung mit Teams teilen, in denen man Mitglied ist. Alle im Team können sie dann nutzen. Ändern kann sie weiterhin nur, wem sie gehört.',
+  },
+  request_knowledge_transfer_org: {
+    label: 'Mit der Organisation teilen',
+    hint: 'Eine eigene Wissenssammlung mit allen in der Organisation teilen. Ändern kann sie weiterhin nur, wem sie gehört.',
+  },
+  create_workspaces: {
+    label: 'Arbeitsbereiche erstellen',
+    hint: 'Eigene Arbeitsbereiche anlegen. Ohne dieses Recht ist „Arbeitsbereich erstellen“ ausgeblendet.',
+  },
+};
+
+function isInIteration(key: string, iteration: Iteration): boolean {
+  return iteration === 2 || !ITERATION_2_ONLY.includes(key);
+}
+
+export function permissionGroupsFor(iteration: Iteration): PermissionGroup[] {
+  return PERMISSION_GROUPS.map((group) => ({
+    ...group,
+    permissions: group.permissions
+      .filter((permission) => isInIteration(permission.key, iteration))
+      .map((permission) =>
+        iteration === 1
+          ? { ...permission, ...ITERATION_1_COPY[permission.key] }
+          : permission,
+      ),
+  }));
+}
+
+export function teamAdminPermissionsFor(
+  iteration: Iteration,
+): PermissionInfo<TeamAdminPermissionKey>[] {
+  return TEAM_ADMIN_PERMISSIONS.filter((permission) =>
+    isInIteration(permission.key, iteration),
+  );
+}
 
 export function orgRoleOf(role: Role): OrgRole {
   return role === 'orgAdmin' ? 'admin' : 'user';

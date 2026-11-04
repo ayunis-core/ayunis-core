@@ -30,13 +30,23 @@ export function sharedSections<T extends OwnedItem>(
     title: 'Organisation',
     skills: skills.filter((skill) => skill.owner.kind === 'org'),
   };
-  return [...teams, org].filter((section) => section.skills.length > 0);
+  const sharedWithViewer = {
+    key: 'shared',
+    title: 'Mit Ihnen geteilt',
+    skills: skills.filter((skill) => skill.owner.kind === 'user'),
+  };
+  return [...teams, org, sharedWithViewer].filter(
+    (section) => section.skills.length > 0,
+  );
 }
 
 export function sharedSkillLabel(
   skill: OwnedItem,
   viewer: Person,
 ): string | null {
+  if (skill.owner.kind === 'user') {
+    return `Geteilt von ${findPerson(skill.owner.userId).name}`;
+  }
   if (skill.submittedBy === viewer.id) return 'Eingereicht von Ihnen';
   return skill.submittedBy
     ? `Eingereicht von ${findPerson(skill.submittedBy).name}`
