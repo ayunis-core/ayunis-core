@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFEmbeddedPage, PDFPage, degrees } from 'pdf-lib';
 
 /**
  * Composites content PDF pages onto letterhead background PDFs.
@@ -36,22 +36,20 @@ export class PdfLetterheadCompositor {
     const outputDoc = await PDFDocument.create();
     const contentPageCount = contentDoc.getPageCount();
 
-    const [embeddedFirstBg] = await outputDoc.embedPdf(firstBgDoc, [0]);
-    const embeddedContinuationBg = continuationBgDoc
-      ? (await outputDoc.embedPdf(continuationBgDoc, [0]))[0]
+    const firstBg = await this.embedBackground(outputDoc, firstBgDoc);
+    const continuationBg = continuationBgDoc
+      ? await this.embedBackground(outputDoc, continuationBgDoc)
       : null;
 
     for (let i = 0; i < contentPageCount; i++) {
       const isFirstPage = i === 0;
-      const embeddedBg = isFirstPage
-        ? embeddedFirstBg
-        : (embeddedContinuationBg ?? embeddedFirstBg);
+      const background = isFirstPage ? firstBg : (continuationBg ?? firstBg);
 
       const contentPage = contentDoc.getPage(i);
       const { width, height } = contentPage.getSize();
 
       const outputPage = outputDoc.addPage([width, height]);
-      outputPage.drawPage(embeddedBg, { x: 0, y: 0, width, height });
+      drawBackground(outputPage, background);
 
       const [embeddedContent] = await outputDoc.embedPdf(contentDoc, [i]);
       outputPage.drawPage(embeddedContent, { x: 0, y: 0, width, height });
@@ -64,4 +62,41 @@ export class PdfLetterheadCompositor {
     );
     return Buffer.from(outputBytes);
   }
+
+  private async embedBackground(
+    outputDoc: PDFDocument,
+    backgroundDoc: PDFDocument,
+  ): Promise<Background> {
+    const [page] = await outputDoc.embedPdf(backgroundDoc, [0]);
+    const rotation = backgroundDoc.getPage(0).getRotation().angle;
+    return { page, rotation: ((rotation % 360) + 360) % 360 };
+  }
+}
+
+interface Background {
+  page: PDFEmbeddedPage;
+  /** The source page's /Rotate, normalized to 0, 90, 180 or 270. */
+  rotation: number;
+}
+
+/**
+ * `embedPdf` ignores the source page's /Rotate, so a letterhead saved as a
+ * landscape MediaBox rotated to portrait would be drawn sideways. Undo the
+ * clockwise /Rotate by drawing counter-rotated around the matching corner.
+ */
+function drawBackground(target: PDFPage, { page, rotation }: Background) {
+  const { width, height } = target.getSize();
+  const placements: Record<number, { x: number; y: number }> = {
+    0: { x: 0, y: 0 },
+    90: { x: 0, y: height },
+    180: { x: width, y: height },
+    270: { x: width, y: 0 },
+  };
+  const isQuarterTurn = rotation % 180 !== 0;
+  target.drawPage(page, {
+    ...placements[rotation],
+    width: isQuarterTurn ? height : width,
+    height: isQuarterTurn ? width : height,
+    rotate: degrees(-rotation),
+  });
 }
