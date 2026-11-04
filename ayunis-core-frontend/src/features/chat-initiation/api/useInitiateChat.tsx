@@ -5,12 +5,14 @@ import {
   getWorkspacesControllerFindOneQueryKey,
   threadKnowledgeBasesControllerAddKnowledgeBase,
   threadMcpIntegrationsControllerAddMcpIntegration,
-  threadSourcesControllerAddFileSource,
+  threadSourcesControllerCompleteUpload,
+  threadSourcesControllerCreateUpload,
   threadsControllerFindOne,
   useThreadsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { uploadSourceFile } from '@/shared/lib/source-upload';
 import { showError } from '@/shared/lib/toast';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
@@ -48,7 +50,8 @@ interface PendingSource {
 }
 
 export type SourceUploadStatus =
-  | { kind: 'uploading' }
+  /** `progress` is the fraction of bytes stored so far, 0..1. */
+  | { kind: 'uploading'; progress: number }
   | { kind: 'processing' }
   | { kind: 'failed'; message: string };
 
@@ -161,10 +164,23 @@ export const useInitiateChat = (options?: {
     onSourceStatus?: (id: string, status: SourceUploadStatus) => void,
   ): Promise<void> {
     try {
-      await threadSourcesControllerAddFileSource(
-        threadId,
-        { file: source.file },
-        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+      const signal = AbortSignal.timeout(UPLOAD_TIMEOUT_MS);
+      const { file } = source;
+      await uploadSourceFile(
+        file,
+        {
+          createSession: (file, signal) =>
+            threadSourcesControllerCreateUpload(
+              threadId,
+              { fileName: file.name, mimeType: file.type, fileSize: file.size },
+              signal,
+            ),
+          complete: (uploadId, signal) =>
+            threadSourcesControllerCompleteUpload(threadId, uploadId, signal),
+        },
+        signal,
+        (progress) =>
+          onSourceStatus?.(source.id, { kind: 'uploading', progress }),
       );
       onSourceStatus?.(source.id, { kind: 'processing' });
     } catch (error) {
@@ -183,7 +199,9 @@ export const useInitiateChat = (options?: {
     sources: PendingSource[],
     onSourceStatus?: (id: string, status: SourceUploadStatus) => void,
   ): Promise<boolean> {
-    sources.forEach((s) => onSourceStatus?.(s.id, { kind: 'uploading' }));
+    sources.forEach((s) =>
+      onSourceStatus?.(s.id, { kind: 'uploading', progress: 0 }),
+    );
     try {
       await Promise.all(
         sources.map((source) =>

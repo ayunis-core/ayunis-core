@@ -102,6 +102,7 @@ export default function NewChatPage({
     file: File;
     status?: SourceResponseDtoStatus;
     processingError?: string;
+    uploadProgress?: number;
   };
   const [sources, setSources] = useState<LocalSource[]>([]);
 
@@ -114,12 +115,14 @@ export default function NewChatPage({
         ...source,
         status: SourceResponseDtoStatus.failed,
         processingError: status.message,
+        uploadProgress: undefined,
       };
     }
     return {
       ...source,
       status: SourceResponseDtoStatus.processing,
       processingError: undefined,
+      uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
     };
   }
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<

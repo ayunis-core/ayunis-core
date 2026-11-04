@@ -173,7 +173,9 @@
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another.",
-    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files."
+    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files.",
+    "uploading": "Uploading… {{percent}}%",
+    "uploadInterruptedError": "The upload was interrupted. Please try again."
   },
   "models": {
     "availableHeading": "Available models",

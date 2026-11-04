@@ -1,17 +1,16 @@
 import {
   getThreadsControllerFindOneQueryKey,
-  threadSourcesControllerAddFileSource,
+  threadSourcesControllerCompleteUpload,
+  threadSourcesControllerCreateUpload,
 } from '@/shared/api';
-import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { useTranslation } from 'react-i18next';
 import {
   useIsMutating,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-
-const UPLOAD_TIMEOUT_MS = 60_000;
 
 interface UseFileSourceProps {
   threadId?: string;
@@ -25,27 +24,34 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const mutationKey = ['createFileSource', threadId];
+  const { uploadAsync, uploads } = useDirectSourceUpload(
+    {
+      createSession: (file, signal) =>
+        threadSourcesControllerCreateUpload(
+          threadId ?? '',
+          { fileName: file.name, mimeType: file.type, fileSize: file.size },
+          signal,
+        ),
+      complete: (uploadId, signal) =>
+        threadSourcesControllerCompleteUpload(threadId ?? '', uploadId, signal),
+    },
+    {
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: getThreadsControllerFindOneQueryKey(threadId ?? ''),
+        }),
+    },
+  );
   const createFileSourceMutation = useMutation({
     mutationKey,
     retry: 0,
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ThreadSourcesControllerAddFileSourceBody;
-    }) =>
-      threadSourcesControllerAddFileSource(
-        id,
-        data,
-        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-      ),
+    mutationFn: ({ file }: UploadFileParams) => uploadAsync(file),
     onError: (error: unknown) => {
       handleSourceUploadError(error, t);
     },
-    onSettled: () => {
-      if (!threadId) return;
-      // Sending must stay blocked until the chat sees the new processing source.
+    onSettled: (_result, error) => {
+      if (!error || !threadId) return;
+      // Failed completion may still have committed; reconcile before allowing another send.
       return queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(threadId),
       });
@@ -57,9 +63,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       console.error('Thread ID is required');
       return;
     }
-
-    const data: ThreadSourcesControllerAddFileSourceBody = { file };
-    createFileSourceMutation.mutate({ id: threadId, data });
+    createFileSourceMutation.mutate({ file });
   }
 
   function createFileSourceAsync({ file }: UploadFileParams) {
@@ -67,9 +71,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       console.error('Thread ID is required');
       return;
     }
-
-    const data: ThreadSourcesControllerAddFileSourceBody = { file };
-    return createFileSourceMutation.mutateAsync({ id: threadId, data });
+    return createFileSourceMutation.mutateAsync({ file });
   }
 
   const activeUploads = useIsMutating({ mutationKey });
@@ -78,6 +80,8 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     createFileSource,
     createFileSourceAsync,
     isLoading: activeUploads > 0,
+    /** Keep placeholders until the uploaded sources appear in the refreshed thread. */
+    uploads,
     error: createFileSourceMutation.error,
     reset: createFileSourceMutation.reset,
   };

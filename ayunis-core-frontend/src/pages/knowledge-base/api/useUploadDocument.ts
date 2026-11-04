@@ -1,23 +1,37 @@
-import { useIsMutating, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
-  useKnowledgeBasesControllerAddDocument,
   getKnowledgeBasesControllerListDocumentsQueryKey,
+  knowledgeBaseUploadsControllerCompleteUpload,
+  knowledgeBaseUploadsControllerCreateUpload,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
-  const mutationKey = ['knowledgeBasesAddDocument', knowledgeBaseId];
 
-  const mutation = useKnowledgeBasesControllerAddDocument({
-    mutation: {
-      mutationKey,
-      onSuccess: (data) => {
-        void queryClient.invalidateQueries({
+  const { upload, uploads, isUploading } = useDirectSourceUpload(
+    {
+      createSession: (file, signal) =>
+        knowledgeBaseUploadsControllerCreateUpload(
+          knowledgeBaseId,
+          { fileName: file.name, mimeType: file.type, fileSize: file.size },
+          signal,
+        ),
+      complete: (uploadId, signal) =>
+        knowledgeBaseUploadsControllerCompleteUpload(
+          knowledgeBaseId,
+          uploadId,
+          signal,
+        ),
+    },
+    {
+      onSuccess: async (data) => {
+        await queryClient.invalidateQueries({
           queryKey:
             getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
         });
@@ -31,20 +45,9 @@ export function useUploadDocument(knowledgeBaseId: string) {
           showSuccess(t('detail.documents.uploadSuccess'));
         }
       },
-      onError: (error: unknown) => {
-        handleSourceUploadError(error, t);
-      },
+      onError: (error) => handleSourceUploadError(error, t),
     },
-  });
+  );
 
-  const uploadDocument = (file: Blob) => {
-    mutation.mutate({
-      id: knowledgeBaseId,
-      data: { file },
-    });
-  };
-
-  const activeUploads = useIsMutating({ mutationKey });
-
-  return { uploadDocument, isUploading: activeUploads > 0 };
+  return { uploadDocument: upload, isUploading, uploads };
 }

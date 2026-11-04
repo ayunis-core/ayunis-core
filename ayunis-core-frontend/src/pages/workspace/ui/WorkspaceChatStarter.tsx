@@ -35,6 +35,7 @@ type LocalSource = {
   file: File;
   status?: SourceResponseDtoStatus;
   processingError?: string;
+  uploadProgress?: number;
 };
 
 function applySourceStatus(
@@ -46,12 +47,14 @@ function applySourceStatus(
       ...source,
       status: SourceResponseDtoStatus.failed,
       processingError: status.message,
+      uploadProgress: undefined,
     };
   }
   return {
     ...source,
     status: SourceResponseDtoStatus.processing,
     processingError: undefined,
+    uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
   };
 }
 
