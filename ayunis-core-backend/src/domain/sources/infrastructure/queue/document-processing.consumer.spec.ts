@@ -90,11 +90,16 @@ const storedFiles = {
 
 const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
 
+const checkpoints = {
+  create: () => undefined,
+  cleanup: jest.fn().mockResolvedValue(undefined),
+};
+
 const sourceRepository = {
   findById: jest.fn(),
   save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
   refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
-  saveTextSource: jest
+  saveProcessingTextSourceContent: jest
     .fn<Promise<unknown>, [unknown, { text: string }]>()
     .mockResolvedValue(undefined),
   updateStatusConditionally: jest.fn(),
@@ -133,7 +138,7 @@ describe('DocumentProcessingConsumer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(true);
-    sourceRepository.saveTextSource.mockResolvedValue(undefined);
+    sourceRepository.saveProcessingTextSourceContent.mockResolvedValue(true);
     admitOrgProcessing.execute.mockResolvedValue(true);
 
     consumer = new DocumentProcessingConsumer(
@@ -148,7 +153,29 @@ describe('DocumentProcessingConsumer', () => {
       spreadsheetParser as never,
       admitOrgProcessing as never,
       new SourceProcessingHeartbeatService(sourceRepository as never),
+      checkpoints as never,
     );
+  });
+
+  it('cleans saved results when a resumed source has already failed', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.FAILED),
+    );
+    await consumer.process(makeJob());
+    expect(checkpoints.cleanup).toHaveBeenCalledWith(ORG_ID, SOURCE_ID);
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('does not index when deletion wins the final content update', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    sourceRepository.saveProcessingTextSourceContent.mockResolvedValueOnce(
+      false,
+    );
+    await consumer.process(makeJob());
+    expect(helper.index).not.toHaveBeenCalled();
+    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+    expect(checkpoints.cleanup).toHaveBeenCalledWith(ORG_ID, SOURCE_ID);
   });
 
   it('skips work when deletion wins before processing admission', async () => {
@@ -168,7 +195,9 @@ describe('DocumentProcessingConsumer', () => {
     await consumer.process(makeJob());
 
     expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(
+      sourceRepository.saveProcessingTextSourceContent,
+    ).not.toHaveBeenCalled();
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
@@ -306,8 +335,10 @@ describe('DocumentProcessingConsumer', () => {
 
     await consumer.process(makeJob());
 
-    // saveTextSource should never be called — we aborted before writing
-    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    // saveProcessingTextSourceContent should never be called — we aborted before writing
+    expect(
+      sourceRepository.saveProcessingTextSourceContent,
+    ).not.toHaveBeenCalled();
     // updateStatusConditionally should never be called either
     expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
     // MinIO file should be cleaned up
@@ -324,8 +355,8 @@ describe('DocumentProcessingConsumer', () => {
 
     await consumer.process(makeJob());
 
-    // saveTextSource should have been called (source was still processing at check time)
-    expect(sourceRepository.saveTextSource).toHaveBeenCalled();
+    // saveProcessingTextSourceContent should have been called (source was still processing at check time)
+    expect(sourceRepository.saveProcessingTextSourceContent).toHaveBeenCalled();
     // Conditional update was attempted
     expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
       SOURCE_ID,
@@ -345,7 +376,7 @@ describe('DocumentProcessingConsumer', () => {
 
     await consumer.process(makeJob());
 
-    expect(sourceRepository.saveTextSource).toHaveBeenCalled();
+    expect(sourceRepository.saveProcessingTextSourceContent).toHaveBeenCalled();
     expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
       SOURCE_ID,
       SourceStatus.PROCESSING,
@@ -372,10 +403,12 @@ describe('DocumentProcessingConsumer', () => {
       source.processingStartedAt = new Date();
       return true;
     });
-    sourceRepository.saveTextSource.mockImplementation(async (_, content) => {
-      savedText = content.text;
-      return source;
-    });
+    sourceRepository.saveProcessingTextSourceContent.mockImplementation(
+      async (_, content) => {
+        savedText = content.text;
+        return true;
+      },
+    );
     sourceRepository.updateStatusConditionally.mockImplementation(async () => {
       source.status = SourceStatus.READY;
       return true;
@@ -447,7 +480,8 @@ describe('DocumentProcessingConsumer', () => {
 
     await consumer.process(makeJob());
 
-    const [saved] = sourceRepository.saveTextSource.mock.calls[0];
+    const [saved] =
+      sourceRepository.saveProcessingTextSourceContent.mock.calls[0];
     expect((saved as FileSource).processingStartedAt).toEqual(
       fresh.processingStartedAt,
     );
@@ -460,8 +494,12 @@ describe('DocumentProcessingConsumer', () => {
         .mockResolvedValueOnce(makeSource())
         .mockResolvedValueOnce(makeSource(status));
       await consumer.process(makeJob());
-      expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+      expect(
+        sourceRepository.saveProcessingTextSourceContent,
+      ).not.toHaveBeenCalled();
       expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
+      expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+      expect(checkpoints.cleanup).toHaveBeenCalledWith(ORG_ID, SOURCE_ID);
     },
   );
 

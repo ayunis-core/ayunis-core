@@ -145,3 +145,13 @@ export class FileRetrieverUnauthorizedError extends FileRetrieverError {
     );
   }
 }
+
+export class PdfBatchTooLargeError extends FileRetrieverError {
+  constructor() {
+    super(
+      'A single PDF page exceeds the OCR batch byte limit',
+      FileRetrieverErrorCode.FILE_TOO_LARGE,
+      413,
+    );
+  }
+}

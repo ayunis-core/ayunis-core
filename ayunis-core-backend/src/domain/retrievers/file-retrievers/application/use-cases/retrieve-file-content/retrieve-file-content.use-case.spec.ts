@@ -67,7 +67,10 @@ describe('RetrieveFileContentUseCase', () => {
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
         { provide: ContextService, useValue: mockContextService },
         { provide: DocumentConverterPort, useValue: mockDocumentConverter },
-        { provide: TranscribeUseCase, useValue: mockTranscribeUseCase },
+        {
+          provide: TranscribeUseCase,
+          useValue: mockTranscribeUseCase,
+        },
         { provide: MsgParserPort, useValue: mockMsgParser },
         { provide: PreflightCheckUseCase, useValue: mockPreflightCheck },
         { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
