@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
@@ -56,12 +57,20 @@ export class UpdatePasswordUseCase {
       );
     }
 
-    user.passwordHash = await this.hashTextUseCase.execute(
+    const newHashedPassword = await this.hashTextUseCase.execute(
       new HashTextCommand(command.newPassword),
     );
-    await this.usersRepository.update(user);
+    await this.persistPasswordAndRevokeSessions(user, newHashedPassword);
+  }
 
-    await this.revokeOtherSessions(command.userId);
+  @Transactional()
+  private async persistPasswordAndRevokeSessions(
+    user: User,
+    newHashedPassword: string,
+  ): Promise<void> {
+    user.passwordHash = newHashedPassword;
+    await this.usersRepository.update(user);
+    await this.revokeOtherSessions(user.id);
   }
 
   private async assertCurrentPassword(

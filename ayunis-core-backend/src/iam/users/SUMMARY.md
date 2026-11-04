@@ -21,6 +21,8 @@ Public forgot-password keeps its generic response and consults the organization 
 
 Persistence adapters participating in synchronous `@Transactional()` paths resolve repositories through the ambient CLS transaction host at call time, with default-repository fallback for callers outside CLS. See [transaction enrollment](../../../TRANSACTIONS.md) for the convention and review checklist.
 
+Password reset and authenticated password changes commit credential updates and refresh-session revocation in one CLS transaction. Reset-token consumption participates in the same transaction. Reset revokes every refresh family; an authenticated change preserves the actor's current family and revokes the others. Refresh-token theft-response family revocation remains intentionally independent after the failed refresh transaction rolls back.
+
 **Usage visibility (AYC-1342).** Hiding individual usage does not restrict user deletion. Existing administrator and organization ownership checks still apply before deletion events or persistence changes.
 
 Organization user lists optionally include current team id/name summaries for administrators only. `FindUsersByOrgIdUseCase` calls the exported teams `FindTeamsByUserIdsAndOrgIdUseCase` through the existing teams-module dependency. The teams-owned repository loads memberships for the requested user page in one organization-scoped query. Other user lookup callers and non-administrator responses omit team summaries.
