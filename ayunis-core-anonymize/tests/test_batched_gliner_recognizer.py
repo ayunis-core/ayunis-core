@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from presidio_analyzer.chunkers import CharacterBasedTextChunker
 
 from app.batched_gliner_recognizer import BatchedGLiNERRecognizer
-from app.presidio_service import GLINER_BATCH_SIZE
+from app.presidio_service import GLINER_BATCH_SIZE, GLINER_ENTITY_MAPPING
 
 
 class BatchedGLiNERRecognizerTests(unittest.TestCase):
@@ -91,6 +91,35 @@ class BatchedGLiNERRecognizerTests(unittest.TestCase):
         results = recognizer.analyze("Anna anna@test.de", ["PERSON"])
 
         self.assertEqual([result.entity_type for result in results], ["PERSON"])
+
+    def test_maps_personnel_numbers_to_their_presidio_entity(self):
+        recognizer = _recognizer_without_a_loaded_model()
+        recognizer.gliner_labels = list(GLINER_ENTITY_MAPPING)
+        recognizer.model_to_presidio_entity_mapping = GLINER_ENTITY_MAPPING
+        recognizer.text_chunker = Mock()
+        recognizer.text_chunker.chunk.return_value = [
+            SimpleNamespace(text="Personalnummer 23423525", start=0)
+        ]
+        recognizer.gliner.inference.return_value = [
+            [
+                {
+                    "label": "Personalnummer",
+                    "start": 15,
+                    "end": 23,
+                    "score": 0.9,
+                }
+            ]
+        ]
+
+        results = recognizer.analyze(
+            "Personalnummer 23423525",
+            ["PERSONNEL_NUMBER"],
+        )
+
+        self.assertEqual(
+            [(result.entity_type, result.start, result.end) for result in results],
+            [("PERSONNEL_NUMBER", 15, 23)],
+        )
 
     def test_keeps_nested_same_type_spans_when_the_text_is_one_chunk(self):
         recognizer = _recognizer_without_a_loaded_model()

@@ -26,6 +26,7 @@ GLINER_ENTITY_MAPPING = {
     "url": "URL",
     "bank account number": "US_BANK_NUMBER",
     "medical record number": "MEDICAL_LICENSE",
+    "Personalnummer": "PERSONNEL_NUMBER",
 }
 
 
