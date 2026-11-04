@@ -1,3 +1,7 @@
+import { BatchedPdfOcrHandler } from './application/services/batched-pdf-ocr.handler';
+import { PdfOcrRequestPort } from './application/ports/file-retriever.handler';
+import { PdfBatcherPort } from './application/ports/pdf-batcher.port';
+import { PdfLibBatcherAdapter } from './infrastructure/adapters/pdf-lib-batcher.adapter';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './infrastructure/adapters/mistral-file-retriever.handler';
@@ -23,6 +27,9 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
   providers: [
     FileRetrieverRegistry,
     MistralFileRetrieverHandler,
+    BatchedPdfOcrHandler,
+    { provide: PdfOcrRequestPort, useExisting: MistralFileRetrieverHandler },
+    { provide: PdfBatcherPort, useClass: PdfLibBatcherAdapter },
     NpmPdfParseFileRetrieverHandler,
     GotenbergConverterService,
     RetrieveFileContentUseCase,
@@ -36,7 +43,7 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
       provide: FileRetrieverRegistry,
       useFactory: (
         npmPdfParseHandler: NpmPdfParseFileRetrieverHandler,
-        mistralHandler: MistralFileRetrieverHandler,
+        mistralHandler: BatchedPdfOcrHandler,
       ) => {
         const registry = new FileRetrieverRegistry();
         registry.registerHandler(
@@ -46,7 +53,7 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
         registry.registerHandler(FileRetrieverType.MISTRAL, mistralHandler);
         return registry;
       },
-      inject: [NpmPdfParseFileRetrieverHandler, MistralFileRetrieverHandler],
+      inject: [NpmPdfParseFileRetrieverHandler, BatchedPdfOcrHandler],
     },
   ],
   exports: [

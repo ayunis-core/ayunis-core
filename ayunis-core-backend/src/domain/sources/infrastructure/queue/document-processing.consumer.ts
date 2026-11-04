@@ -1,3 +1,8 @@
+import {
+  ProcessingStoppedError,
+  type ProcessingContext,
+} from 'src/common/types/processing-context';
+import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
@@ -50,6 +55,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
     private readonly heartbeat: SourceProcessingHeartbeatService,
+    private readonly checkpoints: ProcessingCheckpointService,
   ) {
     super();
   }
@@ -81,34 +87,18 @@ export class DocumentProcessingConsumer extends WorkerHost {
       if (!(await this.isAdmitted(job))) return;
 
       try {
-        if (!(await this.loadSourceOrSkip(sourceId, cleanupPath))) return;
+        if (!(await this.loadSourceOrSkip(sourceId, cleanupPath))) {
+          await this.cleanupCheckpoints(orgId, sourceId);
+          return;
+        }
 
-        const { text, chunks } = await this.heartbeat.run(sourceId, () =>
-          this.downloadAndExtractText(job.data),
-        );
-
-        // Guard: re-check the source still exists and is PROCESSING
-        // before writing content. Prevents resurrection of deleted sources.
-        const source = await this.reloadIfStillProcessing(
-          sourceId,
-          cleanupPath,
-        );
-        if (!source) return;
-
-        await this.updateSourceWithContent(source, text, chunks);
-        await processingStage('document.indexing', () =>
-          this.helper.index(sourceId, orgId, chunks),
-        );
-        await this.markSourceReady(sourceId, cleanupPath);
-
-        this.logger.log(
-          {
-            sourceId,
-            chunks: chunks.length,
-          },
-          'Document processing complete',
-        );
+        await this.processSource(job, cleanupPath);
       } catch (error) {
+        if (error instanceof ProcessingStoppedError) {
+          await this.cleanupMinioFile(cleanupPath);
+          await this.cleanupCheckpoints(orgId, sourceId);
+          return;
+        }
         this.logger.error(
           {
             sourceId,
@@ -122,10 +112,48 @@ export class DocumentProcessingConsumer extends WorkerHost {
           await this.helper.markFailed(sourceId, error);
           await this.helper.cleanupIndex(sourceId);
           await this.cleanupMinioFile(cleanupPath);
+          await this.cleanupCheckpoints(orgId, sourceId);
         }
         if (rethrow) throw rethrow;
       }
     });
+  }
+
+  private async processSource(
+    job: Job<DocumentProcessingJobData>,
+    cleanupPath: string | null,
+  ): Promise<void> {
+    const { sourceId, orgId } = job.data;
+    const { text, chunks } = await this.heartbeat.run(sourceId, () =>
+      this.downloadAndExtractText(job),
+    );
+
+    // Guard: re-check the source still exists and is PROCESSING
+    // before writing content. Prevents resurrection of deleted sources.
+    const source = await this.reloadIfStillProcessing(sourceId, cleanupPath);
+    if (!source) {
+      await this.cleanupCheckpoints(orgId, sourceId);
+      return;
+    }
+
+    if (!(await this.updateSourceWithContent(source, text, chunks))) {
+      await this.cleanupMinioFile(cleanupPath);
+      await this.cleanupCheckpoints(orgId, sourceId);
+      return;
+    }
+    await processingStage('document.indexing', () =>
+      this.helper.index(sourceId, orgId, chunks),
+    );
+    await this.markSourceReady(sourceId, cleanupPath);
+    await this.cleanupCheckpoints(orgId, sourceId);
+
+    this.logger.log(
+      {
+        sourceId,
+        chunks: chunks.length,
+      },
+      'Document processing complete',
+    );
   }
 
   private async isAdmitted(
@@ -189,18 +217,23 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   private async downloadAndExtractText(
-    jobData: DocumentProcessingJobData,
+    job: Job<DocumentProcessingJobData>,
   ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
     const { minioPath, fileName, fileType, expectedSize, expectedETag } =
-      jobData;
+      job.data;
 
     const fileBuffer = await processingStage('document.download', () =>
-      jobData.retainFile
+      job.data.retainFile
         ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
         : this.storedFiles.read(minioPath, expectedSize, expectedETag),
     );
+    const context = this.checkpoints.create(
+      job.data.orgId,
+      job.data.sourceId,
+      (completed) => job.updateProgress({ stage: 'extraction', completed }),
+    );
     const text = await processingStage('document.extraction', () =>
-      this.extractText(fileBuffer, fileName, fileType),
+      this.extractText(fileBuffer, fileName, fileType, context),
     );
 
     const splitResult = processingStage('document.splitting', () =>
@@ -226,6 +259,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     fileBuffer: Buffer,
     fileName: string,
     fileType: string,
+    processingContext?: ProcessingContext,
   ): Promise<string> {
     const detected = detectFileType(fileType, fileName);
     if (isCSVFile(detected)) {
@@ -252,6 +286,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         fileData: fileBuffer,
         fileName,
         fileType,
+        processingContext,
       }),
     );
     return result.pages.map((page) => page.text).join('\n');
@@ -288,8 +323,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
     source: TextSource,
     text: string,
     chunks: TextSourceContentChunk[],
-  ): Promise<void> {
-    await this.sourceRepository.saveTextSource(source, { text, chunks });
+  ): Promise<boolean> {
+    return this.sourceRepository.saveProcessingTextSourceContent(source, {
+      text,
+      chunks,
+    });
   }
 
   private async markSourceReady(
@@ -310,6 +348,17 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.helper.cleanupIndex(sourceId);
     }
     await this.cleanupMinioFile(cleanupPath);
+  }
+
+  private async cleanupCheckpoints(orgId: UUID, sourceId: UUID): Promise<void> {
+    try {
+      await this.checkpoints.cleanup(orgId, sourceId);
+    } catch (error) {
+      this.logger.warn(
+        { err: error as Error, sourceId },
+        'Failed to remove processing checkpoints',
+      );
+    }
   }
 
   private async cleanupMinioFile(cleanupPath: string | null): Promise<void> {

@@ -1,3 +1,9 @@
+import type { FileRetrieverProcessOptions } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
+import { createHash } from 'crypto';
+import {
+  ProcessingStoppedError,
+  type ProcessingContext,
+} from 'src/common/types/processing-context';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
@@ -130,8 +136,12 @@ export class RetrieveFileContentUseCase {
         command.fileData,
         command.fileName,
         command.fileType,
-        command.allowLocalPdfParsing,
-        command.pdfPageLimit,
+        {
+          allowLocalParsing: command.allowLocalPdfParsing,
+          pageLimit: command.pdfPageLimit,
+          context: command.processingContext,
+          cacheIdentity: command.cacheIdentity,
+        },
       );
     }
 
@@ -139,6 +149,7 @@ export class RetrieveFileContentUseCase {
       return await this.processOfficeDocument(
         command.fileData,
         command.fileName,
+        command.processingContext,
       );
     }
 
@@ -147,6 +158,7 @@ export class RetrieveFileContentUseCase {
         command.fileData,
         command.fileName,
         command.fileType,
+        command.processingContext,
       );
     }
 
@@ -223,6 +235,7 @@ export class RetrieveFileContentUseCase {
           fileType: mimeType,
           allowLocalPdfParsing: command.allowLocalPdfParsing,
           pdfPageLimit: command.pdfPageLimit,
+          processingContext: command.processingContext,
         }),
         emlDepth + 1,
       );
@@ -231,6 +244,9 @@ export class RetrieveFileContentUseCase {
         result.pages.map((page) => page.text).join('\n'),
       );
     } catch (error) {
+      // A stopped source is not a bad attachment: the remaining ones must not
+      // be converted either, and the consumer handles the stop.
+      if (error instanceof ProcessingStoppedError) throw error;
       this.logger.warn(
         { fileName: attachment.filename, err: error as Error },
         'Could not extract email attachment',
@@ -252,9 +268,14 @@ export class RetrieveFileContentUseCase {
     fileData: Buffer,
     fileName: string,
     mimeType: string,
-    allowLocalParsing = true,
-    pageLimit?: number,
+    options: FileRetrieverProcessOptions & { allowLocalParsing?: boolean } = {},
   ): Promise<FileRetrieverResult> {
+    const {
+      allowLocalParsing = true,
+      pageLimit,
+      context,
+      cacheIdentity,
+    } = options;
     const file = new File(fileData, fileName, mimeType);
     if (!this.config.mistral.apiKey) {
       if (!allowLocalParsing) {
@@ -266,7 +287,12 @@ export class RetrieveFileContentUseCase {
     }
 
     try {
-      return await this.processWithMistral(file, pageLimit);
+      return await this.processWithMistral(
+        file,
+        pageLimit,
+        context,
+        cacheIdentity,
+      );
     } catch (error) {
       if (!(error instanceof UnprocessableDocumentError)) throw error;
       if (!allowLocalParsing) throw error;
@@ -277,12 +303,15 @@ export class RetrieveFileContentUseCase {
   private processWithMistral(
     file: File,
     pageLimit?: number,
+    context?: ProcessingContext,
+    cacheIdentity?: string,
   ): Promise<FileRetrieverResult> {
     const handler = this.fileRetrieverRegistry.getHandler(
       FileRetrieverType.MISTRAL,
     );
-    if (pageLimit === undefined) return handler.processFile(file);
-    return handler.processFile(file, { pageLimit });
+    if (pageLimit === undefined && !context && !cacheIdentity)
+      return handler.processFile(file);
+    return handler.processFile(file, { pageLimit, context, cacheIdentity });
   }
 
   private async processLocalPdfFallback(
@@ -315,6 +344,7 @@ export class RetrieveFileContentUseCase {
   private async processOfficeDocument(
     fileData: Buffer,
     fileName: string,
+    context?: ProcessingContext,
   ): Promise<FileRetrieverResult> {
     const pdfBuffer = await this.documentConverter.convertToPdf(
       fileData,
@@ -328,7 +358,12 @@ export class RetrieveFileContentUseCase {
         fileType: MIME_TYPES.PDF,
       }),
     );
-    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
+    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF, {
+      context,
+      cacheIdentity: context
+        ? createHash('sha256').update(fileData).digest('hex')
+        : undefined,
+    });
   }
 
   /**
@@ -340,12 +375,14 @@ export class RetrieveFileContentUseCase {
     fileData: Buffer,
     fileName: string,
     mimeType: string,
+    processingContext?: ProcessingContext,
   ): Promise<FileRetrieverResult> {
     const transcript = await this.transcribeUseCase.execute(
       new TranscribeCommand({
         file: fileData,
         fileName,
         mimeType,
+        processingContext,
       }),
     );
     return new FileRetrieverResult([new FileRetrieverPage(transcript, 1)]);
