@@ -101,6 +101,8 @@ describe(ModelSettingsPage.name, () => {
       target: { value: 'Finance' },
     });
     expect(onSearchChange).toHaveBeenCalledWith('Finance');
+    fireEvent.click(screen.getByTestId('models-team-search-clear'));
+    expect(onSearchChange).toHaveBeenLastCalledWith('');
   });
 
   it('shows inherited policy and a no-match state', () => {

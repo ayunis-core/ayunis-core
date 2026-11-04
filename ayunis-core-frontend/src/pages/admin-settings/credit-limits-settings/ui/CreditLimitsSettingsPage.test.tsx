@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { defaultParseSearch } from '@tanstack/react-router';
 import type * as RouterModule from '@tanstack/react-router';
@@ -37,11 +37,13 @@ vi.mock('react-i18next', () => ({
     i18n: { language: 'en' },
   }),
 }));
+const navigate = vi.hoisted(() => vi.fn());
+
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const router = await importOriginal<typeof RouterModule>();
   return {
     ...router,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigate,
     Link: ({
       to,
       search,
@@ -99,5 +101,20 @@ describe('CreditLimitsSettingsPage', () => {
 
     render(<CreditLimitsSettingsPage filters={{ tab: 'teams', page: 1 }} />);
     expect(screen.queryByTestId('credit-limits-default-user')).toBeNull();
+  });
+
+  it('clears the search param and returns to page 1', () => {
+    navigate.mockClear();
+    render(
+      <CreditLimitsSettingsPage
+        filters={{ tab: 'teams', page: 3, search: 'finance' }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('credit-limits-search-clear'));
+    expect(navigate).toHaveBeenCalledWith({
+      to: '/admin-settings/credit-limits',
+      search: { tab: 'teams', page: 1, search: undefined },
+      replace: true,
+    });
   });
 });

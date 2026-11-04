@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@ayunis/ui/components/input';
+import { SearchField } from '@/shared/ui/search-field';
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import {
@@ -31,7 +31,7 @@ export function ModelTeamsTable({
   if (isError) return <p role="alert">{t('teams.loadError')}</p>;
   return (
     <div className="space-y-4">
-      <Input
+      <SearchField
         data-testid="models-team-search"
         aria-label={t('teams.search')}
         placeholder={t('teams.search')}

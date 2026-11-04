@@ -1,6 +1,5 @@
-import { Input } from '@ayunis/ui/components/input';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SearchField } from '@/shared/ui/search-field';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UsersSearchWidgetProps {
@@ -66,17 +65,15 @@ export function UsersSearchWidget({
   }, []);
 
   return (
-    <div className="relative flex-1 max-w-md">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-      <Input
-        ref={searchInputRef}
-        type="text"
-        placeholder={t(placeholderKey)}
-        value={displayValue}
-        onChange={handleChange}
-        className="pl-10"
-        data-testid={inputTestId}
-      />
-    </div>
+    <SearchField
+      ref={searchInputRef}
+      leadingIcon
+      wrapperClassName="flex-1 max-w-md"
+      placeholder={t(placeholderKey)}
+      value={displayValue}
+      onChange={handleChange}
+      className="pl-10"
+      data-testid={inputTestId}
+    />
   );
 }

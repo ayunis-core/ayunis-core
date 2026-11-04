@@ -139,6 +139,9 @@
       "next": "Next"
     },
     "hintTriggerLabel": "More information about {{label}}",
+    "search": {
+      "clear": "Clear search"
+    },
     "copy": {
       "label": "Copy {{label}}",
       "success": "Copied to clipboard",

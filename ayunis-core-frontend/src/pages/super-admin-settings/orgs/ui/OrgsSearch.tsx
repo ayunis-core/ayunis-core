@@ -1,7 +1,6 @@
-import { Input } from '@ayunis/ui/components/input';
 import { useNavigate } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SearchField } from '@/shared/ui/search-field';
 import { useState, useEffect, useRef } from 'react';
 
 interface OrgsSearchProps {
@@ -46,16 +45,14 @@ export default function OrgsSearch({ search }: Readonly<OrgsSearchProps>) {
   }, [searchValue, search, navigate]);
 
   return (
-    <div className="relative min-w-48 flex-1 max-w-md">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-      <Input
-        ref={searchInputRef}
-        type="text"
-        placeholder={t('search.placeholder')}
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        className="pl-10"
-      />
-    </div>
+    <SearchField
+      ref={searchInputRef}
+      leadingIcon
+      wrapperClassName="min-w-48 flex-1 max-w-md"
+      placeholder={t('search.placeholder')}
+      value={searchValue}
+      onChange={(e) => setSearchValue(e.target.value)}
+      className="pl-10"
+    />
   );
 }
