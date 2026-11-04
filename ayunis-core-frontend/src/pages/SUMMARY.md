@@ -18,6 +18,8 @@ The `super-admin-settings/users/` page provides a searchable cross-organization 
 
 Municipal SSO uses separate auth route slices for direct organization links, successful completion, and actionable failures. Every broker callback lands on one of these fixed application routes. SSO connections are managed by Superadmins rather than organization admins from Account Settings.
 
+Account settings reads authenticated SSO link status and offers Connect SSO only when the backend permits it; linked and JIT users see SSO connected. The account-link-required error sends users through local login back to account settings. Broker return query parameters never establish connected state: the card always reads persisted status.
+
 The Superadmin organization SSO tab configures one or more verified email domains for the same broker mapping, reviews the complete set before activation, and controls whether an active organization requires SSO. Enforcing SSO requires an explicit confirmation against the current mapping. For SSO-only organizations, login and invitation acceptance present the organization SSO action without password or password-reset controls.
 
 The Super Admin sidebar keeps incident tooling in a separate Operations group; Queue inspection opens the protected Bull Board route in a new tab.

@@ -22,7 +22,21 @@ export function SsoErrorPage({ code }: Readonly<SsoErrorPageProps>) {
         <TriangleAlert className="size-10 text-destructive" />
         <div className="flex w-full flex-col gap-3">
           <Button asChild>
-            <Link to="/login">{t('sso.error.backToLogin')}</Link>
+            <Link
+              data-testid="sso-error-login"
+              to="/login"
+              search={
+                errorKind === 'accountLinkRequired'
+                  ? { redirect: '/settings/account' }
+                  : {}
+              }
+            >
+              {t(
+                errorKind === 'accountLinkRequired'
+                  ? 'sso.error.signInToLink'
+                  : 'sso.error.backToLogin',
+              )}
+            </Link>
           </Button>
           <Button asChild variant="outline">
             <Link to="/password/forgot">{t('sso.error.resetPassword')}</Link>

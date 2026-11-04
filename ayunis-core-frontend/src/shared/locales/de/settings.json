@@ -99,6 +99,16 @@
         "unexpected": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
         "statusFailed": "Zwei-Faktor-Status konnte nicht geladen werden. Bitte laden Sie die Seite neu."
       }
+    },
+    "sso": {
+      "title": "Zentrale Anmeldung",
+      "description": "Verknüpfen Sie Ihr Arbeitskonto, um sich über Ihre Organisation anzumelden.",
+      "connectedDescription": "Ihr Arbeitskonto ist für die zentrale Anmeldung verknüpft.",
+      "connected": "SSO verknüpft",
+      "connect": "SSO verknüpfen",
+      "connecting": "Wird verbunden…",
+      "unavailable": "Die zentrale Anmeldung ist für dieses Konto nicht mehr verfügbar. Laden Sie die Seite neu.",
+      "error": "Die Verknüpfung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
     }
   },
   "general": {

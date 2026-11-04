@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
 import {
   FederatedIdentitiesRepository,
   FederatedIdentityAlreadyExistsError,
@@ -29,6 +30,10 @@ export class PostgresFederatedIdentitiesRepository extends FederatedIdentitiesRe
   ): Promise<FederatedIdentity | null> {
     const record = await this.records.findOne({ where: { issuer, subject } });
     return record ? this.mapper.toDomain(record) : null;
+  }
+
+  existsByUserIdAndIssuer(userId: UUID, issuer: string): Promise<boolean> {
+    return this.records.existsBy({ userId, issuer });
   }
 
   async create(identity: FederatedIdentity): Promise<FederatedIdentity> {

@@ -99,6 +99,16 @@
         "unexpected": "Something went wrong. Please try again.",
         "statusFailed": "Could not load the two-factor status. Please reload the page."
       }
+    },
+    "sso": {
+      "title": "Single sign-on",
+      "description": "Connect your work account to sign in with your organisation.",
+      "connectedDescription": "Your work account is connected for single sign-on.",
+      "connected": "SSO connected",
+      "connect": "Connect SSO",
+      "connecting": "Connecting…",
+      "unavailable": "Single sign-on is no longer available for this account. Reload and try again.",
+      "error": "Could not start linking. Please try again."
     }
   },
   "general": {

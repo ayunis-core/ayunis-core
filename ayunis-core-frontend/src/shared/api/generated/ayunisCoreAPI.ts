@@ -224,6 +224,7 @@ import type {
   SkillTemplateResponseDto,
   SkillsControllerFindAllParams,
   SourceCitationResponseDto,
+  SsoAccountLinkStatusResponseDto,
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
@@ -28290,6 +28291,93 @@ export const useSsoLoginControllerBackchannelLogout = <TError = unknown,
       > => {
       return useMutation(getSsoLoginControllerBackchannelLogoutMutationOptions(options), queryClient);
     }
+
+export const ssoAccountControllerGetStatus = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SsoAccountLinkStatusResponseDto>(
+      {url: `/auth/sso/link/status`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSsoAccountControllerGetStatusQueryKey = () => {
+    return [
+    `/auth/sso/link/status`
+    ] as const;
+    }
+
+
+export const getSsoAccountControllerGetStatusQueryOptions = <TData = Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSsoAccountControllerGetStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>> = ({ signal }) => ssoAccountControllerGetStatus(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SsoAccountControllerGetStatusQueryResult = NonNullable<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>>
+export type SsoAccountControllerGetStatusQueryError = unknown
+
+
+export function useSsoAccountControllerGetStatus<TData = Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoAccountControllerGetStatus<TData = Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoAccountControllerGetStatus<TData = Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSsoAccountControllerGetStatus<TData = Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoAccountControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSsoAccountControllerGetStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Revoke the current session and log out

@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import type { FederatedIdentity } from 'src/iam/sso/domain/federated-identity.entity';
 
 export class FederatedIdentityAlreadyExistsError extends Error {
@@ -8,6 +9,10 @@ export class FederatedIdentityAlreadyExistsError extends Error {
 }
 
 export abstract class FederatedIdentitiesRepository {
+  abstract existsByUserIdAndIssuer(
+    userId: UUID,
+    issuer: string,
+  ): Promise<boolean>;
   abstract findByIssuerAndSubject(
     issuer: string,
     subject: string,

@@ -48,6 +48,29 @@ Copy `.env.example` to `.env` (or export the vars) to override defaults:
 | `E2E_API_URL`  | derived from slot       | Backend URL (`3000 + N×10`).                   |
 | `E2E_MAIL_URL` | derived from slot       | Mailcatcher web/JSON API (`1080 + N×10`).      |
 
+### Local SSO broker
+
+The SSO account-linking spec hosts a signed OIDC broker at
+`http://localhost:4422`. Before starting the dedicated test stack, merge these
+test-only values into `ayunis-core-backend/.env.local` (preserve any existing
+settings):
+
+```dotenv
+SSO_OIDC_ISSUER=http://localhost:4422
+SSO_OIDC_CLIENT_ID=sso-link-e2e
+SSO_OIDC_CLIENT_SECRET=local-test-secret
+SSO_OIDC_CALLBACK_URL=http://localhost:3000/api/auth/sso/oidc/callback
+SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
+Use the slot-zero callback above: `./dev` applies `DEV_PORT_OFFSET`, so slot 2
+uses port 3020. Start the stack with `./dev up --slot 2 --e2e`, then run
+`pnpm --filter ayunis-core-e2e test --grep 'SSO account linking' --workers=1`.
+If the test backend is already running, restart that stack after changing its
+environment. Do not use this configuration with a real broker or production
+data. Only one broker spec can bind port 4422 at a time. CI supplies the same
+settings automatically; the spec closes its broker after the test.
+
 ## Architecture
 
 - **Worker-scoped orgs** — each Playwright worker registers its own org via

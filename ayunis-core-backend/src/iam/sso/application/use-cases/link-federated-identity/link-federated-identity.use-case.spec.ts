@@ -26,6 +26,7 @@ const OTHER_ORG_ID: UUID = 'b85c62a7-f2aa-4937-806b-c9db1b975ce4';
 describe(LinkFederatedIdentityUseCase.name, () => {
   const identities = {
     findByIssuerAndSubject: jest.fn(),
+    existsByUserIdAndIssuer: jest.fn(),
     create: jest.fn(),
   };
   const lock = { acquireIdentity: jest.fn(), acquireEmail: jest.fn() };

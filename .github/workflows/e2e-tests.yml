@@ -226,6 +226,13 @@ jobs:
           COOKIE_SECURE=false
           COOKIE_SAME_SITE=lax
 
+          # Local signed broker hosted by the SSO linking browser spec.
+          SSO_OIDC_ISSUER=http://localhost:4422
+          SSO_OIDC_CLIENT_ID=sso-link-e2e
+          SSO_OIDC_CLIENT_SECRET=local-test-secret
+          SSO_OIDC_CALLBACK_URL=http://localhost:3000/api/auth/sso/oidc/callback
+          SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
           # Legal acceptances created during registration
           TERMS_OF_SERVICE_VERSION=e2e-terms-v1
           PRIVACY_POLICY_VERSION=e2e-privacy-v1

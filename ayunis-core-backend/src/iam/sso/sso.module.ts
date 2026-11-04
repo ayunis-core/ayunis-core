@@ -47,6 +47,9 @@ import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/ss
 import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
 import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.use-case';
 import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { SsoAccountLinkPolicyService } from 'src/iam/sso/application/services/sso-account-link-policy.service';
+import { GetSsoAccountLinkStatusUseCase } from 'src/iam/sso/application/use-cases/get-sso-account-link-status/get-sso-account-link-status.use-case';
+import { SsoAccountController } from 'src/iam/sso/presenters/http/sso-account.controller';
 
 @Module({
   imports: [
@@ -66,6 +69,7 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
   controllers: [
     SuperAdminSsoConnectionsController,
     SsoLoginController,
+    SsoAccountController,
     LogoutController,
   ],
   providers: [
@@ -103,6 +107,8 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
     DiscoverOrgSsoUseCase,
     StartOrgSsoLoginUseCase,
     StartSsoAccountLinkUseCase,
+    SsoAccountLinkPolicyService,
+    GetSsoAccountLinkStatusUseCase,
     CompleteOrgSsoLoginUseCase,
     ProvisionOrgSsoUserUseCase,
     LinkFederatedIdentityUseCase,

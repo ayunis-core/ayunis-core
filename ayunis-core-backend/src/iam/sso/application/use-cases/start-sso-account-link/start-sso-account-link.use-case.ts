@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
+import { SsoAccountLinkPolicyService } from 'src/iam/sso/application/services/sso-account-link-policy.service';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
 import {
   SsoConnectionNotAvailableError,
@@ -14,7 +14,7 @@ export class StartSsoAccountLinkUseCase {
   private readonly logger = new Logger(StartSsoAccountLinkUseCase.name);
 
   constructor(
-    private readonly connections: OrgSsoConnectionsRepository,
+    private readonly policy: SsoAccountLinkPolicyService,
     private readonly authorizationTransactions: SsoAuthorizationTransactionService,
   ) {}
 
@@ -24,8 +24,11 @@ export class StartSsoAccountLinkUseCase {
       { userId: command.userId, orgId: command.orgId },
       'Starting SSO account linking',
     );
-    const connection = await this.connections.findByOrgId(command.orgId);
-    if (!connection?.enabled || !connection.zitadelOrgId) {
+    const { canLink, connection } = await this.policy.evaluate(
+      command.userId,
+      command.orgId,
+    );
+    if (!canLink || !connection?.zitadelOrgId) {
       throw new SsoConnectionNotAvailableError();
     }
     return this.authorizationTransactions.start({
