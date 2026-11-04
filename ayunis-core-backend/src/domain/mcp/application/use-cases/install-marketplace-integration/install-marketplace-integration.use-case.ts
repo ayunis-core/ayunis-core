@@ -17,39 +17,17 @@ import {
   ConfigField,
 } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
-/**
- * Runtime shape of the configSchema returned by the marketplace API.
- * The OpenAPI spec declares this as a generic object, so we cast at the boundary.
- */
-interface MarketplaceConfigSchemaDto {
-  authType: string;
-  orgFields: Array<{
-    key: string;
-    label: string;
-    type: 'text' | 'url' | 'secret';
-    headerName: string | null;
-    prefix: string | null;
-    required: boolean;
-    help: string | null;
-    value: string | null;
-  }>;
-  userFields: Array<{
-    key: string;
-    label: string;
-    type: 'text' | 'url' | 'secret';
-    headerName: string | null;
-    prefix: string | null;
-    required: boolean;
-    help: string | null;
-    value: string | null;
-  }>;
-  oauth?: {
-    clientRegistration: 'automatic' | 'static';
-    scopes?: string[];
-  };
-}
+import { isValidMcpServerUrl } from 'src/domain/mcp/domain/value-objects/mcp-server-url';
+import type {
+  IntegrationConfigFieldDto,
+  IntegrationConfigSchemaDto,
+  IntegrationResponseDto,
+} from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import {
   DuplicateMarketplaceMcpIntegrationError,
+  InvalidServerUrlError,
+  McpMissingRequiredConfigError,
+  McpValidationFailedError,
   UnexpectedMcpError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -166,10 +144,9 @@ export class InstallMarketplaceIntegrationUseCase {
   private async buildIntegration(
     command: InstallMarketplaceIntegrationCommand,
     orgId: UUID,
-    marketplace: Awaited<
-      ReturnType<GetMarketplaceIntegrationUseCase['execute']>
-    >,
+    marketplace: IntegrationResponseDto,
   ): Promise<MarketplaceMcpIntegration> {
+    const serverUrl = this.resolveServerUrl(marketplace, command.serverUrl);
     const configSchema = this.parseConfigSchema(marketplace.configSchema);
     const mergedValues = this.configService.mergeFixedValues(
       command.orgConfigValues,
@@ -192,14 +169,44 @@ export class InstallMarketplaceIntegrationUseCase {
       kind: McpIntegrationKind.MARKETPLACE,
       orgId,
       name: marketplace.name,
-      serverUrl: marketplace.serverUrl,
+      serverUrl,
       auth: this.authFactory.createAuth({ method: McpAuthMethod.NO_AUTH }),
       marketplaceIdentifier: command.identifier,
       configSchema,
       orgConfigValues,
       returnsPii: command.returnsPii,
       logoUrl: marketplace.logoUrl ?? null,
+      customerProvidesServerUrl: marketplace.customerProvidesServerUrl,
+      serverUrlHint: marketplace.serverUrlHint,
     });
+  }
+
+  private resolveServerUrl(
+    marketplace: IntegrationResponseDto,
+    requestedServerUrl: string | undefined,
+  ): string {
+    if (!marketplace.customerProvidesServerUrl) {
+      if (requestedServerUrl !== undefined) {
+        throw new McpValidationFailedError(
+          marketplace.identifier,
+          marketplace.name,
+          'The server URL is fixed by the marketplace.',
+          'serverUrl',
+        );
+      }
+      if (!marketplace.serverUrl) {
+        throw new UnexpectedMcpError(
+          `Marketplace integration '${marketplace.identifier}' has no server URL`,
+        );
+      }
+      return marketplace.serverUrl;
+    }
+    const serverUrl = requestedServerUrl?.trim();
+    if (!serverUrl) throw new McpMissingRequiredConfigError(['serverUrl']);
+    if (!isValidMcpServerUrl(serverUrl)) {
+      throw new InvalidServerUrlError(serverUrl);
+    }
+    return serverUrl;
   }
 
   private emitInstalled(userId: UUID, orgId: UUID, identifier: string): void {
@@ -221,9 +228,8 @@ export class InstallMarketplaceIntegrationUseCase {
   }
 
   private parseConfigSchema(
-    dto: Record<string, unknown>,
+    schema: IntegrationConfigSchemaDto,
   ): IntegrationConfigSchema {
-    const schema = dto as unknown as MarketplaceConfigSchemaDto;
     return {
       authType: schema.authType,
       orgFields: schema.orgFields.map((f) => this.parseConfigField(f)),
@@ -232,18 +238,16 @@ export class InstallMarketplaceIntegrationUseCase {
     };
   }
 
-  private parseConfigField(
-    field: MarketplaceConfigSchemaDto['orgFields'][number],
-  ): ConfigField {
+  private parseConfigField(field: IntegrationConfigFieldDto): ConfigField {
     return {
       key: field.key,
       label: field.label,
       type: field.type,
-      headerName: field.headerName ?? undefined,
-      prefix: field.prefix ?? undefined,
+      headerName: field.headerName,
+      prefix: field.prefix,
       required: field.required,
-      help: field.help ?? undefined,
-      value: field.value ?? undefined,
+      help: field.help,
+      value: field.value,
     };
   }
 }

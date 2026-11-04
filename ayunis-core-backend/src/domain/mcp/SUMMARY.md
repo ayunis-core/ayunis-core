@@ -8,11 +8,11 @@ The MCP module manages connections to external Model Context Protocol servers at
 **Use Cases:**
 
 - `CreateMcpIntegrationUseCase` — Creates predefined integrations or schema-configured custom integrations
-- `InstallMarketplaceIntegrationUseCase` — Installs a marketplace integration by identifier, persisting org-level config values and config schema
+- `InstallMarketplaceIntegrationUseCase` — Installs a marketplace integration by identifier, persisting org-level config values and config schema. Entries marked `customerProvidesServerUrl` require an http(s) `serverUrl` from the organization (stored with the flag and `serverUrlHint`); entries with a fixed URL reject one
 - `GetMcpIntegrationUseCase` — Fetches a single integration by ID
 - `ListOrgMcpIntegrationsUseCase` — Lists all integrations for the current org
 - `ListAvailableMcpIntegrationsUseCase` — Lists enabled integrations for the current org
-- `UpdateMcpIntegrationUseCase` — Updates integration settings (name, credentials, org config values, etc.)
+- `UpdateMcpIntegrationUseCase` — Updates integration settings (name, credentials, org config values, etc.). The server URL is editable for custom integrations and customer-provided marketplace integrations; changing it on an OAuth integration signs every user out, and a static OAuth client must be replaced in the same request
 - `DeleteMcpIntegrationUseCase` — Deletes an integration and its associated user configs
 - `EnableMcpIntegrationUseCase` / `DisableMcpIntegrationUseCase` — Toggles integration enabled state
 - `ValidateMcpIntegrationUseCase` — Validates connection to the MCP server
@@ -32,7 +32,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
 - `McpOAuthAuthorizationService` — Starts and completes per-user OAuth authorization and disconnects grants; transport failures during discovery, authorization, or token exchange surface as `McpOAuthServerUnreachableError` (502) with a privacy-safe `{ integrationId, stage, code }` log line; non-JSON responses (HTML login/error pages, malformed JSON), including HTTP error bodies consumed by the SDK, surface as `McpOAuthInvalidResponseError` (502) naming the failing request stage, with a `{ integrationId, stage, status, contentType }` log line; valid JSON OAuth errors and metadata discovery fallbacks remain SDK-owned, and classified errors do not retain body-bearing SDK causes
-- `McpOAuthClientConfigurationService` — Validates static client configuration and invalidates issuer-bound OAuth state when it changes
+- `McpOAuthClientConfigurationService` — Validates static client configuration and invalidates issuer-bound OAuth state when it changes; `resetAuthorization` drops all grants, pending sessions, and client registrations of an integration
 - `McpOAuthProviderFactory` — Implements the SDK OAuth provider with durable discovery, registration, PKCE, tokens, and locked refresh
 - `McpOAuthFetchService` — Applies HTTPS, private-address, DNS-pinning, and same-origin redirect protections to every server-side OAuth request and all MCP transport requests on cloud deployments
 

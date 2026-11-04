@@ -7,5 +7,6 @@ export class InstallMarketplaceIntegrationCommand {
       clientId: string;
       clientSecret?: string;
     },
+    public readonly serverUrl?: string,
   ) {}
 }

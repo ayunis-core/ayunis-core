@@ -96,6 +96,8 @@ export class MarketplaceController {
       logoUrl: integration.logoUrl ?? null,
       integrationCategoryId: integration.integrationCategoryId ?? null,
       serverUrl: integration.serverUrl,
+      customerProvidesServerUrl: integration.customerProvidesServerUrl,
+      serverUrlHint: integration.serverUrlHint,
       configSchema:
         integration.configSchema as unknown as MarketplaceIntegrationResponseDto['configSchema'],
       featured: integration.featured,

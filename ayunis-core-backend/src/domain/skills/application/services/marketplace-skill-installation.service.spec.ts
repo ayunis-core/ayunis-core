@@ -24,7 +24,7 @@ const marketplaceSkill: SkillResponseDto = {
   instructions:
     'You are a meeting summarization assistant. Analyze meeting notes.',
   skillCategoryId: null,
-  iconUrl: null,
+  iconName: null,
 } as SkillResponseDto;
 
 describe('MarketplaceSkillInstallationService', () => {
@@ -125,7 +125,6 @@ describe('MarketplaceSkillInstallationService', () => {
         identifier,
         name,
         shortDescription: `Short desc for ${name}`,
-        aiDescription: `AI desc for ${name}`,
       }) as SkillListResponseDto;
 
     const setupInstallMocks = (): void => {

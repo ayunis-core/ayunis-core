@@ -175,6 +175,14 @@
       "updating": "Wird aktualisiert...",
       "update": "Aktualisieren"
     },
+    "serverUrlChange": {
+      "title": "Alle müssen sich neu anmelden",
+      "description": "Wenn Sie die Server-URL ändern, werden alle Nutzenden dieser Integration abgemeldet. Jede Person muss ihr Konto erneut verbinden.",
+      "staticClientDescription": "Wenn Sie die Server-URL ändern, werden alle Nutzenden dieser Integration abgemeldet. Registrieren Sie einen neuen OAuth-Client auf dem neuen Server und geben Sie unten dessen Client-ID ein.",
+      "required": "Bitte geben Sie die Server-URL ein.",
+      "invalid": "Bitte geben Sie eine gültige URL ein, die mit http:// oder https:// beginnt.",
+      "oauthClientRequired": "Bitte geben Sie die Client-ID des OAuth-Clients ein, der auf dem neuen Server registriert ist."
+    },
     "deleteDialog": {
       "title": "Integration löschen",
       "description": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

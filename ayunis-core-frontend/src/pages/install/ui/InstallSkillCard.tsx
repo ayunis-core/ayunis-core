@@ -8,9 +8,10 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import { Bot } from 'lucide-react';
+import { DynamicIcon, iconNames, type IconName } from 'lucide-react/dynamic';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import type { MarketplaceSkillResponseDto } from '../api/useFetchMarketplaceSkill';
+import type { MarketplaceSkillResponseDto } from '@/pages/install/api/useFetchMarketplaceSkill';
 
 interface InstallSkillCardProps {
   skill: MarketplaceSkillResponseDto;
@@ -29,11 +30,11 @@ export function InstallSkillCard({
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          {skill.iconUrl ? (
-            <img
-              src={skill.iconUrl}
-              alt={skill.name}
-              className="h-10 w-10 rounded-full object-cover"
+          {isIconName(skill.iconName) ? (
+            <DynamicIcon
+              name={skill.iconName}
+              fallback={() => <Bot className="h-8 w-8 text-primary" />}
+              className="h-8 w-8 text-primary"
             />
           ) : (
             <Bot className="h-8 w-8 text-primary" />
@@ -66,4 +67,8 @@ export function InstallSkillCard({
       </CardFooter>
     </Card>
   );
+}
+
+function isIconName(name: string | null | undefined): name is IconName {
+  return !!name && (iconNames as string[]).includes(name);
 }

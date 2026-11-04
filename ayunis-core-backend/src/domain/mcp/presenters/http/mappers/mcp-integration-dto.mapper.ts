@@ -4,7 +4,7 @@ import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-inte
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
-import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
+import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
@@ -64,9 +64,7 @@ export class McpIntegrationDtoMapper {
         oauthClientConfigured,
       );
       if (integration instanceof MarketplaceMcpIntegration) {
-        baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
-        baseDto.logoUrl = integration.logoUrl;
-        baseDto.serverUrl = undefined;
+        this.applyMarketplaceFields(baseDto, integration);
       } else {
         baseDto.serverUrl = integration.serverUrl;
       }
@@ -79,6 +77,20 @@ export class McpIntegrationDtoMapper {
     }
 
     return baseDto;
+  }
+
+  private applyMarketplaceFields(
+    baseDto: McpIntegrationResponseDto,
+    integration: MarketplaceMcpIntegration,
+  ): void {
+    baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
+    baseDto.logoUrl = integration.logoUrl;
+    baseDto.customerProvidesServerUrl = integration.customerProvidesServerUrl;
+    baseDto.serverUrlHint = integration.serverUrlHint;
+    // A fixed marketplace URL is operated by the vendor and stays hidden.
+    baseDto.serverUrl = integration.customerProvidesServerUrl
+      ? integration.serverUrl
+      : undefined;
   }
 
   private applyConfigFields(

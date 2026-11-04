@@ -8,7 +8,6 @@ import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationNotConfigurableError,
-  InvalidServerUrlError,
   UnexpectedMcpError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -25,6 +24,10 @@ import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/m
 import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
 import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import {
+  assertServerUrlConfigurable,
+  validateServerUrlUpdate,
+} from 'src/domain/mcp/application/util/mcp-server-url-update.helper';
 import {
   type ConfigField,
   normalizeScopes,
@@ -60,21 +63,28 @@ export class UpdateMcpIntegrationUseCase {
       command.oauthClient,
     );
     this.validateConfigurationUpdate(integration, command);
+    const serverUrlChanged = validateServerUrlUpdate(
+      integration,
+      command.serverUrl,
+      command.oauthClient !== undefined,
+    );
     const removedUserFieldKeys = this.removedUserFieldKeys(
       integration,
       command.configSchema,
     );
 
+    // OAuth state is bound to the current server, so it is replaced before
+    // the new URL is committed: if this fails, the URL stays unchanged and a
+    // retry still detects the change.
+    await this.updateOAuthAuthorization(
+      integration,
+      oauthIntegration,
+      command.oauthClient,
+      serverUrlChanged,
+    );
     await this.applyUpdates(integration, command);
     const saved = await this.repository.save(integration);
     await this.removeDeletedUserConfigValues(saved, removedUserFieldKeys);
-
-    if (oauthIntegration && command.oauthClient) {
-      await this.oauthClientConfiguration.initialize(
-        oauthIntegration,
-        command.oauthClient,
-      );
-    }
 
     // Invalidate as soon as the new config is committed — the connection
     // validation below can take tens of seconds, while pooled sessions and
@@ -345,20 +355,29 @@ export class UpdateMcpIntegrationUseCase {
     serverUrl?: string,
   ): void {
     if (serverUrl === undefined) return;
-    if (!(integration instanceof CustomMcpIntegration)) {
-      throw new McpIntegrationNotConfigurableError(integration.id);
-    }
-    if (!this.isValidServerUrl(serverUrl)) {
-      throw new InvalidServerUrlError(serverUrl);
-    }
+    assertServerUrlConfigurable(integration);
     integration.updateServerUrl(serverUrl);
   }
 
-  private isValidServerUrl(serverUrl: string): boolean {
-    try {
-      return ['http:', 'https:'].includes(new URL(serverUrl).protocol);
-    } catch {
-      return false;
+  private async updateOAuthAuthorization(
+    integration: McpIntegration,
+    oauthIntegration: SchemaConfiguredMcpIntegration | undefined,
+    oauthClient: UpdateMcpIntegrationCommand['oauthClient'],
+    serverUrlChanged: boolean,
+  ): Promise<void> {
+    if (oauthIntegration && oauthClient) {
+      await this.oauthClientConfiguration.initialize(
+        oauthIntegration,
+        oauthClient,
+      );
+      return;
+    }
+    if (
+      serverUrlChanged &&
+      integration instanceof SchemaConfiguredMcpIntegration &&
+      integration.configSchema.oauth
+    ) {
+      await this.oauthClientConfiguration.resetAuthorization(integration);
     }
   }
 

@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto';
 import { McpOAuthClientConfigurationService } from './mcp-oauth-client-configuration.service';
-import type { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import type { McpOAuthClientRegistrationRepositoryPort } from '../ports/mcp-oauth-client-registration.repository.port';
-import type { McpOAuthPendingSessionRepositoryPort } from '../ports/mcp-oauth-pending-session.repository.port';
-import type { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
-import { aCustomMcpIntegration } from '../testing/mcp-integration.fixtures';
-import { McpValidationFailedError } from '../mcp.errors';
+import type { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import type { McpOAuthClientRegistrationRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-client-registration.repository.port';
+import type { McpOAuthPendingSessionRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-pending-session.repository.port';
+import type { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { McpValidationFailedError } from 'src/domain/mcp/application/mcp.errors';
 
 describe('McpOAuthClientConfigurationService', () => {
   const encryption = {
@@ -161,5 +161,29 @@ describe('McpOAuthClientConfigurationService', () => {
     expect(registrations.hasStaticRegistration).toHaveBeenCalledWith(
       integration.id,
     );
+  });
+
+  it('removes every OAuth grant, pending session, and client registration on reset', async () => {
+    const integration = aCustomMcpIntegration({
+      id: randomUUID(),
+      configSchema: {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: { clientRegistration: 'automatic' },
+      },
+    });
+
+    await service.resetAuthorization(integration);
+
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(integration);
+    expect(pendingSessions.deleteByIntegration).toHaveBeenCalledWith(
+      integration.id,
+    );
+    expect(tokens.deleteByIntegration).toHaveBeenCalledWith(integration.id);
+    expect(registrations.deleteByIntegration).toHaveBeenCalledWith(
+      integration.id,
+    );
+    expect(capabilityCache.invalidate).toHaveBeenCalledWith(integration.id);
   });
 });

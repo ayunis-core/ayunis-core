@@ -18094,7 +18094,7 @@
           },
           "serverUrl": {
             "type": "string",
-            "description": "Custom server URL (only for custom integrations)",
+            "description": "Server URL (custom integrations, and marketplace integrations whose URL the customer provides)",
             "example": "https://my-server.com/mcp"
           },
           "enabled": {
@@ -18198,6 +18198,15 @@
             "description": "Logo URL for marketplace integrations",
             "nullable": true,
             "example": "https://marketplace.ayunis.com/logos/oparl.png"
+          },
+          "customerProvidesServerUrl": {
+            "type": "boolean",
+            "description": "Whether the organization provides the server URL of this marketplace integration (only for marketplace integrations)"
+          },
+          "serverUrlHint": {
+            "type": "string",
+            "description": "Tells the organization which server URL to enter (only for marketplace integrations)",
+            "nullable": true
           },
           "description": {
             "type": "string",
@@ -18569,6 +18578,11 @@
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": false
           },
+          "serverUrl": {
+            "type": "string",
+            "description": "URL of the customer's own MCP server. Required when the marketplace entry lets the customer provide the server URL; rejected otherwise.",
+            "example": "https://projekte.stadt.de/mcp"
+          },
           "oauthClient": {
             "$ref": "#/components/schemas/McpOAuthClientDto"
           }
@@ -18741,9 +18755,9 @@
             "description": "Skill category ID",
             "nullable": true
           },
-          "iconUrl": {
+          "iconName": {
             "type": "string",
-            "description": "Icon URL",
+            "description": "Lucide icon name (kebab-case)",
             "nullable": true
           },
           "featured": {
@@ -18888,7 +18902,17 @@
           },
           "serverUrl": {
             "type": "string",
-            "description": "MCP server URL"
+            "description": "MCP server URL. Null when the customer provides the server URL at install time.",
+            "nullable": true
+          },
+          "customerProvidesServerUrl": {
+            "type": "boolean",
+            "description": "Whether the customer enters the URL of their own MCP server at install time"
+          },
+          "serverUrlHint": {
+            "type": "string",
+            "description": "Tells the customer which server URL to enter",
+            "nullable": true
           },
           "configSchema": {
             "description": "Configuration schema (authType, orgFields, userFields, oauth)",
@@ -18936,6 +18960,8 @@
           "shortDescription",
           "description",
           "serverUrl",
+          "customerProvidesServerUrl",
+          "serverUrlHint",
           "configSchema",
           "featured",
           "published",

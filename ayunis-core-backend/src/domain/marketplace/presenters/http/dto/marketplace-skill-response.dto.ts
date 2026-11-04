@@ -32,11 +32,11 @@ export class MarketplaceSkillResponseDto {
   skillCategoryId: string | null;
 
   @ApiPropertyOptional({
-    description: 'Icon URL',
+    description: 'Lucide icon name (kebab-case)',
     type: 'string',
     nullable: true,
   })
-  iconUrl: string | null;
+  iconName: string | null;
 
   @ApiProperty({ description: 'Whether the skill is featured' })
   featured: boolean;

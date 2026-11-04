@@ -11,6 +11,13 @@
     "required": "Erforderlich",
     "optional": "Optional"
   },
+  "serverUrl": {
+    "label": "Server-URL",
+    "placeholder": "https://example.com/mcp",
+    "description": "Die MCP-Adresse Ihrer eigenen Instanz dieses Dienstes.",
+    "required": "Bitte geben Sie die Server-URL ein.",
+    "invalid": "Bitte geben Sie eine gültige URL ein, die mit http:// oder https:// beginnt."
+  },
   "action": {
     "install": "Integration installieren",
     "installing": "Wird installiert…",

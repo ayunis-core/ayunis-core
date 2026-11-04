@@ -1,4 +1,4 @@
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -26,128 +26,21 @@ import type {
   UpdateIntegrationFormData,
 } from '@/pages/admin-settings/integrations-settings/model/types';
 import { useUpdateIntegration } from '@/pages/admin-settings/integrations-settings/api/useUpdateIntegration';
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
+import {
+  buildUpdatePayload,
+  resolveEditableOrgFields,
+} from '@/pages/admin-settings/integrations-settings/lib/build-update-integration-payload';
+import { describeServerUrlChange } from '@/pages/admin-settings/integrations-settings/lib/server-url-change';
 import { EditOAuthClientFields } from './edit-oauth-client-fields';
 import { EditCustomIntegrationDialog } from './edit-custom-integration-dialog';
+import { MarketplaceServerUrlField } from './marketplace-server-url-field';
+import { ServerUrlChangeNotice } from './server-url-change-notice';
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface ConfigSchema {
-  orgFields: MarketplaceIntegrationConfigFieldDto[];
-}
-
-function getEditableOrgFields(
-  integration: McpIntegration,
-): MarketplaceIntegrationConfigFieldDto[] {
-  const schema = integration.configSchema as ConfigSchema | undefined;
-  if (!schema?.orgFields) return [];
-  return schema.orgFields.filter(
-    (field) => field.value === null || field.value === undefined,
-  );
-}
-
-function resolveEditableOrgFields(
-  integration: McpIntegration | null,
-  isSchemaConfigured: boolean,
-): MarketplaceIntegrationConfigFieldDto[] {
-  if (!integration || !isSchemaConfigured) return [];
-  return getEditableOrgFields(integration);
-}
-
-function buildConfigPayload(
-  payload: UpdateIntegrationFormData,
-  editableFields: MarketplaceIntegrationConfigFieldDto[],
-  configFormValues: Record<string, string>,
-  currentOrgValues: Record<string, string>,
-): void {
-  const orgConfigValues: Record<string, string> = {};
-  let hasConfigChanges = false;
-
-  for (const field of editableFields) {
-    const value = configFormValues[field.key] ?? '';
-    if (field.type === 'secret') {
-      if (value.trim()) {
-        orgConfigValues[field.key] = value;
-        hasConfigChanges = true;
-      }
-    } else {
-      orgConfigValues[field.key] = value;
-      if (value !== (currentOrgValues[field.key] ?? '')) {
-        hasConfigChanges = true;
-      }
-    }
-  }
-
-  if (hasConfigChanges) {
-    payload.orgConfigValues = orgConfigValues;
-  }
-}
-
-function buildAuthPayload(
-  payload: UpdateIntegrationFormData,
-  data: UpdateIntegrationFormData,
-  integration: McpIntegration,
-): void {
-  const trimmedCredentials = data.credentials?.trim();
-  if (trimmedCredentials) {
-    payload.credentials = trimmedCredentials;
-  }
-
-  if (integration.authMethod === 'CUSTOM_HEADER') {
-    const trimmedHeaderName = data.authHeaderName?.trim();
-    if (trimmedHeaderName && trimmedHeaderName !== integration.authHeaderName) {
-      payload.authHeaderName = trimmedHeaderName;
-    }
-  }
-}
-
-interface BuildUpdatePayloadInput {
-  data: UpdateIntegrationFormData;
-  integration: McpIntegration;
-  isSchemaConfigured: boolean;
-  editableFields: MarketplaceIntegrationConfigFieldDto[];
-  configFormValues: Record<string, string>;
-  currentOrgValues: Record<string, string>;
-  hasStaticOAuthClient: boolean;
-}
-
-function buildUpdatePayload({
-  data,
-  integration,
-  isSchemaConfigured,
-  editableFields,
-  configFormValues,
-  currentOrgValues,
-  hasStaticOAuthClient,
-}: BuildUpdatePayloadInput): UpdateIntegrationFormData {
-  const payload: UpdateIntegrationFormData = {};
-  if (data.name && data.name !== integration.name) payload.name = data.name;
-
-  if (!isSchemaConfigured) {
-    buildAuthPayload(payload, data, integration);
-    return payload;
-  }
-
-  buildConfigPayload(
-    payload,
-    editableFields,
-    configFormValues,
-    currentOrgValues,
-  );
-  const clientId = data.oauthClientId?.trim();
-  if (hasStaticOAuthClient && clientId) {
-    const clientSecret = data.oauthClientSecret?.trim();
-    payload.oauthClient = {
-      clientId,
-      ...(clientSecret ? { clientSecret } : {}),
-    };
-  }
-  return payload;
 }
 
 function OptionalOAuthClientFields({
@@ -170,6 +63,7 @@ function useResetEditForm(
     if (integration && open) {
       form.reset({
         name: integration.name,
+        serverUrl: integration.serverUrl ?? '',
         authHeaderName: '',
         credentials: '',
         oauthClientId: '',
@@ -217,6 +111,7 @@ function LegacyEditIntegrationDialog({
   const form = useForm<UpdateIntegrationFormData>({
     defaultValues: {
       name: '',
+      serverUrl: '',
       authHeaderName: '',
       credentials: '',
       oauthClientId: '',
@@ -265,8 +160,23 @@ function LegacyEditIntegrationDialog({
     setConfigFormValues(initial);
   }
 
+  const serverUrl = useWatch({ control: form.control, name: 'serverUrl' });
+  const serverUrlChange =
+    integration?.customerProvidesServerUrl === true
+      ? describeServerUrlChange(integration, serverUrl ?? '')
+      : undefined;
+
   const handleSubmit = (data: UpdateIntegrationFormData) => {
     if (!integration) return;
+    if (
+      serverUrlChange?.requiresNewOAuthClient &&
+      !data.oauthClientId?.trim()
+    ) {
+      form.setError('oauthClientId', {
+        message: t('integrations.serverUrlChange.oauthClientRequired'),
+      });
+      return;
+    }
     const payload = buildUpdatePayload({
       data,
       integration,
@@ -329,6 +239,16 @@ function LegacyEditIntegrationDialog({
                   </FormItem>
                 )}
               />
+
+              {integration.customerProvidesServerUrl && (
+                <MarketplaceServerUrlField
+                  hint={integration.serverUrlHint}
+                  disabled={isUpdating}
+                />
+              )}
+              {serverUrlChange && (
+                <ServerUrlChangeNotice change={serverUrlChange} />
+              )}
 
               {isSchemaConfigured && editableFields.length > 0 && (
                 <div className="space-y-4">
