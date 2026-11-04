@@ -1,7 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { BedrockInferenceProviderFactory } from './bedrock.inference-provider';
-import { CLAUDE_MAX_OUTPUT_TOKENS } from 'src/domain/models/infrastructure/runtime/inference-config';
 import type { Model } from 'src/domain/models/domain/model.entity';
 
 const bedrockMock = jest.fn<ModelProvider, [unknown]>();
@@ -37,9 +36,8 @@ describe('BedrockInferenceProviderFactory', () => {
     expect(bedrockMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'eu.anthropic.claude-opus-5',
-        maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxTokens: 64_000,
       }),
     );
-    expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
   });
 });
