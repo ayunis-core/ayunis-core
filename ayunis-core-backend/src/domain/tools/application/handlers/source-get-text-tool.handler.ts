@@ -11,28 +11,10 @@ import {
 } from 'src/domain/tools/application/ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
-import {
-  TextExtractionTruncationReason,
-  validateTextExtraction,
-} from 'src/domain/tools/application/utils/text-extraction.utils';
+import { paginateSourceText } from 'src/domain/tools/application/utils/source-text-page.utils';
+import { serializeTextResult } from 'src/domain/tools/application/utils/tool-text-budget.utils';
 import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
-
-/** PostgreSQL max int for "read to end" when endLine is -1 */
-const MAX_END_LINE = 2147483647;
-
-interface SourceGetTextResult {
-  sourceId: string;
-  sourceName: string;
-  totalLines: number;
-  requestedStartLine: number;
-  requestedEndLine: number;
-  actualStartLine: number;
-  actualEndLine: number;
-  truncated: boolean;
-  truncationReasons: TextExtractionTruncationReason[];
-  text: string;
-}
 
 @Injectable()
 export class SourceGetTextToolHandler extends ToolExecutionHandler {
@@ -77,6 +59,7 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
     const {
       sourceId,
       startLine = 1,
+      startCharacter = 0,
       endLine = -1,
     } = tool.validateParams(input);
     const source = await this.getTextSource(sourceId as UUID, tool.name);
@@ -84,7 +67,10 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
       new ExtractTextLinesQuery({
         sourceId: source.id,
         startLine,
-        endLine: endLine === -1 ? MAX_END_LINE : endLine,
+        endLine: Math.min(
+          endLine === -1 ? Infinity : endLine,
+          startLine + this.config.sourceGetText.maxLines - 1,
+        ),
       }),
     );
     if (!dbResult) {
@@ -94,26 +80,23 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
-    const extraction = validateTextExtraction({
+    const { nextPosition, ...page } = paginateSourceText({
       toolName: tool.name,
       dbResult,
       startLine,
+      startCharacter,
       endLine,
       ...this.config.sourceGetText,
     });
-    const result: SourceGetTextResult = {
+    const result = {
       sourceId: source.id,
       sourceName: source.name,
-      totalLines: extraction.totalLines,
+      ...page,
       requestedStartLine: startLine,
       requestedEndLine: endLine,
-      actualStartLine: extraction.effectiveStartLine,
-      actualEndLine: extraction.effectiveEndLine,
-      truncated: extraction.truncated,
-      truncationReasons: extraction.truncationReasons,
-      text: extraction.extractedText,
+      nextPage: nextPosition ? { sourceId, endLine, ...nextPosition } : null,
     };
-    return JSON.stringify(result);
+    return serializeTextResult(result, tool.name);
   }
 
   private async getTextSource(

@@ -18,10 +18,10 @@ const readDocumentToolParameters = {
     },
     numLines: {
       type: 'integer' as const,
-      description: 'Number of lines to read. Defaults to 200. Maximum 200.',
+      description: 'Number of lines to read. Defaults to 500. Maximum 500.',
       minimum: 1,
-      maximum: 200,
-      default: 200,
+      maximum: 500,
+      default: 500,
     },
   },
   required: ['artifact_id'],

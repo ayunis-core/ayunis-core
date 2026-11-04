@@ -33,7 +33,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import { MsgParserPort } from 'src/domain/retrievers/file-retrievers/application/ports/msg-parser.port';
 import retrievalConfig from 'src/config/retrieval.config';
-import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeRecordingUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe-recording/transcribe-recording.use-case';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
@@ -87,7 +87,7 @@ export class RetrieveFileContentUseCase {
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,
     private readonly msgParser: MsgParserPort,
-    private readonly transcribeUseCase: TranscribeUseCase,
+    private readonly transcribeUseCase: TranscribeRecordingUseCase,
     private readonly preflightCheckUseCase: PreflightCheckUseCase,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,

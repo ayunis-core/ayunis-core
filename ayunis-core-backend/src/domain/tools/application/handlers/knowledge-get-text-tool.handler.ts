@@ -12,33 +12,14 @@ import {
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
-import {
-  TextExtractionTruncationReason,
-  validateTextExtraction,
-} from 'src/domain/tools/application/utils/text-extraction.utils';
+import { paginateSourceText } from 'src/domain/tools/application/utils/source-text-page.utils';
+import { serializeTextResult } from 'src/domain/tools/application/utils/tool-text-budget.utils';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
-
-/** PostgreSQL max int for "read to end" when endLine is -1 */
-const MAX_END_LINE = 2147483647;
-
-interface KnowledgeGetTextResult {
-  knowledgeBaseId: string;
-  documentId: string;
-  documentName: string;
-  totalLines: number;
-  requestedStartLine: number;
-  requestedNumLines: number;
-  actualStartLine: number;
-  actualEndLine: number;
-  truncated: boolean;
-  truncationReasons: TextExtractionTruncationReason[];
-  text: string;
-}
 
 @Injectable()
 export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
@@ -84,7 +65,8 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
       knowledgeBaseId,
       documentId,
       startLine = 1,
-      numLines = 100,
+      startCharacter = 0,
+      numLines = this.config.sourceGetText.maxLines,
     } = validated;
     const endLine = startLine + numLines - 1;
     const source = await this.getTextSource(
@@ -94,26 +76,31 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
       orgId,
       threadId,
     );
-    const extraction = await this.extractText(
+    const { nextPosition, ...page } = await this.extractText(
       tool.name,
       source,
       startLine,
       endLine,
+      startCharacter,
     );
-    return JSON.stringify(
-      this.buildResult({
+    return serializeTextResult(
+      {
         knowledgeBaseId,
         documentId,
         documentName: source.name,
-        totalLines: extraction.totalLines,
-        startLine,
-        numLines,
-        actualStartLine: extraction.effectiveStartLine,
-        actualEndLine: extraction.effectiveEndLine,
-        truncated: extraction.truncated,
-        truncationReasons: extraction.truncationReasons,
-        text: extraction.extractedText,
-      }),
+        ...page,
+        requestedStartLine: startLine,
+        requestedNumLines: numLines,
+        nextPage: nextPosition
+          ? {
+              knowledgeBaseId,
+              documentId,
+              numLines,
+              ...nextPosition,
+            }
+          : null,
+      },
+      tool.name,
     );
   }
 
@@ -122,12 +109,16 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     source: TextSource,
     startLine: number,
     endLine: number,
-  ): Promise<ReturnType<typeof validateTextExtraction>> {
+    startCharacter: number,
+  ): Promise<ReturnType<typeof paginateSourceText>> {
     const dbResult = await this.extractTextLinesUseCase.execute(
       new ExtractTextLinesQuery({
         sourceId: source.id,
         startLine,
-        endLine: endLine === -1 ? MAX_END_LINE : endLine,
+        endLine: Math.min(
+          endLine,
+          startLine + this.config.sourceGetText.maxLines - 1,
+        ),
       }),
     );
     if (!dbResult) {
@@ -137,11 +128,12 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
-    return validateTextExtraction({
+    return paginateSourceText({
       toolName,
       dbResult,
       startLine,
-      endLine,
+      startCharacter,
+      endLine: -1,
       ...this.config.sourceGetText,
     });
   }
@@ -205,33 +197,5 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
       message: error instanceof Error ? error.message : 'Unknown error',
       exposeToLLM: false,
     });
-  }
-
-  private buildResult(params: {
-    knowledgeBaseId: string;
-    documentId: string;
-    documentName: string;
-    totalLines: number;
-    startLine: number;
-    numLines: number;
-    actualStartLine: number;
-    actualEndLine: number;
-    truncated: boolean;
-    truncationReasons: TextExtractionTruncationReason[];
-    text: string;
-  }): KnowledgeGetTextResult {
-    return {
-      knowledgeBaseId: params.knowledgeBaseId,
-      documentId: params.documentId,
-      documentName: params.documentName,
-      totalLines: params.totalLines,
-      requestedStartLine: params.startLine,
-      requestedNumLines: params.numLines,
-      actualStartLine: params.actualStartLine,
-      actualEndLine: params.actualEndLine,
-      truncated: params.truncated,
-      truncationReasons: params.truncationReasons,
-      text: params.text,
-    };
   }
 }

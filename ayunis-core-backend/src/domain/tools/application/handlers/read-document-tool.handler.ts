@@ -1,3 +1,4 @@
+import { serializeTextResult } from 'src/domain/tools/application/utils/tool-text-budget.utils';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import {
@@ -120,6 +121,6 @@ export class ReadDocumentToolHandler extends ToolExecutionHandler {
         ? `Call read_document again with startLine ${page.nextStartLine} to continue.`
         : null,
     };
-    return JSON.stringify(result);
+    return serializeTextResult(result, tool.name);
   }
 }

@@ -1,3 +1,4 @@
+import { mockSourceReadingResponse } from './mock-source-reading-response';
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import { mockCodeExecutionResponse } from './mock-code-execution-response';
@@ -77,6 +78,7 @@ function mockToolResponse(
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
   return (
+    mockSourceReadingResponse(request, userText) ??
     mockCreateFileResponse(request, userText) ??
     mockCodeExecutionResponse(request, userText) ??
     mockImageEditResponse(request, userText)
