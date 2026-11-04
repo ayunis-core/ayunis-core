@@ -123,6 +123,22 @@ describe('useRunErrorHandler', () => {
     );
   });
 
+  it('explains that the model used its whole response budget without an answer', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message:
+        'Inference failed: model exhausted the output token limit without an answer',
+      threadId: 'thread-1',
+      timestamp: '2026-11-04T09:00:00.000Z',
+      code: 'INFERENCE_OUTPUT_LIMIT',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorOutputLimit');
+  });
+
   it.each(['unparseable_arguments', 'tool_disabled_fallback'])(
     'asks for a retry when the model produced an invalid tool call (%s)',
     (malformedReason) => {

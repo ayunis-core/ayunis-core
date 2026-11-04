@@ -29,6 +29,7 @@ import {
   InferenceImageTooLargeError,
   InferenceMalformedToolCallError,
 } from 'src/domain/models/application/models.errors';
+import { InferenceOutputLimitError } from 'src/domain/models/application/inference-output.errors';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -608,10 +609,6 @@ describe('adaptRunEventsToStream', () => {
       'model returned an empty response',
     ],
     ['Model provider returned no answer', 'model returned no answer'],
-    [
-      'Model provider exhausted the output token limit without an answer',
-      'model exhausted the output token limit without an answer',
-    ],
     ['Model provider refused the response', 'model refused the response'],
     [
       'Model provider paused the response; continuation is not supported',
@@ -664,6 +661,46 @@ describe('adaptRunEventsToStream', () => {
     },
   );
 
+  it('maps an exhausted output limit to an expected client error', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'PROVIDER_FAILED',
+          message:
+            'Model provider exhausted the output token limit without an answer',
+          modelCall: {
+            modelCallId: 'call-1',
+            runId: 'run-1',
+            turn: 1,
+            callSequence: 1,
+            trigger: 'initial',
+            provider: 'bedrock:eu.anthropic.claude-opus-5-5',
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+      createLoggerMock(),
+      runtimeModels('bedrock:eu.anthropic.claude-opus-5-5', {
+        name: 'claude-opus-5-5',
+        provider: 'bedrock',
+      } as LanguageModel),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'INFERENCE_OUTPUT_LIMIT',
+      statusCode: 400,
+      metadata: {
+        provider: 'bedrock',
+        modelId: 'claude-opus-5-5',
+        modelCallId: 'call-1',
+        completionRejection: 'output_limit',
+        modelTurn: 1,
+      },
+      constructor: InferenceOutputLimitError,
+    });
+  });
+
   it('classifies an empty terminal response from the real runtime', async () => {
     const provider: ModelProvider = {
       name: 'bedrock:eu.anthropic.claude-opus-5-5',
@@ -690,20 +727,12 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it.each([
-    [
-      'length',
-      'output_limit',
-      'model exhausted the output token limit without an answer',
-    ],
-    ['refusal', 'refusal', 'model refused the response'],
-    [
-      'pause_turn',
-      'pause_turn',
-      'model paused the response; continuation is not supported',
-    ],
+    ['length', 'output_limit', 'INFERENCE_OUTPUT_LIMIT'],
+    ['refusal', 'refusal', 'INFERENCE_FAILED'],
+    ['pause_turn', 'pause_turn', 'INFERENCE_FAILED'],
   ] as const)(
     'accounts a terminal %s before surfacing its classified failure',
-    async (finishReason, reason, message) => {
+    async (finishReason, reason, code) => {
       const collectCritical = jest.fn().mockResolvedValue(undefined);
       const observed: string[] = [];
       const model = {
@@ -740,10 +769,7 @@ describe('adaptRunEventsToStream', () => {
             },
           }),
         ]),
-      ).rejects.toMatchObject({
-        code: 'INFERENCE_FAILED',
-        message: `Inference failed: ${message}`,
-      });
+      ).rejects.toMatchObject({ code });
       expect(observed).toEqual([reason]);
       expect(collectCritical).toHaveBeenCalledWith(
         model,
