@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.66.0](https://github.com/ayunis-core/ayunis-core/compare/v2.65.1...v2.66.0) (2026-11-04)
+
+
+### Features
+
+* **auth:** add explicit sso account linking in settings (AYC-1174) ([#2166](https://github.com/ayunis-core/ayunis-core/issues/2166)) ([5e7f78a](https://github.com/ayunis-core/ayunis-core/commit/5e7f78a0468e3f31424a8f6d6cc03b9759b01228))
+* **knowledge-bases:** open the detail view after creating a personal knowledge base (AYC-1490) ([#2154](https://github.com/ayunis-core/ayunis-core/issues/2154)) ([9f49ae0](https://github.com/ayunis-core/ayunis-core/commit/9f49ae0e4fff7e933aa400d2de5fe56f40307bff))
+* **search:** add a clear control to search fields (AYC-1520) ([#2151](https://github.com/ayunis-core/ayunis-core/issues/2151)) ([9be014a](https://github.com/ayunis-core/ayunis-core/commit/9be014a93a08983f8cbe16bbe6860e77b2338594))
+
+
+### Bug Fixes
+
+* **anonymization:** cover personnel number context (AYC-1555) ([#2165](https://github.com/ayunis-core/ayunis-core/issues/2165)) ([d30022a](https://github.com/ayunis-core/ayunis-core/commit/d30022a9e1729b852719d81b82a2bec52cd1b40e))
+* **anonymization:** detect personnel numbers (AYC-1555) ([#2164](https://github.com/ayunis-core/ayunis-core/issues/2164)) ([61ae580](https://github.com/ayunis-core/ayunis-core/commit/61ae58007235e0524d1a557440d26d1f740c4a6f))
+* **artifacts:** honor letterhead page rotation in pdf export (AYC-1534) ([#2149](https://github.com/ayunis-core/ayunis-core/issues/2149)) ([c6779cd](https://github.com/ayunis-core/ayunis-core/commit/c6779cd5f3ad074527dabac1c2b09023cd62f69c))
+* **auth:** make password changes atomic with session revocation (AYC-1436) ([#2161](https://github.com/ayunis-core/ayunis-core/issues/2161)) ([4f3ffc1](https://github.com/ayunis-core/ayunis-core/commit/4f3ffc1877fa4eb8319d76e92cf99d5e588f3e22))
+* **chat:** preserve composer mode after submission (AYC-1573) ([#2159](https://github.com/ayunis-core/ayunis-core/issues/2159)) ([0f5c248](https://github.com/ayunis-core/ayunis-core/commit/0f5c248cfdd2483b482133f847f5863af4e5d03f))
+* **chat:** show a clear error when the model exhausts its output limit (AYC-1562) ([#2160](https://github.com/ayunis-core/ayunis-core/issues/2160)) ([b74ca41](https://github.com/ayunis-core/ayunis-core/commit/b74ca417b71c9195aaef1da9a92b773200852ba4))
+* **models:** raise the claude output-token limit to 64000 (AYC-1574) ([#2162](https://github.com/ayunis-core/ayunis-core/issues/2162)) ([b526135](https://github.com/ayunis-core/ayunis-core/commit/b526135f1934896bd8b6ed24b6412d8dd20805b7))
+* **tools:** authorize CSV inputs before code execution (AYC-1558) ([#2150](https://github.com/ayunis-core/ayunis-core/issues/2150)) ([eb68fba](https://github.com/ayunis-core/ayunis-core/commit/eb68fba3a3c8ad8090df2b70321d4690996ed532))
+
+
+### Documentation
+
+* **agent:** require scope traceability for UI changes (AYC-000) ([#2168](https://github.com/ayunis-core/ayunis-core/issues/2168)) ([76553b8](https://github.com/ayunis-core/ayunis-core/commit/76553b8f20e440cf26baaaef9ce0336745e48451))
+* **auth:** clarify microsoft sso onboarding (AYC-1174) ([#2153](https://github.com/ayunis-core/ayunis-core/issues/2153)) ([58cff1e](https://github.com/ayunis-core/ayunis-core/commit/58cff1e9e7e83554763b851577096ab5519c5e81))
+
+
+### CI/CD
+
+* **e2e:** stop merged-pr cleanup runs cancelling main e2e (AYC-000) ([#2167](https://github.com/ayunis-core/ayunis-core/issues/2167)) ([11bd5f5](https://github.com/ayunis-core/ayunis-core/commit/11bd5f56c60133191b05b8a5539a01d5fbfc6aa4))
+
 ## [2.65.1](https://github.com/ayunis-core/ayunis-core/compare/v2.65.0...v2.65.1) (2026-11-03)
 
 
