@@ -13003,6 +13003,25 @@
         "tags": ["SSO"]
       }
     },
+    "/auth/sso/link/status": {
+      "get": {
+        "operationId": "SsoAccountController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoAccountLinkStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["SSO"]
+      }
+    },
     "/auth/logout": {
       "post": {
         "operationId": "LogoutController_logout",
@@ -22589,6 +22608,18 @@
           }
         },
         "required": ["logout_token"]
+      },
+      "SsoAccountLinkStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "canLink": {
+            "type": "boolean"
+          },
+          "isLinked": {
+            "type": "boolean"
+          }
+        },
+        "required": ["canLink", "isLinked"]
       },
       "LogoutResponseDto": {
         "type": "object",

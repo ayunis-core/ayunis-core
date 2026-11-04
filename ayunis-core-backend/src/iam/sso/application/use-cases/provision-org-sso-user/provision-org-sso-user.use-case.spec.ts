@@ -32,6 +32,7 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
   };
   const identities = {
     findByIssuerAndSubject: jest.fn(),
+    existsByUserIdAndIssuer: jest.fn(),
     create: jest.fn(),
   };
   const lock = { acquireIdentity: jest.fn(), acquireEmail: jest.fn() };

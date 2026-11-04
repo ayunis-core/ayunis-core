@@ -116,6 +116,12 @@ By default, SSO is added alongside the existing Ayunis password login. If your
 organization requires SSO for all users, Ayunis can disable password login only
 after the SSO connection has been tested and approved.
 
+If you already have an Ayunis account and password login remains enabled,
+sign in with your password first. Open **Settings → Account**, select
+**Connect SSO**, and sign in with the matching work account. This one-time
+step confirms that both accounts belong to you. The page then shows
+**SSO connected**. Users created through SSO are already connected.
+
 Requiring SSO affects all users in the organization. Ayunis will review the
 change and recovery options with your technical contact before enabling it.
 

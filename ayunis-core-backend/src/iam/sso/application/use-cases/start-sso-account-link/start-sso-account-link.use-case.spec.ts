@@ -1,3 +1,7 @@
+import { ConfigService } from '@nestjs/config';
+import { SsoAccountLinkPolicyService } from 'src/iam/sso/application/services/sso-account-link-policy.service';
+import { aUser } from 'src/iam/users/application/testing/user.fixtures';
+import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import type { UUID } from 'crypto';
 import { createHash } from 'crypto';
 import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.command';
@@ -31,7 +35,24 @@ describe(StartSsoAccountLinkUseCase.name, () => {
       validateCallback: jest.fn(),
     };
     const useCase = new StartSsoAccountLinkUseCase(
-      connections,
+      new SsoAccountLinkPolicyService(
+        connections,
+        {
+          existsByUserIdAndIssuer: jest.fn().mockResolvedValue(false),
+          findByIssuerAndSubject: jest.fn(),
+          create: jest.fn(),
+        },
+        {
+          execute: jest.fn().mockResolvedValue(
+            aUser({
+              id: USER_ID,
+              orgId: SSO_TEST_ORG_ID,
+              email: 'staff@demo.com',
+            }),
+          ),
+        } as unknown as FindUserByIdUseCase,
+        new ConfigService({ ssoOidc: { issuer: 'https://broker.example' } }),
+      ),
       new SsoAuthorizationTransactionService(transactions, broker, {
         encrypt: jest.fn((value: string) => `encrypted:${value}`),
         decrypt: jest.fn(),
@@ -62,7 +83,24 @@ describe(StartSsoAccountLinkUseCase.name, () => {
       anEnabledSsoConnection({ enabled: false }),
     );
     const useCase = new StartSsoAccountLinkUseCase(
-      connections,
+      new SsoAccountLinkPolicyService(
+        connections,
+        {
+          existsByUserIdAndIssuer: jest.fn().mockResolvedValue(false),
+          findByIssuerAndSubject: jest.fn(),
+          create: jest.fn(),
+        },
+        {
+          execute: jest.fn().mockResolvedValue(
+            aUser({
+              id: USER_ID,
+              orgId: SSO_TEST_ORG_ID,
+              email: 'staff@demo.com',
+            }),
+          ),
+        } as unknown as FindUserByIdUseCase,
+        new ConfigService({ ssoOidc: { issuer: 'https://broker.example' } }),
+      ),
       new SsoAuthorizationTransactionService(
         { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },
         { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },

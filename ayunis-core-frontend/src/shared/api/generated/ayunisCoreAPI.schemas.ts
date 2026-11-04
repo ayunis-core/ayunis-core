@@ -5761,6 +5761,11 @@ export interface SsoBackchannelLogoutRequestDto {
   logout_token: string;
 }
 
+export interface SsoAccountLinkStatusResponseDto {
+  canLink: boolean;
+  isLinked: boolean;
+}
+
 export interface LogoutResponseDto {
   success: boolean;
   /**

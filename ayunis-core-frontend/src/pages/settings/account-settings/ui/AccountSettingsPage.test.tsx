@@ -19,6 +19,9 @@ vi.mock('@/pages/settings/account-settings/ui/AcademyCertificateCard', () => ({
   AcademyCertificateCard: () => null,
 }));
 vi.mock('@/shared/ui/help-link/HelpLink', () => ({ HelpLink: () => null }));
+vi.mock('@/pages/settings/account-settings/ui/SsoAccountLinkCard', () => ({
+  SsoAccountLinkCard: () => <div data-testid="sso-link-settings" />,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -48,7 +51,7 @@ describe(AccountSettingsPage.name, () => {
     expect(screen.queryByTestId('two-factor-settings')).toBeNull();
   });
 
-  it('does not offer organization SSO account linking', () => {
+  it('includes the account SSO status card', () => {
     render(
       <AccountSettingsPage
         user={{ name: 'Admin', email: 'admin@stadt.example' }}
@@ -57,6 +60,6 @@ describe(AccountSettingsPage.name, () => {
     );
 
     expect(screen.getByTestId('account-settings-page')).toBeTruthy();
-    expect(screen.queryByText('account.sso.title')).toBeNull();
+    expect(screen.getByTestId('sso-link-settings')).toBeTruthy();
   });
 });

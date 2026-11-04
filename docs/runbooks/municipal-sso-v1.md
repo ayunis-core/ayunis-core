@@ -166,6 +166,9 @@ tokens, cookie values, or IdP secrets.
 | Invitation while JIT is on | The invitation can still be created and accepted. |
 | Core MFA required | The user verifies or enrolls MFA unless the validated broker claim contains `mfa`. |
 | Local password user | Existing local login and MFA behavior are unchanged. |
+| Existing account, password login allowed | First SSO attempt requires linking. Sign in locally, open Settings → Account → Connect SSO, and authenticate with the same work email. Connected state survives reload and subsequent SSO signs in the same Core user. |
+| Existing linked or JIT account | Account settings shows SSO connected without a connect action. |
+| Mismatched linking identity | Linking fails without changing the signed-in user's identity or session; the user can retry with the correct work account. |
 | Microsoft first-time user | Broker profile has the approved work email marked verified; Core admission follows the chosen JIT or invite policy. |
 | Microsoft existing unverified user | After the reviewed correction and a fresh external login, verify the stored email status and complete Core login; a saved provider toggle alone is not acceptance. |
 | Logout | The Core session is revoked; SSO sessions continue through broker logout. |
