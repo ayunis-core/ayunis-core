@@ -323,6 +323,7 @@ jobs:
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
+          E2E_STUB_CODE_EXECUTION: 'true'
 
       # -- Temporary PR media ------------------------------------------------
       # Scene code lives on pr-media/pr-<n> instead of the product branch.

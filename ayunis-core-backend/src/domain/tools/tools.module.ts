@@ -40,6 +40,7 @@ import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { MarketplaceSearchToolHandler } from './application/handlers/marketplace-search-tool.handler';
+import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { MarketplaceSearchToolHandler } from './application/handlers/marketplace
     ExecuteToolUseCase,
     // Core services and registries
     ToolHandlerRegistry,
+    AuthorizedCsvSourceResolverService,
     HttpToolHandler,
     SourceQueryToolHandler,
     SourceGetTextToolHandler,

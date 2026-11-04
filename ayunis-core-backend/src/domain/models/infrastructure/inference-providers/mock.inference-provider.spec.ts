@@ -158,6 +158,77 @@ describe('MockInferenceProviderFactory runtime provider', () => {
     });
   });
 
+  it('requests code execution with the source IDs from the authorization E2E trigger', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const sourceIds = [sourceId, chunkId];
+    const codeExecutionRequest: ProviderRequest = {
+      ...request,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `E2E code execution sources: ${JSON.stringify(sourceIds)}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const response = await collect(provider.stream(codeExecutionRequest));
+    const toolCall = response[0].toolCallDeltas?.[0];
+
+    expect(toolCall?.name).toBe('code_execution');
+    expect(JSON.parse(toolCall?.argumentsDelta ?? '')).toEqual({
+      code: [
+        'from pathlib import Path',
+        ...sourceIds.map(
+          (id) => `print(Path('/execution/files/${id}.csv').read_text())`,
+        ),
+      ].join('\n'),
+      dataSourceIds: sourceIds,
+    });
+  });
+
+  it('starts a new code execution after a completed earlier turn', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const nextSourceId = chunkId;
+    const response = await collect(
+      provider.stream({
+        ...request,
+        messages: [
+          request.messages[0],
+          {
+            role: 'tool_result',
+            content: [
+              {
+                type: 'tool_result',
+                toolCallId: 'mock-code-execution',
+                toolName: 'code_execution',
+                result: 'earlier result',
+              },
+            ],
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `E2E code execution sources: ${JSON.stringify([nextSourceId])}`,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(response[0].toolCallDeltas?.[0]).toMatchObject({
+      name: 'code_execution',
+      argumentsDelta: expect.stringContaining(nextSourceId),
+    });
+  });
+
   it('requests the first available source for the citation E2E trigger', async () => {
     const provider = new MockInferenceProviderFactory().resolveProvider(model);
     const citationRequest: ProviderRequest = {

@@ -11,10 +11,7 @@ import type {
   ExecutionResponse,
 } from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { convertCSVToString, parseCSV } from 'src/common/util/csv';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
@@ -23,13 +20,14 @@ import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cas
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 
 @Injectable()
 export class CodeExecutionToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(CodeExecutionToolHandler.name);
 
   constructor(
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
+    private readonly authorizedCsvSourceResolver: AuthorizedCsvSourceResolverService,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
@@ -49,6 +47,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
 
       const executionFiles = await this.prepareExecutionFiles(
         dataSourceIds,
+        context.threadId,
         tool.name,
       );
 
@@ -80,6 +79,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
 
   private async prepareExecutionFiles(
     dataSourceIds: unknown,
+    threadId: UUID,
     toolName: string,
   ): Promise<Record<string, string>> {
     const executionFiles: Record<string, string> = {};
@@ -87,54 +87,36 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
       return executionFiles;
     }
 
-    for (const sourceId of dataSourceIds) {
-      const csvSource = await this.loadCsvSource(sourceId as UUID, toolName);
-      if (!(csvSource instanceof CSVDataSource)) {
-        continue;
-      }
-      this.assertSourceReady(csvSource, sourceId as UUID, toolName);
+    const csvSources = await this.resolveAuthorizedCsvSources(
+      dataSourceIds as string[],
+      threadId,
+      toolName,
+    );
+    for (const csvSource of csvSources) {
+      const sourceId = csvSource.id;
       executionFiles[`${sourceId}.csv`] = this.encodeCsvToBase64(
         csvSource,
-        sourceId as UUID,
+        sourceId,
         toolName,
       );
     }
     return executionFiles;
   }
 
-  private assertSourceReady(
-    csvSource: CSVDataSource,
-    sourceId: UUID,
+  private async resolveAuthorizedCsvSources(
+    sourceIds: string[],
+    threadId: UUID,
     toolName: string,
-  ): void {
-    if (csvSource.status === SourceStatus.READY) {
-      return;
-    }
-    // FAILED is terminal — the message must not invite the model to retry.
-    let message = `Data source ${sourceId} is still processing and not available yet — wait for it to finish before running code on it`;
-    if (csvSource.status === SourceStatus.FAILED) {
-      const detail = csvSource.processingError
-        ? ` (${csvSource.processingError})`
-        : '';
-      message = `Data source ${sourceId} failed to process and cannot be used${detail} — do not retry; tell the user the file could not be processed`;
-    }
-    throw new ToolExecutionFailedError({
-      toolName,
-      message,
-      exposeToLLM: true,
-    });
-  }
-
-  private async loadCsvSource(sourceId: UUID, toolName: string) {
+  ): Promise<CSVDataSource[]> {
     try {
-      return await this.getSourceByIdUseCase.execute(
-        new GetSourceByIdQuery(sourceId),
-      );
+      return await this.authorizedCsvSourceResolver.resolve({
+        threadId,
+        sourceIds,
+      });
     } catch (error) {
-      this.logger.error({ err: error }, 'Error getting CSV data source');
       throw new ToolExecutionFailedError({
         toolName,
-        message: `Error getting CSV data source: ${error instanceof Error ? error.message : 'Unknown error. Source ID: ' + sourceId}`,
+        message: error instanceof Error ? error.message : 'Unknown error',
         exposeToLLM: true,
       });
     }
