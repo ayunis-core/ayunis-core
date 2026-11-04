@@ -32,7 +32,9 @@ on:
     branches: [main]
 
 concurrency:
-  group: app-integration-${{ github.workflow }}-${{ github.ref }}
+  # A merged PR's `closed` event has github.ref == refs/heads/main; keying PR
+  # runs by number keeps its cancel-in-progress from killing the main push run.
+  group: app-integration-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
