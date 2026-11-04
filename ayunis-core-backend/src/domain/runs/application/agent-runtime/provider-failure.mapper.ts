@@ -25,6 +25,7 @@ import {
   InferenceStreamStalledError,
   InferenceImageTooLargeError,
 } from 'src/domain/models/application/models.errors';
+import { InferenceOutputLimitError } from 'src/domain/models/application/inference-output.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import type { RuntimeModelRegistry } from './runtime-model.registry';
@@ -150,7 +151,7 @@ function mapModelResponseFailure(
   const failure = MODEL_RESPONSE_FAILURES[message];
   if (!failure) return undefined;
   const model = models && resolveModel(models, modelCall.provider);
-  return new InferenceFailedError(failure.reason, {
+  const metadata = {
     ...(model
       ? { provider: model.provider, modelId: model.name }
       : { runtimeProvider: modelCall.provider }),
@@ -163,7 +164,10 @@ function mapModelResponseFailure(
           modelTurn: modelCall.turn,
         }
       : {}),
-  });
+  };
+  return failure.completionRejection === 'output_limit'
+    ? new InferenceOutputLimitError(metadata)
+    : new InferenceFailedError(failure.reason, metadata);
 }
 
 function mapResolvedProviderError(

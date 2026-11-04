@@ -844,9 +844,13 @@ describe('ExecuteRunUseCase', () => {
     },
   );
 
-  it.each(['length', 'refusal', 'pause_turn'] as const)(
+  it.each([
+    ['length', 'INFERENCE_OUTPUT_LIMIT'],
+    ['refusal', 'INFERENCE_FAILED'],
+    ['pause_turn', 'INFERENCE_FAILED'],
+  ] as const)(
     'preserves completed tools when a later call terminates with %s',
-    async (finishReason) => {
+    async (finishReason, code) => {
       const execute = jest.fn().mockResolvedValue('permit found');
       const lookupTool = {
         name: 'lookup_permit',
@@ -880,7 +884,7 @@ describe('ExecuteRunUseCase', () => {
       });
       await expect(
         drain(await useCase.execute(userCommand())),
-      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      ).rejects.toMatchObject({ code });
       expect(execute).toHaveBeenCalledTimes(1);
       expect(provider.requests).toHaveLength(2);
       expect(save).toHaveBeenCalledTimes(1);
@@ -890,9 +894,13 @@ describe('ExecuteRunUseCase', () => {
     },
   );
 
-  it.each(['length', 'refusal', 'pause_turn'] as const)(
+  it.each([
+    ['length', 'INFERENCE_OUTPUT_LIMIT'],
+    ['refusal', 'INFERENCE_FAILED'],
+    ['pause_turn', 'INFERENCE_FAILED'],
+  ] as const)(
     'cleans up a first-turn %s without visible output or completed tools',
-    async (finishReason) => {
+    async (finishReason, code) => {
       const { useCase, cleanup, provider } = buildHarness({
         turns: [
           [{ finishReason, usage: { inputTokens: 2, outputTokens: 32000 } }],
@@ -900,7 +908,7 @@ describe('ExecuteRunUseCase', () => {
       });
       await expect(
         drain(await useCase.execute(userCommand())),
-      ).rejects.toMatchObject({ code: 'INFERENCE_FAILED' });
+      ).rejects.toMatchObject({ code });
       expect(provider.requests).toHaveLength(1);
       expect(cleanup).toHaveBeenCalledTimes(1);
     },

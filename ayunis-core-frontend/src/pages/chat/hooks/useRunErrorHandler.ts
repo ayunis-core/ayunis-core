@@ -25,6 +25,9 @@ export function useRunErrorHandler(_threadId: string) {
               : t('chat.errorMalformedToolCall'),
           );
           break;
+        case 'INFERENCE_OUTPUT_LIMIT':
+          showError(t('chat.errorOutputLimit'));
+          break;
         case 'RUN_NO_MODEL_FOUND':
           showError(t('chat.errorNoModelFound'));
           break;

@@ -1,5 +1,6 @@
 import { ApplicationError } from 'src/common/errors/base.error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { InferenceOutputLimitError } from 'src/domain/models/application/inference-output.errors';
 import { isCreditPolicyErrorCode } from 'src/domain/runs/application/credit-policy-error';
 import {
   RunMaxIterationsReachedError,
@@ -51,9 +52,8 @@ function findTranscriptPreservingRejection(
 }
 
 function isTerminalCompletionFailure(error: ApplicationError): boolean {
+  if (error instanceof InferenceOutputLimitError) return true;
   if (!(error instanceof InferenceFailedError)) return false;
   const reason = error.metadata?.completionRejection;
-  return (
-    reason === 'output_limit' || reason === 'refusal' || reason === 'pause_turn'
-  );
+  return reason === 'refusal' || reason === 'pause_turn';
 }
