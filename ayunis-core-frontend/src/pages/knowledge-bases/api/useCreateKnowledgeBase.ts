@@ -25,13 +25,17 @@ export function useCreateKnowledgeBase() {
         name: data.name,
         description: data.description ?? '',
       }),
-    onSuccess: () => {
+    onSuccess: (knowledgeBase) => {
       void queryClient.invalidateQueries({
         queryKey: getKnowledgeBasesControllerFindAllQueryKey(
           personalKnowledgeBaseListParams,
         ),
       });
       void router.invalidate();
+      void router.navigate({
+        to: '/knowledge-bases/$id',
+        params: { id: knowledgeBase.id },
+      });
       showSuccess(t('create.success'));
     },
     onError: (error) => {

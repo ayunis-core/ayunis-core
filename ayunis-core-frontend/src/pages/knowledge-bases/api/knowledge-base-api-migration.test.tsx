@@ -4,9 +4,10 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreateKnowledgeBase } from './useCreateKnowledgeBase';
 
-const { request, invalidate } = vi.hoisted(() => ({
+const { request, invalidate, navigate } = vi.hoisted(() => ({
   request: vi.fn(),
   invalidate: vi.fn(),
+  navigate: vi.fn(),
 }));
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/toast', () => ({
@@ -14,7 +15,7 @@ vi.mock('@/shared/lib/toast', () => ({
   showSuccess: vi.fn(),
 }));
 vi.mock('@tanstack/react-router', () => ({
-  useRouter: () => ({ invalidate }),
+  useRouter: () => ({ invalidate, navigate }),
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -56,5 +57,22 @@ describe('personal knowledge-base API migration', () => {
         },
       }),
     );
+    expect(navigate).toHaveBeenCalledWith({
+      to: '/knowledge-bases/$id',
+      params: { id: 'personal-kb' },
+    });
+  });
+
+  it('stays on the list when creation fails', async () => {
+    request.mockRejectedValue(new Error('create failed'));
+    const { result } = renderHook(() => useCreateKnowledgeBase(), { wrapper });
+
+    await act(() =>
+      result.current
+        .createKnowledgeBase({ name: 'Personal notes' })
+        .catch(() => undefined),
+    );
+
+    expect(navigate).not.toHaveBeenCalled();
   });
 });
