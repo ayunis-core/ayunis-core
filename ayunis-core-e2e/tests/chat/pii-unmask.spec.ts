@@ -57,10 +57,12 @@ test.describe('PII mask manual unmasking', () => {
 
   test('masks a personnel number as a government ID', async ({ page, api }) => {
     const personnelNumber = '23423525';
+    const prompt =
+      'Schreibe eine Kündigung für Martin Meier Gartenstraße 100 53721 Siegburg, geb. 12.12.1982, Personalnummer 23423525 wegen Trunkenheit am Arbeitsplatz...';
 
     await page.goto('/chat');
     await page.getByTestId('chat-anonymous-toggle').click();
-    await sendMessage(page, `Personalnummer ${personnelNumber}`);
+    await sendMessage(page, prompt);
     await expect(page.getByTestId('assistant-message').last()).toBeVisible();
 
     await expect(
