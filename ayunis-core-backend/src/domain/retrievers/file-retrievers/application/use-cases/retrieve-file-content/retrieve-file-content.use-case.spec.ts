@@ -14,7 +14,7 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
-import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeRecordingUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe-recording/transcribe-recording.use-case';
 import {
   EmptyOcrResultError,
   FileRetrieverUnauthorizedError,
@@ -32,7 +32,7 @@ describe('RetrieveFileContentUseCase', () => {
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockContextService: Partial<ContextService>;
   let mockDocumentConverter: Partial<DocumentConverterPort>;
-  let mockTranscribeUseCase: Partial<TranscribeUseCase>;
+  let mockTranscribeRecordingUseCase: Partial<TranscribeRecordingUseCase>;
   const mockMsgParser = { extractText: jest.fn<Promise<string>, [Buffer]>() };
   const mockPreflightCheck = { execute: jest.fn() };
 
@@ -58,7 +58,7 @@ describe('RetrieveFileContentUseCase', () => {
     mockDocumentConverter = {
       convertToPdf: jest.fn(),
     };
-    mockTranscribeUseCase = {
+    mockTranscribeRecordingUseCase = {
       execute: jest.fn(),
     };
 
@@ -69,8 +69,8 @@ describe('RetrieveFileContentUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: DocumentConverterPort, useValue: mockDocumentConverter },
         {
-          provide: TranscribeUseCase,
-          useValue: mockTranscribeUseCase,
+          provide: TranscribeRecordingUseCase,
+          useValue: mockTranscribeRecordingUseCase,
         },
         { provide: MsgParserPort, useValue: mockMsgParser },
         { provide: PreflightCheckUseCase, useValue: mockPreflightCheck },
@@ -301,7 +301,7 @@ describe('RetrieveFileContentUseCase', () => {
       const text = result.pages[0].text;
       expect(text).toContain('Attachments: foto.png, sprachnachricht.mp3');
       expect(text).not.toContain('--- Attachment:');
-      expect(mockTranscribeUseCase.execute).not.toHaveBeenCalled();
+      expect(mockTranscribeRecordingUseCase.execute).not.toHaveBeenCalled();
       expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
     });
 
@@ -765,7 +765,9 @@ describe('RetrieveFileContentUseCase', () => {
   it('should transcribe audio and wrap the transcript as a single page', async () => {
     const audioBuffer = Buffer.from('fake audio bytes');
     const transcript = 'Hello world, this is the transcribed audio.';
-    jest.spyOn(mockTranscribeUseCase, 'execute').mockResolvedValue(transcript);
+    jest
+      .spyOn(mockTranscribeRecordingUseCase, 'execute')
+      .mockResolvedValue(transcript);
 
     const command = new RetrieveFileContentCommand({
       fileData: audioBuffer,
@@ -775,7 +777,7 @@ describe('RetrieveFileContentUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(mockTranscribeUseCase.execute).toHaveBeenCalledWith(
+    expect(mockTranscribeRecordingUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         file: audioBuffer,
         fileName: 'meeting.mp3',

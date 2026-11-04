@@ -11,7 +11,7 @@ import {
   FileRetrieverPage,
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
-import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeRecordingUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe-recording/transcribe-recording.use-case';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
 
@@ -37,7 +37,7 @@ describe('Office document page limit after conversion', () => {
         },
         { provide: ContextService, useValue: { get: () => 'municipality-id' } },
         { provide: MsgParserPort, useValue: {} },
-        { provide: TranscribeUseCase, useValue: {} },
+        { provide: TranscribeRecordingUseCase, useValue: {} },
       ],
     }).compile();
     useCase = module.get(RetrieveFileContentUseCase);

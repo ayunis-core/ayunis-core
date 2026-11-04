@@ -1,3 +1,4 @@
+import { textPrefixWithinBudget } from './tool-text-budget.utils';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 interface TextExtractionParams {
@@ -62,11 +63,15 @@ const splitPaginationLines = (
   return text.split('\n').flatMap((line) => {
     if (line.length === 0) return [{ text: '', startsPhysicalLine: true }];
     const segments: PaginationLine[] = [];
-    for (let offset = 0; offset < line.length; offset += maxChars) {
+    for (let offset = 0; offset < line.length;) {
+      const text =
+        textPrefixWithinBudget(line.slice(offset), maxChars) ||
+        String.fromCodePoint(line.codePointAt(offset)!);
       segments.push({
-        text: line.slice(offset, offset + maxChars),
+        text,
         startsPhysicalLine: offset === 0,
       });
+      offset += text.length;
     }
     return segments;
   });
@@ -113,8 +118,8 @@ const selectPaginationLines = (params: {
     const line = params.lines[index];
     const separator =
       selected.length > 0 && line.startsPhysicalLine ? '\n' : '';
-    const addedChars = separator.length + line.text.length;
-    if (selectedChars + addedChars > params.maxChars) {
+    const addedChars = JSON.stringify(separator + line.text).length - 2;
+    if (selected.length > 0 && selectedChars + addedChars > params.maxChars) {
       charLimited = true;
       break;
     }
