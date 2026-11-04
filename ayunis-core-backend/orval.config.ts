@@ -1,5 +1,11 @@
 import { defineConfig } from 'orval';
 
+// Orval derives import extensions from tsconfig; the backend's `nodenext`
+// setting would emit `.js` specifiers, which Jest cannot resolve.
+const commonJsImports = {
+  compilerOptions: { module: 'commonjs', moduleResolution: 'node' },
+} as const;
+
 export default defineConfig({
   codeExecution: {
     input: {
@@ -11,6 +17,7 @@ export default defineConfig({
       mode: 'split',
       mock: false,
       clean: true,
+      tsconfig: commonJsImports,
       override: {
         mutator: {
           path: 'src/common/clients/code-execution/client.ts',
@@ -29,6 +36,7 @@ export default defineConfig({
       mode: 'split',
       mock: false,
       clean: true,
+      tsconfig: commonJsImports,
       override: {
         mutator: {
           path: 'src/common/clients/anonymize/client.ts',
@@ -47,6 +55,7 @@ export default defineConfig({
       mode: 'split',
       mock: false,
       clean: true,
+      tsconfig: commonJsImports,
       override: {
         mutator: {
           path: 'src/common/clients/marketplace/client.ts',

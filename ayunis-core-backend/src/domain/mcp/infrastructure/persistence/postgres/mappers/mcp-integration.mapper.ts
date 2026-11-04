@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { McpIntegration } from '../../../../domain/mcp-integration.entity';
-import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../../../domain/integrations/marketplace-mcp-integration.entity';
-import { McpIntegrationAuth } from '../../../../domain/auth/mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../../../domain/auth/oauth-mcp-integration-auth.entity';
-import { McpIntegrationFactory } from '../../../../application/factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../../../application/factories/mcp-integration-auth.factory';
-import { McpAuthMethod } from '../../../../domain/value-objects/mcp-auth-method.enum';
-import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
@@ -21,8 +21,8 @@ import {
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
-} from '../schema';
-import { McpIntegrationRecord } from '../schema/mcp-integration.record';
+} from 'src/domain/mcp/infrastructure/persistence/postgres/schema';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 /**
  * Mapper for converting between MCP integration domain entities and database records.
@@ -125,6 +125,8 @@ export class McpIntegrationMapper {
       configSchema: this.requiredMarketplaceConfigSchema(record),
       orgConfigValues: record.orgConfigValues ?? {},
       logoUrl: record.logoUrl,
+      customerProvidesServerUrl: record.customerProvidesServerUrl,
+      serverUrlHint: record.serverUrlHint,
     });
   }
 
@@ -196,6 +198,8 @@ export class McpIntegrationMapper {
     record.configSchema = entity.configSchema;
     record.orgConfigValues = entity.orgConfigValues;
     record.logoUrl = entity.logoUrl;
+    record.customerProvidesServerUrl = entity.customerProvidesServerUrl;
+    record.serverUrlHint = entity.serverUrlHint;
     return record;
   }
 

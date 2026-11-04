@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { McpIntegration } from '../../domain/mcp-integration.entity';
-import { McpIntegrationKind } from '../../domain/value-objects/mcp-integration-kind.enum';
-import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
-import { McpIntegrationAuth } from '../../domain/auth/mcp-integration-auth.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
 import { UUID } from 'crypto';
 
 @Injectable()
@@ -56,6 +56,8 @@ export class McpIntegrationFactory {
     configSchema: IntegrationConfigSchema;
     orgConfigValues: Record<string, string>;
     logoUrl?: string | null;
+    customerProvidesServerUrl?: boolean;
+    serverUrlHint?: string | null;
     id?: UUID;
     enabled?: boolean;
     createdAt?: Date;
@@ -131,6 +133,8 @@ export class McpIntegrationFactory {
       configSchema: params.configSchema,
       orgConfigValues: params.orgConfigValues ?? {},
       logoUrl: params.logoUrl,
+      customerProvidesServerUrl: params.customerProvidesServerUrl,
+      serverUrlHint: params.serverUrlHint,
     });
   }
 
@@ -155,6 +159,8 @@ type CreateIntegrationParams = {
   configSchema?: IntegrationConfigSchema;
   orgConfigValues?: Record<string, string>;
   logoUrl?: string | null;
+  customerProvidesServerUrl?: boolean;
+  serverUrlHint?: string | null;
   id?: UUID;
   enabled?: boolean;
   createdAt?: Date;

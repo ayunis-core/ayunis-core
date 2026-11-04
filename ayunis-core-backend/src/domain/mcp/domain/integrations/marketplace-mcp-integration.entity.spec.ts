@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto';
 import { MarketplaceMcpIntegration } from './marketplace-mcp-integration.entity';
-import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import { NoAuthMcpIntegrationAuth } from '../auth/no-auth-mcp-integration-auth.entity';
-import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 describe('MarketplaceMcpIntegration', () => {
   const orgId = randomUUID();
@@ -160,6 +160,63 @@ describe('MarketplaceMcpIntegration', () => {
     });
 
     expect(integration.orgConfigValues).toEqual({});
+  });
+
+  describe('server URL', () => {
+    function build(
+      overrides: Partial<
+        ConstructorParameters<typeof MarketplaceMcpIntegration>[0]
+      > = {},
+    ): MarketplaceMcpIntegration {
+      return new MarketplaceMcpIntegration({
+        orgId,
+        name: 'OpenProject',
+        serverUrl: 'https://projekte.stadt.de/mcp',
+        marketplaceIdentifier: 'openproject',
+        configSchema,
+        orgConfigValues: {},
+        auth: new NoAuthMcpIntegrationAuth(),
+        ...overrides,
+      });
+    }
+
+    it('uses the marketplace server URL by default', () => {
+      const integration = build();
+
+      expect(integration.customerProvidesServerUrl).toBe(false);
+      expect(integration.serverUrlHint).toBeNull();
+    });
+
+    it('keeps the customer-provided flag and hint', () => {
+      const integration = build({
+        customerProvidesServerUrl: true,
+        serverUrlHint: 'Your OpenProject MCP address',
+      });
+
+      expect(integration.customerProvidesServerUrl).toBe(true);
+      expect(integration.serverUrlHint).toBe('Your OpenProject MCP address');
+    });
+
+    it('lets the org change a customer-provided server URL', () => {
+      const integration = build({ customerProvidesServerUrl: true });
+      const previousUpdatedAt = integration.updatedAt;
+
+      integration.updateServerUrl('https://andere.stadt.de/mcp');
+
+      expect(integration.serverUrl).toBe('https://andere.stadt.de/mcp');
+      expect(integration.updatedAt.getTime()).toBeGreaterThanOrEqual(
+        previousUpdatedAt.getTime(),
+      );
+    });
+
+    it('refuses to change a server URL fixed by the marketplace', () => {
+      const integration = build();
+
+      expect(() =>
+        integration.updateServerUrl('https://evil.example.com/mcp'),
+      ).toThrow();
+      expect(integration.serverUrl).toBe('https://projekte.stadt.de/mcp');
+    });
   });
 
   describe('per-user authorization', () => {

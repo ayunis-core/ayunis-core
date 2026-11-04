@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
-import { McpOAuthClientRegistration } from '../../domain/mcp-oauth-client-registration.entity';
-import { McpValidationFailedError } from '../mcp.errors';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpOAuthClientRegistrationRepositoryPort } from '../ports/mcp-oauth-client-registration.repository.port';
-import { McpOAuthPendingSessionRepositoryPort } from '../ports/mcp-oauth-pending-session.repository.port';
-import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { McpOAuthClientRegistration } from 'src/domain/mcp/domain/mcp-oauth-client-registration.entity';
+import { McpValidationFailedError } from 'src/domain/mcp/application/mcp.errors';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpOAuthClientRegistrationRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-client-registration.repository.port';
+import { McpOAuthPendingSessionRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-pending-session.repository.port';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
 import { McpClientService } from './mcp-client.service';
 
@@ -84,6 +84,16 @@ export class McpOAuthClientConfigurationService {
         'Static OAuth client information is required.',
       );
     }
+  }
+
+  async resetAuthorization(
+    integration: SchemaConfiguredMcpIntegration,
+  ): Promise<void> {
+    await this.mcpClientService.invalidateConnections(integration);
+    await this.pendingSessions.deleteByIntegration(integration.id);
+    await this.tokens.deleteByIntegration(integration.id);
+    await this.registrations.deleteByIntegration(integration.id);
+    this.capabilityCache.invalidate(integration.id);
   }
 
   isStaticClientConfigured(

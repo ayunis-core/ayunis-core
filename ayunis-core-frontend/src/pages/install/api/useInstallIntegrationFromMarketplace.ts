@@ -1,3 +1,4 @@
+import type { UseFormReturn } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +10,11 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import type { InstallIntegrationFormFields } from '@/pages/install/model/types';
 
-export function useInstallIntegrationFromMarketplace() {
+export function useInstallIntegrationFromMarketplace(
+  form: UseFormReturn<InstallIntegrationFormFields>,
+) {
   const { t } = useTranslation('install-integration');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -32,7 +36,15 @@ export function useInstallIntegrationFromMarketplace() {
       },
       onError: (error) => {
         try {
-          const { code } = extractErrorData(error);
+          const { code, errors } = extractErrorData(error);
+          if (
+            code === 'INVALID_SERVER_URL' ||
+            (code === 'VALIDATION_ERROR' &&
+              errors?.some(({ field }) => field === 'serverUrl'))
+          ) {
+            form.setError('serverUrl', { message: t('serverUrl.invalid') });
+            return;
+          }
           switch (code) {
             case 'MARKETPLACE_INTEGRATION_NOT_FOUND':
               showError(t('error.notFound.description'));

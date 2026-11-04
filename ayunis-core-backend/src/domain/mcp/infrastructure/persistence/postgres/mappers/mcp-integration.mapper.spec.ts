@@ -21,7 +21,7 @@ import {
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
-} from '../schema';
+} from 'src/domain/mcp/infrastructure/persistence/postgres/schema';
 
 describe('McpIntegrationMapper', () => {
   let mapper: McpIntegrationMapper;
@@ -341,6 +341,29 @@ describe('McpIntegrationMapper', () => {
       });
       expect(domain.auth).toBeInstanceOf(NoAuthMcpIntegrationAuth);
     });
+  });
+
+  it('round-trips the customer-provided server URL of a marketplace integration', () => {
+    const original = new MarketplaceMcpIntegration({
+      ...baseParams,
+      serverUrl: 'https://projekte.stadt.de/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      marketplaceIdentifier: 'openproject',
+      configSchema: oparlConfigSchema,
+      orgConfigValues: {},
+      customerProvidesServerUrl: true,
+      serverUrlHint: 'Your OpenProject MCP address',
+    });
+
+    const record = mapper.toRecord(original) as MarketplaceMcpIntegrationRecord;
+    const restored = mapper.toDomain(record) as MarketplaceMcpIntegration;
+
+    expect(record.serverUrl).toBe('https://projekte.stadt.de/mcp');
+    expect(record.customerProvidesServerUrl).toBe(true);
+    expect(record.serverUrlHint).toBe('Your OpenProject MCP address');
+    expect(restored.serverUrl).toBe('https://projekte.stadt.de/mcp');
+    expect(restored.customerProvidesServerUrl).toBe(true);
+    expect(restored.serverUrlHint).toBe('Your OpenProject MCP address');
   });
 
   it('round-trips a marketplace integration through record mapping', () => {

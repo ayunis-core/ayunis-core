@@ -134,4 +134,160 @@ describe(EditIntegrationDialog.name, () => {
     expect((scope as HTMLButtonElement).disabled).toBe(true);
     expect((type as HTMLButtonElement).disabled).toBe(true);
   });
+
+  describe('customer-provided marketplace server URL', () => {
+    const marketplace = {
+      ...integration,
+      name: 'OpenProject',
+      type: 'marketplace',
+      marketplaceIdentifier: 'openproject',
+      serverUrl: 'https://projekte.stadt.de/mcp',
+      customerProvidesServerUrl: true,
+      serverUrlHint: 'Your OpenProject MCP address',
+      configSchema: { authType: 'NO_AUTH', orgFields: [], userFields: [] },
+      orgConfigValues: {},
+    } as McpIntegration;
+    const staticOAuth = {
+      ...marketplace,
+      configSchema: {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: { clientRegistration: 'static', scopes: ['mcp'] },
+      },
+    } as McpIntegration;
+
+    function renderDialog(target: McpIntegration) {
+      render(
+        <EditIntegrationDialog
+          integration={target}
+          open
+          onOpenChange={vi.fn()}
+        />,
+      );
+    }
+
+    function changeServerUrl(value: string) {
+      fireEvent.change(screen.getByTestId('integration-edit-server-url'), {
+        target: { value },
+      });
+    }
+
+    function submit() {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'integrations.editDialog.update' }),
+      );
+    }
+
+    it('shows the current URL with the marketplace hint', () => {
+      renderDialog(marketplace);
+
+      expect(
+        screen.getByDisplayValue('https://projekte.stadt.de/mcp'),
+      ).toBeTruthy();
+      expect(screen.getByText('Your OpenProject MCP address')).toBeTruthy();
+    });
+
+    it('sends the changed URL', async () => {
+      renderDialog(marketplace);
+
+      changeServerUrl('https://neu.stadt.de/mcp');
+      submit();
+
+      await waitFor(() =>
+        expect(mocks.updateIntegration).toHaveBeenCalledWith(marketplace.id, {
+          serverUrl: 'https://neu.stadt.de/mcp',
+        }),
+      );
+    });
+
+    it('rejects a URL without http or https', async () => {
+      renderDialog(marketplace);
+
+      changeServerUrl('file:///etc/mcp');
+      submit();
+
+      expect(
+        await screen.findByText('integrations.serverUrlChange.invalid'),
+      ).toBeTruthy();
+      expect(mocks.updateIntegration).not.toHaveBeenCalled();
+    });
+
+    it('requires a new static OAuth client before changing the URL', async () => {
+      renderDialog(staticOAuth);
+
+      changeServerUrl('https://neu.stadt.de/mcp');
+      expect(
+        screen.getByTestId('integration-server-url-change-notice'),
+      ).toBeTruthy();
+      submit();
+
+      expect(
+        await screen.findByText(
+          'integrations.serverUrlChange.oauthClientRequired',
+        ),
+      ).toBeTruthy();
+      expect(mocks.updateIntegration).not.toHaveBeenCalled();
+    });
+
+    it('sends the URL together with the new static OAuth client', async () => {
+      renderDialog(staticOAuth);
+
+      changeServerUrl('https://neu.stadt.de/mcp');
+      fireEvent.change(screen.getByLabelText('integrations.oauth.clientId'), {
+        target: { value: 'new-client' },
+      });
+      submit();
+
+      await waitFor(() =>
+        expect(mocks.updateIntegration).toHaveBeenCalledWith(staticOAuth.id, {
+          serverUrl: 'https://neu.stadt.de/mcp',
+          oauthClient: { clientId: 'new-client' },
+        }),
+      );
+    });
+
+    it('hides the URL of marketplace integrations with a fixed URL', () => {
+      renderDialog({
+        ...marketplace,
+        serverUrl: undefined,
+        customerProvidesServerUrl: false,
+      });
+
+      expect(screen.queryByTestId('integration-edit-server-url')).toBeNull();
+    });
+  });
+
+  it('requires a new static OAuth client before changing a custom URL', async () => {
+    render(
+      <EditIntegrationDialog
+        integration={{
+          ...integration,
+          configSchema: {
+            authType: 'OAUTH',
+            orgFields: [],
+            userFields: [],
+            oauth: { clientRegistration: 'static', scopes: [] },
+          },
+          orgConfigValues: {},
+        }}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('integration-edit-server-url'), {
+      target: { value: 'https://new.example.com/mcp' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'integrations.editDialog.update' }),
+    );
+
+    expect(
+      await screen.findByText(
+        'integrations.serverUrlChange.oauthClientRequired',
+      ),
+    ).toBeTruthy();
+    expect(mocks.updateIntegration).not.toHaveBeenCalled();
+  });
 });
