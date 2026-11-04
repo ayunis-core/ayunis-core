@@ -68,19 +68,13 @@ export class ResetPasswordUseCase {
       new HashTextCommand(command.newPassword),
     );
 
-    await this.persistPassword(user, token, newHashedPassword);
-
-    // A reset happens while logged out (via an email link), so revoke every
-    // session — any that survive would be an attacker's.
-    await this.revokeAllSessionsForUserUseCase.execute(
-      new RevokeAllSessionsForUserCommand(user.id),
-    );
+    await this.persistPasswordAndRevokeSessions(user, token, newHashedPassword);
 
     this.logger.debug({ userId: user.id }, 'Password reset successfully');
   }
 
   @Transactional()
-  private async persistPassword(
+  private async persistPasswordAndRevokeSessions(
     user: User,
     token: PasswordSetToken,
     newHashedPassword: string,
@@ -89,6 +83,11 @@ export class ResetPasswordUseCase {
     await this.consumeToken(token);
     user.passwordHash = newHashedPassword;
     await this.usersRepository.update(user);
+    // A reset happens while logged out (via an email link), so revoke every
+    // session — any that survive would be an attacker's.
+    await this.revokeAllSessionsForUserUseCase.execute(
+      new RevokeAllSessionsForUserCommand(user.id),
+    );
   }
 
   private async assertLocalPasswordLoginEnabled(

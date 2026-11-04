@@ -103,7 +103,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
   }
 
   async revokeAllForUser(userId: UUID): Promise<void> {
-    await this.repository
+    await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
       .createQueryBuilder()
       .update(RefreshTokenRecord)
       .set({ revokedAt: () => 'NOW()' })
@@ -177,7 +178,8 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
     userId: UUID,
     keepFamilyId: UUID,
   ): Promise<void> {
-    await this.repository
+    await this.txHost.tx
+      .getRepository(RefreshTokenRecord)
       .createQueryBuilder()
       .update(RefreshTokenRecord)
       .set({ revokedAt: () => 'NOW()' })
