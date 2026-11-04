@@ -12,6 +12,7 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { GetThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 
 describe('CreateSpreadsheetToolHandler', () => {
   let handler: CreateSpreadsheetToolHandler;
@@ -34,6 +35,7 @@ describe('CreateSpreadsheetToolHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSpreadsheetToolHandler,
+        AuthorizedCsvSourceResolverService,
         {
           provide: CreateArtifactUseCase,
           useValue: mockCreateArtifactUseCase,

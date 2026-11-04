@@ -30,6 +30,23 @@ export function sendThreadMessage(
   });
 }
 
+export function uploadThreadCsv(
+  api: APIRequestContext,
+  threadId: string,
+  filename: string,
+  content: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/threads/${threadId}/sources/file`, {
+    multipart: {
+      file: {
+        name: filename,
+        mimeType: 'text/csv',
+        buffer: Buffer.from(content, 'utf8'),
+      },
+    },
+  });
+}
+
 export function getThreadAiContextResponse(
   api: APIRequestContext,
   threadId: string,

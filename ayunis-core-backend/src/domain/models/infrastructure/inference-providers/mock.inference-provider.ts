@@ -1,5 +1,6 @@
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
+import { mockCodeExecutionResponse } from './mock-code-execution-response';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -35,10 +36,8 @@ export class MockInferenceProviderFactory extends InferenceProviderFactory {
       name: defaultResponseText,
       stream: (request) => {
         const lastUserText = lastProviderUserText(request);
-        const fileResponse = mockCreateFileResponse(request, lastUserText);
-        if (fileResponse) return fileResponse;
-        const imageResponse = mockImageEditResponse(request, lastUserText);
-        if (imageResponse) return imageResponse;
+        const scriptedToolResponse = mockToolResponse(request, lastUserText);
+        if (scriptedToolResponse) return scriptedToolResponse;
         const researchInput = parseResearchInput(lastUserText);
         if (researchInput) {
           const hasToolResults = request.messages.some(
@@ -71,6 +70,17 @@ export class MockInferenceProviderFactory extends InferenceProviderFactory {
       },
     };
   }
+}
+
+function mockToolResponse(
+  request: ProviderRequest,
+  userText: string,
+): AsyncIterable<ProviderChunk> | null {
+  return (
+    mockCreateFileResponse(request, userText) ??
+    mockCodeExecutionResponse(request, userText) ??
+    mockImageEditResponse(request, userText)
+  );
 }
 
 const MOCK_CHUNK_DELAY_MS = 40;

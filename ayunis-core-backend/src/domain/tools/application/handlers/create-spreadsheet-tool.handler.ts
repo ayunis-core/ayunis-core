@@ -18,10 +18,7 @@ import {
   SpreadsheetCell,
   SpreadsheetGrid,
 } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
-import { GetThreadSourcesUseCase } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.use-case';
-import { FindThreadSourcesQuery } from 'src/domain/threads/application/use-cases/get-thread-sources/get-thread-sources.query';
-import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 
 // At most 15 integer digits and no leading zeros, so IDs, IBAN fragments and
 // zero-padded batch numbers stay text.
@@ -58,7 +55,7 @@ export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly createArtifactUseCase: CreateArtifactUseCase,
-    private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
+    private readonly authorizedCsvSourceResolver: AuthorizedCsvSourceResolverService,
   ) {
     super();
   }
@@ -135,28 +132,10 @@ export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
     sourceId: UUID,
     threadId: UUID,
   ): Promise<SpreadsheetGrid> {
-    const threadSources = await this.getThreadSourcesUseCase.execute(
-      new FindThreadSourcesQuery(threadId),
-    );
-    const source = threadSources.find(({ id }) => id === sourceId);
-    if (!source) {
-      throw new Error(
-        `Data source ${sourceId} is not attached to this conversation.`,
-      );
-    }
-    if (!(source instanceof CSVDataSource)) {
-      throw new Error(`Source ${sourceId} is not a CSV data source.`);
-    }
-    if (source.status === SourceStatus.PROCESSING) {
-      throw new Error(
-        `Data source ${sourceId} is still processing — wait for it to finish before importing it.`,
-      );
-    }
-    if (source.status !== SourceStatus.READY) {
-      throw new Error(
-        `Data source ${sourceId} failed to process and cannot be imported — do not retry; tell the user the file could not be processed.`,
-      );
-    }
+    const [source] = await this.authorizedCsvSourceResolver.resolve({
+      threadId,
+      sourceIds: [sourceId],
+    });
 
     return {
       columns: [...source.data.headers],
