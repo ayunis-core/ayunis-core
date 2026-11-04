@@ -209,6 +209,48 @@ describe('MinioObjectStorageProvider', () => {
     expect(url).toContain('partNumber=2');
   });
 
+  it('signs the exact content length so a different upload size invalidates the signature', async () => {
+    stubInternalRegionLookup();
+    const target = new StorageUrl(
+      'org/uploads/session/file.pdf',
+      'generated-images',
+    );
+    const first = new URL(
+      await provider.presignUploadRequest(
+        target,
+        { method: 'PUT', query: {}, contentLength: 3 },
+        900,
+      ),
+    );
+    const second = new URL(
+      await provider.presignUploadRequest(
+        target,
+        { method: 'PUT', query: {}, contentLength: 4 },
+        900,
+      ),
+    );
+    expect(first.searchParams.get('X-Amz-SignedHeaders')).toBe(
+      'content-length;host',
+    );
+    expect(first.searchParams.get('X-Amz-Signature')).not.toBe(
+      second.searchParams.get('X-Amz-Signature'),
+    );
+  });
+
+  it.each(['org/uploads/session/.', 'org/uploads/session/..'])(
+    'refuses a legacy key whose path would be normalized: %s',
+    async (key) => {
+      stubInternalRegionLookup();
+      await expect(
+        provider.presignUploadRequest(
+          new StorageUrl(key, 'generated-images'),
+          { method: 'PUT', query: {}, contentLength: 3 },
+          900,
+        ),
+      ).rejects.toThrow('cannot be signed');
+    },
+  );
+
   it('aborts multipart uploads through the internal endpoint', async () => {
     const abort = jest
       .spyOn(Minio.Client.prototype, 'abortMultipartUpload')

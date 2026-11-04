@@ -1,6 +1,7 @@
 import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
+import { AwsV4Signer } from 'aws4fetch';
 import { Readable } from 'stream';
 import type { IncomingMessage } from 'http';
 import {
@@ -40,14 +41,7 @@ export class MinioObjectStorageProvider
   private readonly logger = new Logger(MinioObjectStorageProvider.name);
 
   private readonly internalClient: Minio.Client;
-  /**
-   * Signs browser-facing upload URLs against the public endpoint. It is
-   * pinned to the bucket's region (resolved once through the internal
-   * client) so signing is local and never sends a request to the public
-   * host; every object and bucket operation stays on the internal client
-   * (AYC-885).
-   */
-  private signingClient: Promise<Minio.Client> | null = null;
+  private signingRegion: Promise<string> | null = null;
   private defaultBucket: string;
 
   constructor(
@@ -69,23 +63,14 @@ export class MinioObjectStorageProvider
     };
   }
 
-  private getSigningClient(bucket: string): Promise<Minio.Client> {
-    this.signingClient ??= this.internalClient
+  private getSigningRegion(bucket: string): Promise<string> {
+    this.signingRegion ??= this.internalClient
       .getBucketRegionAsync(bucket)
-      .then(
-        (region) =>
-          new Minio.Client({
-            ...this.config.minio.public,
-            ...this.credentials(),
-            region,
-          }),
-      )
       .catch((error: unknown) => {
-        // Leave the next call free to retry instead of caching the failure.
-        this.signingClient = null;
+        this.signingRegion = null;
         throw error;
       });
-    return this.signingClient;
+    return this.signingRegion;
   }
 
   async onModuleInit(): Promise<void> {
@@ -310,15 +295,74 @@ export class MinioObjectStorageProvider
     request: UploadRequest,
     expiresInSeconds: number,
   ): Promise<string> {
+    this.validateUploadSignature(request, expiresInSeconds);
     const bucketName = storageUrl.bucket || this.defaultBucket;
-    const client = await this.getSigningClient(bucketName);
-    return client.presignedUrl(
-      request.method,
+    const region = await this.getSigningRegion(bucketName);
+    const url = this.uploadUrl(
       bucketName,
       storageUrl.objectName,
-      expiresInSeconds,
       request.query,
+      expiresInSeconds,
     );
+    const signed = await new AwsV4Signer({
+      url: url.toString(),
+      method: request.method,
+      service: 's3',
+      region,
+      accessKeyId: this.config.minio.accessKey,
+      secretAccessKey: this.config.minio.secretKey,
+      signQuery: true,
+      allHeaders: true,
+      headers:
+        request.contentLength === undefined
+          ? {}
+          : { 'content-length': String(request.contentLength) },
+    }).sign();
+    return signed.url.toString();
+  }
+
+  private validateUploadSignature(
+    request: UploadRequest,
+    expiresInSeconds: number,
+  ): void {
+    if (
+      !Number.isSafeInteger(expiresInSeconds) ||
+      expiresInSeconds < 1 ||
+      expiresInSeconds > 604800
+    )
+      throw new Error('Invalid upload URL expiry');
+    if (
+      request.contentLength !== undefined &&
+      (!Number.isSafeInteger(request.contentLength) ||
+        request.contentLength < 1)
+    )
+      throw new Error('Invalid upload content length');
+    if (!this.config.minio.accessKey || !this.config.minio.secretKey)
+      throw new Error('Storage credentials are required to sign uploads');
+  }
+
+  private uploadUrl(
+    bucket: string,
+    key: string,
+    query: Record<string, string>,
+    expires: number,
+  ): URL {
+    const endpoint = this.config.minio.public;
+    const host = endpoint.endPoint.includes(':')
+      ? `[${endpoint.endPoint}]`
+      : endpoint.endPoint;
+    const url = new URL(`${endpoint.useSSL ? 'https' : 'http'}://${host}`);
+    url.port = String(endpoint.port);
+    const pathname = `/${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
+    url.pathname = pathname;
+    if (url.pathname !== pathname)
+      throw new Error(
+        'Storage key contains path segments that cannot be signed safely',
+      );
+    for (const [name, value] of Object.entries(query))
+      url.searchParams.set(name, value);
+    url.searchParams.set('X-Amz-Expires', String(expires));
+    return url;
   }
 
   async abortMultipartUpload(

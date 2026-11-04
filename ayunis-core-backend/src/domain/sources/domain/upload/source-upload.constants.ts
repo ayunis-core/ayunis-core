@@ -23,5 +23,8 @@ export function buildSourceUploadKey(
   const sanitizedFileName = path
     .basename(fileName)
     .replace(/[^a-zA-Z0-9._-]/g, '_');
-  return `${orgId}/uploads/${sessionId}/${sanitizedFileName}`;
+  const objectFileName = ['', '.', '..'].includes(sanitizedFileName)
+    ? 'upload'
+    : sanitizedFileName;
+  return `${orgId}/uploads/${sessionId}/${objectFileName}`;
 }

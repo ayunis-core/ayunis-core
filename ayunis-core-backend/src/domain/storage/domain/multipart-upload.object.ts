@@ -14,4 +14,5 @@ export type UploadRequestMethod = 'PUT' | 'POST' | 'GET' | 'DELETE';
 export interface UploadRequest {
   method: UploadRequestMethod;
   query: Record<string, string>;
+  contentLength?: number;
 }

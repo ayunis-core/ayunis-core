@@ -56,6 +56,7 @@ test('uploads chat files straight to object storage and shows transfer apart fro
 
   const put = await storagePut;
   expect(new URL(put.url()).origin).not.toBe(new URL(config.apiURL).origin);
+  expect(new URL(put.url()).searchParams.get('X-Amz-SignedHeaders')).toContain('content-length');
   await expect(
     page
       .getByTestId('chat-source')
@@ -180,6 +181,13 @@ test('rejects bad uploads, hides sessions from other users, and completes idempo
     { method: 'PUT' },
     { api },
   );
+  const oversized = await api.fetch(signed.url, {
+    method: 'PUT',
+    data: Buffer.concat([pdf, Buffer.from('extra bytes')]),
+    headers: { 'content-type': 'application/pdf' },
+  });
+  expect(oversized.status()).toBe(403);
+
   const stored = await api.fetch(signed.url, {
     method: 'PUT',
     data: pdf,

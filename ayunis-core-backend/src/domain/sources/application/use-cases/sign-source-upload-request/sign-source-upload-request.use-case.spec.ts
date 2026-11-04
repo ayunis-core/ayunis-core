@@ -57,7 +57,11 @@ describe('SignSourceUploadRequestUseCase', () => {
       expect(presign.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           objectName: buildUploadSession().storageKey,
-          request: { method: 'PUT', query: {} },
+          request: {
+            method: 'PUT',
+            query: {},
+            contentLength: buildUploadSession().fileSize,
+          },
         }),
       );
     });
@@ -99,12 +103,33 @@ describe('SignSourceUploadRequestUseCase', () => {
       expect(signedRequest()).toEqual({
         method: 'PUT',
         query: { uploadId: 'mp-1', partNumber: '3' },
+        contentLength: 8 * 1024 * 1024,
       });
       expect(sessions.recordMultipartUploadId).toHaveBeenCalledWith(
         UPLOAD_SESSION_ID,
         'mp-1',
       );
     });
+
+    it('binds the last part to only the remaining declared bytes', async () => {
+      await sign({ method: 'PUT', multipartUploadId: 'mp-1', partNumber: 7 });
+      expect(signedRequest()).toEqual({
+        method: 'PUT',
+        query: { uploadId: 'mp-1', partNumber: '7' },
+        contentLength: 2 * 1024 * 1024,
+      });
+    });
+
+    it.each([0, -1, 1.5, 8, Infinity])(
+      'refuses a part outside the declared file: %s',
+      async (partNumber) => {
+        await expect(
+          sign({ method: 'PUT', multipartUploadId: 'mp-1', partNumber }),
+        ).rejects.toBeInstanceOf(SourceUploadRequestNotAllowedError);
+        expect(presign.execute).not.toHaveBeenCalled();
+        expect(sessions.recordMultipartUploadId).not.toHaveBeenCalled();
+      },
+    );
 
     it.each([
       ['listing parts', 'GET' as const],

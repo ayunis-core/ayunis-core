@@ -7,7 +7,10 @@ import {
   UnexpectedSourceError,
 } from 'src/domain/sources/application/sources.errors';
 import type { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
-import { SOURCE_UPLOAD_URL_TTL_SECONDS } from 'src/domain/sources/domain/upload/source-upload.constants';
+import {
+  SOURCE_UPLOAD_PART_SIZE_BYTES,
+  SOURCE_UPLOAD_URL_TTL_SECONDS,
+} from 'src/domain/sources/domain/upload/source-upload.constants';
 import type { UploadRequest } from 'src/domain/storage/domain/multipart-upload.object';
 import { PresignUploadRequestUseCase } from 'src/domain/storage/application/use-cases/presign-upload-request/presign-upload-request.use-case';
 import { PresignUploadRequestCommand } from 'src/domain/storage/application/use-cases/presign-upload-request/presign-upload-request.command';
@@ -72,7 +75,7 @@ export class SignSourceUploadRequestUseCase {
         uploadId === undefined &&
         partNumber === undefined
       )
-        return { method, query: {} };
+        return { method, query: {}, contentLength: session.fileSize };
       throw new SourceUploadRequestNotAllowedError(session.id, { method });
     }
     if (method === 'POST' && uploadId === undefined) {
@@ -81,12 +84,34 @@ export class SignSourceUploadRequestUseCase {
     if (uploadId === undefined) {
       throw new SourceUploadRequestNotAllowedError(session.id, { method });
     }
-    if (method === 'PUT') {
-      if (partNumber === undefined) {
-        throw new SourceUploadRequestNotAllowedError(session.id, { method });
-      }
-      return { method, query: { uploadId, partNumber: String(partNumber) } };
-    }
+    if (method === 'PUT')
+      return this.resolvePart(session, uploadId, partNumber);
     return { method, query: { uploadId } };
+  }
+
+  private resolvePart(
+    session: SourceUploadSession,
+    uploadId: string,
+    partNumber: number | undefined,
+  ): UploadRequest {
+    const maxPart = Math.ceil(session.fileSize / SOURCE_UPLOAD_PART_SIZE_BYTES);
+    if (
+      partNumber === undefined ||
+      !Number.isSafeInteger(partNumber) ||
+      partNumber < 1 ||
+      partNumber > maxPart
+    ) {
+      throw new SourceUploadRequestNotAllowedError(session.id, {
+        method: 'PUT',
+      });
+    }
+    return {
+      method: 'PUT',
+      query: { uploadId, partNumber: String(partNumber) },
+      contentLength: Math.min(
+        SOURCE_UPLOAD_PART_SIZE_BYTES,
+        session.fileSize - (partNumber - 1) * SOURCE_UPLOAD_PART_SIZE_BYTES,
+      ),
+    };
   }
 }

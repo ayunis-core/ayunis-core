@@ -59,6 +59,19 @@ describe('CreateSourceUploadSessionUseCase', () => {
     expect(sessions.save).toHaveBeenCalledTimes(1);
   });
 
+  it.each(['.', '..', 'folder/.', 'folder/..', '/'])(
+    'reserves a literal cleanable object key for file name %s',
+    async (fileName) => {
+      const { session } = await useCase.execute(command({ fileName }));
+      const url = new URL('https://storage.example.org/bucket/');
+      url.pathname = `/bucket/${session.storageKey}`;
+      expect(decodeURIComponent(url.pathname)).toBe(
+        `/bucket/${session.storageKey}`,
+      );
+      expect(session.storageKey.split('/').at(-1)).not.toMatch(/^\.{0,2}$/);
+    },
+  );
+
   it('marks large files for multipart transfer', async () => {
     const { session } = await useCase.execute(
       command({ fileSize: SOURCE_UPLOAD_MULTIPART_THRESHOLD_BYTES + 1 }),
