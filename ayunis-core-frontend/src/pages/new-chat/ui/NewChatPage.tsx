@@ -334,12 +334,14 @@ export default function NewChatPage({
               onSkillRemove={handleSkillRemove}
             />
 
-            <div className="mt-1.5 flex justify-start">
-              <WorkspacePicker
-                workspaceId={workspaceId}
-                onWorkspaceChange={handleWorkspaceChange}
-              />
-            </div>
+            {!isCreating && (
+              <div className="mt-1.5 flex justify-start">
+                <WorkspacePicker
+                  workspaceId={workspaceId}
+                  onWorkspaceChange={handleWorkspaceChange}
+                />
+              </div>
+            )}
           </div>
 
           <div

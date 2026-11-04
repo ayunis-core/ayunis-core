@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import NewChatPage from './NewChatPage';
 
-const mocks = vi.hoisted(() => ({ initiateChat: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  initiateChat: vi.fn(),
+  isCreating: false,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -14,7 +17,7 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/features/chat-initiation', () => ({
   useInitiateChat: () => ({
     initiateChat: mocks.initiateChat,
-    isCreating: false,
+    isCreating: mocks.isCreating,
   }),
 }));
 vi.mock('@/features/usePermittedModels', () => ({
@@ -67,7 +70,9 @@ vi.mock('@/widgets/academy-gate-notice', () => ({
   AcademyGateNotice: () => null,
 }));
 vi.mock('./PinnedSkills', () => ({ PinnedSkills: () => null }));
-vi.mock('./WorkspacePicker', () => ({ WorkspacePicker: () => null }));
+vi.mock('./WorkspacePicker', () => ({
+  WorkspacePicker: () => <div data-testid="workspace-picker" />,
+}));
 vi.mock('./PersonalizationCard', () => ({ PersonalizationCard: () => null }));
 vi.mock('./NewChatPageLayout', () => ({
   default: ({ compose }: { compose: ReactNode }) => compose,
@@ -90,7 +95,10 @@ vi.mock('@/widgets/chat-input', () => ({
   ),
 }));
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.isCreating = false;
+});
 afterEach(cleanup);
 
 function setup(modelId?: string) {
@@ -154,5 +162,20 @@ describe('new chat model selection', () => {
     setup('mode:max');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     expect(mocks.initiateChat).not.toHaveBeenCalled();
+  });
+
+  it('removes the workspace picker as soon as chat creation starts', () => {
+    const { rerender } = setup('mode:auto');
+    expect(screen.getByTestId('workspace-picker')).toBeTruthy();
+
+    mocks.isCreating = true;
+    rerender(
+      <NewChatPage
+        selectedModelId="mode:auto"
+        isEmbeddingModelEnabled={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('workspace-picker')).toBeNull();
   });
 });

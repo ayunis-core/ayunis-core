@@ -12,7 +12,7 @@ import {
 import { test, expect } from '../../src/fixtures/test';
 import { sendMessage } from '../../src/flows/chat.flow';
 
-test('a chat started in Auto binds the first listed model and attributes it', async ({
+test('a chat started in Auto keeps Auto selected without model attribution', async ({
   page,
   api,
   publicApi,
@@ -47,14 +47,13 @@ test('a chat started in Auto binds the first listed model and attributes it', as
     const answer = page.getByTestId('assistant-message').last();
     await expect(answer).toContainText(`openai::${name}`);
     await expect(page).toHaveURL(/\/chats\/[0-9a-f-]+/);
+    await expect(selector).toContainText('Auto');
+    await expect(page.getByTestId('assistant-model-attribution')).toHaveCount(
+      0,
+    );
 
-    await expect(
-      page.getByTestId('assistant-model-attribution').last(),
-    ).toContainText(displayName.replace(/ \(.*\)$/, ''));
-
-    // An existing chat shows the bound model, not the mode it started with.
     await page.reload();
-    await expect(selector).toContainText(displayName);
+    await expect(selector).toContainText('Auto');
   } finally {
     await replaceModelModeEntries(publicApi, 'auto', previousAutoEntries);
     await removePermittedModel(api, permittedModel.id);
