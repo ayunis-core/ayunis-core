@@ -1,7 +1,6 @@
-import { Input } from '@ayunis/ui/components/input';
 import { useNavigate } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SearchField } from '@/shared/ui/search-field';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface InvitesSearchProps {
@@ -56,15 +55,13 @@ export default function InvitesSearch({
   }, []);
 
   return (
-    <div className="relative flex-1 max-w-md">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-      <Input
-        type="text"
-        placeholder={t('invitesSearch.placeholder')}
-        value={displayValue}
-        onChange={handleChange}
-        className="pl-10"
-      />
-    </div>
+    <SearchField
+      leadingIcon
+      wrapperClassName="flex-1 max-w-md"
+      placeholder={t('invitesSearch.placeholder')}
+      value={displayValue}
+      onChange={handleChange}
+      className="pl-10"
+    />
   );
 }

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsList, TabsTrigger } from '@ayunis/ui/components/tabs';
-import { Input } from '@ayunis/ui/components/input';
+import { SearchField } from '@/shared/ui/search-field';
 import {
   Card,
   CardContent,
@@ -86,7 +86,7 @@ function CreditLimitDirectory({
           <CardTitle>{t(`table.${filters.tab}Title`)}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
+          <SearchField
             value={filters.search ?? ''}
             onChange={(event) =>
               update({ search: event.target.value || undefined, page: 1 }, true)
@@ -94,7 +94,7 @@ function CreditLimitDirectory({
             placeholder={t('table.search')}
             aria-label={t('table.search')}
             data-testid="credit-limits-search"
-            className="max-w-sm"
+            wrapperClassName="max-w-sm"
           />
           <CreditLimitsTable
             rows={directory.rows}

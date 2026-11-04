@@ -1,6 +1,5 @@
-import { Input } from '@ayunis/ui/components/input';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SearchField } from '@/shared/ui/search-field';
 import { useEffect, useRef } from 'react';
 
 interface TeamsFiltersProps {
@@ -21,17 +20,15 @@ export default function TeamsFilters({
 
   return (
     <div className="flex gap-4 mb-6">
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          ref={searchInputRef}
-          type="text"
-          placeholder={t('teams.filters.searchPlaceholder')}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <SearchField
+        ref={searchInputRef}
+        leadingIcon
+        wrapperClassName="flex-1 max-w-md"
+        placeholder={t('teams.filters.searchPlaceholder')}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pl-10"
+      />
     </div>
   );
 }
