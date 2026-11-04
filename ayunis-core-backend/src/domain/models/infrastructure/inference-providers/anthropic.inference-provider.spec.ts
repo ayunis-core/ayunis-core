@@ -1,7 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 import type { ModelProvider } from '@ayunis/inference';
 import { AnthropicInferenceProviderFactory } from './anthropic.inference-provider';
-import { CLAUDE_MAX_OUTPUT_TOKENS } from 'src/domain/models/infrastructure/runtime/inference-config';
 import type { Model } from 'src/domain/models/domain/model.entity';
 
 const anthropicMock = jest.fn<ModelProvider, [unknown]>();
@@ -40,9 +39,8 @@ describe('AnthropicInferenceProviderFactory', () => {
     expect(anthropicMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'claude-opus-5',
-        maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+        maxTokens: 64_000,
       }),
     );
-    expect(CLAUDE_MAX_OUTPUT_TOKENS).toBeGreaterThan(16_384);
   });
 });

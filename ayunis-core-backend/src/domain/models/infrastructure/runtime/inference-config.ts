@@ -13,11 +13,10 @@ export const PROVIDER_SDK_MAX_RETRIES = 0;
  * 'length', the truncated arguments failed the integrity check, every retry
  * hit the same wall, and generation fell back to plain text.
  *
- * 32_000 is the maximum output supported by Claude Opus (Sonnet 4.5 allows
- * more), so it is the safe ceiling shared across the modern Claude models
- * these handlers serve. Bedrock reserves `input_tokens + max_tokens` against
- * the account's TPM quota at admission, so this larger budget raises that
- * reservation — an accepted trade-off, because a budget that actually
- * completes the document is worth more than avoiding a rare throttle.
+ * Models that think by default (Opus 5.5, Sonnet 5) can also spend 32_000
+ * tokens on thinking alone and end without an answer (AYC-1574). 64_000 is
+ * half their 128K maximum: Bedrock reserves `input_tokens + max_tokens`
+ * against the account's TPM quota at admission, so the full maximum would
+ * raise that reservation and the worst-case run length further than needed.
  */
-export const CLAUDE_MAX_OUTPUT_TOKENS = 32_000;
+export const CLAUDE_MAX_OUTPUT_TOKENS = 64_000;
