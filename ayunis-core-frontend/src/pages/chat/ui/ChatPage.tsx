@@ -51,6 +51,7 @@ import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
 import SourceCitationController from './SourceCitationController';
+import { getModeValue } from '@/widgets/model-select-options';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -385,7 +386,6 @@ export default function ChatPage({
       }
       showLoadingPlaceholder={showLoadingPlaceholder}
       onOpenArtifact={sidePanelTransitions.openArtifactPanel}
-      answeringModel={thread.mode ? selectedModel : undefined}
     />
   );
 
@@ -406,7 +406,9 @@ export default function ChatPage({
         ref={chatInputRef}
         draftChatId={thread.id}
         sentPrompts={threadPrompts}
-        modelId={thread.permittedModelId}
+        modelId={
+          thread.mode ? getModeValue(thread.mode) : thread.permittedModelId
+        }
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
         sources={thread.sources}
