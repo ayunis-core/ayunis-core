@@ -65,6 +65,10 @@ Lead with the solution a senior engineer would reach for, not the first mechanis
 
 Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
 
+#### Keep user-visible changes traceable to requirements
+
+Do not introduce user-facing behavior, copy, metadata, controls, explanations, or tests for them unless they are required by an acceptance criterion or an established product pattern. Map every user-visible addition to that requirement before implementing it, and include the mapping in the PR description. If an addition seems useful but is not required, present it as an optional proposal and wait for approval instead of silently making a product decision.
+
 ### 7. Implementation Delivery and PR Completion
 
 Unless the user explicitly asks to keep changes local, a request to implement or fix code includes committing the validated change and creating or updating its PR through the repository's `git-workflow`. Use the provided ticket ID. For a small unticketed maintenance, tooling, documentation, or agent-workflow fix, use `AYC-000` without asking. Features, product bugs, customer work, and ambiguous changes require a real ticket ID; ask rather than inventing one.
