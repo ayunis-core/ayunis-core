@@ -69,6 +69,7 @@ describe('PresidioAnonymizationProvider', () => {
       { entity_type: 'IBAN_CODE', start: 20, end: 25, score: 0.9 },
       { entity_type: 'US_SSN', start: 30, end: 35, score: 0.9 },
       { entity_type: 'NRP', start: 40, end: 45, score: 0.9 },
+      { entity_type: 'PERSONNEL_NUMBER', start: 50, end: 55, score: 0.9 },
     ]);
 
     const detections = await provider.detect(text);
@@ -79,6 +80,7 @@ describe('PresidioAnonymizationProvider', () => {
       PiiCategory.FINANCIAL_ACCOUNT,
       PiiCategory.GOVERNMENT_ID,
       PiiCategory.NATIONALITY_RELIGION_POLITICS,
+      PiiCategory.GOVERNMENT_ID,
     ]);
   });
 

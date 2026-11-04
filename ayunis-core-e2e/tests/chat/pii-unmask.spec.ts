@@ -1,4 +1,5 @@
 import { test, expect } from '../../src/fixtures/test';
+import { getThread } from '../../src/clients/api/threads.client';
 import { sendMessage } from '../../src/flows/chat.flow';
 
 // Manual unmasking (AYC-807): in an anonymous chat a detected PII value is
@@ -52,5 +53,28 @@ test.describe('PII mask manual unmasking', () => {
       page.getByTestId('pii-mask-unmasked').filter({ hasText: email }).first(),
     ).toBeVisible();
     await expect(mask).toHaveCount(0);
+  });
+
+  test('masks a personnel number as a government ID', async ({ page, api }) => {
+    const personnelNumber = '23423525';
+
+    await page.goto('/chat');
+    await page.getByTestId('chat-anonymous-toggle').click();
+    await sendMessage(page, `Personalnummer ${personnelNumber}`);
+    await expect(page.getByTestId('assistant-message').last()).toBeVisible();
+
+    await expect(
+      page.getByTestId('pii-mask').filter({ hasText: personnelNumber }),
+    ).toBeVisible();
+
+    const threadId = /\/chats\/([0-9a-f-]+)/.exec(page.url())?.[1];
+    expect(threadId).toBeDefined();
+    const thread = await getThread(api, threadId as string);
+    expect(thread.piiMasks).toContainEqual(
+      expect.objectContaining({
+        value: personnelNumber,
+        category: 'government_id',
+      }),
+    );
   });
 });

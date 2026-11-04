@@ -1,4 +1,4 @@
-import { PiiCategory } from '../../domain/pii-category.enum';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 
 const PRESIDIO_ENTITY_TO_CATEGORY: Record<string, PiiCategory> = {
   PERSON: PiiCategory.PERSON_NAME,
@@ -16,6 +16,7 @@ const PRESIDIO_ENTITY_TO_CATEGORY: Record<string, PiiCategory> = {
   PASSPORT: PiiCategory.GOVERNMENT_ID,
   US_DRIVER_LICENSE: PiiCategory.GOVERNMENT_ID,
   MEDICAL_LICENSE: PiiCategory.GOVERNMENT_ID,
+  PERSONNEL_NUMBER: PiiCategory.GOVERNMENT_ID,
   NRP: PiiCategory.NATIONALITY_RELIGION_POLITICS,
 };
 
