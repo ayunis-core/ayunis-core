@@ -11,24 +11,37 @@ import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
+import type { TranscriptionResponse } from '@mistralai/mistralai/models/components';
+import type { RecordingTranscript } from 'src/domain/transcriptions/domain/recording-transcript';
+import type { ApplicationError } from 'src/common/errors/base.error';
 @Injectable()
 export class MistralTranscriptionService extends TranscriptionPort {
   private readonly logger = new Logger(MistralTranscriptionService.name);
-
   private readonly client: Mistral;
   private readonly model: string;
+  private readonly segmentTimeoutMs: number;
 
   constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('models.mistral.apiKey'),
       server: 'eu',
+      serverURL: this.configService.get<string>(
+        'models.mistral.transcriptionServerUrl',
+      ),
       timeoutMs: 30_000,
     });
-    this.model = this.configService.get<string>(
-      'models.mistral.transcriptionModel',
-      'voxtral-mini-latest',
-    );
+    this.model =
+      this.configService.get<string>('models.mistral.transcriptionModel') ??
+      'voxtral-mini-latest';
+    this.segmentTimeoutMs =
+      this.configService.get<number>('transcription.requestTimeoutMs') ??
+      120_000;
+    if (
+      !Number.isSafeInteger(this.segmentTimeoutMs) ||
+      this.segmentTimeoutMs <= 0
+    )
+      throw new Error('Invalid audio transcription timeout');
   }
 
   async transcribe(
@@ -37,92 +50,115 @@ export class MistralTranscriptionService extends TranscriptionPort {
     mimeType: string,
     language?: string,
   ): Promise<string> {
+    const response = await this.perform(
+      { file, fileName, mimeType, language },
+      false,
+    );
+    return response.text.trim();
+  }
+
+  async transcribeSegment(
+    file: Buffer,
+    fileName: string,
+    mimeType: string,
+    language?: string,
+  ): Promise<RecordingTranscript> {
+    const response = await this.perform(
+      { file, fileName, mimeType, language },
+      true,
+    );
+    const text = response.text.trim();
+    if (text && !response.segments?.length) {
+      throw new TranscriptionFailedError(
+        'The configured transcription model did not return segment timestamps',
+      );
+    }
+    const segments = (response.segments ?? []).map((segment) => {
+      if (
+        segment.start === null ||
+        segment.end === null ||
+        segment.start < 0 ||
+        segment.end < segment.start
+      ) {
+        throw new TranscriptionFailedError(
+          'The transcription provider returned invalid segment timestamps',
+        );
+      }
+      return { text: segment.text, start: segment.start, end: segment.end };
+    });
+    return { text, segments };
+  }
+
+  private async perform(
+    input: {
+      file: Buffer;
+      fileName: string;
+      mimeType: string;
+      language?: string;
+    },
+    timestamps: boolean,
+  ): Promise<TranscriptionResponse> {
     this.logger.log(
-      {
-        fileName,
-        fileSize: file.length,
-        mimeType,
-        language,
-      },
+      { fileName: input.fileName, fileSize: input.file.length },
       'Starting transcription',
     );
-
     try {
-      // Create a File object from the buffer for the Mistral API
-      const audioFile = new File([new Uint8Array(file)], fileName, {
-        type: mimeType,
+      const audioFile = new File([new Uint8Array(input.file)], input.fileName, {
+        type: input.mimeType,
       });
-
-      const response = await this.requestTranscription(audioFile, language);
-
-      const transcriptedText = response.text.trim() || '';
-
-      this.logger.log(
-        {
-          fileName,
-          textLength: transcriptedText.length,
-        },
-        'Transcription completed successfully',
+      const result = await this.requestTranscription(
+        audioFile,
+        input.language,
+        timestamps,
       );
-
-      return transcriptedText;
+      this.logger.log(
+        { fileName: input.fileName, textLength: result.text.length },
+        'Transcription completed',
+      );
+      return result;
     } catch (error) {
       this.logger.error(
-        { err: error as Error, fileName },
+        { err: error as Error, fileName: input.fileName },
         'Transcription failed',
       );
-
-      // Availability failures (transport errors, SDK 5xx, timeouts) all
-      // classify here; what falls through is a request-shaped failure.
-      const providerError = wrapProviderFailure(error, {
-        provider: 'mistral',
-        modelId: this.model,
-      });
-      if (providerError) {
-        throw providerError;
-      }
-      if (isUndecodableAudioError(error)) throw new InvalidAudioFileError();
-
-      throw new TranscriptionFailedError(
-        `Mistral transcription failed: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      throw this.mapError(error);
     }
   }
 
-  private requestTranscription(audioFile: File, language?: string) {
-    const transcriptionRequest = {
+  private mapError(error: unknown): ApplicationError {
+    const providerError = wrapProviderFailure(error, {
+      provider: 'mistral',
+      modelId: this.model,
+    });
+    if (providerError) return providerError;
+    if (isUndecodableAudioError(error)) return new InvalidAudioFileError();
+    return new TranscriptionFailedError(
+      `Mistral transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
+
+  private requestTranscription(
+    audioFile: File,
+    language?: string,
+    timestamps = false,
+  ) {
+    const request = {
       file: audioFile,
       model: this.model,
       ...(language && { language }),
+      ...(timestamps && { timestampGranularities: ['segment' as const] }),
     };
-
-    this.logger.log(
-      {
-        model: this.model,
-        language,
-      },
-      'Sending transcription request to Mistral',
-    );
-
     return retryWithBackoff({
-      fn: () => this.client.audio.transcriptions.complete(transcriptionRequest),
+      fn: () =>
+        timestamps
+          ? this.client.audio.transcriptions.complete(request, {
+              timeoutMs: this.segmentTimeoutMs,
+            })
+          : this.client.audio.transcriptions.complete(request),
       maxRetries: 3,
       delay: 2000,
-      retryIfError: (error: Error) => this.shouldRetry(error),
+      retryIfError: (error: Error) => isTransientMistralError(error),
     });
-  }
-
-  private shouldRetry(error: Error): boolean {
-    const isTransient = isTransientMistralError(error);
-    if (isTransient) {
-      this.logger.warn(
-        { err: error },
-        'Retrying Mistral transcription after transient error',
-      );
-    }
-    return isTransient;
   }
 }
 

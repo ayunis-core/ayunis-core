@@ -72,6 +72,46 @@ describe('MistralTranscriptionService', () => {
     );
   });
 
+  it('supports an explicit transcription endpoint for deterministic integration tests', async () => {
+    await createService({
+      'models.mistral.apiKey': 'test-api-key',
+      'models.mistral.transcriptionServerUrl': 'http://127.0.0.1:3198',
+    });
+    const { Mistral } = jest.requireMock<{ Mistral: jest.Mock }>(
+      '@mistralai/mistralai',
+    );
+    expect(Mistral).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        serverURL: 'http://127.0.0.1:3198',
+      }),
+    );
+  });
+
+  it('requests and preserves timestamps for uploaded recording segments', async () => {
+    const service = await createService({
+      'models.mistral.apiKey': 'test-api-key',
+      'models.mistral.transcriptionModel': 'voxtral-mini-2602',
+    });
+    mockClient.audio.transcriptions.complete.mockResolvedValue({
+      text: 'The council approves the proposal.',
+      segments: [
+        { text: 'The council approves the proposal.', start: 1.2, end: 4.8 },
+      ],
+    });
+    const result = await service.transcribeSegment(
+      Buffer.from('audio segment'),
+      'segment.wav',
+      'audio/wav',
+    );
+    expect(result.segments).toEqual([
+      { text: 'The council approves the proposal.', start: 1.2, end: 4.8 },
+    ]);
+    expect(mockClient.audio.transcriptions.complete).toHaveBeenCalledWith(
+      expect.objectContaining({ timestampGranularities: ['segment'] }),
+      expect.objectContaining({ timeoutMs: 120_000 }),
+    );
+  });
+
   it('should send the transcription model configured via models.mistral.transcriptionModel', async () => {
     const service = await createService({
       'models.mistral.apiKey': 'test-api-key',

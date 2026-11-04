@@ -4,6 +4,7 @@ import { registerAs } from '@nestjs/config';
 // ConfigModule has loaded .env files.
 const mistralConfig = () => ({
   apiKey: process.env.MISTRAL_API_KEY,
+  transcriptionServerUrl: process.env.MISTRAL_TRANSCRIPTION_SERVER_URL,
   // Default must be a model with the audio_transcription capability —
   // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
   transcriptionModel:

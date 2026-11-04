@@ -60,7 +60,7 @@ RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 FROM node:26.12.1-alpine AS production
 
 # Chromium for Puppeteer PDF export
-RUN apk add --no-cache chromium
+RUN apk add --no-cache chromium ffmpeg
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app

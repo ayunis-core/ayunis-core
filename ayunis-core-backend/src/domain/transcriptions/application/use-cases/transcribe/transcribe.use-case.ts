@@ -1,23 +1,11 @@
+import { validateAudio } from 'src/domain/transcriptions/application/util/validate-audio';
 import { Injectable, Logger } from '@nestjs/common';
 import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
 import { TranscribeCommand } from './transcribe.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import {
-  TranscriptionFailedError,
-  InvalidAudioFileError,
-} from 'src/domain/transcriptions/application/transcription.errors';
+import { TranscriptionFailedError } from 'src/domain/transcriptions/application/transcription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { getRequiredOrgId } from 'src/common/context/required-context';
-
-// 25 MB - matches Mistral's API limit for audio transcription
-const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024;
-const SUPPORTED_MIME_TYPES = [
-  'audio/webm',
-  'audio/mp4',
-  'audio/mpeg',
-  'audio/wav',
-  'audio/x-m4a',
-];
 
 @Injectable()
 export class TranscribeUseCase {
@@ -78,19 +66,6 @@ export class TranscribeUseCase {
   }
 
   private validateAudio(command: TranscribeCommand): void {
-    if (command.file.length === 0) {
-      throw new InvalidAudioFileError('Empty audio file');
-    }
-    if (command.file.length > MAX_AUDIO_FILE_SIZE_BYTES) {
-      const maxSizeMB = MAX_AUDIO_FILE_SIZE_BYTES / (1024 * 1024);
-      throw new InvalidAudioFileError(
-        `Audio file size exceeds maximum allowed size of ${maxSizeMB} MB`,
-      );
-    }
-    if (!SUPPORTED_MIME_TYPES.includes(command.mimeType)) {
-      throw new InvalidAudioFileError(
-        `Unsupported audio format: ${command.mimeType}`,
-      );
-    }
+    validateAudio(command.file, command.mimeType);
   }
 }

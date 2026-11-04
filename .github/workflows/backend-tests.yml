@@ -106,6 +106,9 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: Install audio processing tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Start MinIO
         uses: ./.github/actions/start-minio
 
