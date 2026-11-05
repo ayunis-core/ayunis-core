@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
-import { MemoryEntryRecord } from '../schema/memory-entry.record';
+import { MemoryEntryRecord } from 'src/domain/memory/infrastructure/persistence/local/schema/memory-entry.record';
 
 @Injectable()
 export class MemoryEntryMapper {
@@ -10,6 +10,7 @@ export class MemoryEntryMapper {
       userId: record.userId,
       key: record.key,
       content: record.content,
+      description: record.description,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -21,6 +22,7 @@ export class MemoryEntryMapper {
     record.userId = domain.userId;
     record.key = domain.key;
     record.content = domain.content;
+    record.description = domain.description;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

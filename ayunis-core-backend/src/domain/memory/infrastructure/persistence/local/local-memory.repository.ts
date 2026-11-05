@@ -40,14 +40,15 @@ export class LocalMemoryRepository extends MemoryRepository {
   async upsert(entry: MemoryEntry): Promise<MemoryEntry> {
     this.logger.log({ userId: entry.userId, key: entry.key }, 'upsert');
 
-    // Only content and updatedAt are overwritten: an existing row keeps its id
-    // and createdAt, and a concurrent write cannot lose to a read-then-write.
+    // Only content, description and updatedAt are overwritten: an existing row
+    // keeps its id and createdAt, and a concurrent write cannot lose to a
+    // read-then-write.
     await this.repository
       .createQueryBuilder()
       .insert()
       .into(MemoryEntryRecord)
       .values(this.mapper.toRecord(entry))
-      .orUpdate(['content', 'updatedAt'], ['userId', 'key'])
+      .orUpdate(['content', 'description', 'updatedAt'], ['userId', 'key'])
       .execute();
 
     const saved = await this.repository.findOneOrFail({

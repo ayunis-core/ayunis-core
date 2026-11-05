@@ -4,7 +4,7 @@ import {
   RESERVED_MEMORY_KEYS,
   isReservedMemoryKey,
 } from 'src/domain/memory/domain/memory.constants';
-import { MemoryEntryResponseDto } from '../dtos/memory-entry-response.dto';
+import { MemoryEntryResponseDto } from 'src/domain/memory/presenters/http/dtos/memory-entry-response.dto';
 
 @Injectable()
 export class MemoryEntryDtoMapper {
@@ -20,7 +20,13 @@ export class MemoryEntryDtoMapper {
       const entry = byKey.get(key);
       return entry
         ? this.toDto(entry)
-        : { key, content: '', isReserved: true, updatedAt: null };
+        : {
+            key,
+            content: '',
+            description: null,
+            isReserved: true,
+            updatedAt: null,
+          };
     });
 
     const open = entries
@@ -34,6 +40,7 @@ export class MemoryEntryDtoMapper {
     return {
       key: entry.key,
       content: entry.content,
+      description: entry.description,
       isReserved: isReservedMemoryKey(entry.key),
       updatedAt: entry.updatedAt.toISOString(),
     };

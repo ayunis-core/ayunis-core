@@ -9,12 +9,12 @@ import {
   Put,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { FindUserMemoryUseCase } from '../../application/use-cases/find-user-memory/find-user-memory.use-case';
-import { UpsertMemoryEntryUseCase } from '../../application/use-cases/upsert-memory-entry/upsert-memory-entry.use-case';
-import { UpsertMemoryEntryCommand } from '../../application/use-cases/upsert-memory-entry/upsert-memory-entry.command';
-import { DeleteMemoryEntryUseCase } from '../../application/use-cases/delete-memory-entry/delete-memory-entry.use-case';
-import { DeleteMemoryEntryCommand } from '../../application/use-cases/delete-memory-entry/delete-memory-entry.command';
-import { ClearUserMemoryUseCase } from '../../application/use-cases/clear-user-memory/clear-user-memory.use-case';
+import { FindUserMemoryUseCase } from 'src/domain/memory/application/use-cases/find-user-memory/find-user-memory.use-case';
+import { UpsertMemoryEntryUseCase } from 'src/domain/memory/application/use-cases/upsert-memory-entry/upsert-memory-entry.use-case';
+import { UpsertMemoryEntryCommand } from 'src/domain/memory/application/use-cases/upsert-memory-entry/upsert-memory-entry.command';
+import { DeleteMemoryEntryUseCase } from 'src/domain/memory/application/use-cases/delete-memory-entry/delete-memory-entry.use-case';
+import { DeleteMemoryEntryCommand } from 'src/domain/memory/application/use-cases/delete-memory-entry/delete-memory-entry.command';
+import { ClearUserMemoryUseCase } from 'src/domain/memory/application/use-cases/clear-user-memory/clear-user-memory.use-case';
 import { MemoryEntryDtoMapper } from './mappers/memory-entry.mapper';
 import { MemoryEntryResponseDto } from './dtos/memory-entry-response.dto';
 import { MemoryResponseDto } from './dtos/memory-response.dto';
@@ -66,7 +66,7 @@ export class MemoryController {
     @Body() dto: UpsertMemoryEntryDto,
   ): Promise<MemoryEntryResponseDto> {
     const entry = await this.upsertMemoryEntryUseCase.execute(
-      new UpsertMemoryEntryCommand(key, dto.content),
+      new UpsertMemoryEntryCommand(key, dto.content, dto.description),
     );
 
     return this.mapper.toDto(entry);

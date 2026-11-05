@@ -21315,6 +21315,12 @@
             "description": "The stored snippet. Empty for a reserved key with no content",
             "example": "Works in the building authority of the city of Musterstadt."
           },
+          "description": {
+            "type": "string",
+            "description": "One line on when the entry is relevant; null when none was given. Reserved keys never have one",
+            "nullable": true,
+            "example": "How the user wants monthly council reports structured."
+          },
           "isReserved": {
             "type": "boolean",
             "description": "Whether this key is always offered to the assistant and cannot be removed",
@@ -21327,7 +21333,7 @@
             "format": "date-time"
           }
         },
-        "required": ["key", "content", "isReserved", "updatedAt"]
+        "required": ["key", "content", "description", "isReserved", "updatedAt"]
       },
       "MemoryResponseDto": {
         "type": "object",
@@ -21350,6 +21356,13 @@
             "description": "The snippet to store under this key",
             "example": "Works in the building authority of the city of Musterstadt.",
             "maxLength": 2000
+          },
+          "description": {
+            "type": "string",
+            "description": "One line on when this entry is relevant. Omit to keep the stored description, send an empty string or null to clear it",
+            "example": "How the user wants monthly council reports structured.",
+            "maxLength": 150,
+            "nullable": true
           }
         },
         "required": ["content"]

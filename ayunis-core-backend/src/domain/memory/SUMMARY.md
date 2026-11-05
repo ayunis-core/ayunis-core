@@ -2,13 +2,13 @@
 
 Per-user key/value store of text snippets that the assistant reads on every run and writes during a conversation, so stable facts about a user survive across threads.
 
-Two keys are reserved: **`personal`** (who the user is — role, department, organization, responsibilities) and **`preferences`** (how they want to be served — tone, form of address, output formats). The runs module renders both in full in the system prompt; every other key is listed by name only and is pulled in on demand via the `get_memory` tool. Reserved keys are *virtual*: no row exists until the assistant writes one, so "always present" means always described in the prompt and always listed in the API response.
+Two keys are reserved: **`personal`** (who the user is — role, department, organization, responsibilities) and **`preferences`** (how they want to be served — tone, form of address, output formats). The runs module renders both in full in the system prompt; every other key is listed by name plus a one-line **description** of when it is relevant, and its content is pulled in on demand via the `get_memory` tool. The description works like a skill description: a trigger the model can judge relevance by without loading the entry. Reserved keys are *virtual*: no row exists until the assistant writes one, so "always present" means always described in the prompt and always listed in the API response.
 
 Memory is strictly personal. Every use case derives the owner from the request context, so no API shape can address another user's memory.
 
 ## Domain
 
-- **`MemoryEntry`** — One snippet (`id`, `userId`, `key`, `content`, `createdAt`, `updatedAt`). Unique per (`userId`, `key`).
+- **`MemoryEntry`** — One snippet (`id`, `userId`, `key`, `content`, `description`, `createdAt`, `updatedAt`). Unique per (`userId`, `key`). `description` is optional (≤ 150 characters) and only meaningful for non-reserved keys.
 - **`memory.constants.ts`** — `RESERVED_MEMORY_KEYS`, key validation (`^[a-z][a-z0-9_]*$`, ≤ 48 chars), and the bounds that keep the system prompt finite: ≤ 2,000 characters per entry, ≤ 50 entries per user.
 
 ## Ports
@@ -19,13 +19,13 @@ Memory is strictly personal. Every use case derives the owner from the request c
 
 - **`FindUserMemoryUseCase`** — All entries of the authenticated user
 - **`GetMemoryEntryUseCase`** — One entry by key (`null` when absent)
-- **`UpsertMemoryEntryUseCase`** — Creates or replaces an entry; enforces key shape, content length and the entry limit
+- **`UpsertMemoryEntryUseCase`** — Creates or replaces an entry; enforces key shape, content and description length and the entry limit. An omitted description keeps the stored one, an empty one clears it
 - **`DeleteMemoryEntryUseCase`** — Removes an entry (idempotent). A reserved key is cleared rather than removed, because the key itself always stays available
 - **`ClearUserMemoryUseCase`** — Removes every entry of the authenticated user
 
 ## Infrastructure
 
-- **`LocalMemoryRepository`** — TypeORM implementation backed by `user_memory_entries`. `upsert` is a single `INSERT … ON CONFLICT DO UPDATE` touching only `content` and `updatedAt`, so the settings page and a tool call cannot lose each other's write.
+- **`LocalMemoryRepository`** — TypeORM implementation backed by `user_memory_entries`. `upsert` is a single `INSERT … ON CONFLICT DO UPDATE` touching only `content`, `description` and `updatedAt`, so the settings page and a tool call cannot lose each other's write.
 - **`MemoryEntryRecord`** — Unique constraint on (`userId`, `key`) and FK to `users` with cascade delete, which is what makes account deletion erase memory.
 
 ## HTTP API

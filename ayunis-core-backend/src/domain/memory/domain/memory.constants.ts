@@ -9,6 +9,7 @@ export type ReservedMemoryKey = (typeof RESERVED_MEMORY_KEYS)[number];
 
 export const MEMORY_KEY_MAX_LENGTH = 48;
 export const MEMORY_CONTENT_MAX_LENGTH = 2000;
+export const MEMORY_DESCRIPTION_MAX_LENGTH = 150;
 export const MEMORY_MAX_ENTRIES_PER_USER = 50;
 
 const MEMORY_KEY_PATTERN = /^[a-z][a-z0-9_]*$/;

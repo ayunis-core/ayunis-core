@@ -16,11 +16,13 @@ import type { MemoryRepository } from 'src/domain/memory/application/ports/memor
 import {
   InvalidMemoryKeyError,
   MemoryContentTooLongError,
+  MemoryDescriptionTooLongError,
   MemoryEntryLimitReachedError,
 } from 'src/domain/memory/application/memory.errors';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 import {
   MEMORY_CONTENT_MAX_LENGTH,
+  MEMORY_DESCRIPTION_MAX_LENGTH,
   MEMORY_MAX_ENTRIES_PER_USER,
 } from 'src/domain/memory/domain/memory.constants';
 import { UpsertMemoryEntryCommand } from './upsert-memory-entry.command';
@@ -28,7 +30,7 @@ import { UpsertMemoryEntryUseCase } from './upsert-memory-entry.use-case';
 
 describe('UpsertMemoryEntryUseCase', () => {
   function build(overrides: Partial<MemoryRepository> = {}) {
-    const repository = {
+    const repository: MemoryRepository = {
       findAllByUserId: jest.fn().mockResolvedValue([]),
       findByUserIdAndKey: jest.fn().mockResolvedValue(null),
       upsert: jest.fn().mockImplementation((entry: MemoryEntry) => entry),
@@ -36,7 +38,7 @@ describe('UpsertMemoryEntryUseCase', () => {
       deleteAllByUserId: jest.fn().mockResolvedValue(undefined),
       countByUserId: jest.fn().mockResolvedValue(0),
       ...overrides,
-    } as unknown as MemoryRepository;
+    };
 
     return {
       repository,
@@ -100,10 +102,77 @@ describe('UpsertMemoryEntryUseCase', () => {
     expect(repository.upsert).not.toHaveBeenCalled();
   });
 
+  it('stores a trimmed description alongside the content', async () => {
+    const { useCase } = build();
+
+    const entry = await useCase.execute(
+      new UpsertMemoryEntryCommand(
+        'report_template',
+        'Intro, three findings, next steps',
+        '  How the user wants monthly council reports structured ',
+      ),
+    );
+
+    expect(entry.description).toBe(
+      'How the user wants monthly council reports structured',
+    );
+  });
+
+  it('keeps the stored description when the write omits one', async () => {
+    const existing = new MemoryEntry({
+      userId: TEST_USER_ID,
+      key: 'report_template',
+      content: 'old',
+      description: 'When drafting council reports',
+    });
+    const { useCase } = build({
+      findByUserIdAndKey: jest.fn().mockResolvedValue(existing),
+    });
+
+    const entry = await useCase.execute(
+      new UpsertMemoryEntryCommand('report_template', 'new'),
+    );
+
+    expect(entry.description).toBe('When drafting council reports');
+  });
+
+  it('clears the description when the write sends an empty one', async () => {
+    const existing = new MemoryEntry({
+      userId: TEST_USER_ID,
+      key: 'report_template',
+      content: 'old',
+      description: 'When drafting council reports',
+    });
+    const { useCase } = build({
+      findByUserIdAndKey: jest.fn().mockResolvedValue(existing),
+    });
+
+    const entry = await useCase.execute(
+      new UpsertMemoryEntryCommand('report_template', 'new', ''),
+    );
+
+    expect(entry.description).toBeNull();
+  });
+
+  it('rejects a description longer than the limit', async () => {
+    const { useCase, repository } = build();
+
+    await expect(
+      useCase.execute(
+        new UpsertMemoryEntryCommand(
+          'report_template',
+          'content',
+          'x'.repeat(MEMORY_DESCRIPTION_MAX_LENGTH + 1),
+        ),
+      ),
+    ).rejects.toThrow(MemoryDescriptionTooLongError);
+    expect(repository.upsert).not.toHaveBeenCalled();
+  });
+
   it('refuses a new key once the store is full', async () => {
     const { useCase, repository } = build({
       countByUserId: jest.fn().mockResolvedValue(MEMORY_MAX_ENTRIES_PER_USER),
-    } as Partial<MemoryRepository>);
+    });
 
     await expect(
       useCase.execute(new UpsertMemoryEntryCommand('a_new_key', 'content')),
@@ -120,7 +189,7 @@ describe('UpsertMemoryEntryUseCase', () => {
     const { useCase, repository } = build({
       countByUserId: jest.fn().mockResolvedValue(MEMORY_MAX_ENTRIES_PER_USER),
       findByUserIdAndKey: jest.fn().mockResolvedValue(existing),
-    } as Partial<MemoryRepository>);
+    });
 
     await useCase.execute(new UpsertMemoryEntryCommand('personal', 'new'));
 

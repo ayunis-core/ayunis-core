@@ -4,6 +4,7 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import {
   MEMORY_CONTENT_MAX_LENGTH,
+  MEMORY_DESCRIPTION_MAX_LENGTH,
   MEMORY_KEY_MAX_LENGTH,
 } from 'src/domain/memory/domain/memory.constants';
 
@@ -23,6 +24,14 @@ const setMemoryToolParameters = {
         'The complete new content for this key. It replaces the previous content, so include everything ' +
         'that should be kept. An empty string removes the entry.',
       maxLength: MEMORY_CONTENT_MAX_LENGTH,
+    },
+    description: {
+      type: 'string' as const,
+      description:
+        'For keys other than "personal" and "preferences": one line on WHEN this entry is relevant, so you ' +
+        'can recognise it later from the key list without loading it (e.g. "How the user wants monthly ' +
+        'council reports structured"). Not a summary of the content. Omit to keep the stored description.',
+      maxLength: MEMORY_DESCRIPTION_MAX_LENGTH,
     },
   },
   additionalProperties: false,

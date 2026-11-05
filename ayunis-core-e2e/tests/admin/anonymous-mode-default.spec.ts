@@ -60,7 +60,10 @@ test("admin default reaches members, preserves settings, and permits per-chat op
       anonymousModeByDefault: false,
       internetSearchEnabled: false,
     });
-    expect(await readDefault()).toEqual({ anonymousModeByDefault: false });
+    expect(await readDefault()).toEqual({
+      anonymousModeByDefault: false,
+      memoryEnabled: previousSettings.memoryEnabled,
+    });
     await expect(readDefault(unauthenticatedApi)).rejects.toThrow("HTTP 401");
     await expect(
       update({ anonymousModeByDefault: true }, memberApi),
@@ -75,7 +78,10 @@ test("admin default reaches members, preserves settings, and permits per-chat op
     await expect(
       page.getByTestId("anonymization-default-switch"),
     ).toBeChecked();
-    await expect.poll(readDefault).toEqual({ anonymousModeByDefault: true });
+    await expect.poll(readDefault).toEqual({
+      anonymousModeByDefault: true,
+      memoryEnabled: previousSettings.memoryEnabled,
+    });
     await page.reload();
     await expect(
       page.getByTestId("anonymization-default-switch"),
@@ -86,6 +92,7 @@ test("admin default reaches members, preserves settings, and permits per-chat op
     ).toBe(false);
     expect(await readDefault(otherApi)).toEqual({
       anonymousModeByDefault: false,
+      memoryEnabled: false,
     });
 
     await memberPage.reload();
@@ -124,12 +131,22 @@ test("admin default reaches members, preserves settings, and permits per-chat op
     ]);
     expect(
       await generatedApi.orgChatSettingsControllerGetOrgChatSettings({ api }),
-    ).toEqual({ anonymousModeByDefault: false, internetSearchEnabled: true });
+    ).toEqual({
+      anonymousModeByDefault: false,
+      internetSearchEnabled: true,
+      memoryEnabled: previousSettings.memoryEnabled,
+    });
     await update({ anonymousModeByDefault: true });
     await update({ internetSearchEnabled: false });
-    expect(await readDefault()).toEqual({ anonymousModeByDefault: true });
+    expect(await readDefault()).toEqual({
+      anonymousModeByDefault: true,
+      memoryEnabled: previousSettings.memoryEnabled,
+    });
     await expect(update({})).rejects.toThrow("HTTP 400");
-    expect(await readDefault()).toEqual({ anonymousModeByDefault: true });
+    expect(await readDefault()).toEqual({
+      anonymousModeByDefault: true,
+      memoryEnabled: previousSettings.memoryEnabled,
+    });
     expect(
       (
         await generatedApi.threadsControllerFindOne(threadId!, {

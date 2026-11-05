@@ -29,7 +29,7 @@ export class SetMemoryToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    const { key, content } = tool.validateParams(input);
+    const { key, content, description } = tool.validateParams(input);
     this.logger.log(
       { name: tool.name, key, contentLength: content.length },
       'execute',
@@ -38,7 +38,7 @@ export class SetMemoryToolHandler extends ToolExecutionHandler {
     try {
       return content.trim().length === 0
         ? await this.remove(key)
-        : await this.store(key, content);
+        : await this.store(key, content, description);
     } catch (error) {
       if (error instanceof MemoryError) {
         // The model can fix an invalid key, over-long content or a full store
@@ -53,9 +53,13 @@ export class SetMemoryToolHandler extends ToolExecutionHandler {
     }
   }
 
-  private async store(key: string, content: string): Promise<string> {
+  private async store(
+    key: string,
+    content: string,
+    description: string | undefined,
+  ): Promise<string> {
     const entry = await this.upsertMemoryEntryUseCase.execute(
-      new UpsertMemoryEntryCommand(key, content),
+      new UpsertMemoryEntryCommand(key, content, description),
     );
 
     return `Stored memory "${entry.key}".`;

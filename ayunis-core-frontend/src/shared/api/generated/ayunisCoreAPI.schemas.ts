@@ -4958,6 +4958,11 @@ export interface MemoryEntryResponseDto {
   key: string;
   /** The stored snippet. Empty for a reserved key with no content */
   content: string;
+  /**
+     * One line on when the entry is relevant; null when none was given. Reserved keys never have one
+     * @nullable
+     */
+  description: string | null;
   /** Whether this key is always offered to the assistant and cannot be removed */
   isReserved: boolean;
   /**
@@ -4978,6 +4983,12 @@ export interface UpsertMemoryEntryDto {
      * @maxLength 2000
      */
   content: string;
+  /**
+     * One line on when this entry is relevant. Omit to keep the stored description, send an empty string or null to clear it
+     * @maxLength 150
+     * @nullable
+     */
+  description?: string | null;
 }
 
 /**

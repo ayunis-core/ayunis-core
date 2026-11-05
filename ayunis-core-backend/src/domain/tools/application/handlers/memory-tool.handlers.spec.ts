@@ -146,6 +146,27 @@ describe('SetMemoryToolHandler', () => {
     expect(result).toContain('Stored memory "personal"');
   });
 
+  it('passes the description through so the key list can explain itself', async () => {
+    const { handler, upsertMemoryEntryUseCase } = build();
+
+    await handler.execute({
+      tool,
+      input: {
+        key: 'report_template',
+        content: 'Intro, three findings, next steps',
+        description: 'How the user wants monthly council reports structured',
+      },
+      context,
+    });
+
+    expect(upsertMemoryEntryUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'report_template',
+        description: 'How the user wants monthly council reports structured',
+      }),
+    );
+  });
+
   it('removes an open key when the content is empty', async () => {
     const { handler, deleteMemoryEntryUseCase, upsertMemoryEntryUseCase } =
       build();

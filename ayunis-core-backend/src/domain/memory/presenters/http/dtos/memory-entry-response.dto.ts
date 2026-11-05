@@ -15,6 +15,15 @@ export class MemoryEntryResponseDto {
 
   @ApiProperty({
     description:
+      'One line on when the entry is relevant; null when none was given. Reserved keys never have one',
+    nullable: true,
+    type: String,
+    example: 'How the user wants monthly council reports structured.',
+  })
+  description: string | null;
+
+  @ApiProperty({
+    description:
       'Whether this key is always offered to the assistant and cannot be removed',
     example: true,
   })
