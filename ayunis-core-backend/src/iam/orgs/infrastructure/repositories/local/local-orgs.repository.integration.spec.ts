@@ -10,6 +10,8 @@ import {
   type OrgLifecycleStatus,
 } from 'src/iam/orgs/application/models/org-lifecycle-status';
 import type { OrgsFilters } from 'src/iam/orgs/application/ports/orgs.repository';
+import { SortOrder } from 'src/common/sorting/sort';
+import { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { getEffectiveAccessEnd } from 'src/iam/subscriptions/application/util/get-effective-access-end';
 import { isActive } from 'src/iam/subscriptions/application/util/is-active';
@@ -373,8 +375,34 @@ describe('LocalOrgsRepository super-admin lifecycle status', () => {
     await dataSource.destroy();
   }, 30_000);
 
-  const list = (filters: OrgsFilters) =>
-    repository.findAllForSuperAdmin({ limit: 100, offset: 0 }, filters);
+  const list = (
+    filters: OrgsFilters,
+    sort = { field: OrgsSortField.CREATED_AT, order: SortOrder.DESC },
+  ) =>
+    repository.findAllForSuperAdmin({ limit: 100, offset: 0 }, filters, sort);
+
+  it('sorts by name in both directions', async () => {
+    const asc = await list(
+      {},
+      { field: OrgsSortField.NAME, order: SortOrder.ASC },
+    );
+    const desc = await list(
+      {},
+      { field: OrgsSortField.NAME, order: SortOrder.DESC },
+    );
+
+    expect(asc.data[0].name).toBe('archived with a running subscription');
+    expect(desc.data.map((org) => org.id)).toEqual(
+      asc.data.map((org) => org.id).reverse(),
+    );
+  });
+
+  it('breaks equal creation times by id in the sort direction', async () => {
+    const desc = await list({});
+    const ids = desc.data.map((org) => org.id);
+
+    expect(ids).toEqual([...ids].sort((a, b) => (a < b ? 1 : -1)));
+  });
 
   it.each(ORG_LIFECYCLE_STATUSES)('has at least one %s case', (status) => {
     expect(namesWithStatus(status)).not.toHaveLength(0);

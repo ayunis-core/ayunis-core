@@ -1,4 +1,5 @@
-import type { OrgLifecycleFilter } from '@/shared/api';
+import type { OrgLifecycleFilter, OrgsSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
 import { SearchPagination } from '@/widgets/pagination';
 
 interface OrgsPaginationProps {
@@ -6,6 +7,7 @@ interface OrgsPaginationProps {
   totalPages: number;
   search?: string;
   lifecycle: OrgLifecycleFilter;
+  sort: TableSort<OrgsSortField>;
 }
 
 export default function OrgsPagination({
@@ -13,6 +15,7 @@ export default function OrgsPagination({
   totalPages,
   search,
   lifecycle,
+  sort,
 }: Readonly<OrgsPaginationProps>) {
   return (
     <SearchPagination
@@ -20,7 +23,7 @@ export default function OrgsPagination({
       totalPages={totalPages}
       to="/super-admin-settings/orgs"
       search={search}
-      extraSearchParams={{ orgLifecycle: lifecycle }}
+      extraSearchParams={{ orgLifecycle: lifecycle, ...sort }}
     />
   );
 }

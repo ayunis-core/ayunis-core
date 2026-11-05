@@ -29,6 +29,9 @@ import { BulkInviteDialog } from '@/features/bulk-user-invite';
 import { Button } from '@ayunis/ui/components/button';
 import { Upload } from 'lucide-react';
 import { useState } from 'react';
+import type { OrgUsersSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 
 interface UsersTableProps {
   users: UserResponseDto[];
@@ -36,6 +39,8 @@ interface UsersTableProps {
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
+  sort: TableSort<OrgUsersSortField>;
+  onSort: (next: Required<TableSort<OrgUsersSortField>>) => void;
 }
 
 export default function UsersTable({
@@ -44,6 +49,8 @@ export default function UsersTable({
   pagination,
   search,
   currentPage,
+  sort,
+  onSort,
 }: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { t: tUsers } = useTranslation('admin-settings-users');
@@ -99,10 +106,38 @@ export default function UsersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('table.name')}</TableHead>
-                  <TableHead>{t('table.createdAt')}</TableHead>
-                  <TableHead>{t('table.email')}</TableHead>
-                  <TableHead>{t('table.role')}</TableHead>
+                  <SortableTableHead
+                    field="name"
+                    sort={sort}
+                    onSort={onSort}
+                    data-testid="org-users-sort-name"
+                  >
+                    {t('table.name')}
+                  </SortableTableHead>
+                  <SortableTableHead
+                    field="createdAt"
+                    sort={sort}
+                    onSort={onSort}
+                    data-testid="org-users-sort-createdAt"
+                  >
+                    {t('table.createdAt')}
+                  </SortableTableHead>
+                  <SortableTableHead
+                    field="email"
+                    sort={sort}
+                    onSort={onSort}
+                    data-testid="org-users-sort-email"
+                  >
+                    {t('table.email')}
+                  </SortableTableHead>
+                  <SortableTableHead
+                    field="role"
+                    sort={sort}
+                    onSort={onSort}
+                    data-testid="org-users-sort-role"
+                  >
+                    {t('table.role')}
+                  </SortableTableHead>
                   <TableHead>{t('table.status')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}

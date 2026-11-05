@@ -67,6 +67,7 @@ export class FindUsersByOrgIdUseCase {
       {
         search: query.search,
       },
+      { field: query.sortBy, order: query.sortOrder },
     );
     if (!query.includeTeams || (role !== UserRole.ADMIN && !callerIsSuperAdmin))
       return users;

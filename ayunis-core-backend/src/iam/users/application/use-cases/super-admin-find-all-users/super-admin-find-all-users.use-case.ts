@@ -29,6 +29,8 @@ export class SuperAdminFindAllUsersUseCase {
         limit: query.limit,
         offset: query.offset,
         hasSearch: query.search !== undefined,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
       },
       'superAdminFindAllUsers',
     );
@@ -40,6 +42,7 @@ export class SuperAdminFindAllUsersUseCase {
     return this.usersRepository.findAllForSuperAdmin(
       { limit: query.limit, offset: query.offset },
       { search: query.search },
+      { field: query.sortBy, order: query.sortOrder },
     );
   }
 }

@@ -14,7 +14,12 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgOverviewResponseDto } from '@/shared/api';
+import type {
+  OrgsSortField,
+  SuperAdminOrgOverviewResponseDto,
+} from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
@@ -22,11 +27,15 @@ import type { ReactNode } from 'react';
 
 interface OrgsTableProps {
   orgs: SuperAdminOrgOverviewResponseDto[];
+  sort: TableSort<OrgsSortField>;
+  onSort: (next: Required<TableSort<OrgsSortField>>) => void;
   searchSlot?: ReactNode;
 }
 
 export default function OrgsTable({
   orgs,
+  sort,
+  onSort,
   searchSlot,
 }: Readonly<OrgsTableProps>) {
   const { t } = useTranslation('super-admin-settings-orgs');
@@ -51,9 +60,23 @@ export default function OrgsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('table.name')}</TableHead>
+                <SortableTableHead
+                  field="name"
+                  sort={sort}
+                  onSort={onSort}
+                  data-testid="orgs-sort-name"
+                >
+                  {t('table.name')}
+                </SortableTableHead>
                 <TableHead>{t('table.status')}</TableHead>
-                <TableHead>{t('table.createdAt')}</TableHead>
+                <SortableTableHead
+                  field="createdAt"
+                  sort={sort}
+                  onSort={onSort}
+                  data-testid="orgs-sort-createdAt"
+                >
+                  {t('table.createdAt')}
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

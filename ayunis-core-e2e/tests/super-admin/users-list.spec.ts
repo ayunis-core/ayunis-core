@@ -38,6 +38,21 @@ test('super admin searches users and opens their organization', async ({
   await expect(page).not.toHaveURL(/page=999/);
   await expect(page.getByTestId('super-admin-user-row').first()).toBeVisible();
 
+  await page.getByTestId('super-admin-users-search').fill('@usage.local');
+  const emailSort = page.getByTestId('super-admin-users-sort-email');
+  const firstRow = page.getByTestId('super-admin-user-row').first();
+  await emailSort.getByRole('button').click();
+  await expect(emailSort).toHaveAttribute('aria-sort', 'ascending');
+  await expect(
+    firstRow.getByRole('cell', { name: 'admin@usage.local' }),
+  ).toBeVisible();
+  await emailSort.getByRole('button').click();
+  await expect(emailSort).toHaveAttribute('aria-sort', 'descending');
+  await expect(page).toHaveURL(/sortBy=email&sortOrder=desc/);
+  await expect(
+    firstRow.getByRole('cell', { name: 'dan@usage.local' }),
+  ).toBeVisible();
+
   await page.getByTestId('super-admin-users-search').fill('anna@usage.local');
   const userRow = page.getByTestId('super-admin-user-row').filter({
     has: page.getByRole('cell', { name: 'anna@usage.local' }),

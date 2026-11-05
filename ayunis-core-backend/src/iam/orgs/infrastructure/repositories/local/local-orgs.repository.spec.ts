@@ -5,6 +5,8 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import { OrgErrorCode } from 'src/iam/orgs/application/orgs.errors';
 import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
 import { LocalOrgsRepository } from './local-orgs.repository';
+import { SortOrder } from 'src/common/sorting/sort';
+import { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
 
 describe('LocalOrgsRepository.findById error classification', () => {
   const orgId = '11111111-1111-4111-8111-111111111111' as UUID;
@@ -64,6 +66,7 @@ describe('LocalOrgsRepository.findAllForSuperAdmin search', () => {
     const builder = {
       leftJoinAndSelect: () => builder,
       orderBy: () => builder,
+      addOrderBy: () => builder,
       skip: () => builder,
       take: () => builder,
       getManyAndCount: () => Promise.resolve([[], 0]),
@@ -80,6 +83,7 @@ describe('LocalOrgsRepository.findAllForSuperAdmin search', () => {
     await new LocalOrgsRepository(txHost).findAllForSuperAdmin(
       { limit: 10, offset: 0 },
       { search },
+      { field: OrgsSortField.CREATED_AT, order: SortOrder.DESC },
     );
     return conditions;
   };

@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import TwoFactorPage from '@/pages/auth/two-factor';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({
-  redirect: z.string().optional(),
+  redirect: searchParamString.optional(),
   enroll: z.boolean().optional(),
 });
 

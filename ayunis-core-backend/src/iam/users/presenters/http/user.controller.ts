@@ -47,7 +47,7 @@ import {
   UserResponseDto,
   PaginatedUsersListResponseDto,
 } from 'src/iam/users/presenters/http/dtos/user-response.dto';
-import { GetUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-users-query-params.dto';
+import { GetOrgUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-org-users-query-params.dto';
 import { UpdateUserRoleDto } from 'src/iam/users/presenters/http/dtos/update-user-role.dto';
 import { UpdateUserNameDto } from 'src/iam/users/presenters/http/dtos/update-user-name.dto';
 import { UpdatePasswordDto } from 'src/iam/users/presenters/http/dtos/update-password.dto';
@@ -116,7 +116,7 @@ export class UserController {
   async getUsersInOrganization(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.FULL_USER) currentUser: ActiveUser,
-    @Query() queryParams: GetUsersQueryParamsDto,
+    @Query() queryParams: GetOrgUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
     this.logUsersQuery(orgId, queryParams);
 
@@ -131,7 +131,7 @@ export class UserController {
 
   private logUsersQuery(
     orgId: UUID,
-    queryParams: GetUsersQueryParamsDto,
+    queryParams: GetOrgUsersQueryParamsDto,
   ): void {
     this.logger.log(
       {
@@ -146,7 +146,7 @@ export class UserController {
 
   private buildFindUsersQuery(
     orgId: UUID,
-    queryParams: GetUsersQueryParamsDto,
+    queryParams: GetOrgUsersQueryParamsDto,
   ): FindUsersByOrgIdQuery {
     return new FindUsersByOrgIdQuery({
       orgId,
@@ -156,6 +156,8 @@ export class UserController {
         limit: queryParams.limit,
         offset: queryParams.offset,
       },
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder,
     });
   }
 

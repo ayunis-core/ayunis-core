@@ -15,6 +15,7 @@ import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
 } from './-default-model-selection-query';
+import { searchParamString } from '@/shared/lib/search-params';
 
 function handleDefaultModelLoadError(error: unknown): null {
   let code: string | undefined;
@@ -40,10 +41,10 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 });
 
 const searchSchema = z.object({
-  modelId: z.string().optional(),
-  prompt: z.string().optional(),
-  attachmentUrl: z.string().optional(),
-  workspaceId: z.string().optional(),
+  modelId: searchParamString.optional(),
+  prompt: searchParamString.optional(),
+  attachmentUrl: searchParamString.optional(),
+  workspaceId: searchParamString.optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/chat/')({

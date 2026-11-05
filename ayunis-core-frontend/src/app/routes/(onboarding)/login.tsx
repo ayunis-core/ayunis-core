@@ -4,11 +4,12 @@ import { appControllerIsCloud } from '@/shared/api';
 import { meQueryOptions } from '@/shared/api/me-query-options';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import z from 'zod';
+import { searchParamString } from '@/shared/lib/search-params';
 
 export const Route = createFileRoute('/(onboarding)/login')({
   validateSearch: z.object({
     emailVerified: z.boolean().optional(),
-    redirect: z.string().optional(),
+    redirect: searchParamString.optional(),
   }),
   beforeLoad: async ({ context: { queryClient }, search }) => {
     // staleTime 0 overrides the app-wide 5-minute default: a cached "signed

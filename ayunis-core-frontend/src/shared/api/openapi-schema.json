@@ -90,6 +90,34 @@
               "example": 0,
               "type": "number"
             }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/OrgUsersSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
+            }
           }
         ],
         "responses": {
@@ -589,6 +617,34 @@
               "example": 0,
               "type": "number"
             }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/OrgUsersSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
+            }
           }
         ],
         "responses": {
@@ -816,6 +872,34 @@
               "default": 0,
               "example": 0,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SuperAdminUsersSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
             }
           }
         ],
@@ -1075,6 +1159,34 @@
               "default": 0,
               "example": 0,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/InvitesSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
             }
           }
         ],
@@ -1357,6 +1469,34 @@
               "example": 0,
               "type": "number"
             }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/InvitesSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
+            }
           }
         ],
         "responses": {
@@ -1568,6 +1708,34 @@
               "default": 0,
               "example": 0,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by",
+            "schema": {
+              "default": "createdAt",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/OrgsSortField"
+                }
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortOrder"
+                }
+              ]
             }
           }
         ],
@@ -13085,6 +13253,14 @@
         },
         "required": ["externalSubscriptionsEnabled"]
       },
+      "OrgUsersSortField": {
+        "type": "string",
+        "enum": ["name", "email", "role", "createdAt"]
+      },
+      "SortOrder": {
+        "type": "string",
+        "enum": ["asc", "desc"]
+      },
       "UserTeamResponseDto": {
         "type": "object",
         "properties": {
@@ -13362,6 +13538,10 @@
           }
         },
         "required": ["email", "name", "role", "sendActivationEmail"]
+      },
+      "SuperAdminUsersSortField": {
+        "type": "string",
+        "enum": ["name", "email", "orgName", "createdAt"]
       },
       "SuperAdminUserListItemResponseDto": {
         "type": "object",
@@ -13738,6 +13918,10 @@
         },
         "required": ["totalCount", "successCount", "failureCount", "results"]
       },
+      "InvitesSortField": {
+        "type": "string",
+        "enum": ["email", "role", "createdAt"]
+      },
       "InviteTeamResponseDto": {
         "type": "object",
         "properties": {
@@ -14018,6 +14202,10 @@
       "OrgLifecycleFilter": {
         "type": "string",
         "enum": ["all", "archived", "paying", "expired", "trial", "no-plan"]
+      },
+      "OrgsSortField": {
+        "type": "string",
+        "enum": ["name", "createdAt"]
       },
       "OrgLifecycleStatus": {
         "type": "string",

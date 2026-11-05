@@ -3,9 +3,10 @@ import ResetPasswordPage from '@/pages/auth/reset-password';
 import { TokenExpiredPage } from '@/pages/auth/reset-password/ui/TokenExpiredPage';
 import { z } from 'zod';
 import { userPasswordResetControllerValidateResetToken } from '@/shared/api/generated/ayunisCoreAPI';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({
-  token: z.string(),
+  token: searchParamString,
 });
 
 export const Route = createFileRoute('/(onboarding)/password/reset')({

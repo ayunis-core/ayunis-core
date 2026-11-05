@@ -8,6 +8,8 @@ import {
   TEST_USER_ID,
 } from 'src/common/context/testing/context.fixtures';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { SortOrder } from 'src/common/sorting/sort';
+import { InvitesSortField } from 'src/iam/invites/domain/invites-sort-field.enum';
 import { UnauthorizedInviteAccessError } from 'src/iam/invites/application/invites.errors';
 import type { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
@@ -63,6 +65,30 @@ describe('GetInvitesByOrgUseCase', () => {
       OTHER_ORG_ID,
       { limit: 25, offset: 0 },
       { search: undefined, onlyPending: false },
+      { field: InvitesSortField.CREATED_AT, order: SortOrder.DESC },
+    );
+  });
+
+  it('passes the requested sort to the repository', async () => {
+    await useCase(
+      aUserContext({
+        role: UserRole.USER,
+        systemRole: SystemRole.SUPER_ADMIN,
+      }),
+    ).execute(
+      new GetInvitesByOrgQuery({
+        orgId: OTHER_ORG_ID,
+        requestingUserId: TEST_USER_ID,
+        sortBy: InvitesSortField.EMAIL,
+        sortOrder: SortOrder.ASC,
+      }),
+    );
+
+    expect(invitesRepository.findByOrgIdPaginated).toHaveBeenCalledWith(
+      OTHER_ORG_ID,
+      { limit: 25, offset: 0 },
+      { search: undefined, onlyPending: false },
+      { field: InvitesSortField.EMAIL, order: SortOrder.ASC },
     );
   });
 

@@ -273,19 +273,29 @@ export class InvitesController {
     this.logInvitesQuery(userId, orgId, queryParams);
 
     const invites = await this.getInvitesByOrgUseCase.execute(
-      new GetInvitesByOrgQuery({
-        orgId,
-        requestingUserId: userId,
-        onlyOpen: true, // Only show pending invites
-        search: queryParams.search,
-        pagination: {
-          limit: queryParams.limit,
-          offset: queryParams.offset,
-        },
-      }),
+      this.buildGetInvitesQuery(userId, orgId, queryParams),
     );
 
     return this.inviteResponseMapper.toPaginatedDto(invites);
+  }
+
+  private buildGetInvitesQuery(
+    userId: UUID,
+    orgId: UUID,
+    queryParams: GetInvitesQueryParamsDto,
+  ): GetInvitesByOrgQuery {
+    return new GetInvitesByOrgQuery({
+      orgId,
+      requestingUserId: userId,
+      onlyOpen: true, // Only show pending invites
+      search: queryParams.search,
+      pagination: {
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder,
+    });
   }
 
   private logInvitesQuery(

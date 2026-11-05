@@ -13,21 +13,35 @@ import {
   TableHeader,
   TableRow,
 } from '@ayunis/ui/components/table';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { SuperAdminUserActions } from '@/widgets/super-admin-user-actions';
 import type {
   PaginationDto,
   SuperAdminUserListItemResponseDto,
+  SuperAdminUsersSortField,
 } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { UsersPagination } from './UsersPagination';
 import { UsersSearch } from './UsersSearch';
 import { UserLockStatus } from '@/widgets/user-lock-status';
+
+const SORTABLE_COLUMNS = [
+  { field: 'name', labelKey: 'table.name' },
+  { field: 'email', labelKey: 'table.email' },
+  { field: 'orgName', labelKey: 'table.organization' },
+] as const satisfies readonly {
+  field: SuperAdminUsersSortField;
+  labelKey: string;
+}[];
 
 interface UsersTableProps {
   users: SuperAdminUserListItemResponseDto[];
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
+  sort: TableSort<SuperAdminUsersSortField>;
 }
 
 export function UsersTable({
@@ -35,8 +49,10 @@ export function UsersTable({
   pagination,
   search,
   currentPage,
+  sort,
 }: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-users');
+  const navigate = useNavigate({ from: '/super-admin-settings/users/' });
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
@@ -68,9 +84,25 @@ export function UsersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('table.name')}</TableHead>
-                  <TableHead>{t('table.email')}</TableHead>
-                  <TableHead>{t('table.organization')}</TableHead>
+                  {SORTABLE_COLUMNS.map(({ field, labelKey }) => (
+                    <SortableTableHead
+                      key={field}
+                      field={field}
+                      sort={sort}
+                      data-testid={`super-admin-users-sort-${field}`}
+                      onSort={(next) =>
+                        void navigate({
+                          search: (previous) => ({
+                            ...previous,
+                            ...next,
+                            page: undefined,
+                          }),
+                        })
+                      }
+                    >
+                      {t(labelKey)}
+                    </SortableTableHead>
+                  ))}
                   <TableHead>{t('table.status')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
@@ -106,6 +138,7 @@ export function UsersTable({
               currentPage={currentPage}
               totalPages={totalPages}
               search={search}
+              sort={sort}
             />
           </>
         )}

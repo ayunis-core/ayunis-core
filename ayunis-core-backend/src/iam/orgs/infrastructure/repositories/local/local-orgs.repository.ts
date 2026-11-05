@@ -32,6 +32,14 @@ import {
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { applySort } from 'src/common/db/apply-sort';
+import type { Sort } from 'src/common/sorting/sort';
+import { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
+
+const ORGS_SORT_COLUMNS: Record<OrgsSortField, string> = {
+  [OrgsSortField.NAME]: 'org.name',
+  [OrgsSortField.CREATED_AT]: 'org.createdAt',
+};
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
@@ -140,22 +148,28 @@ export class LocalOrgsRepository extends OrgsRepository {
 
   async findAllForSuperAdmin(
     pagination: OrgsPagination,
-    filters?: OrgsFilters,
+    filters: OrgsFilters,
+    sort: Sort<OrgsSortField>,
   ): Promise<Paginated<Org>> {
     this.logger.log(
       {
         limit: pagination.limit,
         offset: pagination.offset,
-        text: filters?.search,
+        text: filters.search,
+        sort,
       },
       'findAllForSuperAdmin',
     );
 
     try {
-      const queryBuilder = this.orgRepository
-        .createQueryBuilder('org')
-        .leftJoinAndSelect('org.users', 'users')
-        .orderBy('org.createdAt', 'DESC');
+      const queryBuilder = applySort(
+        this.orgRepository
+          .createQueryBuilder('org')
+          .leftJoinAndSelect('org.users', 'users'),
+        ORGS_SORT_COLUMNS,
+        sort,
+        'org.id',
+      );
       this.applySuperAdminFilters(queryBuilder, filters);
 
       // Apply pagination and get data with count in one call

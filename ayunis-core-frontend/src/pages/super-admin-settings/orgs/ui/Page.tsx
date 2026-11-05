@@ -11,7 +11,10 @@ import type {
   PaginationDto,
   OrgLifecycleCountsDto,
   OrgLifecycleFilter as OrgLifecycleFilterValue,
+  OrgsSortField,
 } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { useNavigate } from '@tanstack/react-router';
 
 interface SuperAdminOrgsPageProps {
   orgs: SuperAdminOrgOverviewResponseDto[];
@@ -20,6 +23,7 @@ interface SuperAdminOrgsPageProps {
   search?: string;
   lifecycle: OrgLifecycleFilterValue;
   currentPage: number;
+  sort: TableSort<OrgsSortField>;
 }
 
 export default function SuperAdminOrgsPage({
@@ -29,8 +33,10 @@ export default function SuperAdminOrgsPage({
   search,
   lifecycle,
   currentPage,
+  sort,
 }: Readonly<SuperAdminOrgsPageProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
+  const navigate = useNavigate({ from: '/super-admin-settings/orgs/' });
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
@@ -43,6 +49,12 @@ export default function SuperAdminOrgsPage({
       <div className="space-y-4">
         <OrgsTable
           orgs={orgs}
+          sort={sort}
+          onSort={(next) =>
+            void navigate({
+              search: (previous) => ({ ...previous, ...next, page: undefined }),
+            })
+          }
           searchSlot={
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
@@ -60,6 +72,7 @@ export default function SuperAdminOrgsPage({
           totalPages={totalPages}
           search={search}
           lifecycle={lifecycle}
+          sort={sort}
         />
       </div>
     </SuperAdminSettingsLayout>

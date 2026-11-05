@@ -17,6 +17,24 @@ export interface FeatureTogglesResponseDto {
   externalSubscriptionsEnabled: boolean;
 }
 
+export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
+
+
+export const OrgUsersSortField = {
+  name: 'name',
+  email: 'email',
+  role: 'role',
+  createdAt: 'createdAt',
+} as const;
+
+export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
 export interface UserTeamResponseDto {
   id: string;
   name: string;
@@ -186,6 +204,16 @@ export interface CreateUserDto {
   /** Send the account activation (welcome) email to the new user */
   sendActivationEmail: boolean;
 }
+
+export type SuperAdminUsersSortField = typeof SuperAdminUsersSortField[keyof typeof SuperAdminUsersSortField];
+
+
+export const SuperAdminUsersSortField = {
+  name: 'name',
+  email: 'email',
+  orgName: 'orgName',
+  createdAt: 'createdAt',
+} as const;
 
 /**
  * User role
@@ -436,6 +464,15 @@ export interface CreateBulkInvitesResponseDto {
   results: BulkInviteResultDto[];
 }
 
+export type InvitesSortField = typeof InvitesSortField[keyof typeof InvitesSortField];
+
+
+export const InvitesSortField = {
+  email: 'email',
+  role: 'role',
+  createdAt: 'createdAt',
+} as const;
+
 export interface InviteTeamResponseDto {
   id: string;
   name: string;
@@ -592,6 +629,14 @@ export const OrgLifecycleFilter = {
   expired: 'expired',
   trial: 'trial',
   'no-plan': 'no-plan',
+} as const;
+
+export type OrgsSortField = typeof OrgsSortField[keyof typeof OrgsSortField];
+
+
+export const OrgsSortField = {
+  name: 'name',
+  createdAt: 'createdAt',
 } as const;
 
 /**
@@ -5788,6 +5833,14 @@ limit?: number;
  * Number of users to skip (default: 0)
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: OrgUsersSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type UserPasswordResetControllerValidateResetTokenParams = {
@@ -5814,6 +5867,14 @@ limit?: number;
  * Number of users to skip (default: 0)
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: OrgUsersSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type SuperAdminUserListControllerGetAllUsersParams = {
@@ -5829,6 +5890,14 @@ limit?: number;
  * Number of users to skip (default: 0)
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: SuperAdminUsersSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type InvitesControllerGetInvitesParams = {
@@ -5844,6 +5913,14 @@ limit?: number;
  * Number of invites to skip (default: 0)
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: InvitesSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type SuperAdminInvitesControllerGetInvitesParams = {
@@ -5859,6 +5936,14 @@ limit?: number;
  * Number of invites to skip
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: InvitesSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
@@ -5878,6 +5963,14 @@ limit?: number;
  * Number of organizations to skip (default: 0).
  */
 offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: OrgsSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
 };
 
 export type TeamsControllerListTeamMembersParams = {

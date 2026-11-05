@@ -3,9 +3,10 @@ import z from 'zod';
 import { userControllerConfirmEmail } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import EmailConfirmError from '@/pages/auth/email-confirm/ui/EmailConfirmError';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({
-  token: z.string(),
+  token: searchParamString,
 });
 
 export const Route = createFileRoute('/(onboarding)/confirm-email')({

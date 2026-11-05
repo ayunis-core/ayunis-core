@@ -68,6 +68,8 @@ export class SuperAdminInvitesController {
         onlyOpen: true,
         search: query.search,
         pagination: { limit: query.limit, offset: query.offset },
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
       }),
     );
     return this.inviteResponseMapper.toPaginatedDto(invites);

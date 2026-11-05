@@ -10,6 +10,8 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { SortOrder } from 'src/common/sorting/sort';
+import { OrgUsersSortField } from 'src/iam/users/domain/value-objects/org-users-sort.enum';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 
 describe('FindUsersByOrgIdUseCase', () => {
@@ -107,6 +109,7 @@ describe('FindUsersByOrgIdUseCase', () => {
       orgId,
       { limit: 25, offset: 0 },
       { search: undefined },
+      { field: OrgUsersSortField.CREATED_AT, order: SortOrder.DESC },
     );
   });
 
@@ -134,6 +137,31 @@ describe('FindUsersByOrgIdUseCase', () => {
       orgId,
       { limit: 25, offset: 0 },
       { search: undefined },
+      { field: OrgUsersSortField.CREATED_AT, order: SortOrder.DESC },
+    );
+  });
+
+  it('passes the requested sort to the repository', async () => {
+    const orgId = 'org-id' as UUID;
+    jest
+      .spyOn(mockUsersRepository, 'findManyByOrgId')
+      .mockResolvedValue(
+        new Paginated<User>({ data: [], limit: 25, offset: 0, total: 0 }),
+      );
+
+    await useCase.execute(
+      new FindUsersByOrgIdQuery({
+        orgId,
+        sortBy: OrgUsersSortField.ROLE,
+        sortOrder: SortOrder.ASC,
+      }),
+    );
+
+    expect(mockUsersRepository.findManyByOrgId).toHaveBeenCalledWith(
+      orgId,
+      { limit: 25, offset: 0 },
+      { search: undefined },
+      { field: OrgUsersSortField.ROLE, order: SortOrder.ASC },
     );
   });
 });

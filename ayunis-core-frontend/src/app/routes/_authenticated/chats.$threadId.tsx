@@ -9,6 +9,7 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryOptions,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import ChatPage from '@/pages/chat/';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const threadQueryOptions = (threadId: string) =>
   queryOptions({
@@ -24,7 +25,7 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 export const Route = createFileRoute('/_authenticated/chats/$threadId')({
   component: RouteComponent,
   validateSearch: z.object({
-    artifactId: z.string().optional(),
+    artifactId: searchParamString.optional(),
   }),
   loader: async ({ params: { threadId }, context: { queryClient } }) => {
     // Prefetch the permitted models so ChatPage can decide synchronously

@@ -45,7 +45,12 @@ import type {
   User,
   UserRole,
 } from '@/pages/admin-settings/users-settings/model/openapi';
-import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  OrgUsersSortField,
+  UserResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import { useAdminUnlockUserAccount } from '@/pages/admin-settings/users-settings/api/useAdminUnlockUserAccount';
@@ -57,6 +62,8 @@ const ROLE_OPTIONS: UserRole[] = ['user', 'manager', 'admin'];
 interface UsersSectionProps {
   users: User[];
   total: number;
+  sort: TableSort<OrgUsersSortField>;
+  onSort: (next: Required<TableSort<OrgUsersSortField>>) => void;
   searchSlot?: ReactNode;
   paginationSlot?: ReactNode;
 }
@@ -64,6 +71,8 @@ interface UsersSectionProps {
 export default function UsersSection({
   users,
   total,
+  sort,
+  onSort,
   searchSlot,
   paginationSlot,
 }: Readonly<UsersSectionProps>) {
@@ -214,9 +223,30 @@ export default function UsersSection({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('users.name')}</TableHead>
-              <TableHead>{t('users.email')}</TableHead>
-              <TableHead>{t('users.role')}</TableHead>
+              <SortableTableHead
+                field="name"
+                sort={sort}
+                onSort={onSort}
+                data-testid="admin-users-sort-name"
+              >
+                {t('users.name')}
+              </SortableTableHead>
+              <SortableTableHead
+                field="email"
+                sort={sort}
+                onSort={onSort}
+                data-testid="admin-users-sort-email"
+              >
+                {t('users.email')}
+              </SortableTableHead>
+              <SortableTableHead
+                field="role"
+                sort={sort}
+                onSort={onSort}
+                data-testid="admin-users-sort-role"
+              >
+                {t('users.role')}
+              </SortableTableHead>
               {canViewLockStatus && <TableHead>{t('users.teams')}</TableHead>}
               {canViewLockStatus && <TableHead>{t('users.status')}</TableHead>}
               <TableHead className="w-[50px]"></TableHead>

@@ -12,10 +12,14 @@ import {
   getSuperAdminInvitesControllerGetInvitesQueryKey,
   superAdminTrialsControllerGetTrialByOrgId,
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
+  InvitesSortField,
+  OrgUsersSortField,
 } from '@/shared/api';
+import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
 import SuperAdminSettingsOrgPage from '@/pages/super-admin-settings/org';
 import { toSubscriptionHistoryItem } from '@/pages/super-admin-settings/org/lib/subscription-history';
 import { z } from 'zod';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const USERS_PER_PAGE = 25;
 const INVITES_PER_PAGE = 10;
@@ -34,10 +38,14 @@ const searchSchema = z.object({
       'sso',
     ])
     .optional(),
-  usersSearch: z.string().optional(),
+  usersSearch: searchParamString.optional(),
   usersPage: z.number().min(1).optional().catch(1),
-  invitesSearch: z.string().optional(),
+  invitesSearch: searchParamString.optional(),
   invitesPage: z.number().min(1).optional().catch(1),
+  usersSortBy: sortFieldSchema(OrgUsersSortField),
+  usersSortOrder: sortOrderSchema,
+  invitesSortBy: sortFieldSchema(InvitesSortField),
+  invitesSortOrder: sortOrderSchema,
 });
 
 export const Route = createFileRoute(
@@ -49,10 +57,31 @@ export const Route = createFileRoute(
   loader: async ({
     context: { queryClient },
     params: { id },
-    deps: { usersSearch, usersPage = 1, invitesSearch, invitesPage = 1 },
+    deps: {
+      usersSearch,
+      usersPage = 1,
+      invitesSearch,
+      invitesPage = 1,
+      usersSortBy,
+      usersSortOrder,
+      invitesSortBy,
+      invitesSortOrder,
+    },
   }) => {
-    const offset = (usersPage - 1) * USERS_PER_PAGE;
-    const invitesOffset = (invitesPage - 1) * INVITES_PER_PAGE;
+    const usersParams = {
+      search: usersSearch,
+      sortBy: usersSortBy,
+      sortOrder: usersSortOrder,
+      limit: USERS_PER_PAGE,
+      offset: (usersPage - 1) * USERS_PER_PAGE,
+    };
+    const invitesParams = {
+      search: invitesSearch,
+      sortBy: invitesSortBy,
+      sortOrder: invitesSortOrder,
+      limit: INVITES_PER_PAGE,
+      offset: (invitesPage - 1) * INVITES_PER_PAGE,
+    };
 
     const org = await queryClient.query({
       queryKey: getSuperAdminOrgsControllerGetOrgByIdQueryKey(id),
@@ -60,30 +89,19 @@ export const Route = createFileRoute(
     });
     const [usersResponse, invitesResponse] = await Promise.all([
       queryClient.query({
-        queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(id, {
-          search: usersSearch,
-          limit: USERS_PER_PAGE,
-          offset,
-        }),
+        queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
+          id,
+          usersParams,
+        ),
         queryFn: () =>
-          superAdminUsersControllerGetUsersByOrgId(id, {
-            search: usersSearch,
-            limit: USERS_PER_PAGE,
-            offset,
-          }),
+          superAdminUsersControllerGetUsersByOrgId(id, usersParams),
       }),
       queryClient.query({
-        queryKey: getSuperAdminInvitesControllerGetInvitesQueryKey(id, {
-          search: invitesSearch,
-          limit: INVITES_PER_PAGE,
-          offset: invitesOffset,
-        }),
-        queryFn: () =>
-          superAdminInvitesControllerGetInvites(id, {
-            search: invitesSearch,
-            limit: INVITES_PER_PAGE,
-            offset: invitesOffset,
-          }),
+        queryKey: getSuperAdminInvitesControllerGetInvitesQueryKey(
+          id,
+          invitesParams,
+        ),
+        queryFn: () => superAdminInvitesControllerGetInvites(id, invitesParams),
       }),
     ]);
     const subscriptionResult = await queryClient.query({
@@ -111,6 +129,8 @@ export const Route = createFileRoute(
       usersPage,
       invitesSearch,
       invitesPage,
+      usersSort: { sortBy: usersSortBy, sortOrder: usersSortOrder },
+      invitesSort: { sortBy: invitesSortBy, sortOrder: invitesSortOrder },
     };
   },
 });
@@ -129,6 +149,8 @@ function RouteComponent() {
       invitesPagination={data.invitesResponse.pagination}
       invitesSearch={data.invitesSearch}
       invitesCurrentPage={data.invitesPage}
+      usersSort={data.usersSort}
+      invitesSort={data.invitesSort}
       subscription={data.subscriptionResult.subscription ?? null}
       subscriptionHistory={data.subscriptionHistoryResult.subscriptions.map(
         toSubscriptionHistoryItem,
