@@ -38,6 +38,8 @@ describe(SuperAdminInvitesSection.name, () => {
         orgId="selected-org"
         invites={[invite]}
         total={1}
+        sort={{}}
+        onSort={vi.fn()}
       />,
     );
 
@@ -50,7 +52,13 @@ describe(SuperAdminInvitesSection.name, () => {
 
   it('shows an empty state when the organization has no invitations', () => {
     render(
-      <SuperAdminInvitesSection orgId="selected-org" invites={[]} total={0} />,
+      <SuperAdminInvitesSection
+        orgId="selected-org"
+        invites={[]}
+        total={0}
+        sort={{}}
+        onSort={vi.fn()}
+      />,
     );
 
     expect(screen.getByText('users.noInvitesFound')).toBeTruthy();
@@ -65,6 +73,8 @@ it('waits for confirmation before deleting one invite', () => {
       orgId="selected-org"
       invites={[invite]}
       total={1}
+      sort={{}}
+      onSort={vi.fn()}
     />,
   );
   fireEvent.click(screen.getByTestId(`super-admin-invite-delete-${invite.id}`));
@@ -86,6 +96,8 @@ it('confirms deletion of all pending invites, including rows outside the current
       orgId="selected-org"
       invites={[invite]}
       total={12}
+      sort={{}}
+      onSort={vi.fn()}
     />,
   );
   fireEvent.click(screen.getByTestId('super-admin-invites-delete-all'));
@@ -96,7 +108,13 @@ it('confirms deletion of all pending invites, including rows outside the current
 
 it('keeps org-wide deletion available when a search matches no invites', () => {
   render(
-    <SuperAdminInvitesSection orgId="selected-org" invites={[]} total={0} />,
+    <SuperAdminInvitesSection
+      orgId="selected-org"
+      invites={[]}
+      total={0}
+      sort={{}}
+      onSort={vi.fn()}
+    />,
   );
   expect(
     screen

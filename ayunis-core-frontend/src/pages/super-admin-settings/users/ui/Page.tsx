@@ -7,6 +7,8 @@ import type {
   PaginationDto,
   SuperAdminUserListItemResponseDto,
 } from '@/shared/api';
+import type { SuperAdminUsersSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
 import { UsersTable } from './UsersTable';
 
 interface SuperAdminUsersPageProps {
@@ -14,6 +16,7 @@ interface SuperAdminUsersPageProps {
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
+  sort: TableSort<SuperAdminUsersSortField>;
 }
 
 export default function SuperAdminUsersPage({
@@ -21,6 +24,7 @@ export default function SuperAdminUsersPage({
   pagination,
   search,
   currentPage,
+  sort,
 }: Readonly<SuperAdminUsersPageProps>) {
   const { t } = useTranslation('super-admin-settings-users');
   const { t: tLayout } = useTranslation('super-admin-settings-layout');
@@ -50,6 +54,7 @@ export default function SuperAdminUsersPage({
           pagination={pagination}
           search={search}
           currentPage={currentPage}
+          sort={sort}
         />
       </div>
     </SuperAdminSettingsLayout>

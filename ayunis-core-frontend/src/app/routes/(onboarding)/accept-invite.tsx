@@ -7,6 +7,7 @@ import {
   appControllerIsCloud,
 } from '@/shared/api';
 import { z } from 'zod';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const inviteQueryOptions = (inviteToken: string) =>
   queryOptions({
@@ -15,7 +16,7 @@ const inviteQueryOptions = (inviteToken: string) =>
   });
 
 const searchSchema = z.object({
-  token: z.string(),
+  token: searchParamString,
 });
 
 export const Route = createFileRoute('/(onboarding)/accept-invite')({

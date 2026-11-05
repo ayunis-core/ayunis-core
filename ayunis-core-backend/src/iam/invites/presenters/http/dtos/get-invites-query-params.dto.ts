@@ -1,6 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import type { SortOrder } from 'src/common/sorting/sort';
+import {
+  SortByQueryParam,
+  SortOrderQueryParam,
+} from 'src/common/sorting/sort-query-params.decorators';
+import { InvitesSortField } from 'src/iam/invites/domain/invites-sort-field.enum';
 
 export class GetInvitesQueryParamsDto {
   @ApiPropertyOptional({
@@ -32,4 +38,14 @@ export class GetInvitesQueryParamsDto {
   @Min(0)
   @Type(() => Number)
   offset?: number;
+
+  @SortByQueryParam(
+    InvitesSortField,
+    'InvitesSortField',
+    InvitesSortField.CREATED_AT,
+  )
+  sortBy?: InvitesSortField;
+
+  @SortOrderQueryParam()
+  sortOrder?: SortOrder;
 }

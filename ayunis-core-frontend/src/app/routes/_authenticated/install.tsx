@@ -10,10 +10,11 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { useTranslation } from 'react-i18next';
 import { createAuthorization } from '@/features/permissions';
 import { MeResponseDtoRole } from '@/shared/api';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({
-  skill: z.string().optional(),
-  integration: z.string().optional(),
+  skill: searchParamString.optional(),
+  integration: searchParamString.optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/install')({

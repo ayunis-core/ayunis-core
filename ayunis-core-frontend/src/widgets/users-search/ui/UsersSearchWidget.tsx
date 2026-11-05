@@ -22,10 +22,21 @@ export function UsersSearchWidget({
 }: Readonly<UsersSearchWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
   const [localValue, setLocalValue] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [previousSearch, setPreviousSearch] = useState(search);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // The displayed value: local value while typing, otherwise the prop
+  // The search prop lags behind onSearchChange while the route loader fetches,
+  // so the typed value stays until the prop changes, and a late prop update
+  // must not overwrite text typed after it was published.
+  if (search !== previousSearch) {
+    setPreviousSearch(search);
+    if (!isTyping) {
+      setLocalValue(null);
+    }
+  }
+
   const displayValue = localValue ?? search ?? '';
 
   // Auto-focus search input on mount
@@ -39,17 +50,15 @@ export function UsersSearchWidget({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       setLocalValue(newValue);
+      setIsTyping(true);
 
-      // Clear existing timer
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
 
-      // Debounce search change
       timerRef.current = setTimeout(() => {
         onSearchChange(newValue || undefined);
-        // Reset local value after search change
-        setLocalValue(null);
+        setIsTyping(false);
       }, 300);
     },
     [onSearchChange],

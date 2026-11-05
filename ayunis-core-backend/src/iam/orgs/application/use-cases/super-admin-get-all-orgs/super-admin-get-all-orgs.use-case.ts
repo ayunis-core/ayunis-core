@@ -47,6 +47,7 @@ export class SuperAdminGetAllOrgsUseCase {
       this.orgsRepository.findAllForSuperAdmin(
         { limit: query.limit, offset: query.offset },
         { search: query.search, lifecycle: query.lifecycle },
+        { field: query.sortBy, order: query.sortOrder },
       ),
       this.orgsRepository.countByLifecycleStatus(query.search),
     ]);

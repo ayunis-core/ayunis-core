@@ -5,6 +5,8 @@ import { LocalInvitesRepository } from './local-invites.repository';
 import { InviteRecord } from './schema/invite.record';
 import { InviteMapper } from './mappers/invite.mapper';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SortOrder } from 'src/common/sorting/sort';
+import { InvitesSortField } from 'src/iam/invites/domain/invites-sort-field.enum';
 
 function makeAcceptedInviteRecord(email: string): InviteRecord {
   const record = new InviteRecord();
@@ -261,10 +263,12 @@ describe('LocalInvitesRepository', () => {
       };
       inviteRepo.createQueryBuilder.mockReturnValue(queryBuilder as never);
 
-      await repository.findByOrgIdPaginated(randomUUID(), {
-        limit: 50,
-        offset: 50,
-      });
+      await repository.findByOrgIdPaginated(
+        randomUUID(),
+        { limit: 50, offset: 50 },
+        {},
+        { field: InvitesSortField.CREATED_AT, order: SortOrder.DESC },
+      );
 
       expect(queryBuilder.orderBy).toHaveBeenCalledWith(
         'invite.createdAt',

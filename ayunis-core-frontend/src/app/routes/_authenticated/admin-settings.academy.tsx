@@ -14,11 +14,12 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CertificateValidityStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { isStatusReachable } from '@/pages/admin-settings/academy-settings';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const MEMBERS_PER_PAGE = 25;
 
 const searchSchema = z.object({
-  search: z.string().optional(),
+  search: searchParamString.optional(),
   status: z.enum(CertificateValidityStatus).optional().catch(undefined),
   page: z.number().min(1).optional().catch(1),
 });

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { Sort } from 'src/common/sorting/sort';
+import type { InvitesSortField } from 'src/iam/invites/domain/invites-sort-field.enum';
 
 export interface InvitesPagination {
   limit: number;
@@ -21,7 +23,8 @@ export abstract class InvitesRepository {
   abstract findByOrgIdPaginated(
     orgId: UUID,
     pagination: InvitesPagination,
-    filters?: InvitesFilters,
+    filters: InvitesFilters,
+    sort: Sort<InvitesSortField>,
   ): Promise<Paginated<Invite>>;
   abstract findOneByEmail(email: string): Promise<Invite | null>;
   abstract findOneByEmailAndOrg(

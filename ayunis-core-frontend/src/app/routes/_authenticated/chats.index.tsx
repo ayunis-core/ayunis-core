@@ -5,11 +5,12 @@ import {
   threadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const CHATS_PER_PAGE = 20;
 
 const searchSchema = z.object({
-  search: z.string().optional(),
+  search: searchParamString.optional(),
   page: z.number().min(1).optional().catch(1),
 });
 

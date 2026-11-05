@@ -14,11 +14,12 @@ import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
 } from './-default-model-selection-query';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const WORKSPACE_CHATS_LIMIT = 20;
 
 const searchSchema = z.object({
-  search: z.string().optional(),
+  search: searchParamString.optional(),
   page: z.number().min(1).optional().catch(1),
   tab: z
     .enum(['chats', 'artifacts', 'skills', 'knowledge', 'instructions'])

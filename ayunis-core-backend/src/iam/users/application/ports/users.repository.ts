@@ -3,6 +3,9 @@ import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
+import type { Sort } from 'src/common/sorting/sort';
+import type { SuperAdminUsersSortField } from 'src/iam/users/domain/value-objects/super-admin-users-sort.enum';
+import type { OrgUsersSortField } from 'src/iam/users/domain/value-objects/org-users-sort.enum';
 
 export interface UsersPagination {
   limit: number;
@@ -37,11 +40,13 @@ export abstract class UsersRepository {
   abstract findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,
-    filters?: UsersFilters,
+    filters: UsersFilters,
+    sort: Sort<OrgUsersSortField>,
   ): Promise<Paginated<User>>;
   abstract findAllForSuperAdmin(
     pagination: UsersPagination,
-    filters?: UsersFilters,
+    filters: UsersFilters,
+    sort: Sort<SuperAdminUsersSortField>,
   ): Promise<Paginated<SuperAdminUserListItem>>;
   abstract findAllIdsByOrgId(orgId: UUID): Promise<UUID[]>;
   abstract create(user: User): Promise<User>;

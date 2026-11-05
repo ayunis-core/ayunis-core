@@ -13,6 +13,15 @@ import { InviteRecord } from 'src/iam/invites/infrastructure/persistence/local/s
 import { InviteMapper } from 'src/iam/invites/infrastructure/persistence/local/mappers/invite.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { exactEmail } from 'src/common/db/exact-email.operator';
+import { applySort } from 'src/common/db/apply-sort';
+import type { Sort } from 'src/common/sorting/sort';
+import { InvitesSortField } from 'src/iam/invites/domain/invites-sort-field.enum';
+
+const INVITES_SORT_COLUMNS: Record<InvitesSortField, string> = {
+  [InvitesSortField.EMAIL]: 'invite.email',
+  [InvitesSortField.ROLE]: 'invite.role',
+  [InvitesSortField.CREATED_AT]: 'invite.createdAt',
+};
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
@@ -87,33 +96,38 @@ export class LocalInvitesRepository implements InvitesRepository {
   async findByOrgIdPaginated(
     orgId: UUID,
     pagination: InvitesPagination,
-    filters?: InvitesFilters,
+    filters: InvitesFilters,
+    sort: Sort<InvitesSortField>,
   ): Promise<Paginated<Invite>> {
     this.logger.log(
       {
         orgId,
         limit: pagination.limit,
         offset: pagination.offset,
-        input: filters?.search,
+        input: filters.search,
+        sort,
       },
       'findByOrgIdPaginated',
     );
 
-    const queryBuilder = this.invites
-      .createQueryBuilder('invite')
-      .leftJoinAndSelect('invite.inviteTeams', 'inviteTeam')
-      .leftJoinAndSelect('inviteTeam.team', 'team', 'team.orgId = :orgId', {
-        orgId,
-      })
-      .where('invite.orgId = :orgId', { orgId })
-      .orderBy('invite.createdAt', 'DESC')
-      .addOrderBy('invite.id', 'DESC');
+    const queryBuilder = applySort(
+      this.invites
+        .createQueryBuilder('invite')
+        .leftJoinAndSelect('invite.inviteTeams', 'inviteTeam')
+        .leftJoinAndSelect('inviteTeam.team', 'team', 'team.orgId = :orgId', {
+          orgId,
+        })
+        .where('invite.orgId = :orgId', { orgId }),
+      INVITES_SORT_COLUMNS,
+      sort,
+      'invite.id',
+    );
 
-    if (filters?.onlyPending) {
+    if (filters.onlyPending) {
       queryBuilder.andWhere('invite.acceptedAt IS NULL');
     }
 
-    if (filters?.search) {
+    if (filters.search) {
       queryBuilder.andWhere('invite.email ILIKE :search', {
         search: `%${filters.search}%`,
       });

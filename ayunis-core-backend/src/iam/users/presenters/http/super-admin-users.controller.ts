@@ -42,7 +42,7 @@ import {
 } from './dtos/user-response.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { TriggerPasswordResetResponseDto } from './dtos/trigger-password-reset-response.dto';
-import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
+import { GetOrgUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-org-users-query-params.dto';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { DeleteUserCommand } from 'src/iam/users/application/use-cases/delete-user/delete-user.command';
@@ -93,7 +93,7 @@ export class SuperAdminUsersController {
   })
   async getUsersByOrgId(
     @Param('orgId') orgId: UUID,
-    @Query() queryParams: GetUsersQueryParamsDto,
+    @Query() queryParams: GetOrgUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
     this.logger.log(
       {
@@ -113,6 +113,8 @@ export class SuperAdminUsersController {
           limit: queryParams.limit,
           offset: queryParams.offset,
         },
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
       }),
     );
     return this.userResponseDtoMapper.toPaginatedDto(users, true);

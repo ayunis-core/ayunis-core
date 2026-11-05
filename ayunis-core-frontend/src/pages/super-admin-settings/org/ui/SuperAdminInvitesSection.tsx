@@ -22,11 +22,16 @@ import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Trash2 } from 'lucide-react';
 import { useSuperAdminInviteActions } from '@/pages/super-admin-settings/org/lib/useSuperAdminInviteActions';
+import type { InvitesSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 
 interface SuperAdminInvitesSectionProps {
   orgId: string;
   invites: InviteResponseDto[];
   total: number;
+  sort: TableSort<InvitesSortField>;
+  onSort: (next: Required<TableSort<InvitesSortField>>) => void;
   searchSlot?: ReactNode;
   paginationSlot?: ReactNode;
 }
@@ -35,6 +40,8 @@ export default function SuperAdminInvitesSection({
   orgId,
   invites,
   total,
+  sort,
+  onSort,
   searchSlot,
   paginationSlot,
 }: Readonly<SuperAdminInvitesSectionProps>) {
@@ -66,6 +73,8 @@ export default function SuperAdminInvitesSection({
             t={t}
             onDelete={actions.deleteInvite}
             disabled={actions.isDeleting}
+            sort={sort}
+            onSort={onSort}
           />
         )}
         {paginationSlot}
@@ -114,6 +123,8 @@ interface InvitesTableProps {
   t: (key: string) => string;
   onDelete: (invite: InviteResponseDto) => void;
   disabled: boolean;
+  sort: TableSort<InvitesSortField>;
+  onSort: (next: Required<TableSort<InvitesSortField>>) => void;
 }
 
 function InvitesTable({
@@ -122,15 +133,38 @@ function InvitesTable({
   t,
   onDelete,
   disabled,
+  sort,
+  onSort,
 }: Readonly<InvitesTableProps>) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{t('users.email')}</TableHead>
-          <TableHead>{t('users.role')}</TableHead>
+          <SortableTableHead
+            field="email"
+            sort={sort}
+            onSort={onSort}
+            data-testid="org-invites-sort-email"
+          >
+            {t('users.email')}
+          </SortableTableHead>
+          <SortableTableHead
+            field="role"
+            sort={sort}
+            onSort={onSort}
+            data-testid="org-invites-sort-role"
+          >
+            {t('users.role')}
+          </SortableTableHead>
           <TableHead>{t('users.status')}</TableHead>
-          <TableHead>{t('users.sentDate')}</TableHead>
+          <SortableTableHead
+            field="createdAt"
+            sort={sort}
+            onSort={onSort}
+            data-testid="org-invites-sort-createdAt"
+          >
+            {t('users.sentDate')}
+          </SortableTableHead>
           <TableHead>
             <span className="sr-only">{t('users.delete')}</span>
           </TableHead>

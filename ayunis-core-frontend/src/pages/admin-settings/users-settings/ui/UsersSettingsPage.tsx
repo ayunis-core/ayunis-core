@@ -1,5 +1,6 @@
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import InviteMenuButton from './InviteMenuButton';
@@ -9,11 +10,14 @@ import InvitesPagination from './InvitesPagination';
 import UsersSection from './UsersSection';
 import UsersSearch from './UsersSearch';
 import UsersPagination from './UsersPagination';
-import type { Invite } from '../model/openapi';
+import type { Invite } from '@/pages/admin-settings/users-settings/model/openapi';
 import type {
+  InvitesSortField,
+  OrgUsersSortField,
   UserResponseDto,
   PaginationDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { TableSort } from '@/shared/lib/table-sort';
 
 interface UsersSettingsPageProps {
   invites: Invite[];
@@ -24,6 +28,8 @@ interface UsersSettingsPageProps {
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
+  usersSort: TableSort<OrgUsersSortField>;
+  invitesSort: TableSort<InvitesSortField>;
 }
 
 export default function UsersSettingsPage({
@@ -35,8 +41,11 @@ export default function UsersSettingsPage({
   pagination,
   search,
   currentPage,
+  usersSort,
+  invitesSort,
 }: Readonly<UsersSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-layout');
+  const navigate = useNavigate({ from: '/admin-settings/users' });
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
@@ -63,6 +72,17 @@ export default function UsersSettingsPage({
           <InvitesSection
             invites={invites}
             totalInvites={invitesTotal}
+            sort={invitesSort}
+            onSort={(next) =>
+              void navigate({
+                search: (previous) => ({
+                  ...previous,
+                  invitesSortBy: next.sortBy,
+                  invitesSortOrder: next.sortOrder,
+                  invitesPage: undefined,
+                }),
+              })
+            }
             searchSlot={<InvitesSearch search={invitesSearch} />}
             paginationSlot={
               <InvitesPagination
@@ -76,12 +96,19 @@ export default function UsersSettingsPage({
         <UsersSection
           users={users}
           total={total}
+          sort={usersSort}
+          onSort={(next) =>
+            void navigate({
+              search: (previous) => ({ ...previous, ...next, page: undefined }),
+            })
+          }
           searchSlot={<UsersSearch search={search} />}
           paginationSlot={
             <UsersPagination
               currentPage={currentPage}
               totalPages={totalPages}
               search={search}
+              sort={usersSort}
             />
           }
         />

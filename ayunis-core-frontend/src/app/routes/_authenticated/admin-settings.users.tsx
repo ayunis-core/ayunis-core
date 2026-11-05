@@ -7,15 +7,22 @@ import {
   getUserControllerGetUsersInOrganizationQueryKey,
   userControllerGetUsersInOrganization,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { InvitesSortField, OrgUsersSortField } from '@/shared/api';
+import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
+import { searchParamString } from '@/shared/lib/search-params';
 
 const USERS_PER_PAGE = 25;
 const INVITES_PER_PAGE = 10;
 
 const searchSchema = z.object({
-  search: z.string().optional(),
+  search: searchParamString.optional(),
   page: z.number().min(1).optional().catch(1),
-  invitesSearch: z.string().optional(),
+  invitesSearch: searchParamString.optional(),
   invitesPage: z.number().min(1).optional().catch(1),
+  sortBy: sortFieldSchema(OrgUsersSortField),
+  sortOrder: sortOrderSchema,
+  invitesSortBy: sortFieldSchema(InvitesSortField),
+  invitesSortOrder: sortOrderSchema,
 });
 
 export const Route = createFileRoute('/_authenticated/admin-settings/users')({
@@ -23,38 +30,41 @@ export const Route = createFileRoute('/_authenticated/admin-settings/users')({
   loaderDeps: ({ search }) => search,
   component: RouteComponent,
   loader: async ({
-    deps: { search, page = 1, invitesSearch, invitesPage = 1 },
+    deps: {
+      search,
+      page = 1,
+      invitesSearch,
+      invitesPage = 1,
+      sortBy,
+      sortOrder,
+      invitesSortBy,
+      invitesSortOrder,
+    },
     context: { queryClient },
   }) => {
-    const offset = (page - 1) * USERS_PER_PAGE;
-    const invitesOffset = (invitesPage - 1) * INVITES_PER_PAGE;
+    const usersParams = {
+      search,
+      sortBy,
+      sortOrder,
+      limit: USERS_PER_PAGE,
+      offset: (page - 1) * USERS_PER_PAGE,
+    };
+    const invitesParams = {
+      search: invitesSearch,
+      sortBy: invitesSortBy,
+      sortOrder: invitesSortOrder,
+      limit: INVITES_PER_PAGE,
+      offset: (invitesPage - 1) * INVITES_PER_PAGE,
+    };
 
     const [invitesResponse, usersResponse] = await Promise.all([
       queryClient.query({
-        queryKey: getInvitesControllerGetInvitesQueryKey({
-          search: invitesSearch,
-          limit: INVITES_PER_PAGE,
-          offset: invitesOffset,
-        }),
-        queryFn: () =>
-          invitesControllerGetInvites({
-            search: invitesSearch,
-            limit: INVITES_PER_PAGE,
-            offset: invitesOffset,
-          }),
+        queryKey: getInvitesControllerGetInvitesQueryKey(invitesParams),
+        queryFn: () => invitesControllerGetInvites(invitesParams),
       }),
       queryClient.query({
-        queryKey: getUserControllerGetUsersInOrganizationQueryKey({
-          search,
-          limit: USERS_PER_PAGE,
-          offset,
-        }),
-        queryFn: () =>
-          userControllerGetUsersInOrganization({
-            search,
-            limit: USERS_PER_PAGE,
-            offset,
-          }),
+        queryKey: getUserControllerGetUsersInOrganizationQueryKey(usersParams),
+        queryFn: () => userControllerGetUsersInOrganization(usersParams),
       }),
     ]);
     return {
@@ -64,6 +74,8 @@ export const Route = createFileRoute('/_authenticated/admin-settings/users')({
       page,
       invitesSearch,
       invitesPage,
+      usersSort: { sortBy, sortOrder },
+      invitesSort: { sortBy: invitesSortBy, sortOrder: invitesSortOrder },
     };
   },
 });
@@ -76,6 +88,8 @@ function RouteComponent() {
     page,
     invitesSearch,
     invitesPage,
+    usersSort,
+    invitesSort,
   } = Route.useLoaderData();
   return (
     <UsersSettingsPage
@@ -87,6 +101,8 @@ function RouteComponent() {
       pagination={usersResponse.pagination}
       search={search}
       currentPage={page}
+      usersSort={usersSort}
+      invitesSort={invitesSort}
     />
   );
 }

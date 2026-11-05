@@ -21,7 +21,9 @@ import { useInviteDelete } from '@/pages/admin-settings/users-settings/api/useIn
 import { useDeleteAllInvites } from '@/pages/admin-settings/users-settings/api/useDeleteAllInvites';
 import { useInviteResend } from '@/pages/admin-settings/users-settings/api/useInviteResend';
 import type { Invite } from '@/pages/admin-settings/users-settings/model/openapi';
-import type { InviteResponseDtoRole } from '@/shared/api';
+import type { InviteResponseDtoRole, InvitesSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
+import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +31,8 @@ import { useTranslation } from 'react-i18next';
 interface InvitesSectionProps {
   invites: Invite[];
   totalInvites: number;
+  sort: TableSort<InvitesSortField>;
+  onSort: (next: Required<TableSort<InvitesSortField>>) => void;
   searchSlot?: ReactNode;
   paginationSlot?: ReactNode;
 }
@@ -36,6 +40,8 @@ interface InvitesSectionProps {
 export default function InvitesSection({
   invites,
   totalInvites,
+  sort,
+  onSort,
   searchSlot,
   paginationSlot,
 }: Readonly<InvitesSectionProps>) {
@@ -115,17 +121,38 @@ export default function InvitesSection({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('users.email')}</TableHead>
-                <TableHead>{t('users.role')}</TableHead>
+                <SortableTableHead
+                  field="email"
+                  sort={sort}
+                  onSort={onSort}
+                  data-testid="admin-invites-sort-email"
+                >
+                  {t('users.email')}
+                </SortableTableHead>
+                <SortableTableHead
+                  field="role"
+                  sort={sort}
+                  onSort={onSort}
+                  data-testid="admin-invites-sort-role"
+                >
+                  {t('users.role')}
+                </SortableTableHead>
                 <TableHead>{t('users.teams')}</TableHead>
                 <TableHead>{t('users.status')}</TableHead>
-                <TableHead>{t('users.sentDate')}</TableHead>
+                <SortableTableHead
+                  field="createdAt"
+                  sort={sort}
+                  onSort={onSort}
+                  data-testid="admin-invites-sort-createdAt"
+                >
+                  {t('users.sentDate')}
+                </SortableTableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {invites.map((invite) => (
-                <TableRow key={invite.id}>
+                <TableRow key={invite.id} data-testid="admin-invite-row">
                   <TableCell
                     className="font-medium max-w-48 truncate"
                     title={invite.email}

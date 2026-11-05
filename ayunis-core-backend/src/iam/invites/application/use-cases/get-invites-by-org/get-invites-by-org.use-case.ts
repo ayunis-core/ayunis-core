@@ -47,6 +47,7 @@ export class GetInvitesByOrgUseCase {
           query.orgId,
           { limit: query.limit, offset: query.offset },
           { search: query.search, onlyPending: query.onlyOpen },
+          { field: query.sortBy, order: query.sortOrder },
         );
 
       this.logger.debug(

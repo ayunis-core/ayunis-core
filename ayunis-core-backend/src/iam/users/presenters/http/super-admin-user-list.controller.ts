@@ -9,7 +9,7 @@ import { SuperAdminFindAllUsersQuery } from 'src/iam/users/application/use-cases
 import { SuperAdminFindAllUsersUseCase } from 'src/iam/users/application/use-cases/super-admin-find-all-users/super-admin-find-all-users.use-case';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ApiSuperAdminUsersListQueries } from 'src/iam/users/presenters/http/decorators/api-super-admin-users-list.decorator';
-import { GetUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-users-query-params.dto';
+import { GetSuperAdminUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-super-admin-users-query-params.dto';
 import { PaginatedSuperAdminUsersListResponseDto } from 'src/iam/users/presenters/http/dtos/super-admin-user-list-item-response.dto';
 import { SuperAdminUserListItemResponseDtoMapper } from 'src/iam/users/presenters/http/mappers/super-admin-user-list-item-response-dto.mapper';
 
@@ -34,7 +34,7 @@ export class SuperAdminUserListController {
     description: 'User not authenticated or not authorized as super admin',
   })
   async getAllUsers(
-    @Query() queryParams: GetUsersQueryParamsDto,
+    @Query() queryParams: GetSuperAdminUsersQueryParamsDto,
   ): Promise<PaginatedSuperAdminUsersListResponseDto> {
     const users = await this.superAdminFindAllUsersUseCase.execute(
       new SuperAdminFindAllUsersQuery({
@@ -43,6 +43,8 @@ export class SuperAdminUserListController {
           limit: queryParams.limit,
           offset: queryParams.offset,
         },
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
       }),
     );
 

@@ -9,6 +9,10 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { OrgUnauthorizedError } from 'src/iam/orgs/application/orgs.errors';
 import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { SortOrder } from 'src/common/sorting/sort';
+import { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
+
+const DEFAULT_SORT = { field: OrgsSortField.CREATED_AT, order: SortOrder.DESC };
 
 const COUNTS = {
   total: 56,
@@ -79,6 +83,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
       { limit: 50, offset: 0 },
       { search: undefined },
+      DEFAULT_SORT,
     );
     expect(result.page.data.map((item) => item.org)).toEqual(orgs);
     expect(result.page.total).toBe(2);
@@ -103,6 +108,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
       { limit: 50, offset: 0 },
       { search: 'Acme' },
+      DEFAULT_SORT,
     );
     expect(result.page.data).toHaveLength(1);
   });
@@ -169,6 +175,27 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
       { limit: 50, offset: 0 },
       { lifecycle: 'expired' },
+      DEFAULT_SORT,
+    );
+  });
+
+  it('passes the requested sort through to the repository', async () => {
+    contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
+    orgsRepository.findAllForSuperAdmin.mockResolvedValue(
+      new Paginated<Org>({ data: [], limit: 50, offset: 0, total: 0 }),
+    );
+
+    await useCase.execute(
+      new SuperAdminGetAllOrgsQuery({
+        sortBy: OrgsSortField.NAME,
+        sortOrder: SortOrder.ASC,
+      }),
+    );
+
+    expect(orgsRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
+      { limit: 50, offset: 0 },
+      {},
+      { field: OrgsSortField.NAME, order: SortOrder.ASC },
     );
   });
 

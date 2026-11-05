@@ -30,6 +30,8 @@ import { useCallback } from 'react';
 import SuperAdminInvitesSection from './SuperAdminInvitesSection';
 import SuperAdminInvitesSearch from './SuperAdminInvitesSearch';
 import SuperAdminInvitesPagination from './SuperAdminInvitesPagination';
+import type { InvitesSortField, OrgUsersSortField } from '@/shared/api';
+import type { TableSort } from '@/shared/lib/table-sort';
 
 interface SuperAdminSettingsOrgPageProps {
   org: SuperAdminOrgOverviewResponseDto;
@@ -41,6 +43,8 @@ interface SuperAdminSettingsOrgPageProps {
   invitesPagination?: PaginationDto;
   invitesSearch?: string;
   invitesCurrentPage: number;
+  usersSort: TableSort<OrgUsersSortField>;
+  invitesSort: TableSort<InvitesSortField>;
   subscription: SubscriptionResponseDto | null;
   subscriptionHistory?: SubscriptionHistoryItem[];
   activeSubscriptionCount?: number;
@@ -66,6 +70,8 @@ export default function SuperAdminSettingsOrgPage({
   invitesPagination,
   invitesSearch,
   invitesCurrentPage,
+  usersSort,
+  invitesSort,
   subscription,
   subscriptionHistory = [],
   activeSubscriptionCount = 0,
@@ -74,10 +80,30 @@ export default function SuperAdminSettingsOrgPage({
 }: Readonly<SuperAdminSettingsOrgPageProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { t: tLayout } = useTranslation('super-admin-settings-layout');
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: '/super-admin-settings/orgs/$id' });
   const { id } = useParams({
     from: '/_authenticated/super-admin-settings/orgs/$id',
   });
+  const sortUsers = (next: Required<TableSort<OrgUsersSortField>>) =>
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        tab: 'users',
+        usersSortBy: next.sortBy,
+        usersSortOrder: next.sortOrder,
+        usersPage: undefined,
+      }),
+    });
+  const sortInvites = (next: Required<TableSort<InvitesSortField>>) =>
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        tab: 'users',
+        invitesSortBy: next.sortBy,
+        invitesSortOrder: next.sortOrder,
+        invitesPage: undefined,
+      }),
+    });
   const invitesTotal = invitesPagination?.total ?? 0;
   const invitesLimit = invitesPagination?.limit ?? 10;
   const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
@@ -149,6 +175,8 @@ export default function SuperAdminSettingsOrgPage({
               orgId={org.id}
               invites={invites}
               total={invitesTotal}
+              sort={invitesSort}
+              onSort={sortInvites}
               searchSlot={
                 <SuperAdminInvitesSearch
                   search={invitesSearch}
@@ -170,6 +198,8 @@ export default function SuperAdminSettingsOrgPage({
               pagination={usersPagination}
               search={usersSearch}
               currentPage={usersCurrentPage}
+              sort={usersSort}
+              onSort={sortUsers}
             />
           </div>
         </TabsContent>

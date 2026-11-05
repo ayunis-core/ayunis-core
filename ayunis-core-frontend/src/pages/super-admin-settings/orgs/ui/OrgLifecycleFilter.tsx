@@ -12,14 +12,13 @@ import {
 export default function OrgLifecycleFilter({
   lifecycle,
 }: Readonly<{ lifecycle: OrgLifecycleFilterValue }>) {
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: '/super-admin-settings/orgs/' });
   const { t } = useTranslation('super-admin-settings-orgs');
   return (
     <Select
       value={lifecycle}
       onValueChange={(value: OrgLifecycleFilterValue) => {
         void navigate({
-          to: '/super-admin-settings/orgs',
           search: (previous) => ({
             ...previous,
             orgLifecycle: value,

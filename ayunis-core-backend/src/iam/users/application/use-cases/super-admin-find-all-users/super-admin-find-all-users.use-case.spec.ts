@@ -5,6 +5,8 @@ import { UsersRepository } from 'src/iam/users/application/ports/users.repositor
 import { UserUnauthorizedError } from 'src/iam/users/application/users.errors';
 import type { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { SortOrder } from 'src/common/sorting/sort';
+import { SuperAdminUsersSortField } from 'src/iam/users/domain/value-objects/super-admin-users-sort.enum';
 import { SuperAdminFindAllUsersQuery } from './super-admin-find-all-users.query';
 import { SuperAdminFindAllUsersUseCase } from './super-admin-find-all-users.use-case';
 
@@ -53,6 +55,8 @@ describe('SuperAdminFindAllUsersUseCase', () => {
       new SuperAdminFindAllUsersQuery({
         search: 'alex@example.de',
         pagination: { limit: 25, offset: 50 },
+        sortBy: SuperAdminUsersSortField.ORG_NAME,
+        sortOrder: SortOrder.ASC,
       }),
     );
 
@@ -60,6 +64,33 @@ describe('SuperAdminFindAllUsersUseCase', () => {
     expect(usersRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
       { limit: 25, offset: 50 },
       { search: 'alex@example.de' },
+      {
+        field: SuperAdminUsersSortField.ORG_NAME,
+        order: SortOrder.ASC,
+      },
+    );
+  });
+
+  it('defaults to newest users first when no sort is requested', async () => {
+    contextService.get.mockReturnValue(SystemRole.SUPER_ADMIN);
+    usersRepository.findAllForSuperAdmin.mockResolvedValue(
+      new Paginated<SuperAdminUserListItem>({
+        data: [],
+        limit: 25,
+        offset: 0,
+        total: 0,
+      }),
+    );
+
+    await useCase.execute(new SuperAdminFindAllUsersQuery());
+
+    expect(usersRepository.findAllForSuperAdmin).toHaveBeenCalledWith(
+      { limit: 25, offset: 0 },
+      { search: undefined },
+      {
+        field: SuperAdminUsersSortField.CREATED_AT,
+        order: SortOrder.DESC,
+      },
     );
   });
 

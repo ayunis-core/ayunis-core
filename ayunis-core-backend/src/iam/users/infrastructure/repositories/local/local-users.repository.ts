@@ -21,6 +21,25 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
 import { exactEmail } from 'src/common/db/exact-email.operator';
+import { applySort } from 'src/common/db/apply-sort';
+import type { Sort } from 'src/common/sorting/sort';
+import { SuperAdminUsersSortField } from 'src/iam/users/domain/value-objects/super-admin-users-sort.enum';
+import { OrgUsersSortField } from 'src/iam/users/domain/value-objects/org-users-sort.enum';
+
+const SUPER_ADMIN_USERS_SORT_COLUMNS: Record<SuperAdminUsersSortField, string> =
+  {
+    [SuperAdminUsersSortField.NAME]: 'user.name',
+    [SuperAdminUsersSortField.EMAIL]: 'user.email',
+    [SuperAdminUsersSortField.ORG_NAME]: 'org.name',
+    [SuperAdminUsersSortField.CREATED_AT]: 'user.createdAt',
+  };
+
+const ORG_USERS_SORT_COLUMNS: Record<OrgUsersSortField, string> = {
+  [OrgUsersSortField.NAME]: 'user.name',
+  [OrgUsersSortField.EMAIL]: 'user.email',
+  [OrgUsersSortField.ROLE]: 'user.role',
+  [OrgUsersSortField.CREATED_AT]: 'user.createdAt',
+};
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
@@ -169,7 +188,8 @@ export class LocalUsersRepository extends UsersRepository {
   async findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,
-    filters?: UsersFilters,
+    filters: UsersFilters,
+    sort: Sort<OrgUsersSortField>,
   ): Promise<Paginated<User>> {
     // The search term is free text over member names and emails, so it is
     // counted rather than logged — it would otherwise persist personal data in
@@ -179,17 +199,22 @@ export class LocalUsersRepository extends UsersRepository {
         orgId,
         limit: pagination.limit,
         offset: pagination.offset,
-        hasSearch: filters?.search !== undefined,
+        hasSearch: filters.search !== undefined,
+        sort,
       },
       'findManyByOrgId',
     );
 
-    const queryBuilder = this.users
-      .createQueryBuilder('user')
-      .where('user.orgId = :orgId', { orgId })
-      .orderBy('user.createdAt', 'DESC');
+    const queryBuilder = applySort(
+      this.users
+        .createQueryBuilder('user')
+        .where('user.orgId = :orgId', { orgId }),
+      ORG_USERS_SORT_COLUMNS,
+      sort,
+      'user.id',
+    );
 
-    if (filters?.search) {
+    if (filters.search) {
       queryBuilder.andWhere(
         '(user.name ILIKE :search OR user.email ILIKE :search)',
         { search: `%${filters.search}%` },
@@ -213,23 +238,29 @@ export class LocalUsersRepository extends UsersRepository {
 
   async findAllForSuperAdmin(
     pagination: UsersPagination,
-    filters?: UsersFilters,
+    filters: UsersFilters,
+    sort: Sort<SuperAdminUsersSortField>,
   ): Promise<Paginated<SuperAdminUserListItem>> {
     this.logger.log(
       {
         limit: pagination.limit,
         offset: pagination.offset,
-        hasSearch: filters?.search !== undefined,
+        hasSearch: filters.search !== undefined,
+        sort,
       },
       'findAllForSuperAdmin',
     );
 
-    const queryBuilder = this.users
-      .createQueryBuilder('user')
-      .innerJoinAndSelect('user.org', 'org')
-      .orderBy('user.createdAt', 'DESC');
+    const queryBuilder = applySort(
+      this.users
+        .createQueryBuilder('user')
+        .innerJoinAndSelect('user.org', 'org'),
+      SUPER_ADMIN_USERS_SORT_COLUMNS,
+      sort,
+      'user.id',
+    );
 
-    if (filters?.search) {
+    if (filters.search) {
       queryBuilder.andWhere(
         '(user.name ILIKE :search OR user.email ILIKE :search)',
         { search: `%${filters.search}%` },

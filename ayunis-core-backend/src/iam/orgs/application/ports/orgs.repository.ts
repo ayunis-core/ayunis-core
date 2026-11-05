@@ -5,6 +5,8 @@ import type {
   OrgLifecycleCounts,
   OrgLifecycleStatus,
 } from 'src/iam/orgs/application/models/org-lifecycle-status';
+import type { Sort } from 'src/common/sorting/sort';
+import type { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
 
 export interface OrgsPagination {
   limit: number;
@@ -22,7 +24,8 @@ export abstract class OrgsRepository {
   abstract findAllIds(): Promise<UUID[]>;
   abstract findAllForSuperAdmin(
     pagination: OrgsPagination,
-    filters?: OrgsFilters,
+    filters: OrgsFilters,
+    sort: Sort<OrgsSortField>,
   ): Promise<Paginated<Org>>;
   abstract countByLifecycleStatus(search?: string): Promise<OrgLifecycleCounts>;
   abstract findLifecycleStatuses(

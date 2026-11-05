@@ -5,6 +5,12 @@ import {
   ORG_LIFECYCLE_STATUSES,
   type OrgLifecycleStatus,
 } from 'src/iam/orgs/application/models/org-lifecycle-status';
+import type { SortOrder } from 'src/common/sorting/sort';
+import {
+  SortByQueryParam,
+  SortOrderQueryParam,
+} from 'src/common/sorting/sort-query-params.decorators';
+import { OrgsSortField } from 'src/iam/orgs/domain/orgs-sort-field.enum';
 
 const LIFECYCLE_FILTER_VALUES = ['all', ...ORG_LIFECYCLE_STATUSES];
 
@@ -49,4 +55,10 @@ export class SuperAdminGetAllOrgsQueryParamsDto {
   @Min(0)
   @Type(() => Number)
   offset?: number;
+
+  @SortByQueryParam(OrgsSortField, 'OrgsSortField', OrgsSortField.CREATED_AT)
+  sortBy?: OrgsSortField;
+
+  @SortOrderQueryParam()
+  sortOrder?: SortOrder;
 }
