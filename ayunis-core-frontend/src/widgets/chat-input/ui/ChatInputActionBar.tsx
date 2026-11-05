@@ -72,11 +72,9 @@ export function ChatInputActionBar({
   isSubmitting,
   isEmbeddingModelEnabled,
   isVisionEnabled,
-  knowledgeBases,
   mcpIntegrations,
   onFileUpload,
   onImageSelect,
-  onAddKnowledgeBase,
   onAddIntegration,
   isAnonymous,
   onAnonymousChange,
@@ -107,8 +105,6 @@ export function ChatInputActionBar({
               onImageSelect={onImageSelect}
               isFileSourceDisabled={!isEmbeddingModelEnabled || isSubmitting}
               isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-              onKnowledgeBaseSelect={onAddKnowledgeBase}
-              attachedKnowledgeBaseIds={knowledgeBases?.map((kb) => kb.id)}
               onIntegrationSelect={onAddIntegration}
               attachedIntegrationIds={mcpIntegrations?.map(
                 (integration) => integration.id,

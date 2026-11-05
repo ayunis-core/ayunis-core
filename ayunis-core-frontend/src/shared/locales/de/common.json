@@ -77,6 +77,7 @@
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "uploadFile": "Datei oder Bild hochladen",
+    "uploadRecording": "Audioaufnahme hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",
     "imageTooLarge": "Bilder dürfen höchstens {{maxMiB}} MiB groß sein",
     "addKnowledgeBase": "Wissenssammlung hinzufügen",

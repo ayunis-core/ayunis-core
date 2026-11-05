@@ -15,7 +15,7 @@ import {
   TooltipContent,
 } from '@ayunis/ui/components/tooltip';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
+import { AudioLines, Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
 import { useRef } from 'react';
 import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
@@ -26,6 +26,7 @@ import {
   separateFilesByType,
   createFileListFromFiles,
   keepFilesWithinSizeLimit,
+  ACCEPTED_AUDIO_EXTENSIONS,
   ACCEPTED_FILE_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
@@ -56,6 +57,7 @@ export default function PlusButton({
   attachedIntegrationIds = [],
 }: Readonly<PlusButtonProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const {
@@ -95,11 +97,11 @@ export default function PlusButton({
     if (hasSkippedFiles) {
       showError(t('chatInput.invalidDroppedFileType'));
     }
+  };
 
-    // Reset input to allow selecting the same file(s) again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const handleInputChange = (input: HTMLInputElement) => {
+    handleFileChange(input.files);
+    input.value = '';
   };
 
   // Filter out already-attached knowledge bases
@@ -128,6 +130,13 @@ export default function PlusButton({
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="h-4 w-4" />
               <span>{t('chatInput.uploadFile')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={isFileSourceDisabled}
+              onClick={() => audioInputRef.current?.click()}
+            >
+              <AudioLines className="h-4 w-4" />
+              <span>{t('chatInput.uploadRecording')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           {onKnowledgeBaseSelect && (
@@ -200,8 +209,16 @@ export default function PlusButton({
         hidden
         multiple
         accept={ACCEPTED_FILE_PICKER_TYPES}
-        onChange={(e) => handleFileChange(e.target.files)}
+        onChange={(e) => handleInputChange(e.target)}
         ref={fileInputRef}
+      />
+      <Input
+        type="file"
+        hidden
+        multiple
+        accept={ACCEPTED_AUDIO_EXTENSIONS.join(',')}
+        onChange={(e) => handleInputChange(e.target)}
+        ref={audioInputRef}
       />
     </Tooltip>
   );

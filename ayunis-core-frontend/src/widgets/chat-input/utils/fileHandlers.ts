@@ -1,6 +1,8 @@
 import type { TFunction } from 'i18next';
 import { showError } from '@/shared/lib/toast';
 
+export const ACCEPTED_AUDIO_EXTENSIONS = ['.mp3', '.m4a', '.wav', '.webm'];
+
 // Non-image extensions accepted by the chat input. Mirrors the backend's
 // FILE_EXTENSIONS in src/common/util/file-type.ts; images are routed by MIME
 // type instead of extension.
@@ -17,10 +19,7 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.md',
   '.eml',
   '.msg',
-  '.mp3',
-  '.m4a',
-  '.wav',
-  '.webm',
+  ...ACCEPTED_AUDIO_EXTENSIONS,
 ];
 
 // Mirrors the backend's MAX_SOURCE_FILE_SIZE_BYTES in
@@ -28,6 +27,9 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
 export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 const BYTES_PER_MB = 1024 * 1024;
+
+export const MAX_SOURCE_FILE_SIZE_MB =
+  MAX_SOURCE_FILE_SIZE_BYTES / BYTES_PER_MB;
 
 // Rejects oversized files before any upload request is sent, with one toast
 // per rejected file. Sizes round up so a file just over the limit never reads
@@ -39,7 +41,7 @@ export function keepFilesWithinSizeLimit(files: File[], t: TFunction): File[] {
       t('chatInput.fileTooLarge', {
         name: file.name,
         size: Math.ceil(file.size / BYTES_PER_MB),
-        limit: MAX_SOURCE_FILE_SIZE_BYTES / BYTES_PER_MB,
+        limit: MAX_SOURCE_FILE_SIZE_MB,
       }),
     );
     return false;
