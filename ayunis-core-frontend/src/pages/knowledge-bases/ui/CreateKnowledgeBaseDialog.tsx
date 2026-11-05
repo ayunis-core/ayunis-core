@@ -16,7 +16,7 @@ export default function CreateKnowledgeBaseDialog({
   const { createKnowledgeBase } = useCreateKnowledgeBase();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
 
-  if (!isLoadingPermissions && !can('manage_knowledge_bases')) return null;
+  if (!isLoadingPermissions && !can('manage_own_knowledge')) return null;
 
   return (
     <KnowledgeBaseCreateDialog

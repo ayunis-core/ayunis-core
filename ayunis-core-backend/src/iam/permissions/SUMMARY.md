@@ -6,10 +6,23 @@ hold whatever an org admin grants them.
 
 ## Model
 
-- `Permission` — hardcoded enum of assignable capabilities, currently:
-  `manage_teams`, `assign_users_to_teams`, `manage_skills`, `share_skills`,
-  `manage_knowledge_bases`, `share_knowledge_bases`. This is the source of truth
-  for what a role can be granted.
+- `Permission` — hardcoded enum of assignable capabilities in four groups:
+  - teams: `manage_teams`, `assign_users_to_teams`
+  - skills: `manage_own_skills`, `install_marketplace_skills`,
+    `request_skill_transfer`, `request_skill_transfer_other_teams`,
+    `request_skill_transfer_org`, `manage_org_skills`,
+    `review_all_skill_requests`
+  - knowledge: `manage_own_knowledge`, `request_knowledge_transfer`,
+    `request_knowledge_transfer_other_teams`, `request_knowledge_transfer_org`,
+    `manage_org_knowledge`, `review_all_knowledge_requests`
+  - workspaces: `create_workspaces`, `share_workspaces`, `share_workspaces_org`
+
+  This is the source of truth for what a role can be granted. Enforced today:
+  teams, `manage_own_*` (personal and workspace-owned items),
+  `install_marketplace_skills`, `create_workspaces`, and the four
+  `request_*_transfer` / `request_*_transfer_org` keys, which gate team and org
+  shares until handovers replace shares. The other keys are stored and
+  configurable but only read by the features that introduce them.
   How the settings UI labels, groups and orders these is purely a display
   concern and lives in the frontend, keyed on the enum — the API returns grants
   only.
@@ -18,10 +31,11 @@ hold whatever an org admin grants them.
   granted.**
 - `CONFIGURABLE_ROLES` = `[MANAGER, USER]` — the only roles that can be
   configured. `ADMIN` is intentionally excluded (implicit-all, never persisted).
-- `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation. Chosen to
-  preserve pre-RBAC behaviour (all skill + knowledge-base permissions for both
-  MANAGER and USER; teams stay admin-only). **Kept in sync with the backfill
-  VALUES list in the `CreateRolePermissions` migration.**
+- `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation: own skills
+  and knowledge, marketplace installs, handover requests to own teams and the
+  org, creating and managing workspaces. MANAGER additionally gets
+  `assign_users_to_teams`. Existing orgs do not follow these defaults; see
+  Seeding.
 
 ## Enforcement
 
@@ -44,7 +58,15 @@ reads, reachable with `MANAGE_TEAMS` or `ASSIGN_USERS_TO_TEAMS`).
   an org without a grant matrix leaves every non-admin with no permissions, so a
   failure must fail org creation instead of being logged and swallowed.
 - Existing orgs: backfilled by the `CreateRolePermissions` migration so no
-  member silently loses skill/knowledge-base access.
+  member silently loses skill/knowledge-base access, then mapped onto the
+  current keys by `ReplaceRolePermissionKeys`: `manage_skills` →
+  `manage_own_skills` + `install_marketplace_skills`, `share_skills` →
+  `request_skill_transfer` + `request_skill_transfer_org` (same for knowledge),
+  plus `create_workspaces` and `share_workspaces` for MANAGER and USER. Keys
+  that widen access (`manage_org_*`, `review_all_*`, `*_other_teams`,
+  `share_workspaces_org`, MANAGER `assign_users_to_teams`) are not backfilled.
+  `down()` is lossy: it drops the new-only keys and merges the request keys
+  back into `share_*`.
 
 ## Management
 

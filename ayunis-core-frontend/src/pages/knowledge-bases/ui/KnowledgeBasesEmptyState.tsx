@@ -9,7 +9,7 @@ export default function KnowledgeBasesEmptyState() {
   // Assume can-create while permissions load (matching CreateKnowledgeBaseDialog)
   // so the prompt doesn't flicker; drop the create copy/action only once we know
   // the member lacks the permission (they can still read KBs shared with them).
-  const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
+  const canCreate = isLoadingPermissions || can('manage_own_knowledge');
 
   return (
     <EmptyState

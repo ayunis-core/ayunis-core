@@ -23,20 +23,20 @@ describe('GetRolePermissionsUseCase', () => {
       new RolePermission({
         orgId,
         role: UserRole.MANAGER,
-        permission: Permission.MANAGE_SKILLS,
+        permission: Permission.MANAGE_OWN_SKILLS,
       }),
       new RolePermission({
         orgId,
         role: UserRole.USER,
-        permission: Permission.SHARE_SKILLS,
+        permission: Permission.REQUEST_SKILL_TRANSFER,
       }),
     ]);
 
     const result = await useCase.execute(new GetRolePermissionsQuery(orgId));
 
     expect(result).toEqual([
-      { role: UserRole.MANAGER, permissions: [Permission.MANAGE_SKILLS] },
-      { role: UserRole.USER, permissions: [Permission.SHARE_SKILLS] },
+      { role: UserRole.MANAGER, permissions: [Permission.MANAGE_OWN_SKILLS] },
+      { role: UserRole.USER, permissions: [Permission.REQUEST_SKILL_TRANSFER] },
     ]);
   });
 

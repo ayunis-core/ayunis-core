@@ -20,18 +20,24 @@
   "permissionHints": {
     "manage_teams": "Create, rename and delete teams.",
     "assign_users_to_teams": "Add members to a team and remove them again. Does not allow creating or deleting teams.",
-    "manage_skills": "Create, edit and delete skills, including their instructions, sources and integrations.",
-    "share_skills": "Make a skill available to a team or to the whole organisation.",
-    "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
-    "share_knowledge_bases": "Make a knowledge base available to a team or to the whole organisation."
+    "manage_own_skills": "Create, edit and delete your own skills, including their instructions, sources and integrations.",
+    "install_marketplace_skills": "Add skills from the Ayunis Core Marketplace to your own skills.",
+    "request_skill_transfer": "Make one of your own skills available to a team you belong to.",
+    "request_skill_transfer_org": "Make one of your own skills available to the whole organisation.",
+    "manage_own_knowledge": "Create, edit and delete your own knowledge bases and the documents inside them.",
+    "request_knowledge_transfer": "Make one of your own knowledge bases available to a team you belong to.",
+    "request_knowledge_transfer_org": "Make one of your own knowledge bases available to the whole organisation."
   },
   "permissions": {
     "manage_teams": "Manage teams",
     "assign_users_to_teams": "Assign users to teams",
-    "manage_skills": "Manage skills",
-    "share_skills": "Share skills",
-    "manage_knowledge_bases": "Manage knowledge bases",
-    "share_knowledge_bases": "Share knowledge bases"
+    "manage_own_skills": "Manage own skills",
+    "install_marketplace_skills": "Add from the Marketplace",
+    "request_skill_transfer": "Share with own teams",
+    "request_skill_transfer_org": "Share with the organisation",
+    "manage_own_knowledge": "Manage own knowledge bases",
+    "request_knowledge_transfer": "Share with own teams",
+    "request_knowledge_transfer_org": "Share with the organisation"
   },
   "adminHint": "Admins always have every permission and cannot be restricted.",
   "save": "Save changes",

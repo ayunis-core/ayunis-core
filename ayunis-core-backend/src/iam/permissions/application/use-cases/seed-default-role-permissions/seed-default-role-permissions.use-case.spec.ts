@@ -7,6 +7,7 @@ import {
 } from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 describe('SeedDefaultRolePermissionsUseCase', () => {
   const orgId = 'org-1' as UUID;
@@ -32,6 +33,26 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
         permissions: DEFAULT_ROLE_PERMISSIONS[role],
       })),
     );
+  });
+
+  it('grants new orgs the decided default matrix', () => {
+    const userDefaults = [
+      Permission.MANAGE_OWN_SKILLS,
+      Permission.INSTALL_MARKETPLACE_SKILLS,
+      Permission.REQUEST_SKILL_TRANSFER,
+      Permission.REQUEST_SKILL_TRANSFER_ORG,
+      Permission.MANAGE_OWN_KNOWLEDGE,
+      Permission.REQUEST_KNOWLEDGE_TRANSFER,
+      Permission.REQUEST_KNOWLEDGE_TRANSFER_ORG,
+      Permission.CREATE_WORKSPACES,
+      Permission.SHARE_WORKSPACES,
+    ];
+
+    expect(DEFAULT_ROLE_PERMISSIONS[UserRole.USER]).toEqual(userDefaults);
+    expect(DEFAULT_ROLE_PERMISSIONS[UserRole.MANAGER]).toEqual([
+      Permission.ASSIGN_USERS_TO_TEAMS,
+      ...userDefaults,
+    ]);
   });
 
   it('writes all roles in a single call so a failure cannot half-seed the matrix', async () => {

@@ -15,7 +15,7 @@ const {
   showSuccess,
 } = vi.hoisted(() => ({
   installSkill: vi.fn(),
-  permissions: { canManageSkills: true },
+  permissions: { canInstallMarketplaceSkills: true },
   catalogue: {
     state: 'success',
   },
@@ -72,7 +72,7 @@ vi.mock('@/features/permissions', () => ({
   }: {
     children: ReactNode;
     fallback: ReactNode;
-  }) => <>{permissions.canManageSkills ? children : fallback}</>,
+  }) => <>{permissions.canInstallMarketplaceSkills ? children : fallback}</>,
 }));
 
 vi.mock('@/shared/api', () => ({
@@ -135,7 +135,7 @@ function renderWidget() {
 describe('InstallMarketplaceSkillWidget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    permissions.canManageSkills = true;
+    permissions.canInstallMarketplaceSkills = true;
     catalogue.state = 'success';
     installedEntry.skillId = null;
     installedEntry.state = 'success';
@@ -225,8 +225,8 @@ describe('InstallMarketplaceSkillWidget', () => {
     expect(installSkill).not.toHaveBeenCalled();
   });
 
-  it('shows an administrator hint and no install action to members without manage_skills', () => {
-    permissions.canManageSkills = false;
+  it('shows an administrator hint and no install action to members without install_marketplace_skills', () => {
+    permissions.canInstallMarketplaceSkills = false;
     renderWidget();
 
     expect(screen.queryByTestId('marketplace-install-button')).toBeNull();

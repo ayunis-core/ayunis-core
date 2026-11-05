@@ -127,7 +127,7 @@ export default function SkillCard({
               pinButton
             ))}
           {!skill.isShared && (
-            <PermissionGate permission="manage_skills">
+            <PermissionGate permission="manage_own_skills">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

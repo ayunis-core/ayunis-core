@@ -100,7 +100,7 @@ describe('PermissionsGuard', () => {
   it('denies a holder of none of several required permissions', async () => {
     const { guard, context } = createGuard({
       required: [Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS],
-      granted: [Permission.MANAGE_SKILLS],
+      granted: [Permission.MANAGE_OWN_SKILLS],
       user: manager,
     });
 

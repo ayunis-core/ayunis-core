@@ -78,7 +78,7 @@ export class SkillSourcesController {
     return this.skillDtoMapper.sourcesToDtoArray(sources);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post(':id/sources/file')
   @ApiSkillFileSourceUpload()
   async addFileSource(
@@ -119,7 +119,7 @@ export class SkillSourcesController {
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a skill' })
   @ApiParam({

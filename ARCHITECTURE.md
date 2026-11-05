@@ -195,14 +195,14 @@ load-bearing):
   `@Roles(...)` + `RolesGuard` do a plain OR-match. `SystemRole`
   (`super_admin`) is a separate platform axis via `@SystemRoles` +
   `SystemRolesGuard`.
-- **Permission** — fine-grained capabilities (`manage_teams`,
-  `assign_users_to_teams`, `manage_skills`, `share_skills`,
-  `manage_knowledge_bases`, `share_knowledge_bases`) that org admins grant
-  **per role, per org**. `@RequirePermission(Permission.X)` + `PermissionsGuard`
+- **Permission** — fine-grained capabilities in four groups (teams, skills,
+  knowledge collections, workspaces; e.g. `manage_teams`, `manage_own_skills`,
+  `install_marketplace_skills`, `request_skill_transfer_org`,
+  `create_workspaces`) that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` + `PermissionsGuard`
   → `HasPermissionUseCase`. **ADMIN implicitly holds every permission**;
   MANAGER/USER hold what the org's matrix grants (each must keep ≥1). Grants
   live in the per-org `role_permissions` table; new orgs are seeded and existing
-  orgs backfilled to preserve pre-RBAC access. See
+  orgs were migrated onto the current keys without losing access. See
   [permissions/SUMMARY.md](ayunis-core-backend/src/iam/permissions/SUMMARY.md).
 
 **Reads stay open** — only manage/share (write) endpoints are permission-gated;

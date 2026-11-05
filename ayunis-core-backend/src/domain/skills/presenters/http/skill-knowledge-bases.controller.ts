@@ -43,7 +43,7 @@ export class SkillKnowledgeBasesController {
     private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Post(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Assign knowledge base to skill' })
   @ApiParam({
@@ -82,7 +82,7 @@ export class SkillKnowledgeBasesController {
     return this.toSkillDto(skillId);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.MANAGE_OWN_SKILLS)
   @Delete(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Unassign knowledge base from skill' })
   @ApiParam({

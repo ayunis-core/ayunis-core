@@ -84,7 +84,7 @@ export class SetSkillPinUseCase {
   private async requireManagementPermission(): Promise<void> {
     const { orgId, role } = getRequiredUserContext(this.context);
     const allowed = await this.hasPermission.execute(
-      new HasPermissionQuery(orgId, role, Permission.MANAGE_SKILLS),
+      new HasPermissionQuery(orgId, role, Permission.MANAGE_OWN_SKILLS),
     );
     if (!allowed) throw new UnauthorizedAccessError();
   }

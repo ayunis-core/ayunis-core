@@ -22,7 +22,7 @@ export default function CreateSkillDialog({
   const { createSkill } = useCreateSkill();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
 
-  if (!isLoadingPermissions && !can('manage_skills')) return null;
+  if (!isLoadingPermissions && !can('manage_own_skills')) return null;
 
   return (
     <SkillCreateDialog

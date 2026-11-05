@@ -91,7 +91,7 @@ export function KnowledgeBasePage({
 
   const isReadOnly = knowledgeBase.isShared;
   const { can } = useMyPermissions();
-  const canManageKb = can('manage_knowledge_bases');
+  const canManageKb = can('manage_own_knowledge');
 
   const configContent = (
     <div className="grid gap-4">

@@ -22,7 +22,7 @@ describe('createAuthorization', () => {
     ]);
 
     expect(authorization.can('manage_teams')).toBe(true);
-    expect(authorization.can('manage_skills')).toBe(false);
+    expect(authorization.can('manage_own_skills')).toBe(false);
   });
 
   it('recognizes any one of several granted permissions', () => {
@@ -33,6 +33,8 @@ describe('createAuthorization', () => {
     expect(authorization.canAny('manage_teams', 'assign_users_to_teams')).toBe(
       true,
     );
-    expect(authorization.canAny('manage_skills', 'share_skills')).toBe(false);
+    expect(
+      authorization.canAny('manage_own_skills', 'request_skill_transfer'),
+    ).toBe(false);
   });
 });
