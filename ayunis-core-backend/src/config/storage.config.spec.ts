@@ -11,9 +11,14 @@ describe('storageConfig', () => {
     delete process.env.MINIO_SECRET_KEY;
     delete process.env.MINIO_ROOT_USER;
     delete process.env.MINIO_ROOT_PASSWORD;
+    delete process.env.MINIO_UPLOAD_ACCESS_KEY;
+    delete process.env.MINIO_UPLOAD_SECRET_KEY;
     delete process.env.MINIO_INTERNAL_ENDPOINT;
     delete process.env.MINIO_INTERNAL_PORT;
     delete process.env.MINIO_INTERNAL_USE_SSL;
+    delete process.env.MINIO_PUBLIC_ENDPOINT;
+    delete process.env.MINIO_PUBLIC_PORT;
+    delete process.env.MINIO_PUBLIC_USE_SSL;
     delete process.env.MINIO_ENDPOINT;
     delete process.env.MINIO_PORT;
     delete process.env.MINIO_USE_SSL;
@@ -52,6 +57,36 @@ describe('storageConfig', () => {
     });
   });
 
+  describe('upload identity', () => {
+    it('signs uploads as the dedicated upload user when configured', () => {
+      process.env.MINIO_ROOT_USER = 'root-user';
+      process.env.MINIO_ROOT_PASSWORD = 'root-password';
+      process.env.MINIO_UPLOAD_ACCESS_KEY = 'uploads';
+      process.env.MINIO_UPLOAD_SECRET_KEY = 'uploads-secret';
+
+      const config = storageConfig();
+
+      expect(config.minio.upload).toEqual({
+        accessKey: 'uploads',
+        secretKey: 'uploads-secret',
+      });
+      expect(config.minio.accessKey).toBe('root-user');
+    });
+
+    it('falls back to the server-side identity when the upload user is unset', () => {
+      process.env.MINIO_ROOT_USER = 'root-user';
+      process.env.MINIO_ROOT_PASSWORD = 'root-password';
+      process.env.MINIO_UPLOAD_ACCESS_KEY = 'uploads';
+
+      const config = storageConfig();
+
+      expect(config.minio.upload).toEqual({
+        accessKey: 'root-user',
+        secretKey: 'root-password',
+      });
+    });
+  });
+
   it('configures the internal MinIO connection independently of legacy values', () => {
     process.env.MINIO_INTERNAL_ENDPOINT = 'minio.internal';
     process.env.MINIO_INTERNAL_PORT = '443';
@@ -66,6 +101,32 @@ describe('storageConfig', () => {
       port: 443,
       useSSL: true,
       endPoint: 'minio.internal',
+    });
+  });
+
+  describe('public endpoint', () => {
+    it('falls back to the internal endpoint when unset', () => {
+      process.env.MINIO_INTERNAL_ENDPOINT = 'minio';
+      process.env.MINIO_INTERNAL_PORT = '9000';
+
+      const config = storageConfig();
+
+      expect(config.minio.public).toEqual(config.minio.internal);
+    });
+
+    it('reads the browser-facing endpoint separately', () => {
+      process.env.MINIO_INTERNAL_ENDPOINT = 'minio';
+      process.env.MINIO_PUBLIC_ENDPOINT = 'cdn.example.org';
+      process.env.MINIO_PUBLIC_USE_SSL = 'true';
+
+      const config = storageConfig();
+
+      expect(config.minio.public).toEqual({
+        endPoint: 'cdn.example.org',
+        port: 443,
+        useSSL: true,
+      });
+      expect(config.minio.internal.endPoint).toBe('minio');
     });
   });
 });

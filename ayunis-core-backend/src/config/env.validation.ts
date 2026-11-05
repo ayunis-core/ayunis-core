@@ -157,6 +157,12 @@ export class EnvironmentVariables {
   @Min(1)
   MINIO_INTERNAL_PORT?: number;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_INTERNAL_USE_SSL?: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  MINIO_PUBLIC_PORT?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MINIO_PUBLIC_USE_SSL?: string;
 
   // Redis — production requires REDIS_PASSWORD (see production rules).
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) REDIS_PORT?: number;
@@ -274,6 +280,30 @@ function collectConstraintMessages(errors: ValidationError[]): string[] {
 }
 
 /**
+ * Browser upload URLs are signed as this identity, and MinIO honours a signed
+ * PUT as CopyObject authorised as the signer, so the signer must be a user that
+ * is limited to the upload prefix rather than the server-side identity.
+ */
+function validateUploadIdentity(env: Record<string, unknown>): string[] {
+  if (!env.MINIO_UPLOAD_ACCESS_KEY || !env.MINIO_UPLOAD_SECRET_KEY) {
+    return [
+      'MINIO_UPLOAD_ACCESS_KEY and MINIO_UPLOAD_SECRET_KEY are required in ' +
+        'production (a MinIO user limited to uploads; see DEPLOYMENT.md)',
+    ];
+  }
+  // Either identity signs as root: the SDK client uses MINIO_ACCESS_KEY when
+  // set, and MINIO_ROOT_USER is the server's own superuser regardless.
+  const serverIdentities = [env.MINIO_ACCESS_KEY, env.MINIO_ROOT_USER];
+  if (serverIdentities.includes(env.MINIO_UPLOAD_ACCESS_KEY)) {
+    return [
+      'MINIO_UPLOAD_ACCESS_KEY must be a dedicated upload user, not the ' +
+        'server-side MinIO identity',
+    ];
+  }
+  return [];
+}
+
+/**
  * Cross-field rules that only apply in production, folded in from the former
  * storage/redis/auth factory asserts. Blank values are already dropped, so a
  * missing secret is `undefined` here.
@@ -302,6 +332,7 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
   if (!env.MINIO_INTERNAL_ENDPOINT) {
     messages.push('MINIO_INTERNAL_ENDPOINT is required in production');
   }
+  messages.push(...validateUploadIdentity(env));
   if (!env.REDIS_PASSWORD) {
     messages.push(
       'REDIS_PASSWORD is required in production (Redis must run with ' +

@@ -4,6 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
   GatewayTimeoutException,
+  GoneException,
   HttpException,
   HttpStatus,
   InternalServerErrorException,
@@ -99,6 +100,7 @@ const EXCEPTION_FACTORIES: Record<
   404: (body) => new NotFoundException(body),
   408: (body) => new RequestTimeoutException(body),
   409: (body) => new ConflictException(body),
+  410: (body) => new GoneException(body),
   413: (body) => new PayloadTooLargeException(body),
   422: (body) => new UnprocessableEntityException(body),
   // Nest ships no TooManyRequestsException; use the generic base.

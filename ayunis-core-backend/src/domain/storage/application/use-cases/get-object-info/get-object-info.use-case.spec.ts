@@ -140,13 +140,11 @@ describe('GetObjectInfoUseCase', () => {
       const objectName = 'non-existent-file.txt';
       const command = new GetObjectInfoCommand(objectName);
 
-      const error = new Error('Object not found');
+      const error = new ObjectNotFoundError({ objectName });
       jest.spyOn(mockObjectStorage, 'getObjectInfo').mockRejectedValue(error);
 
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ObjectNotFoundError,
-      );
+      await expect(useCase.execute(command)).rejects.toBe(error);
     });
 
     it('should throw DownloadFailedError on other storage errors', async () => {

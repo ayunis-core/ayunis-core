@@ -6,6 +6,7 @@ import storageConfig from 'src/config/storage.config';
 import {
   DownloadFailedError,
   ObjectNotFoundError,
+  ObjectChangedError,
 } from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
@@ -65,6 +66,7 @@ export class DownloadObjectUseCase {
         fn: () =>
           this.objectStorage.download(
             new StorageUrl(command.objectName, bucketName),
+            command.expectedETag,
           ),
         maxRetries: MAX_RETRIES,
         delay: RETRY_DELAY_MS,
@@ -78,7 +80,10 @@ export class DownloadObjectUseCase {
 
       return stream;
     } catch (error) {
-      if (error instanceof ObjectNotFoundError) {
+      if (
+        error instanceof ObjectNotFoundError ||
+        error instanceof ObjectChangedError
+      ) {
         throw error;
       }
 
