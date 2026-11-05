@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import config from '@/shared/config';
 import { patchAnnouncableMobileLayout } from '@/features/patchAnnouncableMobileLayout';
+import { useOnboardingControllerGetOnboarding } from '@/shared/api/generated/ayunisCoreAPI';
 
 interface AnnouncableInit {
   org_id: string;
@@ -22,12 +23,19 @@ let announcableLoaded = false;
  * Must be called in a component that renders AFTER the #updates-button element exists.
  */
 export function useReleaseNotes(): void {
+  const { data, isError } = useOnboardingControllerGetOnboarding();
+  const canInitialize = data ? Boolean(data.welcomeVideoSeenAt) : isError;
+
   useEffect(() => {
     const observer = patchAnnouncableMobileLayout();
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
+    if (!canInitialize) {
+      return;
+    }
+
     const orgId = config.features.announcableOrgId;
 
     // Don't initialize if feature is disabled (no org ID configured)
@@ -68,5 +76,5 @@ export function useReleaseNotes(): void {
 
     // No cleanup needed - the widget registers custom elements that persist
     // and cannot be unregistered from CustomElementRegistry
-  }, []);
+  }, [canInitialize]);
 }
