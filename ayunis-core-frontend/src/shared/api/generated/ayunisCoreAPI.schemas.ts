@@ -4991,6 +4991,88 @@ export interface UpsertMemoryEntryDto {
   description?: string | null;
 }
 
+export interface UserSystemPromptResponseDto {
+  /**
+     * The custom system prompt for the user, or null if not set
+     * @nullable
+     */
+  systemPrompt: string | null;
+}
+
+export interface UpsertUserSystemPromptDto {
+  /**
+     * The custom system prompt for the user
+     * @maxLength 10000
+     */
+  systemPrompt: string;
+}
+
+export interface GeneratePersonalizedSystemPromptDto {
+  /**
+     * The preferred name of the user
+     * @maxLength 200
+     */
+  preferredName: string;
+  /**
+     * The preferred communication style
+     * @maxLength 500
+     */
+  communicationStyle?: string;
+  /**
+     * The work context of the user
+     * @maxLength 1000
+     */
+  workContext?: string;
+}
+
+export interface GeneratePersonalizedSystemPromptResponseDto {
+  /** The generated personalized system prompt */
+  systemPrompt: string;
+  /** A personalized welcome message for the user */
+  welcomeMessage: string;
+}
+
+export interface OrgSystemPromptResponseDto {
+  /**
+     * The organization-wide system prompt, or null if not set
+     * @nullable
+     */
+  systemPrompt: string | null;
+}
+
+export interface UpsertOrgSystemPromptDto {
+  /**
+     * The organization-wide system prompt
+     * @maxLength 10000
+     */
+  systemPrompt: string;
+}
+
+export interface ChatStartDefaultsResponseDto {
+  /** Whether new chats start in anonymous mode; users may opt out */
+  anonymousModeByDefault: boolean;
+  /** Whether the AI assistant may remember durable facts about the user across chats */
+  memoryEnabled: boolean;
+}
+
+export interface OrgChatSettingsResponseDto {
+  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
+  internetSearchEnabled: boolean;
+  /** Whether new chats start in anonymous mode */
+  anonymousModeByDefault: boolean;
+  /** Whether the AI assistant may remember durable facts about each user across chats */
+  memoryEnabled: boolean;
+}
+
+export interface UpsertOrgChatSettingsDto {
+  /** Whether internet access is available to the AI assistant */
+  internetSearchEnabled?: boolean;
+  /** Whether new chats start in anonymous mode; users can opt out */
+  anonymousModeByDefault?: boolean;
+  /** Whether the AI assistant may remember durable facts about each user across chats */
+  memoryEnabled?: boolean;
+}
+
 /**
  * Type of the message content
  */
@@ -5232,88 +5314,6 @@ export interface SourceCitationSourceResponseDto {
 export interface SourceCitationResponseDto {
   chunk: SourceCitationChunkResponseDto;
   source: SourceCitationSourceResponseDto;
-}
-
-export interface UserSystemPromptResponseDto {
-  /**
-     * The custom system prompt for the user, or null if not set
-     * @nullable
-     */
-  systemPrompt: string | null;
-}
-
-export interface UpsertUserSystemPromptDto {
-  /**
-     * The custom system prompt for the user
-     * @maxLength 10000
-     */
-  systemPrompt: string;
-}
-
-export interface GeneratePersonalizedSystemPromptDto {
-  /**
-     * The preferred name of the user
-     * @maxLength 200
-     */
-  preferredName: string;
-  /**
-     * The preferred communication style
-     * @maxLength 500
-     */
-  communicationStyle?: string;
-  /**
-     * The work context of the user
-     * @maxLength 1000
-     */
-  workContext?: string;
-}
-
-export interface GeneratePersonalizedSystemPromptResponseDto {
-  /** The generated personalized system prompt */
-  systemPrompt: string;
-  /** A personalized welcome message for the user */
-  welcomeMessage: string;
-}
-
-export interface OrgSystemPromptResponseDto {
-  /**
-     * The organization-wide system prompt, or null if not set
-     * @nullable
-     */
-  systemPrompt: string | null;
-}
-
-export interface UpsertOrgSystemPromptDto {
-  /**
-     * The organization-wide system prompt
-     * @maxLength 10000
-     */
-  systemPrompt: string;
-}
-
-export interface ChatStartDefaultsResponseDto {
-  /** Whether new chats start in anonymous mode; users may opt out */
-  anonymousModeByDefault: boolean;
-  /** Whether the AI assistant may remember durable facts about the user across chats */
-  memoryEnabled: boolean;
-}
-
-export interface OrgChatSettingsResponseDto {
-  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
-  internetSearchEnabled: boolean;
-  /** Whether new chats start in anonymous mode */
-  anonymousModeByDefault: boolean;
-  /** Whether the AI assistant may remember durable facts about each user across chats */
-  memoryEnabled: boolean;
-}
-
-export interface UpsertOrgChatSettingsDto {
-  /** Whether internet access is available to the AI assistant */
-  internetSearchEnabled?: boolean;
-  /** Whether new chats start in anonymous mode; users can opt out */
-  anonymousModeByDefault?: boolean;
-  /** Whether the AI assistant may remember durable facts about each user across chats */
-  memoryEnabled?: boolean;
 }
 
 export interface RetentionPolicyResponseDto {
