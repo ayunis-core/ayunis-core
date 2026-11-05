@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { In, type Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
@@ -15,10 +16,13 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   private readonly logger = new Logger(McpIntegrationUserConfigRepository.name);
 
   constructor(
-    @InjectRepository(McpIntegrationUserConfigRecord)
-    private readonly repository: Repository<McpIntegrationUserConfigRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private get repository(): Repository<McpIntegrationUserConfigRecord> {
+    return this.txHost.tx.getRepository(McpIntegrationUserConfigRecord);
   }
 
   async save(

@@ -1,4 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID } from 'crypto';
 import { UpdateMcpIntegrationUseCase } from './update-mcp-integration.use-case';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
@@ -89,6 +91,9 @@ describe('UpdateMcpIntegrationUseCase', () => {
       capabilityCache,
       { initialize: jest.fn() } as never,
       mcpClientService as unknown as McpClientService,
+      {
+        withTransaction: (run: () => Promise<unknown>) => run(),
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
     context.get.mockReturnValue(orgId);
     repository.save.mockImplementation(async (integration) => integration);

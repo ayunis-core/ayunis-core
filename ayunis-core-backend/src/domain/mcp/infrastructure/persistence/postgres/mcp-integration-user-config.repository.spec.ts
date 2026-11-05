@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { McpIntegrationUserConfigRepository } from './mcp-integration-user-config.repository';
 import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-config.record';
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
@@ -20,7 +22,9 @@ describe('McpIntegrationUserConfigRepository', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<McpIntegrationUserConfigRecord>>;
 
-    repository = new McpIntegrationUserConfigRepository(mockTypeOrmRepo);
+    repository = new McpIntegrationUserConfigRepository({
+      tx: { getRepository: () => mockTypeOrmRepo },
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
   });
 
   describe('save', () => {
