@@ -142,6 +142,8 @@ import type {
   McpOAuthClientMetadataDto,
   McpOAuthCompleteResponseDto,
   MeResponseDto,
+  MemoryEntryResponseDto,
+  MemoryResponseDto,
   MfaCodeRequestDto,
   MfaLoginConfirmResponseDto,
   MfaSetupResponseDto,
@@ -293,6 +295,7 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
+  UpsertMemoryEntryDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -22591,39 +22594,17 @@ export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awai
 
 
 /**
- * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
- * @summary Send a message with optional images and receive streaming response
+ * Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.
+ * @summary List the memory of the authenticated user
  */
-export const runsControllerSendMessage = (
-    runsControllerSendMessageBody: RunsControllerSendMessageBody,
+export const memoryControllerFindAll = (
+
  signal?: AbortSignal
 ) => {
 
-      const formData = new FormData();
-formData.append(`threadId`, runsControllerSendMessageBody.threadId);
-if(runsControllerSendMessageBody.text !== undefined) {
- formData.append(`text`, runsControllerSendMessageBody.text);
- }
-if(runsControllerSendMessageBody.images !== undefined) {
- runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
- }
-if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
- formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts);
- }
-if(runsControllerSendMessageBody.toolResult !== undefined) {
- formData.append(`toolResult`, runsControllerSendMessageBody.toolResult);
- }
-if(runsControllerSendMessageBody.skillId !== undefined) {
- formData.append(`skillId`, runsControllerSendMessageBody.skillId);
- }
-if(runsControllerSendMessageBody.streaming !== undefined) {
- formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
- }
 
-      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
-      {url: `/runs/send-message`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
+      return customAxiosInstance<MemoryResponseDto>(
+      {url: `/memory`, method: 'GET', signal
     },
       );
     }
@@ -22631,13 +22612,106 @@ if(runsControllerSendMessageBody.streaming !== undefined) {
 
 
 
-export const getRunsControllerSendMessageMutationKey = () => ['runsControllerSendMessage'] as const;
+export const getMemoryControllerFindAllQueryKey = () => {
+    return [
+    `/memory`
+    ] as const;
+    }
 
-export const getRunsControllerSendMessageMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext> => {
 
-const mutationKey = getRunsControllerSendMessageMutationKey();
+export const getMemoryControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMemoryControllerFindAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof memoryControllerFindAll>>> = ({ signal }) => memoryControllerFindAll(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MemoryControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof memoryControllerFindAll>>>
+export type MemoryControllerFindAllQueryError = void
+
+
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof memoryControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof memoryControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof memoryControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof memoryControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the memory of the authenticated user
+ */
+
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMemoryControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Delete the whole memory of the authenticated user
+ */
+export const memoryControllerClear = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/memory`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getMemoryControllerClearMutationKey = () => ['memoryControllerClear'] as const;
+
+export const getMemoryControllerClearMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext> => {
+
+const mutationKey = getMemoryControllerClearMutationKey();
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -22647,10 +22721,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, RunsControllerSendMessageMutationVariables> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerClear>>, void> = () => {
 
-          return  runsControllerSendMessage(data,)
+
+          return  memoryControllerClear()
         }
 
 
@@ -22660,36 +22734,40 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
-    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
-    export type RunsControllerSendMessageMutationError = void
-    export type RunsControllerSendMessageMutationVariables = {data: RunsControllerSendMessageBody}
+    export type MemoryControllerClearMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerClear>>>
+
+    export type MemoryControllerClearMutationError = void
+
 
     /**
- * @summary Send a message with optional images and receive streaming response
+ * @summary Delete the whole memory of the authenticated user
  */
-export const useRunsControllerSendMessage = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
+export const useMemoryControllerClear = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof runsControllerSendMessage>>,
+        Awaited<ReturnType<typeof memoryControllerClear>>,
         TError,
-        RunsControllerSendMessageMutationVariables,
+        void,
         TContext
       > => {
-      return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
+      return useMutation(getMemoryControllerClearMutationOptions(options), queryClient);
     }
 
 /**
- * @summary Get the AI resources available in a thread
+ * Replaces the whole snippet stored under this key for the authenticated user.
+ * @summary Create or replace a memory entry
  */
-export const threadAiContextControllerGetAiContext = (
-    threadId: string,
+export const memoryControllerUpsert = (
+    key: string,
+    upsertMemoryEntryDto: UpsertMemoryEntryDto,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<ThreadAiContextResponseDto>(
-      {url: `/threads/${threadId}/ai-context`, method: 'GET', signal
+      return customAxiosInstance<MemoryEntryResponseDto>(
+      {url: `/memory/${key}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertMemoryEntryDto, signal
     },
       );
     }
@@ -22697,93 +22775,66 @@ export const threadAiContextControllerGetAiContext = (
 
 
 
-export const getThreadAiContextControllerGetAiContextQueryKey = (threadId: string,) => {
-    return [
-    `/threads/${threadId}/ai-context`
-    ] as const;
+export const getMemoryControllerUpsertMutationKey = () => ['memoryControllerUpsert'] as const;
+
+export const getMemoryControllerUpsertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext> => {
+
+const mutationKey = getMemoryControllerUpsertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerUpsert>>, MemoryControllerUpsertMutationVariables> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  memoryControllerUpsert(key,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MemoryControllerUpsertMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerUpsert>>>
+    export type MemoryControllerUpsertMutationBody = UpsertMemoryEntryDto
+    export type MemoryControllerUpsertMutationError = void
+    export type MemoryControllerUpsertMutationVariables = {key: string;data: UpsertMemoryEntryDto}
+
+    /**
+ * @summary Create or replace a memory entry
+ */
+export const useMemoryControllerUpsert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof memoryControllerUpsert>>,
+        TError,
+        MemoryControllerUpsertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMemoryControllerUpsertMutationOptions(options), queryClient);
     }
 
-
-export const getThreadAiContextControllerGetAiContextQueryOptions = <TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadAiContextControllerGetAiContextQueryKey(threadId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>> = ({ signal }) => threadAiContextControllerGetAiContext(threadId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadAiContextControllerGetAiContextQueryResult = NonNullable<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>>
-export type ThreadAiContextControllerGetAiContextQueryError = void
-
-
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
-          TError,
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
-          TError,
-          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get the AI resources available in a thread
+ * Removes the entry. A reserved key stays available to the assistant and becomes empty.
+ * @summary Delete a memory entry
  */
-
-export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get a source citation in a thread
- */
-export const threadSourceCitationsControllerGetSourceCitation = (
-    threadId: string,
-    chunkId: string,
+export const memoryControllerDelete = (
+    key: string,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<SourceCitationResponseDto>(
-      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
+      return customAxiosInstance<void>(
+      {url: `/memory/${key}`, method: 'DELETE', signal
     },
       );
     }
@@ -22791,86 +22842,53 @@ export const threadSourceCitationsControllerGetSourceCitation = (
 
 
 
-export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
-    chunkId: string,) => {
-    return [
-    `/threads/${threadId}/source-chunks/${chunkId}`
-    ] as const;
-    }
+export const getMemoryControllerDeleteMutationKey = () => ['memoryControllerDelete'] as const;
 
+export const getMemoryControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext> => {
 
-export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
+const mutationKey = getMemoryControllerDeleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerDelete>>, MemoryControllerDeleteMutationVariables> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
-export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
+          return  memoryControllerDelete(key,)
+        }
 
 
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
-          TError,
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
-          TError,
-          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a source citation in a thread
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MemoryControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerDelete>>>
+
+    export type MemoryControllerDeleteMutationError = void
+    export type MemoryControllerDeleteMutationVariables = {key: string}
+
+    /**
+ * @summary Delete a memory entry
  */
-
-export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
- threadId: string,
-    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
+export const useMemoryControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof memoryControllerDelete>>,
+        TError,
+        MemoryControllerDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMemoryControllerDeleteMutationOptions(options), queryClient);
+    }
 
 /**
  * Returns the custom system prompt for the authenticated user, or null if not set.
@@ -23656,6 +23674,288 @@ export const useOrgChatSettingsControllerUpsertOrgChatSettings = <TError = void,
       > => {
       return useMutation(getOrgChatSettingsControllerUpsertOrgChatSettingsMutationOptions(options), queryClient);
     }
+
+/**
+ * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const runsControllerSendMessage = (
+    runsControllerSendMessageBody: RunsControllerSendMessageBody,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+formData.append(`threadId`, runsControllerSendMessageBody.threadId);
+if(runsControllerSendMessageBody.text !== undefined) {
+ formData.append(`text`, runsControllerSendMessageBody.text);
+ }
+if(runsControllerSendMessageBody.images !== undefined) {
+ runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
+ }
+if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
+ formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts);
+ }
+if(runsControllerSendMessageBody.toolResult !== undefined) {
+ formData.append(`toolResult`, runsControllerSendMessageBody.toolResult);
+ }
+if(runsControllerSendMessageBody.skillId !== undefined) {
+ formData.append(`skillId`, runsControllerSendMessageBody.skillId);
+ }
+if(runsControllerSendMessageBody.streaming !== undefined) {
+ formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
+ }
+
+      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
+      {url: `/runs/send-message`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getRunsControllerSendMessageMutationKey = () => ['runsControllerSendMessage'] as const;
+
+export const getRunsControllerSendMessageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext> => {
+
+const mutationKey = getRunsControllerSendMessageMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, RunsControllerSendMessageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  runsControllerSendMessage(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
+    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
+    export type RunsControllerSendMessageMutationError = void
+    export type RunsControllerSendMessageMutationVariables = {data: RunsControllerSendMessageBody}
+
+    /**
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const useRunsControllerSendMessage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,RunsControllerSendMessageMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runsControllerSendMessage>>,
+        TError,
+        RunsControllerSendMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the AI resources available in a thread
+ */
+export const threadAiContextControllerGetAiContext = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ThreadAiContextResponseDto>(
+      {url: `/threads/${threadId}/ai-context`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadAiContextControllerGetAiContextQueryKey = (threadId: string,) => {
+    return [
+    `/threads/${threadId}/ai-context`
+    ] as const;
+    }
+
+
+export const getThreadAiContextControllerGetAiContextQueryOptions = <TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadAiContextControllerGetAiContextQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>> = ({ signal }) => threadAiContextControllerGetAiContext(threadId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadAiContextControllerGetAiContextQueryResult = NonNullable<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>>
+export type ThreadAiContextControllerGetAiContextQueryError = void
+
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>,
+          TError,
+          Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the AI resources available in a thread
+ */
+
+export function useThreadAiContextControllerGetAiContext<TData = Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError = void>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadAiContextControllerGetAiContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadAiContextControllerGetAiContextQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get a source citation in a thread
+ */
+export const threadSourceCitationsControllerGetSourceCitation = (
+    threadId: string,
+    chunkId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceCitationResponseDto>(
+      {url: `/threads/${threadId}/source-chunks/${chunkId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryKey = (threadId: string,
+    chunkId: string,) => {
+    return [
+    `/threads/${threadId}/source-chunks/${chunkId}`
+    ] as const;
+    }
+
+
+export const getThreadSourceCitationsControllerGetSourceCitationQueryOptions = <TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourceCitationsControllerGetSourceCitationQueryKey(threadId,chunkId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>> = ({ signal }) => threadSourceCitationsControllerGetSourceCitation(threadId,chunkId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined && chunkId !== null && chunkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadSourceCitationsControllerGetSourceCitationQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>>
+export type ThreadSourceCitationsControllerGetSourceCitationQueryError = void
+
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a source citation in a thread
+ */
+
+export function useThreadSourceCitationsControllerGetSourceCitation<TData = Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError = void>(
+ threadId: string,
+    chunkId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourceCitationsControllerGetSourceCitation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadSourceCitationsControllerGetSourceCitationQueryOptions(threadId,chunkId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Get the data-retention policy for the current org

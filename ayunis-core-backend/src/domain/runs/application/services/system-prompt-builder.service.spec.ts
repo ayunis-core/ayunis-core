@@ -7,6 +7,7 @@ import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { randomUUID } from 'crypto';
+import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 
 describe('SystemPromptBuilderService', () => {
   let service: SystemPromptBuilderService;
@@ -563,4 +564,40 @@ it('requires complete tabular file content instead of internal paths or counts',
   });
   expect(prompt).toContain('Include all individual rows');
   expect(prompt).toContain('internal processing paths are not download links');
+});
+
+describe('memory placement', () => {
+  // Provider prompt caching matches a byte-exact prefix, so the per-user
+  // memory block has to sit at the tail with the other per-user text.
+  it('places the memory section after the user instructions', () => {
+    const prompt = new SystemPromptBuilderService().build({
+      tools: [],
+      currentTime: new Date('2026-11-02'),
+      userSystemPrompt: 'Answer briefly.',
+      memory: [
+        new MemoryEntry({
+          userId: randomUUID(),
+          key: 'personal',
+          content: 'Works in the building authority',
+        }),
+      ],
+      memoryToolsAvailable: true,
+    });
+
+    expect(prompt.indexOf('<memory>')).toBeGreaterThan(
+      prompt.indexOf('<user_instructions>'),
+    );
+    expect(prompt.indexOf('<memory>')).toBeLessThan(
+      prompt.indexOf('You are now ready to assist the user.'),
+    );
+  });
+
+  it('emits no memory section when the feature is not active for the run', () => {
+    const prompt = new SystemPromptBuilderService().build({
+      tools: [],
+      currentTime: new Date('2026-11-02'),
+    });
+
+    expect(prompt).not.toContain('<memory>');
+  });
 });

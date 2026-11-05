@@ -39,7 +39,10 @@ import { ModelsModule } from 'src/domain/models/models.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
+import { MemoryModule } from 'src/domain/memory/memory.module';
 import { MarketplaceSearchToolHandler } from './application/handlers/marketplace-search-tool.handler';
+import { GetMemoryToolHandler } from './application/handlers/get-memory-tool.handler';
+import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.handler';
 import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 
 @Module({
@@ -57,6 +60,7 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
     UsageModule,
     QuotasModule,
     MarketplaceModule,
+    MemoryModule,
   ],
   providers: [
     // Use cases
@@ -98,6 +102,8 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
 
     // Mappers
     ToolConfigMapper,
+    GetMemoryToolHandler,
+    SetMemoryToolHandler,
   ],
   exports: [
     // Export use cases

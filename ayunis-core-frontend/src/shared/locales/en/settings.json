@@ -5,6 +5,7 @@
     "settings": "Settings",
     "general": "General",
     "chat": "Chat",
+    "memory": "Memory",
     "integrations": "Integrations",
     "account": "Account"
   },
@@ -138,5 +139,39 @@
     "defaultModelError": "Failed to update default model",
     "saveSystemPrompt": "Save",
     "deleteSystemPrompt": "Remove"
+  },
+  "memory": {
+    "title": "Memory",
+    "description": "What the assistant remembers about you. These notes are visible only to you and are taken into account in every new chat.",
+    "reserved": {
+      "personal": {
+        "title": "About you"
+      },
+      "preferences": {
+        "title": "Your preferences"
+      }
+    },
+    "emptyEntry": "Nothing stored yet.",
+    "contentPlaceholder": "What the assistant should remember",
+    "updatedAt": "Updated: {{date}}",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "delete": "Delete",
+    "clearAll": "Delete all memory",
+    "saved": "Memory updated",
+    "deleted": "Memory entry removed",
+    "cleared": "Memory deleted",
+    "saveError": "Could not save the memory entry",
+    "deleteError": "Could not delete the memory entry",
+    "loadError": "Could not load your memory.",
+    "retry": "Try again",
+    "confirmClear": {
+      "title": "Delete all memory?",
+      "body": "Every entry is deleted permanently. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete all"
+    }
   }
 }

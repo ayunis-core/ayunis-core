@@ -1,4 +1,3 @@
-import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
@@ -21,15 +20,7 @@ import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
 import { marketplaceConfig } from 'src/config/marketplace.config';
-import {
-  buildSkillSlug,
-  SlugCollisionError,
-  SYSTEM_PREFIX,
-  USER_PREFIX,
-  WORKSPACE_PREFIX,
-  type SkillEntry,
-  type SkillPrefix,
-} from 'src/common/util/skill-slug';
+import type { SkillEntry } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
 import { assembleMarketplaceTools as buildMarketplaceTools } from './marketplace-tool-assembly.helper';
@@ -42,6 +33,24 @@ import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { mergeKnowledgeBases } from './merge-knowledge-bases';
+import {
+  buildEditableSkillIds,
+  buildSkillSlugs,
+} from './skill-slug-assembly.helper';
+import {
+  assembleMemoryTools,
+  loadMemoryForRun,
+  resolveMemoryAvailability,
+} from './memory-tool-assembly.helper';
+import { FindUserMemoryUseCase } from 'src/domain/memory/application/use-cases/find-user-memory/find-user-memory.use-case';
+import type { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
+
+interface RunSkillContext {
+  workspaceContext?: WorkspaceRunContext;
+  slugMap: Map<string, string>;
+  editableSkillIds: Map<string, string>;
+  skillEntries: SkillEntry[];
+}
 
 @Injectable()
 export class ToolAssemblyService {
@@ -61,6 +70,7 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    private readonly findUserMemoryUseCase: FindUserMemoryUseCase,
     @Inject(marketplaceConfig.KEY)
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
@@ -75,10 +85,24 @@ export class ToolAssemblyService {
     canUseTools: boolean,
     isAnonymous: boolean,
     workspaceContext?: WorkspaceRunContext,
-  ): Promise<{ tools: Tool[]; instructions: string }> {
-    const [skillContext, activeKnowledgeBases] = await Promise.all([
+  ): Promise<{
+    tools: Tool[];
+    instructions: string;
+    memoryAvailable: boolean;
+  }> {
+    const memoryAvailable = await resolveMemoryAvailability({
+      isAnonymous,
+      getOrgChatSettingsUseCase: this.getOrgChatSettingsUseCase,
+    });
+    const [skillContext, activeKnowledgeBases, memory] = await Promise.all([
       this.prepareRunSkillContext(activeSkills, workspaceContext),
       this.findActiveKnowledgeBasesUseCase.execute(),
+      memoryAvailable
+        ? loadMemoryForRun({
+            findUserMemoryUseCase: this.findUserMemoryUseCase,
+            logger: this.logger,
+          })
+        : [],
     ]);
 
     const tools = canUseTools
@@ -88,55 +112,76 @@ export class ToolAssemblyService {
           skillContext.workspaceContext,
           skillContext.editableSkillIds,
           activeKnowledgeBases,
+          memoryAvailable,
         )
       : [];
 
-    const allSources = this.collectRunSources(thread);
+    const instructions = await this.buildInstructions({
+      thread,
+      tools,
+      canUseTools,
+      isAnonymous,
+      skillContext,
+      activeKnowledgeBases,
+      memory,
+      memoryToolsAvailable: canUseTools && memoryAvailable,
+    });
 
+    return { tools, instructions, memoryAvailable };
+  }
+
+  private async buildInstructions(params: {
+    thread: Thread;
+    tools: Tool[];
+    canUseTools: boolean;
+    isAnonymous: boolean;
+    skillContext: RunSkillContext;
+    activeKnowledgeBases: KnowledgeBaseSummary[];
+    memory: MemoryEntry[];
+    memoryToolsAvailable: boolean;
+  }): Promise<string> {
+    const { thread, canUseTools, skillContext } = params;
     const { orgSystemPrompt, userSystemPrompt } =
       await this.fetchSystemPrompts();
 
-    const instructions = this.systemPromptBuilderService.build({
-      tools,
+    return this.systemPromptBuilderService.build({
+      tools: params.tools,
       currentTime: new Date(),
-      sources: allSources,
+      sources: this.collectRunSources(thread),
       skills: canUseTools ? skillContext.skillEntries : [],
       knowledgeBases: canUseTools
         ? mergeKnowledgeBases(
             thread.getUniqueKnowledgeBases(),
             skillContext.workspaceContext?.runtimeKnowledgeBases ?? [],
-            activeKnowledgeBases,
+            params.activeKnowledgeBases,
           )
         : [],
       workspaceInstructions: skillContext.workspaceContext?.instruction,
       orgSystemPrompt,
       userSystemPrompt,
-      isAnonymous,
+      isAnonymous: params.isAnonymous,
+      memory: params.memory,
+      memoryToolsAvailable: params.memoryToolsAvailable,
     });
-
-    return { tools, instructions };
   }
 
   private async prepareRunSkillContext(
     activeSkills: Skill[],
     workspaceContext?: WorkspaceRunContext,
-  ): Promise<{
-    workspaceContext?: WorkspaceRunContext;
-    slugMap: Map<string, string>;
-    editableSkillIds: Map<string, string>;
-    skillEntries: SkillEntry[];
-  }> {
+  ): Promise<RunSkillContext> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
     const projectSkills =
       workspaceContext?.skills.map(({ skill }) => skill) ?? [];
-    const { slugMap, skillEntries } = this.buildSkillSlugs(
-      this.mergeById(activeSkills, projectSkills),
+    const { slugMap, skillEntries } = buildSkillSlugs({
+      activeSkills: this.mergeById(activeSkills, projectSkills),
       alwaysOnTemplates,
-    );
-    const editableSkillIds = this.buildEditableSkillIds(
-      this.mergeById(activeSkills, projectSkills),
-      slugMap,
-    );
+      logger: this.logger,
+    });
+    const editableSkillIds = buildEditableSkillIds({
+      skills: this.mergeById(activeSkills, projectSkills),
+      advertisedSlugs: slugMap,
+      logger: this.logger,
+    });
 
     return {
       workspaceContext,
@@ -201,93 +246,13 @@ export class ToolAssemblyService {
     };
   }
 
-  /**
-   * Build slug→name map and skill entries in a single pass.
-   * Errors are handled per-entry so a single problematic skill
-   * (collision or un-slugifiable name) only removes that entry.
-   */
-  private buildSkillSlugs(
-    activeSkills: Skill[],
-    alwaysOnTemplates: SkillTemplate[],
-  ): { slugMap: Map<string, string>; skillEntries: SkillEntry[] } {
-    const slugMap = new Map<string, string>();
-    const skillEntries: SkillEntry[] = [];
-
-    type SkillInput = {
-      name: string;
-      prefix: SkillPrefix;
-      description: string;
-    };
-    const allInputs: SkillInput[] = [
-      ...activeSkills.map((s): SkillInput => ({
-        name: s.name,
-        prefix: s instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX,
-        description: s.shortDescription,
-      })),
-      ...alwaysOnTemplates.map((t): SkillInput => ({
-        name: t.name,
-        prefix: SYSTEM_PREFIX,
-        description: t.shortDescription,
-      })),
-    ];
-
-    for (const input of allInputs) {
-      try {
-        const slug = buildSkillSlug(input.prefix, input.name);
-        const existing = slugMap.get(slug);
-        if (existing !== undefined && existing !== input.name) {
-          throw new SlugCollisionError(slug, existing, input.name);
-        }
-        slugMap.set(slug, input.name);
-        skillEntries.push({ slug, description: input.description });
-      } catch (error) {
-        const message =
-          error instanceof SlugCollisionError
-            ? 'Slug collision, skipping skill'
-            : 'Failed to build slug for skill, skipping';
-        const detail = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn({ skillName: input.name, error: detail }, message);
-      }
-    }
-
-    return { slugMap, skillEntries };
-  }
-
-  private buildEditableSkillIds(
-    skills: Skill[],
-    advertisedSlugs: Map<string, string>,
-  ): Map<string, string> {
-    const skillIds = new Map<string, string>();
-    for (const skill of skills) {
-      try {
-        const prefix =
-          skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
-        const slug = buildSkillSlug(prefix, skill.name);
-        if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
-          throw new SlugCollisionError(
-            slug,
-            advertisedSlugs.get(slug) ?? 'unknown',
-            skill.name,
-          );
-        }
-        skillIds.set(slug, skill.id);
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(
-          { skillName: skill.name, error: detail },
-          'Failed to build editable skill slug, skipping',
-        );
-      }
-    }
-    return skillIds;
-  }
-
   async assembleTools(
     thread: Thread,
     slugMap: Map<string, string>,
     workspaceContext?: WorkspaceRunContext,
     editableSkillIds: Map<string, string> = new Map(),
     activeKnowledgeBases: KnowledgeBaseSummary[] = [],
+    includeMemoryTools = false,
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
@@ -330,6 +295,14 @@ export class ToolAssemblyService {
       )),
     );
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
+
+    if (includeMemoryTools) {
+      tools.push(
+        ...(await assembleMemoryTools({
+          assembleToolsUseCase: this.assembleToolsUseCase,
+        })),
+      );
+    }
 
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(

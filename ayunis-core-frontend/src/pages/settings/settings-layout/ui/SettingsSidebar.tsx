@@ -1,13 +1,22 @@
-import { Compass, MessageSquare, Plug, Settings, User } from 'lucide-react';
+import {
+  Brain,
+  Compass,
+  MessageSquare,
+  Plug,
+  Settings,
+  User,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
+import { useMemoryEnabled } from '@/features/memory-enabled';
 
 export function SettingsSidebar() {
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');
+  const memoryEnabled = useMemoryEnabled();
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -20,6 +29,15 @@ export function SettingsSidebar() {
       icon: <MessageSquare />,
       label: t('layout.chat'),
     },
+    ...(memoryEnabled
+      ? [
+          {
+            to: '/settings/memory',
+            icon: <Brain />,
+            label: t('layout.memory'),
+          },
+        ]
+      : []),
     {
       to: '/settings/integrations',
       icon: <Plug />,

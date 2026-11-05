@@ -20,6 +20,7 @@ import { CreditGateHookFactory } from './application/agent-runtime/hooks/credit-
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
+import { MemoryNudgeHookFactory } from './application/agent-runtime/hooks/memory-nudge-hook.factory';
 import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
@@ -44,6 +45,7 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
+import { MemoryModule } from 'src/domain/memory/memory.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
@@ -67,6 +69,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
+    MemoryModule,
     ArtifactsModule,
     LetterheadsModule,
     WorkspacesModule,
@@ -88,6 +91,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
+    MemoryNudgeHookFactory,
     RuntimeHistoryMaterializer,
     RunAssemblyService,
     ModelCallObservabilityHookFactory,

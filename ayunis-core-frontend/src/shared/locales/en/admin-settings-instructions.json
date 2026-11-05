@@ -23,5 +23,15 @@
     "error": "Failed to update internet access setting.",
     "loadError": "Failed to load internet access setting.",
     "retry": "Retry"
+  },
+  "memory": {
+    "title": "Memory",
+    "description": "Control whether the AI assistant may remember durable facts about each user across chats. This applies to all users in your organization.",
+    "label": "Enable memory",
+    "hint": "When enabled, the assistant stores what a user tells it about their role and preferences and uses it in their later chats. Users see and manage their own entries in their settings; administrators cannot read them.",
+    "saved": "Memory setting saved.",
+    "error": "Failed to update memory setting.",
+    "loadError": "Failed to load memory setting.",
+    "retry": "Retry"
   }
 }

@@ -18,6 +18,7 @@ export interface PreparedRun extends PreparedTools {
   orgId: UUID;
   userId: UUID;
   isAnonymous: boolean;
+  memoryAvailable: boolean;
   instructions: string;
   activeSkills: Skill[];
   skillInstructions?: string;

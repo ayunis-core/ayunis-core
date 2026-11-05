@@ -6,6 +6,7 @@ export class OrgChatSettings {
   orgId: UUID;
   internetSearchEnabled: boolean;
   anonymousModeByDefault: boolean;
+  memoryEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -14,6 +15,7 @@ export class OrgChatSettings {
     orgId: UUID;
     internetSearchEnabled?: boolean;
     anonymousModeByDefault?: boolean;
+    memoryEnabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -21,6 +23,7 @@ export class OrgChatSettings {
     this.orgId = params.orgId;
     this.internetSearchEnabled = params.internetSearchEnabled ?? true;
     this.anonymousModeByDefault = params.anonymousModeByDefault ?? false;
+    this.memoryEnabled = params.memoryEnabled ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

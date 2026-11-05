@@ -51,6 +51,7 @@ import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
+import { Route as AuthenticatedSettingsMemoryRouteImport } from './routes/_authenticated/settings.memory'
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
 import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
@@ -313,6 +314,12 @@ const AuthenticatedSettingsIntegrationsRoute =
     path: '/settings/integrations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSettingsMemoryRoute =
+  AuthenticatedSettingsMemoryRouteImport.update({
+    id: '/settings/memory',
+    path: '/settings/memory',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSkillsIndexRoute =
   AuthenticatedSkillsIndexRouteImport.update({
     id: '/skills/',
@@ -506,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/settings/memory': typeof AuthenticatedSettingsMemoryRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy/': typeof AuthenticatedAcademyIndexRoute
@@ -573,6 +581,7 @@ export interface FileRoutesByTo {
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/settings/memory': typeof AuthenticatedSettingsMemoryRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy': typeof AuthenticatedAcademyIndexRoute
@@ -644,6 +653,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/_authenticated/settings/memory': typeof AuthenticatedSettingsMemoryRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/_authenticated/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
@@ -715,6 +725,7 @@ export interface FileRouteTypes {
     | '/settings/chat'
     | '/settings/general'
     | '/settings/integrations'
+    | '/settings/memory'
     | '/skills/$id'
     | '/workspaces/$workspaceId'
     | '/academy/'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/settings/chat'
     | '/settings/general'
     | '/settings/integrations'
+    | '/settings/memory'
     | '/skills/$id'
     | '/workspaces/$workspaceId'
     | '/academy'
@@ -852,6 +864,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
     | '/_authenticated/settings/integrations'
+    | '/_authenticated/settings/memory'
     | '/_authenticated/skills/$id'
     | '/_authenticated/workspaces/$workspaceId'
     | '/_authenticated/academy/'
@@ -1201,6 +1214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/memory': {
+      id: '/_authenticated/settings/memory'
+      path: '/settings/memory'
+      fullPath: '/settings/memory'
+      preLoaderRoute: typeof AuthenticatedSettingsMemoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/skills/': {
       id: '/_authenticated/skills/'
       path: '/skills'
@@ -1504,6 +1524,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
   AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
+  AuthenticatedSettingsMemoryRoute: typeof AuthenticatedSettingsMemoryRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
   AuthenticatedWorkspacesWorkspaceIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdRoute
   AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
@@ -1533,6 +1554,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
   AuthenticatedSettingsIntegrationsRoute:
     AuthenticatedSettingsIntegrationsRoute,
+  AuthenticatedSettingsMemoryRoute: AuthenticatedSettingsMemoryRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
   AuthenticatedWorkspacesWorkspaceIdRoute:
     AuthenticatedWorkspacesWorkspaceIdRoute,

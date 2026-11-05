@@ -2,7 +2,10 @@ import type { UUID } from 'crypto';
 import type { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 
 export type OrgChatSettingsUpdate = Partial<
-  Pick<OrgChatSettings, 'internetSearchEnabled' | 'anonymousModeByDefault'>
+  Pick<
+    OrgChatSettings,
+    'internetSearchEnabled' | 'anonymousModeByDefault' | 'memoryEnabled'
+  >
 >;
 
 export abstract class OrgChatSettingsRepository {

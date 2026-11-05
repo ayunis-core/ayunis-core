@@ -5,6 +5,10 @@ import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmas
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
 import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import {
+  MemoryNudgeHookFactory,
+  shouldNudgeMemory,
+} from 'src/domain/runs/application/agent-runtime/hooks/memory-nudge-hook.factory';
 import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
@@ -36,6 +40,7 @@ export class RunAssemblyService {
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
+    private readonly memoryNudgeHookFactory: MemoryNudgeHookFactory,
   ) {}
 
   async assemble(
@@ -119,12 +124,26 @@ export class RunAssemblyService {
         activatedSkillName: prepared.activatedSkillName,
       }),
       this.contextBudgetHookFactory.create({ model: prepared.model }),
+      // After the budget hook, so the reminder it appends survives trimming.
+      ...this.buildMemoryNudgeHooks(prepared),
       this.modelCallObservabilityHookFactory.create({
         userId: prepared.userId,
         orgId: prepared.orgId,
         models,
         toolIntegrations: prepared.toolIntegrations,
       }),
+    ];
+  }
+
+  private buildMemoryNudgeHooks(prepared: PreparedRun): Hook[] {
+    const memoryUsable = prepared.memoryAvailable && prepared.model.canUseTools;
+
+    if (!memoryUsable || !shouldNudgeMemory(prepared.thread.messages)) {
+      return [];
+    }
+
+    return [
+      this.memoryNudgeHookFactory.create({ threadId: prepared.thread.id }),
     ];
   }
 }
