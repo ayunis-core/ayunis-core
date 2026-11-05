@@ -32,6 +32,10 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import type { SourceCitationTarget } from 'src/domain/sources/application/models/source-citation-target';
 import { chunk } from 'src/common/util/chunk';
+import {
+  findOrphanedSourceIds,
+  findUnreferencedSourceIds,
+} from './local-source-reachability.queries';
 
 // Keeps each candidate lookup far below Postgres' 65,535 bind-parameter cap.
 export const UNREFERENCED_LOOKUP_CHUNK_SIZE = 1000;
@@ -450,6 +454,7 @@ export class LocalSourceRepository extends SourceRepository {
   async findUnreferencedIds(
     candidateIds: UUID[],
     olderThan: Date,
+    ignoreThreadAssignments = false,
   ): Promise<UUID[]> {
     this.logger.log(
       {
@@ -465,27 +470,19 @@ export class LocalSourceRepository extends SourceRepository {
       UNREFERENCED_LOOKUP_CHUNK_SIZE,
     )) {
       unreferencedIds.push(
-        ...(await this.findUnreferencedIdsChunk(candidates, olderThan)),
+        ...(await findUnreferencedSourceIds(
+          this.sourceRepository,
+          candidates,
+          olderThan,
+          ignoreThreadAssignments,
+        )),
       );
     }
     return unreferencedIds;
   }
 
-  private async findUnreferencedIdsChunk(
-    candidateIds: UUID[],
-    olderThan: Date,
-  ): Promise<UUID[]> {
-    const rows = await this.sourceRepository
-      .createQueryBuilder('s')
-      .select('s.id', 'id')
-      .where('s.id IN (:...candidateIds)', { candidateIds })
-      .andWhere('s."knowledgeBaseId" IS NULL')
-      .andWhere('s."createdAt" < :olderThan', { olderThan })
-      .andWhere(
-        `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,
-      )
-      .getRawMany<{ id: UUID }>();
-
-    return rows.map((row) => row.id);
+  async findOrphanedIds(olderThan: Date, limit: number): Promise<UUID[]> {
+    this.logger.log({ olderThan, limit }, 'findOrphanedIds');
+    return findOrphanedSourceIds(this.sourceRepository, olderThan, limit);
   }
 }

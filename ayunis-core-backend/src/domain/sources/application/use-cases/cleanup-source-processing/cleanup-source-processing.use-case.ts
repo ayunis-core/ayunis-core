@@ -46,6 +46,7 @@ export class CleanupSourceProcessingUseCase {
     for (const sourceId of command.sourceIds) {
       await this.cancelJobs(sourceId);
     }
+    if (command.orgId === null) return;
 
     try {
       await this.purgeStoragePrefixesUseCase.execute(

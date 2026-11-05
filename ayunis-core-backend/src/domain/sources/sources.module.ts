@@ -11,6 +11,8 @@ import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { SourceUploadStorageCleanupService } from './application/services/source-upload-storage-cleanup.service';
+import { SweepOrphanedSourcesUseCase } from './application/use-cases/sweep-orphaned-sources/sweep-orphaned-sources.use-case';
+import { OrphanedSourcesSweepTask } from './infrastructure/tasks/orphaned-sources-sweep.task';
 import { SweepUnreferencedOriginalsUseCase } from './application/use-cases/sweep-unreferenced-originals/sweep-unreferenced-originals.use-case';
 import { UnreferencedOriginalsSweepTask } from './infrastructure/tasks/unreferenced-originals-sweep.task';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
@@ -38,6 +40,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
 import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
+import { DeleteUnreferencedSourcesUseCase } from './application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
@@ -64,6 +67,8 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
   ],
   providers: [
     SourceUploadStorageCleanupService,
+    SweepOrphanedSourcesUseCase,
+    OrphanedSourcesSweepTask,
     SweepUnreferencedOriginalsUseCase,
     UnreferencedOriginalsSweepTask,
     OrgProcessingDeletionListener,
@@ -87,6 +92,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
   ],
@@ -115,6 +121,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
   ],
