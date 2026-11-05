@@ -111,4 +111,26 @@ describe('MistralEmbeddingsHandler', () => {
     );
     expect(retryIfError?.(new Error('schema validation failed'))).toBe(false);
   });
+
+  it('returns embeddings in input order when the provider responds out of order', async () => {
+    const client = (Mistral as unknown as jest.Mock).mock.results[0].value as {
+      embeddings: { create: jest.Mock };
+    };
+    client.embeddings.create.mockResolvedValue({
+      data: [
+        { embedding: [0.2], index: 1 },
+        { embedding: [0.1], index: 0 },
+      ],
+    });
+
+    const embeddings = await handler.embed(
+      ['Kündigungsfrist', 'Vertragslaufzeit'],
+      model,
+    );
+
+    expect(embeddings.map(({ text, vector }) => ({ text, vector }))).toEqual([
+      { text: 'Kündigungsfrist', vector: [0.1] },
+      { text: 'Vertragslaufzeit', vector: [0.2] },
+    ]);
+  });
 });

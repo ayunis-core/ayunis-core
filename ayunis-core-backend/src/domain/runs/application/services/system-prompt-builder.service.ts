@@ -381,6 +381,7 @@ ${skillEntries}
 
     let section = `<available_files>
 The following files are available for you to search using the source_query tool.
+Search all relevant files with all phrasings in a single source_query call by passing several sourceIds and queries.
 `;
 
     if (userFiles.length > 0) {
@@ -490,6 +491,7 @@ ${files}
 
     return `<available_knowledge_bases>
 The following knowledge bases are available. Use the knowledge_query tool to search them and the knowledge_get_text tool to read specific document sections.
+Search all relevant knowledge bases with all phrasings in a single knowledge_query call by passing several knowledgeBaseIds and queries.
 
 ${entries}
 </available_knowledge_bases>`;

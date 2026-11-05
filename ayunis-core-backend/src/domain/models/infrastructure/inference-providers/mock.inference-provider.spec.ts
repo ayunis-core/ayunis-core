@@ -247,8 +247,11 @@ describe('MockInferenceProviderFactory runtime provider', () => {
           parameters: {
             type: 'object',
             properties: {
-              sourceId: { type: 'string', enum: [sourceId] },
-              query: { type: 'string' },
+              sourceIds: {
+                type: 'array',
+                items: { type: 'string', enum: [sourceId] },
+              },
+              queries: { type: 'array', items: { type: 'string' } },
             },
           },
         },
@@ -265,8 +268,8 @@ describe('MockInferenceProviderFactory runtime provider', () => {
             id: 'mock-source-citation-call',
             name: 'source_query',
             argumentsDelta: JSON.stringify({
-              sourceId,
-              query: 'source citation evidence',
+              sourceIds: [sourceId],
+              queries: ['source citation evidence'],
             }),
           },
         ],
@@ -338,11 +341,11 @@ describe('MockInferenceProviderFactory runtime provider', () => {
           parameters: {
             type: 'object',
             properties: {
-              knowledgeBaseId: {
-                type: 'string',
-                enum: [knowledgeBaseId],
+              knowledgeBaseIds: {
+                type: 'array',
+                items: { type: 'string', enum: [knowledgeBaseId] },
               },
-              query: { type: 'string' },
+              queries: { type: 'array', items: { type: 'string' } },
             },
           },
         },
@@ -359,8 +362,8 @@ describe('MockInferenceProviderFactory runtime provider', () => {
             id: 'mock-source-citation-call',
             name: 'knowledge_query',
             argumentsDelta: JSON.stringify({
-              knowledgeBaseId,
-              query: 'source citation evidence',
+              knowledgeBaseIds: [knowledgeBaseId],
+              queries: ['source citation evidence'],
             }),
           },
         ],
@@ -386,7 +389,10 @@ describe('MockInferenceProviderFactory runtime provider', () => {
               type: 'tool_use',
               id: 'mock-source-citation-call',
               name: 'source_query',
-              input: { sourceId, query: 'source citation evidence' },
+              input: {
+                sourceIds: [sourceId],
+                queries: ['source citation evidence'],
+              },
             },
           ],
         },

@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type {
   IngestBulkInput,
-  SearchInput,
   SearchMultiInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
-import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { IndexMatch } from 'src/domain/rag/indexers/domain/index-match.entity';
 import { IngestBulkContentUseCase } from './use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from './use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { SearchContentUseCase } from './use-cases/search-content/search-content.use-case';
@@ -38,11 +37,7 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     );
   }
 
-  async search(input: SearchInput): Promise<IndexEntry[]> {
-    return await this.searchContentUseCase.execute(input);
-  }
-
-  async searchMulti(input: SearchMultiInput): Promise<IndexEntry[]> {
+  async searchMulti(input: SearchMultiInput): Promise<IndexMatch[]> {
     return await this.searchContentUseCase.executeMulti(input);
   }
 

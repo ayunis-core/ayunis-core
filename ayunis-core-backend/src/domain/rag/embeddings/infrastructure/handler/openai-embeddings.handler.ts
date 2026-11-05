@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { EmbeddingsHandler } from '../../application/ports/embeddings.handler';
+import { EmbeddingsHandler } from 'src/domain/rag/embeddings/application/ports/embeddings.handler';
 import { OpenAI } from 'openai';
 import { ConfigService } from '@nestjs/config';
-import { Embedding } from '../../domain/embedding.entity';
-import { EmbeddingModel } from '../../domain/embedding-model.entity';
+import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
 
 // Embeddings are small, fast requests. The tight per-attempt timeout turns a
 // stalled connection into a quick SDK-level retry instead of hanging the run
@@ -36,9 +36,11 @@ export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
       dimensions: model.dimensions,
     });
 
-    return result.data.map((data) => {
-      return new Embedding(data.embedding, input[data.index], model);
-    });
+    // Callers pair embeddings with their inputs by position; the API only
+    // guarantees the pairing through `index`, not through response order.
+    return [...result.data]
+      .sort((a, b) => a.index - b.index)
+      .map((data) => new Embedding(data.embedding, input[data.index], model));
   }
 
   isAvailable(): boolean {

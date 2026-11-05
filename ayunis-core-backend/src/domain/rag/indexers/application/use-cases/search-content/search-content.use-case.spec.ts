@@ -5,6 +5,7 @@ import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.regis
 import { SearchMultiContentQuery } from './search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import { IndexMatch } from 'src/domain/rag/indexers/domain/index-match.entity';
 import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import type { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
 import type { UUID } from 'crypto';
@@ -21,7 +22,6 @@ describe('SearchContentUseCase', () => {
 
   beforeEach(async () => {
     mockIndexer = {
-      search: jest.fn(),
       searchMulti: jest.fn(),
       ingestBulk: jest.fn(),
       delete: jest.fn(),
@@ -46,15 +46,18 @@ describe('SearchContentUseCase', () => {
 
   describe('executeMulti', () => {
     it('should resolve index from registry and delegate to searchMulti', async () => {
-      const entry = new IndexEntry({
-        relatedDocumentId: docId1,
-        relatedChunkId: chunkId,
+      const match = new IndexMatch({
+        entry: new IndexEntry({
+          relatedDocumentId: docId1,
+          relatedChunkId: chunkId,
+        }),
+        matchedQueries: ['Bebauungsplan Gewerbegebiet'],
       });
-      mockIndexer.searchMulti.mockResolvedValue([entry]);
+      mockIndexer.searchMulti.mockResolvedValue([match]);
 
       const query = new SearchMultiContentQuery({
         orgId,
-        query: 'Bebauungsplan Gewerbegebiet',
+        queries: ['Bebauungsplan Gewerbegebiet'],
         documentIds: [docId1, docId2],
         type: IndexType.PARENT_CHILD,
         limit: 25,
@@ -66,10 +69,10 @@ describe('SearchContentUseCase', () => {
       expect(mockIndexer.searchMulti).toHaveBeenCalledWith({
         orgId,
         documentIds: [docId1, docId2],
-        query: 'Bebauungsplan Gewerbegebiet',
+        queries: ['Bebauungsplan Gewerbegebiet'],
         filter: { limit: 25 },
       });
-      expect(results).toEqual([entry]);
+      expect(results).toEqual([match]);
     });
 
     it('should pass undefined limit when not specified in query', async () => {
@@ -77,7 +80,7 @@ describe('SearchContentUseCase', () => {
 
       const query = new SearchMultiContentQuery({
         orgId,
-        query: 'Haushaltssatzung',
+        queries: ['Haushaltssatzung'],
         documentIds: [docId1],
         type: IndexType.PARENT_CHILD,
       });
@@ -98,7 +101,7 @@ describe('SearchContentUseCase', () => {
 
       const query = new SearchMultiContentQuery({
         orgId,
-        query: 'Wassergebühren',
+        queries: ['Wassergebühren'],
         documentIds: [docId1],
         type: IndexType.PARENT_CHILD,
       });
@@ -118,7 +121,7 @@ describe('SearchContentUseCase', () => {
 
       const query = new SearchMultiContentQuery({
         orgId,
-        query: 'Abfallgebühren',
+        queries: ['Abfallgebühren'],
         documentIds: [docId1],
         type: IndexType.PARENT_CHILD,
       });

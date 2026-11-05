@@ -1,20 +1,13 @@
 import type { UUID } from 'crypto';
-import type { IndexEntry } from '../../domain/index-entry.entity';
-
-export interface SearchInput {
-  orgId: UUID;
-  documentId: UUID;
-  query: string;
-  filter?: {
-    limit?: number;
-  };
-}
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { IndexMatch } from 'src/domain/rag/indexers/domain/index-match.entity';
 
 export interface SearchMultiInput {
   orgId: UUID;
   documentIds: UUID[];
-  query: string;
+  queries: string[];
   filter?: {
+    /** Maximum matches per query, before merging across queries. */
     limit?: number;
   };
 }
@@ -26,8 +19,7 @@ export interface IngestBulkInput {
 
 export abstract class IndexerPort {
   abstract ingestBulk(input: IngestBulkInput): Promise<void>;
-  abstract search(input: SearchInput): Promise<IndexEntry[]>;
-  abstract searchMulti(input: SearchMultiInput): Promise<IndexEntry[]>;
+  abstract searchMulti(input: SearchMultiInput): Promise<IndexMatch[]>;
   abstract delete(documentId: UUID): Promise<void>;
   abstract deleteMany(documentIds: UUID[]): Promise<void>;
 }

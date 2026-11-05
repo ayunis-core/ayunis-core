@@ -49,7 +49,6 @@ describe('IngestBulkContentUseCase', () => {
       saveMany: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
-      find: jest.fn(),
       findByDocumentIds: jest.fn(),
     };
 

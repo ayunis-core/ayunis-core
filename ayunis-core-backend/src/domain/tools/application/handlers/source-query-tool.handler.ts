@@ -2,9 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
-import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
-import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
 import { QueryTextSourceCommand } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.command';
 import {
   ToolExecutionContext,
@@ -12,15 +10,13 @@ import {
 } from 'src/domain/tools/application/ports/execution.handler';
 import { handleEmbeddingError } from 'src/domain/tools/application/utils/embedding-error.utils';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
 
 @Injectable()
 export class SourceQueryToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(SourceQueryToolHandler.name);
 
-  constructor(
-    private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
-    private readonly matchSourceContentChunksUseCase: QueryTextSourceUseCase,
-  ) {
+  constructor(private readonly queryTextSourceUseCase: QueryTextSourceUseCase) {
     super();
   }
 
@@ -34,40 +30,40 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
     this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
-      const source = await this.getSourceByIdUseCase.execute(
-        new GetTextSourceByIdQuery(validatedInput.sourceId as UUID),
-      );
-      const matchedChunks = await this.matchSourceContentChunksUseCase.execute(
+      const results = await this.queryTextSourceUseCase.execute(
         new QueryTextSourceCommand({
           orgId,
-          filter: {
-            sourceId: source.id,
-            userId: input.userId as UUID,
-          },
-          query: validatedInput.query,
+          sourceIds: validatedInput.sourceIds as UUID[],
+          queries: validatedInput.queries,
         }),
       );
 
-      const result = matchedChunks.map((chunk) => {
-        return {
-          chunkId: chunk.id,
-          sourceId: source.id,
-          sourceName: source.name,
-          citable: source.createdBy !== SourceCreator.SYSTEM,
-          content: chunk.content,
-          startLine: (chunk.meta.startLine as number | undefined) ?? null,
-          endLine: (chunk.meta.endLine as number | undefined) ?? null,
-          fileName: (chunk.meta.fileName as string | undefined) ?? null,
-          url: (chunk.meta.url as string | undefined) ?? null,
-        };
-      });
+      const formatted = results.map(({ chunk, ...result }) => ({
+        chunkId: chunk.id,
+        sourceId: result.sourceId,
+        sourceName: result.sourceName,
+        citable: result.sourceCreatedBy !== SourceCreator.SYSTEM,
+        content: chunk.content,
+        startLine: (chunk.meta.startLine as number | undefined) ?? null,
+        endLine: (chunk.meta.endLine as number | undefined) ?? null,
+        fileName: (chunk.meta.fileName as string | undefined) ?? null,
+        url: (chunk.meta.url as string | undefined) ?? null,
+        matchedQueries: result.matchedQueries,
+      }));
 
-      return JSON.stringify(result);
+      return JSON.stringify(formatted);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
       this.logger.error({ err: error }, 'execute');
+      if (error instanceof SourceNotFoundError) {
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message: `${error.message}. It may have been deleted; search the remaining files without it.`,
+          exposeToLLM: true,
+        });
+      }
       handleEmbeddingError(error, tool.name);
     }
   }

@@ -45,8 +45,8 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
 
       const results = await this.queryKnowledgeBaseUseCase.execute(
         new QueryKnowledgeBaseQuery({
-          knowledgeBaseId: validatedInput.knowledgeBaseId as UUID,
-          query: validatedInput.query,
+          knowledgeBaseIds: validatedInput.knowledgeBaseIds as UUID[],
+          queries: validatedInput.queries,
           userId,
           threadId: context.threadId,
         }),
@@ -61,6 +61,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
         fileName: (result.chunk.meta.fileName as string | undefined) ?? null,
         documentId: result.sourceId,
         documentName: result.sourceName,
+        matchedQueries: result.matchedQueries,
       }));
 
       return JSON.stringify(formatted);
@@ -78,8 +79,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
     if (error instanceof KnowledgeBaseNotFoundError) {
       throw new ToolExecutionFailedError({
         toolName,
-        message:
-          'Knowledge base not found. It may have been deleted or you may not have access.',
+        message: `${error.message}. It may have been deleted or you may not have access.`,
         exposeToLLM: true,
       });
     }
