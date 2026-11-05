@@ -47,6 +47,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
 import { CreateSourceUploadSessionUseCase } from './application/use-cases/create-source-upload-session/create-source-upload-session.use-case';
 import { SignSourceUploadRequestUseCase } from './application/use-cases/sign-source-upload-request/sign-source-upload-request.use-case';
 import { AbortSourceUploadUseCase } from './application/use-cases/abort-source-upload/abort-source-upload.use-case';
+import { CompleteSourceUploadUseCase } from './application/use-cases/complete-source-upload/complete-source-upload.use-case';
 import { SweepSourceUploadSessionsUseCase } from './application/use-cases/sweep-source-upload-sessions/sweep-source-upload-sessions.use-case';
 import { SourceUploadSessionAccessService } from './application/services/source-upload-session-access.service';
 import { SourceUploadQueueingService } from './application/services/source-upload-queueing.service';
@@ -58,6 +59,7 @@ const SOURCE_UPLOAD_USE_CASES = [
   CreateSourceUploadSessionUseCase,
   SignSourceUploadRequestUseCase,
   AbortSourceUploadUseCase,
+  CompleteSourceUploadUseCase,
   SweepSourceUploadSessionsUseCase,
 ];
 
@@ -147,6 +149,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     CreateSourceUploadSessionUseCase,
+    CompleteSourceUploadUseCase,
   ],
 })
 export class SourcesModule {}
