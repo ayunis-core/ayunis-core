@@ -42,6 +42,20 @@ import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { mergeKnowledgeBases } from './merge-knowledge-bases';
+import {
+  assembleMemoryTools,
+  isMemoryAvailable,
+  loadMemoryForRun,
+} from './memory-tool-assembly.helper';
+import { FindUserMemoryUseCase } from 'src/domain/memory/application/use-cases/find-user-memory/find-user-memory.use-case';
+import type { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
+
+interface RunSkillContext {
+  workspaceContext?: WorkspaceRunContext;
+  slugMap: Map<string, string>;
+  editableSkillIds: Map<string, string>;
+  skillEntries: SkillEntry[];
+}
 
 @Injectable()
 export class ToolAssemblyService {
@@ -61,6 +75,7 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    private readonly findUserMemoryUseCase: FindUserMemoryUseCase,
     @Inject(marketplaceConfig.KEY)
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
@@ -76,9 +91,16 @@ export class ToolAssemblyService {
     isAnonymous: boolean,
     workspaceContext?: WorkspaceRunContext,
   ): Promise<{ tools: Tool[]; instructions: string }> {
-    const [skillContext, activeKnowledgeBases] = await Promise.all([
+    const memoryAvailable = isMemoryAvailable({ isAnonymous });
+    const [skillContext, activeKnowledgeBases, memory] = await Promise.all([
       this.prepareRunSkillContext(activeSkills, workspaceContext),
       this.findActiveKnowledgeBasesUseCase.execute(),
+      memoryAvailable
+        ? loadMemoryForRun({
+            findUserMemoryUseCase: this.findUserMemoryUseCase,
+            logger: this.logger,
+          })
+        : [],
     ]);
 
     const tools = canUseTools
@@ -88,44 +110,63 @@ export class ToolAssemblyService {
           skillContext.workspaceContext,
           skillContext.editableSkillIds,
           activeKnowledgeBases,
+          memoryAvailable,
         )
       : [];
 
-    const allSources = this.collectRunSources(thread);
-
-    const { orgSystemPrompt, userSystemPrompt } =
-      await this.fetchSystemPrompts();
-
-    const instructions = this.systemPromptBuilderService.build({
+    const instructions = await this.buildInstructions({
+      thread,
       tools,
-      currentTime: new Date(),
-      sources: allSources,
-      skills: canUseTools ? skillContext.skillEntries : [],
-      knowledgeBases: canUseTools
-        ? mergeKnowledgeBases(
-            thread.getUniqueKnowledgeBases(),
-            skillContext.workspaceContext?.runtimeKnowledgeBases ?? [],
-            activeKnowledgeBases,
-          )
-        : [],
-      workspaceInstructions: skillContext.workspaceContext?.instruction,
-      orgSystemPrompt,
-      userSystemPrompt,
+      canUseTools,
       isAnonymous,
+      skillContext,
+      activeKnowledgeBases,
+      memory,
+      memoryToolsAvailable: canUseTools && memoryAvailable,
     });
 
     return { tools, instructions };
   }
 
+  private async buildInstructions(params: {
+    thread: Thread;
+    tools: Tool[];
+    canUseTools: boolean;
+    isAnonymous: boolean;
+    skillContext: RunSkillContext;
+    activeKnowledgeBases: KnowledgeBaseSummary[];
+    memory: MemoryEntry[];
+    memoryToolsAvailable: boolean;
+  }): Promise<string> {
+    const { thread, canUseTools, skillContext } = params;
+    const { orgSystemPrompt, userSystemPrompt } =
+      await this.fetchSystemPrompts();
+
+    return this.systemPromptBuilderService.build({
+      tools: params.tools,
+      currentTime: new Date(),
+      sources: this.collectRunSources(thread),
+      skills: canUseTools ? skillContext.skillEntries : [],
+      knowledgeBases: canUseTools
+        ? mergeKnowledgeBases(
+            thread.getUniqueKnowledgeBases(),
+            skillContext.workspaceContext?.runtimeKnowledgeBases ?? [],
+            params.activeKnowledgeBases,
+          )
+        : [],
+      workspaceInstructions: skillContext.workspaceContext?.instruction,
+      orgSystemPrompt,
+      userSystemPrompt,
+      isAnonymous: params.isAnonymous,
+      memory: params.memory,
+      memoryToolsAvailable: params.memoryToolsAvailable,
+    });
+  }
+
   private async prepareRunSkillContext(
     activeSkills: Skill[],
     workspaceContext?: WorkspaceRunContext,
-  ): Promise<{
-    workspaceContext?: WorkspaceRunContext;
-    slugMap: Map<string, string>;
-    editableSkillIds: Map<string, string>;
-    skillEntries: SkillEntry[];
-  }> {
+  ): Promise<RunSkillContext> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
     const projectSkills =
       workspaceContext?.skills.map(({ skill }) => skill) ?? [];
@@ -288,6 +329,7 @@ export class ToolAssemblyService {
     workspaceContext?: WorkspaceRunContext,
     editableSkillIds: Map<string, string> = new Map(),
     activeKnowledgeBases: KnowledgeBaseSummary[] = [],
+    includeMemoryTools = false,
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
@@ -330,6 +372,14 @@ export class ToolAssemblyService {
       )),
     );
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
+
+    if (includeMemoryTools) {
+      tools.push(
+        ...(await assembleMemoryTools({
+          assembleToolsUseCase: this.assembleToolsUseCase,
+        })),
+      );
+    }
 
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(

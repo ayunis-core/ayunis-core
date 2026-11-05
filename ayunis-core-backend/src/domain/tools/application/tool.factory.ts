@@ -42,6 +42,8 @@ import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spre
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
+import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
+import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -67,6 +69,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
+  [ToolType.GET_MEMORY]: () => new GetMemoryTool(),
+  [ToolType.SET_MEMORY]: () => new SetMemoryTool(),
 };
 
 @Injectable()

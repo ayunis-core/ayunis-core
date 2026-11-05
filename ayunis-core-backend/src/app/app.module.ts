@@ -23,6 +23,7 @@ import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
+import { MemoryModule } from 'src/domain/memory/memory.module';
 import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
 import { RetentionPoliciesModule } from 'src/domain/retention-policies/retention-policies.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
@@ -139,6 +140,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
     UsageModule,
     TranscriptionsModule,
     ChatSettingsModule,
+    MemoryModule,
     AnonymizationSettingsModule,
     RetentionPoliciesModule,
     KnowledgeBasesModule,

@@ -35,7 +35,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
    *  7 getOrgSystemPromptUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
    *  9 contextService,
    *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
-   *  12 getOrgChatSettingsUseCase, 13 logger
+   *  12 getOrgChatSettingsUseCase, 13 findUserMemoryUseCase, 14 marketplace
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -49,6 +49,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     alwaysOnTemplatesExecute?: jest.Mock;
     activeKnowledgeBasesExecute?: jest.Mock;
     marketplaceEnabled?: boolean;
+    userMemoryExecute?: jest.Mock;
   }) {
     const configFlags: Record<string, boolean> = {
       'internetSearch.isAvailable':
@@ -108,6 +109,10 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         jest.fn().mockResolvedValue({ internetSearchEnabled: true }),
     };
 
+    const findUserMemoryUseCase = {
+      execute: overrides.userMemoryExecute ?? jest.fn().mockResolvedValue([]),
+    };
+
     const mcpToolAssembler = new (McpToolAssemblerService as any)(
       discoverMcpCapabilitiesUseCase,
       getMcpIntegrationsByIdsUseCase,
@@ -127,6 +132,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
+      findUserMemoryUseCase,
       marketplace,
     );
 
@@ -136,6 +142,8 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       contextService,
       getOrgChatSettingsUseCase,
+      findUserMemoryUseCase,
+      systemPromptBuilderService,
     };
   }
 
@@ -546,5 +554,83 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.MARKETPLACE_SEARCH);
+  });
+  describe('memory', () => {
+    const memoryEntry = {
+      key: 'personal',
+      content: 'Works in the building authority',
+    };
+
+    it('offers the memory tools and loads memory for a normal run', async () => {
+      const { service, findUserMemoryUseCase, systemPromptBuilderService } =
+        await buildService({
+          contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+          userMemoryExecute: jest.fn().mockResolvedValue([memoryEntry]),
+        });
+
+      const { tools } = await service.buildRunContext(
+        createMockThread(),
+        [],
+        true,
+        false,
+      );
+
+      const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+      expect(toolTypes).toContain(ToolType.GET_MEMORY);
+      expect(toolTypes).toContain(ToolType.SET_MEMORY);
+      expect(findUserMemoryUseCase.execute).toHaveBeenCalled();
+      expect(systemPromptBuilderService.build).toHaveBeenCalledWith(
+        expect.objectContaining({
+          memory: [memoryEntry],
+          memoryToolsAvailable: true,
+        }),
+      );
+    });
+
+    // Anonymous threads mask PII per thread, so memory written there would be
+    // meaningless everywhere else.
+    it('neither reads nor offers memory in an anonymous run', async () => {
+      const { service, findUserMemoryUseCase, systemPromptBuilderService } =
+        await buildService({
+          contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+          userMemoryExecute: jest.fn().mockResolvedValue([memoryEntry]),
+        });
+
+      const { tools } = await service.buildRunContext(
+        createMockThread(),
+        [],
+        true,
+        true,
+      );
+
+      const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+      expect(toolTypes).not.toContain(ToolType.GET_MEMORY);
+      expect(toolTypes).not.toContain(ToolType.SET_MEMORY);
+      expect(findUserMemoryUseCase.execute).not.toHaveBeenCalled();
+      expect(systemPromptBuilderService.build).toHaveBeenCalledWith(
+        expect.objectContaining({ memory: [], memoryToolsAvailable: false }),
+      );
+    });
+
+    it('still runs when memory cannot be read', async () => {
+      const { service, systemPromptBuilderService } = await buildService({
+        contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+        userMemoryExecute: jest.fn().mockRejectedValue(new Error('db down')),
+      });
+
+      const { tools } = await service.buildRunContext(
+        createMockThread(),
+        [],
+        true,
+        false,
+      );
+
+      expect(tools.map((t: { type: ToolType }) => t.type)).toContain(
+        ToolType.GET_MEMORY,
+      );
+      expect(systemPromptBuilderService.build).toHaveBeenCalledWith(
+        expect.objectContaining({ memory: [] }),
+      );
+    });
   });
 });

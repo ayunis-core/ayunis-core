@@ -77,6 +77,7 @@ import {
 } from 'src/domain/runs/application/runs.errors';
 import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { MemoryNudgeHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/memory-nudge-hook.factory';
 import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
@@ -390,6 +391,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     toolUsageHookFactory,
     skillActivationHookFactory,
     contextBudgetHookFactory,
+    new MemoryNudgeHookFactory(),
   );
   const useCase = new ExecuteRunUseCase(
     contextService,
