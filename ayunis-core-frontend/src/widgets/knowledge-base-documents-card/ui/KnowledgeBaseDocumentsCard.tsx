@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import type { PendingSourceUpload } from '@/shared/lib/source-upload';
+import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
 import { Fragment } from 'react/jsx-runtime';
 import {
   Card,
@@ -74,6 +76,8 @@ export interface KnowledgeBaseDocumentsController {
   isLoading: boolean;
   uploadDocument: (file: File) => void;
   isUploading: boolean;
+  /** Files still being transferred to storage, before they become documents. */
+  uploads?: PendingSourceUpload[];
   removeDocument: (id: string) => void;
   isRemoving: boolean;
   addUrlAsync?: (url: string, depth: number) => Promise<unknown>;
@@ -99,6 +103,7 @@ export default function KnowledgeBaseDocumentsCard({
     isLoading,
     uploadDocument,
     isUploading,
+    uploads = [],
     removeDocument,
     isRemoving,
     addUrlAsync,
@@ -215,9 +220,11 @@ export default function KnowledgeBaseDocumentsCard({
         )}
       </CardHeader>
       <CardContent>
+        <PendingUploadItems uploads={uploads} />
         <DocumentsContent
           isLoading={isLoading}
           documents={documents}
+          hasPendingUploads={uploads.length > 0}
           removeDocument={removeDocument}
           isRemoving={isRemoving}
           emptyText={t('detail.documents.empty')}
@@ -244,6 +251,7 @@ export default function KnowledgeBaseDocumentsCard({
 function DocumentsContent({
   isLoading,
   documents,
+  hasPendingUploads,
   removeDocument,
   isRemoving,
   emptyText,
@@ -251,6 +259,7 @@ function DocumentsContent({
 }: Readonly<{
   isLoading: boolean;
   documents: KnowledgeBaseDocumentResponseDto[];
+  hasPendingUploads: boolean;
   removeDocument: (id: string) => void;
   isRemoving: boolean;
   emptyText: string;
@@ -264,6 +273,7 @@ function DocumentsContent({
     );
   }
   if (documents.length === 0) {
+    if (hasPendingUploads) return null;
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
         {emptyText}

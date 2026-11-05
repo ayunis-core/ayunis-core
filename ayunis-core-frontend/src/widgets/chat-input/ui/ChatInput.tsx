@@ -72,6 +72,7 @@ interface ChatInputProps {
     status?: SourceResponseDtoStatus;
     processingError?: string;
     processingErrorCode?: SourceProcessingErrorCode;
+    uploadProgress?: number;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];

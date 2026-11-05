@@ -51,6 +51,8 @@
     "@tiptap/react": "^3.30.5",
     "@tiptap/starter-kit": "^3.30.5",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@uppy/aws-s3": "^6.3.1",
+    "@uppy/core": "^6.3.1",
     "axios": "^1.20.0",
     "date-fns": "^4.4.0",
     "fast-formula-parser": "1.0.19",
