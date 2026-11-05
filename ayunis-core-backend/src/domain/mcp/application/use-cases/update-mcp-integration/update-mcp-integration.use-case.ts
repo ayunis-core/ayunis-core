@@ -1,4 +1,6 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { UUID } from 'crypto';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
@@ -45,6 +47,7 @@ export class UpdateMcpIntegrationUseCase {
     private readonly capabilityCache: McpCapabilityCacheService,
     private readonly oauthClientConfiguration: McpOAuthClientConfigurationService,
     private readonly mcpClientService: McpClientService,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
@@ -66,8 +69,11 @@ export class UpdateMcpIntegrationUseCase {
     );
 
     await this.applyUpdates(integration, command);
-    const saved = await this.repository.save(integration);
-    await this.removeDeletedUserConfigValues(saved, removedUserFieldKeys);
+    const saved = await this.txHost.withTransaction(async () => {
+      const updated = await this.repository.save(integration);
+      await this.removeDeletedUserConfigValues(updated, removedUserFieldKeys);
+      return updated;
+    });
 
     if (oauthIntegration && command.oauthClient) {
       await this.oauthClientConfiguration.initialize(
