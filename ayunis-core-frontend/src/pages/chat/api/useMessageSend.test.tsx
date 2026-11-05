@@ -376,4 +376,154 @@ describe('useMessageSend', () => {
 
     expect(request?.signal?.aborted).toBe(true);
   });
+
+  describe('message batching', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({
+        toFake: ['requestAnimationFrame', 'cancelAnimationFrame'],
+      });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function renderStreamingHook(
+      params: Omit<Parameters<typeof useMessageSend>[0], 'threadId'>,
+      { startedBeforeMount = false } = {},
+    ) {
+      const stream = createControlledSseResponse();
+      const fetchMock = vi.fn().mockResolvedValue(stream.response);
+      vi.stubGlobal('fetch', fetchMock);
+      const startedRequest = startedBeforeMount
+        ? {
+            controller: new AbortController(),
+            response: Promise.resolve(stream.response),
+          }
+        : undefined;
+      const queryClient = new QueryClient();
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+      const { result } = renderHook(
+        () => useMessageSend({ threadId, ...params }),
+        { wrapper },
+      );
+      let sendPromise: Promise<void> | undefined;
+      act(() => {
+        sendPromise = result.current.sendTextMessage({
+          text: 'Frage',
+          startedRequest,
+        });
+      });
+      const sendAndRead = async (...events: object[]) => {
+        await act(async () => {
+          events.forEach((event) => stream.send(event));
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+      };
+      const finish = async () => {
+        stream.close();
+        await act(async () => await sendPromise);
+      };
+      return { result, sendAndRead, finish, fetchMock };
+    }
+
+    it('applies streamed messages once per animation frame, keeping the latest per message', async () => {
+      const onMessageEvent = vi.fn();
+      const { sendAndRead, finish } = renderStreamingHook({ onMessageEvent });
+
+      await sendAndRead(
+        { type: 'message', message: { id: 'answer', text: 'H' } },
+        { type: 'message', message: { id: 'tool', text: 'Suche' } },
+        { type: 'message', message: { id: 'answer', text: 'Hallo' } },
+      );
+      expect(onMessageEvent).not.toHaveBeenCalled();
+
+      act(() => vi.advanceTimersToNextFrame());
+
+      expect(onMessageEvent.mock.calls.map(([event]) => event)).toEqual([
+        { type: 'message', message: { id: 'answer', text: 'Hallo' } },
+        { type: 'message', message: { id: 'tool', text: 'Suche' } },
+      ]);
+      await finish();
+    });
+
+    it('applies pending messages before other events and before completing', async () => {
+      const calls: string[] = [];
+      const { sendAndRead, finish } = renderStreamingHook({
+        onMessageEvent: (event) => calls.push(`message:${event.message.id}`),
+        onThreadEvent: () => calls.push('thread'),
+        onErrorEvent: () => calls.push('error'),
+        onComplete: () => calls.push('complete'),
+      });
+
+      await sendAndRead(
+        { type: 'message', message: { id: 'first' } },
+        { type: 'thread', title: 'Titel' },
+        { type: 'message', message: { id: 'partial' } },
+        { type: 'error', code: 'RUN_FAILED' },
+        { type: 'message', message: { id: 'final' } },
+      );
+      await finish();
+
+      expect(calls).toEqual([
+        'message:first',
+        'thread',
+        'message:partial',
+        'error',
+        'message:final',
+        'complete',
+      ]);
+    });
+
+    it('applies pending messages as soon as the run is cancelled', async () => {
+      const onMessageEvent = vi.fn();
+      const { result, sendAndRead, finish } = renderStreamingHook({
+        onMessageEvent,
+      });
+
+      await sendAndRead({ type: 'message', message: { id: 'partial' } });
+      act(() => result.current.abort());
+
+      expect(onMessageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ message: { id: 'partial' } }),
+      );
+      await finish();
+    });
+
+    it('batches a run started before the chat page mounted and applies it on cancel', async () => {
+      const onMessageEvent = vi.fn();
+      const { result, sendAndRead, finish, fetchMock } = renderStreamingHook(
+        { onMessageEvent },
+        { startedBeforeMount: true },
+      );
+
+      await sendAndRead(
+        { type: 'message', message: { id: 'answer', text: 'H' } },
+        { type: 'message', message: { id: 'answer', text: 'Hallo' } },
+      );
+      expect(onMessageEvent).not.toHaveBeenCalled();
+
+      act(() => vi.advanceTimersToNextFrame());
+      expect(onMessageEvent.mock.calls.map(([event]) => event)).toEqual([
+        { type: 'message', message: { id: 'answer', text: 'Hallo' } },
+      ]);
+
+      await sendAndRead({
+        type: 'message',
+        message: { id: 'answer', text: 'Hallo Welt' },
+      });
+      act(() => result.current.abort());
+
+      expect(onMessageEvent).toHaveBeenLastCalledWith({
+        type: 'message',
+        message: { id: 'answer', text: 'Hallo Welt' },
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+      await finish();
+    });
+  });
 });

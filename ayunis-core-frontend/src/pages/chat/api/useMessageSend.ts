@@ -24,6 +24,7 @@ import {
   type StartedRunRequest,
 } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
+import { createFrameCoalescer } from '@/pages/chat/lib/frame-coalescer';
 
 export interface PendingImage {
   file: File;
@@ -122,10 +123,24 @@ export function useMessageSend(params: UseMessageSendParams) {
       const requestParams = currentParamsRef.current;
       const getCurrentParams = () =>
         mountedParamsByThread.get(requestThreadId) ?? null;
+      // Each event carries a full message snapshot, so only the newest one per
+      // message needs to reach React in a frame. Other events and the end of
+      // the run flush first to keep their order relative to the messages.
+      const messageEvents = createFrameCoalescer<RunMessageResponseDto>(
+        (event) => event.message.id,
+        (events) => {
+          requestParams.onMessageReceived?.();
+          const currentParams = getCurrentParams();
+          events.forEach((event) => currentParams?.onMessageEvent?.(event));
+        },
+      );
       try {
         requestController =
           payload.startedRequest?.controller ?? new AbortController();
         registerActiveThreadRun(requestThreadId, requestController);
+        // Cancelling cleans up the last message synchronously after aborting,
+        // so already received snapshots must be applied before that.
+        requestController.signal.addEventListener('abort', messageEvents.flush);
 
         const response = await (payload.startedRequest?.response ??
           postRunMessage(payload, requestController.signal));
@@ -158,16 +173,15 @@ export function useMessageSend(params: UseMessageSendParams) {
           if (!line.startsWith('data: ')) return;
           try {
             const data = JSON.parse(line.slice(6)) as { type?: string };
+            if (data.type === 'message') {
+              messageEvents.push(data as RunMessageResponseDto);
+              return;
+            }
+            messageEvents.flush();
             switch (data.type) {
               case 'session':
                 getCurrentParams()?.onSessionEvent?.(
                   data as RunSessionResponseDto,
-                );
-                break;
-              case 'message':
-                requestParams.onMessageReceived?.();
-                getCurrentParams()?.onMessageEvent?.(
-                  data as RunMessageResponseDto,
                 );
                 break;
               case 'thread':
@@ -268,6 +282,7 @@ export function useMessageSend(params: UseMessageSendParams) {
           }
         }
       } finally {
+        messageEvents.flush();
         if (requestController) {
           unregisterActiveThreadRun(requestThreadId, requestController);
         }

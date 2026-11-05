@@ -20,6 +20,8 @@ The `knowledge-base-documents-card/` widget provides scope-agnostic document man
 
 The `usage-overview/` widget shares aggregate usage displays between organisation admins and super admins. Its `showIndividualUsage` input controls whether `UserUsageSection` mounts at all, so hidden reports render no table, placeholder or hint and make no per-user usage request.
 
+The Markdown widget keeps its custom renderers at module scope, so streamed updates do not remount citations, tokens, links, tables, or code blocks; with `isStreaming` it leaves a code block unhighlighted until its closing fence arrives.
+
 The Markdown widget converts opt-in `{{url:<url>}}` markers in assistant chat into HTTP(S) reference tokens showing a globe and hostname. Complete markers are protected before Markdown parsing so URL punctuation cannot interfere with links or tables, while code and existing links retain literal markers. URL references make no favicon or metadata requests.
 
 Billing seat/address sections support omitted edit-dialog renderers, and the subscription-cancellation section supports read-only mode. Both retain their data display; existing consumers remain editable by default.
