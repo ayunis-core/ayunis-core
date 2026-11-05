@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import { Badge } from '@ayunis/ui/components/badge';
 import {
   Item,
   ItemContent,
@@ -47,29 +46,24 @@ const TEAM_ADMIN_COLUMNS: MatrixColumn[] = [
 
 interface RoleSummary {
   name: string;
-  scope: string;
   text: string;
 }
 
 const ROLE_SUMMARIES: RoleSummary[] = [
   {
     name: 'Benutzer',
-    scope: 'Organisation',
     text: 'Für die meisten Mitarbeitenden.',
   },
   {
     name: 'Manager',
-    scope: 'Organisation',
     text: 'Für einzelne Personen, die mehr dürfen sollen als Benutzer, aber nicht alles. Gilt in der ganzen Organisation, anders als Team-Admin.',
   },
   {
     name: 'Admin',
-    scope: 'Organisation',
     text: 'Für die Personen, die Ayunis Core in der Verwaltung betreuen. Darf alles und lässt sich nicht einschränken.',
   },
   {
     name: 'Team-Admin',
-    scope: 'Team',
     text: 'Wird pro Team ernannt und behält dazu die Rechte seiner Rolle. Was Team-Admins im eigenen Team dürfen, legen Sie unten fest.',
   },
 ];
@@ -88,10 +82,7 @@ function RolesOverviewCard() {
               {index > 0 && <ItemSeparator />}
               <Item size="sm" className="px-0">
                 <ItemContent>
-                  <ItemTitle>
-                    {summary.name}
-                    <Badge variant="secondary">{summary.scope}</Badge>
-                  </ItemTitle>
+                  <ItemTitle>{summary.name}</ItemTitle>
                   <ItemDescription className="line-clamp-none">
                     {summary.text}
                   </ItemDescription>
