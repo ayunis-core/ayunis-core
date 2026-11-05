@@ -1,14 +1,11 @@
-import {
-  useIsMutating,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   getKnowledgeBasesControllerFindOneQueryKey,
   getKnowledgeBasesControllerListDocumentsQueryKey,
   useKnowledgeBasesControllerListDocuments,
-  knowledgeBasesControllerAddDocument,
+  knowledgeBaseUploadsControllerCompleteUpload,
+  knowledgeBaseUploadsControllerCreateUpload,
   knowledgeBasesControllerAddUrl,
   knowledgeBasesControllerRemoveDocument,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -16,6 +13,8 @@ import type { KnowledgeBaseDocumentListResponseDto } from '@/shared/api/generate
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { KnowledgeBaseDocumentsController } from '@/widgets/knowledge-base-documents-card';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useDirectSourceUpload } from '@/shared/lib/source-upload';
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
@@ -23,16 +22,17 @@ function useDocuments(
   knowledgeBaseId: string,
   initialData: KnowledgeBaseDocumentListResponseDto,
 ) {
+  const processingPollInterval = useProcessingPollInterval();
   return useKnowledgeBasesControllerListDocuments(knowledgeBaseId, {
     query: {
       initialData,
       staleTime: 0,
       refetchInterval: (query) =>
-        query.state.data?.data.some(
-          (document) => document.status === 'processing',
-        )
-          ? 5000
-          : false,
+        processingPollInterval(
+          query.state.data?.data.some(
+            (document) => document.status === 'processing',
+          ) ?? false,
+        ),
     },
   });
 }
@@ -59,22 +59,27 @@ function useUploadDocument(
   refresh: () => Promise<void>,
 ) {
   const { t } = useTranslation('knowledge-bases');
-  const mutationKey = [
-    ...getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
-    'upload',
-  ];
-  const mutation = useMutation({
-    mutationKey,
-    mutationFn: (file: File) =>
-      knowledgeBasesControllerAddDocument(knowledgeBaseId, { file }),
-    retry: 0,
-    onSuccess: refresh,
-    onError: (error: unknown) => handleSourceUploadError(error, t),
-  });
-  return {
-    uploadDocument: mutation.mutate,
-    isUploading: useIsMutating({ mutationKey }) > 0,
-  };
+  const { upload, uploads, isUploading } = useDirectSourceUpload(
+    {
+      createSession: (file, signal) =>
+        knowledgeBaseUploadsControllerCreateUpload(
+          knowledgeBaseId,
+          { fileName: file.name, mimeType: file.type, fileSize: file.size },
+          signal,
+        ),
+      complete: (uploadId, signal) =>
+        knowledgeBaseUploadsControllerCompleteUpload(
+          knowledgeBaseId,
+          uploadId,
+          signal,
+        ),
+    },
+    {
+      onSuccess: refresh,
+      onError: (error) => handleSourceUploadError(error, t),
+    },
+  );
+  return { uploadDocument: upload, isUploading, uploads };
 }
 
 function useRemoveDocument(
