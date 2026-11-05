@@ -123,6 +123,16 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.activate_skill'),
         target: asString(params.name),
       };
+    case 'get_memory':
+      return {
+        verb: t('chat.timeline.actions.get_memory'),
+        target: asString(params.key),
+      };
+    case 'set_memory':
+      return {
+        verb: t('chat.timeline.actions.set_memory'),
+        target: asString(params.key),
+      };
     case 'internet_search':
       return {
         verb: t('chat.timeline.actions.internet_search'),

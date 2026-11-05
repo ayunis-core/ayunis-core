@@ -61,3 +61,34 @@ test("admin enables memory for the organization and members see the flag", async
     await memberApi.dispose();
   }
 });
+
+test("admin switches memory on from the instructions settings page", async ({
+  page,
+  api,
+}) => {
+  const previous =
+    await generatedApi.orgChatSettingsControllerGetOrgChatSettings({ api });
+  const readMemoryEnabled = async (): Promise<boolean> =>
+    (await generatedApi.orgChatSettingsControllerGetOrgChatSettings({ api }))
+      .memoryEnabled;
+
+  try {
+    await generatedApi.orgChatSettingsControllerUpsertOrgChatSettings(
+      { memoryEnabled: false },
+      { api },
+    );
+
+    await page.goto("/admin-settings/instructions");
+    await page.locator("#enable-memory-switch").click();
+
+    await expect(
+      page.locator('[data-sonner-toast][data-type="success"]'),
+    ).toBeVisible();
+    await expect.poll(readMemoryEnabled).toBe(true);
+  } finally {
+    await generatedApi.orgChatSettingsControllerUpsertOrgChatSettings(
+      { memoryEnabled: previous.memoryEnabled },
+      { api },
+    );
+  }
+});

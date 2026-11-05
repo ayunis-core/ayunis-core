@@ -23,5 +23,15 @@
     "error": "Failed to update internet access setting.",
     "loadError": "Failed to load internet access setting.",
     "retry": "Retry"
+  },
+  "memory": {
+    "title": "Memory",
+    "description": "Control whether the AI assistant may remember durable facts about each user across chats, such as their role or preferred tone. This applies to all users in your organization.",
+    "label": "Enable memory",
+    "hint": "When enabled, the AI assistant stores what users tell it about themselves and uses it in later chats. Each user can review and delete their own memory in their settings. Anonymous chats never use memory.",
+    "saved": "Memory setting saved.",
+    "error": "Failed to update memory setting.",
+    "loadError": "Failed to load memory setting.",
+    "retry": "Retry"
   }
 }

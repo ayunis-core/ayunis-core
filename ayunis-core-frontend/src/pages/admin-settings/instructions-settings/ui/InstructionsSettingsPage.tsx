@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import {
   Card,
   CardContent,
@@ -14,8 +14,8 @@ import { Button } from '@ayunis/ui/components/button';
 import { Switch } from '@ayunis/ui/components/switch';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { useOrgSystemPrompt } from '../api/useOrgSystemPrompt';
-import { useOrgChatSettings } from '../api/useOrgChatSettings';
+import { useOrgSystemPrompt } from '@/pages/admin-settings/instructions-settings/api/useOrgSystemPrompt';
+import { useOrgChatSettings } from '@/pages/admin-settings/instructions-settings/api/useOrgChatSettings';
 
 function InstructionsForm({
   initialValue,
@@ -241,6 +241,73 @@ function InternetAccessCard() {
   );
 }
 
+function MemoryToggle({
+  memoryEnabled,
+  isUpdating,
+  onChange,
+}: Readonly<{
+  memoryEnabled: boolean;
+  isUpdating: boolean;
+  onChange: (memoryEnabled: boolean) => void;
+}>) {
+  const { t } = useTranslation('admin-settings-instructions');
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="space-y-1">
+        <Label htmlFor="enable-memory-switch">{t('memory.label')}</Label>
+        <p className="text-sm text-muted-foreground">{t('memory.hint')}</p>
+      </div>
+      <Switch
+        id="enable-memory-switch"
+        checked={memoryEnabled}
+        disabled={isUpdating}
+        onCheckedChange={onChange}
+      />
+    </div>
+  );
+}
+
+function MemoryCard() {
+  const { t } = useTranslation('admin-settings-instructions');
+  const {
+    memoryEnabled,
+    isLoading,
+    isError,
+    refetch,
+    isUpdating,
+    setMemoryEnabled,
+  } = useOrgChatSettings();
+  let content;
+  if (isError) {
+    content = (
+      <LoadErrorAlert
+        message={t('memory.loadError')}
+        retryLabel={t('memory.retry')}
+        onRetry={() => void refetch()}
+      />
+    );
+  } else if (isLoading) {
+    content = <LoadingSpinner />;
+  } else {
+    content = (
+      <MemoryToggle
+        memoryEnabled={memoryEnabled}
+        isUpdating={isUpdating}
+        onChange={setMemoryEnabled}
+      />
+    );
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('memory.title')}</CardTitle>
+        <CardDescription>{t('memory.description')}</CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
+    </Card>
+  );
+}
+
 export function InstructionsSettingsPage() {
   const { t: tLayout } = useTranslation('admin-settings-layout');
 
@@ -249,6 +316,7 @@ export function InstructionsSettingsPage() {
       <div className="space-y-6">
         <InstructionsCard />
         <InternetAccessCard />
+        <MemoryCard />
       </div>
     </SettingsLayout>
   );
