@@ -5,6 +5,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (_target: unknown, _prop: string, descriptor: PropertyDescriptor) =>
       descriptor,
+  TransactionHost: class TransactionHost {},
 }));
 
 import type { UUID } from 'crypto';
@@ -13,6 +14,7 @@ import { DeleteSourcesUseCase } from './delete-sources.use-case';
 import { DeleteSourcesCommand } from './delete-sources.command';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
@@ -34,6 +36,7 @@ describe('DeleteSourcesUseCase', () => {
   let mockSourceRepository: Record<string, jest.Mock>;
   let mockCleanupSourceProcessingUseCase: Record<string, jest.Mock>;
   let mockIndex: Record<string, jest.Mock>;
+  const mockTxHost = { isTransactionActive: jest.fn().mockReturnValue(false) };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
 
@@ -55,6 +58,7 @@ describe('DeleteSourcesUseCase', () => {
           provide: CleanupSourceProcessingUseCase,
           useValue: mockCleanupSourceProcessingUseCase,
         },
+        { provide: TransactionHost, useValue: mockTxHost },
         {
           provide: IndexRegistry,
           useValue: { getAll: () => [mockIndex] },
@@ -70,6 +74,7 @@ describe('DeleteSourcesUseCase', () => {
     mockSourceRepository.findByIds.mockResolvedValue([]);
     mockSourceRepository.deleteMany.mockResolvedValue(undefined);
     mockCleanupSourceProcessingUseCase.execute.mockResolvedValue(undefined);
+    mockTxHost.isTransactionActive.mockReturnValue(false);
   });
 
   it('should cancel and cleanup for processing sources in batch delete', async () => {
@@ -94,6 +99,19 @@ describe('DeleteSourcesUseCase', () => {
       processingId,
       readyId,
     ]);
+  });
+
+  it('leaves the originals to the sweep when a caller holds the transaction', async () => {
+    const sourceId = randomUUID();
+    const source = makeSource(sourceId, SourceStatus.READY);
+    source.storageKey = `${orgId}/uploads/session/doc.pdf`;
+    mockSourceRepository.findByIds.mockResolvedValue([source]);
+    mockTxHost.isTransactionActive.mockReturnValue(true);
+
+    await useCase.execute(new DeleteSourcesCommand([sourceId], orgId));
+
+    expect(mockSourceRepository.deleteMany).toHaveBeenCalledWith([sourceId]);
+    expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should skip early when sourceIds is empty', async () => {

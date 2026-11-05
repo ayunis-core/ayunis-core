@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { DataSourceFileKind } from '../../domain/data-source-file-kind.type';
+import type { DataSourceFileKind } from 'src/domain/sources/domain/data-source-file-kind.type';
 
 export interface DataSourceProcessingTarget {
   sourceId: UUID;
@@ -21,6 +21,14 @@ export interface DataSourceProcessingJobData {
   fileName: string;
   kind: DataSourceFileKind;
   targets: DataSourceProcessingTarget[];
+  /** See DocumentProcessingJobData.retainFile. */
+  retainFile?: boolean;
+  /**
+   * Size the upload was verified at. The consumer refuses an object of any
+   * other size, since the browser's signed URLs may outlive completion.
+   */
+  expectedSize?: number;
+  expectedETag?: string;
 }
 
 /**

@@ -424,6 +424,16 @@ export class LocalSourceRepository extends SourceRepository {
     }));
   }
 
+  async findReferencedStorageKeys(storageKeys: string[]): Promise<string[]> {
+    if (storageKeys.length === 0) return [];
+    const records = await this.sourceRepository
+      .createQueryBuilder('source')
+      .select('DISTINCT source.storageKey', 'storageKey')
+      .where('source.storageKey IN (:...storageKeys)', { storageKeys })
+      .getRawMany<{ storageKey: string }>();
+    return records.map((record) => record.storageKey);
+  }
+
   async delete(sourceId: UUID): Promise<void> {
     this.logger.log({ sourceId }, 'delete');
     await this.sourceRepository.delete({ id: sourceId });

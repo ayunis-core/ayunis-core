@@ -27,10 +27,12 @@ export class CreateProcessingSourceUseCase {
     );
 
     const source = new FileSource({
+      id: command.id,
       fileType: this.getFileType(command.fileType),
       name: command.fileName,
       type: TextType.FILE,
       status: SourceStatus.PROCESSING,
+      storageKey: command.storageKey,
     });
 
     return (await this.sourceRepository.save(source)) as FileSource;

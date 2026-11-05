@@ -99,6 +99,7 @@ describe('DeleteSourcesUseCase database atomicity', () => {
       registry,
       sources,
       {} as CleanupSourceProcessingUseCase,
+      txHost,
     );
   }
 
