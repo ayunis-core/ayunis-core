@@ -141,6 +141,8 @@
   "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}",
   "/skills/{skillId}/mcp-integrations",
   "/skills/{skillId}/mcp-integrations/{integrationId}",
+  "/source-uploads/{id}",
+  "/source-uploads/{id}/sign",
   "/subscriptions/active",
   "/subscriptions/price",
   "/super-admin/academy/chapters",
