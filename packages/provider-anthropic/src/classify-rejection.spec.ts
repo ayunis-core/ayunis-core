@@ -24,6 +24,18 @@ describe('classifyAnthropicRejection', () => {
     ).toEqual({ reason: 'context_length_exceeded' });
   });
 
+  it.each([
+    {
+      message: '400 Input is too long.',
+      error: { message: 'Input is too long.' },
+    },
+    new Error('Input is too long for requested model.'),
+  ])('recognises the Bedrock input-length wording %#', (error) => {
+    expect(classifyAnthropicRejection(error)).toEqual({
+      reason: 'context_length_exceeded',
+    });
+  });
+
   it('leaves other invalid requests unclassified', () => {
     expect(
       classifyAnthropicRejection(new Error('messages: roles must alternate')),

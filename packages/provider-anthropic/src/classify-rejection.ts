@@ -3,11 +3,13 @@ import type { ProviderRejection } from '@ayunis/inference';
 /**
  * Anthropic and Bedrock report these rejections only in prose under the
  * generic `invalid_request_error` type, so the wording is the only signal:
- * "prompt is too long: N tokens > M maximum" and
- * "…image exceeds 5 MB maximum: N bytes > M bytes".
+ * "prompt is too long: N tokens > M maximum",
+ * "…image exceeds 5 MB maximum: N bytes > M bytes", and Bedrock's own
+ * "Input is too long." (no counts) for oversized requests (AYC-1392).
  */
 const PROMPT_TOO_LONG =
   /prompt is too long(?::\s*(\d+)\s*tokens\s*>\s*(\d+)\s*maximum)?/i;
+const INPUT_TOO_LONG = /^(?:\d{3} )?input is too long\b/i;
 const IMAGE_TOO_LARGE = /image exceeds .* maximum/i;
 
 export function classifyAnthropicRejection(
@@ -27,7 +29,8 @@ export function classifyAnthropicRejection(
       };
     }
   }
-  if (promptTooLong) return { reason: 'context_length_exceeded' };
+  if (promptTooLong || messages.some((message) => INPUT_TOO_LONG.test(message)))
+    return { reason: 'context_length_exceeded' };
   if (messages.some((message) => IMAGE_TOO_LARGE.test(message))) {
     return { reason: 'image_too_large' };
   }

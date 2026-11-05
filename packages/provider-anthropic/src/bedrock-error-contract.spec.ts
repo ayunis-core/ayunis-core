@@ -112,6 +112,28 @@ describe('Bedrock provider error contract', () => {
     });
   });
 
+  it('marks Bedrock "Input is too long." as a context-length rejection', async () => {
+    const message = 'Input is too long.';
+    createMock.mockRejectedValueOnce(
+      Object.assign(new Error(`400 ${message}`), {
+        status: 400,
+        error: { message },
+      }),
+    );
+    const provider = bedrock({ model: 'anthropic.test', maxRetries: 0 });
+
+    const failure = drain(provider.stream(request()));
+    await expect(failure).rejects.toMatchObject({
+      kind: 'rejection',
+      rejectionReason: 'context_length_exceeded',
+      upstreamStatus: 400,
+    });
+    await expect(failure).rejects.not.toHaveProperty(
+      'contextOverflowTokens',
+      expect.anything(),
+    );
+  });
+
   it('normalizes post-chunk transport failures through the shared stream core', async () => {
     const cause = Object.assign(new Error('socket closed'), {
       code: 'UND_ERR_SOCKET',
