@@ -23,12 +23,12 @@ describe('WebsiteContentTool', () => {
     ).toThrow(/must be one of: content, links/);
   });
 
-  it('rejects requests for more than 200 lines', () => {
+  it('rejects requests for more than 2000 lines', () => {
     expect(() =>
       tool.validateParams({
         url: 'https://stadt.example.de/haushalt',
-        numLines: 201,
+        numLines: 2_001,
       }),
-    ).toThrow(/must be <= 200/);
+    ).toThrow(/must be <= 2000/);
   });
 });

@@ -1,5 +1,7 @@
 import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
 import { RequestPdfExtractionCacheService } from 'src/domain/retrievers/url-retrievers/infrastructure/cache/request-pdf-extraction-cache.service';
+import { UrlRetrievalCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/url-retrieval-cache.port';
+import { RequestUrlRetrievalCacheService } from 'src/domain/retrievers/url-retrievers/infrastructure/cache/request-url-retrieval-cache.service';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Test } from '@nestjs/testing';
 import {
@@ -52,6 +54,10 @@ describe('Website PDF pagination', () => {
           provide: PdfExtractionCachePort,
           useClass: RequestPdfExtractionCacheService,
         },
+        {
+          provide: UrlRetrievalCachePort,
+          useClass: RequestUrlRetrievalCacheService,
+        },
         { provide: ContextService, useValue: cls },
         {
           provide: AssertCrawlDomainAccessUseCase,
@@ -75,6 +81,7 @@ describe('Website PDF pagination', () => {
       module.get(RetrieveUrlUseCase),
       {
         sourceGetText: { maxLines: 200, maxChars: 5000 },
+        websiteContent: { maxLines: 200, maxChars: 5000 },
       },
     );
     const read = (startLine: number) =>

@@ -3,6 +3,7 @@ import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-ret
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { ConfigService } from '@nestjs/config';
 import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
+import { searchRequestSignal } from './search-request-signal';
 
 type BraveSearchResult = {
   news?: {
@@ -11,6 +12,7 @@ type BraveSearchResult = {
       url: string;
       description: string;
       page_age: string; // ISO 8601 datetime string
+      extra_snippets?: string[] | null;
     }>;
   };
   web?: {
@@ -18,6 +20,7 @@ type BraveSearchResult = {
       title: string;
       url: string;
       description: string;
+      extra_snippets?: string[] | null;
     }>;
   };
 };
@@ -35,10 +38,17 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async search(query: string): Promise<InternetSearchResult[]> {
+  async search(
+    query: string,
+    signal?: AbortSignal,
+  ): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Brave internet search handler');
     try {
-      const response = await fetch(...this.buildRequest(query));
+      const [url, init] = this.buildRequest(query);
+      const response = await fetch(url, {
+        ...init,
+        signal: searchRequestSignal(signal),
+      });
       const data = (await response.json()) as
         BraveSearchResult | BraveSearchErrorResult;
       if ('error' in data) {
@@ -73,7 +83,12 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
       'x-subscription-token': braveSearchApiKey,
       Accept: 'application/json',
     };
-    return [`${braveSearchUrl}?q=${urlFriendlyQuery}`, { headers }];
+    // Extra snippets often answer the question directly, sparing the model a
+    // website_content turn; Brave includes them in the regular search price.
+    return [
+      `${braveSearchUrl}?q=${urlFriendlyQuery}&extra_snippets=true`,
+      { headers },
+    ];
   }
 
   /** Top 5 web and top 5 news hits, skipping entries with missing fields. */
@@ -86,6 +101,7 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
             title: result.title,
             url: result.url,
             description: result.description,
+            extraSnippets: result.extra_snippets ?? undefined,
           });
         }
         return null;
@@ -99,6 +115,7 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
             url: result.url,
             description: result.description,
             pageAge: result.page_age,
+            extraSnippets: result.extra_snippets ?? undefined,
           });
         }
         return null;

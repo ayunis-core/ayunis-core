@@ -74,6 +74,19 @@ describe('BackendToolAdapter', () => {
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
+  it('passes the run cancel signal to backend tool execution', async () => {
+    execute.mockResolvedValue('3 results');
+    const controller = new AbortController();
+    const [tool] = adapter.toRuntimeTools([fakeTool('internet_search')]);
+
+    await tool.execute!(
+      { query: 'Öffnungszeiten Bürgerbüro' },
+      { ...toolCtx(), signal: controller.signal },
+    );
+
+    expect(execute.mock.calls[0][0].context.signal).toBe(controller.signal);
+  });
+
   it.each([
     new CreateFileTool(),
     new BarChartTool(),

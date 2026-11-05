@@ -21,12 +21,12 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const results = await this.searchWebUseCase.execute(
-        new SearchWebCommand(validatedInput.query),
+        new SearchWebCommand(validatedInput.query, context.signal),
       );
       return JSON.stringify(results);
     } catch (error) {

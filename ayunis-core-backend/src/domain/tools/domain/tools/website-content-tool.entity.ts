@@ -23,10 +23,10 @@ const websiteContentToolParameters = {
     },
     numLines: {
       type: 'integer' as const,
-      description: 'Number of lines to return. Defaults to 200. Maximum 200.',
+      description:
+        'Number of lines to return. Omit to get as much of the page as fits in one result.',
       minimum: 1,
-      maximum: 200,
-      default: 200,
+      maximum: 2000,
     },
   },
   additionalProperties: false,
@@ -43,7 +43,7 @@ export class WebsiteContentTool extends Tool {
       name: ToolType.WEBSITE_CONTENT,
       description: 'Fetch content from a specific URL.',
       descriptionLong:
-        'Fetch a bounded page of website content. Use nextPage.startLine from a truncated result to continue. ' +
+        'Fetch the main text of a web page, without navigation, header or footer. Pages up to about 60,000 characters come back in one result; only longer pages are truncated, in which case use nextPage.startLine to continue. ' +
         "Set section to 'links' to page through links discovered on the website.",
       parameters: websiteContentToolParameters,
       type: ToolType.WEBSITE_CONTENT,

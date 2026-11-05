@@ -9,6 +9,7 @@ import {
   type TokenEstimator,
 } from '@ayunis/agent-runtime';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import toolsConfig from 'src/config/tools.config';
 
 const context = {
   threadId: '123e4567-e89b-12d3-a456-426614174000',
@@ -24,8 +25,102 @@ describe('WebsiteContentToolHandler', () => {
     retrieveUrl = jest.fn();
     handler = new WebsiteContentToolHandler(
       { execute: retrieveUrl } as unknown as RetrieveUrlUseCase,
-      { sourceGetText: { maxLines: 200, maxChars: 5000 } },
+      {
+        sourceGetText: { maxLines: 200, maxChars: 5000 },
+        websiteContent: { maxLines: 200, maxChars: 5000 },
+      },
     );
+  });
+
+  const withDefaultBudget = (): WebsiteContentToolHandler =>
+    new WebsiteContentToolHandler(
+      { execute: retrieveUrl } as unknown as RetrieveUrlUseCase,
+      toolsConfig(),
+    );
+
+  it('returns a long article in a single call by default', async () => {
+    const paragraphs = Array.from(
+      { length: 800 },
+      (_, index) =>
+        `Absatz ${index + 1}: Die Stadt stellt ihre Verwaltung auf offene Software um.`,
+    );
+    const article = paragraphs.join('\n');
+    expect(article.length).toBeGreaterThan(50_000);
+    retrieveUrl.mockResolvedValue(
+      new UrlRetrieverResult(
+        article,
+        'https://stadt.example.de/open-source',
+        'Open Source',
+      ),
+    );
+
+    const result = JSON.parse(
+      await withDefaultBudget().execute({
+        tool,
+        input: { url: 'https://stadt.example.de/open-source' },
+        context,
+      }),
+    );
+
+    expect(result).toMatchObject({
+      totalLines: 800,
+      actualEndLine: 800,
+      truncated: false,
+      nextPage: null,
+    });
+    expect(result.content).toBe(article);
+  });
+
+  it('accepts page sizes up to the website line budget', async () => {
+    retrieveUrl.mockResolvedValue(
+      new UrlRetrieverResult(
+        'Sitzungskalender',
+        'https://stadt.example.de/sitzungen',
+        'Sitzungen',
+      ),
+    );
+
+    const result = JSON.parse(
+      await withDefaultBudget().execute({
+        tool,
+        input: { url: 'https://stadt.example.de/sitzungen', numLines: 2_000 },
+        context,
+      }),
+    );
+
+    expect(result).toMatchObject({
+      requestedNumLines: 2_000,
+      content: 'Sitzungskalender',
+    });
+  });
+
+  it('paginates pages above the 60,000-character default budget', async () => {
+    const lines = Array.from({ length: 1_000 }, (_, index) =>
+      `Ratsprotokoll ${index + 1} `.padEnd(99, '.'),
+    );
+    retrieveUrl.mockResolvedValue(
+      new UrlRetrieverResult(
+        lines.join('\n'),
+        'https://stadt.example.de/protokolle',
+        'Protokolle',
+      ),
+    );
+
+    const result = JSON.parse(
+      await withDefaultBudget().execute({
+        tool,
+        input: { url: 'https://stadt.example.de/protokolle' },
+        context,
+      }),
+    );
+
+    expect(result).toMatchObject({
+      actualEndLine: 600,
+      truncated: true,
+      truncationReasons: ['max_chars'],
+      nextPage: { section: 'content', startLine: 601 },
+    });
+    expect(result.content.length).toBeLessThanOrEqual(60_000);
   });
 
   it('returns the first content page and an actionable next-page input', async () => {
@@ -60,6 +155,34 @@ describe('WebsiteContentToolHandler', () => {
       paginationHint: expect.stringContaining('startLine 201'),
     });
     expect(result.content.length).toBeLessThanOrEqual(5000);
+  });
+
+  it('continues a redirected page with the requested URL so the run reuses its retrieval', async () => {
+    const lines = Array.from(
+      { length: 205 },
+      (_, index) => `Council record ${index + 1}`,
+    );
+    retrieveUrl.mockResolvedValue(
+      new UrlRetrieverResult(
+        lines.join('\n'),
+        'https://www.stadt.example.de/records/',
+        'Council records',
+        {},
+        ['https://www.stadt.example.de/archive'],
+      ),
+    );
+
+    const result = JSON.parse(
+      await handler.execute({
+        tool,
+        input: { url: 'https://stadt.example.de/records' },
+        context,
+      }),
+    );
+
+    expect(result.url).toBe('https://www.stadt.example.de/records/');
+    expect(result.nextPage.url).toBe('https://stadt.example.de/records');
+    expect(result.linksPage.url).toBe('https://stadt.example.de/records');
   });
 
   it('returns the final content page without truncation', async () => {
@@ -146,9 +269,10 @@ describe('WebsiteContentToolHandler', () => {
         'Research source',
       ),
     );
+    const defaultHandler = withDefaultBudget();
     const boundedResults = await Promise.all(
       Array.from({ length: 5 }, () =>
-        handler.execute({
+        defaultHandler.execute({
           tool,
           input: { url: 'https://stadt.example.de/research' },
           context,

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
+import { searchRequestSignal } from './search-request-signal';
 
 const MAX_RESULTS = 10;
 
@@ -22,10 +23,17 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async search(query: string): Promise<InternetSearchResult[]> {
+  async search(
+    query: string,
+    signal?: AbortSignal,
+  ): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Staan internet search handler');
 
-    const response = await fetch(...this.buildRequest(query));
+    const [url, init] = this.buildRequest(query);
+    const response = await fetch(url, {
+      ...init,
+      signal: searchRequestSignal(signal),
+    });
 
     // fetch does not throw on HTTP error status — check explicitly.
     if (!response.ok) {

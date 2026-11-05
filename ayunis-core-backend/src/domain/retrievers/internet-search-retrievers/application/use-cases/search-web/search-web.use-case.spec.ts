@@ -54,10 +54,24 @@ describe('SearchWebUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result).toBe(expectedResults);
-    expect(mockHandler.search).toHaveBeenCalledWith(command.query);
+    expect(mockHandler.search).toHaveBeenCalledWith(command.query, undefined);
     expect(logger.debug).toHaveBeenCalledWith(
       { input: command.query },
       'Searching web',
+    );
+  });
+
+  it('passes the caller abort signal to the search provider', async () => {
+    const controller = new AbortController();
+    jest.spyOn(mockHandler, 'search').mockResolvedValue([]);
+
+    await useCase.execute(
+      new SearchWebCommand('Abfallkalender Musterstadt', controller.signal),
+    );
+
+    expect(mockHandler.search).toHaveBeenCalledWith(
+      'Abfallkalender Musterstadt',
+      controller.signal,
     );
   });
 });
