@@ -25,6 +25,7 @@ import {
 } from 'src/domain/shares/domain/share-scope.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { randomUUID } from 'crypto';
+import { SharePermissionService } from 'src/domain/shares/application/services/share-permission.service';
 
 describe('DeleteShareUseCase', () => {
   let useCase: DeleteShareUseCase;
@@ -32,6 +33,9 @@ describe('DeleteShareUseCase', () => {
   let repository: SharesRepository;
   let eventEmitter: EventEmitter2;
   let logger: LoggerMock;
+  const sharePermissionService = {
+    requireSharePermission: jest.fn().mockResolvedValue(undefined),
+  };
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
@@ -54,6 +58,10 @@ describe('DeleteShareUseCase', () => {
             delete: jest.fn(),
             findByEntityIdAndType: jest.fn().mockResolvedValue([]),
           },
+        },
+        {
+          provide: SharePermissionService,
+          useValue: sharePermissionService,
         },
         {
           provide: EventEmitter2,
@@ -221,6 +229,48 @@ describe('DeleteShareUseCase', () => {
 
     await expect(useCase.execute(share.id)).rejects.toThrow(
       UnauthorizedAccessError,
+    );
+    expect(repository.delete).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+  it('should require the permission matching the stored share scope', async () => {
+    const share = new SkillShare({
+      skillId: randomUUID(),
+      scope: new TeamShareScope({ teamId: randomUUID() }),
+      ownerId: mockUserId,
+    });
+
+    (contextService.get as jest.Mock).mockReturnValue(mockUserId);
+    (repository.findById as jest.Mock).mockResolvedValue(share);
+
+    await useCase.execute(share.id);
+
+    expect(sharePermissionService.requireSharePermission).toHaveBeenCalledWith(
+      SharedEntityType.SKILL,
+      ShareScopeType.TEAM,
+    );
+    expect(repository.delete).toHaveBeenCalledWith(share);
+  });
+
+  it('should not delete the share when the scope permission is missing', async () => {
+    const share = new SkillShare({
+      skillId: randomUUID(),
+      scope: new OrgShareScope({ orgId: mockOrgId }),
+      ownerId: mockUserId,
+    });
+
+    (contextService.get as jest.Mock).mockReturnValue(mockUserId);
+    (repository.findById as jest.Mock).mockResolvedValue(share);
+    sharePermissionService.requireSharePermission.mockRejectedValueOnce(
+      new UnauthorizedAccessError(),
+    );
+
+    await expect(useCase.execute(share.id)).rejects.toThrow(
+      UnauthorizedAccessError,
+    );
+    expect(sharePermissionService.requireSharePermission).toHaveBeenCalledWith(
+      SharedEntityType.SKILL,
+      ShareScopeType.ORG,
     );
     expect(repository.delete).not.toHaveBeenCalled();
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();

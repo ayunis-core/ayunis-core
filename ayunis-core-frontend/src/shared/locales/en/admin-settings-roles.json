@@ -21,17 +21,21 @@
     "manage_teams": "Create, rename and delete teams.",
     "assign_users_to_teams": "Add members to a team and remove them again. Does not allow creating or deleting teams.",
     "manage_skills": "Create, edit and delete skills, including their instructions, sources and integrations.",
-    "share_skills": "Make a skill available to a team or to the whole organisation.",
+    "share_skills_with_teams": "Make a skill available to teams the member belongs to.",
+    "share_skills_with_org": "Make a skill available to the whole organisation.",
     "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
-    "share_knowledge_bases": "Make a knowledge base available to a team or to the whole organisation."
+    "share_knowledge_bases_with_teams": "Make a knowledge base available to teams the member belongs to.",
+    "share_knowledge_bases_with_org": "Make a knowledge base available to the whole organisation."
   },
   "permissions": {
     "manage_teams": "Manage teams",
     "assign_users_to_teams": "Assign users to teams",
     "manage_skills": "Manage skills",
-    "share_skills": "Share skills",
+    "share_skills_with_teams": "Share skills with own teams",
+    "share_skills_with_org": "Share skills with the organisation",
     "manage_knowledge_bases": "Manage knowledge bases",
-    "share_knowledge_bases": "Share knowledge bases"
+    "share_knowledge_bases_with_teams": "Share knowledge bases with own teams",
+    "share_knowledge_bases_with_org": "Share knowledge bases with the organisation"
   },
   "adminHint": "Admins always have every permission and cannot be restricted.",
   "save": "Save changes",

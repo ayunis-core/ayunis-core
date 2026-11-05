@@ -7,8 +7,13 @@ hold whatever an org admin grants them.
 ## Model
 
 - `Permission` — hardcoded enum of assignable capabilities, currently:
-  `manage_teams`, `assign_users_to_teams`, `manage_skills`, `share_skills`,
-  `manage_knowledge_bases`, `share_knowledge_bases`. This is the source of truth
+  `manage_teams`, `assign_users_to_teams`, `manage_skills`,
+  `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
+  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`. Sharing
+  is split by audience: `*_with_teams` covers teams the member belongs to,
+  `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
+  migration granted both wherever the former `share_*` permission was held).
+  This is the source of truth
   for what a role can be granted.
   How the settings UI labels, groups and orders these is purely a display
   concern and lives in the frontend, keyed on the enum — the API returns grants
@@ -33,6 +38,10 @@ which short-circuits to `true` for `ADMIN` and otherwise checks
 `@RequirePermission(A, B)` grants access to holders of *any* of the listed
 permissions, used for reads a holder of either permission needs (e.g. the team
 reads, reachable with `MANAGE_TEAMS` or `ASSIGN_USERS_TO_TEAMS`).
+When the required permission depends on request data, the route declares the
+any-of set and the use case checks the exact one with `HasPermissionUseCase`
+(e.g. the shares module's `SharePermissionService`, which picks the
+team or org share permission from the share's scope).
 
 ## Seeding
 

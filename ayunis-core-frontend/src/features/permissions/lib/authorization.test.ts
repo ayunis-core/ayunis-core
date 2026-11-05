@@ -33,6 +33,8 @@ describe('createAuthorization', () => {
     expect(authorization.canAny('manage_teams', 'assign_users_to_teams')).toBe(
       true,
     );
-    expect(authorization.canAny('manage_skills', 'share_skills')).toBe(false);
+    expect(authorization.canAny('manage_skills', 'share_skills_with_org')).toBe(
+      false,
+    );
   });
 });

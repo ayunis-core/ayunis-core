@@ -16,6 +16,7 @@ import {
   TeamShareScope,
 } from 'src/domain/shares/domain/share-scope.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { SharePermissionService } from 'src/domain/shares/application/services/share-permission.service';
 
 @Injectable()
 export class DeleteShareUseCase {
@@ -25,6 +26,7 @@ export class DeleteShareUseCase {
     private readonly repository: SharesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly sharePermissionService: SharePermissionService,
   ) {}
 
   @Transactional()
@@ -40,6 +42,11 @@ export class DeleteShareUseCase {
       if (share.ownerId !== userId) {
         throw new UnauthorizedAccessError();
       }
+
+      await this.sharePermissionService.requireSharePermission(
+        share.entityType,
+        share.scope.scopeType,
+      );
 
       await this.repository.delete(share);
 

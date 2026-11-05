@@ -2,11 +2,14 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { CreateShareUseCase } from './create-share.use-case';
-import { CreateOrgSkillShareCommand } from './create-share.command';
+import {
+  CreateOrgSkillShareCommand,
+  CreateTeamSkillShareCommand,
+} from './create-share.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SharesRepository } from '../../ports/shares-repository.port';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
-import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
+import type { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import {
   SkillShare,
@@ -20,6 +23,9 @@ import {
   CreateTeamKnowledgeBaseShareCommand,
 } from './create-share.command';
 import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
+import { SharePermissionService } from 'src/domain/shares/application/services/share-permission.service';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;
@@ -28,12 +34,16 @@ describe('CreateShareUseCase', () => {
   let authorizationFactory: ShareAuthorizationFactory;
   let authorizationStrategy: ShareAuthorizationStrategy;
   let checkUserTeamMembershipUseCase: CheckUserTeamMembershipUseCase;
+  let sharePermissionService: { requireSharePermission: jest.Mock };
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
   const mockSkillId = randomUUID();
 
   beforeAll(async () => {
+    sharePermissionService = {
+      requireSharePermission: jest.fn().mockResolvedValue(undefined),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateShareUseCase,
@@ -61,6 +71,10 @@ describe('CreateShareUseCase', () => {
           useValue: {
             execute: jest.fn(),
           },
+        },
+        {
+          provide: SharePermissionService,
+          useValue: sharePermissionService,
         },
       ],
     }).compile();
@@ -368,6 +382,72 @@ describe('CreateShareUseCase', () => {
       expect((result as KnowledgeBaseShare).knowledgeBaseId).toBe(
         mockKnowledgeBaseId,
       );
+    });
+    describe('share permissions', () => {
+      beforeEach(() => {
+        (contextService.get as jest.Mock).mockImplementation((key: string) => {
+          if (key === 'userId') return mockUserId;
+          if (key === 'orgId') return mockOrgId;
+          return null;
+        });
+        (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
+          authorizationStrategy,
+        );
+        (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
+          true,
+        );
+        (checkUserTeamMembershipUseCase.execute as jest.Mock).mockResolvedValue(
+          true,
+        );
+        (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
+      });
+
+      it.each([
+        [
+          'org skill',
+          new CreateOrgSkillShareCommand(mockSkillId),
+          SharedEntityType.SKILL,
+          ShareScopeType.ORG,
+        ],
+        [
+          'team skill',
+          new CreateTeamSkillShareCommand(mockSkillId, randomUUID()),
+          SharedEntityType.SKILL,
+          ShareScopeType.TEAM,
+        ],
+        [
+          'org knowledge base',
+          new CreateOrgKnowledgeBaseShareCommand(randomUUID()),
+          SharedEntityType.KNOWLEDGE_BASE,
+          ShareScopeType.ORG,
+        ],
+        [
+          'team knowledge base',
+          new CreateTeamKnowledgeBaseShareCommand(randomUUID(), randomUUID()),
+          SharedEntityType.KNOWLEDGE_BASE,
+          ShareScopeType.TEAM,
+        ],
+      ])(
+        'requires the scope permission for a %s share',
+        async (_label, command, entityType, scopeType) => {
+          await useCase.execute(command);
+
+          expect(
+            sharePermissionService.requireSharePermission,
+          ).toHaveBeenCalledWith(entityType, scopeType);
+        },
+      );
+
+      it('does not create the share when the scope permission is missing', async () => {
+        sharePermissionService.requireSharePermission.mockRejectedValueOnce(
+          new UnauthorizedAccessError(),
+        );
+
+        await expect(
+          useCase.execute(new CreateOrgSkillShareCommand(mockSkillId)),
+        ).rejects.toThrow(UnauthorizedAccessError);
+        expect(repository.create).not.toHaveBeenCalled();
+      });
     });
   });
 });

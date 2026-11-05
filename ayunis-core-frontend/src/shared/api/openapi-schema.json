@@ -14411,9 +14411,11 @@
                 "manage_teams",
                 "assign_users_to_teams",
                 "manage_skills",
-                "share_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
                 "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
               ]
             }
           }
@@ -14445,9 +14447,11 @@
                 "manage_teams",
                 "assign_users_to_teams",
                 "manage_skills",
-                "share_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
                 "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
               ]
             }
           }
@@ -14466,9 +14470,11 @@
                 "manage_teams",
                 "assign_users_to_teams",
                 "manage_skills",
-                "share_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
                 "manage_knowledge_bases",
-                "share_knowledge_bases"
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
               ]
             }
           }
