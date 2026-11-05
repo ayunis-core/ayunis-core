@@ -2,6 +2,10 @@ import type { StorageObject } from 'src/domain/storage/domain/storage-object.ent
 import type { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 import type { StorageBucket } from 'src/domain/storage/domain/storage-bucket.entity';
 import type { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import type {
+  IncompleteUpload,
+  UploadRequest,
+} from 'src/domain/storage/domain/multipart-upload.object';
 
 /** An object's key plus the metadata needed to age it against a safety window. */
 export interface StorageObjectSummary {
@@ -24,7 +28,10 @@ export abstract class ObjectStoragePort {
    * @param storageUrl Reference to the object to download
    * @returns A readable stream containing the object data
    */
-  abstract download(storageUrl: StorageUrl): Promise<NodeJS.ReadableStream>;
+  abstract download(
+    storageUrl: StorageUrl,
+    expectedETag?: string,
+  ): Promise<NodeJS.ReadableStream>;
 
   /**
    * Get object info without downloading the actual data
@@ -100,4 +107,25 @@ export abstract class ObjectStoragePort {
     prefix?: string,
     bucket?: string,
   ): Promise<StorageObjectSummary[]>;
+
+  /**
+   * Sign a browser-facing URL for one upload request on the object. Signing
+   * is local; the URL points at the public endpoint.
+   */
+  abstract presignUploadRequest(
+    storageUrl: StorageUrl,
+    request: UploadRequest,
+    expiresInSeconds: number,
+  ): Promise<string>;
+
+  abstract abortMultipartUpload(
+    storageUrl: StorageUrl,
+    uploadId: string,
+  ): Promise<void>;
+
+  /** Multipart uploads under `prefix` that were neither completed nor aborted. */
+  abstract listIncompleteUploads(
+    prefix: string,
+    bucket?: string,
+  ): Promise<IncompleteUpload[]>;
 }
