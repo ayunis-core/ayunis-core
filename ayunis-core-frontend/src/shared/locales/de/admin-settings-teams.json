@@ -69,10 +69,38 @@
       "title": "Mitglieder",
       "name": "Name",
       "email": "E-Mail",
-      "role": "Rolle",
+      "role": "Team-Rolle",
       "joinedAt": "Beigetreten",
       "emptyTitle": "Noch keine Mitglieder",
       "emptyDescription": "Fügen Sie Mitglieder zu diesem Team hinzu, um loszulegen."
+    },
+    "memberRole": {
+      "roles": {
+        "user": "Benutzer",
+        "manager": "Manager",
+        "admin": "Administrator"
+      },
+      "card": {
+        "intro": "In diesem Team dürfen sie:",
+        "none": "Keine zusätzlichen Berechtigungen in diesem Team.",
+        "footer": "Gemäß Rollen & Berechtigungen. Ihre Rolle in der Organisation gilt weiterhin.",
+        "adminFooter": "Team-Administratoren haben in ihrem Team immer alle Berechtigungen.",
+        "items": {
+          "manage_teams": "Das Team umbenennen",
+          "assign_users_to_teams": "Mitglieder hinzufügen und entfernen",
+          "share_skills_with_teams": "Fähigkeiten mit dem Team teilen",
+          "share_knowledge_bases_with_teams": "Wissenssammlungen mit dem Team teilen",
+          "manage_roles": "Team-Rollen ändern und Team-Administratoren entfernen"
+        }
+      },
+      "confirmTitle": "Teamrolle ändern",
+      "confirmDescription": "Rolle von {{name}} in diesem Team zu {{role}} ändern?",
+      "confirmButton": "Rolle ändern",
+      "cancelButton": "Abbrechen",
+      "success": "Teamrolle aktualisiert",
+      "error": "Teamrolle konnte nicht aktualisiert werden",
+      "notFound": "Mitglied nicht gefunden",
+      "lastAdmin": "Ein Team braucht mindestens einen Administrator"
     },
     "addMember": {
       "button": "Mitglieder hinzufügen",
@@ -128,7 +156,8 @@
       "cancelButton": "Abbrechen",
       "success": "Mitglied erfolgreich entfernt",
       "error": "Mitglied konnte nicht entfernt werden",
-      "notFound": "Mitglied nicht gefunden"
+      "notFound": "Mitglied nicht gefunden",
+      "lastAdmin": "Ein Team braucht mindestens einen Administrator"
     }
   },
   "models": {

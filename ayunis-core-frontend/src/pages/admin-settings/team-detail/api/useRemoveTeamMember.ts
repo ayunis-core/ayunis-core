@@ -1,38 +1,40 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from '@tanstack/react-router';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import {
-  useTeamMembersControllerRemoveTeamMember,
-  getTeamMembersControllerListTeamMembersQueryKey,
-  getTeamsControllerGetTeamQueryKey,
-  getTeamsControllerListTeamsQueryKey,
-  getTeamsControllerListMyTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamMembersControllerRemoveTeamMember } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { useInvalidateTeamMembership } from '@/pages/admin-settings/team-detail/api/useInvalidateTeamMembership';
 
 export function useRemoveTeamMember(teamId: string) {
   const { t } = useTranslation('admin-settings-teams');
-  const queryClient = useQueryClient();
-  const router = useRouter();
   const { confirm } = useConfirmation();
+  const invalidateMembership = useInvalidateTeamMembership(teamId);
   const [removingUserIds, setRemovingUserIds] = useState<Set<string>>(
     new Set(),
   );
 
   const mutation = useTeamMembersControllerRemoveTeamMember({
     mutation: {
-      onSuccess: () => {
+      onSuccess: async (_data, { userId }) => {
         showSuccess(t('teamDetail.removeMember.success'));
+        await invalidateMembership(userId);
       },
-      onError: (error: unknown) => {
-        const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj.response?.data?.code;
-
-        if (errorCode === 'TEAM_MEMBER_NOT_FOUND') {
-          showError(t('teamDetail.removeMember.notFound'));
-        } else {
+      onError: (error) => {
+        void invalidateMembership();
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'TEAM_MEMBER_NOT_FOUND':
+              showError(t('teamDetail.removeMember.notFound'));
+              break;
+            case 'TEAM_LAST_ADMIN':
+              showError(t('teamDetail.removeMember.lastAdmin'));
+              break;
+            default:
+              showError(t('teamDetail.removeMember.error'));
+          }
+        } catch {
           showError(t('teamDetail.removeMember.error'));
         }
       },
@@ -42,20 +44,6 @@ export function useRemoveTeamMember(teamId: string) {
           next.delete(variables.userId);
           return next;
         });
-        void queryClient.invalidateQueries({
-          queryKey: getTeamMembersControllerListTeamMembersQueryKey(teamId),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerGetTeamQueryKey(teamId),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerListTeamsQueryKey(),
-        });
-        // Invalidate my teams cache since membership changes affect shares tab
-        void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerListMyTeamsQueryKey(),
-        });
-        void router.invalidate();
       },
     },
   });

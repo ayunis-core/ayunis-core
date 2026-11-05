@@ -23,7 +23,7 @@ vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
 }));
 vi.mock('@/features/permissions', () => ({
   useAuthorization: () => ({ hasRole: () => state.isAdmin }),
-  PermissionGate: ({ children }: { children: ReactNode }) => children,
+  TeamPermissionGate: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock('@/features/credit-limits', () => ({
   useHasCreditBudget: (enabled: boolean) => enabled,

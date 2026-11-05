@@ -34,6 +34,7 @@ import { GetTeamAccessUseCase } from 'src/iam/teams/application/use-cases/get-te
 import { ListManageableTeamsUseCase } from 'src/iam/teams/application/use-cases/list-manageable-teams/list-manageable-teams.use-case';
 import { ListMyTeamAccessUseCase } from 'src/iam/teams/application/use-cases/list-my-team-access/list-my-team-access.use-case';
 import { UpdateTeamMemberRoleUseCase } from 'src/iam/teams/application/use-cases/update-team-member-role/update-team-member-role.use-case';
+import { GetTeamRolePermissionsUseCase } from 'src/iam/teams/application/use-cases/get-team-role-permissions/get-team-role-permissions.use-case';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { UpdateTeamMemberRoleUseCase } from 'src/iam/teams/application/use-cases
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,
+    GetTeamRolePermissionsUseCase,
   ],
   // TeamPermissionsGuard is exported so IamModule can bind it globally.
   exports: [
@@ -96,6 +98,7 @@ import { UpdateTeamMemberRoleUseCase } from 'src/iam/teams/application/use-cases
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,
+    GetTeamRolePermissionsUseCase,
   ],
 })
 export class TeamsApplicationModule {}

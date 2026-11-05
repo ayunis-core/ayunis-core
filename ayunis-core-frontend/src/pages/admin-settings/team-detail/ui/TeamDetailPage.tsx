@@ -23,7 +23,7 @@ import type {
   TeamDetail,
   PaginatedTeamMembers,
 } from '@/pages/admin-settings/team-detail/model/types';
-import { PermissionGate, useAuthorization } from '@/features/permissions';
+import { TeamPermissionGate, useAuthorization } from '@/features/permissions';
 import { PaginationWidget } from '@/widgets/pagination';
 
 interface TeamDetailPageProps {
@@ -73,7 +73,7 @@ export function TeamDetailPage({
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
   const headerActions = (
-    <PermissionGate permission="assign_users_to_teams">
+    <TeamPermissionGate teamId={team.id} permission="assign_users_to_teams">
       <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
         <Button
           size="sm"
@@ -83,7 +83,7 @@ export function TeamDetailPage({
           {t('teamDetail.addMember.button')}
         </Button>
       </OnboardingTourTarget>
-    </PermissionGate>
+    </TeamPermissionGate>
   );
 
   return (

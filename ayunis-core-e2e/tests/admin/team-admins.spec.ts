@@ -17,6 +17,7 @@ import {
   requestTeam,
   requestTeamMemberRemoval,
   requestTeamMemberRoleChange,
+  requestTeamRolePermissions,
   setTeamMemberRole,
 } from "../../src/clients/api/teams.client";
 import type { MailcatcherClient } from "../../src/clients/mailcatcher.client";
@@ -108,8 +109,24 @@ test("a team admin manages the members of their own team only", async ({
       (await requestAddTeamMember(lead.api, teamId, newcomer.user.id)).status(),
     ).toBe(403);
     expect(await listTeams(lead.api)).toEqual([]);
+    expect((await requestTeamRolePermissions(lead.api, teamId)).status()).toBe(
+      403,
+    );
 
     await setTeamMemberRole(adminApi, teamId, lead.user.id, "admin");
+
+    const rolePermissions = await requestTeamRolePermissions(lead.api, teamId);
+    expect(rolePermissions.status()).toBe(200);
+    const { roles } = (await rolePermissions.json()) as {
+      roles: { role: string; permissions: string[] }[];
+    };
+    expect(roles.find((r) => r.role === "user")?.permissions).toEqual([]);
+    expect(roles.find((r) => r.role === "admin")?.permissions).toContain(
+      "assign_users_to_teams",
+    );
+    expect(
+      (await requestTeamRolePermissions(lead.api, otherTeamId)).status(),
+    ).toBe(403);
 
     expect((await listTeams(lead.api)).map((team) => team.id)).toEqual([
       teamId,

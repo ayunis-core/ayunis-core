@@ -254,6 +254,7 @@ import type {
   TeamMemberResponseDto,
   TeamMembersControllerListTeamMembersParams,
   TeamResponseDto,
+  TeamRolePermissionsResponseDto,
   ThreadAiContextResponseDto,
   ThreadFavoriteResponseDto,
   ThreadSourcesControllerAddFileSourceBody,
@@ -9586,6 +9587,99 @@ export const useTeamsControllerDeleteTeam = <TError = void,
       > => {
       return useMutation(getTeamsControllerDeleteTeamMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary What each team role grants within a team
+ */
+export const teamsControllerGetTeamRolePermissions = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<TeamRolePermissionsResponseDto>(
+      {url: `/teams/${id}/role-permissions`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerGetTeamRolePermissionsQueryKey = (id: string,) => {
+    return [
+    `/teams/${id}/role-permissions`
+    ] as const;
+    }
+
+
+export const getTeamsControllerGetTeamRolePermissionsQueryOptions = <TData = Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamsControllerGetTeamRolePermissionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>> = ({ signal }) => teamsControllerGetTeamRolePermissions(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamsControllerGetTeamRolePermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>>
+export type TeamsControllerGetTeamRolePermissionsQueryError = void
+
+
+export function useTeamsControllerGetTeamRolePermissions<TData = Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerGetTeamRolePermissions<TData = Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerGetTeamRolePermissions<TData = Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary What each team role grants within a team
+ */
+
+export function useTeamsControllerGetTeamRolePermissions<TData = Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerGetTeamRolePermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamsControllerGetTeamRolePermissionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary List members of a team

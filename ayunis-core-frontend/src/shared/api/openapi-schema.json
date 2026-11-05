@@ -4647,6 +4647,41 @@
         "tags": ["teams"]
       }
     },
+    "/teams/{id}/role-permissions": {
+      "get": {
+        "operationId": "TeamsController_getTeamRolePermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamRolePermissionsResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed to manage members"
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        },
+        "summary": "What each team role grants within a team",
+        "tags": ["teams"]
+      }
+    },
     "/teams/{id}/members": {
       "get": {
         "operationId": "TeamMembersController_listTeamMembers",
@@ -16622,6 +16657,45 @@
           "role",
           "permissions"
         ]
+      },
+      "TeamRolePermissionSetDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["admin", "manager", "user"]
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Team-scoped permissions this role grants within the team",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
+                "manage_knowledge_bases",
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
+              ]
+            }
+          }
+        },
+        "required": ["role", "permissions"]
+      },
+      "TeamRolePermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamRolePermissionSetDto"
+            }
+          }
+        },
+        "required": ["roles"]
       },
       "TeamMemberResponseDto": {
         "type": "object",

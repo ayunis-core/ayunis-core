@@ -1,6 +1,14 @@
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
+/** The permissions a team role can change anything for within its team. */
+export const TEAM_SCOPED_PERMISSIONS: ReadonlyArray<Permission> = [
+  Permission.MANAGE_TEAMS,
+  Permission.ASSIGN_USERS_TO_TEAMS,
+  Permission.SHARE_SKILLS_WITH_TEAMS,
+  Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+];
+
 /**
  * What a user may do in one team: the permissions their organisation role
  * holds everywhere, plus the permissions their team role holds in this team.

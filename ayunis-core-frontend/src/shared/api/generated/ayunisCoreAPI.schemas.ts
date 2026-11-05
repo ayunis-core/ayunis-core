@@ -2207,6 +2207,39 @@ export interface MyTeamResponseDto {
   permissions: MyTeamResponseDtoPermissionsItem[];
 }
 
+export type TeamRolePermissionSetDtoRole = typeof TeamRolePermissionSetDtoRole[keyof typeof TeamRolePermissionSetDtoRole];
+
+
+export const TeamRolePermissionSetDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type TeamRolePermissionSetDtoPermissionsItem = typeof TeamRolePermissionSetDtoPermissionsItem[keyof typeof TeamRolePermissionSetDtoPermissionsItem];
+
+
+export const TeamRolePermissionSetDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+} as const;
+
+export interface TeamRolePermissionSetDto {
+  role: TeamRolePermissionSetDtoRole;
+  /** Team-scoped permissions this role grants within the team */
+  permissions: TeamRolePermissionSetDtoPermissionsItem[];
+}
+
+export interface TeamRolePermissionsResponseDto {
+  roles: TeamRolePermissionSetDto[];
+}
+
 /**
  * The role of the team member in the organization
  */

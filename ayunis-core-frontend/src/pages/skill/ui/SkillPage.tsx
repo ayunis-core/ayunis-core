@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type {
   ShareResponseDto,
-  TeamResponseDto,
+  MyTeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
@@ -54,7 +54,7 @@ export function SkillPage({
 }: Readonly<{
   skill: SkillResponseDto;
   shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
+  userTeams: MyTeamResponseDto[];
   isEmbeddingModelEnabled: boolean;
   initialTab?: 'config' | 'share';
 }>) {

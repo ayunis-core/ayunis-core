@@ -73,6 +73,13 @@ export function requestTeam(api: APIRequestContext, teamId: string) {
   return api.get(`${config.apiURL}/api/teams/${teamId}`);
 }
 
+export function requestTeamRolePermissions(
+  api: APIRequestContext,
+  teamId: string,
+) {
+  return api.get(`${config.apiURL}/api/teams/${teamId}/role-permissions`);
+}
+
 export function requestAddTeamMember(
   api: APIRequestContext,
   teamId: string,

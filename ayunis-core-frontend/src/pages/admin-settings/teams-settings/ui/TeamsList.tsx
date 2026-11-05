@@ -12,7 +12,7 @@ import {
 } from '@ayunis/ui/components/item';
 import { useDeleteTeam } from '@/pages/admin-settings/teams-settings/api/useDeleteTeam';
 import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
-import { PermissionGate } from '@/features/permissions';
+import { PermissionGate, TeamPermissionGate } from '@/features/permissions';
 
 interface TeamsListProps {
   teams: Team[];
@@ -52,7 +52,7 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             </ItemContent>
           </Link>
           <ItemActions>
-            <PermissionGate permission="manage_teams">
+            <TeamPermissionGate teamId={team.id} permission="manage_teams">
               <Button
                 variant="ghost"
                 size="icon"
@@ -60,9 +60,12 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
                   e.stopPropagation();
                   onEditTeam(team);
                 }}
+                data-testid={`teams-edit-${team.id}`}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+            </TeamPermissionGate>
+            <PermissionGate permission="manage_teams">
               <Button
                 variant="ghost"
                 size="icon"
@@ -72,6 +75,7 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
                   deleteTeam(team.id);
                 }}
                 disabled={isDeleting}
+                data-testid={`teams-delete-${team.id}`}
               >
                 <Trash2 />
               </Button>

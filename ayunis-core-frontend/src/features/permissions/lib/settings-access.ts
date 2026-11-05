@@ -6,15 +6,18 @@ const ALL_SETTINGS = '/admin-settings';
 /**
  * Settings sections a non-admin may reach if they hold one of the listed
  * permissions. Sections not listed here are admin-only. Extend this as more
- * role permissions map to settings screens.
+ * role permissions map to settings screens. `teamScoped` sections also open for
+ * a permission held only through a team role (e.g. a team admin).
  */
 export const MANAGER_SETTINGS_SECTIONS: ReadonlyArray<{
   path: string;
   anyOf: AppPermission[];
+  teamScoped?: boolean;
 }> = [
   {
     path: '/admin-settings/teams',
     anyOf: ['manage_teams', 'assign_users_to_teams'],
+    teamScoped: true,
   },
 ];
 
@@ -31,6 +34,8 @@ export function allowedSettingsSections(
   }
 
   return MANAGER_SETTINGS_SECTIONS.filter((section) =>
-    authorization.canAny(...section.anyOf),
+    section.teamScoped
+      ? authorization.canAnyInSomeTeam(...section.anyOf)
+      : authorization.canAny(...section.anyOf),
   ).map((section) => section.path);
 }

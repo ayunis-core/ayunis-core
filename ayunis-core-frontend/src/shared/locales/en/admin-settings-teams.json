@@ -69,10 +69,38 @@
       "title": "Members",
       "name": "Name",
       "email": "Email",
-      "role": "Role",
+      "role": "Team role",
       "joinedAt": "Joined",
       "emptyTitle": "No members yet",
       "emptyDescription": "Add members to this team to get started."
+    },
+    "memberRole": {
+      "roles": {
+        "user": "User",
+        "manager": "Manager",
+        "admin": "Admin"
+      },
+      "card": {
+        "intro": "In this team, they can:",
+        "none": "No additional permissions in this team.",
+        "footer": "Based on Roles & Permissions. Their organisation role still applies.",
+        "adminFooter": "Team admins always have every permission in their team.",
+        "items": {
+          "manage_teams": "Rename the team",
+          "assign_users_to_teams": "Add and remove members",
+          "share_skills_with_teams": "Share skills with the team",
+          "share_knowledge_bases_with_teams": "Share knowledge bases with the team",
+          "manage_roles": "Change team roles and remove team admins"
+        }
+      },
+      "confirmTitle": "Change Team Role",
+      "confirmDescription": "Change {{name}}'s role in this team to {{role}}?",
+      "confirmButton": "Change Role",
+      "cancelButton": "Cancel",
+      "success": "Team role updated",
+      "error": "Failed to update team role",
+      "notFound": "Member not found",
+      "lastAdmin": "A team needs at least one admin"
     },
     "addMember": {
       "button": "Add Members",
@@ -128,7 +156,8 @@
       "cancelButton": "Cancel",
       "success": "Member removed successfully",
       "error": "Failed to remove member",
-      "notFound": "Member not found"
+      "notFound": "Member not found",
+      "lastAdmin": "A team needs at least one admin"
     }
   },
   "models": {
