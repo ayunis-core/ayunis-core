@@ -11,9 +11,11 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 
 /**
  * Snapshots sources owned through a user's personal and workspace knowledge
- * bases before the database cascade removes them. Processing cleanup and index
- * deletion are deferred until the user row has been deleted successfully.
- * Failures are logged and never block user deletion.
+ * bases before the database cascade removes them. Processing cleanup, the
+ * release of retained originals (whose keys only the snapshot still knows
+ * once the rows are gone) and index deletion are deferred until the user row
+ * has been deleted successfully. Failures are logged and never block user
+ * deletion.
  */
 @Injectable()
 export class KnowledgeBasesUserDeletionRequestedListener {
@@ -51,6 +53,9 @@ export class KnowledgeBasesUserDeletionRequestedListener {
       const processingSourceIds = sources
         .filter((source) => source.status === SourceStatus.PROCESSING)
         .map((source) => source.id);
+      const storageKeys = sources
+        .map((source) => source.storageKey)
+        .filter((key): key is string => typeof key === 'string');
 
       this.logger.log(
         {
@@ -61,7 +66,11 @@ export class KnowledgeBasesUserDeletionRequestedListener {
         'Deferring knowledge base source cleanup for deleted user',
       );
 
-      this.deferSourceCleanup(event, sourceIds, processingSourceIds);
+      this.deferSourceCleanup(event, {
+        sourceIds,
+        processingSourceIds,
+        storageKeys,
+      });
     } catch (error) {
       this.logger.error(
         {
@@ -75,19 +84,29 @@ export class KnowledgeBasesUserDeletionRequestedListener {
 
   private deferSourceCleanup(
     event: UserDeletionRequestedEvent,
-    sourceIds: UUID[],
-    processingSourceIds: UUID[],
+    snapshot: {
+      sourceIds: UUID[];
+      processingSourceIds: UUID[];
+      storageKeys: string[];
+    },
   ): void {
-    if (processingSourceIds.length > 0) {
+    if (
+      snapshot.processingSourceIds.length > 0 ||
+      snapshot.storageKeys.length > 0
+    ) {
       event.deferCleanup('cleanup knowledge base source processing', () =>
         this.cleanupSourceProcessingUseCase.execute(
-          new CleanupSourceProcessingCommand(processingSourceIds, event.orgId),
+          new CleanupSourceProcessingCommand(
+            snapshot.processingSourceIds,
+            event.orgId,
+            snapshot.storageKeys,
+          ),
         ),
       );
     }
     event.deferCleanup('delete knowledge base source indexes', () =>
       this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sourceIds, event.orgId),
+        new DeleteSourcesCommand(snapshot.sourceIds, event.orgId),
       ),
     );
   }
