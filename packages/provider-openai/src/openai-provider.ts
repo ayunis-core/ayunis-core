@@ -30,6 +30,7 @@ import {
   convertTool,
   convertToolChoice,
 } from './convert-request';
+import { isOpenAICompatibleServerFault } from './classify-server-fault';
 
 // Bounds each connection attempt — the SDK aborts if the response hasn't
 // started, and clears the timer once streaming begins, so long healthy
@@ -181,6 +182,7 @@ async function* streamChat(
   const normalizedStream = normalizeProviderStreamErrors(stream, {
     stage: 'stream_consumption',
     signal: request.signal,
+    classifyServerFault: isOpenAICompatibleServerFault,
   });
   for await (const chunk of normalizedStream) {
     // Track the finish from the *raw* chunk, not the mapped ProviderChunk:
@@ -207,6 +209,7 @@ async function* streamResponses(
   const normalizedStream = normalizeProviderStreamErrors(stream, {
     stage: 'stream_consumption',
     signal: request.signal,
+    classifyServerFault: isOpenAICompatibleServerFault,
   });
   for await (const event of normalizedStream) {
     const converted = convertResponseEvent(event, codec, conversionState);
@@ -235,6 +238,7 @@ const createChatStream = async (
       stage: 'stream_establishment',
       signal,
       timeoutSource: 'response_start',
+      classifyServerFault: isOpenAICompatibleServerFault,
     });
   }
 };
@@ -254,6 +258,7 @@ const createResponsesStream = async (
       stage: 'stream_establishment',
       signal,
       timeoutSource: 'response_start',
+      classifyServerFault: isOpenAICompatibleServerFault,
     });
   }
 };
