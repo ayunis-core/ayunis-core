@@ -224,6 +224,8 @@ import type {
   SetUserDefaultModelDto,
   ShareResponseDto,
   SharesControllerGetSharesParams,
+  SignSourceUploadRequestDto,
+  SignedUploadUrlResponseDto,
   SkillListResponseDto,
   SkillResponseDto,
   SkillSourceResponseDto,
@@ -10441,6 +10443,143 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSuperAdminTeamsControllerRemoveTeamMutationOptions(options), queryClient);
+    }
+
+/**
+ * Returns a short-lived pre-signed URL for the given S3 request on the upload's server-chosen key. Call again to retry after the URL expired.
+ * @summary Sign one storage request of a direct upload
+ */
+export const sourceUploadsControllerSign = (
+    id: string,
+    signSourceUploadRequestDto: SignSourceUploadRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SignedUploadUrlResponseDto>(
+      {url: `/source-uploads/${id}/sign`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: signSourceUploadRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSourceUploadsControllerSignMutationKey = () => ['sourceUploadsControllerSign'] as const;
+
+export const getSourceUploadsControllerSignMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerSign>>, TError,SourceUploadsControllerSignMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerSign>>, TError,SourceUploadsControllerSignMutationVariables, TContext> => {
+
+const mutationKey = getSourceUploadsControllerSignMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourceUploadsControllerSign>>, SourceUploadsControllerSignMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sourceUploadsControllerSign(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SourceUploadsControllerSignMutationResult = NonNullable<Awaited<ReturnType<typeof sourceUploadsControllerSign>>>
+    export type SourceUploadsControllerSignMutationBody = SignSourceUploadRequestDto
+    export type SourceUploadsControllerSignMutationError = void
+    export type SourceUploadsControllerSignMutationVariables = {id: string;data: SignSourceUploadRequestDto}
+
+    /**
+ * @summary Sign one storage request of a direct upload
+ */
+export const useSourceUploadsControllerSign = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerSign>>, TError,SourceUploadsControllerSignMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sourceUploadsControllerSign>>,
+        TError,
+        SourceUploadsControllerSignMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSourceUploadsControllerSignMutationOptions(options), queryClient);
+    }
+
+/**
+ * A no-op for uploads that were already completed.
+ * @summary Abort an upload and discard what was transferred
+ */
+export const sourceUploadsControllerAbort = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/source-uploads/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSourceUploadsControllerAbortMutationKey = () => ['sourceUploadsControllerAbort'] as const;
+
+export const getSourceUploadsControllerAbortMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerAbort>>, TError,SourceUploadsControllerAbortMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerAbort>>, TError,SourceUploadsControllerAbortMutationVariables, TContext> => {
+
+const mutationKey = getSourceUploadsControllerAbortMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourceUploadsControllerAbort>>, SourceUploadsControllerAbortMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  sourceUploadsControllerAbort(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SourceUploadsControllerAbortMutationResult = NonNullable<Awaited<ReturnType<typeof sourceUploadsControllerAbort>>>
+
+    export type SourceUploadsControllerAbortMutationError = void
+    export type SourceUploadsControllerAbortMutationVariables = {id: string}
+
+    /**
+ * @summary Abort an upload and discard what was transferred
+ */
+export const useSourceUploadsControllerAbort = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourceUploadsControllerAbort>>, TError,SourceUploadsControllerAbortMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sourceUploadsControllerAbort>>,
+        TError,
+        SourceUploadsControllerAbortMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSourceUploadsControllerAbortMutationOptions(options), queryClient);
     }
 
 /**

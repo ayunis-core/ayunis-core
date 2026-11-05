@@ -2335,6 +2335,38 @@ export interface BulkAddTeamMembersDto {
   userIds: string[];
 }
 
+/**
+ * S3 request to sign: PUT (whole object, or a part with uploadId and partNumber), POST (initiate without uploadId, complete with uploadId), GET (list parts), DELETE (abort).
+ */
+export type SignSourceUploadRequestDtoMethod = typeof SignSourceUploadRequestDtoMethod[keyof typeof SignSourceUploadRequestDtoMethod];
+
+
+export const SignSourceUploadRequestDtoMethod = {
+  PUT: 'PUT',
+  POST: 'POST',
+  GET: 'GET',
+  DELETE: 'DELETE',
+} as const;
+
+export interface SignSourceUploadRequestDto {
+  /** S3 request to sign: PUT (whole object, or a part with uploadId and partNumber), POST (initiate without uploadId, complete with uploadId), GET (list parts), DELETE (abort). */
+  method: SignSourceUploadRequestDtoMethod;
+  /** S3 multipart upload id, for every multipart step after initiation */
+  uploadId?: string;
+  /**
+     * 1-based part number
+     * @minimum 1
+     */
+  partNumber?: number;
+}
+
+export interface SignedUploadUrlResponseDto {
+  /** Pre-signed URL the browser PUTs the bytes to */
+  url: string;
+  /** The URL stops working after this time; sign again to retry */
+  expiresAt: string;
+}
+
 export interface TranscriptionResponseDto {
   /** The transcribed text from the audio file */
   text: string;

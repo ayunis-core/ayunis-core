@@ -16,6 +16,10 @@ import {
   UrlSourceDetailsRecord,
 } from './schema/text-source-details.record';
 import { DataSourceDetailsRecord } from './schema/data-source-details.record';
+import { SourceUploadSessionRecord } from './schema/source-upload-session.record';
+import { SourceUploadSessionMapper } from './mappers/source-upload-session.mapper';
+import { LocalSourceUploadSessionRepository } from './local-source-upload-session.repository';
+import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 
 @Module({
   imports: [
@@ -28,6 +32,7 @@ import { DataSourceDetailsRecord } from './schema/data-source-details.record';
       FileSourceDetailsRecord,
       UrlSourceDetailsRecord,
       SourceContentChunkRecord,
+      SourceUploadSessionRecord,
     ]),
   ],
   providers: [
@@ -38,7 +43,13 @@ import { DataSourceDetailsRecord } from './schema/data-source-details.record';
       provide: SourceRepository,
       useExisting: LocalSourceRepository,
     },
+    SourceUploadSessionMapper,
+    LocalSourceUploadSessionRepository,
+    {
+      provide: SourceUploadSessionRepository,
+      useExisting: LocalSourceUploadSessionRepository,
+    },
   ],
-  exports: [SourceRepository, SourceMapper],
+  exports: [SourceRepository, SourceMapper, SourceUploadSessionRepository],
 })
 export class LocalSourceRepositoryModule {}
