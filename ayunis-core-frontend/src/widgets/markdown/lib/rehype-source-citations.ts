@@ -52,6 +52,7 @@ export function rehypeSourceCitations(options?: { separator?: string }) {
       tree,
       findSourceCitationMarkers(source, options?.separator),
     );
+    visitTextNodes(tree);
   };
 }
 

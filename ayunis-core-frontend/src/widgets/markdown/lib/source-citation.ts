@@ -1,9 +1,20 @@
 const UUID_PATTERN =
   '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
-const LABEL_PATTERN = '[^|{}\\r\\n]{1,200}';
+const LABEL_PATTERN = '[^|{}\\r\\n]{1,200}?';
 const SEPARATOR_PATTERN = String.raw`\\?\|`;
-const markerPattern = (separator: string) =>
-  `\\{\\{source:(${UUID_PATTERN})(?:${separator})(${LABEL_PATTERN})\\}\\}`;
+const OPENING_BRACES_PATTERN = String.raw`\{\{`;
+const CLOSING_BRACES_PATTERN = String.raw`\}\}`;
+const ESCAPABLE_OPENING_BRACES_PATTERN = String.raw`(?:\\)?\{(?:\\)?\{`;
+const ESCAPABLE_CLOSING_BRACES_PATTERN = String.raw`(?:\\)?\}(?:\\)?\}`;
+const markerPattern = (separator: string, escapedBraces = false) => {
+  const opening = escapedBraces
+    ? ESCAPABLE_OPENING_BRACES_PATTERN
+    : OPENING_BRACES_PATTERN;
+  const closing = escapedBraces
+    ? ESCAPABLE_CLOSING_BRACES_PATTERN
+    : CLOSING_BRACES_PATTERN;
+  return `${opening}source:(${UUID_PATTERN})(?:${separator})(${LABEL_PATTERN})${closing}`;
+};
 const MARKER_PATTERN = markerPattern(SEPARATOR_PATTERN);
 const FULL_MARKER_REGEX = new RegExp(`^${MARKER_PATTERN}$`);
 
@@ -38,7 +49,10 @@ export function findSourceCitationMarkers(
   const separator = protectedSeparator
     ? `${SEPARATOR_PATTERN}|${protectedSeparator}`
     : SEPARATOR_PATTERN;
-  const regex = new RegExp(`(?<!\\{)${markerPattern(separator)}(?!\\})`, 'g');
+  const regex = new RegExp(
+    `(?<!\\{)${markerPattern(separator, true)}(?!\\})`,
+    'g',
+  );
   return [...text.matchAll(regex)].map((match) => ({
     citation: { chunkId: match[1], label: match[2] },
     start: match.index,

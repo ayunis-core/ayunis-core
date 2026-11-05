@@ -200,6 +200,39 @@ describe('Markdown source citation rendering', () => {
     });
   });
 
+  it('renders Markdown-escaped citation markup as a button', () => {
+    const onCitationClick = vi.fn();
+    render(
+      <SourceCitationProvider onCitationClick={onCitationClick}>
+        <Markdown renderSourceCitations>
+          {String.raw`\{\{source:${CHUNK_ID}\|GR-Protokoll vom 21.12.2023, TOP 6\}\}`}
+        </Markdown>
+      </SourceCitationProvider>,
+    );
+
+    const citation = screen.getByRole('button', {
+      name: 'GR-Protokoll vom 21.12.2023, TOP 6',
+    });
+    fireEvent.click(citation);
+    expect(onCitationClick).toHaveBeenCalledWith({
+      chunkId: CHUNK_ID,
+      label: 'GR-Protokoll vom 21.12.2023, TOP 6',
+    });
+  });
+
+  it('renders a Markdown-escaped citation with a formatted label literally', () => {
+    const label = 'Budget *draft*.pdf';
+    render(
+      <SourceCitationProvider onCitationClick={vi.fn()}>
+        <Markdown renderSourceCitations>
+          {String.raw`\{\{source:${CHUNK_ID}\|${label}\}\}`}
+        </Markdown>
+      </SourceCitationProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: label }).textContent).toBe(label);
+  });
+
   it.each(['Budget *draft*.pdf', 'Run `report` now'])(
     'renders Markdown syntax in a valid label literally: %s',
     (label) => {
