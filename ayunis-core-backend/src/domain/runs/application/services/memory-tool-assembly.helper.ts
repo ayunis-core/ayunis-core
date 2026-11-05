@@ -1,4 +1,5 @@
 import type { Logger } from '@nestjs/common';
+import type { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
@@ -7,12 +8,22 @@ import type { FindUserMemoryUseCase } from 'src/domain/memory/application/use-ca
 import type { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 
 /**
- * Anonymous threads are excluded from memory entirely. PII there is replaced by
+ * Memory is an organization-level opt-in (`OrgChatSettings.memoryEnabled`).
+ * Anonymous threads stay excluded even when it is on: PII there is replaced by
  * per-thread `{{pii:…}}` placeholders, so anything written to memory would be
  * meaningless — and silently wrong — in every other thread.
  */
-export function isMemoryAvailable(args: { isAnonymous: boolean }): boolean {
-  return !args.isAnonymous;
+export async function resolveMemoryAvailability(args: {
+  isAnonymous: boolean;
+  getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase;
+}): Promise<boolean> {
+  if (args.isAnonymous) {
+    return false;
+  }
+
+  const settings = await args.getOrgChatSettingsUseCase.execute();
+
+  return settings.memoryEnabled;
 }
 
 export async function assembleMemoryTools(args: {

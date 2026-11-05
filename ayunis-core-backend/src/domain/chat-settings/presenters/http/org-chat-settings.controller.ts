@@ -25,7 +25,10 @@ export class OrgChatSettingsController {
   @ApiResponse({ status: 200, type: ChatStartDefaultsResponseDto })
   async getChatStartDefaults(): Promise<ChatStartDefaultsResponseDto> {
     const result = await this.getOrgChatSettingsUseCase.execute();
-    return { anonymousModeByDefault: result.anonymousModeByDefault };
+    return {
+      anonymousModeByDefault: result.anonymousModeByDefault,
+      memoryEnabled: result.memoryEnabled,
+    };
   }
 
   @Get('org-chat-settings')
@@ -50,6 +53,7 @@ export class OrgChatSettingsController {
     return {
       internetSearchEnabled: result.internetSearchEnabled,
       anonymousModeByDefault: result.anonymousModeByDefault,
+      memoryEnabled: result.memoryEnabled,
     };
   }
 
@@ -84,6 +88,7 @@ export class OrgChatSettingsController {
     return {
       internetSearchEnabled: result.internetSearchEnabled,
       anonymousModeByDefault: result.anonymousModeByDefault,
+      memoryEnabled: result.memoryEnabled,
     };
   }
 }

@@ -142,6 +142,8 @@ import type {
   McpOAuthClientMetadataDto,
   McpOAuthCompleteResponseDto,
   MeResponseDto,
+  MemoryEntryResponseDto,
+  MemoryResponseDto,
   MfaCodeRequestDto,
   MfaLoginConfirmResponseDto,
   MfaSetupResponseDto,
@@ -293,6 +295,7 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
+  UpsertMemoryEntryDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -22589,6 +22592,303 @@ export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awai
 
 
 
+
+/**
+ * Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.
+ * @summary List the memory of the authenticated user
+ */
+export const memoryControllerFindAll = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<MemoryResponseDto>(
+      {url: `/memory`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMemoryControllerFindAllQueryKey = () => {
+    return [
+    `/memory`
+    ] as const;
+    }
+
+
+export const getMemoryControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMemoryControllerFindAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof memoryControllerFindAll>>> = ({ signal }) => memoryControllerFindAll(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MemoryControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof memoryControllerFindAll>>>
+export type MemoryControllerFindAllQueryError = unknown
+
+
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof memoryControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof memoryControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof memoryControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof memoryControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the memory of the authenticated user
+ */
+
+export function useMemoryControllerFindAll<TData = Awaited<ReturnType<typeof memoryControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof memoryControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMemoryControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Delete the whole memory of the authenticated user
+ */
+export const memoryControllerClear = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/memory`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getMemoryControllerClearMutationKey = () => ['memoryControllerClear'] as const;
+
+export const getMemoryControllerClearMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext> => {
+
+const mutationKey = getMemoryControllerClearMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerClear>>, void> = () => {
+
+
+          return  memoryControllerClear()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MemoryControllerClearMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerClear>>>
+
+    export type MemoryControllerClearMutationError = unknown
+
+
+    /**
+ * @summary Delete the whole memory of the authenticated user
+ */
+export const useMemoryControllerClear = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerClear>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof memoryControllerClear>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getMemoryControllerClearMutationOptions(options), queryClient);
+    }
+
+/**
+ * Replaces the whole snippet stored under this key for the authenticated user.
+ * @summary Create or replace a memory entry
+ */
+export const memoryControllerUpsert = (
+    key: string,
+    upsertMemoryEntryDto: UpsertMemoryEntryDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<MemoryEntryResponseDto>(
+      {url: `/memory/${key}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertMemoryEntryDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getMemoryControllerUpsertMutationKey = () => ['memoryControllerUpsert'] as const;
+
+export const getMemoryControllerUpsertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext> => {
+
+const mutationKey = getMemoryControllerUpsertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerUpsert>>, MemoryControllerUpsertMutationVariables> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  memoryControllerUpsert(key,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MemoryControllerUpsertMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerUpsert>>>
+    export type MemoryControllerUpsertMutationBody = UpsertMemoryEntryDto
+    export type MemoryControllerUpsertMutationError = void
+    export type MemoryControllerUpsertMutationVariables = {key: string;data: UpsertMemoryEntryDto}
+
+    /**
+ * @summary Create or replace a memory entry
+ */
+export const useMemoryControllerUpsert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerUpsert>>, TError,MemoryControllerUpsertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof memoryControllerUpsert>>,
+        TError,
+        MemoryControllerUpsertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMemoryControllerUpsertMutationOptions(options), queryClient);
+    }
+
+/**
+ * Removes the entry. A reserved key stays available to the assistant and becomes empty.
+ * @summary Delete a memory entry
+ */
+export const memoryControllerDelete = (
+    key: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/memory/${key}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getMemoryControllerDeleteMutationKey = () => ['memoryControllerDelete'] as const;
+
+export const getMemoryControllerDeleteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext> => {
+
+const mutationKey = getMemoryControllerDeleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof memoryControllerDelete>>, MemoryControllerDeleteMutationVariables> = (props) => {
+          const {key} = props ?? {};
+
+          return  memoryControllerDelete(key,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MemoryControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof memoryControllerDelete>>>
+
+    export type MemoryControllerDeleteMutationError = unknown
+    export type MemoryControllerDeleteMutationVariables = {key: string}
+
+    /**
+ * @summary Delete a memory entry
+ */
+export const useMemoryControllerDelete = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof memoryControllerDelete>>, TError,MemoryControllerDeleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof memoryControllerDelete>>,
+        TError,
+        MemoryControllerDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMemoryControllerDeleteMutationOptions(options), queryClient);
+    }
 
 /**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.

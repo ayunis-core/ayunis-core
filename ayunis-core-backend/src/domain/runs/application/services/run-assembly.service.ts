@@ -9,7 +9,6 @@ import {
   MemoryNudgeHookFactory,
   shouldNudgeMemory,
 } from 'src/domain/runs/application/agent-runtime/hooks/memory-nudge-hook.factory';
-import { isMemoryAvailable } from 'src/domain/runs/application/services/memory-tool-assembly.helper';
 import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
@@ -137,9 +136,7 @@ export class RunAssemblyService {
   }
 
   private buildMemoryNudgeHooks(prepared: PreparedRun): Hook[] {
-    const memoryUsable =
-      isMemoryAvailable({ isAnonymous: prepared.isAnonymous }) &&
-      prepared.model.canUseTools;
+    const memoryUsable = prepared.memoryAvailable && prepared.model.canUseTools;
 
     if (!memoryUsable || !shouldNudgeMemory(prepared.thread.messages)) {
       return [];

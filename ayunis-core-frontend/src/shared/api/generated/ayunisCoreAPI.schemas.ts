@@ -4953,6 +4953,33 @@ export interface UpdateLetterheadDto {
   removeContinuationPage?: string;
 }
 
+export interface MemoryEntryResponseDto {
+  /** The key the snippet is stored under */
+  key: string;
+  /** The stored snippet. Empty for a reserved key with no content */
+  content: string;
+  /** Whether this key is always offered to the assistant and cannot be removed */
+  isReserved: boolean;
+  /**
+     * When the snippet was last written, or null if it has none
+     * @nullable
+     */
+  updatedAt: string | null;
+}
+
+export interface MemoryResponseDto {
+  /** All memory entries of the authenticated user. The reserved keys are always present, the reserved keys first. */
+  entries: MemoryEntryResponseDto[];
+}
+
+export interface UpsertMemoryEntryDto {
+  /**
+     * The snippet to store under this key
+     * @maxLength 2000
+     */
+  content: string;
+}
+
 /**
  * Type of the message content
  */
@@ -5256,6 +5283,8 @@ export interface UpsertOrgSystemPromptDto {
 export interface ChatStartDefaultsResponseDto {
   /** Whether new chats start in anonymous mode; users may opt out */
   anonymousModeByDefault: boolean;
+  /** Whether the AI assistant may remember durable facts about the user across chats */
+  memoryEnabled: boolean;
 }
 
 export interface OrgChatSettingsResponseDto {
@@ -5263,6 +5292,8 @@ export interface OrgChatSettingsResponseDto {
   internetSearchEnabled: boolean;
   /** Whether new chats start in anonymous mode */
   anonymousModeByDefault: boolean;
+  /** Whether the AI assistant may remember durable facts about each user across chats */
+  memoryEnabled: boolean;
 }
 
 export interface UpsertOrgChatSettingsDto {
@@ -5270,6 +5301,8 @@ export interface UpsertOrgChatSettingsDto {
   internetSearchEnabled?: boolean;
   /** Whether new chats start in anonymous mode; users can opt out */
   anonymousModeByDefault?: boolean;
+  /** Whether the AI assistant may remember durable facts about each user across chats */
+  memoryEnabled?: boolean;
 }
 
 export interface RetentionPolicyResponseDto {

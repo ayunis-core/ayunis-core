@@ -46,6 +46,9 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
     if (settings.anonymousModeByDefault !== undefined) {
       suppliedSettings.anonymousModeByDefault = settings.anonymousModeByDefault;
     }
+    if (settings.memoryEnabled !== undefined) {
+      suppliedSettings.memoryEnabled = settings.memoryEnabled;
+    }
     // Updating only supplied columns prevents concurrent toggles from overwriting each other.
     const result = await this.repository
       .createQueryBuilder()

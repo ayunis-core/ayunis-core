@@ -60,6 +60,24 @@ describe('UpsertOrgChatSettingsUseCase', () => {
     });
   });
 
+  it('passes only the memory flag to persistence, preserving the other settings', async () => {
+    const saved = new OrgChatSettings({
+      orgId,
+      internetSearchEnabled: false,
+      memoryEnabled: true,
+    });
+    repository.upsert.mockResolvedValue(saved);
+
+    const result = await useCase.execute(
+      new UpsertOrgChatSettingsCommand({ memoryEnabled: true }),
+    );
+
+    expect(result).toEqual(saved);
+    expect(repository.upsert).toHaveBeenCalledWith(orgId, {
+      memoryEnabled: true,
+    });
+  });
+
   it('should throw UnauthorizedAccessError when orgId is missing from context', async () => {
     contextService.get.mockReturnValue(undefined);
 

@@ -17,6 +17,7 @@ describe('OrgChatSettingsMapper', () => {
         orgId: randomUUID(),
         internetSearchEnabled: false,
         anonymousModeByDefault: true,
+        memoryEnabled: true,
         createdAt: new Date('2026-01-15T10:00:00Z'),
         updatedAt: new Date('2026-02-10T14:30:00Z'),
       });
@@ -27,6 +28,7 @@ describe('OrgChatSettingsMapper', () => {
       expect(restored.id).toEqual(original.id);
       expect(restored.orgId).toEqual(original.orgId);
       expect(restored).toHaveProperty('anonymousModeByDefault', true);
+      expect(restored).toHaveProperty('memoryEnabled', true);
       expect(restored.internetSearchEnabled).toEqual(
         original.internetSearchEnabled,
       );

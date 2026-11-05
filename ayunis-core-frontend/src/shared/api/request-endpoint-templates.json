@@ -89,6 +89,8 @@
   "/mcp-integrations/{id}/oauth/authorize",
   "/mcp-integrations/{id}/user-config",
   "/mcp-integrations/{id}/validate",
+  "/memory",
+  "/memory/{key}",
   "/mfa/disable",
   "/mfa/org",
   "/mfa/setup",

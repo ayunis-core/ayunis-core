@@ -10783,6 +10783,102 @@
         "tags": ["letterheads"]
       }
     },
+    "/memory": {
+      "get": {
+        "description": "Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.",
+        "operationId": "MemoryController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The memory of the authenticated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the memory of the authenticated user",
+        "tags": ["Memory"]
+      },
+      "delete": {
+        "operationId": "MemoryController_clear",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "The memory is empty"
+          }
+        },
+        "summary": "Delete the whole memory of the authenticated user",
+        "tags": ["Memory"]
+      }
+    },
+    "/memory/{key}": {
+      "put": {
+        "description": "Replaces the whole snippet stored under this key for the authenticated user.",
+        "operationId": "MemoryController_upsert",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMemoryEntryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The stored memory entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryEntryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid key or content"
+          }
+        },
+        "summary": "Create or replace a memory entry",
+        "tags": ["Memory"]
+      },
+      "delete": {
+        "description": "Removes the entry. A reserved key stays available to the assistant and becomes empty.",
+        "operationId": "MemoryController_delete",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The entry no longer exists"
+          }
+        },
+        "summary": "Delete a memory entry",
+        "tags": ["Memory"]
+      }
+    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -21206,6 +21302,58 @@
           }
         }
       },
+      "MemoryEntryResponseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key the snippet is stored under",
+            "example": "personal"
+          },
+          "content": {
+            "type": "string",
+            "description": "The stored snippet. Empty for a reserved key with no content",
+            "example": "Works in the building authority of the city of Musterstadt."
+          },
+          "isReserved": {
+            "type": "boolean",
+            "description": "Whether this key is always offered to the assistant and cannot be removed",
+            "example": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the snippet was last written, or null if it has none",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": ["key", "content", "isReserved", "updatedAt"]
+      },
+      "MemoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "All memory entries of the authenticated user. The reserved keys are always present, the reserved keys first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryEntryResponseDto"
+            }
+          }
+        },
+        "required": ["entries"]
+      },
+      "UpsertMemoryEntryDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The snippet to store under this key",
+            "example": "Works in the building authority of the city of Musterstadt.",
+            "maxLength": 2000
+          }
+        },
+        "required": ["content"]
+      },
       "MessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -21687,9 +21835,14 @@
             "type": "boolean",
             "description": "Whether new chats start in anonymous mode; users may opt out",
             "example": false
+          },
+          "memoryEnabled": {
+            "type": "boolean",
+            "description": "Whether the AI assistant may remember durable facts about the user across chats",
+            "example": false
           }
         },
-        "required": ["anonymousModeByDefault"]
+        "required": ["anonymousModeByDefault", "memoryEnabled"]
       },
       "OrgChatSettingsResponseDto": {
         "type": "object",
@@ -21703,9 +21856,18 @@
             "type": "boolean",
             "description": "Whether new chats start in anonymous mode",
             "example": false
+          },
+          "memoryEnabled": {
+            "type": "boolean",
+            "description": "Whether the AI assistant may remember durable facts about each user across chats",
+            "example": false
           }
         },
-        "required": ["internetSearchEnabled", "anonymousModeByDefault"]
+        "required": [
+          "internetSearchEnabled",
+          "anonymousModeByDefault",
+          "memoryEnabled"
+        ]
       },
       "UpsertOrgChatSettingsDto": {
         "type": "object",
@@ -21718,6 +21880,11 @@
           "anonymousModeByDefault": {
             "type": "boolean",
             "description": "Whether new chats start in anonymous mode; users can opt out",
+            "example": false
+          },
+          "memoryEnabled": {
+            "type": "boolean",
+            "description": "Whether the AI assistant may remember durable facts about each user across chats",
             "example": false
           }
         }

@@ -6,4 +6,11 @@ export class ChatStartDefaultsResponseDto {
     example: false,
   })
   anonymousModeByDefault: boolean;
+
+  @ApiProperty({
+    description:
+      'Whether the AI assistant may remember durable facts about the user across chats',
+    example: false,
+  })
+  memoryEnabled: boolean;
 }

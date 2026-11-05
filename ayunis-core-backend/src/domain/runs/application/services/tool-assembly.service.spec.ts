@@ -106,7 +106,10 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const getOrgChatSettingsUseCase = {
       execute:
         overrides.orgChatSettingsExecute ??
-        jest.fn().mockResolvedValue({ internetSearchEnabled: true }),
+        jest.fn().mockResolvedValue({
+          internetSearchEnabled: true,
+          memoryEnabled: true,
+        }),
     };
 
     const findUserMemoryUseCase = {
@@ -568,7 +571,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
           userMemoryExecute: jest.fn().mockResolvedValue([memoryEntry]),
         });
 
-      const { tools } = await service.buildRunContext(
+      const { tools, memoryAvailable } = await service.buildRunContext(
         createMockThread(),
         [],
         true,
@@ -576,6 +579,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       );
 
       const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+      expect(memoryAvailable).toBe(true);
       expect(toolTypes).toContain(ToolType.GET_MEMORY);
       expect(toolTypes).toContain(ToolType.SET_MEMORY);
       expect(findUserMemoryUseCase.execute).toHaveBeenCalled();
@@ -604,6 +608,34 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       );
 
       const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+      expect(toolTypes).not.toContain(ToolType.GET_MEMORY);
+      expect(toolTypes).not.toContain(ToolType.SET_MEMORY);
+      expect(findUserMemoryUseCase.execute).not.toHaveBeenCalled();
+      expect(systemPromptBuilderService.build).toHaveBeenCalledWith(
+        expect.objectContaining({ memory: [], memoryToolsAvailable: false }),
+      );
+    });
+
+    it('neither reads nor offers memory when the organization has it disabled', async () => {
+      const { service, findUserMemoryUseCase, systemPromptBuilderService } =
+        await buildService({
+          contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+          orgChatSettingsExecute: jest.fn().mockResolvedValue({
+            internetSearchEnabled: true,
+            memoryEnabled: false,
+          }),
+          userMemoryExecute: jest.fn().mockResolvedValue([memoryEntry]),
+        });
+
+      const { tools, memoryAvailable } = await service.buildRunContext(
+        createMockThread(),
+        [],
+        true,
+        false,
+      );
+
+      const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+      expect(memoryAvailable).toBe(false);
       expect(toolTypes).not.toContain(ToolType.GET_MEMORY);
       expect(toolTypes).not.toContain(ToolType.SET_MEMORY);
       expect(findUserMemoryUseCase.execute).not.toHaveBeenCalled();

@@ -138,7 +138,7 @@ export class ExecuteRunUseCase {
       command,
       found.thread,
     );
-    const { tools, instructions } =
+    const { tools, instructions, memoryAvailable } =
       await this.toolAssemblyService.buildRunContext(
         activated.thread,
         activeSkills,
@@ -153,6 +153,7 @@ export class ExecuteRunUseCase {
       orgId,
       userId,
       isAnonymous: anonymous,
+      memoryAvailable,
       instructions: appendSkillActivatedNote(instructions, activated.skillName),
       ...this.prepareTools(tools),
       activeSkills,

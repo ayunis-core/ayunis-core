@@ -9,7 +9,8 @@ export class UpsertOrgChatSettingsDto {
   @ValidateIf(
     (dto: UpsertOrgChatSettingsDto) =>
       dto.internetSearchEnabled !== undefined ||
-      dto.anonymousModeByDefault === undefined,
+      (dto.anonymousModeByDefault === undefined &&
+        dto.memoryEnabled === undefined),
   )
   @IsBoolean()
   internetSearchEnabled?: boolean;
@@ -23,4 +24,15 @@ export class UpsertOrgChatSettingsDto {
   )
   @IsBoolean()
   anonymousModeByDefault?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether the AI assistant may remember durable facts about each user across chats',
+    example: false,
+  })
+  @ValidateIf(
+    (dto: UpsertOrgChatSettingsDto) => dto.memoryEnabled !== undefined,
+  )
+  @IsBoolean()
+  memoryEnabled?: boolean;
 }

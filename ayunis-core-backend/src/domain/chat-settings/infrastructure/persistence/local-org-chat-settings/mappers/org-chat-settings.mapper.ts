@@ -10,6 +10,7 @@ export class OrgChatSettingsMapper {
       orgId: record.orgId,
       internetSearchEnabled: record.internetSearchEnabled,
       anonymousModeByDefault: record.anonymousModeByDefault,
+      memoryEnabled: record.memoryEnabled,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -21,6 +22,7 @@ export class OrgChatSettingsMapper {
     record.orgId = domain.orgId;
     record.internetSearchEnabled = domain.internetSearchEnabled;
     record.anonymousModeByDefault = domain.anonymousModeByDefault;
+    record.memoryEnabled = domain.memoryEnabled;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

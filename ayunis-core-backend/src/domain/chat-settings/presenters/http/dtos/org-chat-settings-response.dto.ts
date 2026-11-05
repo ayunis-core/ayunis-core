@@ -12,4 +12,11 @@ export class OrgChatSettingsResponseDto {
     example: false,
   })
   anonymousModeByDefault: boolean;
+
+  @ApiProperty({
+    description:
+      'Whether the AI assistant may remember durable facts about each user across chats',
+    example: false,
+  })
+  memoryEnabled: boolean;
 }

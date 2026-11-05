@@ -32,12 +32,12 @@ Memory is strictly personal. Every use case derives the owner from the request c
 
 Controller: `MemoryController`, base path `/memory`, tag `Memory`
 
-| Method | Path            | Description                                                     |
-| ------ | --------------- | --------------------------------------------------------------- |
-| GET    | `/memory`       | List the user's memory; reserved keys always included, first     |
-| PUT    | `/memory/:key`  | Create or replace one entry                                      |
-| DELETE | `/memory/:key`  | Delete one entry (clear, for a reserved key)                     |
-| DELETE | `/memory`       | Delete the user's whole memory                                   |
+| Method | Path           | Description                                                  |
+| ------ | -------------- | ------------------------------------------------------------ |
+| GET    | `/memory`      | List the user's memory; reserved keys always included, first |
+| PUT    | `/memory/:key` | Create or replace one entry                                  |
+| DELETE | `/memory/:key` | Delete one entry (clear, for a reserved key)                 |
+| DELETE | `/memory`      | Delete the user's whole memory                               |
 
 ## Exports
 
@@ -52,6 +52,7 @@ Controller: `MemoryController`, base path `/memory`, tag `Memory`
 
 ## Boundaries
 
+- **Memory is an organization-level opt-in.** `OrgChatSettings.memoryEnabled` (chat-settings module, default `false`) gates the tools, the prompt section and the nudge. The `/memory` API is not gated, so a user can still inspect and delete stored entries after an admin switches memory off.
 - **Anonymous threads are excluded entirely** — no tools, no prompt section, no nudge. PII there is replaced with per-thread `{{pii:…}}` placeholders, so anything written to memory would be meaningless in every other thread.
 - **Memory never enters the transcript.** It lives in the run instructions, which are not persisted, so sharing a thread does not expose it. A `get_memory` tool *result* is persisted like any other tool result.
 - A memory read failure degrades the run to one without memory rather than failing the chat.

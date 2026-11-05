@@ -1,12 +1,12 @@
 # Chat Settings Module
 
-Chat configuration at user and organization scope. Contains the **user system prompt** feature — a personal system prompt that gets injected into every AI conversation — the **org system prompt** feature — an organization-wide system prompt set by org admins and injected into all conversations of the org's users — and **org chat settings**, an organization-wide toggle that controls whether internet access (web search + website content tools) is offered to the AI assistant.
+Chat configuration at user and organization scope. Contains the **user system prompt** feature — a personal system prompt that gets injected into every AI conversation — the **org system prompt** feature — an organization-wide system prompt set by org admins and injected into all conversations of the org's users — and **org chat settings**, organization-wide toggles that control whether internet access (web search + website content tools) and per-user memory are offered to the AI assistant.
 
 ## Domain Entities
 
 - **`UserSystemPrompt`** — A user's custom system prompt (`id`, `userId`, `systemPrompt`, `createdAt`, `updatedAt`). One per user, upsert semantics.
 - **`OrgSystemPrompt`** — An organization-wide system prompt (`id`, `orgId`, `systemPrompt`, `createdAt`, `updatedAt`). One per org, upsert semantics.
-- **`OrgChatSettings`** — Organization-wide chat configuration (`id`, `orgId`, `internetSearchEnabled`, `anonymousModeByDefault`, `createdAt`, `updatedAt`). One per org, atomic partial upsert semantics. `anonymousModeByDefault` defaults to `false`; admins can enable it and users can opt out per new chat. Existing threads are unchanged. `internetSearchEnabled` defaults to `true` (internet access on); when `false`, the runs module omits the web search and website content tools from all of the org's conversations.
+- **`OrgChatSettings`** — Organization-wide chat configuration (`id`, `orgId`, `internetSearchEnabled`, `anonymousModeByDefault`, `memoryEnabled`, `createdAt`, `updatedAt`). One per org, atomic partial upsert semantics. `anonymousModeByDefault` defaults to `false`; admins can enable it and users can opt out per new chat. Existing threads are unchanged. `internetSearchEnabled` defaults to `true` (internet access on); when `false`, the runs module omits the web search and website content tools from all of the org's conversations. `memoryEnabled` defaults to `false` (memory off); when `true`, the runs module loads the user's memory, offers the `get_memory`/`set_memory` tools and schedules the memory nudge in non-anonymous conversations. The `/memory` API stays reachable either way, so users can still inspect and delete what was stored.
 
 ## Ports
 
@@ -50,7 +50,7 @@ Controllers: `ChatSettingsController` (user self-service), `OrgSystemPromptContr
 | GET    | `/chat-settings/org-system-prompt`                   | Get org-wide system prompt (org admin only)                  |
 | PUT    | `/chat-settings/org-system-prompt`                   | Set/update org-wide system prompt (org admin only)           |
 | DELETE | `/chat-settings/org-system-prompt`                   | Delete org-wide system prompt (org admin only)               |
-| GET    | `/chat-settings/chat-start-defaults`                 | Read only anonymous-mode default (authenticated org members) |
+| GET    | `/chat-settings/chat-start-defaults`                 | Read anonymous-mode default and memory flag (org members)    |
 | GET    | `/chat-settings/org-chat-settings`                   | Get org-wide chat settings (org admin only)                  |
 | PUT    | `/chat-settings/org-chat-settings`                   | Set/update org-wide chat settings (org admin only)           |
 | POST   | `/chat-settings/generate-personalized-system-prompt` | Generate and save a personalized system prompt               |
@@ -59,7 +59,7 @@ Controllers: `ChatSettingsController` (user self-service), `OrgSystemPromptContr
 
 - `GetUserSystemPromptUseCase` — Used by the runs module to inject user instructions into the system prompt
 - `GetOrgSystemPromptUseCase` — Used by the runs module to inject organization instructions into the system prompt
-- `GetOrgChatSettingsUseCase` — Used by the runs module to decide whether internet access (web search + website content) tools are offered
+- `GetOrgChatSettingsUseCase` — Used by the runs module to decide whether internet access (web search + website content) tools and memory are offered
 
 ## Future
 
