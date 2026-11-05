@@ -21,6 +21,7 @@ export class SourceUploadSession {
   fileType: string;
   fileSize: number;
   storageKey: string;
+  expectedETag: string | null;
   /** Whether the browser transfers the file as an S3 multipart upload. */
   multipart: boolean;
   /**
@@ -45,6 +46,7 @@ export class SourceUploadSession {
     fileType: string;
     fileSize: number;
     storageKey: string;
+    expectedETag?: string | null;
     multipart?: boolean;
     multipartUploadId?: string | null;
     status?: SourceUploadSessionStatus;
@@ -62,6 +64,7 @@ export class SourceUploadSession {
     this.fileType = params.fileType;
     this.fileSize = params.fileSize;
     this.storageKey = params.storageKey;
+    this.expectedETag = params.expectedETag ?? null;
     this.multipart = params.multipart ?? false;
     this.multipartUploadId = params.multipartUploadId ?? null;
     this.status = params.status ?? SourceUploadSessionStatus.PENDING;

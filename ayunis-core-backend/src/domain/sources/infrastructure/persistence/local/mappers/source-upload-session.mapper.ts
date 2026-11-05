@@ -15,10 +15,17 @@ export class SourceUploadSessionMapper {
       fileType: record.fileType,
       fileSize: Number(record.fileSize),
       storageKey: record.storageKey,
+      expectedETag:
+        record.expectedETag ??
+        record.sources.find((source) => source.expectedETag)?.expectedETag ??
+        null,
       multipart: record.multipart,
       multipartUploadId: record.multipartUploadId,
       status: record.status,
-      sources: record.sources,
+      sources: record.sources.map(({ sourceId, sheetName }) => ({
+        sourceId,
+        sheetName,
+      })),
       expiresAt: record.expiresAt,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -36,6 +43,7 @@ export class SourceUploadSessionMapper {
     record.fileType = session.fileType;
     record.fileSize = String(session.fileSize);
     record.storageKey = session.storageKey;
+    record.expectedETag = session.expectedETag;
     record.multipart = session.multipart;
     record.multipartUploadId = session.multipartUploadId;
     record.status = session.status;

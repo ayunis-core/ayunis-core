@@ -124,15 +124,18 @@ describe('CompleteSourceUploadUseCase', () => {
   function pendingThenCreated() {
     const pending = buildUploadSession();
     sessions.findById.mockResolvedValueOnce(pending);
-    sessions.updateSources.mockImplementation((_id, sources) => {
-      sessions.findById.mockResolvedValueOnce(
-        buildUploadSession({
-          status: SourceUploadSessionStatus.SOURCES_CREATED,
-          sources,
-        }),
-      );
-      return Promise.resolve();
-    });
+    sessions.recordVerifiedSources.mockImplementation(
+      (_id, sources, expectedETag) => {
+        sessions.findById.mockResolvedValueOnce(
+          buildUploadSession({
+            status: SourceUploadSessionStatus.SOURCES_CREATED,
+            sources,
+            expectedETag,
+          }),
+        );
+        return Promise.resolve();
+      },
+    );
     return pending;
   }
 
@@ -153,9 +156,11 @@ describe('CompleteSourceUploadUseCase', () => {
       SourceUploadSessionStatus.PENDING,
       SourceUploadSessionStatus.SOURCES_CREATED,
     );
-    expect(sessions.updateSources).toHaveBeenCalledWith(UPLOAD_SESSION_ID, [
-      expect.objectContaining({ expectedETag: 'verified' }),
-    ]);
+    expect(sessions.recordVerifiedSources).toHaveBeenCalledWith(
+      UPLOAD_SESSION_ID,
+      [expect.objectContaining({ sheetName: null })],
+      'verified',
+    );
     expect(queueing.tryQueue).toHaveBeenCalledTimes(1);
     expect(result.alreadyCompleted).toBe(false);
     expect(result.sources).toHaveLength(1);
@@ -288,7 +293,7 @@ describe('CompleteSourceUploadUseCase', () => {
     const result = await useCase.execute(command());
 
     expect(createProcessingSource.execute).not.toHaveBeenCalled();
-    expect(sessions.updateSources).not.toHaveBeenCalled();
+    expect(sessions.recordVerifiedSources).not.toHaveBeenCalled();
     expect(result.sources.map((s) => s.id)).toEqual([sourceId]);
   });
 
@@ -300,15 +305,18 @@ describe('CompleteSourceUploadUseCase', () => {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       }),
     );
-    sessions.updateSources.mockImplementation((_id, sources) => {
-      sessions.findById.mockResolvedValueOnce(
-        buildUploadSession({
-          status: SourceUploadSessionStatus.SOURCES_CREATED,
-          sources,
-        }),
-      );
-      return Promise.resolve();
-    });
+    sessions.recordVerifiedSources.mockImplementation(
+      (_id, sources, expectedETag) => {
+        sessions.findById.mockResolvedValueOnce(
+          buildUploadSession({
+            status: SourceUploadSessionStatus.SOURCES_CREATED,
+            sources,
+            expectedETag,
+          }),
+        );
+        return Promise.resolve();
+      },
+    );
     const ensureCapacityFor = jest.fn();
 
     await useCase.execute(command({ ensureCapacityFor }));
@@ -327,10 +335,14 @@ describe('CompleteSourceUploadUseCase', () => {
       'Haushalt_Sheet_2.csv',
     ]);
     expect(saved.every((s) => s.storageKey !== null)).toBe(true);
-    expect(sessions.updateSources).toHaveBeenCalledWith(UPLOAD_SESSION_ID, [
-      expect.objectContaining({ sheetName: 'Sheet 1' }),
-      expect.objectContaining({ sheetName: 'Sheet 2' }),
-    ]);
+    expect(sessions.recordVerifiedSources).toHaveBeenCalledWith(
+      UPLOAD_SESSION_ID,
+      [
+        expect.objectContaining({ sheetName: 'Sheet 1' }),
+        expect.objectContaining({ sheetName: 'Sheet 2' }),
+      ],
+      'verified',
+    );
   });
 
   it('rejects a workbook that grew past the verified size before any source exists', async () => {

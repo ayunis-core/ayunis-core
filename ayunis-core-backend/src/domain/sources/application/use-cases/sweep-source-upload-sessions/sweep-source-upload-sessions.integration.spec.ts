@@ -32,6 +32,7 @@ const sessionSchema = new EntitySchema<SourceUploadSessionRecord>({
     fileType: { type: String },
     fileSize: { type: 'bigint' },
     storageKey: { type: String },
+    expectedETag: { type: String, nullable: true },
     multipart: { type: Boolean },
     multipartUploadId: { type: String, nullable: true },
     status: { type: String },

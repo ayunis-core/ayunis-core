@@ -24,7 +24,8 @@ describe('SourceUploadQueueingService', () => {
   it('queues a document job that retains the original and completes the session', async () => {
     const session = buildUploadSession({
       status: SourceUploadSessionStatus.SOURCES_CREATED,
-      sources: [{ sourceId, sheetName: null, expectedETag: 'verified' }],
+      expectedETag: 'verified',
+      sources: [{ sourceId, sheetName: null }],
     });
 
     await expect(service.tryQueue(session)).resolves.toBe(true);
@@ -51,7 +52,14 @@ describe('SourceUploadQueueingService', () => {
       fileType:
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       status: SourceUploadSessionStatus.SOURCES_CREATED,
-      sources: [{ sourceId, sheetName: 'Sheet 1', expectedETag: 'verified' }],
+      expectedETag: 'verified',
+      sources: [
+        { sourceId, sheetName: 'Sheet 1' },
+        {
+          sourceId: '66666666-6666-6666-6666-666666666666',
+          sheetName: 'Sheet 2',
+        },
+      ],
     });
 
     await service.tryQueue(session);

@@ -17,9 +17,10 @@ export abstract class SourceUploadSessionRepository {
     toStatus: SourceUploadSessionStatus,
     updates?: Partial<{ sources: UploadedSourceReference[] }>,
   ): Promise<boolean>;
-  abstract updateSources(
+  abstract recordVerifiedSources(
     id: UUID,
     sources: UploadedSourceReference[],
+    expectedETag: string,
   ): Promise<void>;
   /** Remembers the multipart upload id the browser is transferring under. */
   abstract recordMultipartUploadId(id: UUID, uploadId: string): Promise<void>;

@@ -39,7 +39,7 @@ export function createMockSourceUploadSessionRepository(): jest.Mocked<SourceUpl
       ),
     findById: jest.fn().mockResolvedValue(null),
     transition: jest.fn().mockResolvedValue(true),
-    updateSources: jest.fn().mockResolvedValue(undefined),
+    recordVerifiedSources: jest.fn().mockResolvedValue(undefined),
     recordMultipartUploadId: jest.fn().mockResolvedValue(undefined),
     findByStorageKey: jest.fn().mockResolvedValue(null),
     findExpiredPending: jest.fn().mockResolvedValue([]),

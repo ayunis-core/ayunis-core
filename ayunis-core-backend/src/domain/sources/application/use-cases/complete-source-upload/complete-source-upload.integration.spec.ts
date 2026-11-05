@@ -125,6 +125,7 @@ const sessionSchema = new EntitySchema<SourceUploadSessionRecord>({
     fileType: { type: String },
     fileSize: { type: 'bigint' },
     storageKey: { type: String },
+    expectedETag: { type: String, nullable: true },
     multipart: { type: Boolean },
     multipartUploadId: { type: String, nullable: true },
     status: { type: String },
@@ -242,6 +243,9 @@ describe('CompleteSourceUploadUseCase transaction', () => {
     queueing.tryQueue.mockReset();
     queueing.tryQueue.mockImplementation(async () => {
       expect(host.isTransactionActive()).toBe(false);
+      expect(await sessions.findById(session.id)).toMatchObject({
+        expectedETag: 'verified',
+      });
       const committed = await db
         .getRepository(ThreadSourceAssignmentRecord)
         .findBy({ threadId: session.targetId });
@@ -315,6 +319,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       expect(await sessions.findById(session.id)).toMatchObject({
         status: SourceUploadSessionStatus.PENDING,
         sources: [],
+        expectedETag: null,
       });
       expect(queueing.tryQueue).not.toHaveBeenCalled();
 
@@ -322,6 +327,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       expect(result.sources).toHaveLength(workbook ? 2 : 1);
       expect(await sessions.findById(session.id)).toMatchObject({
         status: SourceUploadSessionStatus.COMPLETED,
+        expectedETag: 'verified',
       });
       expect(
         await db
@@ -368,6 +374,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
     const first = await useCase.execute(command(hook));
     expect(await sessions.findById(session.id)).toMatchObject({
       status: SourceUploadSessionStatus.SOURCES_CREATED,
+      expectedETag: 'verified',
     });
     const replay = await useCase.execute(command(hook));
     expect(replay.sources.map((source) => source.id)).toEqual(

@@ -4,6 +4,4 @@ import type { UUID } from 'crypto';
 export interface UploadedSourceReference {
   sourceId: UUID;
   sheetName: string | null;
-  /** Identity verified at completion; retained for queue retries. */
-  expectedETag?: string;
 }

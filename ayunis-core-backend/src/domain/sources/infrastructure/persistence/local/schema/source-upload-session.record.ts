@@ -42,6 +42,9 @@ export class SourceUploadSessionRecord extends BaseRecord {
   @Column()
   storageKey: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  expectedETag: string | null;
+
   @Column({ default: false })
   multipart: boolean;
 
@@ -53,7 +56,8 @@ export class SourceUploadSessionRecord extends BaseRecord {
   status: SourceUploadSessionStatus;
 
   @Column({ type: 'jsonb', default: () => "'[]'" })
-  sources: UploadedSourceReference[];
+  // Older sessions stored the file identity on each source reference.
+  sources: (UploadedSourceReference & { expectedETag?: string })[];
 
   @Column({ type: 'timestamp' })
   expiresAt: Date;

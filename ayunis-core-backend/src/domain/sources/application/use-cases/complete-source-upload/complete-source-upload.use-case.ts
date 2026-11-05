@@ -209,10 +209,9 @@ export class CompleteSourceUploadUseCase {
       ({ sourceId, sheetName }) => ({
         sourceId,
         sheetName,
-        expectedETag: etag,
       }),
     );
-    await this.sessions.updateSources(session.id, targets);
+    await this.sessions.recordVerifiedSources(session.id, targets, etag);
     return true;
   }
 

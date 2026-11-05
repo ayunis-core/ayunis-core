@@ -57,11 +57,12 @@ export class LocalSourceUploadSessionRepository extends SourceUploadSessionRepos
     return (result.affected ?? 0) > 0;
   }
 
-  async updateSources(
+  async recordVerifiedSources(
     id: UUID,
     sources: UploadedSourceReference[],
+    expectedETag: string,
   ): Promise<void> {
-    await this.repository.update({ id }, { sources });
+    await this.repository.update({ id }, { sources, expectedETag });
   }
 
   async recordMultipartUploadId(id: UUID, uploadId: string): Promise<void> {

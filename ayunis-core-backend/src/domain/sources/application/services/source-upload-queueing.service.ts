@@ -60,21 +60,20 @@ export class SourceUploadQueueingService {
           targets: session.sources,
           retainFile: true,
           expectedSize: session.fileSize,
-          expectedETag: session.sources[0]?.expectedETag,
+          expectedETag: session.expectedETag ?? undefined,
         }),
       );
       return;
     }
 
     for (const source of session.sources) {
-      await this.enqueueDocument(session, source.sourceId, source.expectedETag);
+      await this.enqueueDocument(session, source.sourceId);
     }
   }
 
   private async enqueueDocument(
     session: SourceUploadSession,
     sourceId: UUID,
-    expectedETag?: string,
   ): Promise<void> {
     await this.enqueueDocumentProcessing.execute(
       new EnqueueDocumentProcessingCommand({
@@ -86,7 +85,7 @@ export class SourceUploadQueueingService {
         fileType: session.fileType,
         retainFile: true,
         expectedSize: session.fileSize,
-        expectedETag,
+        expectedETag: session.expectedETag ?? undefined,
       }),
     );
   }
