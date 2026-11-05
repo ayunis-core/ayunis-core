@@ -230,6 +230,7 @@
   "/teams/{id}/members",
   "/teams/{id}/members/bulk",
   "/teams/{id}/members/{userId}",
+  "/teams/{id}/role-permissions",
   "/teams/{teamId}/permitted-models",
   "/teams/{teamId}/permitted-models/default",
   "/teams/{teamId}/permitted-models/image-generation",

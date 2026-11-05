@@ -36,6 +36,13 @@ export class TeamMemberResponseDto {
   userRole: UserRole;
 
   @ApiProperty({
+    description: 'The role of the member within the team',
+    enum: UserRole,
+    example: UserRole.USER,
+  })
+  role: UserRole;
+
+  @ApiProperty({
     description: 'The date when the user joined the team',
     example: '2024-01-15T10:30:00.000Z',
   })

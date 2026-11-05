@@ -207,6 +207,12 @@ load-bearing):
   live in the per-org `role_permissions` table; new orgs are seeded and existing
   orgs backfilled to preserve pre-RBAC access. See
   [permissions/SUMMARY.md](ayunis-core-backend/src/iam/permissions/SUMMARY.md).
+- **Team role** — each team membership also carries a `UserRole`. In that
+  team, a member holds the permissions of their org role plus those of their
+  team role (team `ADMIN` ⇒ every permission, team `MANAGER`/`USER` ⇒ that row
+  of the matrix). Routes on `/teams/:id/…` use `@RequireTeamPermission(...)` +
+  `TeamPermissionsGuard`, and team shares accept the team-scoped share
+  permission. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
 
 **Reads stay open** — only manage/share (write) endpoints are permission-gated;
 per-entity visibility (ownership + shares) is enforced separately inside the use

@@ -10,9 +10,10 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { TeamMembersEmptyState } from './TeamMembersEmptyState';
+import { TeamMemberRoleSelect } from './TeamMemberRoleSelect';
 import { useRemoveTeamMember } from '@/pages/admin-settings/team-detail/api/useRemoveTeamMember';
 import type { TeamMember } from '@/pages/admin-settings/team-detail/model/types';
-import { PermissionGate } from '@/features/permissions';
+import { useAuthorization } from '@/features/permissions';
 
 interface TeamMembersListProps {
   teamId: string;
@@ -25,6 +26,12 @@ export function TeamMembersList({
 }: Readonly<TeamMembersListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { removeTeamMember, removingUserIds } = useRemoveTeamMember(teamId);
+  const { canInTeam, canManageTeamRoles, isLoading } = useAuthorization();
+  const canManageRoles = !isLoading && canManageTeamRoles(teamId);
+  const canRemove = (member: TeamMember) =>
+    !isLoading &&
+    canInTeam(teamId, 'assign_users_to_teams') &&
+    (member.role !== 'admin' || canManageRoles);
 
   if (members.length === 0) {
     return <TeamMembersEmptyState />;
@@ -36,20 +43,31 @@ export function TeamMembersList({
         <TableRow>
           <TableHead>{t('teamDetail.members.name')}</TableHead>
           <TableHead>{t('teamDetail.members.email')}</TableHead>
+          <TableHead>{t('teamDetail.members.role')}</TableHead>
           <TableHead>{t('teamDetail.members.joinedAt')}</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {members.map((member) => (
-          <TableRow key={member.id}>
+          <TableRow
+            key={member.id}
+            data-testid={`team-member-${member.userId}`}
+          >
             <TableCell className="font-medium">{member.userName}</TableCell>
             <TableCell>{member.userEmail}</TableCell>
+            <TableCell>
+              {canManageRoles ? (
+                <TeamMemberRoleSelect teamId={teamId} member={member} />
+              ) : (
+                t(`teamDetail.memberRole.roles.${member.role}`)
+              )}
+            </TableCell>
             <TableCell>
               {new Date(member.joinedAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
-              <PermissionGate permission="assign_users_to_teams">
+              {canRemove(member) && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -60,7 +78,7 @@ export function TeamMembersList({
                 >
                   <Trash2 />
                 </Button>
-              </PermissionGate>
+              )}
             </TableCell>
           </TableRow>
         ))}

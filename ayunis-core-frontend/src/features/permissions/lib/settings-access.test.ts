@@ -27,4 +27,16 @@ describe('allowedSettingsSections', () => {
 
     expect(allowedSettingsSections(authorization)).toEqual([]);
   });
+
+  it('allows a team admin to reach the teams section', () => {
+    const authorization = createAuthorization(
+      MeResponseDtoRole.user,
+      ['manage_skills'],
+      [{ id: 'team-id', role: 'admin', permissions: ['manage_teams'] }],
+    );
+
+    expect(allowedSettingsSections(authorization)).toEqual([
+      '/admin-settings/teams',
+    ]);
+  });
 });

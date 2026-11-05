@@ -402,39 +402,37 @@ describe('CreateShareUseCase', () => {
         (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
       });
 
+      const teamId = randomUUID();
+
       it.each([
         [
           'org skill',
           new CreateOrgSkillShareCommand(mockSkillId),
-          SharedEntityType.SKILL,
-          ShareScopeType.ORG,
+          [SharedEntityType.SKILL, ShareScopeType.ORG],
         ],
         [
           'team skill',
-          new CreateTeamSkillShareCommand(mockSkillId, randomUUID()),
-          SharedEntityType.SKILL,
-          ShareScopeType.TEAM,
+          new CreateTeamSkillShareCommand(mockSkillId, teamId),
+          [SharedEntityType.SKILL, ShareScopeType.TEAM, teamId],
         ],
         [
           'org knowledge base',
           new CreateOrgKnowledgeBaseShareCommand(randomUUID()),
-          SharedEntityType.KNOWLEDGE_BASE,
-          ShareScopeType.ORG,
+          [SharedEntityType.KNOWLEDGE_BASE, ShareScopeType.ORG],
         ],
         [
           'team knowledge base',
-          new CreateTeamKnowledgeBaseShareCommand(randomUUID(), randomUUID()),
-          SharedEntityType.KNOWLEDGE_BASE,
-          ShareScopeType.TEAM,
+          new CreateTeamKnowledgeBaseShareCommand(randomUUID(), teamId),
+          [SharedEntityType.KNOWLEDGE_BASE, ShareScopeType.TEAM, teamId],
         ],
       ])(
         'requires the scope permission for a %s share',
-        async (_label, command, entityType, scopeType) => {
+        async (_label, command, expectedArgs) => {
           await useCase.execute(command);
 
           expect(
             sharePermissionService.requireSharePermission,
-          ).toHaveBeenCalledWith(entityType, scopeType);
+          ).toHaveBeenCalledWith(...expectedArgs);
         },
       );
 

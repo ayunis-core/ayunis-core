@@ -44,9 +44,8 @@ import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import {
-  useMyPermissions,
   allowedSettingsSections,
-  createAuthorization,
+  useAuthorization,
 } from '@/features/permissions';
 import {
   useIsAcademyAddonActive,
@@ -59,10 +58,9 @@ import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/u
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
-  const { permissions } = useMyPermissions();
-  const authorization = createAuthorization(user?.role, permissions);
-  // Admins and managers granted a settings-relevant permission (e.g. team
-  // management) get the settings entry point.
+  const authorization = useAuthorization();
+  // Admins, managers granted a settings-relevant permission (e.g. team
+  // management) and team admins get the settings entry point.
   const canOpenSettings = allowedSettingsSections(authorization).length > 0;
   const { logout } = useLogout();
   const { t } = useTranslation('common');

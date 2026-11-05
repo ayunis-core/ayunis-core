@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { Switch } from '@ayunis/ui/components/switch';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import type {
+  MyTeamResponseDto,
   ShareResponseDto,
-  TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useCreateShare } from '@/widgets/shares-tab/api/useCreateShare';
@@ -23,7 +23,7 @@ interface SharesTabProps {
   entityType: EntityType;
   entityId: string;
   shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
+  userTeams: MyTeamResponseDto[];
 }
 
 export default function SharesTab({
@@ -49,11 +49,14 @@ export default function SharesTab({
       ? 'share_skills_with_org'
       : 'share_knowledge_bases_with_org',
   );
-  const canShareWithTeams = can(
+  const teamSharePermission =
     entityType === 'skill'
       ? 'share_skills_with_teams'
-      : 'share_knowledge_bases_with_teams',
-  );
+      : 'share_knowledge_bases_with_teams';
+  // A team role can grant team sharing (team admins always may), so each
+  // team's own effective permissions decide its switch.
+  const canShareWithTeam = (team: MyTeamResponseDto) =>
+    team.permissions.includes(teamSharePermission);
 
   // Check if organization share exists
   const organizationShare = shares.find(
@@ -164,7 +167,9 @@ export default function SharesTab({
                     onCheckedChange={(checked) =>
                       handleTeamToggleChange(team.id, team.name, checked)
                     }
-                    disabled={isCreating || isDeleting || !canShareWithTeams}
+                    disabled={
+                      isCreating || isDeleting || !canShareWithTeam(team)
+                    }
                     data-testid={`shares-team-switch-${team.id}`}
                   />
                 </ItemActions>

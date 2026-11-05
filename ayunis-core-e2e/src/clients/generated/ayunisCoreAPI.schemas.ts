@@ -2161,12 +2161,104 @@ export interface TeamResponseDto {
 }
 
 /**
+ * The current user's role within the team
+ */
+export type MyTeamResponseDtoRole = typeof MyTeamResponseDtoRole[keyof typeof MyTeamResponseDtoRole];
+
+
+export const MyTeamResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type MyTeamResponseDtoPermissionsItem = typeof MyTeamResponseDtoPermissionsItem[keyof typeof MyTeamResponseDtoPermissionsItem];
+
+
+export const MyTeamResponseDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+} as const;
+
+export interface MyTeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+  /** Whether model access override is enabled for this team */
+  modelOverrideEnabled: boolean;
+  /** The number of members in the team. Only populated by the admin list endpoint (GET /teams). */
+  memberCount?: number;
+  /** The current user's role within the team */
+  role: MyTeamResponseDtoRole;
+  /** The current user's effective permissions in this team: those of their organisation role plus those of their team role */
+  permissions: MyTeamResponseDtoPermissionsItem[];
+}
+
+export type TeamRolePermissionSetDtoRole = typeof TeamRolePermissionSetDtoRole[keyof typeof TeamRolePermissionSetDtoRole];
+
+
+export const TeamRolePermissionSetDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type TeamRolePermissionSetDtoPermissionsItem = typeof TeamRolePermissionSetDtoPermissionsItem[keyof typeof TeamRolePermissionSetDtoPermissionsItem];
+
+
+export const TeamRolePermissionSetDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+} as const;
+
+export interface TeamRolePermissionSetDto {
+  role: TeamRolePermissionSetDtoRole;
+  /** Team-scoped permissions this role grants within the team */
+  permissions: TeamRolePermissionSetDtoPermissionsItem[];
+}
+
+export interface TeamRolePermissionsResponseDto {
+  roles: TeamRolePermissionSetDto[];
+}
+
+/**
  * The role of the team member in the organization
  */
 export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
 
 
 export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * The role of the member within the team
+ */
+export type TeamMemberResponseDtoRole = typeof TeamMemberResponseDtoRole[keyof typeof TeamMemberResponseDtoRole];
+
+
+export const TeamMemberResponseDtoRole = {
   admin: 'admin',
   manager: 'manager',
   user: 'user',
@@ -2183,6 +2275,8 @@ export interface TeamMemberResponseDto {
   userEmail: string;
   /** The role of the team member in the organization */
   userRole: TeamMemberResponseDtoUserRole;
+  /** The role of the member within the team */
+  role: TeamMemberResponseDtoRole;
   /** The date when the user joined the team */
   joinedAt: string;
 }
@@ -2204,6 +2298,23 @@ export interface ListTeamMembersQueryDto {
   limit?: number;
   /** Number of items to skip */
   offset?: number;
+}
+
+/**
+ * The role of the member within the team
+ */
+export type UpdateTeamMemberRoleDtoRole = typeof UpdateTeamMemberRoleDtoRole[keyof typeof UpdateTeamMemberRoleDtoRole];
+
+
+export const UpdateTeamMemberRoleDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface UpdateTeamMemberRoleDto {
+  /** The role of the member within the team */
+  role: UpdateTeamMemberRoleDtoRole;
 }
 
 export interface BulkAddTeamMembersDto {
@@ -5981,7 +6092,7 @@ sortBy?: OrgsSortField;
 sortOrder?: SortOrder;
 };
 
-export type TeamsControllerListTeamMembersParams = {
+export type TeamMembersControllerListTeamMembersParams = {
 /**
  * Maximum number of items per page
  */

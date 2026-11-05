@@ -11,7 +11,11 @@ import {
 } from 'src/iam/teams/application/teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getRequiredOrgId } from 'src/common/context/required-context';
+import { getRequiredUserContext } from 'src/common/context/required-context';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @Injectable()
 export class UpdateTeamUseCase {
@@ -20,10 +24,11 @@ export class UpdateTeamUseCase {
   constructor(
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
+    private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}
 
   async execute(command: UpdateTeamCommand): Promise<Team> {
-    const orgId = getRequiredOrgId(this.contextService);
+    const { orgId } = getRequiredUserContext(this.contextService);
 
     const trimmedName = command.name.trim() || '';
 
@@ -63,6 +68,7 @@ export class UpdateTeamUseCase {
     orgId: UUID,
   ): Promise<Team> {
     const team = await this.getTeam(command.teamId, orgId);
+    await this.assertMayChangeModelOverride(team, command);
     await this.assertNameAvailable(team, name, orgId);
     this.logger.debug(
       { id: team.id, name: { old: team.name, new: name } },
@@ -91,6 +97,25 @@ export class UpdateTeamUseCase {
       'Team not found or belongs to different org',
     );
     throw new TeamNotFoundError(teamId);
+  }
+
+  // Renaming is team-scoped; the model policy switch stays organisation-wide.
+  private async assertMayChangeModelOverride(
+    team: Team,
+    command: UpdateTeamCommand,
+  ): Promise<void> {
+    if (
+      command.modelOverrideEnabled === undefined ||
+      command.modelOverrideEnabled === team.modelOverrideEnabled
+    ) {
+      return;
+    }
+    const { orgId, role } = getRequiredUserContext(this.contextService);
+    const allowed = await this.hasPermissionUseCase.execute(
+      new HasPermissionQuery(orgId, role, Permission.MANAGE_TEAMS),
+    );
+    if (allowed) return;
+    throw new UnauthorizedAccessError({ teamId: team.id });
   }
 
   private async assertNameAvailable(

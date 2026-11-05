@@ -158,6 +158,7 @@ export class CreateShareUseCase {
     await this.sharePermissionService.requireSharePermission(
       entityType,
       ShareScopeType.TEAM,
+      teamId,
     );
     await this.authorizeCreateShare(entityType, entityId, userId);
 

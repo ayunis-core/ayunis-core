@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import type {
   KnowledgeBaseResponseDto,
   ShareResponseDto,
-  TeamResponseDto,
+  MyTeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
@@ -47,7 +47,7 @@ export function KnowledgeBasePage({
 }: Readonly<{
   knowledgeBase: KnowledgeBaseResponseDto;
   shares: ShareResponseDto[];
-  userTeams: TeamResponseDto[];
+  userTeams: MyTeamResponseDto[];
   initialTab?: 'config' | 'share';
 }>) {
   const { t } = useTranslation('knowledge-bases');

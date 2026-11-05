@@ -37,4 +37,49 @@ describe('createAuthorization', () => {
       false,
     );
   });
+
+  describe('team access', () => {
+    const teams = [
+      {
+        id: 'admin-team',
+        role: 'admin' as const,
+        permissions: ['assign_users_to_teams' as const],
+      },
+      {
+        id: 'member-team',
+        role: 'user' as const,
+        permissions: ['manage_skills' as const],
+      },
+    ];
+
+    it('adds what the team role grants in that team only', () => {
+      const authorization = createAuthorization(
+        MeResponseDtoRole.user,
+        ['manage_skills'],
+        teams,
+      );
+
+      expect(
+        authorization.canInTeam('admin-team', 'assign_users_to_teams'),
+      ).toBe(true);
+      expect(
+        authorization.canInTeam('member-team', 'assign_users_to_teams'),
+      ).toBe(false);
+      expect(authorization.can('assign_users_to_teams')).toBe(false);
+      expect(authorization.canAnyInSomeTeam('assign_users_to_teams')).toBe(
+        true,
+      );
+    });
+
+    it('lets team admins and org-wide member managers manage team roles', () => {
+      const teamAdmin = createAuthorization(MeResponseDtoRole.user, [], teams);
+      const orgAssigner = createAuthorization(MeResponseDtoRole.manager, [
+        'assign_users_to_teams',
+      ]);
+
+      expect(teamAdmin.canManageTeamRoles('admin-team')).toBe(true);
+      expect(teamAdmin.canManageTeamRoles('member-team')).toBe(false);
+      expect(orgAssigner.canManageTeamRoles('member-team')).toBe(true);
+    });
+  });
 });

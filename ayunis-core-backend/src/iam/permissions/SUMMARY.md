@@ -77,5 +77,7 @@ Standard hexagonal: `domain/` (`RolePermission` entity, `Permission` enum,
 (repository port, use-cases, errors), `infrastructure/`
 (local TypeORM record + mapper + repository), `presenters/http/` (admin
 `RolePermissionsController`, non-admin `MyPermissionsController`, and DTOs).
-Two use cases are exported: `HasPermissionUseCase` for the `PermissionsGuard`,
-and `SeedDefaultRolePermissionsUseCase` for org creation.
+Three use cases are exported: `HasPermissionUseCase` for the
+`PermissionsGuard`, `SeedDefaultRolePermissionsUseCase` for org creation, and
+`GetMyPermissionsUseCase`, which the teams module uses to resolve what a team
+role grants (team roles reuse the org matrix rows).

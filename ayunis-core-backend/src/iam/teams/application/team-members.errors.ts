@@ -5,6 +5,7 @@ export enum TeamMemberErrorCode {
   TEAM_MEMBER_NOT_FOUND = 'TEAM_MEMBER_NOT_FOUND',
   USER_ALREADY_TEAM_MEMBER = 'USER_ALREADY_TEAM_MEMBER',
   USER_NOT_IN_SAME_ORG = 'USER_NOT_IN_SAME_ORG',
+  TEAM_LAST_ADMIN = 'TEAM_LAST_ADMIN',
   UNEXPECTED_TEAM_MEMBER_ERROR = 'UNEXPECTED_TEAM_MEMBER_ERROR',
 }
 
@@ -47,6 +48,17 @@ export class UserNotInSameOrgError extends TeamMemberError {
       `User '${userId}' is not in the same organization as the team`,
       TeamMemberErrorCode.USER_NOT_IN_SAME_ORG,
       400,
+      metadata,
+    );
+  }
+}
+
+export class TeamLastAdminError extends TeamMemberError {
+  constructor(teamId: string, metadata?: ErrorMetadata) {
+    super(
+      `Team '${teamId}' must keep at least one admin`,
+      TeamMemberErrorCode.TEAM_LAST_ADMIN,
+      409,
       metadata,
     );
   }
