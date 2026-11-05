@@ -5,7 +5,7 @@ export function ReadOnlyBadge({
   label = 'Nur lesen',
 }: Readonly<{ label?: string }>) {
   return (
-    <Badge variant="outline" className="gap-1 [&_svg]:size-3">
+    <Badge variant="secondary">
       <Lock />
       {label}
     </Badge>

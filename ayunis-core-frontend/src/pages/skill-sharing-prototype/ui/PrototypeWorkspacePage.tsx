@@ -70,7 +70,7 @@ function WorkspaceAccessBadge({
 }: Readonly<{ access: WorkspaceAccess }>) {
   const label = VIEWER_WORKSPACE_ACCESS_LABEL[access];
   if (access === 'use') return <ReadOnlyBadge label={label} />;
-  return <Badge variant="outline">{label}</Badge>;
+  return <Badge variant="secondary">{label}</Badge>;
 }
 
 function WorkspaceHero({

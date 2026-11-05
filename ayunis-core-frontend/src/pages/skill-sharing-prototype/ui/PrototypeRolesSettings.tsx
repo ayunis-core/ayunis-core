@@ -90,7 +90,7 @@ function RolesOverviewCard() {
                 <ItemContent>
                   <ItemTitle>
                     {summary.name}
-                    <Badge variant="outline">{summary.scope}</Badge>
+                    <Badge variant="secondary">{summary.scope}</Badge>
                   </ItemTitle>
                   <ItemDescription className="line-clamp-none">
                     {summary.text}
