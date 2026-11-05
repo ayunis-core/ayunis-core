@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.67.0](https://github.com/ayunis-core/ayunis-core/compare/v2.66.0...v2.67.0) (2026-11-05)
+
+
+### Features
+
+* **admin:** sort user, invite and organization lists by column (AYC-1518) ([#2174](https://github.com/ayunis-core/ayunis-core/issues/2174)) ([61bd360](https://github.com/ayunis-core/ayunis-core/commit/61bd3602a22be1c6bbf45f7a7d137d17b9fb91aa))
+* **permissions:** split share permissions into team and organisation scope (AYC-1598) ([#2185](https://github.com/ayunis-core/ayunis-core/issues/2185)) ([90a9396](https://github.com/ayunis-core/ayunis-core/commit/90a9396d5440f12db840164d2d23cae2c35ff4ea))
+
+
+### Bug Fixes
+
+* **chat:** render escaped source citations (AYC-1451) ([#2169](https://github.com/ayunis-core/ayunis-core/issues/2169)) ([2b76e09](https://github.com/ayunis-core/ayunis-core/commit/2b76e093ec3a52532205ce404608b0f182804052))
+* **inference:** classify bedrock "input is too long" as a context-length rejection (AYC-1392) ([#2172](https://github.com/ayunis-core/ayunis-core/issues/2172)) ([634765a](https://github.com/ayunis-core/ayunis-core/commit/634765a76721c76c4ef118017f61d9edc781d07f))
+* **mcp:** run schema update and user credential cleanup in one transaction (AYC-1450) ([#2171](https://github.com/ayunis-core/ayunis-core/issues/2171)) ([1cc1769](https://github.com/ayunis-core/ayunis-core/commit/1cc1769e4f55694bc9fa7307643b1c255803e69b))
+* **onboarding:** prioritize welcome video over product updates (AYC-1446) ([#2170](https://github.com/ayunis-core/ayunis-core/issues/2170)) ([a8292b6](https://github.com/ayunis-core/ayunis-core/commit/a8292b691835964a673e941e2b5529096584e889))
+
 ## [2.66.0](https://github.com/ayunis-core/ayunis-core/compare/v2.65.1...v2.66.0) (2026-11-04)
 
 
