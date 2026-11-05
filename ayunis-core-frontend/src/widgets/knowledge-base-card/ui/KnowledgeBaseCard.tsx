@@ -30,6 +30,8 @@ import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { showError } from '@/shared/lib/toast';
 import { cn } from '@ayunis/ui/lib/cn';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
+import type { PendingSourceUpload } from '@/shared/lib/source-upload';
+import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
 
 export interface Source {
   id: string;
@@ -44,6 +46,8 @@ export interface SourcesHook {
   isLoadingSources: boolean;
   addFileSource: (params: { id: string; data: { file: File } }) => void;
   addFileSourcePending: boolean;
+  /** Files still being transferred to storage, before they become sources. */
+  uploads?: PendingSourceUpload[];
   removeSource: (sourceId: string) => void;
   removeSourcePending: boolean;
 }
@@ -88,6 +92,7 @@ export default function KnowledgeBaseCard({
     isLoadingSources,
     addFileSource,
     addFileSourcePending,
+    uploads = [],
     removeSource,
     removeSourcePending,
   } = sourcesHook;
@@ -129,6 +134,7 @@ export default function KnowledgeBaseCard({
               <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           )}
+          <PendingUploadItems uploads={uploads} />
           {!isLoadingSources && sources.length > 0 && (
             <SourceList
               sources={sources}

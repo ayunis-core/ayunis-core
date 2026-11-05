@@ -5,12 +5,14 @@ import {
   getWorkspacesControllerFindOneQueryKey,
   threadKnowledgeBasesControllerAddKnowledgeBase,
   threadMcpIntegrationsControllerAddMcpIntegration,
-  threadSourcesControllerAddFileSource,
+  threadSourcesControllerCompleteUpload,
+  threadSourcesControllerCreateUpload,
   threadsControllerFindOne,
   useThreadsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { uploadSourceFile } from '@/shared/lib/source-upload';
 import { showError } from '@/shared/lib/toast';
 import { cancelStartedThreadRun, startThreadRun } from '@/features/thread-run';
 import type {
@@ -30,7 +32,6 @@ import type { SourceResponseDtoType } from '@/shared/api';
 
 const PROCESSING_POLL_INTERVAL_MS = 500;
 const PROCESSING_TIMEOUT_MS = 180_000;
-const UPLOAD_TIMEOUT_MS = 60_000;
 /** Compose slide duration (matches --new-chat-settle-duration in CSS) */
 const NEW_CHAT_SETTLE_MS = 1450;
 /** Disclaimer soft fade after slide (matches --new-chat-disclaimer-fade-duration) */
@@ -48,7 +49,8 @@ interface PendingSource {
 }
 
 export type SourceUploadStatus =
-  | { kind: 'uploading' }
+  /** `progress` is the fraction of bytes stored so far, 0..1. */
+  | { kind: 'uploading'; progress: number }
   | { kind: 'processing' }
   | { kind: 'failed'; message: string };
 
@@ -125,6 +127,7 @@ export const useInitiateChat = (options?: {
   // synchronously and have any in-flight pipeline observe it on the next
   // checkpoint, without dragging it through the dependency graph.
   const cancelledRef = useRef(false);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   const settleAnimation = options?.settleAnimation ?? true;
 
@@ -159,20 +162,48 @@ export const useInitiateChat = (options?: {
   async function uploadOneSource(
     threadId: string,
     source: PendingSource,
+    signal: AbortSignal,
     onSourceStatus?: (id: string, status: SourceUploadStatus) => void,
   ): Promise<void> {
     try {
-      await threadSourcesControllerAddFileSource(
-        threadId,
-        { file: source.file },
-        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+      const { file } = source;
+      let reported = 0;
+      await uploadSourceFile(
+        file,
+        {
+          createSession: (file, signal) =>
+            threadSourcesControllerCreateUpload(
+              threadId,
+              { fileName: file.name, mimeType: file.type, fileSize: file.size },
+              signal,
+            ),
+          complete: (uploadId, signal) =>
+            threadSourcesControllerCompleteUpload(threadId, uploadId, signal),
+        },
+        signal,
+        (progress) => {
+          // Bytes still in flight after Stop must not revive the chip.
+          if (cancelledRef.current) return;
+          // A retried part reports from zero again; never show it going back.
+          reported = Math.max(reported, progress);
+          onSourceStatus?.(source.id, {
+            kind: 'uploading',
+            progress: reported,
+          });
+        },
       );
-      onSourceStatus?.(source.id, { kind: 'processing' });
+      // Stop may have landed while the last bytes were on the wire.
+      if (!cancelledRef.current) {
+        onSourceStatus?.(source.id, { kind: 'processing' });
+      }
     } catch (error) {
-      onSourceStatus?.(source.id, {
-        kind: 'failed',
-        message: error instanceof Error ? error.message : 'Upload failed',
-      });
+      // After a cancel the page has already reset the chips; keep them so.
+      if (!cancelledRef.current) {
+        onSourceStatus?.(source.id, {
+          kind: 'failed',
+          message: error instanceof Error ? error.message : 'Upload failed',
+        });
+      }
       throw error;
     }
   }
@@ -184,15 +215,26 @@ export const useInitiateChat = (options?: {
     sources: PendingSource[],
     onSourceStatus?: (id: string, status: SourceUploadStatus) => void,
   ): Promise<boolean> {
-    sources.forEach((s) => onSourceStatus?.(s.id, { kind: 'uploading' }));
+    sources.forEach((s) =>
+      onSourceStatus?.(s.id, { kind: 'uploading', progress: 0 }),
+    );
+    // No wall-clock limit: the session's server-side expiry bounds a slow
+    // transfer, and a 25 MB file on a weak uplink needs minutes. Only the
+    // user's cancel aborts it.
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
     try {
       await Promise.all(
         sources.map((source) =>
-          uploadOneSource(threadId, source, onSourceStatus),
+          uploadOneSource(threadId, source, controller.signal, onSourceStatus),
         ),
       );
       return true;
     } catch (error) {
+      // The chat is not created without all of its files: stop the siblings
+      // instead of letting them finish into a thread that is abandoned.
+      controller.abort();
+      if (cancelledRef.current) return false;
       console.error('Failed to upload sources:', error);
       handleSourceUploadError(error, tCommon);
       return false;
@@ -404,6 +446,7 @@ export const useInitiateChat = (options?: {
 
   function cancel() {
     cancelledRef.current = true;
+    uploadAbortRef.current?.abort();
     if (startedThreadIdRef.current) {
       cancelStartedThreadRun(startedThreadIdRef.current);
     }

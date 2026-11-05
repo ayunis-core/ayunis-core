@@ -1,9 +1,9 @@
 import { useKnowledgeBasesControllerListDocuments } from '@/shared/api/generated/ayunisCoreAPI';
 import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 export function useKnowledgeBaseDocuments(id: string, enabled = true) {
+  const processingPollInterval = useProcessingPollInterval(id);
   const { data, isLoading } = useKnowledgeBasesControllerListDocuments(id, {
     query: {
       enabled,
@@ -14,7 +14,7 @@ export function useKnowledgeBaseDocuments(id: string, enabled = true) {
           (doc) =>
             doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing,
         );
-        return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+        return processingPollInterval(hasProcessing);
       },
     },
   });

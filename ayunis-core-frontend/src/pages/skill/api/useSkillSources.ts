@@ -1,16 +1,17 @@
 import {
-  useSkillSourcesControllerAddFileSource,
+  skillSourcesControllerCompleteUpload,
+  skillSourcesControllerCreateUpload,
   useSkillSourcesControllerGetSkillSources,
   useSkillSourcesControllerRemoveSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 export default function useSkillSources({
   skill,
@@ -19,6 +20,7 @@ export default function useSkillSources({
 }) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
+  const processingPollInterval = useProcessingPollInterval(skill.id);
 
   const { data: sources = [], isLoading: isLoadingSources } =
     useSkillSourcesControllerGetSkillSources(skill.id, {
@@ -29,25 +31,33 @@ export default function useSkillSources({
           const hasProcessing = data.some(
             (s) => s.status === SkillSourceResponseDtoStatus.processing,
           );
-          return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+          return processingPollInterval(hasProcessing);
         },
       },
     });
 
-  const addFileSourceMutation = useSkillSourcesControllerAddFileSource({
-    mutation: {
-      retry: 0,
-      onSuccess: () => {
-        void queryClient.invalidateQueries({
+  const { upload, uploads, isUploading } = useDirectSourceUpload(
+    {
+      createSession: (file, signal) =>
+        skillSourcesControllerCreateUpload(
+          skill.id,
+          { fileName: file.name, mimeType: file.type, fileSize: file.size },
+          signal,
+        ),
+      complete: (uploadId, signal) =>
+        skillSourcesControllerCompleteUpload(skill.id, uploadId, signal),
+    },
+    {
+      onSuccess: async () => {
+        showSuccess(t('sources.addedSuccessfully'));
+        await queryClient.invalidateQueries({
           queryKey: [`/skills/${skill.id}/sources`],
         });
-        showSuccess(t('sources.addedSuccessfully'));
       },
-      onError: (error: unknown) => {
-        handleSourceUploadError(error, t);
-      },
+      onError: (error) => handleSourceUploadError(error, t),
     },
-  });
+    { scope: skill.id },
+  );
 
   const removeSourceMutation = useSkillSourcesControllerRemoveSource({
     mutation: {
@@ -73,8 +83,10 @@ export default function useSkillSources({
   return {
     sources,
     isLoadingSources,
-    addFileSource: addFileSourceMutation.mutate,
-    addFileSourcePending: addFileSourceMutation.isPending,
+    addFileSource: ({ data }: { id: string; data: { file: File } }) =>
+      upload(data.file),
+    addFileSourcePending: isUploading,
+    uploads,
     removeSource: removeFileSource,
     removeSourcePending: removeSourceMutation.isPending,
   };

@@ -1,26 +1,37 @@
-import { useIsMutating, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
-  useKnowledgeBasesControllerAddDocument,
   getKnowledgeBasesControllerListDocumentsQueryKey,
+  knowledgeBaseUploadsControllerCompleteUpload,
+  knowledgeBaseUploadsControllerCreateUpload,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
-  const mutationKey = ['knowledgeBasesAddDocument', knowledgeBaseId];
 
-  const mutation = useKnowledgeBasesControllerAddDocument({
-    mutation: {
-      mutationKey,
-      onSuccess: (data) => {
-        void queryClient.invalidateQueries({
-          queryKey:
-            getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
-        });
+  const { upload, uploads, isUploading } = useDirectSourceUpload(
+    {
+      createSession: (file, signal) =>
+        knowledgeBaseUploadsControllerCreateUpload(
+          knowledgeBaseId,
+          { fileName: file.name, mimeType: file.type, fileSize: file.size },
+          signal,
+        ),
+      complete: (uploadId, signal) =>
+        knowledgeBaseUploadsControllerCompleteUpload(
+          knowledgeBaseId,
+          uploadId,
+          signal,
+        ),
+    },
+    {
+      onSuccess: async (data) => {
+        // The upload is done whatever the list refresh does; say so first.
         if (data.status === KnowledgeBaseDocumentResponseDtoStatus.processing) {
           showInfo(t('detail.documents.uploadAccepted'));
         } else if (
@@ -30,21 +41,15 @@ export function useUploadDocument(knowledgeBaseId: string) {
         } else {
           showSuccess(t('detail.documents.uploadSuccess'));
         }
+        await queryClient.invalidateQueries({
+          queryKey:
+            getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
+        });
       },
-      onError: (error: unknown) => {
-        handleSourceUploadError(error, t);
-      },
+      onError: (error) => handleSourceUploadError(error, t),
     },
-  });
+    { scope: knowledgeBaseId },
+  );
 
-  const uploadDocument = (file: Blob) => {
-    mutation.mutate({
-      id: knowledgeBaseId,
-      data: { file },
-    });
-  };
-
-  const activeUploads = useIsMutating({ mutationKey });
-
-  return { uploadDocument, isUploading: activeUploads > 0 };
+  return { uploadDocument: upload, isUploading, uploads };
 }
