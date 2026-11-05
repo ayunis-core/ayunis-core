@@ -26,6 +26,7 @@ export interface ToolCallSnapshot {
   id: string | null;
   name: string | null;
   argumentsJson: string;
+  /** Parsed arguments of an invalid call; always null while streaming. */
   input: Record<string, unknown> | null;
   providerMetadata?: ProviderMetadata;
   status: 'streaming' | 'invalid';

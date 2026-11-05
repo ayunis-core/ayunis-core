@@ -40,6 +40,7 @@ import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execut
 import { mapRuntimeHookError } from './runtime-hook-error';
 import { mapCreditPolicyError } from 'src/domain/runs/application/credit-policy-error';
 import { mapUsageAccountingError } from './usage-accounting-error.mapper';
+import { SNAPSHOT_DUE, SnapshotThrottle } from './snapshot-throttle';
 
 interface StreamingTurn {
   id: UUID;
@@ -48,48 +49,110 @@ interface StreamingTurn {
   toolCalls: Map<number, ToolCallSnapshot>;
 }
 
+export interface RunEventStreamOptions {
+  integrations?: RuntimeToolIntegrationRegistry;
+  models?: RuntimeModelRegistry;
+  throttle?: SnapshotThrottle;
+}
+
 /** Delays mapped errors until runtime terminal hooks have completed. */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
   logger: Logger,
-  integrations?: RuntimeToolIntegrationRegistry,
-  models?: RuntimeModelRegistry,
+  { throttle = new SnapshotThrottle(), ...options }: RunEventStreamOptions = {},
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
-  const assistant = new AssistantTurnAccumulator(threadId, integrations);
-  let pendingError: ApplicationError | null = null;
-  let outcome: RunExecutionOutcome | undefined;
-
-  for await (const event of events) {
-    outcome = readOutcome(event) ?? outcome;
-    const streamed = assistant.consume(event);
-    if (streamed) {
-      yield streamed;
-      continue;
+  const translator = new RunEventTranslator(
+    threadId,
+    logger,
+    throttle,
+    options,
+  );
+  try {
+    for await (const item of throttle.pace(events, () =>
+      translator.hasUnsentSnapshot(),
+    )) {
+      yield* translator.translate(item);
     }
-    const side = toSideStreamItem(
-      event,
+  } catch (error) {
+    yield* translator.sendSnapshot();
+    throw error;
+  }
+  yield* translator.sendSnapshot();
+  return translator.finish();
+}
+
+/**
+ * Streaming deltas only update the turn; its snapshot is sent at most once
+ * per throttle interval and always before any other item, so the client never
+ * misses the latest state.
+ */
+class RunEventTranslator {
+  private readonly assistant: AssistantTurnAccumulator;
+  private pendingError: ApplicationError | null = null;
+  private outcome: RunExecutionOutcome | undefined;
+
+  constructor(
+    private readonly threadId: UUID,
+    private readonly logger: Logger,
+    private readonly throttle: SnapshotThrottle,
+    private readonly options: Omit<RunEventStreamOptions, 'throttle'>,
+  ) {
+    this.assistant = new AssistantTurnAccumulator(
       threadId,
-      assistant.lastCompletedIteration(),
-      logger,
-      models,
+      options.integrations,
     );
-    if (side instanceof ApplicationError) {
-      pendingError = side;
-    } else if (side) {
-      yield side;
+  }
+
+  hasUnsentSnapshot(): boolean {
+    return this.assistant.hasUnsentSnapshot();
+  }
+
+  *translate(item: RunEvent | typeof SNAPSHOT_DUE): Generator<RunStreamItem> {
+    if (item === SNAPSHOT_DUE) {
+      yield* this.sendSnapshot();
+      return;
+    }
+    if (this.assistant.accumulate(item)) {
+      if (this.throttle.isDue()) yield* this.sendSnapshot();
+      return;
+    }
+    yield* this.sendSnapshot();
+    this.outcome = readOutcome(item) ?? this.outcome;
+    const translated =
+      this.assistant.complete(item) ??
+      toSideStreamItem(
+        item,
+        this.threadId,
+        this.assistant.lastCompletedIteration(),
+        this.logger,
+        this.options.models,
+      );
+    if (translated instanceof ApplicationError) {
+      this.pendingError = translated;
+    } else if (translated) {
+      yield translated;
     }
   }
 
-  if (pendingError) {
-    throw pendingError;
+  *sendSnapshot(): Generator<AssistantMessage> {
+    const snapshot = this.assistant.takeUnsentSnapshot();
+    if (!snapshot) return;
+    this.throttle.markSent();
+    yield snapshot;
   }
-  if (!outcome) {
-    throw new RunExecutionFailedError(
-      'Agent runtime ended without a terminal outcome',
-    );
+
+  finish(): RunExecutionOutcome {
+    if (this.pendingError) {
+      throw this.pendingError;
+    }
+    if (!this.outcome) {
+      throw new RunExecutionFailedError(
+        'Agent runtime ended without a terminal outcome',
+      );
+    }
+    return this.outcome;
   }
-  return outcome;
 }
 
 function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
@@ -102,43 +165,53 @@ function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
 class AssistantTurnAccumulator {
   private turn: StreamingTurn | null = null;
   private turnIndex = 0;
+  private unsent = false;
 
   constructor(
     private readonly threadId: UUID,
     private readonly integrations?: RuntimeToolIntegrationRegistry,
   ) {}
 
-  consume(event: RunEvent): AssistantMessage | null {
+  /** Folds a streaming event into the turn; false for any other event. */
+  accumulate(event: RunEvent): boolean {
     if (event.type === 'thinking_delta') {
-      const turn = this.ensureTurn(event.runId);
-      turn.thinking += event.delta;
-      return buildStreamingMessage(turn, this.threadId, this.integrations);
-    }
-    if (event.type === 'text_delta') {
-      const turn = this.ensureTurn(event.runId);
-      turn.text += event.delta;
-      return buildStreamingMessage(turn, this.threadId, this.integrations);
-    }
-    if (event.type === 'tool_call_snapshot') {
+      this.ensureTurn(event.runId).thinking += event.delta;
+    } else if (event.type === 'text_delta') {
+      this.ensureTurn(event.runId).text += event.delta;
+    } else if (event.type === 'tool_call_snapshot') {
       const turn = this.ensureTurn(event.runId);
       turn.toolCalls.set(event.toolCall.index, event.toolCall);
-      return buildStreamingMessage(turn, this.threadId, this.integrations);
+    } else {
+      return false;
     }
-    if (event.type === 'assistant_message') {
-      const id =
-        this.turn?.id ?? assistantMessageId(event.runId, this.turnIndex);
-      const message = toBackendAssistantMessage(
-        event.message,
-        this.threadId,
-        id,
-        this.integrations,
-      );
-      appendInvalidToolCalls(message, this.turn, this.integrations);
-      this.turn = null;
-      this.turnIndex++;
-      return message;
-    }
-    return null;
+    this.unsent = true;
+    return true;
+  }
+
+  hasUnsentSnapshot(): boolean {
+    return this.unsent;
+  }
+
+  takeUnsentSnapshot(): AssistantMessage | null {
+    if (!this.unsent || !this.turn) return null;
+    this.unsent = false;
+    return buildStreamingMessage(this.turn, this.threadId, this.integrations);
+  }
+
+  complete(event: RunEvent): AssistantMessage | null {
+    if (event.type !== 'assistant_message') return null;
+    const id = this.turn?.id ?? assistantMessageId(event.runId, this.turnIndex);
+    const message = toBackendAssistantMessage(
+      event.message,
+      this.threadId,
+      id,
+      this.integrations,
+    );
+    appendInvalidToolCalls(message, this.turn, this.integrations);
+    this.turn = null;
+    this.unsent = false;
+    this.turnIndex++;
+    return message;
   }
 
   private ensureTurn(runId: string): StreamingTurn {

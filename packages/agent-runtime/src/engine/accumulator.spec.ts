@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ChunkAccumulator } from './accumulator';
 
 describe('ChunkAccumulator', () => {
-  it('exposes accumulated tool input snapshots while arguments stream', () => {
+  it('streams raw tool arguments and parses the input only when the call finalizes', () => {
     const accumulator = new ChunkAccumulator();
 
     const [partial] = accumulator.accept({
@@ -30,9 +30,17 @@ describe('ChunkAccumulator', () => {
     });
     expect(complete).toMatchObject({
       argumentsJson: '{"query":"Berlin"}',
-      input: { query: 'Berlin' },
+      input: null,
       status: 'streaming',
     });
+    expect(accumulator.finalize().message.content).toEqual([
+      {
+        type: 'tool_use',
+        id: 'call-1',
+        name: 'internet_search',
+        input: { query: 'Berlin' },
+      },
+    ]);
   });
 
   it('reports malformed terminal tool calls as invalid snapshots', () => {
