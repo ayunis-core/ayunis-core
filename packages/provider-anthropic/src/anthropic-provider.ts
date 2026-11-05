@@ -190,6 +190,7 @@ const buildParams = (
   ...(thinksByDefault(model)
     ? { thinking: { type: 'adaptive', display: 'summarized' } }
     : {}),
+  ...(supportsEffort(model) ? { output_config: { effort: 'medium' } } : {}),
   max_tokens: maxTokens,
   stream: true,
 });
@@ -217,3 +218,14 @@ const DEFAULT_THINKING_MODEL = /claude-(?:opus|sonnet)-5(?:-\d+)?(?!\d)/;
 
 const thinksByDefault = (model: string): boolean =>
   DEFAULT_THINKING_MODEL.test(model);
+
+// The API default is `high` on most models, which makes multi-turn tool runs
+// slow in chat (AYC-1604); `medium` is already the default on Opus 5.5 and
+// Haiku 5.5. Haiku 4.5, Sonnet 4.5 and older reject the field with a 400.
+// Opus 4.5 is left out because Bedrock only accepts it there behind the
+// `effort-2025-11-24` beta. Verified on Bedrock: Opus 4.6–5.5, Sonnet 4.6–5;
+// on the Anthropic API: Sonnet 5.5, Haiku 5.5.
+const EFFORT_MODEL =
+  /claude-(?:(?:opus|sonnet|haiku|fable|mythos)-[5-9]|(?:opus|sonnet)-4-[6-9])(?!\d)/;
+
+const supportsEffort = (model: string): boolean => EFFORT_MODEL.test(model);

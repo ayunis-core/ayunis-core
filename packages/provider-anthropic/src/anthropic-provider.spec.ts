@@ -145,27 +145,27 @@ describe('createMessagesProvider tool input streaming', () => {
   });
 });
 
-describe('createMessagesProvider thinking display', () => {
-  const capturedParamsFor = async (
-    model: string,
-  ): Promise<MessageCreateParamsStreaming> => {
-    const captured: MessageCreateParamsStreaming[] = [];
-    const provider = createMessagesProvider(
-      captureClient(captured),
-      `test:${model}`,
-      model,
-      1024,
-    );
-    await drain(
-      provider.stream({
-        instructions: '',
-        messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
-        tools: [],
-      }),
-    );
-    return captured[0];
-  };
+const capturedParamsFor = async (
+  model: string,
+): Promise<MessageCreateParamsStreaming> => {
+  const captured: MessageCreateParamsStreaming[] = [];
+  const provider = createMessagesProvider(
+    captureClient(captured),
+    `test:${model}`,
+    model,
+    1024,
+  );
+  await drain(
+    provider.stream({
+      instructions: '',
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
+      tools: [],
+    }),
+  );
+  return captured[0];
+};
 
+describe('createMessagesProvider thinking display', () => {
   it.each([
     'claude-opus-5-5',
     'claude-opus-5',
@@ -193,6 +193,38 @@ describe('createMessagesProvider thinking display', () => {
     'arn:aws:bedrock:eu-central-1:123:application-inference-profile/abc',
   ])('leaves thinking unset for %s', async (model) => {
     expect((await capturedParamsFor(model)).thinking).toBeUndefined();
+  });
+});
+
+describe('createMessagesProvider effort', () => {
+  it.each([
+    'claude-opus-5-5',
+    'claude-sonnet-5-5',
+    'claude-haiku-5-5',
+    'claude-fable-5-1',
+    'eu.anthropic.claude-opus-5-5',
+    'eu.anthropic.claude-opus-5',
+    'eu.anthropic.claude-sonnet-5',
+    'eu.anthropic.claude-opus-4-8',
+    'eu.anthropic.claude-opus-4-7',
+    'eu.anthropic.claude-opus-4-6-v1',
+    'eu.anthropic.claude-sonnet-4-6',
+  ])('requests medium effort for %s', async (model) => {
+    expect((await capturedParamsFor(model)).output_config).toEqual({
+      effort: 'medium',
+    });
+  });
+
+  // These reject the field with a 400 (Opus 4.5 on Bedrock without a beta).
+  it.each([
+    'eu.anthropic.claude-haiku-4-5-20251001-v1:0',
+    'eu.anthropic.claude-sonnet-4-5-20250929-v1:0',
+    'eu.anthropic.claude-opus-4-5-20251101-v1:0',
+    'anthropic.claude-sonnet-4-20250514-v1:0',
+    'claude-opus-50',
+    'arn:aws:bedrock:eu-central-1:123:application-inference-profile/abc',
+  ])('leaves effort unset for %s', async (model) => {
+    expect((await capturedParamsFor(model)).output_config).toBeUndefined();
   });
 });
 
