@@ -52,8 +52,7 @@ import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanel
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
 import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -75,6 +74,7 @@ export default function ChatPage({
     error: isModelsError,
   } = usePermittedModels();
   const isStreaming = useIsThreadRunActive(initialThread.id);
+  const processingPollInterval = useProcessingPollInterval();
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -89,7 +89,7 @@ export default function ChatPage({
       const hasProcessing = data.sources.some(
         (s) => s.status === SourceResponseDtoStatus.processing,
       );
-      return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+      return processingPollInterval(hasProcessing);
     },
   });
 

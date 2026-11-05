@@ -9,25 +9,25 @@ import {
 import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { showError, showSuccess } from '@/shared/lib/toast';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 export function useWorkspaceSkillSources({ skillId }: { skillId: string }) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
   const queryKey = getSkillSourcesControllerGetSkillSourcesQueryKey(skillId);
+  const processingPollInterval = useProcessingPollInterval();
 
   const { data: sources = [], isLoading: isLoadingSources } =
     useSkillSourcesControllerGetSkillSources(skillId, {
       query: {
         staleTime: 0,
         refetchInterval: (query) =>
-          (query.state.data ?? []).some(
-            (source) =>
-              source.status === SkillSourceResponseDtoStatus.processing,
-          )
-            ? PROCESSING_POLL_INTERVAL
-            : false,
+          processingPollInterval(
+            (query.state.data ?? []).some(
+              (source) =>
+                source.status === SkillSourceResponseDtoStatus.processing,
+            ),
+          ),
       },
     });
 

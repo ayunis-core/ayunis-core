@@ -16,6 +16,7 @@ import type { KnowledgeBaseDocumentListResponseDto } from '@/shared/api/generate
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { KnowledgeBaseDocumentsController } from '@/widgets/knowledge-base-documents-card';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
@@ -23,16 +24,17 @@ function useDocuments(
   knowledgeBaseId: string,
   initialData: KnowledgeBaseDocumentListResponseDto,
 ) {
+  const processingPollInterval = useProcessingPollInterval();
   return useKnowledgeBasesControllerListDocuments(knowledgeBaseId, {
     query: {
       initialData,
       staleTime: 0,
       refetchInterval: (query) =>
-        query.state.data?.data.some(
-          (document) => document.status === 'processing',
-        )
-          ? 5000
-          : false,
+        processingPollInterval(
+          query.state.data?.data.some(
+            (document) => document.status === 'processing',
+          ) ?? false,
+        ),
     },
   });
 }

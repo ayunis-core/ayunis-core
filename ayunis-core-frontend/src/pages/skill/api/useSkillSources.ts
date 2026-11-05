@@ -9,8 +9,7 @@ import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 export default function useSkillSources({
   skill,
@@ -19,6 +18,7 @@ export default function useSkillSources({
 }) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
+  const processingPollInterval = useProcessingPollInterval();
 
   const { data: sources = [], isLoading: isLoadingSources } =
     useSkillSourcesControllerGetSkillSources(skill.id, {
@@ -29,7 +29,7 @@ export default function useSkillSources({
           const hasProcessing = data.some(
             (s) => s.status === SkillSourceResponseDtoStatus.processing,
           );
-          return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+          return processingPollInterval(hasProcessing);
         },
       },
     });
