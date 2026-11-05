@@ -10,6 +10,7 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
+  STORED_FILE_MISMATCH = 'STORED_FILE_MISMATCH',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -121,6 +122,17 @@ export class UnsupportedSourceFileTypeError extends SourceError {
       SourceErrorCode.UNSUPPORTED_SOURCE_FILE_TYPE,
       400,
       metadata,
+    );
+  }
+}
+
+export class StoredFileMismatchError extends SourceError {
+  constructor(storageKey: string, metadata?: ErrorMetadata) {
+    super(
+      'The stored file no longer matches the verified upload',
+      SourceErrorCode.STORED_FILE_MISMATCH,
+      409,
+      { storageKey, ...metadata },
     );
   }
 }

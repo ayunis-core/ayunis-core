@@ -8,7 +8,8 @@ import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/u
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
-import { Transactional } from '@nestjs-cls/transactional';
+import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class DeleteSourceUseCase {
@@ -18,27 +19,24 @@ export class DeleteSourceUseCase {
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
-  @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
     this.logger.debug({ sourceId: command.sourceId }, 'Deleting source');
+    // The original is released only after the row delete is committed: a
+    // rolled-back delete must not lose the file its surviving source still
+    // points at. When a caller holds the transaction, commit happens after
+    // this returns, so the original is left to the nightly
+    // unreferenced-originals sweep instead.
+    const releaseNow = !this.txHost.isTransactionActive();
     try {
-      const source = await this.sourceRepository.findById(command.sourceId);
-
-      if (source?.status === SourceStatus.PROCESSING) {
+      const storageKey = await this.deleteRecords(command);
+      if (releaseNow && storageKey !== null) {
         await this.cleanupSourceProcessingUseCase.execute(
-          new CleanupSourceProcessingCommand([command.sourceId], command.orgId),
+          new CleanupSourceProcessingCommand([], command.orgId, [storageKey]),
         );
       }
-
-      // Delete indexed content first
-      const deleteContentCommand = new DeleteContentCommand({
-        documentId: command.sourceId,
-      });
-
-      await this.deleteContentUseCase.execute(deleteContentCommand);
-      await this.sourceRepository.delete(command.sourceId);
 
       this.logger.debug(
         { sourceId: command.sourceId },
@@ -58,5 +56,26 @@ export class DeleteSourceUseCase {
         error: error as Error,
       });
     }
+  }
+
+  /** Returns the deleted source's storage key, if it had an uploaded original. */
+  @Transactional()
+  private async deleteRecords(
+    command: DeleteSourceCommand,
+  ): Promise<string | null> {
+    const source = await this.sourceRepository.findById(command.sourceId);
+
+    if (source?.status === SourceStatus.PROCESSING) {
+      await this.cleanupSourceProcessingUseCase.execute(
+        new CleanupSourceProcessingCommand([command.sourceId], command.orgId),
+      );
+    }
+
+    // Delete indexed content first
+    await this.deleteContentUseCase.execute(
+      new DeleteContentCommand({ documentId: command.sourceId }),
+    );
+    await this.sourceRepository.delete(command.sourceId);
+    return source?.storageKey ?? null;
   }
 }

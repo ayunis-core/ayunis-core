@@ -15,6 +15,11 @@ export abstract class Source {
   processingError: string | null;
   processingErrorCode: SourceProcessingErrorCode | null;
   processingStartedAt: Date | null;
+  /**
+   * Object-storage key of the uploaded original. Retained while the source
+   * exists so a worker can re-read the file; null for sources without one.
+   */
+  storageKey: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -28,6 +33,7 @@ export abstract class Source {
     processingError?: string | null;
     processingErrorCode?: SourceProcessingErrorCode | null;
     processingStartedAt?: Date | null;
+    storageKey?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -40,6 +46,7 @@ export abstract class Source {
     this.processingError = params.processingError ?? null;
     this.processingErrorCode = params.processingErrorCode ?? null;
     this.processingStartedAt = params.processingStartedAt ?? null;
+    this.storageKey = params.storageKey ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

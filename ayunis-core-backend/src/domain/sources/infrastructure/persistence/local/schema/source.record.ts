@@ -52,6 +52,11 @@ export abstract class SourceRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;
 
+  // Looked up by key on every source deletion (findReferencedStorageKeys).
+  @Index('IDX_sources_storageKey')
+  @Column({ type: 'varchar', nullable: true })
+  storageKey: string | null;
+
   @Index()
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;

@@ -29,6 +29,9 @@ export class EnqueueDocumentProcessingUseCase {
         minioPath: command.minioPath,
         fileName: command.fileName,
         fileType: command.fileType,
+        retainFile: command.retainFile,
+        expectedSize: command.expectedSize,
+        expectedETag: command.expectedETag,
       });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;

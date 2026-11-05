@@ -10,6 +10,9 @@ import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
+import { SourceUploadStorageCleanupService } from './application/services/source-upload-storage-cleanup.service';
+import { SweepUnreferencedOriginalsUseCase } from './application/use-cases/sweep-unreferenced-originals/sweep-unreferenced-originals.use-case';
+import { UnreferencedOriginalsSweepTask } from './infrastructure/tasks/unreferenced-originals-sweep.task';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
 import { DataSourceProcessingModule } from './infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from './infrastructure/queue/url-crawl.module';
@@ -60,6 +63,9 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   providers: [
+    SourceUploadStorageCleanupService,
+    SweepUnreferencedOriginalsUseCase,
+    UnreferencedOriginalsSweepTask,
     OrgProcessingDeletionListener,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
