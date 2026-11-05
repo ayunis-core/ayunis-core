@@ -48,6 +48,7 @@ describe('EnqueueDataSourceProcessingUseCase', () => {
       fileName: cmd.fileName,
       kind: cmd.kind,
       targets: cmd.targets,
+      retainFile: false,
     });
   });
 

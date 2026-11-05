@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourcesCommand } from './delete-sources.command';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
@@ -20,7 +19,6 @@ export class DeleteSourcesUseCase {
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
   ) {}
 
-  @Transactional()
   async execute(command: DeleteSourcesCommand): Promise<void> {
     if (command.sourceIds.length === 0) {
       return;
@@ -31,17 +29,13 @@ export class DeleteSourcesUseCase {
       'Deleting sources',
     );
     try {
-      // Cancel jobs and clean MinIO for any processing sources
-      await this.cancelProcessingSources(command.sourceIds, command.orgId);
-
-      // Batch delete indexed content from all indices
-      const indices = this.indexRegistry.getAll();
-      for (const index of indices) {
-        await index.deleteMany(command.sourceIds);
+      const storageKeys = await this.deleteRecords(command);
+      // Originals are released after commit; see DeleteSourceUseCase.
+      if (storageKeys.length > 0) {
+        await this.cleanupSourceProcessingUseCase.execute(
+          new CleanupSourceProcessingCommand([], command.orgId, storageKeys),
+        );
       }
-
-      // Batch delete sources
-      await this.sourceRepository.deleteMany(command.sourceIds);
 
       this.logger.debug(
         { sourceCount: command.sourceIds.length },
@@ -63,11 +57,13 @@ export class DeleteSourcesUseCase {
     }
   }
 
-  private async cancelProcessingSources(
-    sourceIds: UUID[],
-    orgId: UUID,
-  ): Promise<void> {
-    const sources = await this.sourceRepository.findByIds(sourceIds);
+  /** Returns the storage keys of the deleted sources' uploaded originals. */
+  @Transactional()
+  private async deleteRecords(
+    command: DeleteSourcesCommand,
+  ): Promise<string[]> {
+    const sources = await this.sourceRepository.findByIds(command.sourceIds);
+    // Cancel jobs and clean MinIO for any processing sources
     const processing = sources.filter(
       (s) => s.status === SourceStatus.PROCESSING,
     );
@@ -75,9 +71,21 @@ export class DeleteSourcesUseCase {
       await this.cleanupSourceProcessingUseCase.execute(
         new CleanupSourceProcessingCommand(
           processing.map((source) => source.id),
-          orgId,
+          command.orgId,
         ),
       );
     }
+
+    // Batch delete indexed content from all indices
+    const indices = this.indexRegistry.getAll();
+    for (const index of indices) {
+      await index.deleteMany(command.sourceIds);
+    }
+
+    // Batch delete sources
+    await this.sourceRepository.deleteMany(command.sourceIds);
+    return sources.flatMap((source) =>
+      source.storageKey === null ? [] : [source.storageKey],
+    );
   }
 }

@@ -52,6 +52,9 @@ export abstract class SourceRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  storageKey: string | null;
+
   @Index()
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;
