@@ -12,6 +12,7 @@ export enum MemoryErrorCode {
   MEMORY_CONTENT_TOO_LONG = 'MEMORY_CONTENT_TOO_LONG',
   MEMORY_DESCRIPTION_TOO_LONG = 'MEMORY_DESCRIPTION_TOO_LONG',
   MEMORY_ENTRY_LIMIT_REACHED = 'MEMORY_ENTRY_LIMIT_REACHED',
+  MEMORY_DISABLED = 'MEMORY_DISABLED',
   UNEXPECTED_MEMORY_ERROR = 'UNEXPECTED_MEMORY_ERROR',
 }
 
@@ -62,6 +63,20 @@ export class MemoryEntryLimitReachedError extends MemoryError {
         `stored. Remove or merge an existing entry before adding a new one.`,
       MemoryErrorCode.MEMORY_ENTRY_LIMIT_REACHED,
       400,
+    );
+  }
+}
+
+/**
+ * 404 rather than 403: an organization that has not switched memory on should
+ * not see the feature exist at all.
+ */
+export class MemoryDisabledError extends MemoryError {
+  constructor() {
+    super(
+      'Memory is not enabled for this organization',
+      MemoryErrorCode.MEMORY_DISABLED,
+      404,
     );
   }
 }

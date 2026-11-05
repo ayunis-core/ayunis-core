@@ -46,8 +46,13 @@ export function MemoryEntryCard({
 
   return (
     <Card data-testid={`memory-entry-${entry.key}`}>
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle>{title}</CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between gap-2">
+        <div className="space-y-1">
+          <CardTitle>{title}</CardTitle>
+          {entry.description && (
+            <p className="text-muted-foreground text-sm">{entry.description}</p>
+          )}
+        </div>
         {entry.isReserved && <Badge variant="secondary">{entry.key}</Badge>}
       </CardHeader>
       <CardContent className="space-y-3">

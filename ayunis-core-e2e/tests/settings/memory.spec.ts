@@ -1,86 +1,72 @@
-import { request } from "@playwright/test";
-import { expect, test } from "../../src/fixtures/test";
-import { generatedApi } from "../../src/clients/api/generated-api";
-import { login } from "../../src/clients/api/auth.client";
-import { createUser } from "../../src/factories/user.factory";
-import { config } from "../../src/config";
+import type { APIRequestContext } from '@playwright/test';
+import { expect, test } from '../../src/fixtures/test';
+import { generatedApi } from '../../src/clients/api/generated-api';
 
-/** The content of the entry stored under `key`, or undefined when absent. */
-async function readMemory(api: Parameters<typeof login>[0], key: string) {
+/** Memory is off for every organization until an admin switches it on. */
+async function setMemoryEnabled(api: APIRequestContext, memoryEnabled: boolean) {
+  await generatedApi.orgChatSettingsControllerUpsertOrgChatSettings(
+    { memoryEnabled },
+    { api },
+  );
+}
+
+async function readMemory(api: APIRequestContext, key: string) {
   const memory = await generatedApi.memoryControllerFindAll({ api });
   return memory.entries.find((entry) => entry.key === key)?.content;
 }
 
-test("keeps one user’s memory out of another user’s memory", async ({
-  api,
-  mail,
-}) => {
-  const secret = `Bauamt ${Date.now()}`;
-
-  const member = await createUser(api, mail, `memory-${Date.now()}`);
-  const memberApi = await request.newContext({ baseURL: config.apiURL });
-  try {
-    await login(memberApi, member.email, member.password);
-
-    // Both start empty, so a later difference can only come from the write.
-    expect(await readMemory(api, "personal")).toBe("");
-    expect(await readMemory(memberApi, "personal")).toBe("");
-
-    await generatedApi.memoryControllerUpsert(
-      "personal",
-      { content: secret },
-      { api },
-    );
-
-    expect(await readMemory(api, "personal")).toBe(secret);
-    expect(await readMemory(memberApi, "personal")).toBe("");
-
-    const memberMemory = await generatedApi.memoryControllerFindAll({
-      api: memberApi,
-    });
-    expect(JSON.stringify(memberMemory)).not.toContain(secret);
-  } finally {
-    await generatedApi.memoryControllerClear({ api });
-    await memberApi.dispose();
-  }
-});
-
-test("shows memory in settings and applies an edit made there", async ({
+test('shows memory in settings and applies an edit made there', async ({
   api,
   page,
 }) => {
   const stored = `Stored ${Date.now()}`;
   const edited = `Edited ${Date.now()}`;
+  await setMemoryEnabled(api, true);
 
   await generatedApi.memoryControllerUpsert(
-    "personal",
+    'personal',
     { content: stored },
     { api },
   );
 
   try {
-    await page.goto("/settings/memory");
-    await expect(page.getByTestId("memory-settings-page")).toBeVisible();
+    await page.goto('/settings/memory');
+    await expect(page.getByTestId('memory-settings-page')).toBeVisible();
 
-    const card = page.getByTestId("memory-entry-personal");
-    await expect(card.getByTestId("memory-entry-content")).toHaveText(stored);
+    const card = page.getByTestId('memory-entry-personal');
+    await expect(card.getByTestId('memory-entry-content')).toHaveText(stored);
+    await expect(page.getByTestId('memory-entry-preferences')).toBeVisible();
 
-    await card.getByTestId("memory-entry-edit").click();
-    await card.getByTestId("memory-entry-input").fill(edited);
-    await card.getByTestId("memory-entry-save").click();
+    await card.getByTestId('memory-entry-edit').click();
+    await card.getByTestId('memory-entry-input').fill(edited);
+    await card.getByTestId('memory-entry-save').click();
 
-    await expect(card.getByTestId("memory-entry-content")).toHaveText(edited);
-    expect(await readMemory(api, "personal")).toBe(edited);
+    await expect(card.getByTestId('memory-entry-content')).toHaveText(edited);
+    expect(await readMemory(api, 'personal')).toBe(edited);
   } finally {
     await generatedApi.memoryControllerClear({ api });
+    await setMemoryEnabled(api, false);
   }
 });
 
-test("always offers the reserved keys, even with nothing stored", async ({
+test('hides the memory surfaces until an admin turns memory on', async ({
+  api,
   page,
 }) => {
-  await page.goto("/settings/memory");
+  await setMemoryEnabled(api, false);
 
-  await expect(page.getByTestId("memory-entry-personal")).toBeVisible();
-  await expect(page.getByTestId("memory-entry-preferences")).toBeVisible();
+  const denied = await api.get('/memory');
+  expect(denied.status()).toBe(404);
+
+  await page.goto('/settings/general');
+  await expect(page.getByRole('link', { name: /Erinnerung|Memory/ })).toHaveCount(
+    0,
+  );
+
+  // A bookmark from before the switch was flipped lands somewhere useful.
+  await page.goto('/settings/memory');
+  await expect(page).toHaveURL(/\/settings\/general/);
+
+  // Turning memory off must not take the rest of the settings with it.
+  await expect(page.getByRole('main')).toBeVisible();
 });

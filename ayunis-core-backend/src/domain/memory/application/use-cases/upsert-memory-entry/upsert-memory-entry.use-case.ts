@@ -5,6 +5,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { MemoryRepository } from 'src/domain/memory/application/ports/memory.repository';
+import { MemoryAvailabilityService } from 'src/domain/memory/application/services/memory-availability.service';
 import {
   InvalidMemoryKeyError,
   MemoryContentTooLongError,
@@ -28,6 +29,7 @@ export class UpsertMemoryEntryUseCase {
   constructor(
     private readonly memoryRepository: MemoryRepository,
     private readonly contextService: ContextService,
+    private readonly memoryAvailability: MemoryAvailabilityService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedMemoryError)
@@ -39,6 +41,8 @@ export class UpsertMemoryEntryUseCase {
       { userId, key: command.key, contentLength: content.length },
       'execute',
     );
+
+    await this.memoryAvailability.assertEnabled();
 
     const description = normalizeDescription(command.description);
     this.assertWritable(command.key, content, description);

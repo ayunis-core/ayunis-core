@@ -22,6 +22,10 @@ import { UpsertMemoryEntryDto } from './dtos/upsert-memory-entry.dto';
 
 @ApiTags('Memory')
 @Controller('memory')
+@ApiResponse({
+  status: 404,
+  description: 'Memory is not enabled for this organization',
+})
 export class MemoryController {
   constructor(
     private readonly findUserMemoryUseCase: FindUserMemoryUseCase,

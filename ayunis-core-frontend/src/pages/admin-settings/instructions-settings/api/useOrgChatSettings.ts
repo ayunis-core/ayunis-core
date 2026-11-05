@@ -25,12 +25,6 @@ export function useOrgChatSettings() {
 
   const upsertMutation = useOrgChatSettingsControllerUpsertOrgChatSettings({
     mutation: {
-      onSuccess: () => {
-        showSuccess(t('internetAccess.saved'));
-      },
-      onError: () => {
-        showError(t('internetAccess.error'));
-      },
       onSettled: async () => {
         await queryClient.invalidateQueries({ queryKey });
         await router.invalidate();
@@ -38,19 +32,36 @@ export function useOrgChatSettings() {
     },
   });
 
+  // One endpoint serves several independent settings, so each caller names the
+  // setting it changed instead of sharing one message.
+  function update(data: UpsertOrgChatSettingsDto, translationPrefix: string) {
+    return upsertMutation.mutate(
+      { data },
+      {
+        onSuccess: () => showSuccess(t(`${translationPrefix}.saved`)),
+        onError: () => showError(t(`${translationPrefix}.error`)),
+      },
+    );
+  }
+
   function setInternetSearchEnabled(internetSearchEnabled: boolean) {
-    const data: UpsertOrgChatSettingsDto = { internetSearchEnabled };
-    return upsertMutation.mutate({ data });
+    return update({ internetSearchEnabled }, 'internetAccess');
+  }
+
+  function setMemoryEnabled(memoryEnabled: boolean) {
+    return update({ memoryEnabled }, 'memory');
   }
 
   return {
     internetSearchEnabled:
       orgChatSettingsResponse?.internetSearchEnabled ?? true,
+    memoryEnabled: orgChatSettingsResponse?.memoryEnabled ?? false,
     isLoading,
     isError,
     error,
     refetch,
     isUpdating: upsertMutation.isPending,
     setInternetSearchEnabled,
+    setMemoryEnabled,
   };
 }

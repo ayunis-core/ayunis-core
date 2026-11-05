@@ -17,6 +17,7 @@ import {
   InvalidMemoryKeyError,
   MemoryContentTooLongError,
   MemoryDescriptionTooLongError,
+  MemoryDisabledError,
   MemoryEntryLimitReachedError,
 } from 'src/domain/memory/application/memory.errors';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
@@ -25,11 +26,29 @@ import {
   MEMORY_DESCRIPTION_MAX_LENGTH,
   MEMORY_MAX_ENTRIES_PER_USER,
 } from 'src/domain/memory/domain/memory.constants';
+import type { MemoryAvailabilityService } from 'src/domain/memory/application/services/memory-availability.service';
 import { UpsertMemoryEntryCommand } from './upsert-memory-entry.command';
 import { UpsertMemoryEntryUseCase } from './upsert-memory-entry.use-case';
 
 describe('UpsertMemoryEntryUseCase', () => {
-  function build(overrides: Partial<MemoryRepository> = {}) {
+  /** The organization has memory switched on unless a test says otherwise. */
+  function anAvailabilityService(enabled = true): MemoryAvailabilityService {
+    return {
+      isEnabled: jest.fn().mockResolvedValue(enabled),
+      assertEnabled: jest
+        .fn()
+        .mockImplementation(() =>
+          enabled
+            ? Promise.resolve()
+            : Promise.reject(new MemoryDisabledError()),
+        ),
+    } as unknown as MemoryAvailabilityService;
+  }
+
+  function build(
+    overrides: Partial<MemoryRepository> = {},
+    memoryEnabled = true,
+  ) {
     const repository: MemoryRepository = {
       findAllByUserId: jest.fn().mockResolvedValue([]),
       findByUserIdAndKey: jest.fn().mockResolvedValue(null),
@@ -45,6 +64,7 @@ describe('UpsertMemoryEntryUseCase', () => {
       useCase: new UpsertMemoryEntryUseCase(
         repository,
         createMockContextService(),
+        anAvailabilityService(memoryEnabled),
       ),
     };
   }
@@ -196,15 +216,28 @@ describe('UpsertMemoryEntryUseCase', () => {
     expect(repository.upsert).toHaveBeenCalledTimes(1);
   });
 
+  it('refuses to write when the organization has memory off', async () => {
+    const { useCase, repository } = build({}, false);
+
+    await expect(
+      useCase.execute(new UpsertMemoryEntryCommand('personal', 'content')),
+    ).rejects.toThrow(MemoryDisabledError);
+    expect(repository.upsert).not.toHaveBeenCalled();
+  });
+
   it('refuses to write without an authenticated user', async () => {
     const repository = {
       upsert: jest.fn(),
       findByUserIdAndKey: jest.fn(),
       countByUserId: jest.fn(),
     } as unknown as MemoryRepository;
-    const useCase = new UpsertMemoryEntryUseCase(repository, {
-      get: jest.fn().mockReturnValue(undefined),
-    } as unknown as ContextService);
+    const useCase = new UpsertMemoryEntryUseCase(
+      repository,
+      {
+        get: jest.fn().mockReturnValue(undefined),
+      } as unknown as ContextService,
+      anAvailabilityService(),
+    );
 
     await expect(
       useCase.execute(new UpsertMemoryEntryCommand('personal', 'content')),

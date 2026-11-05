@@ -16,6 +16,11 @@ test("keeps one user’s memory out of another user’s memory", async ({
   mail,
 }) => {
   const secret = `Bauamt ${Date.now()}`;
+  // Memory is off for every organization until an admin switches it on.
+  await generatedApi.orgChatSettingsControllerUpsertOrgChatSettings(
+    { memoryEnabled: true },
+    { api },
+  );
 
   const member = await createUser(api, mail, `memory-${Date.now()}`);
   const memberApi = await request.newContext({ baseURL: config.apiURL });
@@ -41,6 +46,10 @@ test("keeps one user’s memory out of another user’s memory", async ({
     expect(JSON.stringify(memberMemory)).not.toContain(secret);
   } finally {
     await generatedApi.memoryControllerClear({ api });
+    await generatedApi.orgChatSettingsControllerUpsertOrgChatSettings(
+      { memoryEnabled: false },
+      { api },
+    );
     await memberApi.dispose();
   }
 });

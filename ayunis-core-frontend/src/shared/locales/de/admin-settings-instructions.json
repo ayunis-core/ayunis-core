@@ -23,5 +23,15 @@
     "error": "Einstellung zum Internetzugriff konnte nicht aktualisiert werden.",
     "loadError": "Einstellung zum Internetzugriff konnte nicht geladen werden.",
     "retry": "Erneut versuchen"
+  },
+  "memory": {
+    "title": "Erinnerung",
+    "description": "Legen Sie fest, ob sich der Assistent dauerhaft Angaben über einzelne Nutzer:innen merken darf. Gilt für alle Nutzer:innen Ihrer Organisation.",
+    "label": "Erinnerung aktivieren",
+    "hint": "Wenn aktiviert, merkt sich der Assistent, was Nutzer:innen über ihre Rolle und ihre Vorlieben mitteilen, und berücksichtigt das in späteren Chats. Nutzer:innen sehen und verwalten ihre eigenen Einträge in ihren Einstellungen; Administrator:innen können sie nicht einsehen.",
+    "saved": "Einstellung zur Erinnerung gespeichert.",
+    "error": "Die Einstellung zur Erinnerung konnte nicht geändert werden.",
+    "loadError": "Die Einstellung zur Erinnerung konnte nicht geladen werden.",
+    "retry": "Erneut versuchen"
   }
 }
