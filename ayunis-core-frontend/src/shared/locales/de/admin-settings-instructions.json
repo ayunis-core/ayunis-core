@@ -23,5 +23,15 @@
     "error": "Einstellung zum Internetzugriff konnte nicht aktualisiert werden.",
     "loadError": "Einstellung zum Internetzugriff konnte nicht geladen werden.",
     "retry": "Erneut versuchen"
+  },
+  "memory": {
+    "title": "Erinnerung",
+    "description": "Legen Sie fest, ob sich der KI-Assistent dauerhafte Angaben über einzelne Benutzer chatübergreifend merken darf, etwa ihre Rolle oder den gewünschten Tonfall. Dies gilt für alle Benutzer Ihrer Organisation.",
+    "label": "Erinnerung aktivieren",
+    "hint": "Wenn aktiviert, merkt sich der KI-Assistent, was Benutzer über sich selbst mitteilen, und berücksichtigt es in späteren Chats. Jeder Benutzer kann seine eigene Erinnerung in den Einstellungen einsehen und löschen. Anonyme Chats nutzen die Erinnerung nie.",
+    "saved": "Einstellung zur Erinnerung gespeichert.",
+    "error": "Einstellung zur Erinnerung konnte nicht aktualisiert werden.",
+    "loadError": "Einstellung zur Erinnerung konnte nicht geladen werden.",
+    "retry": "Erneut versuchen"
   }
 }

@@ -120,6 +120,8 @@
         "edit_skill": "Edited skill",
         "install_marketplace_skill": "Offered skill install",
         "activate_skill": "Activated skill",
+        "get_memory": "Read memory",
+        "set_memory": "Updated memory",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
         "source_query": "Searched files",

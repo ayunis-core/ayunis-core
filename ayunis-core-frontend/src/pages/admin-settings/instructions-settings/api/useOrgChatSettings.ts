@@ -25,11 +25,19 @@ export function useOrgChatSettings() {
 
   const upsertMutation = useOrgChatSettingsControllerUpsertOrgChatSettings({
     mutation: {
-      onSuccess: () => {
-        showSuccess(t('internetAccess.saved'));
+      onSuccess: (_result, { data }) => {
+        showSuccess(
+          data.memoryEnabled === undefined
+            ? t('internetAccess.saved')
+            : t('memory.saved'),
+        );
       },
-      onError: () => {
-        showError(t('internetAccess.error'));
+      onError: (_error, { data }) => {
+        showError(
+          data.memoryEnabled === undefined
+            ? t('internetAccess.error')
+            : t('memory.error'),
+        );
       },
       onSettled: async () => {
         await queryClient.invalidateQueries({ queryKey });
@@ -43,14 +51,21 @@ export function useOrgChatSettings() {
     return upsertMutation.mutate({ data });
   }
 
+  function setMemoryEnabled(memoryEnabled: boolean) {
+    const data: UpsertOrgChatSettingsDto = { memoryEnabled };
+    return upsertMutation.mutate({ data });
+  }
+
   return {
     internetSearchEnabled:
       orgChatSettingsResponse?.internetSearchEnabled ?? true,
+    memoryEnabled: orgChatSettingsResponse?.memoryEnabled ?? false,
     isLoading,
     isError,
     error,
     refetch,
     isUpdating: upsertMutation.isPending,
     setInternetSearchEnabled,
+    setMemoryEnabled,
   };
 }
