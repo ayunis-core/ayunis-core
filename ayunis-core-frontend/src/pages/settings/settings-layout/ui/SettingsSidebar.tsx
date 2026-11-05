@@ -1,4 +1,11 @@
-import { Compass, MessageSquare, Plug, Settings, User } from 'lucide-react';
+import {
+  Brain,
+  Compass,
+  MessageSquare,
+  Plug,
+  Settings,
+  User,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
@@ -19,6 +26,11 @@ export function SettingsSidebar() {
       to: '/settings/chat',
       icon: <MessageSquare />,
       label: t('layout.chat'),
+    },
+    {
+      to: '/settings/memory',
+      icon: <Brain />,
+      label: t('layout.memory'),
     },
     {
       to: '/settings/integrations',

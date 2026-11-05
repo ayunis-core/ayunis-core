@@ -5,6 +5,7 @@
     "settings": "Einstellungen",
     "general": "Allgemein",
     "chat": "Chat",
+    "memory": "Erinnerung",
     "integrations": "Integrationen",
     "account": "Konto"
   },
@@ -138,5 +139,39 @@
     "defaultModelError": "Standardmodell konnte nicht aktualisiert werden",
     "saveSystemPrompt": "Speichern",
     "deleteSystemPrompt": "Entfernen"
+  },
+  "memory": {
+    "title": "Erinnerung",
+    "description": "Was sich der Assistent über Sie merkt. Diese Angaben sind nur für Sie sichtbar und werden in jedem neuen Chat berücksichtigt.",
+    "reserved": {
+      "personal": {
+        "title": "Über Sie"
+      },
+      "preferences": {
+        "title": "Ihre Vorlieben"
+      }
+    },
+    "emptyEntry": "Noch nichts gespeichert.",
+    "contentPlaceholder": "Was sich der Assistent merken soll",
+    "updatedAt": "Aktualisiert: {{date}}",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "clear": "Leeren",
+    "delete": "Löschen",
+    "clearAll": "Gesamte Erinnerung löschen",
+    "saved": "Erinnerung aktualisiert",
+    "deleted": "Eintrag entfernt",
+    "cleared": "Erinnerung gelöscht",
+    "saveError": "Der Eintrag konnte nicht gespeichert werden",
+    "deleteError": "Der Eintrag konnte nicht gelöscht werden",
+    "loadError": "Ihre Erinnerung konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "confirmClear": {
+      "title": "Gesamte Erinnerung löschen?",
+      "body": "Alle Einträge werden dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Alles löschen"
+    }
   }
 }
