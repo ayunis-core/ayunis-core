@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { ListToolbar, ListToolbarSearch } from '@/widgets/list-toolbar';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   personForRole,
   reviewableTeamIds,
@@ -151,6 +152,7 @@ export function PrototypeSkillsPage({
                   options={list.options}
                   onChange={setFilter}
                 />
+                <HelpLink path="skills/" />
                 <CreateSkillMenu
                   onCreateYourself={() => setIsCreateOpen(true)}
                 />
