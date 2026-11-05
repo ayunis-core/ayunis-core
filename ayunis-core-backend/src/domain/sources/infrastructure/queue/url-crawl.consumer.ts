@@ -1,3 +1,4 @@
+import { ingestionConcurrency } from 'src/config/ingestion.config';
 import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import type { PdfLink } from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
@@ -26,7 +27,7 @@ import { observeJob, processingStage } from './job-telemetry';
 
 const PAGE_SEPARATOR = '\n\n';
 
-@Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
+@Processor(URL_CRAWL_QUEUE, { concurrency: ingestionConcurrency('urlCrawl') })
 export class UrlCrawlConsumer extends WorkerHost {
   private readonly logger = new Logger(UrlCrawlConsumer.name);
 

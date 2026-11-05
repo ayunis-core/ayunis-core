@@ -1,3 +1,4 @@
+import { ingestionConcurrency } from 'src/config/ingestion.config';
 import {
   ProcessingStoppedError,
   type ProcessingContext,
@@ -46,7 +47,7 @@ import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, {
-  concurrency: 4,
+  concurrency: ingestionConcurrency('document'),
   settings: {
     backoffStrategy: (attemptsMade, _type, error) =>
       documentRetryDelayMs(attemptsMade, error),
