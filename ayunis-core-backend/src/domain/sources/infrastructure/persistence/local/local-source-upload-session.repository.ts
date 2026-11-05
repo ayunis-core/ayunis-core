@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
-import { In, IsNull, LessThan, Not, Repository } from 'typeorm';
+import { In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
@@ -54,8 +54,10 @@ export class LocalSourceUploadSessionRepository extends SourceUploadSessionRepos
       {
         id,
         status: fromStatus,
+        // A claim needs a living owner and an unexpired deadline; the
+        // expiry check before the stat does not cover a long workbook read.
         ...(toStatus === SourceUploadSessionStatus.SOURCES_CREATED
-          ? { userId: Not(IsNull()) }
+          ? { userId: Not(IsNull()), expiresAt: MoreThan(new Date()) }
           : {}),
       },
       { status: toStatus, ...updates },
