@@ -42,12 +42,6 @@ vi.mock('@/features/anonymous-mode-default', () => ({
 vi.mock('@/features/academy', () => ({
   useAcademyAccessStatus: () => ({ isGated: false }),
 }));
-vi.mock('@/shared/contexts/chat/useChatContext', () => ({
-  useChatContext: () => ({
-    setPendingImages: vi.fn(),
-    setPendingSkillId: vi.fn(),
-  }),
-}));
 vi.mock('@/shared/hooks/useFileFromUrl', () => ({ useFileFromUrl: vi.fn() }));
 vi.mock('@/pages/new-chat/model/useTimeBasedGreeting', () => ({
   useTimeBasedGreeting: () => 'Hello',

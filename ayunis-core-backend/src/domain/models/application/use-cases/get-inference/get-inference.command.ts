@@ -14,6 +14,7 @@ export class GetInferenceCommand {
   acceptTokenLimitCompletion: boolean;
   onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
   onCallTerminal?: InferenceCallTerminalHandler;
+  signal?: AbortSignal;
 
   constructor(params: {
     model: LanguageModel;
@@ -24,6 +25,7 @@ export class GetInferenceCommand {
     acceptTokenLimitCompletion?: boolean;
     onUsage?: (usage: InferenceResponse['meta']) => Promise<void>;
     onCallTerminal?: InferenceCallTerminalHandler;
+    signal?: AbortSignal;
   }) {
     this.model = params.model;
     this.onUsage = params.onUsage;
@@ -34,5 +36,6 @@ export class GetInferenceCommand {
     this.acceptTokenLimitCompletion =
       params.acceptTokenLimitCompletion ?? false;
     this.onCallTerminal = params.onCallTerminal;
+    this.signal = params.signal;
   }
 }

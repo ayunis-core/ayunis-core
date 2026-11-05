@@ -30,6 +30,7 @@ export class GenerateAndSetThreadTitleUseCase {
     try {
       return await this.generateTitle(command);
     } catch (error) {
+      if (command.signal?.aborted) return null;
       const logContext = {
         threadId: command.thread.id,
         err: this.toTitleGenerationError(command.thread.id, error),
@@ -41,7 +42,10 @@ export class GenerateAndSetThreadTitleUseCase {
 
   private async generateTitle(
     command: GenerateAndSetThreadTitleCommand,
-  ): Promise<string> {
+  ): Promise<string | null> {
+    if (command.signal?.aborted) {
+      return null;
+    }
     const prompt = `Based on the following user message, generate a short, concise title (maximum 50 characters):
       
       "${command.message}"
@@ -57,6 +61,7 @@ export class GenerateAndSetThreadTitleUseCase {
         messages: [userMessage],
         tools: [],
         toolChoice: ModelToolChoice.AUTO,
+        signal: command.signal,
       }),
     );
     if (!response.content.length) {
@@ -78,6 +83,9 @@ export class GenerateAndSetThreadTitleUseCase {
     );
     if (!title) {
       throw new EmptyTitleResponseError(command.thread.id);
+    }
+    if (command.signal?.aborted) {
+      return null;
     }
     await this.updateThreadTitleUseCase.execute(
       new UpdateThreadTitleCommand({ threadId: command.thread.id, title }),

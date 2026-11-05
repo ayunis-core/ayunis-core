@@ -3,6 +3,7 @@ import { GetInferenceCommand } from './get-inference.command';
 import { InferenceCallService } from 'src/domain/models/application/services/inference-call.service';
 import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
 import {
+  InferenceAbortedError,
   InferenceFailedError,
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
@@ -64,6 +65,7 @@ export class GetInferenceUseCase {
         toolChoice: command.toolChoice,
         orgId,
         onCallTerminal: command.onCallTerminal,
+        signal: command.signal,
       });
     } catch (error) {
       this.handleInferenceError(error, command);
@@ -94,6 +96,13 @@ export class GetInferenceUseCase {
     command: GetInferenceCommand,
   ): never {
     if (error instanceof ApplicationError) throw error;
+    if (command.signal?.aborted) {
+      this.logger.log(
+        { model: command.model.name, provider: command.model.provider },
+        'Inference aborted by caller',
+      );
+      throw new InferenceAbortedError();
+    }
     const providerError = wrapProviderFailure(error, {
       provider: command.model.provider,
       modelId: command.model.name,

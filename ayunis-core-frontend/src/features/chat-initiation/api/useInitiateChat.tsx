@@ -12,7 +12,7 @@ import {
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { showError } from '@/shared/lib/toast';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
+import { cancelStartedThreadRun, startThreadRun } from '@/features/thread-run';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -66,6 +66,7 @@ interface InitiateChatParams {
   isAnonymous: boolean;
   /** Files the new chat under a workspace ("Projekt"). */
   workspaceId?: string;
+  skillId?: string;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
@@ -110,7 +111,6 @@ export const useInitiateChat = (options?: {
 }) => {
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
-  const { setPendingMessage, setPendingImages } = useChatContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate();
@@ -119,6 +119,7 @@ export const useInitiateChat = (options?: {
   const [isSettlingLayout, setIsSettlingLayout] = useState(false);
   const isInitiatingChatRef = useRef(false);
   const settleStartedAtRef = useRef<number | null>(null);
+  const startedThreadIdRef = useRef<string | null>(null);
 
   // Cancellation flag is a ref because we want `cancel()` to flip it
   // synchronously and have any in-flight pipeline observe it on the next
@@ -249,12 +250,14 @@ export const useInitiateChat = (options?: {
     mcpIntegrations,
     isAnonymous,
     workspaceId,
+    skillId,
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
     if (isInitiatingChatRef.current) return;
     isInitiatingChatRef.current = true;
     setIsInitiatingChat(true);
     cancelledRef.current = false;
+    startedThreadIdRef.current = null;
     beginSettleAnimation();
     const isCancelled = () => cancelledRef.current;
 
@@ -285,7 +288,12 @@ export const useInitiateChat = (options?: {
       knowledgeBases.length === 0 &&
       mcpIntegrations.length === 0
     ) {
-      await finalizeAndNavigate(thread.id, message, images, workspaceId);
+      await finalizeAndNavigate(thread.id, {
+        message,
+        images,
+        skillId,
+        workspaceId,
+      });
       return;
     }
 
@@ -332,7 +340,12 @@ export const useInitiateChat = (options?: {
         return;
       }
 
-      await finalizeAndNavigate(thread.id, message, images, workspaceId);
+      await finalizeAndNavigate(thread.id, {
+        message,
+        images,
+        skillId,
+        workspaceId,
+      });
     } finally {
       setIsAttachingResources(false);
     }
@@ -340,14 +353,23 @@ export const useInitiateChat = (options?: {
 
   async function finalizeAndNavigate(
     threadId: string,
-    message: string,
-    images: PendingImageFile[],
-    workspaceId?: string,
+    {
+      message,
+      images,
+      skillId,
+      workspaceId,
+    }: Pick<
+      InitiateChatParams,
+      'message' | 'images' | 'skillId' | 'workspaceId'
+    >,
   ): Promise<void> {
     if (cancelledRef.current) {
       stopInitiatingChat();
       return;
     }
+
+    startThreadRun({ threadId, text: message, images, skillId });
+    startedThreadIdRef.current = threadId;
 
     await waitForSettleAnimation();
 
@@ -373,11 +395,6 @@ export const useInitiateChat = (options?: {
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
     }
-    // Images are handed off only now, with the text: the chat page sends
-    // whatever is pending on mount, so a cancelled or failed initiation must
-    // not leave images behind for the next chat that opens.
-    setPendingMessage(message);
-    setPendingImages(images);
     options?.onSuccess?.();
 
     // Keep settling state until unmount — avoids snapping back to --idle transform.
@@ -387,6 +404,9 @@ export const useInitiateChat = (options?: {
 
   function cancel() {
     cancelledRef.current = true;
+    if (startedThreadIdRef.current) {
+      cancelStartedThreadRun(startedThreadIdRef.current);
+    }
     setIsAttachingResources(false);
     stopInitiatingChat();
   }
