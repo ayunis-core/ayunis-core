@@ -3123,6 +3123,32 @@ export interface AssignThreadWorkspaceDto {
   workspaceId: string | null;
 }
 
+export interface CreateSourceUploadDto {
+  /**
+     * Original file name, including its extension
+     * @maxLength 255
+     */
+  fileName: string;
+  /** MIME type reported by the browser; may be empty when unknown. The server derives the canonical type from it and the file name. */
+  mimeType: string;
+  /**
+     * Exact size of the file in bytes
+     * @minimum 1
+     */
+  fileSize: number;
+}
+
+export interface SourceUploadSessionResponseDto {
+  /** Upload id. Used for the transfer endpoints under /source-uploads and for completing the upload on its target. */
+  id: string;
+  /** True when the file must be transferred as an S3 multipart upload (part URLs signed per part); false for a single signed PUT. */
+  multipart: boolean;
+  /** Size of every part except the last, in bytes */
+  partSizeBytes: number;
+  /** The transfer must be completed before this time */
+  expiresAt: string;
+}
+
 export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwnerType[keyof typeof CreateKnowledgeBaseDtoOwnerType];
 
 
