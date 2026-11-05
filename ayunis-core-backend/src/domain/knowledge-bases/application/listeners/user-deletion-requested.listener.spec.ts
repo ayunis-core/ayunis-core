@@ -118,6 +118,37 @@ describe(KnowledgeBasesUserDeletionRequestedListener.name, () => {
     expect(event.takeCleanupTasks()).toHaveLength(0);
   });
 
+  it('releases the retained originals of ready sources, whose rows the cascade removes', async () => {
+    knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
+      { id: 'kb-1' },
+    ]);
+    knowledgeBaseRepository.findSourcesByKnowledgeBaseIds.mockResolvedValue([
+      {
+        id: 'src-1',
+        status: SourceStatus.READY,
+        storageKey: 'org/uploads/s1/a.pdf',
+      },
+      { id: 'src-2', status: SourceStatus.READY, storageKey: null },
+    ]);
+    const event = new UserDeletionRequestedEvent(userId, orgId);
+
+    await listener.handleUserDeletionRequested(event);
+    const tasks = event.takeCleanupTasks();
+
+    expect(tasks.map((task) => task.label)).toEqual([
+      'cleanup knowledge base source processing',
+      'delete knowledge base source indexes',
+    ]);
+    await tasks[0].run();
+    expect(cleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceIds: [],
+        orgId,
+        storageKeys: ['org/uploads/s1/a.pdf'],
+      }),
+    );
+  });
+
   it('defers index cleanup but not processing cleanup for ready sources', async () => {
     knowledgeBaseRepository.findAllOwnedByUserId.mockResolvedValue([
       { id: 'kb-1' },

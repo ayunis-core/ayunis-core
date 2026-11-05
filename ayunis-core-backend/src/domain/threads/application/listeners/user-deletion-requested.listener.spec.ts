@@ -6,19 +6,30 @@ import { ThreadsUserDeletionRequestedListener } from './user-deletion-requested.
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
+import { DeleteUnreferencedSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.use-case';
 
 describe('ThreadsUserDeletionRequestedListener', () => {
   let listener: ThreadsUserDeletionRequestedListener;
-  let threadsRepository: { findAllIdsByUserId: jest.Mock };
+  let threadsRepository: {
+    findAllIdsByUserId: jest.Mock;
+    findDirectSourceIdsByUserId: jest.Mock;
+  };
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
+  let deleteUnreferencedSourcesUseCase: { execute: jest.Mock };
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const orgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
-    threadsRepository = { findAllIdsByUserId: jest.fn().mockResolvedValue([]) };
+    threadsRepository = {
+      findAllIdsByUserId: jest.fn().mockResolvedValue([]),
+      findDirectSourceIdsByUserId: jest.fn().mockResolvedValue([]),
+    };
     purgeStoragePrefixesUseCase = {
       execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
+    };
+    deleteUnreferencedSourcesUseCase = {
+      execute: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -28,6 +39,10 @@ describe('ThreadsUserDeletionRequestedListener', () => {
         {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,
+        },
+        {
+          provide: DeleteUnreferencedSourcesUseCase,
+          useValue: deleteUnreferencedSourcesUseCase,
         },
       ],
     }).compile();
@@ -61,6 +76,32 @@ describe('ThreadsUserDeletionRequestedListener', () => {
           `generated-images/${orgId}/${threadB}/`,
         ],
       }),
+    );
+  });
+
+  it("defers deletion of the sources uploaded into the user's threads after the purge", async () => {
+    const threadA = '00000000-0000-0000-0000-0000000000a1' as UUID;
+    const sourceA = '00000000-0000-0000-0000-0000000000b1' as UUID;
+    const sourceB = '00000000-0000-0000-0000-0000000000b2' as UUID;
+    threadsRepository.findAllIdsByUserId.mockResolvedValue([threadA]);
+    threadsRepository.findDirectSourceIdsByUserId.mockResolvedValue([
+      sourceA,
+      sourceB,
+    ]);
+    const event = new UserDeletionRequestedEvent(userId, orgId);
+
+    await listener.handleUserDeletionRequested(event);
+
+    expect(deleteUnreferencedSourcesUseCase.execute).not.toHaveBeenCalled();
+    const tasks = event.takeCleanupTasks();
+    expect(tasks.map((task) => task.label)).toEqual([
+      'purge thread storage',
+      'delete thread sources',
+    ]);
+
+    await tasks[1].run();
+    expect(deleteUnreferencedSourcesUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: [sourceA, sourceB], orgId }),
     );
   });
 

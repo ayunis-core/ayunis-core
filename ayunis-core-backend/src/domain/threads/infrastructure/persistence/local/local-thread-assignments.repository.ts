@@ -308,6 +308,17 @@ export class LocalThreadAssignmentsRepository {
       .execute();
   }
 
+  async findDirectSourceIdsByUserId(userId: UUID): Promise<UUID[]> {
+    const rows = await this.threadSourceAssignmentRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.thread', 'thread')
+      .select('DISTINCT assignment.sourceId', 'sourceId')
+      .where('thread.userId = :userId', { userId })
+      .andWhere('assignment.originSkillId IS NULL')
+      .getRawMany<{ sourceId: UUID }>();
+    return rows.map((row) => row.sourceId);
+  }
+
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
   ): Promise<StaleThreadSourceRef[]> {

@@ -36,6 +36,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
 import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
+import { DeleteUnreferencedSourcesUseCase } from './application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
@@ -83,6 +84,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
   ],
@@ -111,6 +113,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
   ],

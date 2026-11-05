@@ -4,19 +4,26 @@ import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/use
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
+import { DeleteUnreferencedSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.use-case';
+import { DeleteUnreferencedSourcesCommand } from 'src/domain/sources/application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.command';
 
 /**
- * Cleans up object-storage (MinIO) assets owned by a user's threads when the
- * user is being deleted. The thread rows themselves (and their messages,
- * artifacts and generated-image records) are removed by the `threads.userId`
- * FK cascade; only the blobs need explicit cleanup.
+ * Cleans up what the `threads.userId` FK cascade cannot reach when a user is
+ * deleted. The thread rows themselves (and their messages, artifacts and
+ * generated-image records) go with the cascade; two things need explicit work:
  *
- * Thread ids are resolved here, before the row delete, while the thread rows
- * still exist; the blobs are then purged by key prefix (`<orgId>/<threadId>/`
- * for message images, `generated-images/<orgId>/<threadId>/` for generated
- * images), which needs no rows — so the purge itself is deferred until after
- * the row delete succeeds. Failures are logged, never thrown, so a lookup
- * error cannot block user deletion.
+ * - Object-storage (MinIO) blobs under the thread prefixes
+ *   (`<orgId>/<threadId>/` for message images,
+ *   `generated-images/<orgId>/<threadId>/` for generated images).
+ * - Sources uploaded into those threads. They have no owner FK, so the cascade
+ *   only removes their assignment rows and the stale-source sweep, which starts
+ *   from assignments, never sees them again; their indexes and retained
+ *   originals would stay until the org is deleted.
+ *
+ * Both are resolved here, before the row delete, while the thread rows still
+ * exist, and the irreversible work is deferred until after the delete
+ * succeeds. Failures are logged, never thrown, so a lookup error cannot block
+ * user deletion.
  */
 @Injectable()
 export class ThreadsUserDeletionRequestedListener {
@@ -27,6 +34,7 @@ export class ThreadsUserDeletionRequestedListener {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
+    private readonly deleteUnreferencedSourcesUseCase: DeleteUnreferencedSourcesUseCase,
   ) {}
 
   @OnEvent(UserDeletionRequestedEvent.EVENT_NAME)
@@ -42,10 +50,14 @@ export class ThreadsUserDeletionRequestedListener {
         return;
       }
 
+      const sourceIds =
+        await this.threadsRepository.findDirectSourceIdsByUserId(event.userId);
+
       this.logger.log(
         {
           userId: event.userId,
           threadCount: threadIds.length,
+          sourceCount: sourceIds.length,
         },
         'Deferring thread storage cleanup for deleted user',
       );
@@ -59,6 +71,13 @@ export class ThreadsUserDeletionRequestedListener {
           new PurgeStoragePrefixesCommand(prefixes),
         );
       });
+      if (sourceIds.length > 0) {
+        event.deferCleanup('delete thread sources', async () => {
+          await this.deleteUnreferencedSourcesUseCase.execute(
+            new DeleteUnreferencedSourcesCommand(sourceIds, event.orgId),
+          );
+        });
+      }
     } catch (error) {
       this.logger.error(
         {

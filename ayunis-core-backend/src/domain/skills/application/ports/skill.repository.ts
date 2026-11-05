@@ -111,6 +111,8 @@ export abstract class SkillRepository {
     ownerIds: UUID[],
   ): Promise<PersonalSkill[]>;
   abstract findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]>;
+  /** Sources of every skill the user owns, across personal and workspace skills. */
+  abstract findSourceIdsByOwnerUserId(userId: UUID): Promise<UUID[]>;
   abstract removeKnowledgeBaseFromSkills(
     knowledgeBaseId: UUID,
     skillIds: UUID[],

@@ -450,6 +450,17 @@ export class LocalSkillRepository implements SkillRepository {
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
+  async findSourceIdsByOwnerUserId(userId: UUID): Promise<UUID[]> {
+    this.logger.log({ userId }, 'findSourceIdsByOwnerUserId');
+    const rows = await this.skillRepository
+      .createQueryBuilder('skill')
+      .innerJoin('skill.sources', 'source')
+      .select('DISTINCT source.id', 'sourceId')
+      .where('skill.userId = :userId', { userId })
+      .getRawMany<{ sourceId: UUID }>();
+    return rows.map((row) => row.sourceId);
+  }
+
   async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {
     this.logger.log(
       { skillCount: skillIds.length },
