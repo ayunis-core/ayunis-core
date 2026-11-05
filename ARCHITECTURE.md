@@ -196,10 +196,13 @@ load-bearing):
   (`super_admin`) is a separate platform axis via `@SystemRoles` +
   `SystemRolesGuard`.
 - **Permission** — fine-grained capabilities (`manage_teams`,
-  `assign_users_to_teams`, `manage_skills`, `share_skills`,
-  `manage_knowledge_bases`, `share_knowledge_bases`) that org admins grant
-  **per role, per org**. `@RequirePermission(Permission.X)` + `PermissionsGuard`
-  → `HasPermissionUseCase`. **ADMIN implicitly holds every permission**;
+  `assign_users_to_teams`, `manage_skills`, `share_skills_with_teams`,
+  `share_skills_with_org`, `manage_knowledge_bases`,
+  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`) that org
+  admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
+  `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the
+  share's scope, so the shares use cases check them via
+  `SharePermissionService`. **ADMIN implicitly holds every permission**;
   MANAGER/USER hold what the org's matrix grants (each must keep ≥1). Grants
   live in the per-org `role_permissions` table; new orgs are seeded and existing
   orgs backfilled to preserve pre-RBAC access. See

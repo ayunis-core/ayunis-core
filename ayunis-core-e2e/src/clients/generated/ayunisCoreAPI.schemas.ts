@@ -747,9 +747,11 @@ export const RolePermissionSetDtoPermissionsItem = {
   manage_teams: 'manage_teams',
   assign_users_to_teams: 'assign_users_to_teams',
   manage_skills: 'manage_skills',
-  share_skills: 'share_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
   manage_knowledge_bases: 'manage_knowledge_bases',
-  share_knowledge_bases: 'share_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
 } as const;
 
 export interface RolePermissionSetDto {
@@ -769,9 +771,11 @@ export const UpdateRolePermissionsDtoPermissionsItem = {
   manage_teams: 'manage_teams',
   assign_users_to_teams: 'assign_users_to_teams',
   manage_skills: 'manage_skills',
-  share_skills: 'share_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
   manage_knowledge_bases: 'manage_knowledge_bases',
-  share_knowledge_bases: 'share_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
 } as const;
 
 export interface UpdateRolePermissionsDto {
@@ -786,9 +790,11 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   manage_teams: 'manage_teams',
   assign_users_to_teams: 'assign_users_to_teams',
   manage_skills: 'manage_skills',
-  share_skills: 'share_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
   manage_knowledge_bases: 'manage_knowledge_bases',
-  share_knowledge_bases: 'share_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
 } as const;
 
 export interface MyPermissionsResponseDto {

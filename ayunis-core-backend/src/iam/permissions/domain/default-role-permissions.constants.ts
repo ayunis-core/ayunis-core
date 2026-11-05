@@ -28,14 +28,18 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<
   [UserRole.ADMIN]: [],
   [UserRole.MANAGER]: [
     Permission.MANAGE_SKILLS,
-    Permission.SHARE_SKILLS,
+    Permission.SHARE_SKILLS_WITH_TEAMS,
+    Permission.SHARE_SKILLS_WITH_ORG,
     Permission.MANAGE_KNOWLEDGE_BASES,
-    Permission.SHARE_KNOWLEDGE_BASES,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
   ],
   [UserRole.USER]: [
     Permission.MANAGE_SKILLS,
-    Permission.SHARE_SKILLS,
+    Permission.SHARE_SKILLS_WITH_TEAMS,
+    Permission.SHARE_SKILLS_WITH_ORG,
     Permission.MANAGE_KNOWLEDGE_BASES,
-    Permission.SHARE_KNOWLEDGE_BASES,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
   ],
 };

@@ -6,8 +6,8 @@ import type {
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useCreateShare } from '../api/useCreateShare';
-import { useDeleteShare } from '../api/useDeleteShare';
+import { useCreateShare } from '@/widgets/shares-tab/api/useCreateShare';
+import { useDeleteShare } from '@/widgets/shares-tab/api/useDeleteShare';
 import { useMyPermissions } from '@/features/permissions';
 import {
   Item,
@@ -42,10 +42,17 @@ export default function SharesTab({
   const { createShare, isCreating } = useCreateShare(entityType, entityId);
   const { deleteShare, isDeleting } = useDeleteShare(entityType, entityId);
   const { can } = useMyPermissions();
-  // Members without the entity's share permission cannot toggle shares (the
-  // backend 403s the create anyway); disable the switches so it's clear.
-  const canShare = can(
-    entityType === 'skill' ? 'share_skills' : 'share_knowledge_bases',
+  // Sharing is permissioned per audience and the backend 403s the rest;
+  // disable the switches the member cannot use so it's clear.
+  const canShareWithOrg = can(
+    entityType === 'skill'
+      ? 'share_skills_with_org'
+      : 'share_knowledge_bases_with_org',
+  );
+  const canShareWithTeams = can(
+    entityType === 'skill'
+      ? 'share_skills_with_teams'
+      : 'share_knowledge_bases_with_teams',
   );
 
   // Check if organization share exists
@@ -132,7 +139,8 @@ export default function SharesTab({
           <Switch
             checked={!!organizationShare}
             onCheckedChange={handleOrgToggleChange}
-            disabled={isCreating || isDeleting || !canShare}
+            disabled={isCreating || isDeleting || !canShareWithOrg}
+            data-testid="shares-org-switch"
           />
         </ItemActions>
       </Item>
@@ -156,7 +164,8 @@ export default function SharesTab({
                     onCheckedChange={(checked) =>
                       handleTeamToggleChange(team.id, team.name, checked)
                     }
-                    disabled={isCreating || isDeleting || !canShare}
+                    disabled={isCreating || isDeleting || !canShareWithTeams}
+                    data-testid={`shares-team-switch-${team.id}`}
                   />
                 </ItemActions>
               </Item>

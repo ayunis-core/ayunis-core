@@ -21,17 +21,21 @@
     "manage_teams": "Teams erstellen, umbenennen und löschen.",
     "assign_users_to_teams": "Mitglieder zu einem Team hinzufügen und wieder entfernen. Erlaubt nicht, Teams zu erstellen oder zu löschen.",
     "manage_skills": "Fähigkeiten erstellen, bearbeiten und löschen – einschließlich ihrer Anweisungen, Quellen und Integrationen.",
-    "share_skills": "Eine Fähigkeit für ein Team oder die gesamte Organisation freigeben.",
+    "share_skills_with_teams": "Eine Fähigkeit für Teams freigeben, denen das Mitglied angehört.",
+    "share_skills_with_org": "Eine Fähigkeit für die gesamte Organisation freigeben.",
     "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
-    "share_knowledge_bases": "Eine Wissenssammlung für ein Team oder die gesamte Organisation freigeben."
+    "share_knowledge_bases_with_teams": "Eine Wissenssammlung für Teams freigeben, denen das Mitglied angehört.",
+    "share_knowledge_bases_with_org": "Eine Wissenssammlung für die gesamte Organisation freigeben."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
     "assign_users_to_teams": "Benutzer zu Teams zuordnen",
     "manage_skills": "Fähigkeiten verwalten",
-    "share_skills": "Fähigkeiten teilen",
+    "share_skills_with_teams": "Fähigkeiten mit eigenen Teams teilen",
+    "share_skills_with_org": "Fähigkeiten mit der Organisation teilen",
     "manage_knowledge_bases": "Wissenssammlungen verwalten",
-    "share_knowledge_bases": "Wissenssammlungen teilen"
+    "share_knowledge_bases_with_teams": "Wissenssammlungen mit eigenen Teams teilen",
+    "share_knowledge_bases_with_org": "Wissenssammlungen mit der Organisation teilen"
   },
   "adminHint": "Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden.",
   "save": "Änderungen speichern",

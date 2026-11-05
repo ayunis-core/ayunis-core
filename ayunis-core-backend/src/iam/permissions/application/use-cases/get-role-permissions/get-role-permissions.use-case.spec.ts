@@ -28,7 +28,7 @@ describe('GetRolePermissionsUseCase', () => {
       new RolePermission({
         orgId,
         role: UserRole.USER,
-        permission: Permission.SHARE_SKILLS,
+        permission: Permission.SHARE_SKILLS_WITH_TEAMS,
       }),
     ]);
 
@@ -36,7 +36,10 @@ describe('GetRolePermissionsUseCase', () => {
 
     expect(result).toEqual([
       { role: UserRole.MANAGER, permissions: [Permission.MANAGE_SKILLS] },
-      { role: UserRole.USER, permissions: [Permission.SHARE_SKILLS] },
+      {
+        role: UserRole.USER,
+        permissions: [Permission.SHARE_SKILLS_WITH_TEAMS],
+      },
     ]);
   });
 

@@ -34,14 +34,14 @@ describe('UpdateRolePermissionsUseCase', () => {
       new UpdateRolePermissionsCommand(orgId, UserRole.MANAGER, [
         Permission.MANAGE_SKILLS,
         Permission.MANAGE_SKILLS,
-        Permission.SHARE_SKILLS,
+        Permission.SHARE_SKILLS_WITH_TEAMS,
       ]),
     );
 
     expect(repository.setForRole).toHaveBeenCalledWith(
       orgId,
       UserRole.MANAGER,
-      [Permission.MANAGE_SKILLS, Permission.SHARE_SKILLS],
+      [Permission.MANAGE_SKILLS, Permission.SHARE_SKILLS_WITH_TEAMS],
     );
   });
 });

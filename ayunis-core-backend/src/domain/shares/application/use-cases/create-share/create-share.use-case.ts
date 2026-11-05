@@ -12,7 +12,7 @@ import {
   CreateTeamKnowledgeBaseShareCommand,
   CreateShareCommand,
 } from './create-share.command';
-import { SharesRepository } from '../../ports/shares-repository.port';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import {
   SkillShare,
   KnowledgeBaseShare,
@@ -22,12 +22,13 @@ import {
   OrgShareScope,
   TeamShareScope,
 } from 'src/domain/shares/domain/share-scope.entity';
-import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
+import { ShareAuthorizationFactory } from 'src/domain/shares/application/factories/share-authorization.factory';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import { CheckUserTeamMembershipQuery } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.query';
-import { ShareAlreadyExistsError } from '../../shares.errors';
+import { ShareAlreadyExistsError } from 'src/domain/shares/application/shares.errors';
+import { SharePermissionService } from 'src/domain/shares/application/services/share-permission.service';
 
 interface ShareCommandConfig {
   entityType: SharedEntityType;
@@ -43,6 +44,7 @@ export class CreateShareUseCase {
     private readonly repository: SharesRepository,
     private readonly authorizationFactory: ShareAuthorizationFactory,
     private readonly checkUserTeamMembershipUseCase: CheckUserTeamMembershipUseCase,
+    private readonly sharePermissionService: SharePermissionService,
   ) {}
 
   async execute(command: CreateShareCommand): Promise<Share> {
@@ -124,6 +126,10 @@ export class CreateShareUseCase {
     orgId: UUID,
     factory: (ownerId: UUID, scope: OrgShareScope) => Share,
   ): Promise<Share> {
+    await this.sharePermissionService.requireSharePermission(
+      entityType,
+      ShareScopeType.ORG,
+    );
     await this.authorizeCreateShare(entityType, entityId, userId);
 
     const existingShare = await this.repository.findByEntityAndScope(
@@ -149,6 +155,10 @@ export class CreateShareUseCase {
     userId: UUID,
     factory: (ownerId: UUID, scope: TeamShareScope) => Share,
   ): Promise<Share> {
+    await this.sharePermissionService.requireSharePermission(
+      entityType,
+      ShareScopeType.TEAM,
+    );
     await this.authorizeCreateShare(entityType, entityId, userId);
 
     const isMember = await this.checkUserTeamMembershipUseCase.execute(

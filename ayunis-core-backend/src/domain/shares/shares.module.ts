@@ -22,6 +22,7 @@ import { FindShareByEntityUseCase } from './application/use-cases/find-share-by-
 
 // Services
 import { ShareScopeResolverService } from './application/services/share-scope-resolver.service';
+import { SharePermissionService } from './application/services/share-permission.service';
 
 // Factories
 import { ShareAuthorizationFactory } from './application/factories/share-authorization.factory';
@@ -33,6 +34,7 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 import { SharesController } from './presenters/http/shares.controller';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { UsersModule } from 'src/iam/users/users.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -44,6 +46,7 @@ import { UsersModule } from 'src/iam/users/users.module';
     ]),
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
     UsersModule, // For ShareScopeResolverService
+    PermissionsModule, // For SharePermissionService
   ],
   providers: [
     // Repository
@@ -65,6 +68,7 @@ import { UsersModule } from 'src/iam/users/users.module';
 
     // Services
     ShareScopeResolverService,
+    SharePermissionService,
 
     // Factories
     ShareAuthorizationFactory,

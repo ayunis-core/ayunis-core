@@ -61,7 +61,10 @@ export class SharesController {
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
-  @RequirePermission(Permission.SHARE_SKILLS)
+  @RequirePermission(
+    Permission.SHARE_SKILLS_WITH_TEAMS,
+    Permission.SHARE_SKILLS_WITH_ORG,
+  )
   @Post('skills')
   @ApiOperation({ summary: 'Create a share for a skill' })
   @ApiBody({
@@ -107,7 +110,10 @@ export class SharesController {
     return this.shareDtoMapper.toDto(share);
   }
 
-  @RequirePermission(Permission.SHARE_KNOWLEDGE_BASES)
+  @RequirePermission(
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
+  )
   @Post('knowledge-bases')
   @ApiOperation({ summary: 'Create a share for a knowledge base' })
   @ApiBody({
@@ -209,10 +215,15 @@ export class SharesController {
     return this.shareDtoMapper.toDtoArray(shares, teamNamesMap);
   }
 
-  // Withdrawing a share is managing sharing, so it needs the same permission as
-  // creating one. The route is keyed by share id rather than entity type, so it
-  // accepts either permission; ownership is still enforced in the use case.
-  @RequirePermission(Permission.SHARE_SKILLS, Permission.SHARE_KNOWLEDGE_BASES)
+  // Withdrawing a share needs the same permission as creating it. The route is
+  // keyed by share id, so the guard only admits holders of any share permission;
+  // the use case checks the one matching the stored share's entity and scope.
+  @RequirePermission(
+    Permission.SHARE_SKILLS_WITH_TEAMS,
+    Permission.SHARE_SKILLS_WITH_ORG,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
+  )
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a share' })
   @ApiParam({

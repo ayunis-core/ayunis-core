@@ -142,6 +142,7 @@ export function RolesSettingsPage() {
             <Button
               onClick={() => void save(rows, serverDraft)}
               disabled={isSaving || !hasChanges}
+              data-testid="roles-settings-save"
             >
               {isSaving ? t('saving') : t('save')}
             </Button>
