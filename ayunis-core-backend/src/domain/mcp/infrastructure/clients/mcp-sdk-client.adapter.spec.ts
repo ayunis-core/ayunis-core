@@ -504,6 +504,40 @@ describe('McpSdkClientAdapter', () => {
       ).rejects.toThrow(McpConnectionFailedError);
     });
 
+    it("aborts the tool request when the caller's run is cancelled", async () => {
+      const controller = new AbortController();
+      let requestSignal: AbortSignal | undefined;
+      // Mirrors the SDK: a request rejects once its signal aborts.
+      clientMock.callTool.mockImplementation(
+        (_request: unknown, options: { signal?: AbortSignal }) => {
+          requestSignal = options.signal;
+          return new Promise((_resolve, reject) => {
+            options.signal?.addEventListener('abort', () =>
+              reject(
+                new DOMException('This operation was aborted', 'AbortError'),
+              ),
+            );
+          });
+        },
+      );
+
+      const call = adapter.callTool(config, {
+        toolName: 'search',
+        parameters: {},
+        signal: controller.signal,
+      });
+      await new Promise((resolve) => setImmediate(resolve));
+      controller.abort(new Error('Run consumer abandoned the stream'));
+
+      await expect(call).rejects.toBeDefined();
+      expect(requestSignal).toBe(controller.signal);
+      expect(requestSignal?.aborted).toBe(true);
+      expect(clientMock.connect).toHaveBeenCalledWith(
+        expect.anything(),
+        REQUEST_TIMEOUT,
+      );
+    });
+
     it('passes non-timeout errors through unchanged', async () => {
       const authError = Object.assign(new Error('Unauthorized'), {
         code: 401,

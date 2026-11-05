@@ -40,6 +40,13 @@ export type ToolExecutionOutput = string | ToolExecutionResult;
  * current tool phase has been settled.
  */
 export interface Tool extends ToolSchema {
+  /**
+   * Calls of one model turn run concurrently by default. An exclusive tool
+   * runs alone: it starts once the calls before it have settled, and the
+   * calls after it start once it has settled. Use it for tools whose side
+   * effects sibling calls may observe or race with.
+   */
+  readonly exclusive?: boolean;
   execute?(
     input: Record<string, unknown>,
     ctx: ToolExecutionContext,

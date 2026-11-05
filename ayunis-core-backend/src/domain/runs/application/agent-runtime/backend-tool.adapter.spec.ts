@@ -19,6 +19,8 @@ import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -41,10 +43,14 @@ function fakeTool(name: string): BackendTool {
   } as unknown as BackendTool;
 }
 
-function toolCtx(isAnonymous = false): ToolExecutionContext {
+function toolCtx(
+  isAnonymous = false,
+  signal?: AbortSignal,
+): ToolExecutionContext {
   return {
     context: RunContext.create({ orgId, threadId, isAnonymous }),
     toolCallId: 'c1',
+    signal,
     emit: jest.fn(),
   } as unknown as ToolExecutionContext;
 }
@@ -406,5 +412,37 @@ describe('BackendToolAdapter', () => {
       result: expect.stringContaining('bad query'),
       isError: true,
     });
+  });
+
+  it('marks skill activation and artifact updates as exclusive', () => {
+    const [activate, update, search] = adapter.toRuntimeTools([
+      new ActivateSkillTool(),
+      new UpdateDocumentTool(),
+      new InternetSearchTool(),
+    ]);
+
+    expect(activate.exclusive).toBe(true);
+    expect(update.exclusive).toBe(true);
+    expect(search.exclusive).toBe(false);
+  });
+
+  it('reports a tool failure caused by cancellation as the cancellation', async () => {
+    const controller = new AbortController();
+    execute.mockImplementation(() => {
+      controller.abort(new Error('Run consumer abandoned the stream'));
+      return Promise.reject(
+        new ToolExecutionFailedError({
+          toolName: 'search',
+          message: 'This operation was aborted',
+          exposeToLLM: true,
+        }),
+      );
+    });
+
+    const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
+    const result = tool.execute!({}, toolCtx(true, controller.signal));
+
+    await expect(result).rejects.toBe(controller.signal.reason);
+    expect(anonymize).not.toHaveBeenCalled();
   });
 });

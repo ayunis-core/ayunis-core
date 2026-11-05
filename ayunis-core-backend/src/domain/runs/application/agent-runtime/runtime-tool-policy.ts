@@ -1,4 +1,5 @@
 import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
@@ -45,6 +46,21 @@ export function isHybridArtifactTool(tool: Tool): boolean {
     tool instanceof CreateDiagramTool ||
     tool instanceof UpdateDiagramTool ||
     tool instanceof CreateSpreadsheetTool ||
+    tool instanceof UpdateSpreadsheetTool
+  );
+}
+
+/**
+ * Tools whose side effects sibling calls in the same turn may observe or race
+ * with: skill activation changes the thread's sources and integrations, and
+ * artifact updates rewrite an existing artifact's latest version.
+ */
+export function requiresExclusiveExecution(tool: Tool): boolean {
+  return (
+    tool instanceof ActivateSkillTool ||
+    tool instanceof UpdateDocumentTool ||
+    tool instanceof EditDocumentTool ||
+    tool instanceof UpdateDiagramTool ||
     tool instanceof UpdateSpreadsheetTool
   );
 }

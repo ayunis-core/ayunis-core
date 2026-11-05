@@ -410,6 +410,7 @@ export class McpClientService {
     try {
       return await this.mcpClient.callTool(config, call);
     } catch (error) {
+      call.signal?.throwIfAborted();
       await this.handleOperationError(error, integration, 'callTool', userId);
       throw error;
     }

@@ -11,6 +11,7 @@ import { GetThreadPiiMasksUseCase } from './application/use-cases/get-thread-pii
 import { AnonymizeTextForThreadUseCase } from './application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { UnmaskThreadPiiMaskUseCase } from './application/use-cases/unmask-thread-pii-mask/unmask-thread-pii-mask.use-case';
 import { PiiMaskDtoMapper } from './presenters/http/mappers/pii-mask.mapper';
+import { ThreadMaskAllocationLock } from './application/services/thread-mask-allocation-lock.service';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PiiMaskDtoMapper } from './presenters/http/mappers/pii-mask.mapper';
       provide: ThreadPiiMaskRepository,
       useClass: PostgresThreadPiiMaskRepository,
     },
+    ThreadMaskAllocationLock,
     GetThreadPiiMasksUseCase,
     AnonymizeTextForThreadUseCase,
     UnmaskThreadPiiMaskUseCase,

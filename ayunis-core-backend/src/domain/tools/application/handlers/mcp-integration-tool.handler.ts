@@ -20,7 +20,7 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
@@ -29,10 +29,12 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
           tool.integrationId,
           tool.originalName,
           validatedInput,
+          context.signal,
         ),
       );
       return JSON.stringify(result.content);
     } catch (error) {
+      context.signal?.throwIfAborted();
       if (error instanceof ApplicationError) throw error;
       this.logger.error({ err: error }, 'error');
       throw new ToolExecutionFailedError({

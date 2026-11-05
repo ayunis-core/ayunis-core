@@ -17,6 +17,9 @@ import {
 import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import { Logger } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
+import type { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { applyMaskReplacements } from 'src/common/anonymization/domain/apply-mask-replacements';
+import { ThreadMaskAllocationLock } from 'src/domain/thread-pii-masks/application/services/thread-mask-allocation-lock.service';
 
 describe('AnonymizeTextForThreadUseCase', () => {
   const orgId = '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c' as UUID;
@@ -49,6 +52,7 @@ describe('AnonymizeTextForThreadUseCase', () => {
         execute: globalWhitelistExecute,
       } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
+      new ThreadMaskAllocationLock(),
     );
   });
 
@@ -330,6 +334,120 @@ describe('AnonymizeTextForThreadUseCase', () => {
     });
     await expect(result).rejects.not.toMatchObject({
       metadata: expect.objectContaining({ detail: expect.anything() }),
+    });
+  });
+
+  describe('concurrent redactions', () => {
+    const otherThreadId = '9c2d3e4f-5a6b-4c7d-8e9f-a0b1c2d3e4f5' as UUID;
+    let stored: ThreadPiiMask[];
+    let activeDetections: number;
+    let maxActiveDetections: number;
+
+    /** Treats the whole text as one person name, like a slow Presidio call. */
+    const detectWholeTextAsName = async (cmd: AnonymizeTextCommand) => {
+      activeDetections++;
+      maxActiveDetections = Math.max(maxActiveDetections, activeDetections);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      activeDetections--;
+      const masked = applyMaskReplacements(
+        cmd.text,
+        [
+          {
+            entityType: 'PERSON',
+            category: PiiCategory.PERSON_NAME,
+            text: cmd.text,
+            start: 0,
+            end: cmd.text.length,
+            score: 0.9,
+          },
+        ],
+        cmd.existingMasks ?? [],
+      );
+      return { originalText: cmd.text, replacements: [], ...masked };
+    };
+
+    beforeEach(() => {
+      stored = [];
+      activeDetections = 0;
+      maxActiveDetections = 0;
+      findByThreadId.mockImplementation((id: UUID) =>
+        Promise.resolve(stored.filter((mask) => mask.threadId === id)),
+      );
+      saveMany.mockImplementation((masks: ThreadPiiMask[]) => {
+        stored.push(...masks);
+        return Promise.resolve();
+      });
+      anonymizeExecute.mockImplementation(detectWholeTextAsName);
+    });
+
+    const redact = (value: string, thread = threadId) =>
+      useCase.execute(
+        new AnonymizeTextForThreadCommand(value, orgId, thread, {
+          source: 'tool_result',
+        }),
+      );
+
+    it('never hands out the same mask token twice on one thread', async () => {
+      const results = await Promise.all(
+        ['Anna Schmidt', 'Bernd Müller', 'Clara Weber'].map((name) =>
+          redact(name),
+        ),
+      );
+
+      const tokens = stored.map((mask) => mask.token);
+      expect(new Set(tokens).size).toBe(3);
+      expect(
+        results
+          .map((result) => result.anonymizedText)
+          .toSorted((a, b) => a.localeCompare(b)),
+      ).toEqual([
+        '{{pii:PERSON_NAME_1}}',
+        '{{pii:PERSON_NAME_2}}',
+        '{{pii:PERSON_NAME_3}}',
+      ]);
+    });
+
+    it('reuses one token when concurrent results contain the same value', async () => {
+      const results = await Promise.all([
+        redact('Anna Schmidt'),
+        redact('Anna Schmidt'),
+      ]);
+
+      expect(stored).toHaveLength(1);
+      expect(results.map((result) => result.anonymizedText)).toEqual([
+        '{{pii:PERSON_NAME_1}}',
+        '{{pii:PERSON_NAME_1}}',
+      ]);
+    });
+
+    it('redacts different threads in parallel', async () => {
+      const results = await Promise.all([
+        redact('Anna Schmidt', threadId),
+        redact('Bernd Müller', otherThreadId),
+      ]);
+
+      expect(maxActiveDetections).toBe(2);
+      expect(results.map((result) => result.anonymizedText)).toEqual([
+        '{{pii:PERSON_NAME_1}}',
+        '{{pii:PERSON_NAME_1}}',
+      ]);
+    });
+
+    it('lets the next redaction on the thread proceed after one fails', async () => {
+      anonymizeExecute.mockRejectedValueOnce(
+        new AnonymizationFailedError('Presidio unavailable'),
+      );
+
+      const [failed, succeeded] = await Promise.allSettled([
+        redact('Anna Schmidt'),
+        redact('Bernd Müller'),
+      ]);
+
+      expect(failed.status).toBe('rejected');
+      expect(succeeded).toMatchObject({
+        status: 'fulfilled',
+        value: { anonymizedText: '{{pii:PERSON_NAME_1}}' },
+      });
     });
   });
 });

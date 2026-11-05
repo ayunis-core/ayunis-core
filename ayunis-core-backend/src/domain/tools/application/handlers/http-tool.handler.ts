@@ -22,18 +22,23 @@ export class HttpToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const requestInput = JSON.parse(
         validatedInput.bodyOrQueryParams,
       ) as Record<string, unknown>;
-      const response = await this.fetchResponse(tool, requestInput);
+      const response = await this.fetchResponse(
+        tool,
+        requestInput,
+        context.signal,
+      );
 
       const data = (await response.json()) as Record<string, unknown>;
       return JSON.stringify(data);
     } catch (error) {
+      context.signal?.throwIfAborted();
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
@@ -52,10 +57,12 @@ export class HttpToolHandler extends ToolExecutionHandler {
   private async fetchResponse(
     tool: HttpTool,
     input: Record<string, unknown>,
+    signal?: AbortSignal,
   ): Promise<Response> {
     const options: RequestInit = {
       method: tool.config.method,
       headers: { 'Content-Type': 'application/json' },
+      signal,
       ...(tool.config.method === HttpToolMethod.POST && {
         body: JSON.stringify(input),
       }),
@@ -63,6 +70,7 @@ export class HttpToolHandler extends ToolExecutionHandler {
     try {
       return await fetch(this.buildUrl(tool, input), options);
     } catch {
+      signal?.throwIfAborted();
       this.logger.warn(
         { error: 'Request to the given endpoint failed' },
         'execute',

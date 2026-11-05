@@ -64,6 +64,8 @@ export interface McpPrompt {
 export interface McpToolCall {
   toolName: string;
   parameters: Record<string, unknown>;
+  /** Cancels the request; the call then rejects with the signal's reason. */
+  signal?: AbortSignal;
 }
 
 /**
