@@ -303,6 +303,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.assignments.addSourceAssignment(params);
   }
 
+  async attachSourcesWithinCapacity(params: {
+    threadId: UUID;
+    userId: UUID;
+    sourceIds: UUID[];
+    maxSources: number;
+  }): Promise<void> {
+    return this.assignments.attachSourcesWithinCapacity(params);
+  }
+
   async updateModel(params: {
     threadId: UUID;
     userId: UUID;

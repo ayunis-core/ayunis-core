@@ -9,7 +9,10 @@ import { ThreadRecord } from './schema/thread.record';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
-import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import {
+  ThreadNotFoundError,
+  ThreadSourceLimitExceededError,
+} from 'src/domain/threads/application/threads.errors';
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import type { StaleThreadSourceRef } from 'src/domain/threads/application/ports/threads.repository';
@@ -130,6 +133,41 @@ export class LocalThreadAssignmentsRepository {
       params.threadId,
     );
     await this.threadSourceAssignmentRepository.save(record);
+  }
+
+  async attachSourcesWithinCapacity(params: {
+    threadId: UUID;
+    userId: UUID;
+    sourceIds: UUID[];
+    maxSources: number;
+  }): Promise<void> {
+    const { threadId, userId, sourceIds, maxSources } = params;
+    this.logger.log(
+      { threadId, userId, sourceCount: sourceIds.length },
+      'attachSourcesWithinCapacity',
+    );
+    // The row lock serialises concurrent completions on this thread; the
+    // count is read after acquiring it, so the second one sees the first.
+    const thread = await this.threadRepository.findOne({
+      select: { id: true },
+      where: { id: threadId, userId },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!thread) throw new ThreadNotFoundError(threadId, userId);
+    const current = await this.threadSourceAssignmentRepository.countBy({
+      threadId,
+    });
+    if (current + sourceIds.length > maxSources) {
+      throw new ThreadSourceLimitExceededError(maxSources);
+    }
+    await this.threadSourceAssignmentRepository.insert(
+      sourceIds.map((sourceId) => ({
+        id: randomUUID(),
+        threadId,
+        sourceId,
+        originSkillId: null,
+      })),
+    );
   }
 
   async updateMcpIntegrations(params: {
