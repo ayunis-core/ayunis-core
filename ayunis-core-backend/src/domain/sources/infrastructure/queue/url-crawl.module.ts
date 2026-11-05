@@ -1,3 +1,4 @@
+import { ingestionTopology } from 'src/common/process/ingestion-topology';
 import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
@@ -33,7 +34,7 @@ import { UrlCrawlConsumer } from './url-crawl.consumer';
       provide: UrlCrawlProcessingPort,
       useExisting: UrlCrawlProducer,
     },
-    UrlCrawlConsumer,
+    ...ingestionTopology.consumers([UrlCrawlConsumer]),
     CrawledPdfSourcesService,
     SourceProcessingHeartbeatService,
     MarkSourceFailedUseCase,

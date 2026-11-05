@@ -1,3 +1,4 @@
+import { ingestionConcurrency } from 'src/config/ingestion.config';
 import {
   ProcessingStoppedError,
   type ProcessingContext,
@@ -45,7 +46,9 @@ import { SourceProcessingHeartbeatService } from 'src/domain/sources/application
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
-@Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 4 })
+@Processor(DOCUMENT_PROCESSING_QUEUE, {
+  concurrency: ingestionConcurrency('document'),
+})
 export class DocumentProcessingConsumer extends WorkerHost {
   private readonly logger = new Logger(DocumentProcessingConsumer.name);
 

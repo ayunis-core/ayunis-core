@@ -1,9 +1,7 @@
+import { BaseModule } from './base.module';
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { SubscriptionSyncModule } from 'src/integrations/core-connect/subscription-sync/subscription-sync.module';
 import { APP_FILTER } from '@nestjs/core';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from 'src/domain/models/models.module';
@@ -42,89 +40,29 @@ import { OfficeAddinsModule } from 'src/domain/office-addins/office-addins.modul
 import { IamModule } from 'src/iam/iam.module';
 
 import { AuthProvider } from 'src/config/authentication.config';
-import { rootConfigs } from 'src/config/root-configs';
-import { validateEnv } from 'src/config/env.validation';
 import { CookieParserMiddleware } from 'src/common/middleware/cookie-parser.middleware';
-import dataSource from 'src/db/datasource';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers.middleware';
 import { AppsignalNamespaceMiddleware } from 'src/common/middleware/appsignal-namespace.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { serveFrontendOptions } from './presenters/http/serve-frontend.options';
-import type { RedisConfig } from 'src/config/redis.config';
-import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { GetFrontendRuntimeConfigUseCase } from './application/use-cases/get-frontend-runtime-config/get-frontend-runtime-config.use-case';
-import { ClsModule } from 'nestjs-cls';
 import { ContextModule } from 'src/common/context/context.module';
-import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from 'src/integrations/integrations.module';
 import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
 import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-telemetry.module';
-import { LoggingModule } from 'src/common/logger/logging.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: rootConfigs,
-      validate: validateEnv,
-    }),
-    LoggingModule,
-    ClsModule.forRoot({
-      global: true,
-      middleware: { mount: true },
-      plugins: [
-        new ClsPluginTransactional({
-          imports: [
-            // module in which the database instance is provided
-            TypeOrmModule,
-          ],
-          adapter: new TransactionalAdapterTypeOrm({
-            // the injection token of the database instance
-            dataSourceToken: getDataSourceToken(),
-          }),
-        }),
-      ],
-    }),
+    BaseModule,
     ScheduleModule.forRoot(),
     ServeStaticModule.forRoot(
       serveFrontendOptions(join(__dirname, '..', '..', 'frontend')),
     ),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) =>
-        configService.get('typeorm')!,
-      dataSourceFactory: async () => {
-        // Vector type hack is now applied in the datasource itself
-        // Initialize datasource
-        await dataSource.initialize();
-
-        return dataSource;
-      },
-    }),
-    BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const redis = configService.get<RedisConfig>('redis')!;
-        return {
-          connection: {
-            host: redis.host,
-            port: redis.port,
-            password: redis.password,
-            // Note: maxRetriesPerRequest is intentionally omitted — BullMQ
-            // forces it to null internally because it uses blocking Redis
-            // commands (BRPOPLPUSH/BLMOVE) that must wait indefinitely.
-            connectTimeout: 5000,
-          },
-        };
-      },
-    }),
-    EventEmitterModule.forRoot(),
     IntegrationsModule,
     ContextModule, // Global
     ModelsModule,

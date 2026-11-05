@@ -1,3 +1,4 @@
+import { ingestionTopology } from 'src/common/process/ingestion-topology';
 import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
@@ -45,7 +46,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
       provide: DocumentProcessingPort,
       useExisting: DocumentProcessingProducer,
     },
-    DocumentProcessingConsumer,
+    ...ingestionTopology.consumers([DocumentProcessingConsumer]),
     SourceProcessingHeartbeatService,
     StaleProcessingCleanupTask,
     MarkSourceFailedUseCase,

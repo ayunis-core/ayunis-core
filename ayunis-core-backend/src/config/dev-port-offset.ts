@@ -16,6 +16,7 @@ const PORT_VARS = [
   'MINIO_PUBLIC_PORT',
   'REDIS_PORT',
   'SMTP_PORT',
+  'INGESTION_WORKER_HEALTH_PORT',
 ] as const;
 
 const URL_VARS = [
