@@ -30,7 +30,12 @@ import { MyPermissionsController } from './presenters/http/my-permissions.contro
   ],
   // HasPermissionUseCase is exported so the PermissionsGuard (bound globally by
   // IamModule) can gate routes on stored per-role permissions;
-  // SeedDefaultRolePermissionsUseCase so org creation can grant the defaults.
-  exports: [HasPermissionUseCase, SeedDefaultRolePermissionsUseCase],
+  // SeedDefaultRolePermissionsUseCase so org creation can grant the defaults;
+  // GetMyPermissionsUseCase so teams can resolve what a team role grants.
+  exports: [
+    HasPermissionUseCase,
+    SeedDefaultRolePermissionsUseCase,
+    GetMyPermissionsUseCase,
+  ],
 })
 export class PermissionsModule {}

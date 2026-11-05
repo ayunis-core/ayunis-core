@@ -12,12 +12,12 @@ vi.mock('@/pages/admin-settings/team-detail', () => ({
 }));
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getTeamsControllerGetTeamQueryKey: (id: string) => ['teams', id],
-  getTeamsControllerListTeamMembersQueryKey: (
+  getTeamMembersControllerListTeamMembersQueryKey: (
     id: string,
     pagination: { limit: number; offset: number },
   ) => ['teams', id, 'members', pagination],
   teamsControllerGetTeam: mocks.getTeam,
-  teamsControllerListTeamMembers: mocks.listMembers,
+  teamMembersControllerListTeamMembers: mocks.listMembers,
 }));
 
 const { Route } = await import('./admin-settings.teams.$id');

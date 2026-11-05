@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import {
-  useTeamsControllerRemoveTeamMember,
-  getTeamsControllerListTeamMembersQueryKey,
+  useTeamMembersControllerRemoveTeamMember,
+  getTeamMembersControllerListTeamMembersQueryKey,
   getTeamsControllerGetTeamQueryKey,
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
@@ -21,7 +21,7 @@ export function useRemoveTeamMember(teamId: string) {
     new Set(),
   );
 
-  const mutation = useTeamsControllerRemoveTeamMember({
+  const mutation = useTeamMembersControllerRemoveTeamMember({
     mutation: {
       onSuccess: () => {
         showSuccess(t('teamDetail.removeMember.success'));
@@ -43,7 +43,7 @@ export function useRemoveTeamMember(teamId: string) {
           return next;
         });
         void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerListTeamMembersQueryKey(teamId),
+          queryKey: getTeamMembersControllerListTeamMembersQueryKey(teamId),
         });
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerGetTeamQueryKey(teamId),

@@ -8,6 +8,7 @@ import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/loca
 import { TeamMemberMapper } from 'src/iam/teams/infrastructure/repositories/local/mappers/team-member.mapper';
 import { UUID } from 'crypto';
 import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @Injectable()
 export class LocalTeamMembersRepository extends TeamMembersRepository {
@@ -76,6 +77,25 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
 
     this.logger.debug({ teamId, userId }, 'Team member found');
     return TeamMemberMapper.toDomain(record);
+  }
+
+  async findByUserId(userId: UUID): Promise<TeamMember[]> {
+    this.logger.log({ userId }, 'findByUserId');
+
+    const records = await this.teamMembers.find({ where: { userId } });
+    return records.map((record) => TeamMemberMapper.toDomain(record));
+  }
+
+  async countByTeamIdAndRole(teamId: UUID, role: UserRole): Promise<number> {
+    this.logger.log({ teamId, role }, 'countByTeamIdAndRole');
+
+    return this.teamMembers.count({ where: { teamId, role } });
+  }
+
+  async updateRole(teamId: UUID, userId: UUID, role: UserRole): Promise<void> {
+    this.logger.log({ teamId, userId, role }, 'updateRole');
+
+    await this.teamMembers.update({ teamId, userId }, { role });
   }
 
   async create(teamMember: TeamMember): Promise<TeamMember> {

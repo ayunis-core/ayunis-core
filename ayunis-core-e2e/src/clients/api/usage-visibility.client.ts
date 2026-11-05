@@ -71,7 +71,7 @@ export function removeTeamMember(
   teamId: string,
   userId: string,
 ) {
-  return generatedApi.teamsControllerRemoveTeamMember(teamId, userId, { api });
+  return generatedApi.teamMembersControllerRemoveTeamMember(teamId, userId, { api });
 }
 
 export function readSuperAdminUsageConfig(

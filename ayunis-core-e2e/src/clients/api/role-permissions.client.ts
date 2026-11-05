@@ -13,6 +13,17 @@ export function setUserRolePermissions(
   );
 }
 
+export function setManagerRolePermissions(
+  api: APIRequestContext,
+  permissions: UpdateRolePermissionsDtoPermissionsItem[],
+) {
+  return generatedApi.rolePermissionsControllerUpdate(
+    'manager',
+    { permissions },
+    { api },
+  );
+}
+
 export async function getUserRolePermissions(
   api: APIRequestContext,
 ): Promise<string[]> {

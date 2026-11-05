@@ -26,14 +26,26 @@ import { LocalTeamsRepository } from 'src/iam/teams/infrastructure/repositories/
 import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { UsersModule } from 'src/iam/users/users.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
+import { TeamRolePolicyService } from 'src/iam/teams/application/services/team-role-policy.service';
+import { TeamPermissionsGuard } from 'src/iam/teams/application/guards/team-permissions.guard';
+import { GetTeamAccessUseCase } from 'src/iam/teams/application/use-cases/get-team-access/get-team-access.use-case';
+import { ListManageableTeamsUseCase } from 'src/iam/teams/application/use-cases/list-manageable-teams/list-manageable-teams.use-case';
+import { ListMyTeamAccessUseCase } from 'src/iam/teams/application/use-cases/list-my-team-access/list-my-team-access.use-case';
+import { UpdateTeamMemberRoleUseCase } from 'src/iam/teams/application/use-cases/update-team-member-role/update-team-member-role.use-case';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TeamRecord, TeamMemberRecord]),
     forwardRef(() => UsersModule),
+    PermissionsModule,
   ],
   providers: [
     TeamMemberCreationService,
+    TeamAccessService,
+    TeamRolePolicyService,
+    TeamPermissionsGuard,
     { provide: TeamsRepository, useClass: LocalTeamsRepository },
     { provide: TeamMembersRepository, useClass: LocalTeamMembersRepository },
     CreateTeamUseCase,
@@ -54,8 +66,14 @@ import { UsersModule } from 'src/iam/users/users.module';
     FindTeamsByIdsAndOrgIdUseCase,
     FindTeamsByUserIdsAndOrgIdUseCase,
     AssignUserToTeamsUseCase,
+    GetTeamAccessUseCase,
+    ListManageableTeamsUseCase,
+    ListMyTeamAccessUseCase,
+    UpdateTeamMemberRoleUseCase,
   ],
+  // TeamPermissionsGuard is exported so IamModule can bind it globally.
   exports: [
+    TeamPermissionsGuard,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,
@@ -74,6 +92,10 @@ import { UsersModule } from 'src/iam/users/users.module';
     FindTeamsByIdsAndOrgIdUseCase,
     FindTeamsByUserIdsAndOrgIdUseCase,
     AssignUserToTeamsUseCase,
+    GetTeamAccessUseCase,
+    ListManageableTeamsUseCase,
+    ListMyTeamAccessUseCase,
+    UpdateTeamMemberRoleUseCase,
   ],
 })
 export class TeamsApplicationModule {}

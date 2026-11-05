@@ -45,8 +45,6 @@ import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('shares')
 @Controller('shares')
@@ -61,10 +59,9 @@ export class SharesController {
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
-  @RequirePermission(
-    Permission.SHARE_SKILLS_WITH_TEAMS,
-    Permission.SHARE_SKILLS_WITH_ORG,
-  )
+  // No route guard on creating or deleting shares: the permission depends on
+  // the share's entity and audience, and a team role may grant it, so the use
+  // cases check it.
   @Post('skills')
   @ApiOperation({ summary: 'Create a share for a skill' })
   @ApiBody({
@@ -110,10 +107,6 @@ export class SharesController {
     return this.shareDtoMapper.toDto(share);
   }
 
-  @RequirePermission(
-    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
-    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
-  )
   @Post('knowledge-bases')
   @ApiOperation({ summary: 'Create a share for a knowledge base' })
   @ApiBody({
@@ -215,15 +208,6 @@ export class SharesController {
     return this.shareDtoMapper.toDtoArray(shares, teamNamesMap);
   }
 
-  // Withdrawing a share needs the same permission as creating it. The route is
-  // keyed by share id, so the guard only admits holders of any share permission;
-  // the use case checks the one matching the stored share's entity and scope.
-  @RequirePermission(
-    Permission.SHARE_SKILLS_WITH_TEAMS,
-    Permission.SHARE_SKILLS_WITH_ORG,
-    Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
-    Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
-  )
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a share' })
   @ApiParam({

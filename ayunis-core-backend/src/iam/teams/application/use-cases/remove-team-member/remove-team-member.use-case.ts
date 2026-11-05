@@ -9,7 +9,13 @@ import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { TeamMemberNotFoundError } from 'src/iam/teams/application/team-members.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
-import { getRequiredOrgId } from 'src/common/context/required-context';
+import {
+  getRequiredOrgId,
+  getRequiredUserContext,
+} from 'src/common/context/required-context';
+import { TeamAccessService } from 'src/iam/teams/application/services/team-access.service';
+import { TeamRolePolicyService } from 'src/iam/teams/application/services/team-role-policy.service';
+import type { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 
 @Injectable()
 export class RemoveTeamMemberUseCase {
@@ -19,6 +25,8 @@ export class RemoveTeamMemberUseCase {
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
+    private readonly teamAccessService: TeamAccessService,
+    private readonly teamRolePolicy: TeamRolePolicyService,
   ) {}
 
   @Transactional()
@@ -43,7 +51,12 @@ export class RemoveTeamMemberUseCase {
     orgId: UUID,
   ): Promise<void> {
     await this.assertTeamBelongsToOrg(command.teamId, orgId);
-    await this.assertMemberExists(command.teamId, command.userId);
+    const member = await this.getMember(command.teamId, command.userId);
+    // A target orgId marks the super-admin route, authorized by its system
+    // role rather than by membership in the team.
+    if (!command.orgId) {
+      await this.assertMayRemove(member);
+    }
     // Shared-agent thread history is retained; access is denied after removal.
     await this.teamMembersRepository.deleteByTeamIdAndUserId(
       command.teamId,
@@ -73,13 +86,21 @@ export class RemoveTeamMemberUseCase {
     }
   }
 
-  private async assertMemberExists(teamId: UUID, userId: UUID): Promise<void> {
+  private async getMember(teamId: UUID, userId: UUID): Promise<TeamMember> {
     const member = await this.teamMembersRepository.findByTeamIdAndUserId(
       teamId,
       userId,
     );
-    if (member) return;
+    if (member) return member;
     this.logger.error({ teamId, userId }, 'User is not a team member');
     throw new TeamMemberNotFoundError(teamId, userId);
+  }
+
+  private async assertMayRemove(member: TeamMember): Promise<void> {
+    const access = await this.teamAccessService.forTeam(
+      getRequiredUserContext(this.contextService),
+      member.teamId,
+    );
+    await this.teamRolePolicy.assertMayRemove(access, member);
   }
 }

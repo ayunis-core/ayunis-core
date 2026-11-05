@@ -6,7 +6,7 @@ import { InvitesModule } from './invites/invites.module';
 import {
   authenticationConfig,
   AuthProvider,
-} from '../config/authentication.config';
+} from 'src/config/authentication.config';
 import { HashingModule } from './hashing/hashing.module';
 import { UsersModule } from './users/users.module';
 import { OrgsModule } from './orgs/orgs.module';
@@ -38,6 +38,7 @@ import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 import { AcademyCertificateGuard } from './academy-access/application/guards/academy-certificate.guard';
 import { SsoModule } from './sso/sso.module';
+import { TeamPermissionsGuard } from './teams/application/guards/team-permissions.guard';
 
 // Feature modules re-exported by IamModule. Listed once and spread into both
 // `imports` and `exports` so the two cannot drift out of sync.
@@ -88,6 +89,7 @@ const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: EmailConfirmGuard },
   { provide: APP_GUARD, useExisting: RolesGuard },
   { provide: APP_GUARD, useExisting: PermissionsGuard },
+  { provide: APP_GUARD, useExisting: TeamPermissionsGuard },
   { provide: APP_GUARD, useExisting: SystemRolesGuard },
   { provide: APP_GUARD, useExisting: AddonGuard },
   { provide: APP_GUARD, useExisting: SubscriptionGuard },
