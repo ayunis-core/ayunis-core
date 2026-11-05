@@ -1,3 +1,4 @@
+import { ingestionConcurrency } from 'src/config/ingestion.config';
 import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
@@ -28,7 +29,9 @@ import { classifyJobFailure } from './bullmq-job.helpers';
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
-@Processor(DATA_SOURCE_PROCESSING_QUEUE, { concurrency: 2 })
+@Processor(DATA_SOURCE_PROCESSING_QUEUE, {
+  concurrency: ingestionConcurrency('dataSource'),
+})
 export class DataSourceProcessingConsumer extends WorkerHost {
   private readonly logger = new Logger(DataSourceProcessingConsumer.name);
 

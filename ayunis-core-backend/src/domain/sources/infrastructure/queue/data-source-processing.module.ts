@@ -1,3 +1,4 @@
+import { ingestionConsumers } from 'src/config/ingestion.config';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
@@ -30,7 +31,7 @@ import { DataSourceProcessingConsumer } from './data-source-processing.consumer'
       provide: DataSourceProcessingPort,
       useExisting: DataSourceProcessingProducer,
     },
-    DataSourceProcessingConsumer,
+    ...ingestionConsumers([DataSourceProcessingConsumer]),
     MarkSourceFailedUseCase,
   ],
   exports: [DataSourceProcessingPort],

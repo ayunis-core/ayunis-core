@@ -100,7 +100,7 @@ ENV UV_THREADPOOL_SIZE=8
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "const port = process.env.INGESTION_PROCESS_ROLE === 'worker' ? (process.env.WORKER_HEALTH_PORT || 3001) : (process.env.PORT || 3000); require('http').get('http://127.0.0.1:' + port + '/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" || exit 1
 
 # Start the application (cwd /app → dist/frontend served, ./uploads = /app/uploads)
 CMD ["node", "--require", "./appsignal.cjs", "dist/src/main.js"]

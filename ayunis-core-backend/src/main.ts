@@ -3,6 +3,7 @@
 // the start scripts / Dockerfile CMD), so its OpenTelemetry instrumentation
 // patches core modules before anything below is imported.
 import './config/env';
+import { ingestionProcessRole } from 'src/config/ingestion.config';
 // Crash handlers - self-register on import; must run before the AppModule
 // import evaluates the whole application graph
 import './common/process/process-crash-handlers';
@@ -34,6 +35,10 @@ class Bootstrap {
   private static readonly DEFAULT_BODY_LIMIT = '5mb';
 
   public static async start() {
+    if (ingestionProcessRole() === 'worker')
+      throw new Error(
+        'Use the worker entry point for INGESTION_PROCESS_ROLE=worker',
+      );
     const createStartedMs = performance.now();
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       bufferLogs: true,
