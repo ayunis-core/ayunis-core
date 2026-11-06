@@ -1,6 +1,8 @@
 import type { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
+import { PassThrough } from 'stream';
 import type storageConfig from 'src/config/storage.config';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import { MinioObjectStorageProvider } from './minio-object-storage.provider';
 
@@ -14,6 +16,10 @@ function endpointOf(client: unknown): { host: string; port: number } {
   return { host: inspected.host, port: inspected.port };
 }
 
+function s3Error(code: string): Error & { code: string } {
+  return Object.assign(new Error(code), { code });
+}
+
 describe('MinioObjectStorageProvider', () => {
   const config = {
     provider: 'minio',
@@ -24,8 +30,17 @@ describe('MinioObjectStorageProvider', () => {
         port: 443,
         useSSL: true,
       },
+      public: {
+        endPoint: 'cdn.example.org',
+        port: 443,
+        useSSL: true,
+      },
       accessKey: 'storage-access-key',
       secretKey: 'storage-secret-key',
+      upload: {
+        accessKey: 'upload-access-key',
+        secretKey: 'upload-secret-key',
+      },
       bucket: 'generated-images',
     },
   } satisfies ConfigType<typeof storageConfig>;
@@ -45,6 +60,59 @@ describe('MinioObjectStorageProvider', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  describe('verified downloads', () => {
+    it('rejects replacement bytes even when their size is unchanged', async () => {
+      const response = Object.assign(new PassThrough(), {
+        headers: { etag: '"replacement"' },
+      });
+      jest
+        .spyOn(Minio.Client.prototype, 'getObject')
+        .mockResolvedValue(response);
+      const url = new StorageUrl('org/uploads/document.pdf', 'sources');
+
+      await expect(provider.download(url, 'verified')).rejects.toThrow();
+      expect(response.destroyed).toBe(true);
+    });
+
+    it('accepts the verified GET response without a separate metadata read', async () => {
+      const response = Object.assign(new PassThrough(), {
+        headers: { etag: '"verified"' },
+      });
+      jest
+        .spyOn(Minio.Client.prototype, 'getObject')
+        .mockResolvedValue(response);
+      const url = new StorageUrl('org/uploads/document.pdf', 'sources');
+
+      await expect(provider.download(url, 'verified')).resolves.toBe(response);
+      expect(statObject).not.toHaveBeenCalled();
+    });
+
+    it('accepts an expected ETag that still carries its quotes', async () => {
+      const response = Object.assign(new PassThrough(), {
+        headers: { etag: '"verified"' },
+      });
+      jest
+        .spyOn(Minio.Client.prototype, 'getObject')
+        .mockResolvedValue(response);
+      const url = new StorageUrl('org/uploads/document.pdf', 'sources');
+
+      await expect(provider.download(url, '"verified"')).resolves.toBe(
+        response,
+      );
+    });
+
+    it('fails closed when the download has no identity header', async () => {
+      const response = new PassThrough();
+      jest
+        .spyOn(Minio.Client.prototype, 'getObject')
+        .mockResolvedValue(response);
+      const url = new StorageUrl('org/uploads/document.pdf', 'sources');
+
+      await expect(provider.download(url, 'verified')).rejects.toThrow();
+      expect(response.destroyed).toBe(true);
+    });
   });
 
   describe('exists', () => {
@@ -90,6 +158,16 @@ describe('MinioObjectStorageProvider', () => {
     });
   });
 
+  it('reports a missing object as ObjectNotFoundError on stat', async () => {
+    statObject.mockRejectedValue(
+      Object.assign(new Error('Not Found'), { code: 'NotFound' }),
+    );
+
+    await expect(
+      provider.getObjectInfo(new StorageUrl('org/uploads/s/f.pdf', 'bucket')),
+    ).rejects.toBeInstanceOf(ObjectNotFoundError);
+  });
+
   it('deletes through the internal endpoint', async () => {
     const removeObject = jest
       .spyOn(Minio.Client.prototype, 'removeObject')
@@ -110,5 +188,187 @@ describe('MinioObjectStorageProvider', () => {
       host: 'minio.internal',
       port: 443,
     });
+  });
+
+  // The bucket region is resolved through the internal client only; the
+  // signing client is pinned to it, so its own lookup stays local and a
+  // public host that does not resolve (cdn.example.org) never breaks signing.
+  function stubInternalRegionLookup(): jest.Mock {
+    const getBucketRegion = jest.fn().mockResolvedValue('us-east-1');
+    (
+      provider as unknown as {
+        internalClient: { getBucketRegionAsync: jest.Mock };
+      }
+    ).internalClient.getBucketRegionAsync = getBucketRegion;
+    return getBucketRegion;
+  }
+
+  it('signs browser upload URLs against the public endpoint without a request', async () => {
+    const getBucketRegion = stubInternalRegionLookup();
+    const url = await provider.presignUploadRequest(
+      new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+      { method: 'PUT', query: {}, contentLength: 3 },
+      900,
+    );
+
+    expect(url).toMatch(/^https:\/\/cdn\.example\.org\//);
+    expect(url).toContain('X-Amz-Expires=900');
+    expect(url).toContain('us-east-1');
+    expect(getBucketRegion).toHaveBeenCalledWith('generated-images');
+    expect(statObject).not.toHaveBeenCalled();
+  });
+
+  it('signs browser uploads as the upload identity, never the server-side one', async () => {
+    stubInternalRegionLookup();
+    const url = new URL(
+      await provider.presignUploadRequest(
+        new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+        { method: 'PUT', query: {}, contentLength: 3 },
+        900,
+      ),
+    );
+
+    expect(url.searchParams.get('X-Amz-Credential')).toMatch(
+      /^upload-access-key\//,
+    );
+    expect(url.toString()).not.toContain('storage-access-key');
+  });
+
+  it('refuses to sign a PUT whose length is not bound, while GET and DELETE may omit it', async () => {
+    stubInternalRegionLookup();
+    const target = new StorageUrl(
+      'org/uploads/session/file.pdf',
+      'generated-images',
+    );
+    await expect(
+      provider.presignUploadRequest(target, { method: 'PUT', query: {} }, 900),
+    ).rejects.toThrow('content length');
+    await expect(
+      provider.presignUploadRequest(
+        target,
+        { method: 'PUT', query: { uploadId: 'u', partNumber: '1' } },
+        900,
+      ),
+    ).rejects.toThrow('content length');
+    await expect(
+      provider.presignUploadRequest(
+        target,
+        { method: 'GET', query: { uploadId: 'u' } },
+        900,
+      ),
+    ).resolves.toContain('uploadId=u');
+    await expect(
+      provider.presignUploadRequest(
+        target,
+        { method: 'DELETE', query: { uploadId: 'u' } },
+        900,
+      ),
+    ).resolves.toContain('uploadId=u');
+  });
+
+  it('signs multipart step URLs with their query parameters', async () => {
+    stubInternalRegionLookup();
+    const url = await provider.presignUploadRequest(
+      new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+      {
+        method: 'PUT',
+        query: { uploadId: 'upload-123', partNumber: '2' },
+        contentLength: 3,
+      },
+      900,
+    );
+
+    expect(url).toMatch(/^https:\/\/cdn\.example\.org\//);
+    expect(url).toContain('uploadId=upload-123');
+    expect(url).toContain('partNumber=2');
+  });
+
+  it('signs the exact content length so a different upload size invalidates the signature', async () => {
+    stubInternalRegionLookup();
+    const target = new StorageUrl(
+      'org/uploads/session/file.pdf',
+      'generated-images',
+    );
+    const first = new URL(
+      await provider.presignUploadRequest(
+        target,
+        { method: 'PUT', query: {}, contentLength: 3 },
+        900,
+      ),
+    );
+    const second = new URL(
+      await provider.presignUploadRequest(
+        target,
+        { method: 'PUT', query: {}, contentLength: 4 },
+        900,
+      ),
+    );
+    expect(first.searchParams.get('X-Amz-SignedHeaders')).toBe(
+      'content-length;host',
+    );
+    expect(first.searchParams.get('X-Amz-Signature')).not.toBe(
+      second.searchParams.get('X-Amz-Signature'),
+    );
+  });
+
+  it.each(['org/uploads/session/.', 'org/uploads/session/..'])(
+    'refuses a legacy key whose path would be normalized: %s',
+    async (key) => {
+      stubInternalRegionLookup();
+      await expect(
+        provider.presignUploadRequest(
+          new StorageUrl(key, 'generated-images'),
+          { method: 'PUT', query: {}, contentLength: 3 },
+          900,
+        ),
+      ).rejects.toThrow('cannot be signed');
+    },
+  );
+
+  it('aborts multipart uploads through the internal endpoint', async () => {
+    const abort = jest
+      .spyOn(Minio.Client.prototype, 'abortMultipartUpload')
+      .mockResolvedValue(undefined);
+
+    await provider.abortMultipartUpload(
+      new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+      'upload-123',
+    );
+
+    expect(abort).toHaveBeenCalledWith(
+      'generated-images',
+      'org/uploads/session/file.pdf',
+      'upload-123',
+    );
+    expect(endpointOf(abort.mock.instances[0])).toEqual({
+      host: 'minio.internal',
+      port: 443,
+    });
+  });
+
+  it('treats aborting an upload that no longer exists as done', async () => {
+    jest
+      .spyOn(Minio.Client.prototype, 'abortMultipartUpload')
+      .mockRejectedValue(s3Error('NoSuchUpload'));
+
+    await expect(
+      provider.abortMultipartUpload(
+        new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+        'upload-gone',
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('still surfaces other abort failures', async () => {
+    jest
+      .spyOn(Minio.Client.prototype, 'abortMultipartUpload')
+      .mockRejectedValue(s3Error('InternalError'));
+
+    await expect(
+      provider.abortMultipartUpload(
+        new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+        'upload-123',
+      ),
+    ).rejects.toThrow('InternalError');
   });
 });

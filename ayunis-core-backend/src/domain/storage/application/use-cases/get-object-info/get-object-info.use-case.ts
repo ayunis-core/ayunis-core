@@ -55,12 +55,7 @@ export class GetObjectInfoUseCase {
         info.lastModified,
       );
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        throw new ObjectNotFoundError({
-          objectName: command.objectName,
-          bucket: command.bucket,
-        });
-      }
+      if (error instanceof ObjectNotFoundError) throw error;
 
       this.logger.error(
         { err: error as Error, fileName: command.objectName },

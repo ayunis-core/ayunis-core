@@ -9,6 +9,7 @@ export interface StorageFailureDiagnostics extends ErrorMetadata {
 
 export enum StorageErrorCode {
   OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND',
+  OBJECT_CHANGED = 'OBJECT_CHANGED',
   UPLOAD_FAILED = 'UPLOAD_FAILED',
   STORAGE_UNAVAILABLE = 'STORAGE_UNAVAILABLE',
   DOWNLOAD_FAILED = 'DOWNLOAD_FAILED',
@@ -45,6 +46,17 @@ export class ObjectNotFoundError extends StorageError {
       params.metadata,
     );
     this.name = 'ObjectNotFoundError';
+  }
+}
+
+export class ObjectChangedError extends StorageError {
+  constructor() {
+    super(
+      'Stored object differs from the verified upload',
+      StorageErrorCode.OBJECT_CHANGED,
+      409,
+    );
+    this.name = 'ObjectChangedError';
   }
 }
 

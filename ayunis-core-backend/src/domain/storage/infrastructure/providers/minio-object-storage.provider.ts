@@ -1,17 +1,26 @@
 import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
+import { AwsV4Signer } from 'aws4fetch';
 import { Readable } from 'stream';
+import type { IncomingMessage } from 'http';
 import {
   ObjectStoragePort,
   type StorageObjectSummary,
 } from 'src/domain/storage/application/ports/object-storage.port';
+import type {
+  IncompleteUpload,
+  UploadRequest,
+} from 'src/domain/storage/domain/multipart-upload.object';
 import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import { StorageBucket } from 'src/domain/storage/domain/storage-bucket.entity';
-import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
+import {
+  ObjectChangedError,
+  ObjectNotFoundError,
+} from 'src/domain/storage/application/storage.errors';
 
 /**
  * S3 error codes minio raises for a key that is not there. `NotFound` comes
@@ -19,9 +28,34 @@ import { ObjectNotFoundError } from 'src/domain/storage/application/storage.erro
  */
 const MISSING_OBJECT_CODES = new Set(['NoSuchKey', 'NotFound']);
 
+/** SigV4 caps a presigned URL's lifetime at seven days. */
+const MAX_UPLOAD_URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
+
+/** A PUT whose length is not signed could write any body to the key. */
+function validateContentLength(request: UploadRequest): void {
+  if (request.method === 'PUT' && request.contentLength === undefined)
+    throw new Error('Upload PUTs must sign their content length');
+  if (
+    request.contentLength !== undefined &&
+    (!Number.isSafeInteger(request.contentLength) || request.contentLength < 1)
+  )
+    throw new Error('Invalid upload content length');
+}
+
+/** S3 quotes ETags in headers; the SDK's stat strips them. Compare bare. */
+function unquoteETag(etag: string): string {
+  return etag.replace(/^"(.*)"$/, '$1');
+}
+
 function isMissingObjectError(error: unknown): boolean {
   const code = (error as { code?: string } | null)?.code;
   return code !== undefined && MISSING_OBJECT_CODES.has(code);
+}
+
+/** Aborting an upload that was already aborted or completed. */
+function isMissingUploadError(error: unknown): boolean {
+  const code = (error as { code?: string } | null)?.code;
+  return code === 'NoSuchUpload' || code === 'NotFound';
 }
 
 @Injectable()
@@ -32,6 +66,7 @@ export class MinioObjectStorageProvider
   private readonly logger = new Logger(MinioObjectStorageProvider.name);
 
   private readonly internalClient: Minio.Client;
+  private signingRegion: Promise<string> | null = null;
   private defaultBucket: string;
 
   constructor(
@@ -42,9 +77,31 @@ export class MinioObjectStorageProvider
     this.defaultBucket = this.config.minio.bucket;
     this.internalClient = new Minio.Client({
       ...this.config.minio.internal,
+      ...this.credentials(),
+    });
+    if (this.config.minio.upload.accessKey === this.config.minio.accessKey)
+      this.logger.warn(
+        'Signing browser uploads as the server-side storage identity; set ' +
+          'MINIO_UPLOAD_ACCESS_KEY / MINIO_UPLOAD_SECRET_KEY to a user ' +
+          'limited to uploads',
+      );
+  }
+
+  private credentials(): { accessKey: string; secretKey: string } {
+    return {
       accessKey: this.config.minio.accessKey,
       secretKey: this.config.minio.secretKey,
-    });
+    };
+  }
+
+  private getSigningRegion(bucket: string): Promise<string> {
+    this.signingRegion ??= this.internalClient
+      .getBucketRegionAsync(bucket)
+      .catch((error: unknown) => {
+        this.signingRegion = null;
+        throw error;
+      });
+    return this.signingRegion;
   }
 
   async onModuleInit(): Promise<void> {
@@ -135,13 +192,26 @@ export class MinioObjectStorageProvider
     );
   }
 
-  async download(storageUrl: StorageUrl): Promise<NodeJS.ReadableStream> {
+  async download(
+    storageUrl: StorageUrl,
+    expectedETag?: string,
+  ): Promise<NodeJS.ReadableStream> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
     try {
-      return await this.internalClient.getObject(
+      const response = await this.internalClient.getObject(
         bucketName,
         storageUrl.objectName,
       );
+      // Bind verification to this GET, not a separate HEAD that could race a PUT.
+      const etag = (response as Partial<IncomingMessage>).headers?.etag;
+      if (
+        expectedETag !== undefined &&
+        (etag === undefined || unquoteETag(etag) !== unquoteETag(expectedETag))
+      ) {
+        response.destroy();
+        throw new ObjectChangedError();
+      }
+      return response;
     } catch (error) {
       // Without this translation a missing object is indistinguishable from
       // storage being unreachable, and callers turn both into a 500.
@@ -173,11 +243,11 @@ export class MinioObjectStorageProvider
         stat.lastModified,
       );
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        throw new Error(
-          `Object '${storageUrl.objectName}' not found in bucket '${bucketName}'`,
-          { cause: error },
-        );
+      if (isMissingObjectError(error)) {
+        throw new ObjectNotFoundError({
+          objectName: storageUrl.objectName,
+          bucket: bucketName,
+        });
       }
       throw error;
     }
@@ -251,6 +321,116 @@ export class MinioObjectStorageProvider
       stream.on('end', () => {
         resolve(objects);
       });
+    });
+  }
+
+  async presignUploadRequest(
+    storageUrl: StorageUrl,
+    request: UploadRequest,
+    expiresInSeconds: number,
+  ): Promise<string> {
+    this.validateUploadSignature(request, expiresInSeconds);
+    const bucketName = storageUrl.bucket || this.defaultBucket;
+    const region = await this.getSigningRegion(bucketName);
+    const url = this.uploadUrl(
+      bucketName,
+      storageUrl.objectName,
+      request.query,
+      expiresInSeconds,
+    );
+    const signed = await new AwsV4Signer({
+      url: url.toString(),
+      method: request.method,
+      service: 's3',
+      region,
+      accessKeyId: this.config.minio.upload.accessKey,
+      secretAccessKey: this.config.minio.upload.secretKey,
+      signQuery: true,
+      allHeaders: true,
+      headers:
+        request.contentLength === undefined
+          ? {}
+          : { 'content-length': String(request.contentLength) },
+    }).sign();
+    return signed.url.toString();
+  }
+
+  private validateUploadSignature(
+    request: UploadRequest,
+    expiresInSeconds: number,
+  ): void {
+    if (
+      !Number.isSafeInteger(expiresInSeconds) ||
+      expiresInSeconds < 1 ||
+      expiresInSeconds > MAX_UPLOAD_URL_EXPIRY_SECONDS
+    )
+      throw new Error('Invalid upload URL expiry');
+    validateContentLength(request);
+    const { accessKey, secretKey } = this.config.minio.upload;
+    if (!accessKey || !secretKey)
+      throw new Error('Upload credentials are required to sign uploads');
+  }
+
+  private uploadUrl(
+    bucket: string,
+    key: string,
+    query: Record<string, string>,
+    expires: number,
+  ): URL {
+    const endpoint = this.config.minio.public;
+    const host = endpoint.endPoint.includes(':')
+      ? `[${endpoint.endPoint}]`
+      : endpoint.endPoint;
+    const url = new URL(`${endpoint.useSSL ? 'https' : 'http'}://${host}`);
+    url.port = String(endpoint.port);
+    const pathname = `/${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
+    url.pathname = pathname;
+    if (url.pathname !== pathname)
+      throw new Error(
+        'Storage key contains path segments that cannot be signed safely',
+      );
+    for (const [name, value] of Object.entries(query))
+      url.searchParams.set(name, value);
+    url.searchParams.set('X-Amz-Expires', String(expires));
+    return url;
+  }
+
+  async abortMultipartUpload(
+    storageUrl: StorageUrl,
+    uploadId: string,
+  ): Promise<void> {
+    try {
+      await this.internalClient.abortMultipartUpload(
+        storageUrl.bucket || this.defaultBucket,
+        storageUrl.objectName,
+        uploadId,
+      );
+    } catch (error) {
+      // Idempotent: the retrying cleanup must read "nothing left to abort"
+      // as success, or it keeps its session row forever.
+      if (isMissingUploadError(error)) return;
+      throw error;
+    }
+  }
+
+  async listIncompleteUploads(
+    prefix: string,
+    bucket?: string,
+  ): Promise<IncompleteUpload[]> {
+    const bucketName = bucket ?? this.defaultBucket;
+    const uploads: IncompleteUpload[] = [];
+
+    return new Promise((resolve, reject) => {
+      const stream = this.internalClient.listIncompleteUploads(
+        bucketName,
+        prefix,
+        true,
+      );
+      stream.on('data', (item) => {
+        uploads.push({ objectName: item.key, uploadId: item.uploadId });
+      });
+      stream.on('error', reject);
+      stream.on('end', () => resolve(uploads));
     });
   }
 }

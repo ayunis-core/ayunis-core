@@ -187,6 +187,23 @@ services:
         reservations:
           memory: 1500M
 
+  # Creates the write-only MinIO user that signs browser uploads
+  # (MINIO_UPLOAD_ACCESS_KEY / MINIO_UPLOAD_SECRET_KEY); see DEPLOYMENT.md.
+  minio-init:
+    image: ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:69b55a1c1c5dc285ce04db96689f5b2102317fc77a50680a1874ca6efd1c87f9
+    container_name: ayunis-minio-init-prod
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    env_file:
+      - ./ayunis-core-backend/.env
+    entrypoint: ["/bin/sh", "/scripts/minio-init-upload-user.sh"]
+    volumes:
+      - ./scripts/minio-init-upload-user.sh:/scripts/minio-init-upload-user.sh:ro
+    networks:
+      - ayunis-network
+
   app:
     build:
       context: .
@@ -201,6 +218,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
       code-execution:
         condition: service_healthy
       anonymize:

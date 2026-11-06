@@ -1,4 +1,5 @@
 import {
+  GoneException,
   BadRequestException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -37,6 +38,12 @@ describe('ApplicationError.toHttpException', () => {
     });
     expect(error.message).toBe('test message');
     expect(error.metadata).toEqual({ detail: 'x' });
+  });
+
+  it('maps 410 to GoneException so expired resources are not reported as bad requests', () => {
+    const exception = new TestError(410).toHttpException();
+    expect(exception).toBeInstanceOf(GoneException);
+    expect(exception.getStatus()).toBe(410);
   });
 
   it('falls back to BadRequestException for an unmapped status', () => {
