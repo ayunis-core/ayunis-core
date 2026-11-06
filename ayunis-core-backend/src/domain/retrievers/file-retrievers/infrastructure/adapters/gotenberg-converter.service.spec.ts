@@ -15,8 +15,15 @@ jest.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-function axiosErrorWithStatus(status: number) {
-  return { isAxiosError: true, response: { status, headers: {} } };
+function axiosErrorWithStatus(status: number, body?: string) {
+  return {
+    isAxiosError: true,
+    response: {
+      status,
+      headers: {},
+      ...(body === undefined ? {} : { data: Buffer.from(body) }),
+    },
+  };
 }
 
 describe('GotenbergConverterService', () => {
@@ -29,7 +36,10 @@ describe('GotenbergConverterService', () => {
         GotenbergConverterService,
         {
           provide: gotenbergConfig.KEY,
-          useValue: { url: 'https://gotenberg:3000' },
+          useValue: {
+            url: 'https://gotenberg:3000',
+            maxConcurrentConversions: 1,
+          },
         },
       ],
     }).compile();
@@ -85,6 +95,63 @@ describe('GotenbergConverterService', () => {
       metadata: { converter: 'gotenberg', upstreamStatus: 503 },
     });
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+  });
+
+  // LibreOffice ran out of time on this document itself: retrying would hold
+  // the converter for another full time limit, so it settles as the document's
+  // fault without an incident (AYC-1641).
+  it("classifies a 503 whose body reports the conversion timing out as the document's fault", async () => {
+    mockedAxios.post.mockRejectedValue(
+      axiosErrorWithStatus(
+        503,
+        '{"error":"convert to PDF: supervisor run task: context deadline exceeded"}',
+      ),
+    );
+
+    const result = convert();
+    await expect(result).rejects.toBeInstanceOf(UnprocessableDocumentError);
+    await expect(result).rejects.toMatchObject({
+      statusCode: 422,
+      message: expect.stringMatching(/time limit/i),
+      metadata: { converter: 'gotenberg', upstreamStatus: 503 },
+    });
+  });
+
+  // The request only waited for the LibreOffice lock behind another document
+  // and never got its turn, so a spaced retry can still succeed.
+  it('keeps a 503 that timed out waiting for the LibreOffice lock retryable', async () => {
+    mockedAxios.post.mockRejectedValue(
+      axiosErrorWithStatus(
+        503,
+        'convert to PDF: supervisor run task: acquire process lock: context deadline exceeded',
+      ),
+    );
+
+    await expect(convert()).rejects.toBeInstanceOf(
+      DocumentConversionUnavailableError,
+    );
+  });
+
+  it('sends the next conversion only after the one in flight has finished', async () => {
+    let finishFirst!: (value: { data: ArrayBuffer }) => void;
+    mockedAxios.post
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishFirst = resolve;
+          }),
+      )
+      .mockResolvedValueOnce({ data: new Uint8Array([2]).buffer });
+
+    const first = convert();
+    const second = convert();
+    await Promise.resolve();
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+
+    finishFirst({ data: new Uint8Array([1]).buffer });
+    await expect(first).resolves.toEqual(Buffer.from([1]));
+    await expect(second).resolves.toEqual(Buffer.from([2]));
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
   });
 
   // Gotenberg is our own service, so the cases below are outages we must keep

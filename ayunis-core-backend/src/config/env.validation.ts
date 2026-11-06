@@ -52,6 +52,11 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   HTTP_KEEP_ALIVE_TIMEOUT_MS?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  GOTENBERG_MAX_CONCURRENT_CONVERSIONS?: number;
 
   @IsOptional()
   @IsIn(BOOLEAN_STRINGS)
