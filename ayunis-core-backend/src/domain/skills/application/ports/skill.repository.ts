@@ -22,7 +22,10 @@ export interface WorkspaceSkillState {
 }
 
 export abstract class SkillRepository {
-  abstract findById(id: UUID): Promise<Skill | null>;
+  abstract findById(
+    id: UUID,
+    options?: { lock?: boolean },
+  ): Promise<Skill | null>;
   abstract create(skill: PersonalSkill): Promise<PersonalSkill>;
   abstract create(skill: WorkspaceSkill): Promise<WorkspaceSkill>;
   abstract create(skill: TeamSkill): Promise<TeamSkill>;
@@ -133,6 +136,7 @@ export abstract class SkillRepository {
     knowledgeBaseId: UUID,
     ownerIds: UUID[],
   ): Promise<PersonalSkill[]>;
+  abstract findAllByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Skill[]>;
   abstract findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]>;
   abstract removeKnowledgeBaseFromSkills(
     knowledgeBaseId: UUID,

@@ -29,13 +29,14 @@ export class LocalSkillKnowledgeBaseIdsFinder {
     return rows.map((row) => row.knowledgeBaseId);
   }
 
+  /** Without `ownerIds`, returns the skills of every owner. */
   async findSkillsByKnowledgeBase(
     manager: EntityManager,
     knowledgeBaseId: UUID,
-    ownerIds: UUID[],
+    ownerIds?: UUID[],
   ): Promise<SkillRecord[]> {
-    if (ownerIds.length === 0) return [];
-    return manager
+    if (ownerIds?.length === 0) return [];
+    const query = manager
       .getRepository(SkillRecord)
       .createQueryBuilder('skill')
       .innerJoin(
@@ -46,9 +47,11 @@ export class LocalSkillKnowledgeBaseIdsFinder {
       )
       .leftJoinAndSelect('skill.sources', 'sources')
       .leftJoinAndSelect('skill.mcpIntegrations', 'mcpIntegrations')
-      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases')
-      .where('skill.userId IN (:...ownerIds)', { ownerIds })
-      .getMany();
+      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases');
+    if (ownerIds) {
+      query.where('skill.userId IN (:...ownerIds)', { ownerIds });
+    }
+    return query.getMany();
   }
 
   async removeKnowledgeBaseFromSkills(

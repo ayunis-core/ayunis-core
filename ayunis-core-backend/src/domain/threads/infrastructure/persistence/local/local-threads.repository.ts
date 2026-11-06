@@ -435,7 +435,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
-    userIds: UUID[];
+    userIds: UUID[] | null;
     knowledgeBaseId?: UUID;
   }): Promise<void> {
     return this.assignments.removeKnowledgeBaseAssignmentsByOriginSkill(params);

@@ -70,6 +70,27 @@ describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
     });
   });
 
+  it('removes the assignments of every user when userIds is null', async () => {
+    const skillId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+
+    await useCase.execute(
+      new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(
+        skillId,
+        null,
+        knowledgeBaseId,
+      ),
+    );
+
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignmentsByOriginSkill,
+    ).toHaveBeenCalledWith({
+      originSkillId: skillId,
+      userIds: null,
+      knowledgeBaseId,
+    });
+  });
+
   it('should not call repository when userIds is empty', async () => {
     const skillId = randomUUID();
     const command = new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(

@@ -6389,6 +6389,92 @@
         "tags": ["knowledge-bases"]
       }
     },
+    "/knowledge-bases/{id}/owner": {
+      "patch": {
+        "operationId": "KnowledgeBaseOwnerController_changeOwner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeBaseTransferOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Move a knowledge base to the caller, a team or the organization",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/{id}/owner-change-preview": {
+      "get": {
+        "operationId": "KnowledgeBaseOwnerController_previewOwnerChange",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["personal", "team", "org"]
+            }
+          },
+          {
+            "name": "teamId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseOwnerChangePreviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Preview what moving a knowledge base would remove",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/shares/skills": {
       "post": {
         "operationId": "SharesController_createSkillShare",
@@ -6830,6 +6916,92 @@
             "description": ""
           }
         },
+        "tags": ["skills"]
+      }
+    },
+    "/skills/{id}/owner": {
+      "patch": {
+        "operationId": "SkillsController_changeOwner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillTransferOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Move a skill to the caller, a team or the organization",
+        "tags": ["skills"]
+      }
+    },
+    "/skills/{id}/owner-change-preview": {
+      "get": {
+        "operationId": "SkillsController_previewOwnerChange",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["personal", "team", "org"]
+            }
+          },
+          {
+            "name": "teamId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillOwnerChangePreviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Preview what moving a skill would remove",
         "tags": ["skills"]
       }
     },
@@ -18169,6 +18341,30 @@
         },
         "required": ["url"]
       },
+      "KnowledgeBaseTransferOwnerDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "team", "org"]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["ownerType"]
+      },
+      "KnowledgeBaseOwnerChangePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "unlinkedSkillCount": {
+            "type": "number",
+            "description": "Skills whose link to the knowledge base is removed because they have a different owner"
+          }
+        },
+        "required": ["unlinkedSkillCount"]
+      },
       "CreateSkillShareDto": {
         "type": "object",
         "properties": {
@@ -18480,6 +18676,30 @@
           }
         },
         "required": ["name", "shortDescription", "instructions"]
+      },
+      "SkillTransferOwnerDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "team", "org"]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["ownerType"]
+      },
+      "SkillOwnerChangePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "unlinkedKnowledgeBaseCount": {
+            "type": "number",
+            "description": "Knowledge bases whose link to the skill is removed because they have a different owner"
+          }
+        },
+        "required": ["unlinkedKnowledgeBaseCount"]
       },
       "SetSkillActivationDto": {
         "type": "object",

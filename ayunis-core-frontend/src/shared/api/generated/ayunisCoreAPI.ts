@@ -126,7 +126,10 @@ import type {
   KnowledgeBaseDocumentListResponseDto,
   KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseListResponseDto,
+  KnowledgeBaseOwnerChangePreviewResponseDto,
+  KnowledgeBaseOwnerControllerPreviewOwnerChangeParams,
   KnowledgeBaseResponseDto,
+  KnowledgeBaseTransferOwnerDto,
   KnowledgeBasesControllerAddDocumentBody,
   KnowledgeBasesControllerFindAllParams,
   LanguageModelResponseDto,
@@ -219,11 +222,14 @@ import type {
   ShareResponseDto,
   SharesControllerGetSharesParams,
   SkillListResponseDto,
+  SkillOwnerChangePreviewResponseDto,
   SkillResponseDto,
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
+  SkillTransferOwnerDto,
   SkillsControllerFindAllParams,
+  SkillsControllerPreviewOwnerChangeParams,
   SourceCitationResponseDto,
   SsoAccountLinkStatusResponseDto,
   SsoAuthorizationResponseDto,
@@ -12729,6 +12735,176 @@ export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
     }
 
 /**
+ * @summary Move a knowledge base to the caller, a team or the organization
+ */
+export const knowledgeBaseOwnerControllerChangeOwner = (
+    id: string,
+    knowledgeBaseTransferOwnerDto: KnowledgeBaseTransferOwnerDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<KnowledgeBaseResponseDto>(
+      {url: `/knowledge-bases/${id}/owner`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: knowledgeBaseTransferOwnerDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseOwnerControllerChangeOwnerMutationKey = () => ['knowledgeBaseOwnerControllerChangeOwner'] as const;
+
+export const getKnowledgeBaseOwnerControllerChangeOwnerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>, TError,KnowledgeBaseOwnerControllerChangeOwnerMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>, TError,KnowledgeBaseOwnerControllerChangeOwnerMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseOwnerControllerChangeOwnerMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>, KnowledgeBaseOwnerControllerChangeOwnerMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBaseOwnerControllerChangeOwner(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseOwnerControllerChangeOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>>
+    export type KnowledgeBaseOwnerControllerChangeOwnerMutationBody = KnowledgeBaseTransferOwnerDto
+    export type KnowledgeBaseOwnerControllerChangeOwnerMutationError = unknown
+    export type KnowledgeBaseOwnerControllerChangeOwnerMutationVariables = {id: string;data: KnowledgeBaseTransferOwnerDto}
+
+    /**
+ * @summary Move a knowledge base to the caller, a team or the organization
+ */
+export const useKnowledgeBaseOwnerControllerChangeOwner = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>, TError,KnowledgeBaseOwnerControllerChangeOwnerMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseOwnerControllerChangeOwner>>,
+        TError,
+        KnowledgeBaseOwnerControllerChangeOwnerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseOwnerControllerChangeOwnerMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Preview what moving a knowledge base would remove
+ */
+export const knowledgeBaseOwnerControllerPreviewOwnerChange = (
+    id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<KnowledgeBaseOwnerChangePreviewResponseDto>(
+      {url: `/knowledge-bases/${id}/owner-change-preview`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseOwnerControllerPreviewOwnerChangeQueryKey = (id: string,
+    params?: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams,) => {
+    return [
+    `/knowledge-bases/${id}/owner-change-preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getKnowledgeBaseOwnerControllerPreviewOwnerChangeQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError = unknown>(id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseOwnerControllerPreviewOwnerChangeQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>> = ({ signal }) => knowledgeBaseOwnerControllerPreviewOwnerChange(id,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBaseOwnerControllerPreviewOwnerChangeQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>>
+export type KnowledgeBaseOwnerControllerPreviewOwnerChangeQueryError = unknown
+
+
+export function useKnowledgeBaseOwnerControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseOwnerControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseOwnerControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview what moving a knowledge base would remove
+ */
+
+export function useKnowledgeBaseOwnerControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: KnowledgeBaseOwnerControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseOwnerControllerPreviewOwnerChange>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBaseOwnerControllerPreviewOwnerChangeQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Create a share for a skill
  */
 export const sharesControllerCreateSkillShare = (
@@ -13636,6 +13812,176 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getSkillsControllerDeleteMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Move a skill to the caller, a team or the organization
+ */
+export const skillsControllerChangeOwner = (
+    id: string,
+    skillTransferOwnerDto: SkillTransferOwnerDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${id}/owner`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: skillTransferOwnerDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerChangeOwnerMutationKey = () => ['skillsControllerChangeOwner'] as const;
+
+export const getSkillsControllerChangeOwnerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerChangeOwner>>, TError,SkillsControllerChangeOwnerMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerChangeOwner>>, TError,SkillsControllerChangeOwnerMutationVariables, TContext> => {
+
+const mutationKey = getSkillsControllerChangeOwnerMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerChangeOwner>>, SkillsControllerChangeOwnerMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  skillsControllerChangeOwner(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillsControllerChangeOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerChangeOwner>>>
+    export type SkillsControllerChangeOwnerMutationBody = SkillTransferOwnerDto
+    export type SkillsControllerChangeOwnerMutationError = unknown
+    export type SkillsControllerChangeOwnerMutationVariables = {id: string;data: SkillTransferOwnerDto}
+
+    /**
+ * @summary Move a skill to the caller, a team or the organization
+ */
+export const useSkillsControllerChangeOwner = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerChangeOwner>>, TError,SkillsControllerChangeOwnerMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillsControllerChangeOwner>>,
+        TError,
+        SkillsControllerChangeOwnerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillsControllerChangeOwnerMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Preview what moving a skill would remove
+ */
+export const skillsControllerPreviewOwnerChange = (
+    id: string,
+    params: SkillsControllerPreviewOwnerChangeParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SkillOwnerChangePreviewResponseDto>(
+      {url: `/skills/${id}/owner-change-preview`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillsControllerPreviewOwnerChangeQueryKey = (id: string,
+    params?: SkillsControllerPreviewOwnerChangeParams,) => {
+    return [
+    `/skills/${id}/owner-change-preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSkillsControllerPreviewOwnerChangeQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError = unknown>(id: string,
+    params: SkillsControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerPreviewOwnerChangeQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>> = ({ signal }) => skillsControllerPreviewOwnerChange(id,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillsControllerPreviewOwnerChangeQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>>
+export type SkillsControllerPreviewOwnerChangeQueryError = unknown
+
+
+export function useSkillsControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: SkillsControllerPreviewOwnerChangeParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: SkillsControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>,
+          TError,
+          Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillsControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: SkillsControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview what moving a skill would remove
+ */
+
+export function useSkillsControllerPreviewOwnerChange<TData = Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError = unknown>(
+ id: string,
+    params: SkillsControllerPreviewOwnerChangeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerPreviewOwnerChange>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillsControllerPreviewOwnerChangeQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Set skill activation

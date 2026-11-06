@@ -2,7 +2,10 @@ import {
   addSkillRelations,
   SKILL_RELATIONS,
 } from './local-skill-relations.repository-helper';
-import { updateSkill } from './local-skill-update.repository-helper';
+import {
+  lockSkillRow,
+  updateSkill,
+} from './local-skill-update.repository-helper';
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
@@ -49,7 +52,7 @@ import {
   getWorkspaceSkillStates as loadWorkspaceSkillStates,
   setWorkspaceSkillPinned as updateWorkspaceSkillPinned,
 } from './local-workspace-skill-activation.repository-helper';
-import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 
 @Injectable()
@@ -124,7 +127,13 @@ export class LocalSkillRepository implements SkillRepository {
     if (result.affected === 0) throw new SkillNotFoundError(skillId);
   }
 
-  async findById(id: UUID): Promise<Skill | null> {
+  async findById(
+    id: UUID,
+    options?: { lock?: boolean },
+  ): Promise<Skill | null> {
+    if (options?.lock && !(await lockSkillRow(this.skillRepository, id))) {
+      return null;
+    }
     const record = await this.skillRepository.findOne({
       where: { id },
       relations: [...SKILL_RELATIONS],
@@ -213,31 +222,11 @@ export class LocalSkillRepository implements SkillRepository {
       { userId, workspaceId, ...options },
       'findPaginatedAccessible',
     );
-
-    const [records, total] = await this.accessiblePageFinder
-      .buildQuery(
-        userId,
-        workspaceId,
-        sharedSkillIds,
-        options,
-        workspaceId === undefined ? collectiveOwners : undefined,
-      )
-      .addOrderBy('skill_name_sort', 'ASC')
-      .addOrderBy('skill.id', 'ASC')
-      .skip(options.offset)
-      .take(options.limit)
-      .getManyAndCount();
-
-    return new Paginated({
-      data: records.map((record) =>
-        workspaceId === undefined
-          ? this.skillMapper.toDomain(record)
-          : this.skillMapper.toWorkspace(record),
-      ),
-      limit: options.limit,
-      offset: options.offset,
-      total,
-    });
+    return this.accessiblePageFinder.findPage(
+      { userId, workspaceId, sharedSkillIds, collectiveOwners },
+      options,
+      this.skillMapper,
+    );
   }
 
   async findActiveByOwner(userId: UUID): Promise<PersonalSkill[]> {
@@ -470,6 +459,14 @@ export class LocalSkillRepository implements SkillRepository {
       ownerIds,
     );
     return records.map((r) => this.skillMapper.toPersonal(r));
+  }
+
+  async findAllByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Skill[]> {
+    const records = await this.knowledgeBaseIdsFinder.findSkillsByKnowledgeBase(
+      this.getManager(),
+      knowledgeBaseId,
+    );
+    return records.map((record) => this.skillMapper.toDomain(record));
   }
 
   async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {

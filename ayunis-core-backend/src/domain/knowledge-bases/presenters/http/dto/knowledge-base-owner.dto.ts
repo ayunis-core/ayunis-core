@@ -5,6 +5,7 @@ import { IsIdForOwnerType } from 'src/common/validators/is-id-for-owner-type.val
 import type {
   KnowledgeBaseListScope,
   KnowledgeBaseOwner,
+  KnowledgeBaseTransferOwner,
 } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
 
 export enum KnowledgeBaseOwnerType {
@@ -17,6 +18,11 @@ export enum KnowledgeBaseOwnerType {
 const LIST_SCOPE_TYPES = [
   KnowledgeBaseOwnerType.PERSONAL,
   KnowledgeBaseOwnerType.WORKSPACE,
+];
+const TRANSFER_OWNER_TYPES = [
+  KnowledgeBaseOwnerType.PERSONAL,
+  KnowledgeBaseOwnerType.TEAM,
+  KnowledgeBaseOwnerType.ORG,
 ];
 
 export abstract class KnowledgeBaseListScopeDto {
@@ -41,6 +47,33 @@ export abstract class KnowledgeBaseOwnerDto {
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
   @IsIdForOwnerType(KnowledgeBaseOwnerType.TEAM)
   teamId?: UUID;
+}
+
+/** The owners a knowledge base can move between; workspace ones stay put. */
+export class KnowledgeBaseTransferOwnerDto {
+  @ApiProperty({ enum: TRANSFER_OWNER_TYPES })
+  @IsIn(TRANSFER_OWNER_TYPES)
+  ownerType:
+    | KnowledgeBaseOwnerType.PERSONAL
+    | KnowledgeBaseOwnerType.TEAM
+    | KnowledgeBaseOwnerType.ORG;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  @IsIdForOwnerType(KnowledgeBaseOwnerType.TEAM)
+  teamId?: UUID;
+}
+
+export function toKnowledgeBaseTransferOwner(
+  dto: KnowledgeBaseTransferOwnerDto,
+): KnowledgeBaseTransferOwner {
+  switch (dto.ownerType) {
+    case KnowledgeBaseOwnerType.TEAM:
+      return { type: 'team', teamId: dto.teamId! };
+    case KnowledgeBaseOwnerType.ORG:
+      return { type: 'org' };
+    case KnowledgeBaseOwnerType.PERSONAL:
+      return { type: 'personal' };
+  }
 }
 
 export function toKnowledgeBaseListScope(
