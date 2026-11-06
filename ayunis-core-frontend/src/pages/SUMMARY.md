@@ -6,6 +6,8 @@ Route-level page modules handle authentication, chat conversations, agent manage
 
 Chat file uploads and removals invalidate the subscribed thread query only. Upload mutations await the thread refresh so sending stays blocked until the chat sees the uploaded source and its processing status. Post-run refetches replace stale requests in one operation, keeping upload callers waiting through the replacement. They do not reload route loaders, whose pending thread fetches can otherwise be cancelled by concurrent uploads.
 
+Existing chats match their bound model to the current effective grant by catalog model id, so switching defaults or moving between equivalent organization and team grants does not incorrectly hide the composer.
+
 The chat overview page places its search control in the content header. The project overview keeps only the add-project action there without repeating a content title. Project rows expose pinning with an explanatory tooltip.
 
 The new-chat page combines personal/shared and selected-workspace pinned skills into the same selectable quick-action buttons. Workspace changes clear only a selected skill belonging to a different workspace; regular skill selections remain available.

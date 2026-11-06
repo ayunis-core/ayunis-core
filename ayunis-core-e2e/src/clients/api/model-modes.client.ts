@@ -4,6 +4,16 @@ import { generatedApi } from './generated-api';
 
 type Mode = 'auto' | 'max';
 
+export function setOrgModeDefault(
+  api: APIRequestContext,
+  mode: Mode,
+): Promise<void> {
+  return generatedApi.modelModeDefaultsControllerSetOrgModeDefault(
+    { mode },
+    { api },
+  );
+}
+
 export function getModelModeEntries(
   superAdminApi: APIRequestContext,
   mode: Mode,

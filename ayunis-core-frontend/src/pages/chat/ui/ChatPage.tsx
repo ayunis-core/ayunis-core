@@ -52,6 +52,7 @@ import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanel
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
 import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
+import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -93,7 +94,7 @@ export default function ChatPage({
     },
   });
 
-  const selectedModel = models.find((m) => m.id === thread.permittedModelId);
+  const selectedModel = findThreadModel(models, thread);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
   // A loading or errored models query must not hide the input (AYC-666).

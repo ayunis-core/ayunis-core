@@ -17514,6 +17514,11 @@
             "description": "Permitted model ID",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
+          "modelId": {
+            "type": "string",
+            "description": "Catalog model ID bound to the thread",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
           "title": {
             "type": "string",
             "description": "Title of the thread",
