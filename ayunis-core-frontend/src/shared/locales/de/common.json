@@ -180,7 +180,7 @@
     "modes": {
       "heading": "Modus",
       "current": "Aktuell:",
-      "adminHint": "Ayunis Core wählt aus Ihren freigegebenen Modellen.",
+      "adminHint": "Ayunis Core wählt aus Ihren freigeschalteten Modellen.",
       "otherModelsHeading": "Weitere verfügbare Modelle",
       "auto": {
         "label": "Auto",
@@ -188,12 +188,12 @@
         "hint": "Beste Balance"
       },
       "max": {
-        "label": "Max Modus",
-        "description": "Ayunis Core wählt das leistungsstärkste verfügbare Modell für anspruchsvolle Aufgaben wie Analysen oder lange Dokumente. Der Verbrauch ist höher.",
+        "label": "Max",
+        "description": "Ayunis Core wählt das leistungsstärkste verfügbare Modell für anspruchsvolle Aufgaben wie Analysen oder lange Dokumente. Bei Störungen weicht Ayunis Core automatisch auf ein anderes Modell aus. Der Verbrauch ist höher.",
         "hint": "Höchste Leistung"
       },
       "moreModels": "Weitere Modelle",
-      "noneAvailable": "Für diesen Modus ist derzeit kein freigegebenes Modell verfügbar.",
+      "noneAvailable": "Für diesen Modus ist derzeit kein freigeschaltetes Modell verfügbar.",
       "defaultSaved": "Standard gespeichert.",
       "defaultSaveError": "Der Standard konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
       "defaultForbidden": "Sie dürfen diesen Standard nicht ändern."

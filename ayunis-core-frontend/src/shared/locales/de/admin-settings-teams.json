@@ -169,6 +169,11 @@
       "placeholder": "Standardmodell auswählen",
       "loading": "Modelle werden geladen...",
       "empty": "Aktivieren Sie mindestens ein Modell, um ein Standardmodell festzulegen.",
+      "modesUnavailable": {
+        "auto": "Der Auto-Modus ist mit den freigeschalteten Modellen dieses Teams nicht verfügbar. Schalten Sie weitere Modelle frei, um den Auto-Modus zu nutzen.",
+        "max": "Der Max-Modus ist mit den freigeschalteten Modellen dieses Teams nicht verfügbar. Schalten Sie weitere Modelle frei, um den Max-Modus zu nutzen.",
+        "both": "Der Auto- und der Max-Modus sind mit den freigeschalteten Modellen dieses Teams nicht verfügbar. Schalten Sie weitere Modelle frei, um sie zu nutzen."
+      },
       "success": "Team-Standardmodell aktualisiert",
       "error": "Team-Standardmodell konnte nicht festgelegt werden",
       "modelNotFound": "Modell nicht gefunden",

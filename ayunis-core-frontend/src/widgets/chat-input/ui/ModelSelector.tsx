@@ -37,17 +37,15 @@ export default function ModelSelector({
   } = usePermittedModels();
   const selectedMode = getModeFromValue(selectedModelId);
   const selectedModel = models.find((model) => model.id === selectedModelId);
+  const isLocked = isDisabled || isDisabledModels || !selectedModelId;
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        asChild
-        disabled={isDisabled || isDisabledModels || !selectedModelId}
-      >
+      <DropdownMenuTrigger asChild disabled={isLocked}>
         <Button
           variant="ghost"
           size="sm"
-          className="w-full min-w-0 max-w-full justify-between sm:w-fit"
+          className="w-fit min-w-0 max-w-full justify-between"
           aria-label={t('chatInput.modelSelectorAriaLabel')}
           data-testid="chat-model-selector"
         >
@@ -58,6 +56,7 @@ export default function ModelSelector({
                 mode={selectedMode}
                 label={t(`models.modes.${selectedMode}.label`)}
                 className="gap-1.5"
+                withShimmer={!isLocked}
               />
             )}
             {!selectedMode && selectedModel && (
@@ -78,7 +77,8 @@ export default function ModelSelector({
       <DropdownMenuContent
         align="end"
         sideOffset={4}
-        className="min-w-[240px]"
+        collisionPadding={8}
+        className="max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] min-w-[240px]"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <ModelSelectorMenu

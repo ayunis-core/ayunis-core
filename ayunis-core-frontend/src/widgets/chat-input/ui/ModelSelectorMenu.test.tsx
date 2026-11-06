@@ -9,11 +9,15 @@ import type { PermittedLanguageModelResponseDto } from '@/shared/api';
 import { ModelSelectorMenu } from './ModelSelectorMenu';
 
 const resolutions = vi.hoisted(() => ({ current: [] as unknown[] }));
+const isMobile = vi.hoisted(() => ({ current: false }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@/features/useModelModes', () => ({
   useModelModes: () => ({ resolutions: resolutions.current }),
+}));
+vi.mock('@ayunis/ui/hooks/use-mobile', () => ({
+  useIsMobile: () => isMobile.current,
 }));
 
 const model = {
@@ -38,7 +42,10 @@ function renderMenu() {
   );
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  isMobile.current = false;
+});
 
 describe('ModelSelectorMenu', () => {
   it('offers only modes that currently resolve to a model', () => {
@@ -73,5 +80,20 @@ describe('ModelSelectorMenu', () => {
     ];
     renderMenu();
     expect(screen.getByText('models.modes.moreModels')).toBeTruthy();
+  });
+
+  it('lists the models directly on phones while a mode is offered', () => {
+    isMobile.current = true;
+    resolutions.current = [
+      {
+        mode: 'auto',
+        permittedModelId: 'mistral-large',
+        anonymousPermittedModelId: 'mistral-large',
+      },
+    ];
+    renderMenu();
+    expect(screen.getByText('models.modes.heading')).toBeTruthy();
+    expect(screen.queryByText('models.modes.moreModels')).toBeNull();
+    expect(screen.getByTestId('chat-model-selector-model')).toBeTruthy();
   });
 });

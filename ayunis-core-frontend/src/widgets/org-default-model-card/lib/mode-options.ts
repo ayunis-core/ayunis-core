@@ -5,18 +5,25 @@ import {
 } from '@/widgets/model-select-options';
 
 /**
- * Modes to offer as a level's default: those that resolve there, plus a saved
- * one that stopped resolving so the select can still show it.
+ * Every mode is offered as a level's default; those that do not resolve there
+ * are disabled so admins can see why they cannot pick them.
  */
 export function modeOptionsForLevel(
   availableModes: ModelMode[],
   selectedMode: ModelMode | null,
   currentModel: ModeOption['resolvedModel'],
 ): ModeOption[] {
-  return MODEL_MODES.filter(
-    (mode) => availableModes.includes(mode) || mode === selectedMode,
-  ).map((mode) => ({
+  return MODEL_MODES.map((mode) => ({
     mode,
     resolvedModel: mode === selectedMode ? currentModel : undefined,
+    disabled: !availableModes.includes(mode),
   }));
+}
+
+export function unavailableModesHint(
+  options: ModeOption[],
+): ModelMode | 'both' | null {
+  const unavailable = options.filter((option) => option.disabled);
+  if (unavailable.length > 1) return 'both';
+  return unavailable.at(0)?.mode ?? null;
 }

@@ -169,6 +169,11 @@
       "placeholder": "Select a default model",
       "loading": "Loading models...",
       "empty": "Enable at least one model to set a default.",
+      "modesUnavailable": {
+        "auto": "Auto mode is not available with the models enabled for this team. Enable more models to use Auto mode.",
+        "max": "Max mode is not available with the models enabled for this team. Enable more models to use Max mode.",
+        "both": "Auto mode and Max mode are not available with the models enabled for this team. Enable more models to use them."
+      },
       "success": "Team default model updated",
       "error": "Failed to set team default model",
       "modelNotFound": "Model not found",

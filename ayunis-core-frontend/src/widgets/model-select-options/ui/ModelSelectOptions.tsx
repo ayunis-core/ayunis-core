@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type SyntheticEvent,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Popover,
@@ -31,6 +38,15 @@ export interface ModeOption {
   mode: ModelMode;
   /** Model the mode currently resolves to; shown in the hover card. */
   resolvedModel?: ModelInfoModel;
+  disabled?: boolean;
+}
+
+const preventSelection = (event: SyntheticEvent) => event.preventDefault();
+
+function preventKeyboardSelection(event: KeyboardEvent<HTMLElement>) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+  }
 }
 
 interface ModelSelectOptionsProps {
@@ -40,6 +56,7 @@ interface ModelSelectOptionsProps {
   showProviderFault?: boolean;
   /** Modes listed above the individual models, in this order. */
   modes?: ModeOption[];
+  modesHint?: string;
 }
 
 export default function ModelSelectOptions({
@@ -48,10 +65,12 @@ export default function ModelSelectOptions({
   showHeading = true,
   showProviderFault = false,
   modes = [],
+  modesHint,
 }: Readonly<ModelSelectOptionsProps>) {
   const { t } = useTranslation('common');
   const [hovered, setHovered] = useState<HoveredOption | null>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const modesHintId = useId();
   const sortedModels = [...models].sort(compareModels);
   const hasModes = modes.length > 0;
 
@@ -85,12 +104,21 @@ export default function ModelSelectOptions({
             )}
             {hasModes && (
               <>
-                {modes.map(({ mode }) => (
+                {modes.map(({ mode, disabled }) => (
                   <SelectItem
                     key={mode}
                     value={getModeValue(mode)}
-                    className="cursor-pointer"
+                    aria-disabled={disabled || undefined}
+                    aria-describedby={
+                      disabled && modesHint ? modesHintId : undefined
+                    }
+                    className="cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-50"
                     onMouseEnter={() => showCardFor(mode)}
+                    onFocus={() => showCardFor(mode)}
+                    onBlur={scheduleClose}
+                    onClick={disabled ? preventSelection : undefined}
+                    onPointerUp={disabled ? preventSelection : undefined}
+                    onKeyDown={disabled ? preventKeyboardSelection : undefined}
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <ModelModeIcon mode={mode} />
@@ -101,6 +129,14 @@ export default function ModelSelectOptions({
                     </span>
                   </SelectItem>
                 ))}
+                {modesHint && (
+                  <p
+                    id={modesHintId}
+                    className="w-0 min-w-full px-2 py-1.5 text-xs text-muted-foreground"
+                  >
+                    {modesHint}
+                  </p>
+                )}
                 <SelectSeparator />
                 {showHeading && (
                   <SelectLabel>
