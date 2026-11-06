@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.67.1](https://github.com/ayunis-core/ayunis-core/compare/v2.67.0...v2.67.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **chat:** keep existing chats usable across model grants (AYC-1623) ([#2198](https://github.com/ayunis-core/ayunis-core/issues/2198)) ([7b21fed](https://github.com/ayunis-core/ayunis-core/commit/7b21fed1697ee7cc1adabcc7e601029d739b2656))
+
 ## [2.67.0](https://github.com/ayunis-core/ayunis-core/compare/v2.66.0...v2.67.0) (2026-11-05)
 
 
