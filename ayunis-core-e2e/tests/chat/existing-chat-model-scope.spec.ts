@@ -22,7 +22,40 @@ async function requireEffectiveDefaultModel(api: APIRequestContext) {
   return model;
 }
 
+function modelPickerLabel(displayName: string) {
+  return displayName.replace(/\s+\([^)]*\)\s*$/, '');
+}
+
 test('existing chat stays usable when Auto replaces the default model', async ({
+  api,
+  page,
+}) => {
+  const previousDefault = await requireEffectiveDefaultModel(api);
+  const existingThread = await createEmptyThread(api, previousDefault.id);
+
+  try {
+    await page.goto(`/chats/${existingThread.id}`);
+    await expect(page.getByTestId('input')).toBeVisible();
+    await expect(page.getByTestId('chat-model-selector')).toContainText(
+      modelPickerLabel(previousDefault.displayName),
+    );
+
+    await setOrgModeDefault(api, 'auto');
+    await page.reload();
+    await expect(page.getByTestId('input')).toBeVisible();
+    await expect(page.getByTestId('chat-model-selector')).toContainText(
+      modelPickerLabel(previousDefault.displayName),
+    );
+    await sendMessage(page, 'Prüfe den Chat mit Auto als Standard');
+    await expect(page.getByTestId('assistant-message').last()).toContainText(
+      `${previousDefault.provider}::${previousDefault.name}`,
+    );
+  } finally {
+    await setOrgDefaultModel(api, previousDefault.id);
+  }
+});
+
+test('existing chat displays an equivalent replacement team grant', async ({
   api,
   browser,
   mail,
@@ -54,29 +87,20 @@ test('existing chat stays usable when Auto replaces the default model', async ({
       )
       .toEqual([previousDefault.modelId]);
 
-    await setOrgModeDefault(api, 'auto');
     await memberPage.goto(`/chats/${existingThread.id}`);
     await expect(memberPage.getByTestId('input')).toBeVisible();
-    await sendMessage(memberPage, 'Prüfe den Chat mit Auto als Standard');
     await expect(
-      memberPage.getByTestId('assistant-message').last(),
-    ).toContainText(`${previousDefault.provider}::${previousDefault.name}`);
-
-    await setOrgDefaultModel(api, previousDefault.id);
-    await memberPage.reload();
-    await sendMessage(memberPage, 'Prüfe den Chat nach dem Zurückwechseln');
+      memberPage.getByTestId('chat-model-selector'),
+    ).toContainText(modelPickerLabel(previousDefault.displayName));
+    await sendMessage(memberPage, 'Prüfe den Chat mit Team-Modell');
     await expect(
       memberPage.getByTestId('assistant-message').last(),
     ).toContainText(`${previousDefault.provider}::${previousDefault.name}`);
   } finally {
     try {
-      await setOrgDefaultModel(api, previousDefault.id);
+      await memberContext.close();
     } finally {
-      try {
-        await memberContext.close();
-      } finally {
-        await fixture.cleanup();
-      }
+      await fixture.cleanup();
     }
   }
 });

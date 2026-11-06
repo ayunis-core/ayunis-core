@@ -408,7 +408,9 @@ export default function ChatPage({
         draftChatId={thread.id}
         sentPrompts={threadPrompts}
         modelId={
-          thread.mode ? getModeValue(thread.mode) : thread.permittedModelId
+          thread.mode
+            ? getModeValue(thread.mode)
+            : (selectedModel?.id ?? thread.permittedModelId)
         }
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
