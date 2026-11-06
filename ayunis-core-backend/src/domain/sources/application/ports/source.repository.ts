@@ -84,7 +84,16 @@ export abstract class SourceRepository {
   abstract findUnreferencedIds(
     candidateIds: UUID[],
     olderThan: Date,
+    ignoreThreadAssignments?: boolean,
   ): Promise<UUID[]>;
+  /**
+   * Sources older than `olderThan` that no thread assignment, skill or
+   * knowledge base reaches at all, oldest first. The row cascades of user and
+   * thread deletion leave such sources behind when their deferred cleanup
+   * fails, and the stale-thread sweep starts from assignment rows, so this is
+   * the only lookup that still finds them.
+   */
+  abstract findOrphanedIds(olderThan: Date, limit: number): Promise<UUID[]>;
   /**
    * The subset of `storageKeys` still referenced by any source. Deletion
    * releases an uploaded original only once no source points at it (table

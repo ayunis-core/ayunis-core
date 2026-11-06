@@ -10,6 +10,7 @@ import {
   ThreadsPagination,
   ThreadsRepository,
   ThreadContextRefs,
+  type StaleThreadSourceRef,
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -386,6 +387,10 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return rows.map((row) => row.id);
   }
 
+  async findDirectSourceIdsByUserId(userId: UUID): Promise<UUID[]> {
+    return this.assignments.findDirectSourceIdsByUserId(userId);
+  }
+
   async findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]> {
     this.logger.log({ workspaceId }, 'findAllIdsByWorkspaceId');
     const rows = await this.threadRepository.find({
@@ -450,9 +455,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
-  ): ReturnType<
-    LocalThreadAssignmentsRepository['findSourcesWithOnlyStaleDirectAssignments']
-  > {
+  ): Promise<StaleThreadSourceRef[]> {
     return this.assignments.findSourcesWithOnlyStaleDirectAssignments(
       olderThan,
     );

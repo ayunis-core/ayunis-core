@@ -60,6 +60,7 @@ import { ModelsModule } from 'src/domain/models/models.module';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { UserCreatedListener } from './application/listeners/user-created.listener';
 import { SkillsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
+import { SkillsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 
 // Strategies
 import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
@@ -153,6 +154,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     ShareDeletedListener,
     UserCreatedListener,
     SkillsWorkspaceDeletionRequestedListener,
+    SkillsUserDeletionRequestedListener,
 
     // Strategies
     SkillShareAuthorizationStrategy,
