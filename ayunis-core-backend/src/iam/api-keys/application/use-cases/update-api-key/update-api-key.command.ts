@@ -6,6 +6,7 @@ export class UpdateApiKeyCommand {
     public readonly changes: {
       name?: string;
       description?: string | null;
+      expiresAt?: Date | null;
     },
   ) {}
 }

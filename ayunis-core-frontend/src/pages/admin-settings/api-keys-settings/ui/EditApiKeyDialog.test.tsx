@@ -23,7 +23,7 @@ const apiKey = {
   name: 'Citizen portal',
   description: 'OptiGov connector',
   prefixPreview: 'ayk_live_abc...',
-  expiresAt: null,
+  expiresAt: '2099-12-31T22:59:59.999Z',
   revokedAt: null,
   createdByUserId: null,
   createdAt: '2026-08-30T10:00:00.000Z',
@@ -59,7 +59,7 @@ describe('EditApiKeyDialog', () => {
     await waitFor(() =>
       expect(mocks.updateApiKey).toHaveBeenCalledWith(apiKey.id, {
         name: 'Citizen portal v2',
-        description: '',
+        description: null,
       }),
     );
   });
@@ -76,5 +76,20 @@ describe('EditApiKeyDialog', () => {
       await screen.findByText('apiKeys.editDialog.nameRequired'),
     ).toBeTruthy();
     expect(mocks.updateApiKey).not.toHaveBeenCalled();
+  });
+
+  it('removes the expiry date when it is cleared', async () => {
+    render(<EditApiKeyDialog apiKey={apiKey} onOpenChange={vi.fn()} />);
+
+    fireEvent.click(screen.getByTestId('api-key-expires-at-clear'));
+    fireEvent.click(screen.getByTestId('api-key-edit-save'));
+
+    await waitFor(() =>
+      expect(mocks.updateApiKey).toHaveBeenCalledWith(apiKey.id, {
+        name: 'Citizen portal',
+        description: 'OptiGov connector',
+        expiresAt: null,
+      }),
+    );
   });
 });

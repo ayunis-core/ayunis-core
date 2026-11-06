@@ -112,14 +112,17 @@ export class ApiKeysController {
   @RateLimit({ limit: 30, windowMs: 15 * 60 * 1000 })
   @ApiOperation({
     summary:
-      'Rename an active API key or change its description. The secret stays the same.',
+      'Rename an active API key, change its description or set, change or remove its expiry date. The secret stays the same.',
   })
   @ApiResponse({
     status: 200,
     description: 'API key successfully updated',
     type: ApiKeyResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or an expiry date that is not in the future',
+  })
   @ApiResponse({ status: 401, description: 'User is not authenticated' })
   @ApiResponse({
     status: 403,
@@ -139,6 +142,7 @@ export class ApiKeysController {
       new UpdateApiKeyCommand(id, {
         name: dto.name,
         description: dto.description,
+        expiresAt: dto.expiresAt,
       }),
     );
     return this.apiKeyDtoMapper.toDto(apiKey);

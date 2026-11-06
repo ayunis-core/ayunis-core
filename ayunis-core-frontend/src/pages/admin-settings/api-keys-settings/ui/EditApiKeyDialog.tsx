@@ -29,6 +29,8 @@ import {
   type EditApiKeyFormValues,
 } from '@/pages/admin-settings/api-keys-settings/model/editApiKeyFormSchema';
 import type { ApiKey } from '@/pages/admin-settings/api-keys-settings/model/types';
+import { toEndOfLocalDay } from '@/pages/admin-settings/api-keys-settings/lib/to-end-of-local-day';
+import { ExpiresAtFormItem } from '@/pages/admin-settings/api-keys-settings/ui/ExpiresAtFormItem';
 
 interface EditApiKeyDialogProps {
   apiKey: ApiKey | null;
@@ -43,7 +45,7 @@ export function EditApiKeyDialog({
 
   const form = useForm<EditApiKeyFormValues>({
     resolver: zodResolver(editApiKeyFormSchema(t)),
-    defaultValues: { name: '', description: '' },
+    defaultValues: { name: '', description: '', expiresAt: undefined },
   });
 
   const { updateApiKey, isUpdating } = useUpdateApiKey(form, () =>
@@ -55,6 +57,7 @@ export function EditApiKeyDialog({
       form.reset({
         name: apiKey.name,
         description: apiKey.description ?? '',
+        expiresAt: apiKey.expiresAt ? new Date(apiKey.expiresAt) : undefined,
       });
     }
   }, [apiKey, form]);
@@ -62,7 +65,19 @@ export function EditApiKeyDialog({
   const description = useWatch({ control: form.control, name: 'description' });
 
   const onSubmit = (values: EditApiKeyFormValues) => {
-    if (apiKey) updateApiKey(apiKey.id, values);
+    if (!apiKey) return;
+    // Only send the expiry when it was touched, so saving a new name never
+    // shifts an expiry that was set with a time other than end of day.
+    const expiryChanged = form.getFieldState('expiresAt').isDirty;
+    updateApiKey(apiKey.id, {
+      name: values.name,
+      description: values.description || null,
+      ...(expiryChanged && {
+        expiresAt: values.expiresAt
+          ? toEndOfLocalDay(values.expiresAt).toISOString()
+          : null,
+      }),
+    });
   };
 
   return (
@@ -119,6 +134,16 @@ export function EditApiKeyDialog({
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expiresAt"
+                render={({ field }) => (
+                  <ExpiresAtFormItem
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </div>

@@ -37,7 +37,7 @@
     "editDialog": {
       "menuItem": "Edit",
       "title": "Edit API key",
-      "description": "Change the name and description. The key itself stays the same, so applications do not need any changes.",
+      "description": "Change the name, description or expiry date. The key itself stays the same, so applications do not need any changes.",
       "nameLabel": "Name",
       "nameRequired": "Name is required",
       "nameTooLong": "Name must be less than 100 characters",
