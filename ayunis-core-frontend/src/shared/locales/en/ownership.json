@@ -1,0 +1,38 @@
+{
+  "owner": {
+    "label": "Owner",
+    "personal": "Only me",
+    "org": "Organisation",
+    "unknownTeam": "Team"
+  },
+  "badge": {
+    "team": "Team {{name}}"
+  },
+  "card": {
+    "title": "Owner",
+    "skillDescription": "Who this skill belongs to. Team and organisation skills can be used by all members and edited by everyone allowed to manage them.",
+    "knowledgeBaseDescription": "Who this knowledge base belongs to. Team and organisation knowledge bases can be used by all members and edited by everyone allowed to manage them."
+  },
+  "change": {
+    "title": "Change owner",
+    "toPersonal": "{{name}} becomes yours alone. Everyone else loses access.",
+    "toTeam": "{{name}} moves to the team {{team}}. Only its members keep access.",
+    "toOrg": "{{name}} moves to the organisation. All its members get access.",
+    "sharesRemoved": "Existing shares are removed.",
+    "skillLinksWarning_one": "The link to {{count}} knowledge base with a different owner will be removed.",
+    "skillLinksWarning_other": "The links to {{count}} knowledge bases with a different owner will be removed.",
+    "knowledgeBaseLinksWarning_one": "The link from {{count}} skill with a different owner will be removed.",
+    "knowledgeBaseLinksWarning_other": "The links from {{count}} skills with a different owner will be removed.",
+    "confirm": "Change owner",
+    "cancel": "Cancel",
+    "success": "Owner changed",
+    "error": "The owner could not be changed",
+    "duplicateName": "The new owner already has a skill with this name",
+    "notAllowed": "Workspace items cannot change owner",
+    "noPermission": "You are not allowed to move it to this owner",
+    "notFound": "It no longer exists or you have lost access"
+  },
+  "activation": {
+    "managedByOwner": "Switches it for everyone with access"
+  }
+}

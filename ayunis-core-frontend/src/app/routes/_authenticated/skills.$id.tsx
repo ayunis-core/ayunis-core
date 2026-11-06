@@ -8,6 +8,8 @@ import {
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
   getTeamsControllerListMyTeamsQueryKey,
+  myPermissionsControllerGetMine,
+  getMyPermissionsControllerGetMineQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateSkillShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { createFileRoute } from '@tanstack/react-router';
@@ -48,6 +50,12 @@ const userTeamsQueryOptions = () =>
     queryFn: () => teamsControllerListMyTeams(),
   });
 
+const myPermissionsQueryOptions = () =>
+  queryOptions({
+    queryKey: getMyPermissionsControllerGetMineQueryKey(),
+    queryFn: () => myPermissionsControllerGetMine(),
+  });
+
 export const Route = createFileRoute('/_authenticated/skills/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
@@ -56,13 +64,16 @@ export const Route = createFileRoute('/_authenticated/skills/$id')({
     const isEmbeddingModelEnabled = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    // Only query shares and user teams if the user owns the skill (not shared)
-    const shares = skill.isShared
-      ? []
-      : await queryClient.query(sharesQueryOptions(id));
-    const userTeams = skill.isShared
-      ? []
-      : await queryClient.query(userTeamsQueryOptions());
+    // Only the owner of a personal skill manages its shares; team and
+    // organization skills cannot be shared.
+    const canShare = skill.ownerType === 'personal' && !skill.isShared;
+    // Teams and permissions decide who may manage team and organization
+    // items, so they are loaded before the first paint for every owner.
+    const [shares, userTeams] = await Promise.all([
+      canShare ? queryClient.query(sharesQueryOptions(id)) : [],
+      queryClient.query(userTeamsQueryOptions()),
+      queryClient.query(myPermissionsQueryOptions()),
+    ]);
     return { skill, isEmbeddingModelEnabled, shares, userTeams };
   },
 });

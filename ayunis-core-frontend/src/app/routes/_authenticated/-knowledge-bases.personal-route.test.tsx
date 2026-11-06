@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   findKnowledgeBase: vi.fn(),
   getShares: vi.fn(),
   listTeams: vi.fn(),
+  getPermissions: vi.fn(),
 }));
 
 vi.mock('@/pages/knowledge-base', () => ({
@@ -16,6 +17,8 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   ],
   getSharesControllerGetSharesQueryKey: () => ['shares'],
   getTeamsControllerListMyTeamsQueryKey: () => ['teams'],
+  getMyPermissionsControllerGetMineQueryKey: () => ['permissions'],
+  myPermissionsControllerGetMine: mocks.getPermissions,
   knowledgeBasesControllerFindOne: mocks.findKnowledgeBase,
   sharesControllerGetShares: mocks.getShares,
   teamsControllerListMyTeams: mocks.listTeams,
@@ -49,6 +52,7 @@ describe('personal knowledge-base detail route', () => {
     });
     mocks.getShares.mockResolvedValue([]);
     mocks.listTeams.mockResolvedValue([]);
+    mocks.getPermissions.mockResolvedValue({ permissions: [] });
   });
 
   it('loads sharing context for a personal knowledge base', async () => {
@@ -73,4 +77,36 @@ describe('personal knowledge-base detail route', () => {
     expect(mocks.getShares).not.toHaveBeenCalled();
     expect(mocks.listTeams).not.toHaveBeenCalled();
   });
+
+  it.each(['team', 'org'])(
+    'does not load sharing context for a %s knowledge base, which cannot be shared',
+    async (ownerType) => {
+      mocks.findKnowledgeBase.mockResolvedValue({
+        id: 'knowledge-base',
+        ownerType,
+        teamId: ownerType === 'team' ? 'team' : undefined,
+        isShared: false,
+      });
+
+      await expect(runLoader()).resolves.toMatchObject({ shares: [] });
+      expect(mocks.getShares).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['team', 'org'])(
+    'loads teams and permissions for a %s knowledge base so managers never see it read-only',
+    async (ownerType) => {
+      mocks.findKnowledgeBase.mockResolvedValue({
+        id: 'knowledge-base',
+        ownerType,
+        teamId: ownerType === 'team' ? 'team' : undefined,
+        isShared: false,
+      });
+
+      await runLoader();
+
+      expect(mocks.listTeams).toHaveBeenCalled();
+      expect(mocks.getPermissions).toHaveBeenCalled();
+    },
+  );
 });

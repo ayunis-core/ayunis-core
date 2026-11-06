@@ -1,6 +1,7 @@
 import { useMyPermissions } from '@/features/permissions';
 import { KnowledgeBaseCreateDialog } from '@/widgets/resource-create-dialog';
 import { useCreateKnowledgeBase } from '@/pages/knowledge-bases/api/useCreateKnowledgeBase';
+import { useResourceOwnership } from '@/features/resource-ownership';
 
 interface CreateKnowledgeBaseDialogProps {
   buttonText?: string;
@@ -15,6 +16,8 @@ export default function CreateKnowledgeBaseDialog({
 }: Readonly<CreateKnowledgeBaseDialogProps>) {
   const { createKnowledgeBase } = useCreateKnowledgeBase();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+  const { options: ownerOptions, isLoading: isOwnerChoiceLoading } =
+    useResourceOwnership('knowledge-base');
 
   if (!isLoadingPermissions && !can('manage_knowledge_bases')) return null;
 
@@ -24,6 +27,9 @@ export default function CreateKnowledgeBaseDialog({
       showIcon={showIcon}
       buttonClassName={buttonClassName}
       onCreate={createKnowledgeBase}
+      buttonTestId="knowledge-base-create"
+      ownerOptions={ownerOptions}
+      isOwnerChoiceLoading={isOwnerChoiceLoading}
     />
   );
 }
