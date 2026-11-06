@@ -63,6 +63,7 @@ function buildFactory(
   );
   const create = (thread = aThread({ workspaceId })) =>
     factory.create({
+      profile: { id: 'chat' },
       thread,
       model: aCapabilityContext().model,
       userId: TEST_USER_ID,
