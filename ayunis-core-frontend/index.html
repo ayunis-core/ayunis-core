@@ -30,6 +30,54 @@
   </head>
   <body>
     <div id="app"></div>
+    <script id="outdated-browser-check">
+      (function () {
+        var hasRequiredApis =
+          typeof Array.prototype.findLast === 'function' &&
+          typeof Array.prototype.at === 'function' &&
+          typeof window.structuredClone === 'function';
+
+        if (hasRequiredApis) {
+          return;
+        }
+
+        var isGerman =
+          (navigator.language || '').toLowerCase().indexOf('de') === 0;
+        var copy = isGerman
+          ? {
+              message:
+                'Ihr Browser ist veraltet. Bitte aktualisieren Sie Ihren Browser, damit Ayunis zuverlässig funktioniert.',
+              dismiss: 'Schließen',
+            }
+          : {
+              message:
+                'Your browser is outdated. Please update your browser so Ayunis works reliably.',
+              dismiss: 'Dismiss',
+            };
+        var warning = document.createElement('aside');
+        var message = document.createElement('span');
+        var dismissButton = document.createElement('button');
+
+        warning.id = 'outdated-browser-warning';
+        warning.setAttribute('role', 'status');
+        warning.style.cssText =
+          'box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:16px;width:100%;padding:12px 16px;background:#fff3cd;color:#3d2e00;border-bottom:1px solid #d4a72c;font:14px/1.5 system-ui,sans-serif;position:fixed;top:0;left:0;right:0;z-index:2147483647';
+        message.textContent = copy.message;
+        dismissButton.id = 'outdated-browser-warning-dismiss';
+        dismissButton.type = 'button';
+        dismissButton.textContent = copy.dismiss;
+        dismissButton.setAttribute('aria-label', copy.dismiss);
+        dismissButton.style.cssText =
+          'flex:0 0 auto;padding:4px 10px;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;font:inherit;cursor:pointer';
+        dismissButton.addEventListener('click', function () {
+          warning.remove();
+        });
+
+        warning.appendChild(message);
+        warning.appendChild(dismissButton);
+        document.body.insertBefore(warning, document.body.firstChild);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
