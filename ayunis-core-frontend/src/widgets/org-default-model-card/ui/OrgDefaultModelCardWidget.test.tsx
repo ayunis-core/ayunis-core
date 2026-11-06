@@ -17,10 +17,13 @@ const defaultModel = {
   isDefault: true,
 } as ModelWithConfigResponseDto;
 
-function renderCard(modeIsLoading: boolean) {
+function renderCard(
+  modeIsLoading: boolean,
+  models: ModelWithConfigResponseDto[] = [defaultModel],
+) {
   render(
     <OrgDefaultModelCardWidget
-      models={[defaultModel]}
+      models={models}
       isLoading={false}
       isSaving={false}
       onDefaultModelChange={vi.fn()}
@@ -49,5 +52,11 @@ describe('OrgDefaultModelCardWidget', () => {
   it('shows the model default once no mode default is set', () => {
     const trigger = renderCard(false);
     expect(trigger.textContent).toContain('Mistral Large');
+  });
+
+  it('keeps unavailable modes inspectable when no models are enabled', () => {
+    const trigger = renderCard(false, []);
+
+    expect(trigger).toHaveProperty('disabled', false);
   });
 });

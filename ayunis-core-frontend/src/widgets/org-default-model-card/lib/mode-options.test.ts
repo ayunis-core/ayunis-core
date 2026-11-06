@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { modeOptionsForLevel } from './mode-options';
+import { modeOptionsForLevel, unavailableModesHint } from './mode-options';
 
 const model = {
   id: 'permit-large',
@@ -7,29 +7,50 @@ const model = {
   provider: 'mistral',
   displayName: 'Mistral Large',
 } as const;
-const modes = (options: ReturnType<typeof modeOptionsForLevel>) =>
-  options.map((o) => o.mode);
+const disabledModes = (options: ReturnType<typeof modeOptionsForLevel>) =>
+  options.filter((o) => o.disabled).map((o) => o.mode);
 
 describe(modeOptionsForLevel.name, () => {
-  it('offers no mode while none resolves on this level', () => {
-    expect(modeOptionsForLevel([], null, undefined)).toEqual([]);
-  });
-
-  it('offers only the modes that resolve on this level', () => {
-    expect(modes(modeOptionsForLevel(['auto'], null, undefined))).toEqual([
+  it('lists every mode greyed out while none resolves on this level', () => {
+    expect(disabledModes(modeOptionsForLevel([], null, undefined))).toEqual([
       'auto',
+      'max',
     ]);
   });
 
-  it('keeps a saved mode selectable after it stops resolving', () => {
-    expect(modes(modeOptionsForLevel([], 'max', undefined))).toEqual(['max']);
+  it('greys out only the modes that do not resolve on this level', () => {
+    expect(
+      disabledModes(modeOptionsForLevel(['auto'], null, undefined)),
+    ).toEqual(['max']);
   });
 
   it('attaches the current model to the saved mode only', () => {
     const options = modeOptionsForLevel(['auto', 'max'], 'max', model);
     expect(options).toEqual([
-      { mode: 'auto', resolvedModel: undefined },
-      { mode: 'max', resolvedModel: model },
+      { mode: 'auto', resolvedModel: undefined, disabled: false },
+      { mode: 'max', resolvedModel: model, disabled: false },
     ]);
+  });
+});
+
+describe(unavailableModesHint.name, () => {
+  it('needs no hint while every mode is available', () => {
+    expect(
+      unavailableModesHint(
+        modeOptionsForLevel(['auto', 'max'], null, undefined),
+      ),
+    ).toBeNull();
+  });
+
+  it('names the one mode that is unavailable', () => {
+    expect(
+      unavailableModesHint(modeOptionsForLevel(['auto'], null, undefined)),
+    ).toBe('max');
+  });
+
+  it('covers both modes at once when neither is available', () => {
+    expect(unavailableModesHint(modeOptionsForLevel([], null, undefined))).toBe(
+      'both',
+    );
   });
 });

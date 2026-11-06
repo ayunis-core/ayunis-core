@@ -76,6 +76,11 @@
       "placeholder": "Select a default model",
       "loading": "Loading permitted models...",
       "empty": "Enable at least one model to set an organization default.",
+      "modesUnavailable": {
+        "auto": "Auto mode is not available with the models enabled for your organization. Enable more models to use Auto mode.",
+        "max": "Max mode is not available with the models enabled for your organization. Enable more models to use Max mode.",
+        "both": "Auto mode and Max mode are not available with the models enabled for your organization. Enable more models to use them."
+      },
       "success": "Organization default model updated.",
       "error": "Unable to update the organization default model."
     }

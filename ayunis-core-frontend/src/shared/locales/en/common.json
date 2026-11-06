@@ -188,12 +188,12 @@
         "hint": "Best balance"
       },
       "max": {
-        "label": "Max mode",
-        "description": "Ayunis Core picks the most capable model available for demanding tasks such as analyses or long documents. Usage is higher.",
+        "label": "Max",
+        "description": "Ayunis Core picks the most capable model available for demanding tasks such as analyses or long documents. If a model is disrupted, Ayunis Core automatically switches to another one. Usage is higher.",
         "hint": "Highest performance"
       },
       "moreModels": "More models",
-      "noneAvailable": "No permitted model is currently available for this mode.",
+      "noneAvailable": "No enabled model is currently available for this mode.",
       "defaultSaved": "Default saved.",
       "defaultSaveError": "The default could not be saved. Please try again.",
       "defaultForbidden": "You are not allowed to change this default."

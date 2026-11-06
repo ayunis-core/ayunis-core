@@ -5,12 +5,14 @@ interface ModeLabelProps {
   mode: ModelMode;
   label: string;
   className?: string;
+  withShimmer?: boolean;
 }
 
 export function ModeLabel({
   mode,
   label,
   className,
+  withShimmer = false,
 }: Readonly<ModeLabelProps>) {
   const content = (
     <>
@@ -24,7 +26,7 @@ export function ModeLabel({
       className={cn('relative inline-flex min-w-0 items-center', className)}
     >
       {content}
-      {mode === 'max' && (
+      {withShimmer && mode === 'max' && (
         <span className="max-shimmer__glint" aria-hidden="true">
           {content}
         </span>

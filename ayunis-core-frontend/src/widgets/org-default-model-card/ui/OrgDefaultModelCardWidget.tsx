@@ -24,7 +24,10 @@ import {
   type ModelOption,
 } from '@/widgets/model-select-options';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
-import { modeOptionsForLevel } from '@/widgets/org-default-model-card/lib/mode-options';
+import {
+  modeOptionsForLevel,
+  unavailableModesHint,
+} from '@/widgets/org-default-model-card/lib/mode-options';
 
 interface OrgDefaultModelCardWidgetProps {
   models: ModelWithConfigResponseDto[];
@@ -83,7 +86,7 @@ export function OrgDefaultModelCardWidget({
     isSaving ||
     Boolean(modeDefault?.isSaving) ||
     Boolean(modeDefault?.isLoading) ||
-    permittedModels.length === 0;
+    (permittedModels.length === 0 && !modeDefault);
 
   const selectedMode = modeDefault?.mode ?? null;
   // Until the mode default is known, a leftover model default would flash.
@@ -99,11 +102,16 @@ export function OrgDefaultModelCardWidget({
   const modes = modeDefault
     ? modeOptionsForLevel(modeDefault.availableModes, selectedMode, modeModel)
     : [];
+  const hint = unavailableModesHint(modes);
+  const modesHint = hint
+    ? t(`models.defaultModel.modesUnavailable.${hint}`)
+    : undefined;
 
   const handleChange = (value: string) => {
     if (value === selectedValue) return;
     const mode = getModeFromValue(value);
     if (mode) {
+      if (modes.find((option) => option.mode === mode)?.disabled) return;
       modeDefault?.onModeChange(mode);
     } else {
       onDefaultModelChange(value);
@@ -150,6 +158,7 @@ export function OrgDefaultModelCardWidget({
                   showFlag
                   showHeading={false}
                   modes={modes}
+                  modesHint={modesHint}
                 />
               </SelectContent>
             </Select>
