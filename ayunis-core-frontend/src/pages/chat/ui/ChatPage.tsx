@@ -252,12 +252,9 @@ export default function ChatPage({
   );
 
   usePendingMessage({
+    threadId: thread.id,
+    hasLoadedMessages: thread.messages.length > 0,
     sendTextMessage,
-    onSendStart: (text, images) =>
-      startSubmission(thread.id, {
-        text,
-        images: images?.map((i) => i.file),
-      }),
   });
 
   // Send is gated while a fresh upload is in flight or while server-side

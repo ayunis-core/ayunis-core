@@ -36,6 +36,12 @@ import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error
 import { ContextService } from 'src/common/context/services/context.service';
 import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import { getRequiredUserContext } from 'src/common/context/required-context';
+import {
+  startThreadTitle,
+  type PendingThreadTitle,
+} from './pending-thread-title';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -47,6 +53,7 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly contextService: ContextService,
+    private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
   ) {}
 
   async *execute(
@@ -85,16 +92,40 @@ export class ExecuteRunAndSetTitleUseCase {
         signal: command.signal,
       }),
     );
-    const outcome = yield* this.streamRunItems(messages, command.threadId);
-    if (shouldGenerateTitle && outcome !== 'aborted') {
-      const titleEvent = await this.generateTitle(command, thread);
-      if (titleEvent) yield titleEvent;
+    if (shouldGenerateTitle) {
+      yield* this.streamRunWithTitle(messages, command, thread);
+    } else {
+      yield* this.streamRunItems(messages, command.threadId);
+    }
+  }
+
+  // Starts only once ExecuteRunUseCase admitted the run, so a rejected run
+  // never pays for a title.
+  private async *streamRunWithTitle(
+    messages: AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>,
+    command: ExecuteRunAndSetTitleCommand,
+    thread: Thread,
+  ): AsyncGenerator<RunEvent> {
+    const title = startThreadTitle((signal) =>
+      this.generateTitle(command, thread, signal),
+    );
+    let completed = false;
+    try {
+      const outcome = yield* this.streamRunItems(
+        messages,
+        command.threadId,
+        title,
+      );
+      completed = outcome !== 'aborted';
+    } finally {
+      if (!completed) title.discard();
     }
   }
 
   private async *streamRunItems(
     messages: AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>,
     threadId: UUID,
+    title?: PendingThreadTitle,
   ): AsyncGenerator<RunEvent, RunExecutionOutcome | void, void> {
     let completed = false;
     try {
@@ -102,13 +133,20 @@ export class ExecuteRunAndSetTitleUseCase {
         const next = await messages.next();
         if (next.done) {
           completed = true;
+          yield* this.readyTitle(title);
           return next.value;
         }
         yield this.toStreamEvent(next.value, threadId);
+        yield* this.readyTitle(title);
       }
     } finally {
       if (!completed) await messages.return(undefined);
     }
+  }
+
+  private *readyTitle(title?: PendingThreadTitle): Generator<RunThreadEvent> {
+    const event = title?.takeReady();
+    if (event) yield event;
   }
 
   private sessionEvent(threadId: UUID, streaming: boolean): RunSessionEvent {
@@ -162,6 +200,7 @@ export class ExecuteRunAndSetTitleUseCase {
   private async generateTitle(
     command: ExecuteRunAndSetTitleCommand,
     thread: Thread,
+    signal: AbortSignal,
   ): Promise<RunThreadEvent | null> {
     try {
       // Extract the first user message for title generation
@@ -187,12 +226,19 @@ export class ExecuteRunAndSetTitleUseCase {
           threadId: command.threadId,
         });
       }
+      // The run's own credit gate only runs before its first model call,
+      // which may come after the title started.
+      await this.inferenceAdmissionGuard.ensureModelCallAllowed(
+        getRequiredUserContext(this.contextService),
+        model.model,
+      );
 
       const title = await this.generateAndSetThreadTitleUseCase.execute(
         new GenerateAndSetThreadTitleCommand({
           thread,
           model: model.model,
           message: messageForTitle,
+          signal,
         }),
       );
 

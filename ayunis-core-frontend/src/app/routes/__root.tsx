@@ -1,5 +1,4 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
-import { ChatContextProvider } from '@/shared/contexts/chat/ChatContextProvider';
 import type { QueryClient } from '@tanstack/react-query';
 import { Toaster } from '@ayunis/ui/components/sonner';
 import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -20,11 +19,9 @@ export const Route = createRootRouteWithContext<{
   component: () => (
     <>
       <ConfirmationProvider>
-        <ChatContextProvider>
-          <Outlet />
-          <ConfirmationModal />
-          <Toaster />
-        </ChatContextProvider>
+        <Outlet />
+        <ConfirmationModal />
+        <Toaster />
       </ConfirmationProvider>
     </>
   ),

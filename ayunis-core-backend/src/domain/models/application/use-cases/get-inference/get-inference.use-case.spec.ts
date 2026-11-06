@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
 import {
+  InferenceAbortedError,
   InferenceFailedError,
   InferenceTokenLimitError,
   ModelRateLimitExceededError,
@@ -101,6 +102,26 @@ function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
 }
 
 describe('GetInferenceUseCase error mapping', () => {
+  it('reports a call its caller aborted as InferenceAbortedError', async () => {
+    const abortError = Object.assign(new Error('The operation was aborted'), {
+      name: 'AbortError',
+    });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      useCaseWithFailingHandler(abortError).execute(
+        new GetInferenceCommand({
+          model,
+          messages: [],
+          tools: [],
+          toolChoice: ModelToolChoice.AUTO,
+          signal: controller.signal,
+        }),
+      ),
+    ).rejects.toBeInstanceOf(InferenceAbortedError);
+  });
+
   it('passes ApplicationErrors through unchanged', async () => {
     const rateLimit = new ModelRateLimitExceededError('mistral');
 
@@ -412,6 +433,33 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
     );
 
     expect(received?.onCallTerminal).toBe(onCallTerminal);
+  });
+
+  it('forwards the caller signal to the provider call', async () => {
+    let received: InferenceCall | undefined;
+    const inferenceCallService = {
+      complete: (call: InferenceCall) => {
+        received = call;
+        return Promise.resolve(new InferenceResponse([], {}));
+      },
+    };
+    const useCase = new GetInferenceUseCase(
+      inferenceCallService as never,
+      { get: () => randomUUID() } as never,
+    );
+    const { signal } = new AbortController();
+
+    await useCase.execute(
+      new GetInferenceCommand({
+        model,
+        messages: [],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+        signal,
+      }),
+    );
+
+    expect(received?.signal).toBe(signal);
   });
 });
 

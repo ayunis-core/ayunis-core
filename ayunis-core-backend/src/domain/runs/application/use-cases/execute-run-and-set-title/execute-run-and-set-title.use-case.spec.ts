@@ -6,6 +6,8 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
+import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
+import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type {
@@ -37,6 +39,7 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
   let generateAndSetThreadTitleUseCase: jest.Mocked<GenerateAndSetThreadTitleUseCase>;
   let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
   let contextService: jest.Mocked<ContextService>;
+  let inferenceAdmissionGuard: jest.Mocked<InferenceAdmissionGuard>;
 
   let threadId: UUID;
 
@@ -84,12 +87,17 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       get: jest.fn().mockReturnValue(randomUUID()),
     } as unknown as jest.Mocked<ContextService>;
 
+    inferenceAdmissionGuard = {
+      ensureModelCallAllowed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<InferenceAdmissionGuard>;
+
     useCase = new ExecuteRunAndSetTitleUseCase(
       executeRunUseCase,
       findThreadUseCase,
       generateAndSetThreadTitleUseCase,
       anonymizeTextForOrgUseCase,
       contextService,
+      inferenceAdmissionGuard,
     );
   });
 
@@ -167,36 +175,188 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     );
   });
 
-  it('does not generate a title after an aborted first run', async () => {
-    const controller = new AbortController();
-    const thread = {
-      ...makeThread(),
-      model: { model: { name: 'claude-3-7-sonnet' } },
-    } as unknown as Thread;
-    findThreadUseCase.execute.mockResolvedValue({
-      thread,
-      isLongChat: false,
+  describe('first-run title', () => {
+    function makeTitledThread(): Thread {
+      return {
+        ...makeThread(),
+        model: { model: { name: 'claude-3-7-sonnet' } },
+      } as unknown as Thread;
+    }
+
+    function firstRunCommand(signal?: AbortSignal) {
+      return new ExecuteRunAndSetTitleCommand({
+        threadId,
+        input: new RunUserInput('Summarize the budget amendment', []),
+        streaming: true,
+        signal,
+      });
+    }
+
+    function titleSignal(): AbortSignal {
+      const [titleCommand] =
+        generateAndSetThreadTitleUseCase.execute.mock.calls[0];
+      if (!titleCommand.signal) throw new Error('Title command has no signal');
+      return titleCommand.signal;
+    }
+
+    beforeEach(() => {
+      findThreadUseCase.execute.mockResolvedValue({
+        thread: makeTitledThread(),
+        isLongChat: false,
+      });
     });
-    executeRunUseCase.execute.mockResolvedValue(
-      (async function* (): AsyncGenerator<Message, 'aborted', void> {
-        controller.abort();
-        for (const message of [] as Message[]) yield message;
-        return 'aborted';
-      })(),
-    );
 
-    await drain(
-      useCase.execute(
-        new ExecuteRunAndSetTitleCommand({
-          threadId,
-          input: new RunUserInput('Summarize the budget amendment', []),
-          streaming: true,
-          signal: controller.signal,
+    it('emits the title while the answer is still streaming', async () => {
+      let resolveTitle!: (title: string) => void;
+      generateAndSetThreadTitleUseCase.execute.mockReturnValue(
+        new Promise<string>((resolve) => {
+          resolveTitle = resolve;
         }),
-      ),
-    );
+      );
+      const snapshots = [randomUUID(), randomUUID(), randomUUID()].map(
+        (id) => ({ id }) as unknown as Message,
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield snapshots[0];
+          resolveTitle('Budget amendment');
+          await new Promise((resolve) => setImmediate(resolve));
+          yield snapshots[1];
+          yield snapshots[2];
+          return 'completed' as const;
+        })(),
+      );
 
-    expect(generateAndSetThreadTitleUseCase.execute).not.toHaveBeenCalled();
+      const events = await drain(useCase.execute(firstRunCommand()));
+
+      const titleIndex = events.findIndex((e) => e.type === 'thread');
+      const lastMessageIndex = events.findLastIndex(
+        (e) => e.type === 'message',
+      );
+      expect(events[titleIndex]).toMatchObject({
+        type: 'thread',
+        updateType: 'title_updated',
+        title: 'Budget amendment',
+      });
+      expect(titleIndex).toBeLessThan(lastMessageIndex);
+    });
+
+    it('ends the stream without waiting for a title that is not ready', async () => {
+      generateAndSetThreadTitleUseCase.execute.mockReturnValue(
+        new Promise(() => undefined),
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield { id: randomUUID() } as unknown as Message;
+          return 'completed' as const;
+        })(),
+      );
+
+      const events = await drain(useCase.execute(firstRunCommand()));
+
+      expect(events.some((e) => e.type === 'thread')).toBe(false);
+      expect(events[events.length - 1]).toMatchObject({
+        type: 'session',
+        streaming: false,
+      });
+      expect(titleSignal().aborted).toBe(false);
+    });
+
+    it('does not keep a pending title after an aborted first run', async () => {
+      const controller = new AbortController();
+      generateAndSetThreadTitleUseCase.execute.mockReturnValue(
+        new Promise(() => undefined),
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* (): AsyncGenerator<Message, 'aborted', void> {
+          controller.abort();
+          for (const message of [] as Message[]) yield message;
+          return 'aborted';
+        })(),
+      );
+
+      await drain(useCase.execute(firstRunCommand(controller.signal)));
+
+      expect(titleSignal().aborted).toBe(true);
+    });
+
+    it('does not keep a pending title after a failed first run', async () => {
+      generateAndSetThreadTitleUseCase.execute.mockReturnValue(
+        new Promise(() => undefined),
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* (): AsyncGenerator<Message> {
+          yield { id: randomUUID() } as unknown as Message;
+          throw new ProviderTimeoutError({ provider: 'openai' });
+        })(),
+      );
+
+      const events = await drain(useCase.execute(firstRunCommand()));
+
+      expect(events.some((e) => e.type === 'error')).toBe(true);
+      expect(titleSignal().aborted).toBe(true);
+    });
+
+    it('does not start a title when the run is rejected before streaming', async () => {
+      executeRunUseCase.execute.mockRejectedValue(
+        new QuotaExceededError(QuotaType.FAIR_USE_MESSAGES_HIGH, 1, 1, 1),
+      );
+
+      await drain(useCase.execute(firstRunCommand()));
+
+      expect(generateAndSetThreadTitleUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    // The run's own credit gate runs lazily before its first model call, so
+    // it has not admitted anything yet when the title starts.
+    it('does not generate a title the credit gate rejects', async () => {
+      inferenceAdmissionGuard.ensureModelCallAllowed.mockRejectedValue(
+        new CreditBudgetExceededError(),
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield { id: randomUUID() } as unknown as Message;
+          return 'completed' as const;
+        })(),
+      );
+
+      const events = await drain(useCase.execute(firstRunCommand()));
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(
+        inferenceAdmissionGuard.ensureModelCallAllowed,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: expect.any(String) }),
+        { name: 'claude-3-7-sonnet' },
+      );
+      expect(generateAndSetThreadTitleUseCase.execute).not.toHaveBeenCalled();
+      expect(events.map((e) => e.type)).toEqual([
+        'session',
+        'message',
+        'session',
+      ]);
+    });
+
+    it('keeps the run unaffected when title generation fails', async () => {
+      generateAndSetThreadTitleUseCase.execute.mockRejectedValue(
+        new Error('title model unavailable'),
+      );
+      const answer = { id: randomUUID() } as unknown as Message;
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield answer;
+          return 'completed' as const;
+        })(),
+      );
+
+      const events = await drain(useCase.execute(firstRunCommand()));
+
+      expect(events.map((e) => e.type)).toEqual([
+        'session',
+        'message',
+        'session',
+      ]);
+    });
   });
 
   it('closes the active run when its event consumer returns early', async () => {

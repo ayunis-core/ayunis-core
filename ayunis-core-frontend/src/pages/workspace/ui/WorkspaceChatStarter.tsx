@@ -10,7 +10,6 @@ import { usePermittedModels } from '@/features/usePermittedModels';
 import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { useSelectedModel } from '@/widgets/model-select-options';
 import { useAcademyAccessStatus } from '@/features/academy';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -71,7 +70,6 @@ export function WorkspaceChatStarter({
   });
   const { models } = usePermittedModels();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const { setPendingSkillId } = useChatContext();
 
   const [modelId, setModelId] = useState(selectedModelId);
   const { isAnonymousByDefault } = useAnonymousModeDefault();
@@ -121,8 +119,6 @@ export function WorkspaceChatStarter({
       return;
     }
 
-    setPendingSkillId(skillId);
-
     void initiateChat({
       message,
       images: imageFiles ?? [],
@@ -132,6 +128,7 @@ export function WorkspaceChatStarter({
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
       workspaceId,
+      skillId,
       onSourceStatus: handleSourceStatus,
     });
   }

@@ -1,53 +1,102 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { ChatContext } from '@/shared/contexts/chat/chatContext';
+import { StrictMode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  abortActiveThreadRun,
+  startThreadRun,
+  takeStartedThreadRun,
+} from '@/features/thread-run';
+import {
+  completeThreadSubmission,
+  getFailedThreadSubmission,
+  getPendingThreadSubmission,
+  resetThreadSubmission,
+} from '@/pages/chat/model/pending-submissions';
 import { usePendingMessage } from './usePendingMessage';
 
-function renderWithPending(pending: {
-  message: string;
-  images: Array<{ file: File; altText?: string }>;
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+const threadId = '00000000-0000-0000-0000-000000000001';
+
+function renderPendingMessage(options?: {
+  hasLoadedMessages?: boolean;
+  strict?: boolean;
 }) {
   const sendTextMessage = vi.fn().mockResolvedValue(undefined);
-  const contextValue = {
-    pendingMessage: pending.message,
-    setPendingMessage: vi.fn(),
-    pendingImages: pending.images,
-    setPendingImages: vi.fn(),
-    pendingSkillId: undefined,
-    setPendingSkillId: vi.fn(),
-  };
-  renderHook(() => usePendingMessage({ sendTextMessage }), {
-    wrapper: ({ children }) => (
-      <ChatContext.Provider value={contextValue}>
-        {children}
-      </ChatContext.Provider>
-    ),
-  });
-  return { sendTextMessage, contextValue };
+  renderHook(
+    () =>
+      usePendingMessage({
+        threadId,
+        hasLoadedMessages: options?.hasLoadedMessages ?? false,
+        sendTextMessage,
+      }),
+    options?.strict ? { wrapper: StrictMode } : undefined,
+  );
+  return { sendTextMessage };
 }
 
 describe(usePendingMessage.name, () => {
-  it('sends a pending image without text', async () => {
-    const file = new File(['png'], 'screenshot.png', { type: 'image/png' });
-
-    const { sendTextMessage, contextValue } = renderWithPending({
-      message: '',
-      images: [{ file }],
-    });
-
-    await waitFor(() =>
-      expect(sendTextMessage).toHaveBeenCalledWith({
-        text: '',
-        images: [{ file, altText: 'screenshot.png' }],
-        skillId: undefined,
-      }),
-    );
-    expect(contextValue.setPendingImages).toHaveBeenCalledWith([]);
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('')));
   });
 
-  it('sends nothing when nothing is pending', () => {
-    const { sendTextMessage } = renderWithPending({ message: '', images: [] });
+  afterEach(() => {
+    takeStartedThreadRun(threadId);
+    abortActiveThreadRun(threadId);
+    resetThreadSubmission(threadId);
+    vi.unstubAllGlobals();
+  });
+
+  it('reads the response of the already started first message', async () => {
+    const file = new File(['png'], 'screenshot.png', { type: 'image/png' });
+    startThreadRun({ threadId, text: '', images: [{ file }] });
+
+    const { sendTextMessage } = renderPendingMessage();
+
+    await waitFor(() => expect(sendTextMessage).toHaveBeenCalledTimes(1));
+    const [input] = sendTextMessage.mock.calls[0] as [
+      { text: string; startedRequest?: unknown },
+    ];
+    expect(input.text).toBe('');
+    expect(input.startedRequest).toBeDefined();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the started message as pending until the thread has it', () => {
+    startThreadRun({ threadId, text: 'Hallo', images: [] });
+
+    renderPendingMessage({ hasLoadedMessages: false });
+
+    expect(getPendingThreadSubmission(threadId)).toBe('Hallo');
+  });
+
+  it('does not show a pending copy of a message the thread already loaded', () => {
+    startThreadRun({ threadId, text: 'Hallo', images: [] });
+
+    renderPendingMessage({ hasLoadedMessages: true });
+
+    expect(getPendingThreadSubmission(threadId)).toBeNull();
+    completeThreadSubmission(threadId, true);
+    expect(getFailedThreadSubmission(threadId)).toMatchObject({
+      text: 'Hallo',
+    });
+  });
+
+  it('takes the started message only once under StrictMode', async () => {
+    startThreadRun({ threadId, text: 'Hallo', images: [] });
+
+    const { sendTextMessage } = renderPendingMessage({ strict: true });
+
+    await waitFor(() => expect(sendTextMessage).toHaveBeenCalled());
+    expect(sendTextMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends nothing when no message was started for the thread', () => {
+    const { sendTextMessage } = renderPendingMessage();
 
     expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(getPendingThreadSubmission(threadId)).toBeNull();
   });
 });

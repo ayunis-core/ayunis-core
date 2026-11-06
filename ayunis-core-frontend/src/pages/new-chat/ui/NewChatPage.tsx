@@ -25,7 +25,6 @@ import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useTimeBasedGreeting } from '@/pages/new-chat/model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -59,7 +58,6 @@ export default function NewChatPage({
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const { setPendingSkillId } = useChatContext();
   const {
     hasSystemPrompt,
     isLoading: isSystemPromptLoading,
@@ -211,8 +209,6 @@ export default function NewChatPage({
 
     setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
 
-    setPendingSkillId(skillId);
-
     void initiateChat({
       message,
       images: imageFiles ?? [],
@@ -222,6 +218,7 @@ export default function NewChatPage({
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
       workspaceId: workspaceId ?? undefined,
+      skillId,
       onSourceStatus: handleSourceStatus,
     });
   }

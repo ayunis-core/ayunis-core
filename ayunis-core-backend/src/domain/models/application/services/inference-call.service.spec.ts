@@ -525,6 +525,20 @@ describe('InferenceCallService.stream', () => {
 });
 
 describe('InferenceCallService.complete', () => {
+  it('aborts the provider call when the caller signal aborts', async () => {
+    const { provider, signal } = stallingProvider();
+    const controller = new AbortController();
+
+    const completion = serviceFor(provider).complete({
+      ...makeCall(),
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(completion).rejects.toMatchObject({ name: 'AbortError' });
+    expect(signal()?.aborted).toBe(true);
+  });
+
   it('reports folded usage once after a completed call', async () => {
     const terminal = jest.fn<
       Promise<void>,

@@ -1,66 +1,47 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
+import { takeStartedThreadRun } from '@/features/thread-run';
 import { showError } from '@/shared/lib/toast';
-import type { PendingImage } from '@/pages/chat/api/useMessageSend';
+import type { SendMessageInput } from '@/pages/chat/api/useMessageSend';
+import {
+  clearPendingThreadSubmission,
+  startThreadSubmission,
+} from '@/pages/chat/model/pending-submissions';
 
 interface UsePendingMessageParams {
-  sendTextMessage: (params: {
-    text: string;
-    images?: PendingImage[];
-    skillId?: string;
-  }) => Promise<void>;
-  onSendStart?: (text: string, images?: PendingImage[]) => void;
+  threadId: string;
+  /** Whether the chat route loaded the thread with saved messages. */
+  hasLoadedMessages: boolean;
+  sendTextMessage: (input: SendMessageInput) => Promise<void>;
 }
 
 /**
- * After redirect from the new-chat page, ChatPage mounts with a pending
- * message stashed in chat context. This hook fires once on mount, sends
- * the message, and clears the context. Source uploads, knowledge-base
- * attachment, and source-processing waits all happen *before* navigation
- * (see useInitiateChat) — by the time we get here the thread is already
- * fully prepared.
+ * A new chat's first message is sent before navigation (see useInitiateChat),
+ * after its sources, knowledge bases and integrations were attached. Once
+ * ChatPage mounts, this hook takes that started run and streams its response
+ * like any other send.
  */
 export function usePendingMessage({
+  threadId,
+  hasLoadedMessages,
   sendTextMessage,
-  onSendStart,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
-  const sentRef = useRef(false);
-  const {
-    pendingMessage,
-    setPendingMessage,
-    pendingImages,
-    setPendingImages,
-    pendingSkillId,
-    setPendingSkillId,
-  } = useChatContext();
 
   useEffect(() => {
-    if ((!pendingMessage && pendingImages.length === 0) || sentRef.current) {
-      return;
-    }
-    sentRef.current = true;
+    const startedRun = takeStartedThreadRun(threadId);
+    if (!startedRun) return;
 
-    const text = pendingMessage;
-    const images: PendingImage[] | undefined =
-      pendingImages.length > 0
-        ? pendingImages.map((img) => ({
-            file: img.file,
-            altText: img.altText ?? (img.file.name || 'Pasted image'),
-          }))
-        : undefined;
-    const skillId = pendingSkillId;
-
-    setPendingMessage('');
-    setPendingImages([]);
-    setPendingSkillId(undefined);
+    const { text, images, request } = startedRun;
+    startThreadSubmission(threadId, { text, images });
+    // The run may have saved the message before the chat route loaded the
+    // thread; a pending bubble would then show it twice.
+    if (hasLoadedMessages) clearPendingThreadSubmission(threadId);
 
     void (async () => {
       try {
-        onSendStart?.(text, images);
-        await sendTextMessage({ text, images, skillId });
+        await sendTextMessage({ text, startedRequest: request });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           showError(t('chat.upgradeToProError'));
@@ -69,15 +50,5 @@ export function usePendingMessage({
         }
       }
     })();
-  }, [
-    pendingMessage,
-    pendingImages,
-    pendingSkillId,
-    onSendStart,
-    sendTextMessage,
-    setPendingMessage,
-    setPendingImages,
-    setPendingSkillId,
-    t,
-  ]);
+  }, [threadId, hasLoadedMessages, sendTextMessage, t]);
 }

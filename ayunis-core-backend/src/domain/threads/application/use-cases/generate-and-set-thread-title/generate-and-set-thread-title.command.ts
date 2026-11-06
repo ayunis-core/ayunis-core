@@ -5,14 +5,18 @@ export class GenerateAndSetThreadTitleCommand {
   thread: Thread;
   model: LanguageModel;
   message: string;
+  /** Aborts the model call; a title generated after the abort is not saved. */
+  signal?: AbortSignal;
 
   constructor(params: {
     thread: Thread;
     model: LanguageModel;
     message: string;
+    signal?: AbortSignal;
   }) {
     this.thread = params.thread;
     this.model = params.model;
     this.message = params.message;
+    this.signal = params.signal;
   }
 }

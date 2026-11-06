@@ -29,6 +29,8 @@ import type { Model } from 'src/domain/models/domain/model.entity';
 export interface InferenceCall extends ProviderRequestInput {
   model: Model;
   onCallTerminal?: InferenceCallTerminalHandler;
+  /** Aborts a complete() call; stream() calls abort by unsubscribing. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -50,10 +52,13 @@ export class InferenceCallService {
     let response: InferenceResponse;
     try {
       response = await accumulateResponse(
-        tracker.track(provider.stream(request)),
+        tracker.track(provider.stream({ ...request, signal: call.signal })),
       );
     } catch (error) {
-      await tracker.settle(failedCallOutcome(error), call.onCallTerminal);
+      await tracker.settle(
+        failedCallOutcome(error, call.signal),
+        call.onCallTerminal,
+      );
       throw error;
     }
     await tracker.settle('completed', call.onCallTerminal);

@@ -8,7 +8,6 @@ import type {
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import config from '@/shared/config';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
@@ -18,8 +17,11 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   abortActiveThreadRun,
+  postRunMessage,
   registerActiveThreadRun,
   unregisterActiveThreadRun,
+  type RunMessagePayload,
+  type StartedRunRequest,
 } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
 
@@ -32,6 +34,8 @@ export interface SendMessageInput {
   text: string;
   images?: PendingImage[];
   skillId?: string;
+  /** Already sent for this message; its response is read instead of sending again. */
+  startedRequest?: StartedRunRequest;
 }
 
 interface SendToolResultInput {
@@ -54,14 +58,8 @@ interface UseMessageSendParams {
 
 const mountedParamsByThread = new Map<string, UseMessageSendParams>();
 
-interface SendMessagePayload {
-  threadId: string;
-  text?: string;
-  images?: File[];
-  imageAltTexts?: string[];
-  toolResult?: SendToolResultInput;
-  skillId?: string;
-  streaming?: boolean;
+interface SendMessagePayload extends RunMessagePayload {
+  startedRequest?: StartedRunRequest;
 }
 
 async function refreshThreadQueriesAfterRun(
@@ -125,56 +123,12 @@ export function useMessageSend(params: UseMessageSendParams) {
       const getCurrentParams = () =>
         mountedParamsByThread.get(requestThreadId) ?? null;
       try {
-        requestController = new AbortController();
+        requestController =
+          payload.startedRequest?.controller ?? new AbortController();
         registerActiveThreadRun(requestThreadId, requestController);
-        const signal = requestController.signal;
 
-        const url = `${config.api.baseUrl}/runs/send-message`;
-
-        // Build FormData for multipart request
-        const formData = new FormData();
-        formData.append('threadId', payload.threadId);
-
-        if (payload.text !== undefined) {
-          formData.append('text', payload.text);
-        }
-
-        if (payload.images && payload.images.length > 0) {
-          for (const image of payload.images) {
-            formData.append('images', image);
-          }
-        }
-
-        if (payload.imageAltTexts && payload.imageAltTexts.length > 0) {
-          formData.append(
-            'imageAltTexts',
-            JSON.stringify(payload.imageAltTexts),
-          );
-        }
-
-        if (payload.toolResult) {
-          formData.append('toolResult', JSON.stringify(payload.toolResult));
-        }
-
-        if (payload.skillId) {
-          formData.append('skillId', payload.skillId);
-        }
-
-        if (payload.streaming !== undefined) {
-          formData.append('streaming', String(payload.streaming));
-        }
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            // Don't set Content-Type - browser will set it with boundary for multipart
-            Accept: 'text/event-stream',
-            'Cache-Control': 'no-cache',
-          },
-          credentials: 'include',
-          body: formData,
-          signal,
-        });
+        const response = await (payload.startedRequest?.response ??
+          postRunMessage(payload, requestController.signal));
 
         if (response.status === 401) {
           sessionExpired = true;
@@ -350,6 +304,10 @@ export function useMessageSend(params: UseMessageSendParams) {
 
       if (input.skillId) {
         payload.skillId = input.skillId;
+      }
+
+      if (input.startedRequest) {
+        payload.startedRequest = input.startedRequest;
       }
 
       return sendMessage(payload);
