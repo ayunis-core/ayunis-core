@@ -74,3 +74,20 @@ export class TeamBudgetAlertNotification extends BudgetAlertNotification {
     return this.teamId;
   }
 }
+
+export class ApiKeyBudgetAlertNotification extends BudgetAlertNotification {
+  readonly apiKeyId: UUID;
+
+  constructor(params: BudgetAlertNotificationParams & { apiKeyId: UUID }) {
+    super(params);
+    this.apiKeyId = params.apiKeyId;
+  }
+
+  get scope(): BudgetAlertScope {
+    return BudgetAlertScope.API_KEY;
+  }
+
+  get targetId(): UUID {
+    return this.apiKeyId;
+  }
+}

@@ -203,6 +203,43 @@ describe('budget-warning template', () => {
     });
   });
 
+  describe('API key limit at 80%', () => {
+    it('names the key and explains the consequence in plain text', () => {
+      const text = budgetWarningText(
+        content({
+          scope: BudgetWarningScope.API_KEY,
+          targetName: 'Citizen portal',
+          threshold: '80',
+        }),
+      );
+
+      expect(text).toContain('Ayunis Core – Limitwarnung');
+      expect(text).toContain(
+        'der API-Schlüssel Citizen portal hat mindestens 80 % des festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, werden Anfragen der Anwendung an Credit-pflichtige Modelle abgelehnt, bis Sie das Limit anpassen.',
+      );
+    });
+  });
+
+  describe('API key limit at 100%', () => {
+    it('announces the blocked key in plain text', () => {
+      const text = budgetWarningText(
+        content({
+          scope: BudgetWarningScope.API_KEY,
+          targetName: 'Citizen portal',
+          threshold: '100',
+        }),
+      );
+
+      expect(text).toContain('Ayunis Core – Limit erreicht');
+      expect(text).toContain(
+        'der API-Schlüssel Citizen portal hat das festgelegte Limit vollständig erreicht.',
+      );
+      expect(text).toContain(
+        'Passen Sie das Limit in den API-Schlüssel-Einstellungen an, damit die Anwendung wieder normal arbeiten kann.',
+      );
+    });
+  });
+
   describe('subjects', () => {
     it('builds the org warning subject with the threshold', () => {
       expect(budgetWarningSubject(content({ threshold: '50' }))).toBe(

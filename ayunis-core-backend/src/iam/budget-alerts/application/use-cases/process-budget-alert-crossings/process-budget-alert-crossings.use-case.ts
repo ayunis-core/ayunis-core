@@ -4,6 +4,7 @@ import type { User } from 'src/iam/users/domain/user.entity';
 import { GetOrgAdminsUseCase } from 'src/iam/users/application/use-cases/get-org-admins/get-org-admins.use-case';
 import { GetOrgAdminsQuery } from 'src/iam/users/application/use-cases/get-org-admins/get-org-admins.query';
 import {
+  ApiKeyBudgetAlertNotification,
   BudgetAlertNotification,
   OrgBudgetAlertNotification,
   TeamBudgetAlertNotification,
@@ -27,6 +28,7 @@ const SCOPE_TO_WARNING: Record<BudgetAlertScope, BudgetWarningScope> = {
   [BudgetAlertScope.ORG]: BudgetWarningScope.ORG,
   [BudgetAlertScope.USER]: BudgetWarningScope.USER,
   [BudgetAlertScope.TEAM]: BudgetWarningScope.TEAM,
+  [BudgetAlertScope.API_KEY]: BudgetWarningScope.API_KEY,
 };
 
 @Injectable()
@@ -166,6 +168,11 @@ export class ProcessBudgetAlertCrossingsUseCase {
         return new TeamBudgetAlertNotification({
           ...params,
           teamId: crossing.target.targetId,
+        });
+      case BudgetAlertScope.API_KEY:
+        return new ApiKeyBudgetAlertNotification({
+          ...params,
+          apiKeyId: crossing.target.targetId,
         });
     }
   }

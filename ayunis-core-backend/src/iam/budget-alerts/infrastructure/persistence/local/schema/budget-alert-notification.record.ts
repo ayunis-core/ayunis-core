@@ -8,27 +8,30 @@ import {
   TableInheritance,
 } from 'typeorm';
 import type { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
-import { TeamRecord } from '../../../../../teams/infrastructure/repositories/local/schema/team.record';
-import { BudgetAlertScope } from '../../../../domain/value-objects/budget-alert-scope.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 
 /**
  * One row per budget target and threshold crossing. The STI discriminator
- * selects the target subtype; orgId is the organization target, while userId
- * and teamId belong only to their respective child records.
+ * selects the target subtype; orgId is the organization target, while userId,
+ * teamId and apiKeyId belong only to their respective child records.
  */
 @Entity('budget_alert_notifications')
 @TableInheritance({ column: { type: 'varchar', name: 'scope' } })
 @Check(
-  'CHK_budget_alert_notifications_target_columns',
+  'CHK_budget_alert_notifications_scope_targets',
   `(
-    ("scope" = 'org' AND "userId" IS NULL AND "teamId" IS NULL)
+    ("scope" = 'org' AND "userId" IS NULL AND "teamId" IS NULL AND "apiKeyId" IS NULL)
     OR
-    ("scope" = 'user' AND "userId" IS NOT NULL AND "teamId" IS NULL)
+    ("scope" = 'user' AND "userId" IS NOT NULL AND "teamId" IS NULL AND "apiKeyId" IS NULL)
     OR
-    ("scope" = 'team' AND "userId" IS NULL AND "teamId" IS NOT NULL)
+    ("scope" = 'team' AND "userId" IS NULL AND "teamId" IS NOT NULL AND "apiKeyId" IS NULL)
+    OR
+    ("scope" = 'api_key' AND "userId" IS NULL AND "teamId" IS NULL AND "apiKeyId" IS NOT NULL)
   )`,
 )
 export abstract class BudgetAlertNotificationRecord extends BaseRecord {
@@ -76,4 +79,17 @@ export class TeamBudgetAlertNotificationRecord extends BudgetAlertNotificationRe
 
   @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'CASCADE' })
   team: TeamRecord | null;
+}
+
+@ChildEntity(BudgetAlertScope.API_KEY)
+@Index(['orgId', 'apiKeyId', 'periodStart', 'threshold'], {
+  unique: true,
+  where: '"apiKeyId" IS NOT NULL',
+})
+export class ApiKeyBudgetAlertNotificationRecord extends BudgetAlertNotificationRecord {
+  @Column({ nullable: true })
+  apiKeyId: UUID | null;
+
+  @ManyToOne(() => ApiKeyRecord, { nullable: true, onDelete: 'CASCADE' })
+  apiKey: ApiKeyRecord | null;
 }

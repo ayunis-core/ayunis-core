@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UsersModule } from '../users/users.module';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { CreditLimitsModule } from '../credit-limits/credit-limits.module';
-import { UsageModule } from '../../domain/usage/usage.module';
-import { EmailsModule } from '../../common/emails/emails.module';
-import { EmailTemplatesModule } from '../../common/email-templates/email-templates.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { CreditLimitsModule } from 'src/iam/credit-limits/credit-limits.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
+import { EmailsModule } from 'src/common/emails/emails.module';
+import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
 import { BudgetAlertNotificationRepository } from './application/ports/budget-alert-notification.repository';
 import { LocalBudgetAlertNotificationRepository } from './infrastructure/persistence/local/local-budget-alert-notification.repository';
 import {
+  ApiKeyBudgetAlertNotificationRecord,
   BudgetAlertNotificationRecord,
   OrgBudgetAlertNotificationRecord,
   TeamBudgetAlertNotificationRecord,
@@ -34,6 +35,7 @@ import { BudgetAlertsListener } from './application/listeners/budget-alerts.list
       OrgBudgetAlertNotificationRecord,
       UserBudgetAlertNotificationRecord,
       TeamBudgetAlertNotificationRecord,
+      ApiKeyBudgetAlertNotificationRecord,
     ]),
     UsersModule,
     SubscriptionsModule,

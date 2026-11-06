@@ -96,6 +96,20 @@ describe('SendBudgetWarningEmailUseCase', () => {
     );
   });
 
+  it('links API key warnings to the API keys settings page', async () => {
+    await useCase.execute(
+      new SendBudgetWarningEmailCommand({
+        ...command,
+        scope: BudgetWarningScope.API_KEY,
+        targetName: 'Citizen portal',
+      }),
+    );
+
+    expect(renderedTemplate().content.settingsUrl).toBe(
+      'https://app.example/admin-settings/api-keys',
+    );
+  });
+
   it('links org warnings to the usage settings page', async () => {
     await useCase.execute(
       new SendBudgetWarningEmailCommand({

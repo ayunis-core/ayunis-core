@@ -15,7 +15,8 @@ import {
 
 // Where an admin can act on the warning: org budgets are only visible on the
 // usage page (raising them goes through the provider), team limits live on the
-// team detail page, user limits on the users page.
+// team detail page, user limits on the users page, API key limits on the API
+// keys page.
 const SETTINGS_PATH_BY_SCOPE: Record<
   BudgetWarningScope,
   (targetId: string) => string
@@ -23,6 +24,7 @@ const SETTINGS_PATH_BY_SCOPE: Record<
   [BudgetWarningScope.ORG]: () => '/admin-settings/usage',
   [BudgetWarningScope.TEAM]: (targetId) => `/admin-settings/teams/${targetId}`,
   [BudgetWarningScope.USER]: () => '/admin-settings/users',
+  [BudgetWarningScope.API_KEY]: () => '/admin-settings/api-keys',
 };
 
 @Injectable()

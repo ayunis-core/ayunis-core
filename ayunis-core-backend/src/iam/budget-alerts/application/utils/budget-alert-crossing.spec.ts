@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 import {
   collectCrossings,
   notificationKey,
@@ -182,5 +182,28 @@ describe('collectCrossings', () => {
     expect(result).toHaveLength(1);
     expect(result[0].target.scope).toBe(BudgetAlertScope.USER);
     expect(result[0].emailThreshold).toBe(80);
+  });
+
+  it('warns for API key limits at 80 and 100 percent, not at 50', () => {
+    const apiKeyId = '44444444-4444-4444-4444-444444444444' as UUID;
+    const target = {
+      scope: BudgetAlertScope.API_KEY,
+      targetId: apiKeyId,
+      name: 'Citizen portal',
+      monthlyCredits: 200,
+    };
+
+    expect(
+      collectCrossings([{ ...target, creditsUsed: 130 }], new Set()),
+    ).toEqual([]);
+    expect(
+      collectCrossings([{ ...target, creditsUsed: 200 }], new Set()),
+    ).toEqual([
+      {
+        target: { ...target, creditsUsed: 200 },
+        emailThreshold: 100,
+        recordThresholds: [80, 100],
+      },
+    ]);
   });
 });
