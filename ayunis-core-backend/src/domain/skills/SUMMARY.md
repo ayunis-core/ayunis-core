@@ -26,24 +26,26 @@ Create and list are owner-discriminated while retaining one behavioral contract:
 - Creation honors `isActive` for every owner type (for team and org skills as their global state) and defaults it to `true` when omitted.
 - `GET /skills/marketplace/:identifier` answers per user whether the caller already installed a marketplace entry (`FindInstalledMarketplaceSkillUseCase` over `SkillRepository.findPersonalByMarketplaceIdentifier`). It returns the oldest matching personal skill's ID or `null`; the chat install card uses it to link to the existing skill instead of creating a numbered duplicate.
 
-| Method          | Path                                                | Description                                           |
-| --------------- | --------------------------------------------------- | ----------------------------------------------------- |
-| POST            | `/skills`                                           | Create for the user, a workspace, a team or the org   |
-| POST            | `/skills/improve-text`                              | Rewrite a draft's trigger or instructions             |
-| GET             | `/skills`                                           | Paginated list; `personal` adds readable team/org     |
-| GET             | `/skills/marketplace/:identifier`                   | Caller's skill installed from a marketplace entry     |
-| GET             | `/skills/:id`                                       | Read a skill using persisted-owner authorization      |
-| PUT             | `/skills/:id`                                       | Update a skill                                        |
-| DELETE          | `/skills/:id`                                       | Delete a skill                                        |
-| PATCH           | `/skills/:id/activation`                            | Idempotently set `{ isActive }`                       |
-| PATCH           | `/skills/:id/pin`                                   | Idempotently set `{ isPinned }`                       |
-| GET             | `/skills/:id/sources`                               | List sources                                          |
-| POST            | `/skills/:id/sources/file`                          | Add a file source                                     |
-| DELETE          | `/skills/:id/sources/:sourceId`                     | Remove a source                                       |
-| GET             | `/skills/:skillId/knowledge-bases`                  | List assigned knowledge bases with state              |
-| POST            | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign a knowledge base                               |
-| DELETE          | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign a knowledge base                             |
-| GET/POST/DELETE | `/skills/:skillId/mcp-integrations/...`             | MCP integrations of personal, team and org skills     |
+| Method          | Path                                                | Description                                         |
+| --------------- | --------------------------------------------------- | --------------------------------------------------- |
+| POST            | `/skills`                                           | Create for the user, a workspace, a team or the org |
+| POST            | `/skills/improve-text`                              | Rewrite a draft's trigger or instructions           |
+| GET             | `/skills`                                           | Paginated list; `personal` adds readable team/org   |
+| GET             | `/skills/marketplace/:identifier`                   | Caller's skill installed from a marketplace entry   |
+| GET             | `/skills/:id`                                       | Read a skill using persisted-owner authorization    |
+| PUT             | `/skills/:id`                                       | Update a skill                                      |
+| DELETE          | `/skills/:id`                                       | Delete a skill                                      |
+| PATCH           | `/skills/:id/owner`                                 | Move between the caller, a team and the org         |
+| GET             | `/skills/:id/owner-change-preview`                  | Count the links a move would remove                 |
+| PATCH           | `/skills/:id/activation`                            | Idempotently set `{ isActive }`                     |
+| PATCH           | `/skills/:id/pin`                                   | Idempotently set `{ isPinned }`                     |
+| GET             | `/skills/:id/sources`                               | List sources                                        |
+| POST            | `/skills/:id/sources/file`                          | Add a file source                                   |
+| DELETE          | `/skills/:id/sources/:sourceId`                     | Remove a source                                     |
+| GET             | `/skills/:skillId/knowledge-bases`                  | List assigned knowledge bases with state            |
+| POST            | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign a knowledge base                             |
+| DELETE          | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign a knowledge base                           |
+| GET/POST/DELETE | `/skills/:skillId/mcp-integrations/...`             | MCP integrations of personal, team and org skills   |
 
 `POST /skills/improve-text` (`ImproveSkillTextUseCase`, requires `MANAGE_SKILLS`) rewrites a draft's trigger or instructions using the other text and the name as context; nothing is persisted. The optional `language` (`en` or `de`) carries the current UI language as the fallback for unidentifiable draft text; recognizable author languages are preserved, and older clients default to English. `SkillTextModelResolver` picks the organization default model when the caller may use it, else an eligible user default, team default, or deterministic alphabetical fallback, and never an anonymous-only one (anonymized placeholders would end up in the skill); when every permitted model is anonymous-only it fails with `SKILL_TEXT_IMPROVEMENT_UNAVAILABLE` (422), and when nothing is permitted at all the models module's `NO_DEFAULT_MODEL_FOUND` passes through unchanged. Like send-message, the route requires an active subscription or a trial with messages left (`@RequireSubscription()`) and, when the organization gates chat behind the KI-Schulung certificate, a valid completion (`@RequireAcademyCertificate()` on this handler only, so skill CRUD stays open to blocked members); and a rewrite admitted on trial capacity consumes one trial message (fire-and-forget `IncrementTrialMessagesUseCase`, mirroring send-message) because trial organizations have no credit budget for `InferenceAdmissionGuard` to enforce. The call is a paid model call: admission goes through the quotas module's `InferenceAdmissionGuard` (fair-use and credit checks) and the tokens used are recorded through the usage module's `CollectUsageAsyncService`, awaited at the inference response boundary before truncation checks. Model eligibility and fallback selection reuse the Models module's default resolver without a second effective-grant lookup. An answer that is empty after stripping surrounding quotes fails with `SKILL_TEXT_IMPROVEMENT_FAILED` (502) instead of clearing the field.
 
@@ -62,6 +64,8 @@ File source creation authorizes the skill before external processing starts, enf
 ## Runtime orchestration
 
 `FindActiveSkillsUseCase` returns the user's active personal and shared skills plus the active team and org skills they can read, in a deterministic order (`createdAt`, `id`) for the latter. Run assembly advertises them under the `team__` and `org__` slug prefixes, and `FindActiveCollectiveSkillByNameUseCase` resolves those slugs back through the same ordered set, so a collision resolves to the advertised skill. Only active team and org skills can be activated on a thread.
+
+**Owner changes.** `ChangeSkillOwnerUseCase` (`PATCH /skills/:id/owner`, `ownerType` personal/team/org) moves a skill between the caller, a team and the organization; workspace skills cannot move (`SKILL_OWNER_CHANGE_NOT_ALLOWED`, only after access is checked, so inaccessible ids stay 404). It locks the skill row for the whole move (`findById(id, { lock: true })`, so a concurrent move or link change cannot interleave with authorization and the write), needs the right to manage both the current owner and the new one, enforces the new owner's name uniqueness, and keeps id, content, sources and MCP integrations. `SkillOwnerChangeService` plans the move: a skill becoming team- or org-owned takes over the mover's activation and pin as its global state, a skill becoming personal gives the mover exactly the former global state (including switched off) and drops every other user's per-user row, a skill becoming collective drops the mover's per-user row, and only knowledge-base links of the same owner survive (`isSameOwner`); thread assignments that came through a removed link are removed for every user. `RemoveEntitySharesUseCase` then removes all shares and emits `ShareDeletedEvent` with the new owner's audience as the remaining scope, so the existing share listeners reconcile everyone outside it. `PreviewSkillOwnerChangeUseCase` returns only the number of links a move would remove, for the UI warning. `UnlinkKnowledgeBaseFromOtherOwnersUseCase` is exported for knowledge-base owner changes; it also removes the knowledge base from threads that got it through an unlinked skill.
 
 When a team is deleted its skills cascade with it; `SkillsTeamDeletionRequestedListener` defers deletion of their sources (and in-flight processing), which the join table does not cascade, through `SkillSourceCleanupService`, shared with the workspace-deletion listener.
 

@@ -140,7 +140,7 @@ export abstract class ThreadsRepository {
   }): Promise<void>;
   abstract removeKnowledgeBaseAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
-    userIds: UUID[];
+    userIds: UUID[] | null;
     knowledgeBaseId?: UUID;
   }): Promise<void>;
   abstract removeDirectKnowledgeBaseAssignments(params: {

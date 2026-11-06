@@ -61,6 +61,8 @@ export abstract class KnowledgeBaseRepository {
   ): Promise<WorkspaceKnowledgeBase[]>;
   abstract activate(knowledgeBaseId: UUID, userId: UUID): Promise<void>;
   abstract deactivate(knowledgeBaseId: UUID, userId: UUID): Promise<void>;
+  /** Removes every user's activation; workspace activation is untouched. */
+  abstract deactivateAllUsers(knowledgeBaseId: UUID): Promise<void>;
   abstract isActive(knowledgeBaseId: UUID, userId: UUID): Promise<boolean>;
   abstract getActiveIds(userId: UUID): Promise<Set<UUID>>;
   abstract activateForWorkspace(

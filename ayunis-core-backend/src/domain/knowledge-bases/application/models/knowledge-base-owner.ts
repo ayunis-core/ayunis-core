@@ -11,3 +11,9 @@ export type KnowledgeBaseListScope = Extract<
   KnowledgeBaseOwner,
   { type: 'personal' | 'workspace' }
 >;
+
+/** The owners a knowledge base can be moved between; workspace ones stay put. */
+export type KnowledgeBaseTransferOwner = Exclude<
+  KnowledgeBaseOwner,
+  { type: 'workspace' }
+>;

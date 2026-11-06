@@ -4,6 +4,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum SkillErrorCode {
   SKILL_NOT_FOUND = 'SKILL_NOT_FOUND',
   SKILL_INVALID_INPUT = 'SKILL_INVALID_INPUT',
+  SKILL_OWNER_CHANGE_NOT_ALLOWED = 'SKILL_OWNER_CHANGE_NOT_ALLOWED',
   DUPLICATE_SKILL_NAME = 'DUPLICATE_SKILL_NAME',
   SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
   SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
@@ -65,6 +66,17 @@ export class SkillInvalidInputError extends SkillError {
       SkillErrorCode.SKILL_INVALID_INPUT,
       400,
       metadata,
+    );
+  }
+}
+
+export class SkillOwnerChangeNotAllowedError extends SkillError {
+  constructor(skillId: string) {
+    super(
+      'Workspace skills cannot change owner',
+      SkillErrorCode.SKILL_OWNER_CHANGE_NOT_ALLOWED,
+      400,
+      { skillId },
     );
   }
 }

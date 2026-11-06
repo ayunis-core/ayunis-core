@@ -53,7 +53,17 @@ import {
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { InstalledMarketplaceSkillResponseDto } from './dto/installed-marketplace-skill-response.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
-import { toSkillListScope, toSkillOwner } from './dto/skill-owner.dto';
+import {
+  SkillTransferOwnerDto,
+  toSkillListScope,
+  toSkillOwner,
+  toSkillTransferOwner,
+} from './dto/skill-owner.dto';
+import { SkillOwnerChangePreviewResponseDto } from './dto/skill-owner-change-preview-response.dto';
+import { ChangeSkillOwnerUseCase } from 'src/domain/skills/application/use-cases/change-skill-owner/change-skill-owner.use-case';
+import { ChangeSkillOwnerCommand } from 'src/domain/skills/application/use-cases/change-skill-owner/change-skill-owner.command';
+import { PreviewSkillOwnerChangeUseCase } from 'src/domain/skills/application/use-cases/preview-skill-owner-change/preview-skill-owner-change.use-case';
+import { PreviewSkillOwnerChangeQuery } from 'src/domain/skills/application/use-cases/preview-skill-owner-change/preview-skill-owner-change.query';
 import {
   SkillListResponseDto,
   SkillResponseDto,
@@ -82,6 +92,8 @@ export class SkillsController {
     private readonly setPin: SetSkillPinUseCase,
     private readonly mapper: SkillDtoMapper,
     private readonly improveSkillText: ImproveSkillTextUseCase,
+    private readonly changeSkillOwner: ChangeSkillOwnerUseCase,
+    private readonly previewSkillOwnerChange: PreviewSkillOwnerChangeUseCase,
   ) {}
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -228,6 +240,36 @@ export class SkillsController {
       new UpdateSkillCommand({ skillId: id, ...dto }),
     );
     return this.findOne(id);
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @Patch(':id/owner')
+  @ApiOperation({
+    summary: 'Move a skill to the caller, a team or the organization',
+  })
+  @ApiBody({ type: SkillTransferOwnerDto })
+  @ApiResponse({ status: 200, type: SkillResponseDto })
+  async changeOwner(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: SkillTransferOwnerDto,
+  ): Promise<SkillResponseDto> {
+    await this.changeSkillOwner.execute(
+      new ChangeSkillOwnerCommand(id, toSkillTransferOwner(dto)),
+    );
+    return this.findOne(id);
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @Get(':id/owner-change-preview')
+  @ApiOperation({ summary: 'Preview what moving a skill would remove' })
+  @ApiResponse({ status: 200, type: SkillOwnerChangePreviewResponseDto })
+  previewOwnerChange(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Query() dto: SkillTransferOwnerDto,
+  ): Promise<SkillOwnerChangePreviewResponseDto> {
+    return this.previewSkillOwnerChange.execute(
+      new PreviewSkillOwnerChangeQuery(id, toSkillTransferOwner(dto)),
+    );
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
