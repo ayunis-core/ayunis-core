@@ -1,5 +1,6 @@
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
+import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { BullModule } from '@nestjs/bullmq';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
@@ -32,6 +33,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
     LocalSourceRepositoryModule,
   ],
   providers: [
+    StoredSourceFileService,
     DocumentProcessingProducer,
     {
       provide: DocumentProcessingPort,

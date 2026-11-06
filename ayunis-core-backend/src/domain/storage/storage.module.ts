@@ -9,6 +9,7 @@ import { DownloadObjectUseCase } from './application/use-cases/download-object/d
 import { GetObjectInfoUseCase } from './application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from './application/use-cases/delete-object/delete-object.use-case';
 import { ListObjectsUseCase } from './application/use-cases/list-objects/list-objects.use-case';
+import { ListObjectSummariesUseCase } from './application/use-cases/list-object-summaries/list-object-summaries.use-case';
 import { PurgeOrgStorageUseCase } from './application/use-cases/purge-org-storage/purge-org-storage.use-case';
 import { PurgeStoragePrefixesUseCase } from './application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { SweepOrphanStorageUseCase } from './application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
@@ -38,6 +39,7 @@ const DIRECT_UPLOAD_USE_CASES = [
     GetObjectInfoUseCase,
     DeleteObjectUseCase,
     ListObjectsUseCase,
+    ListObjectSummariesUseCase,
     PurgeOrgStorageUseCase,
     PurgeStoragePrefixesUseCase,
     SweepOrphanStorageUseCase,
@@ -52,6 +54,7 @@ const DIRECT_UPLOAD_USE_CASES = [
     GetObjectInfoUseCase,
     DeleteObjectUseCase,
     ListObjectsUseCase,
+    ListObjectSummariesUseCase,
     PurgeOrgStorageUseCase,
     PurgeStoragePrefixesUseCase,
     ...DIRECT_UPLOAD_USE_CASES,

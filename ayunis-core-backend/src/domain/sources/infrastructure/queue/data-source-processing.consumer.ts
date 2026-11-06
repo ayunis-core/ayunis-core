@@ -3,7 +3,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
@@ -26,10 +26,7 @@ import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admi
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import { observeJob, processingStage } from './job-telemetry';
-import {
-  cleanupMinioProcessingFile,
-  downloadMinioFile,
-} from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DATA_SOURCE_PROCESSING_QUEUE, { concurrency: 2 })
 export class DataSourceProcessingConsumer extends WorkerHost {
@@ -37,7 +34,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
 
   constructor(
     private readonly contextService: ContextService,
-    private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly storedFiles: StoredSourceFileService,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
@@ -65,6 +62,8 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     job: Job<DataSourceProcessingJobData>,
   ): Promise<void> {
     const { orgId, userId, minioPath, fileName, kind, targets } = job.data;
+    // See DocumentProcessingConsumer: retained originals are never removed here.
+    const cleanupPath = job.data.retainFile ? null : minioPath;
     this.validateAndSetContext(orgId, userId);
     if (
       !(await this.admitOrgProcessing.execute(
@@ -82,18 +81,18 @@ export class DataSourceProcessingConsumer extends WorkerHost {
           { jobId: job.id },
           'No pending sources left for job, skipping',
         );
-        await this.cleanupMinioFile(minioPath);
+        await this.cleanupMinioFile(cleanupPath);
         return;
       }
 
       const fileBuffer = await processingStage('data_source.download', () =>
-        this.downloadFile(minioPath),
+        this.readInput(job.data),
       );
       const sheets = await processingStage('data_source.extraction', () =>
         this.parseFile(fileBuffer, kind),
       );
       await this.fillSources(pending, sheets);
-      await this.cleanupMinioFile(minioPath);
+      await this.cleanupMinioFile(cleanupPath);
       this.logger.log(
         { fileName, sources: pending.length },
         'Data source processing complete',
@@ -106,7 +105,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       const { final, rethrow } = classifyJobFailure(job, error);
       if (final) {
         await this.markPendingTargetsFailed(targets, error);
-        await this.cleanupMinioFile(minioPath);
+        await this.cleanupMinioFile(cleanupPath);
       }
       if (rethrow) throw rethrow;
     }
@@ -124,6 +123,13 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     }
     this.contextService.set('orgId', orgId);
     this.contextService.set('userId', userId);
+  }
+
+  private readInput(data: DataSourceProcessingJobData): Promise<Buffer> {
+    const { minioPath, expectedSize, expectedETag } = data;
+    return data.retainFile
+      ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
+      : this.storedFiles.read(minioPath, expectedSize, expectedETag);
   }
 
   private async loadPendingTargets(
@@ -274,15 +280,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     }
   }
 
-  private async downloadFile(minioPath: string): Promise<Buffer> {
-    return downloadMinioFile(this.downloadObjectUseCase, minioPath);
-  }
-
-  private async cleanupMinioFile(minioPath: string): Promise<void> {
+  private async cleanupMinioFile(cleanupPath: string | null): Promise<void> {
+    if (cleanupPath === null) return;
     await cleanupMinioProcessingFile(
       this.deleteObjectUseCase,
       this.logger,
-      minioPath,
+      cleanupPath,
     );
   }
 }

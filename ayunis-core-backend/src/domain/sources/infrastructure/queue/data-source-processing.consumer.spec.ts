@@ -6,14 +6,14 @@ import type { SourceRepository } from 'src/domain/sources/application/ports/sour
 import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import type { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import type { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
-import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import type { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
-async function* fileStream(): AsyncGenerator<Buffer> {
-  yield Buffer.from('file-bytes');
+function fileBuffer(): Buffer {
+  return Buffer.from('file-bytes');
 }
 
 describe('DataSourceProcessingConsumer', () => {
@@ -23,7 +23,7 @@ describe('DataSourceProcessingConsumer', () => {
   let sourceRepository: jest.Mocked<SourceRepository>;
   let parser: jest.Mocked<SpreadsheetParserPort>;
   let markSourceFailed: jest.Mocked<MarkSourceFailedUseCase>;
-  let downloadObject: jest.Mocked<DownloadObjectUseCase>;
+  let storedFiles: jest.Mocked<StoredSourceFileService>;
   let deleteObject: jest.Mocked<DeleteObjectUseCase>;
   let admitOrgProcessing: { execute: jest.Mock };
   let consumer: DataSourceProcessingConsumer;
@@ -67,9 +67,10 @@ describe('DataSourceProcessingConsumer', () => {
     markSourceFailed = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<MarkSourceFailedUseCase>;
-    downloadObject = {
-      execute: jest.fn().mockResolvedValue(fileStream()),
-    } as unknown as jest.Mocked<DownloadObjectUseCase>;
+    storedFiles = {
+      read: jest.fn().mockResolvedValue(fileBuffer()),
+      readRetained: jest.fn().mockResolvedValue(fileBuffer()),
+    } as unknown as jest.Mocked<StoredSourceFileService>;
     deleteObject = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteObjectUseCase>;
@@ -83,7 +84,7 @@ describe('DataSourceProcessingConsumer', () => {
 
     consumer = new DataSourceProcessingConsumer(
       contextService,
-      downloadObject,
+      storedFiles,
       deleteObject,
       sourceRepository,
       parser,
@@ -98,7 +99,7 @@ describe('DataSourceProcessingConsumer', () => {
     await consumer.process(jobFor({}));
 
     expect(sourceRepository.findById).not.toHaveBeenCalled();
-    expect(downloadObject.execute).not.toHaveBeenCalled();
+    expect(storedFiles.read).not.toHaveBeenCalled();
   });
 
   it('fills each source with its sheet data and flips it to READY', async () => {
@@ -116,6 +117,7 @@ describe('DataSourceProcessingConsumer', () => {
 
     await consumer.process(
       jobFor({
+        expectedETag: 'verified',
         targets: [
           { sourceId: first.id, sheetName: 'Plan 2026' },
           { sourceId: second.id, sheetName: 'Plan 2027' },
@@ -123,6 +125,11 @@ describe('DataSourceProcessingConsumer', () => {
       }),
     );
 
+    expect(storedFiles.read).toHaveBeenCalledWith(
+      expect.any(String),
+      undefined,
+      'verified',
+    );
     expect(sourceRepository.updateCsvSourceData).toHaveBeenCalledWith(
       first.id,
       { headers: ['Jahr'], rows: [['2026']] },

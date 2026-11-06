@@ -7,6 +7,17 @@ export interface DocumentProcessingJobData {
   minioPath: string;
   fileName: string;
   fileType: string;
+  /**
+   * True for directly uploaded originals, which stay in storage while their
+   * source exists; absent for legacy staged files the consumer removes.
+   */
+  retainFile?: boolean;
+  /**
+   * Size the upload was verified at. The consumer refuses an object of any
+   * other size, since the browser's signed URLs may outlive completion.
+   */
+  expectedSize?: number;
+  expectedETag?: string;
 }
 
 /**

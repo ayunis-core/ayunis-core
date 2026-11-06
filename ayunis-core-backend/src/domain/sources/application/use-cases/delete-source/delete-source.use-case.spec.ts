@@ -6,6 +6,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (_target: unknown, _prop: string, descriptor: PropertyDescriptor) =>
       descriptor,
+  TransactionHost: class TransactionHost {},
 }));
 
 import type { UUID } from 'crypto';
@@ -15,6 +16,7 @@ import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -46,6 +48,7 @@ describe('DeleteSourceUseCase', () => {
   let mockSourceRepository: Record<string, jest.Mock>;
   let mockCleanupSourceProcessingUseCase: Record<string, jest.Mock>;
   let mockDeleteContentUseCase: Record<string, jest.Mock>;
+  const mockTxHost = { isTransactionActive: jest.fn().mockReturnValue(false) };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
 
@@ -69,6 +72,7 @@ describe('DeleteSourceUseCase', () => {
           provide: CleanupSourceProcessingUseCase,
           useValue: mockCleanupSourceProcessingUseCase,
         },
+        { provide: TransactionHost, useValue: mockTxHost },
         { provide: DeleteContentUseCase, useValue: mockDeleteContentUseCase },
       ],
     }).compile();
@@ -82,6 +86,7 @@ describe('DeleteSourceUseCase', () => {
     mockSourceRepository.delete.mockResolvedValue(undefined);
     mockCleanupSourceProcessingUseCase.execute.mockResolvedValue(undefined);
     mockDeleteContentUseCase.execute.mockResolvedValue(undefined);
+    mockTxHost.isTransactionActive.mockReturnValue(false);
   });
 
   it('should be defined', () => {
@@ -121,5 +126,57 @@ describe('DeleteSourceUseCase', () => {
     ).rejects.toBeInstanceOf(UnexpectedSourceError);
 
     expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+  });
+
+  it('releases the uploaded original after the row is deleted', async () => {
+    const sourceId = randomUUID();
+    const storageKey = `${orgId}/uploads/session/doc.pdf`;
+    const source = makeReadySource(sourceId);
+    source.storageKey = storageKey;
+    mockSourceRepository.findById.mockResolvedValue(source);
+
+    await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
+
+    expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+    expect(mockCleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceIds: [],
+        orgId,
+        storageKeys: [storageKey],
+      }),
+    );
+    const deleteOrder = mockSourceRepository.delete.mock.invocationCallOrder[0];
+    const releaseOrder =
+      mockCleanupSourceProcessingUseCase.execute.mock.invocationCallOrder[0];
+    expect(releaseOrder).toBeGreaterThan(deleteOrder);
+  });
+
+  it('leaves the original to the sweep when a caller holds the transaction', async () => {
+    const sourceId = randomUUID();
+    const source = makeReadySource(sourceId);
+    source.storageKey = `${orgId}/uploads/session/doc.pdf`;
+    mockSourceRepository.findById.mockResolvedValue(source);
+    mockTxHost.isTransactionActive.mockReturnValue(true);
+
+    await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
+
+    expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+    expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps the original when deleting the row fails', async () => {
+    const sourceId = randomUUID();
+    const source = makeReadySource(sourceId);
+    source.storageKey = `${orgId}/uploads/session/doc.pdf`;
+    mockSourceRepository.findById.mockResolvedValue(source);
+    mockSourceRepository.delete.mockRejectedValue(
+      new Error('Repository error'),
+    );
+
+    await expect(
+      useCase.execute(new DeleteSourceCommand(sourceId, orgId)),
+    ).rejects.toBeInstanceOf(UnexpectedSourceError);
+
+    expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 });

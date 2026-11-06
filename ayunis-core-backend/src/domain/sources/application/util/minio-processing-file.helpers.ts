@@ -4,6 +4,7 @@ import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-c
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { StoredFileMismatchError } from 'src/domain/sources/application/sources.errors';
 
 /**
  * Staging path for a processing input file. `batchId` is whatever owns the
@@ -21,17 +22,29 @@ export function buildMinioProcessingPath(
   return `${orgId}/processing/${batchId}/${sanitizedFileName}`;
 }
 
-/** Shared by the processing consumers, which stage their input files in MinIO. */
+/**
+ * Shared by the processing consumers, which read their input files from
+ * MinIO. With `maxBytes`, reading stops as soon as the object exceeds it, so a
+ * file replaced after verification can never be buffered whole.
+ */
 export async function downloadMinioFile(
   downloadObjectUseCase: DownloadObjectUseCase,
   minioPath: string,
+  maxBytes?: number,
+  expectedETag?: string,
 ): Promise<Buffer> {
   const stream = await downloadObjectUseCase.execute(
-    new DownloadObjectCommand(minioPath),
+    new DownloadObjectCommand(minioPath, undefined, expectedETag),
   );
   const chunks: Buffer[] = [];
+  let total = 0;
   for await (const chunk of stream) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += buffer.length;
+    if (maxBytes !== undefined && total > maxBytes) {
+      throw new StoredFileMismatchError(minioPath, { maxBytes });
+    }
+    chunks.push(buffer);
   }
   return Buffer.concat(chunks);
 }

@@ -17,6 +17,7 @@ import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
 
 interface SourceCleanupSnapshot {
   sourceIds: UUID[];
+  storageKeys: string[];
   orgId: UUID;
 }
 
@@ -41,6 +42,7 @@ export class DeleteKnowledgeBaseUseCase {
     const cleanupCommand = new CleanupSourceProcessingCommand(
       cleanupSnapshot.sourceIds,
       cleanupSnapshot.orgId,
+      cleanupSnapshot.storageKeys,
     );
     await runDeferredCleanup(
       [
@@ -71,6 +73,9 @@ export class DeleteKnowledgeBaseUseCase {
     await this.repository.delete(existing);
     return {
       sourceIds: sources.map(({ id }) => id),
+      storageKeys: sources.flatMap(({ storageKey }) =>
+        storageKey === null ? [] : [storageKey],
+      ),
       orgId: existing.orgId,
     };
   }
