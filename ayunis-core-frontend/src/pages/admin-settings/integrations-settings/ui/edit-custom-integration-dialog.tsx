@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -28,7 +28,9 @@ import {
 } from '@/pages/admin-settings/integrations-settings/lib/custom-config-field-validation';
 import { CustomConfigFieldEditor } from './custom-config-field-editor';
 import { CustomIntegrationIdentityFields } from './custom-integration-identity-fields';
+import { describeServerUrlChange } from '@/pages/admin-settings/integrations-settings/lib/server-url-change';
 import { EditOAuthClientFields } from './edit-oauth-client-fields';
+import { ServerUrlChangeNotice } from './server-url-change-notice';
 
 interface EditCustomIntegrationDialogProps {
   integration: McpIntegration;
@@ -52,6 +54,7 @@ export function EditCustomIntegrationDialog({
   const { updateIntegration, isUpdating } = useUpdateIntegration(() => {
     onOpenChange(false);
   });
+  const serverUrl = useWatch({ control: form.control, name: 'serverUrl' });
 
   useEffect(() => {
     if (open) form.reset(toEditCustomIntegrationFormData(integration));
@@ -79,6 +82,16 @@ export function EditCustomIntegrationDialog({
   };
 
   const submit = (data: CreateCustomIntegrationFormData) => {
+    if (
+      describeServerUrlChange(integration, data.serverUrl)
+        .requiresNewOAuthClient &&
+      !data.oauthClientId.trim()
+    ) {
+      form.setError('oauthClientId', {
+        message: t('integrations.serverUrlChange.oauthClientRequired'),
+      });
+      return;
+    }
     const duplicateIndexes = findDuplicateHeaderIndexes(data.fields);
     const oauthHeaderIndexes =
       data.authType === 'OAUTH'
@@ -129,6 +142,9 @@ export function EditCustomIntegrationDialog({
               form={form}
               disabled={isUpdating}
               serverUrlTestId="integration-edit-server-url"
+            />
+            <ServerUrlChangeNotice
+              change={describeServerUrlChange(integration, serverUrl)}
             />
             <FormDescription>
               {t('integrations.editDialog.authMethodDescription', {

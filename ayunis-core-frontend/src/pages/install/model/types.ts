@@ -3,4 +3,5 @@ export interface InstallIntegrationFormFields {
   termsAccepted: boolean;
   oauthClientId: string;
   oauthClientSecret: string;
+  serverUrl: string;
 }

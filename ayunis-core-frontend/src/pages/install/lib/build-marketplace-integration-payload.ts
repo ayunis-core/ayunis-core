@@ -15,8 +15,13 @@ export function buildMarketplaceIntegrationPayload(
   orgConfigValues: Record<string, string>,
   schema: McpSchemaWithOAuth,
   client: McpOAuthClientInput,
+  serverUrl?: string,
 ): OAuthInstallMarketplaceIntegrationDto {
-  const payload = { identifier, orgConfigValues };
+  const payload = {
+    identifier,
+    orgConfigValues,
+    ...(serverUrl === undefined ? {} : { serverUrl: serverUrl.trim() }),
+  };
   if (
     !hasOAuthConfiguration(schema) ||
     schema.oauth.clientRegistration !== 'static'

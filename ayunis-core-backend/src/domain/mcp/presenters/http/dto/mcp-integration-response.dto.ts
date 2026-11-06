@@ -35,7 +35,8 @@ export class McpIntegrationResponseDto {
   slug?: string;
 
   @ApiProperty({
-    description: 'Custom server URL (only for custom integrations)',
+    description:
+      'Server URL (custom integrations, and marketplace integrations whose URL the customer provides)',
     required: false,
     example: 'https://my-server.com/mcp',
   })
@@ -187,6 +188,20 @@ export class McpIntegrationResponseDto {
     example: 'https://marketplace.ayunis.com/logos/oparl.png',
   })
   logoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether the organization provides the server URL of this marketplace integration (only for marketplace integrations)',
+  })
+  customerProvidesServerUrl?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Tells the organization which server URL to enter (only for marketplace integrations)',
+    type: 'string',
+    nullable: true,
+  })
+  serverUrlHint?: string | null;
 
   @ApiPropertyOptional({
     description:

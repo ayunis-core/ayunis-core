@@ -5,6 +5,7 @@ import {
   IsObject,
   IsOptional,
   IsBoolean,
+  IsUrl,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 import { Type } from 'class-transformer';
@@ -47,6 +48,19 @@ export class InstallMarketplaceIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      "URL of the customer's own MCP server. Required when the marketplace entry lets the customer provide the server URL; rejected otherwise.",
+    example: 'https://projekte.stadt.de/mcp',
+  })
+  @IsOptional()
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+    require_tld: false,
+  })
+  serverUrl?: string;
 
   @ApiPropertyOptional({ type: McpOAuthClientDto })
   @IsOptional()

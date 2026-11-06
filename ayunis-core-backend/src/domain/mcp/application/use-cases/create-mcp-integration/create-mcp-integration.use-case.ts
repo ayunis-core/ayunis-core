@@ -28,6 +28,7 @@ import {
 } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { McpIntegration, McpIntegrationAuth } from 'src/domain/mcp/domain';
 import { McpOAuthClientConfigurationService } from 'src/domain/mcp/application/services/mcp-oauth-client-configuration.service';
+import { isValidMcpServerUrl } from 'src/domain/mcp/domain/value-objects/mcp-server-url';
 
 @Injectable()
 export class CreateMcpIntegrationUseCase {
@@ -187,7 +188,7 @@ export class CreateMcpIntegrationUseCase {
     this.logger.log({ url: command.serverUrl }, 'createCustomIntegration');
 
     try {
-      if (!this.isValidUrl(command.serverUrl)) {
+      if (!isValidMcpServerUrl(command.serverUrl)) {
         throw new InvalidServerUrlError(command.serverUrl);
       }
 
@@ -274,15 +275,5 @@ export class CreateMcpIntegrationUseCase {
       'Unexpected error creating integration',
     );
     throw new UnexpectedMcpError('Unexpected error occurred');
-  }
-
-  private isValidUrl(url: string): boolean {
-    try {
-      const parsedUrl = new URL(url);
-      // Basic validation: must be http or https
-      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-    } catch {
-      return false;
-    }
   }
 }

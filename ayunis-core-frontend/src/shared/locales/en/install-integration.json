@@ -11,6 +11,13 @@
     "required": "Required",
     "optional": "Optional"
   },
+  "serverUrl": {
+    "label": "Server URL",
+    "placeholder": "https://example.com/mcp",
+    "description": "The MCP address of your own instance of this service.",
+    "required": "Enter the server URL.",
+    "invalid": "Enter a valid URL starting with http:// or https://."
+  },
   "action": {
     "install": "Install Integration",
     "installing": "Installing…",

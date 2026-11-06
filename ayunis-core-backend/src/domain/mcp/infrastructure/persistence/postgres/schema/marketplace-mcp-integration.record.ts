@@ -13,4 +13,14 @@ export class MarketplaceMcpIntegrationRecord extends McpIntegrationRecord {
 
   @Column({ name: 'logo_url', type: 'varchar', nullable: true })
   logoUrl: string | null;
+
+  @Column({
+    name: 'customer_provides_server_url',
+    type: 'boolean',
+    default: false,
+  })
+  customerProvidesServerUrl: boolean;
+
+  @Column({ name: 'server_url_hint', type: 'varchar', nullable: true })
+  serverUrlHint: string | null;
 }

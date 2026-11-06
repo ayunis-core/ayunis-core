@@ -101,8 +101,26 @@ export class MarketplaceIntegrationResponseDto {
   })
   integrationCategoryId: string | null;
 
-  @ApiProperty({ description: 'MCP server URL' })
-  serverUrl: string;
+  @ApiProperty({
+    description:
+      'MCP server URL. Null when the customer provides the server URL at install time.',
+    type: 'string',
+    nullable: true,
+  })
+  serverUrl: string | null;
+
+  @ApiProperty({
+    description:
+      'Whether the customer enters the URL of their own MCP server at install time',
+  })
+  customerProvidesServerUrl: boolean;
+
+  @ApiProperty({
+    description: 'Tells the customer which server URL to enter',
+    type: 'string',
+    nullable: true,
+  })
+  serverUrlHint: string | null;
 
   @ApiProperty({
     description:

@@ -1,8 +1,8 @@
 import type { UUID } from 'crypto';
 import { SchemaConfiguredMcpIntegration } from './schema-configured-mcp-integration.entity';
-import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import type { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 /**
  * MCP integration installed from the Ayunis marketplace.
@@ -12,7 +12,9 @@ import type { IntegrationConfigSchema } from '../value-objects/integration-confi
 export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
   public readonly marketplaceIdentifier: string;
   public readonly logoUrl: string | null;
-  private readonly _serverUrl: string;
+  public readonly customerProvidesServerUrl: boolean;
+  public readonly serverUrlHint: string | null;
+  private _serverUrl: string;
 
   constructor(params: {
     id?: UUID;
@@ -24,6 +26,8 @@ export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
     orgConfigValues: Record<string, string>;
     auth: McpIntegrationAuth;
     logoUrl?: string | null;
+    customerProvidesServerUrl?: boolean;
+    serverUrlHint?: string | null;
     enabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
@@ -52,6 +56,8 @@ export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
 
     this.marketplaceIdentifier = params.marketplaceIdentifier;
     this.logoUrl = params.logoUrl ?? null;
+    this.customerProvidesServerUrl = params.customerProvidesServerUrl ?? false;
+    this.serverUrlHint = params.serverUrlHint ?? null;
     this._serverUrl = params.serverUrl;
   }
 
@@ -61,5 +67,15 @@ export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
 
   get serverUrl(): string {
     return this._serverUrl;
+  }
+
+  updateServerUrl(serverUrl: string): void {
+    if (!this.customerProvidesServerUrl) {
+      throw new Error(
+        'The marketplace fixes the server URL of this integration',
+      );
+    }
+    this._serverUrl = serverUrl;
+    this.touch();
   }
 }
