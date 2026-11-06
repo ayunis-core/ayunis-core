@@ -14,12 +14,13 @@ export class AzureInferenceProviderFactory extends RuntimeInferenceProviderFacto
   }
 
   protected createProvider(model: Model): ModelProvider {
+    const isReasoning = model instanceof LanguageModel && model.isReasoning;
     return azure({
       apiKey: this.configService.get<string>('models.azure.apiKey') ?? '',
       endpoint: this.configService.get<string>('models.azure.endpoint') ?? '',
       model: model.name,
-      reasoningEffort:
-        model instanceof LanguageModel && model.isReasoning ? 'low' : undefined,
+      reasoningEffort: isReasoning ? 'low' : undefined,
+      reasoningSummary: isReasoning ? 'auto' : undefined,
       maxRetries: PROVIDER_SDK_MAX_RETRIES,
     });
   }

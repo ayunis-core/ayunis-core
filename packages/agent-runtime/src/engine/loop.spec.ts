@@ -50,6 +50,7 @@ describe('the agent loop', () => {
 
     expect(eventTypes(events)).toEqual([
       'run_start',
+      'tool_call_started',
       'tool_call_snapshot',
       'tool_call_snapshot',
       'tool_call_snapshot',

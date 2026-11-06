@@ -29,6 +29,31 @@ describe('convertResponseEvent', () => {
     ).toEqual({ textDelta: 'I cannot help.' });
   });
 
+  it('maps reasoning summary deltas to thinking and separates summary parts', () => {
+    const state = createResponseConversionState();
+    const convert = (value: unknown) =>
+      convertResponseEvent(event(value), codec, state);
+
+    expect(
+      convert({ type: 'response.reasoning_summary_part.added' }),
+    ).toBeNull();
+    expect(
+      convert({
+        type: 'response.reasoning_summary_text.delta',
+        delta: '**Planning**',
+      }),
+    ).toEqual({ thinkingDelta: '**Planning**' });
+    expect(convert({ type: 'response.reasoning_summary_part.added' })).toEqual({
+      thinkingDelta: '\n\n',
+    });
+    expect(
+      convert({
+        type: 'response.reasoning_summary_text.delta',
+        delta: '**Checking**',
+      }),
+    ).toEqual({ thinkingDelta: '**Checking**' });
+  });
+
   it('attaches completed encrypted reasoning to the next function call', () => {
     const state = createResponseConversionState();
     const reasoning = {

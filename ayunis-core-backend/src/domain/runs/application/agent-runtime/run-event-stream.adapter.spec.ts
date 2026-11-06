@@ -353,6 +353,94 @@ describe('adaptRunEventsToStream', () => {
     ]);
   });
 
+  describe('started tool calls', () => {
+    const started = (index: number, id: string, name: string) =>
+      ({
+        type: 'tool_call_started',
+        toolCall: { index, id, name },
+      }) as const;
+
+    const toolCalls = (message: RunStreamItem) =>
+      (message as AssistantMessage).content.filter(
+        (content) => content instanceof ToolUseMessageContent,
+      );
+
+    it('streams a named call as a placeholder before its arguments are revealed', async () => {
+      const items = await collect(
+        eventsFrom([
+          started(0, 'c1', 'create_document'),
+          { type: 'run_end', status: 'aborted', usage: {} },
+        ]),
+      );
+
+      expect(items).toHaveLength(1);
+      const [placeholder] = toolCalls(items[0]);
+      expect(placeholder).toMatchObject({
+        id: 'c1',
+        name: 'create_document',
+        params: {},
+        stream: { status: 'streaming', argumentsJson: '' },
+      });
+    });
+
+    it('replaces the placeholder with the revealed snapshot of the same call', async () => {
+      const items = await collect(
+        eventsFrom([
+          started(0, 'c1', 'create_document'),
+          started(1, 'c2', 'internet_search'),
+          {
+            type: 'tool_call_snapshot',
+            toolCall: {
+              index: 0,
+              id: 'c1',
+              name: 'create_document',
+              argumentsJson: '{"title":"Bericht"}',
+              input: null,
+              status: 'streaming',
+            },
+          },
+          { type: 'run_end', status: 'aborted', usage: {} },
+        ]),
+      );
+
+      const latest = toolCalls(items.at(-1)!);
+      expect(latest.map((call) => call.stream)).toEqual([
+        { status: 'streaming', argumentsJson: '{"title":"Bericht"}' },
+        { status: 'streaming', argumentsJson: '' },
+      ]);
+    });
+
+    it('drops the placeholders of a rejected attempt once its retry produces output', async () => {
+      const items = await collect(
+        eventsFrom([
+          started(0, 'c_bad', 'create_document'),
+          {
+            type: 'text_delta',
+            delta: 'Ich kann das Dokument nicht erstellen.',
+          },
+          {
+            type: 'assistant_message',
+            message: {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Ich kann das Dokument nicht erstellen.',
+                },
+              ],
+            },
+          },
+          { type: 'run_end', status: 'completed', usage: {} },
+        ]),
+      );
+
+      expect(items).toHaveLength(3);
+      expect(toolCalls(items[0])).toHaveLength(1);
+      expect(toolCalls(items[1])).toEqual([]);
+      expect(toolCalls(items[2])).toEqual([]);
+    });
+  });
+
   it('maps a tool_result_message to a backend ToolResultMessage', async () => {
     const items = await collect(
       eventsFrom([

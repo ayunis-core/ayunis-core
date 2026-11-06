@@ -46,7 +46,7 @@ describe('AzureInferenceProviderFactory', () => {
     ).createProvider(model);
   };
 
-  it('uses low reasoning for reasoning models and keeps SDK retries disabled', () => {
+  it('uses low reasoning with streamed summaries for reasoning models and keeps SDK retries disabled', () => {
     buildProvider(createModel('gpt-6-astra', true));
 
     expect(azureMock).toHaveBeenCalledWith(
@@ -54,6 +54,7 @@ describe('AzureInferenceProviderFactory', () => {
         model: 'gpt-6-astra',
         maxRetries: 0,
         reasoningEffort: 'low',
+        reasoningSummary: 'auto',
       }),
     );
   });
@@ -65,6 +66,7 @@ describe('AzureInferenceProviderFactory', () => {
       expect.objectContaining({
         model: 'gpt-5.4',
         reasoningEffort: undefined,
+        reasoningSummary: undefined,
       }),
     );
   });

@@ -33,10 +33,15 @@ export default function AgentRunTimelineRow({
     userOpen ?? (step.kind === 'thinking' && step.status === 'in_progress');
   const { label, hasDetails, details, expandable } = getStepView(step, t);
 
-  const integration =
-    step.kind === 'tool' ? step.toolUse.integration : undefined;
+  const toolUse = step.kind === 'tool' ? step.toolUse : undefined;
+  const integration = toolUse?.integration;
   const header = (
-    <div className="flex items-center gap-2 py-1 text-sm text-muted-foreground">
+    <div
+      className="flex items-center gap-2 py-1 text-sm text-muted-foreground"
+      data-testid={toolUse && 'agent-run-tool-step'}
+      data-tool-name={toolUse?.name}
+      data-status={toolUse && step.status}
+    >
       {step.kind === 'skill_instruction' ? (
         <Sparkles className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       ) : (

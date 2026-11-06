@@ -45,6 +45,7 @@ import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationA
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
+import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { ChatSidePanel } from './ChatSidePanel';
@@ -298,31 +299,10 @@ export default function ChatPage({
     resetSubmission(thread.id);
   }
 
-  function removePendingToolCalls() {
-    setMessages((prev) => {
-      const lastMessage = prev[prev.length - 1];
-      // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- guard against empty prev array where lastMessage would be undefined
-      if (lastMessage != null && lastMessage.role === 'assistant') {
-        const cleanedContent = lastMessage.content.filter(
-          (c) => c.type === 'text' || c.type === 'thinking',
-        );
-
-        if (cleanedContent.length > 0) {
-          return prev.map((msg, index) =>
-            index === prev.length - 1
-              ? { ...lastMessage, content: cleanedContent }
-              : msg,
-          );
-        }
-      }
-      return prev;
-    });
-  }
-
   function handleSendCancelled() {
     abort();
     resetRunState();
-    removePendingToolCalls();
+    setMessages(removePendingToolCalls);
   }
 
   function handleDeleteThread() {
