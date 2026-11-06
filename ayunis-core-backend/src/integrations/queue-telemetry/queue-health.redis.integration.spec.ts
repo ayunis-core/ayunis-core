@@ -9,6 +9,7 @@ describeRedis('queue health against real Redis', () => {
   const connection = {
     host: '127.0.0.1',
     port: Number(redisPort),
+    password: process.env.QUEUE_TELEMETRY_REDIS_PASSWORD,
     maxRetriesPerRequest: null,
   };
 

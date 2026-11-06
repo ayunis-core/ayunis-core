@@ -3,6 +3,7 @@ import { NpmPdfParseFileRetrieverHandler } from 'src/domain/retrievers/file-retr
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
+import { ProcessingStoppedError } from 'src/common/types/processing-context';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import type { FileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
 import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/application/file-retriever-handler.registry';
@@ -67,7 +68,10 @@ describe('RetrieveFileContentUseCase', () => {
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
         { provide: ContextService, useValue: mockContextService },
         { provide: DocumentConverterPort, useValue: mockDocumentConverter },
-        { provide: TranscribeUseCase, useValue: mockTranscribeUseCase },
+        {
+          provide: TranscribeUseCase,
+          useValue: mockTranscribeUseCase,
+        },
         { provide: MsgParserPort, useValue: mockMsgParser },
         { provide: PreflightCheckUseCase, useValue: mockPreflightCheck },
         { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
@@ -320,6 +324,22 @@ describe('RetrieveFileContentUseCase', () => {
       );
       expect(text).not.toContain('OCR provider down');
       expect(text).toContain('--- Attachment: notiz.txt ---\nNotiztext');
+    });
+
+    it('propagates a processing stop from an attachment instead of noting it', async () => {
+      const stopped = new ProcessingStoppedError();
+      jest.spyOn(mockMistralHandler, 'processFile').mockRejectedValue(stopped);
+
+      await expect(
+        retrieveEml(
+          emlWith([
+            attachment('erster.pdf', 'application/pdf', '%PDF-1.4'),
+            attachment('zweiter.pdf', 'application/pdf', '%PDF-1.4'),
+          ]),
+        ),
+      ).rejects.toBe(stopped);
+
+      expect(mockMistralHandler.processFile).toHaveBeenCalledTimes(1);
     });
 
     it('applies the PDF page limit to attachments and says so in the note', async () => {
