@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
@@ -47,6 +47,7 @@ export default function AgentRunTimeline({
           key={block.key}
           block={block}
           index={index}
+          isStreaming={unit.isStreaming && index === unit.blocks.length - 1}
           hasFollowingText={unit.blocks
             .slice(index + 1)
             .some((candidate) => candidate.kind === 'text')}
@@ -69,14 +70,17 @@ function hasInProgressStep(block: AgentRunBlock): boolean {
 interface RunBlockProps {
   block: AgentRunBlock;
   index: number;
+  /** True only for the block the streaming run is currently writing. */
+  isStreaming: boolean;
   hasFollowingText: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
 }
 
-function RunBlock({
+const RunBlock = memo(function RunBlock({
   block,
   index,
+  isStreaming,
   hasFollowingText,
   threadId,
   onOpenArtifact,
@@ -96,12 +100,17 @@ function RunBlock({
   }
   return (
     <div data-copyable="true">
-      <Markdown renderLegalReferences renderSourceCitations renderUrlReferences>
+      <Markdown
+        isStreaming={isStreaming}
+        renderLegalReferences
+        renderSourceCitations
+        renderUrlReferences
+      >
         {block.content.text}
       </Markdown>
     </div>
   );
-}
+});
 
 function ActivityBlock({
   block,

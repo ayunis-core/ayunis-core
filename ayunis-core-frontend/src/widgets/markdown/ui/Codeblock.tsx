@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import {
   oneDark,
@@ -19,13 +19,16 @@ interface CodeBlockProps {
   children: string;
   inline?: boolean;
   className?: string;
+  /** False renders the code as plain text, e.g. while its fence is still streaming. */
+  highlight?: boolean;
 }
 
-export default function CodeBlock({
+function CodeBlock({
   language,
   children,
   inline = false,
   className = '',
+  highlight = true,
 }: Readonly<CodeBlockProps>) {
   const { theme } = useTheme();
   const { t } = useTranslation('chat');
@@ -58,7 +61,7 @@ export default function CodeBlock({
     <div className="relative my-4 max-w-full">
       <SyntaxHighlighter
         style={theme === 'dark' ? oneDark : oneLight}
-        language={language ?? 'text'}
+        language={highlight ? (language ?? 'text') : 'text'}
         PreTag="div"
         showLineNumbers={showLineNumbers}
         lineNumberStyle={{ userSelect: 'none' }}
@@ -92,3 +95,5 @@ export default function CodeBlock({
     </div>
   );
 }
+
+export default memo(CodeBlock);

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { memo, useRef } from 'react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
@@ -12,7 +12,7 @@ interface AssistantRunBlockProps {
   onOpenArtifact?: (artifactId: string) => void;
 }
 
-export default function AssistantRunBlock({
+function AssistantRunBlock({
   unit,
   isGroupedWithPrevious,
   threadId,
@@ -45,3 +45,5 @@ export default function AssistantRunBlock({
     </div>
   );
 }
+
+export default memo(AssistantRunBlock);

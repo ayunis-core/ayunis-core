@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useMemo } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
-import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
 import { useMessageSend } from '@/pages/chat/api/useMessageSend';
 import ChatHeader from './ChatHeader';
@@ -47,6 +46,7 @@ import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
+import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
@@ -354,14 +354,10 @@ export default function ChatPage({
     />
   );
 
-  const renderUnits = useMemo(
-    () =>
-      groupMessagesIntoRuns(messages, {
-        isStreaming,
-        hasPendingUserTurn: pendingSubmission !== null,
-      }),
-    [messages, isStreaming, pendingSubmission],
-  );
+  const renderUnits = useRenderUnits(messages, {
+    isStreaming,
+    hasPendingUserTurn: pendingSubmission !== null,
+  });
 
   const lastUnitKind =
     renderUnits.length > 0

@@ -80,6 +80,21 @@ describe('CodeBlock line numbers', () => {
     expect(document.querySelector('code')?.textContent).toBe(MULTILINE);
   });
 
+  it('renders plain text until highlighting is enabled', () => {
+    const { rerender } = render(
+      <CodeBlock language="typescript" highlight={false}>
+        {MULTILINE}
+      </CodeBlock>,
+    );
+    expect(document.querySelector('code')?.textContent).toContain(
+      'const b = 2;',
+    );
+    expect(document.querySelectorAll('.token')).toHaveLength(0);
+
+    rerender(<CodeBlock language="typescript">{MULTILINE}</CodeBlock>);
+    expect(document.querySelectorAll('.token').length).toBeGreaterThan(0);
+  });
+
   it('copies the source without line numbers', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {

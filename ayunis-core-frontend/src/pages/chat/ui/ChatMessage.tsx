@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
-import type { Message, ImageMessageContentResponseDto } from '../model/openapi';
+import type {
+  Message,
+  ImageMessageContentResponseDto,
+} from '@/pages/chat/model/openapi';
 import config from '@/shared/config';
 import { Markdown } from '@/widgets/markdown';
 import type { TextMessageContentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -13,7 +16,7 @@ interface ChatMessageProps {
   readonly message: Message;
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+function ChatMessage({ message }: ChatMessageProps) {
   if (message.role !== 'user' && message.role !== 'system') return null;
 
   const images = message.content.filter(
@@ -54,6 +57,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     </div>
   );
 }
+
+export default memo(ChatMessage);
 
 function ImageThumbnail({
   imageContent,
