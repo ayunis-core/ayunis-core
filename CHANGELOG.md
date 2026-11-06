@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.69.0](https://github.com/ayunis-core/ayunis-core/compare/v2.68.0...v2.69.0) (2026-11-06)
+
+
+### Features
+
+* **chat:** show reasoning and tool preparation while the model works (AYC-1613) ([#2203](https://github.com/ayunis-core/ayunis-core/issues/2203)) ([f556bf9](https://github.com/ayunis-core/ayunis-core/commit/f556bf9cf2fc408522ebf3efe6f7ef1bc4eb19cf))
+* **teams:** add team roles and let team admins manage their teams (AYC-1599) ([#2191](https://github.com/ayunis-core/ayunis-core/issues/2191)) ([e4cdbb3](https://github.com/ayunis-core/ayunis-core/commit/e4cdbb387adeb8d857f70701f4a7d2dd4a957a5f))
+
+
+### Bug Fixes
+
+* **models:** drop fallback sentence from auto mode description (AYC-1640) ([#2205](https://github.com/ayunis-core/ayunis-core/issues/2205)) ([3b8e5f9](https://github.com/ayunis-core/ayunis-core/commit/3b8e5f9437790837eed1fe1279cb8bf26e21f48a))
+
+
+### Performance Improvements
+
+* **chat:** render streaming answers incrementally (AYC-1610) ([#2192](https://github.com/ayunis-core/ayunis-core/issues/2192)) ([27c5f43](https://github.com/ayunis-core/ayunis-core/commit/27c5f4346fc7974d1e12c109abc83f9c928dc798))
+* **runs:** run a turn's tool calls concurrently (AYC-1608) ([#2187](https://github.com/ayunis-core/ayunis-core/issues/2187)) ([6ea74ab](https://github.com/ayunis-core/ayunis-core/commit/6ea74ab6f92257e2e561e5d8045c526a6f04dc65))
+
 ## [2.68.0](https://github.com/ayunis-core/ayunis-core/compare/v2.67.1...v2.68.0) (2026-11-06)
 
 
