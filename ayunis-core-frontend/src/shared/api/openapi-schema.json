@@ -5135,6 +5135,85 @@
         "tags": ["super-admin-teams"]
       }
     },
+    "/source-uploads/{id}/sign": {
+      "post": {
+        "description": "Returns a short-lived pre-signed URL for the given S3 request on the upload's server-chosen key. Call again to retry after the URL expired.",
+        "operationId": "SourceUploadsController_sign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The upload id returned when the upload was created",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignSourceUploadRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedUploadUrlResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request does not fit the upload's transfer mode"
+          },
+          "404": {
+            "description": "Upload not found"
+          },
+          "410": {
+            "description": "Upload expired or aborted"
+          }
+        },
+        "summary": "Sign one storage request of a direct upload",
+        "tags": ["source-uploads"]
+      }
+    },
+    "/source-uploads/{id}": {
+      "delete": {
+        "description": "A no-op for uploads that were already completed.",
+        "operationId": "SourceUploadsController_abort",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The upload id returned when the upload was created",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Upload aborted"
+          },
+          "404": {
+            "description": "Upload not found"
+          }
+        },
+        "summary": "Abort an upload and discard what was transferred",
+        "tags": ["source-uploads"]
+      }
+    },
     "/transcriptions": {
       "post": {
         "description": "Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.",
@@ -16826,6 +16905,41 @@
           }
         },
         "required": ["userIds"]
+      },
+      "SignSourceUploadRequestDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "S3 request to sign: PUT (whole object, or a part with uploadId and partNumber), POST (initiate without uploadId, complete with uploadId), GET (list parts), DELETE (abort).",
+            "enum": ["PUT", "POST", "GET", "DELETE"]
+          },
+          "uploadId": {
+            "type": "string",
+            "description": "S3 multipart upload id, for every multipart step after initiation"
+          },
+          "partNumber": {
+            "type": "number",
+            "description": "1-based part number",
+            "minimum": 1
+          }
+        },
+        "required": ["method"]
+      },
+      "SignedUploadUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Pre-signed URL the browser PUTs the bytes to"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "The URL stops working after this time; sign again to retry",
+            "example": "2026-01-15T12:00:00.000Z"
+          }
+        },
+        "required": ["url", "expiresAt"]
       },
       "TranscriptionResponseDto": {
         "type": "object",

@@ -44,6 +44,22 @@ import { DeleteUnreferencedSourcesUseCase } from './application/use-cases/delete
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { FindSourceCitationTargetUseCase } from './application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
+import { CreateSourceUploadSessionUseCase } from './application/use-cases/create-source-upload-session/create-source-upload-session.use-case';
+import { SignSourceUploadRequestUseCase } from './application/use-cases/sign-source-upload-request/sign-source-upload-request.use-case';
+import { AbortSourceUploadUseCase } from './application/use-cases/abort-source-upload/abort-source-upload.use-case';
+import { SweepSourceUploadSessionsUseCase } from './application/use-cases/sweep-source-upload-sessions/sweep-source-upload-sessions.use-case';
+import { SourceUploadSessionAccessService } from './application/services/source-upload-session-access.service';
+import { SourceUploadQueueingService } from './application/services/source-upload-queueing.service';
+import { SourceUploadSweepTask } from './infrastructure/tasks/source-upload-sweep.task';
+import { SourceUploadsController } from './presenters/http/source-uploads.controller';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+
+const SOURCE_UPLOAD_USE_CASES = [
+  CreateSourceUploadSessionUseCase,
+  SignSourceUploadRequestUseCase,
+  AbortSourceUploadUseCase,
+  SweepSourceUploadSessionsUseCase,
+];
 
 @Module({
   imports: [
@@ -63,8 +79,10 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     DataSourceProcessingModule,
     UrlCrawlModule,
     SpreadsheetParsingModule,
+    OrgsModule,
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
+  controllers: [SourceUploadsController],
   providers: [
     SourceUploadStorageCleanupService,
     SweepOrphanedSourcesUseCase,
@@ -72,6 +90,10 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     SweepUnreferencedOriginalsUseCase,
     UnreferencedOriginalsSweepTask,
     OrgProcessingDeletionListener,
+    SourceUploadSessionAccessService,
+    SourceUploadQueueingService,
+    SourceUploadSweepTask,
+    ...SOURCE_UPLOAD_USE_CASES,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
@@ -124,6 +146,7 @@ import { FindSourceCitationTargetUseCase } from './application/use-cases/find-so
     DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
+    CreateSourceUploadSessionUseCase,
   ],
 })
 export class SourcesModule {}
