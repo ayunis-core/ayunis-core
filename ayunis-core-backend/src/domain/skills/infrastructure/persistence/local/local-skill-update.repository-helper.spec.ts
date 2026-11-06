@@ -1,6 +1,8 @@
 import { randomUUID, type UUID } from 'crypto';
 import type { EntityManager } from 'typeorm';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
 import {
   SkillSourceLimitExceededError,
   SkillNotFoundError,
@@ -33,7 +35,7 @@ describe('skill update deltas', () => {
     workspaceId: randomUUID(),
   });
 
-  function setup(current: WorkspaceSkill) {
+  function setup(current: Skill) {
     const record = {
       ...mapper.toRecord(current),
       sources: current.sourceIds.map((id) => ({ id })),
@@ -135,5 +137,34 @@ describe('skill update deltas', () => {
       updateSkill(manager, mapper, original, original),
     ).rejects.toBeInstanceOf(SkillNotFoundError);
     expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it('persists the global state of a team skill without touching other fields', async () => {
+    const team = new TeamSkill({
+      name: 'Council minutes',
+      shortDescription: 'Drafts council meeting minutes.',
+      instructions: 'Summarise each agenda item.',
+      teamId: randomUUID(),
+      isActive: true,
+    });
+    const { manager, repository } = setup(team);
+
+    const result = await updateSkill(
+      manager,
+      mapper,
+      team.withState({ isPinned: true }),
+      team,
+    );
+
+    expect(repository.update).toHaveBeenCalledWith(
+      team.id,
+      expect.objectContaining({ isPinned: true }),
+    );
+    expect(repository.update).toHaveBeenCalledWith(
+      team.id,
+      expect.not.objectContaining({ isActive: expect.anything() }),
+    );
+    expect(result).toBeInstanceOf(TeamSkill);
+    expect(result).toMatchObject({ isActive: true, isPinned: true });
   });
 });

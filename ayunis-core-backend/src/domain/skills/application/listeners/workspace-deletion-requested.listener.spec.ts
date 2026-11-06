@@ -8,6 +8,7 @@ import type { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
 import { SkillsWorkspaceDeletionRequestedListener } from './workspace-deletion-requested.listener';
+import { SkillSourceCleanupService } from 'src/domain/skills/application/services/skill-source-cleanup.service';
 
 describe(SkillsWorkspaceDeletionRequestedListener.name, () => {
   it('defers cleanup of workspace skill sources', async () => {
@@ -40,9 +41,11 @@ describe(SkillsWorkspaceDeletionRequestedListener.name, () => {
     } as unknown as jest.Mocked<DeleteSourcesUseCase>;
     const listener = new SkillsWorkspaceDeletionRequestedListener(
       getSkills,
-      getSources,
-      cleanupProcessing,
-      deleteSources,
+      new SkillSourceCleanupService(
+        getSources,
+        cleanupProcessing,
+        deleteSources,
+      ),
     );
     const event = new WorkspaceDeletionRequestedEvent(
       workspaceId,

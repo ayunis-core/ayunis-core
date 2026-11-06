@@ -11,6 +11,7 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
@@ -40,6 +41,13 @@ export class SetSkillActivationUseCase {
     this.logger.log(command, 'Setting skill activation');
     const skill = await this.repository.findById(command.skillId);
     if (!skill) throw new SkillNotFoundError(command.skillId);
+    if (skill instanceof AbstractCollectiveSkill) {
+      await this.authorization.requireWrite(skill);
+      return this.repository.update(
+        skill.withState({ isActive: command.isActive }),
+        skill,
+      );
+    }
     if (skill instanceof PersonalSkill) {
       await this.setPersonal(skill, command.isActive);
     } else {

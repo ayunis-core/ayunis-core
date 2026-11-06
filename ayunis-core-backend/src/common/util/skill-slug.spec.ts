@@ -7,6 +7,8 @@ import {
   SYSTEM_PREFIX,
   USER_PREFIX,
   WORKSPACE_PREFIX,
+  TEAM_PREFIX,
+  ORG_PREFIX,
 } from './skill-slug';
 
 describe('skill-slug', () => {
@@ -97,6 +99,16 @@ describe('skill-slug', () => {
     it('should split user__ prefix correctly', () => {
       const result = parseSkillSlug('user__data-analysis');
       expect(result).toEqual({ prefix: 'user', slug: 'data-analysis' });
+    });
+
+    it.each([
+      ['team__council-minutes', TEAM_PREFIX],
+      ['org__press-release', ORG_PREFIX],
+    ])('should split %s into its owner prefix', (slug, prefix) => {
+      expect(parseSkillSlug(slug)).toEqual({
+        prefix,
+        slug: slug.split('__')[1],
+      });
     });
 
     it('should throw on missing prefix', () => {

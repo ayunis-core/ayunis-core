@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { SkillUserContext } from 'src/domain/skills/application/models/skill-context';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
@@ -16,13 +18,9 @@ export class SkillDtoMapper {
     context: SkillUserContext,
     creatorName?: string | null,
   ): SkillResponseDto {
-    const personal = skill instanceof PersonalSkill;
     return {
       id: skill.id,
-      ownerType: personal ? 'personal' : 'workspace',
-      ...(personal
-        ? { userId: skill.userId }
-        : { workspaceId: skill.workspaceId }),
+      ...this.toOwner(skill),
       name: skill.name,
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
@@ -34,6 +32,21 @@ export class SkillDtoMapper {
       updatedAt: skill.updatedAt,
       creatorName: context.isShared ? (creatorName ?? null) : null,
     };
+  }
+
+  private toOwner(
+    skill: Skill,
+  ): Pick<SkillResponseDto, 'ownerType' | 'userId' | 'workspaceId' | 'teamId'> {
+    if (skill instanceof PersonalSkill) {
+      return { ownerType: 'personal', userId: skill.userId };
+    }
+    if (skill instanceof WorkspaceSkill) {
+      return { ownerType: 'workspace', workspaceId: skill.workspaceId };
+    }
+    if (skill instanceof TeamSkill) {
+      return { ownerType: 'team', teamId: skill.teamId };
+    }
+    return { ownerType: 'org' };
   }
 
   toDtoArray(

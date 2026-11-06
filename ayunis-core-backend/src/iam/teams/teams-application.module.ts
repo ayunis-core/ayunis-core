@@ -36,6 +36,9 @@ import { ListMyTeamAccessUseCase } from 'src/iam/teams/application/use-cases/lis
 import { UpdateTeamMemberRoleUseCase } from 'src/iam/teams/application/use-cases/update-team-member-role/update-team-member-role.use-case';
 import { GetTeamRolePermissionsUseCase } from 'src/iam/teams/application/use-cases/get-team-role-permissions/get-team-role-permissions.use-case';
 
+import { GetCollectiveOwnerAccessUseCase } from 'src/iam/teams/application/use-cases/get-collective-owner-access/get-collective-owner-access.use-case';
+import { ListReadableCollectiveOwnersUseCase } from 'src/iam/teams/application/use-cases/list-readable-collective-owners/list-readable-collective-owners.use-case';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([TeamRecord, TeamMemberRecord]),
@@ -68,6 +71,8 @@ import { GetTeamRolePermissionsUseCase } from 'src/iam/teams/application/use-cas
     FindTeamsByUserIdsAndOrgIdUseCase,
     AssignUserToTeamsUseCase,
     GetTeamAccessUseCase,
+    GetCollectiveOwnerAccessUseCase,
+    ListReadableCollectiveOwnersUseCase,
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,
@@ -95,6 +100,8 @@ import { GetTeamRolePermissionsUseCase } from 'src/iam/teams/application/use-cas
     FindTeamsByUserIdsAndOrgIdUseCase,
     AssignUserToTeamsUseCase,
     GetTeamAccessUseCase,
+    GetCollectiveOwnerAccessUseCase,
+    ListReadableCollectiveOwnersUseCase,
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,

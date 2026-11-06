@@ -15,17 +15,21 @@ import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/loca
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 
 @Entity({ name: 'skills' })
 @Check(
-  'CHK_skills_exactly_one_owner',
-  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+  'CHK_skills_single_owner',
+  'num_nonnulls("userId", "workspaceId", "teamId", "orgId") = 1',
 )
 @Index(['name', 'userId'], { unique: true, where: '"workspaceId" IS NULL' })
 @Index(['name', 'workspaceId'], {
   unique: true,
   where: '"workspaceId" IS NOT NULL',
 })
+@Index(['name', 'teamId'], { unique: true, where: '"teamId" IS NOT NULL' })
+@Index(['name', 'orgId'], { unique: true, where: '"orgId" IS NOT NULL' })
 export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
   name: string;
@@ -53,6 +57,30 @@ export class SkillRecord extends BaseRecord {
   @ManyToOne(() => WorkspaceRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  teamId: UUID | null;
+
+  @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'teamId' })
+  team: TeamRecord | null;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  orgId: UUID | null;
+
+  @ManyToOne(() => OrgRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'orgId' })
+  org: OrgRecord | null;
+
+  // Only authoritative for team- and org-owned skills, whose state is global.
+  // Personal and workspace state lives in skill_activations.
+  @Column({ default: false })
+  isActive: boolean;
+
+  @Column({ default: false })
+  isPinned: boolean;
 
   @ManyToMany(() => SourceRecord)
   @JoinTable({ name: 'skill_sources' })

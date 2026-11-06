@@ -1,7 +1,10 @@
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import {
@@ -38,7 +41,7 @@ function aWorkspaceContext(
 function buildFactory(
   options: {
     workspaceContext?: WorkspaceRunContext;
-    activeSkills?: PersonalSkill[];
+    activeSkills?: Skill[];
     activeKnowledgeBases?: KnowledgeBaseSummary[];
     templates?: () => Promise<unknown[]>;
   } = {},
@@ -185,6 +188,53 @@ describe('RunCapabilityContextFactory', () => {
         ['user__user-skill', personalSkill.id],
         ['workspace__project-skill', workspaceSkill.id],
       ]),
+    );
+  });
+
+  it('advertises team and org skills under their own prefixes next to a same-named personal skill', async () => {
+    const params = {
+      name: 'Council Minutes',
+      shortDescription: 'Drafts minutes',
+      instructions: 'Summarise.',
+    };
+    const personal = new PersonalSkill({ ...params, userId: TEST_USER_ID });
+    const team = new TeamSkill({ ...params, teamId: randomUUID() });
+    const org = new OrgSkill({ ...params, orgId: TEST_ORG_ID });
+    const { create } = buildFactory({ activeSkills: [personal, team, org] });
+
+    const catalog = await (await create()).skillCatalog();
+
+    expect(catalog.entries).toEqual([
+      { slug: 'user__council-minutes', description: 'Drafts minutes' },
+      { slug: 'team__council-minutes', description: 'Drafts minutes' },
+      { slug: 'org__council-minutes', description: 'Drafts minutes' },
+    ]);
+    expect(catalog.editableSkillIds).toEqual(
+      new Map([
+        ['user__council-minutes', personal.id],
+        ['team__council-minutes', team.id],
+        ['org__council-minutes', org.id],
+      ]),
+    );
+  });
+
+  it('advertises same-named skills of two teams once, for the first skill', async () => {
+    const params = {
+      name: 'Council Minutes',
+      shortDescription: 'Drafts minutes',
+      instructions: 'Summarise.',
+    };
+    const first = new TeamSkill({ ...params, teamId: randomUUID() });
+    const second = new TeamSkill({ ...params, teamId: randomUUID() });
+    const { create } = buildFactory({ activeSkills: [first, second] });
+
+    const catalog = await (await create()).skillCatalog();
+
+    expect(catalog.entries).toEqual([
+      { slug: 'team__council-minutes', description: 'Drafts minutes' },
+    ]);
+    expect(catalog.editableSkillIds).toEqual(
+      new Map([['team__council-minutes', first.id]]),
     );
   });
 

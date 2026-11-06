@@ -1,5 +1,7 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { FindActiveSkillsQuery } from './find-active-skills.query';
@@ -21,14 +23,24 @@ export class FindActiveSkillsUseCase {
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
+    private readonly collectiveAccess: CollectiveSkillAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
-  async execute(query: FindActiveSkillsQuery): Promise<PersonalSkill[]> {
+  async execute(query: FindActiveSkillsQuery): Promise<Skill[]> {
     this.logger.log(query, 'Finding active skills');
 
     const { userId } = getRequiredUserContext(this.contextService);
+    const [personal, collective] = await Promise.all([
+      this.findActivePersonal(userId),
+      this.collectiveAccess
+        .readableOwners()
+        .then((owners) => this.skillRepository.findActiveCollective(owners)),
+    ]);
+    return [...personal, ...collective];
+  }
 
+  private async findActivePersonal(userId: UUID): Promise<PersonalSkill[]> {
     // 1. Fetch owned active skills
     const ownedActiveSkills =
       await this.skillRepository.findActiveByOwner(userId);

@@ -2,9 +2,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
-import { SkillOwnerDto } from './skill-owner.dto';
+import { SkillListScopeDto } from './skill-owner.dto';
 
-export class ListSkillsQueryDto extends SkillOwnerDto {
+export class ListSkillsQueryDto extends SkillListScopeDto {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()

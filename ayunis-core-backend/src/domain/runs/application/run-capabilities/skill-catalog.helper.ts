@@ -2,13 +2,17 @@ import type { Logger } from '@nestjs/common';
 import {
   buildSkillSlug,
   SlugCollisionError,
+  ORG_PREFIX,
   SYSTEM_PREFIX,
+  TEAM_PREFIX,
   USER_PREFIX,
   WORKSPACE_PREFIX,
   type SkillEntry,
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { Skill } from 'src/domain/skills/domain/skill';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import type { SkillCatalog } from './run-capability-context';
@@ -64,7 +68,7 @@ function buildSkillSlugs(
     try {
       const slug = buildSkillSlug(input.prefix, input.name);
       const existing = slugMap.get(slug);
-      if (existing !== undefined && existing !== input.name) {
+      if (existing !== undefined) {
         throw new SlugCollisionError(slug, existing, input.name);
       }
       slugMap.set(slug, input.name);
@@ -111,5 +115,8 @@ function buildEditableSkillIds(
 }
 
 function skillPrefix(skill: Skill): SkillPrefix {
-  return skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
+  if (skill instanceof WorkspaceSkill) return WORKSPACE_PREFIX;
+  if (skill instanceof TeamSkill) return TEAM_PREFIX;
+  if (skill instanceof OrgSkill) return ORG_PREFIX;
+  return USER_PREFIX;
 }

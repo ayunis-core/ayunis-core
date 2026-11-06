@@ -19,7 +19,12 @@ import {
   SYSTEM_PREFIX,
   USER_PREFIX,
   WORKSPACE_PREFIX,
+  TEAM_PREFIX,
+  ORG_PREFIX,
+  type SkillPrefix,
 } from 'src/common/util/skill-slug';
+import { FindActiveCollectiveSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-active-collective-skill-by-name/find-active-collective-skill-by-name.use-case';
+import { FindActiveCollectiveSkillByNameQuery } from 'src/domain/skills/application/use-cases/find-active-collective-skill-by-name/find-active-collective-skill-by-name.query';
 
 @Injectable()
 export class ActivateSkillToolHandler extends ToolExecutionHandler {
@@ -31,6 +36,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     private readonly skillActivationService: SkillActivationService,
     private readonly findAlwaysOnTemplateByNameUseCase: FindAlwaysOnTemplateByNameUseCase,
     private readonly activateWorkspaceSkillByName: ActivateWorkspaceSkillByNameUseCase,
+    private readonly findActiveCollectiveSkillByName: FindActiveCollectiveSkillByNameUseCase,
   ) {
     super();
   }
@@ -47,36 +53,14 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     try {
       const validatedInput = tool.validateParams(input);
       const fullSlug = validatedInput.skill_slug;
-
       const originalName = this.resolveSkillName(tool, fullSlug);
-
       const { prefix } = parseSkillSlug(fullSlug);
-
-      switch (prefix) {
-        case SYSTEM_PREFIX:
-          return await this.activateSystemTemplate(tool.name, originalName);
-        case WORKSPACE_PREFIX:
-          return (
-            await this.activateWorkspaceSkillByName.execute({
-              threadId,
-              name: originalName,
-            })
-          ).instructions;
-        case USER_PREFIX:
-          return await this.activateUserSkill(
-            tool.name,
-            originalName,
-            threadId,
-          );
-        default: {
-          const _exhaustive: never = prefix;
-          throw new ToolExecutionFailedError({
-            toolName: tool.name,
-            message: `Unknown skill prefix: "${String(_exhaustive)}"`,
-            exposeToLLM: true,
-          });
-        }
-      }
+      return await this.activateByPrefix(
+        tool.name,
+        prefix,
+        originalName,
+        threadId,
+      );
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -87,6 +71,35 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
         message: error instanceof Error ? error.message : 'Unknown error',
         exposeToLLM: true,
       });
+    }
+  }
+
+  private async activateByPrefix(
+    toolName: string,
+    prefix: SkillPrefix,
+    name: string,
+    threadId: UUID,
+  ): Promise<string> {
+    switch (prefix) {
+      case SYSTEM_PREFIX:
+        return this.activateSystemTemplate(toolName, name);
+      case WORKSPACE_PREFIX:
+        return (
+          await this.activateWorkspaceSkillByName.execute({ threadId, name })
+        ).instructions;
+      case USER_PREFIX:
+        return this.activateUserSkill(toolName, name, threadId);
+      case TEAM_PREFIX:
+      case ORG_PREFIX:
+        return this.activateCollectiveSkill(name, prefix, threadId);
+      default: {
+        const _exhaustive: never = prefix;
+        throw new ToolExecutionFailedError({
+          toolName,
+          message: `Unknown skill prefix: "${String(_exhaustive)}"`,
+          exposeToLLM: true,
+        });
+      }
     }
   }
 
@@ -121,6 +134,17 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     return template.instructions;
   }
 
+  private async activateCollectiveSkill(
+    skillName: string,
+    ownerType: 'team' | 'org',
+    threadId: UUID,
+  ): Promise<string> {
+    const skill = await this.findActiveCollectiveSkillByName.execute(
+      new FindActiveCollectiveSkillByNameQuery(skillName, ownerType),
+    );
+    return this.activateOnThread(skill.id, threadId);
+  }
+
   private async activateUserSkill(
     toolName: string,
     skillName: string,
@@ -130,16 +154,20 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     const skill = await this.findSkillByNameUseCase.execute(
       new FindSkillByNameQuery(skillName),
     );
+    return this.activateOnThread(skill.id, threadId);
+  }
 
+  private async activateOnThread(
+    skillId: UUID,
+    threadId: UUID,
+  ): Promise<string> {
     const threadResult = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
     );
-
     const { instructions } = await this.skillActivationService.activateOnThread(
-      skill.id,
+      skillId,
       threadResult.thread,
     );
-
     return instructions;
   }
 }
