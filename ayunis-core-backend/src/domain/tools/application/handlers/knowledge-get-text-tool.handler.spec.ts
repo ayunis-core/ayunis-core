@@ -234,7 +234,8 @@ describe('KnowledgeGetTextToolHandler', () => {
 
     const parsed = JSON.parse(result);
     expect(parsed.actualEndLine).toBe(2);
-    expect(parsed.text).toBe('AAAAA\nBBBBB');
+    expect(parsed.text).toBe('AAAAA\nBBBB');
+    expect(parsed.nextPage).toMatchObject({ startLine: 2, startCharacter: 4 });
     expect(parsed.truncated).toBe(true);
     expect(parsed.truncationReasons).toEqual(['max_chars']);
   });

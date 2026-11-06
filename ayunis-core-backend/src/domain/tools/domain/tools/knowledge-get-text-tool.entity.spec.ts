@@ -1,5 +1,5 @@
 import { KnowledgeGetTextTool } from './knowledge-get-text-tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { randomUUID } from 'crypto';
 
@@ -60,14 +60,14 @@ describe('KnowledgeGetTextTool', () => {
     expect(result.documentId).toBe(documentId);
   });
 
-  it('should reject numLines exceeding maximum of 100', () => {
+  it('should reject numLines exceeding maximum of 500', () => {
     const tool = new KnowledgeGetTextTool(knowledgeBases);
 
     expect(() =>
       tool.validateParams({
         knowledgeBaseId: knowledgeBases[0].id,
         documentId: randomUUID(),
-        numLines: 101,
+        numLines: 501,
       }),
     ).toThrow();
   });
