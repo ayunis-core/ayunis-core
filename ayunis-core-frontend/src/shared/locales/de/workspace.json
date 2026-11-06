@@ -9,8 +9,8 @@
     "emptyChatsTitle": "Noch keine Chats",
     "emptyChats": "Chats, die Sie diesem Arbeitsbereich hinzufügen, erscheinen hier.",
     "noChatResults": "Keine Chats gefunden.",
-    "pin": "Anheften",
-    "unpin": "Nicht mehr anheften",
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen",
     "settings": "Einstellungen",
     "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
   },
