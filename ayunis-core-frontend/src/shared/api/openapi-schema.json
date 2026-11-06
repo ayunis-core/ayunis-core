@@ -17923,9 +17923,13 @@
         "properties": {
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
             "type": "string",
             "format": "uuid"
           },
@@ -17956,12 +17960,17 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
             "type": "string",
             "format": "uuid",
             "description": "The owning workspace for workspace-owned knowledge bases"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning team for team-owned knowledge bases"
           },
           "name": {
             "type": "string",
@@ -17992,7 +18001,7 @@
           },
           "isActive": {
             "type": "boolean",
-            "description": "Whether the knowledge base is active for the current user",
+            "description": "Whether the knowledge base is active for the current user; for team and org knowledge bases this is the same for everyone with access",
             "example": true
           },
           "isShared": {

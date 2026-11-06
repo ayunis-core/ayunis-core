@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { ValidationArguments, ValidationOptions } from 'class-validator';
-import { IsEnum, IsIn, isUUID, registerDecorator } from 'class-validator';
+import { IsEnum, IsIn } from 'class-validator';
+import { IsIdForOwnerType } from 'src/common/validators/is-id-for-owner-type.validator';
 import type { UUID } from 'crypto';
 import type {
   SkillListScope,
@@ -16,44 +16,13 @@ export enum SkillOwnerType {
 
 const LIST_SCOPE_TYPES = [SkillOwnerType.PERSONAL, SkillOwnerType.WORKSPACE];
 
-/** Requires a UUID exactly when the DTO's `ownerType` is `ownerType`. */
-function IsIdForOwner(
-  ownerType: SkillOwnerType,
-  validationOptions?: ValidationOptions,
-): PropertyDecorator {
-  return (target, propertyKey) => {
-    const property = propertyKey.toString();
-    registerDecorator({
-      name: `is${property}ForSkillOwner`,
-      target: target.constructor,
-      propertyName: property,
-      options: validationOptions,
-      validator: {
-        validate(value: unknown, args: ValidationArguments): boolean {
-          const dto = args.object as { ownerType?: SkillOwnerType };
-          if (dto.ownerType === ownerType) {
-            return typeof value === 'string' && isUUID(value);
-          }
-          return value === undefined;
-        },
-        defaultMessage(args: ValidationArguments): string {
-          const dto = args.object as { ownerType?: SkillOwnerType };
-          return dto.ownerType === ownerType
-            ? `${property} must be a UUID for ${ownerType} ownership`
-            : `${property} must not be provided for ${String(dto.ownerType)} ownership`;
-        },
-      },
-    });
-  };
-}
-
 export abstract class SkillListScopeDto {
   @ApiProperty({ enum: LIST_SCOPE_TYPES })
   @IsIn(LIST_SCOPE_TYPES)
   ownerType: SkillOwnerType.PERSONAL | SkillOwnerType.WORKSPACE;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
-  @IsIdForOwner(SkillOwnerType.WORKSPACE)
+  @IsIdForOwnerType(SkillOwnerType.WORKSPACE)
   workspaceId?: UUID;
 }
 
@@ -63,11 +32,11 @@ export abstract class SkillOwnerDto {
   ownerType: SkillOwnerType;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
-  @IsIdForOwner(SkillOwnerType.WORKSPACE)
+  @IsIdForOwnerType(SkillOwnerType.WORKSPACE)
   workspaceId?: UUID;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
-  @IsIdForOwner(SkillOwnerType.TEAM)
+  @IsIdForOwnerType(SkillOwnerType.TEAM)
   teamId?: UUID;
 }
 

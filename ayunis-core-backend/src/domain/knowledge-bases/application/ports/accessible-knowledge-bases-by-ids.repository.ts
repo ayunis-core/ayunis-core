@@ -1,10 +1,10 @@
 import type { UUID } from 'crypto';
-import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { AccessibleKnowledgeBaseScope } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import type { NonWorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 
 export abstract class AccessibleKnowledgeBasesByIdsRepository {
   abstract findAccessibleByIds(
     ids: UUID[],
-    userId: UUID,
-    orgId: UUID,
-  ): Promise<PersonalKnowledgeBase[]>;
+    scope: AccessibleKnowledgeBaseScope,
+  ): Promise<NonWorkspaceKnowledgeBase[]>;
 }

@@ -13,11 +13,12 @@ import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/loca
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 
 @Entity('knowledge_bases')
 @Check(
-  'CHK_knowledge_bases_exactly_one_owner',
-  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+  'CHK_knowledge_bases_single_owner',
+  'num_nonnulls("userId", "workspaceId", "teamId") + "isOrgOwned"::int = 1',
 )
 export class KnowledgeBaseRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 255 })
@@ -49,6 +50,24 @@ export class KnowledgeBaseRecord extends BaseRecord {
   @ManyToOne(() => WorkspaceRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  teamId: UUID | null;
+
+  @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'teamId' })
+  team: TeamRecord | null;
+
+  // Every knowledge base carries its tenant in orgId, so organization
+  // ownership needs its own marker rather than "no other owner".
+  @Column({ default: false })
+  isOrgOwned: boolean;
+
+  // Only authoritative for team- and org-owned knowledge bases, whose state is
+  // global. Personal and workspace state lives in knowledge_base_activations.
+  @Column({ default: false })
+  isActive: boolean;
 
   @OneToMany(() => SourceRecord, (source) => source.knowledgeBase)
   sources: SourceRecord[];

@@ -8,7 +8,8 @@ import {
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { NonWorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
@@ -24,12 +25,13 @@ export class FindAccessibleKnowledgeBaseUseCase {
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: {
     knowledgeBaseId: UUID;
-  }): Promise<PersonalKnowledgeBase> {
-    this.logger.debug(query, 'Finding accessible personal knowledge base');
+  }): Promise<NonWorkspaceKnowledgeBase> {
+    this.logger.debug(query, 'Finding accessible non-workspace knowledge base');
     const { orgId } = getRequiredUserContext(this.context);
     const knowledgeBase = await this.repository.findById(query.knowledgeBaseId);
     if (
-      !(knowledgeBase instanceof PersonalKnowledgeBase) ||
+      !knowledgeBase ||
+      knowledgeBase instanceof WorkspaceKnowledgeBase ||
       knowledgeBase.orgId !== orgId
     ) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);

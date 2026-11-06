@@ -11,8 +11,8 @@ export class KnowledgeBaseResponseDto {
   })
   id: UUID;
 
-  @ApiProperty({ enum: ['personal', 'workspace'] })
-  ownerType: 'personal' | 'workspace';
+  @ApiProperty({ enum: ['personal', 'workspace', 'team', 'org'] })
+  ownerType: 'personal' | 'workspace' | 'team' | 'org';
 
   @ApiProperty({
     type: 'string',
@@ -21,6 +21,14 @@ export class KnowledgeBaseResponseDto {
     description: 'The owning workspace for workspace-owned knowledge bases',
   })
   workspaceId?: UUID;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'uuid',
+    required: false,
+    description: 'The owning team for team-owned knowledge bases',
+  })
+  teamId?: UUID;
 
   @ApiProperty({
     description: 'The name of the knowledge base',
@@ -57,7 +65,8 @@ export class KnowledgeBaseResponseDto {
   documentCount: number;
 
   @ApiProperty({
-    description: 'Whether the knowledge base is active for the current user',
+    description:
+      'Whether the knowledge base is active for the current user; for team and org knowledge bases this is the same for everyone with access',
     example: true,
   })
   isActive: boolean;

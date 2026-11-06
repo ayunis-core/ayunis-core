@@ -57,6 +57,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
       deactivateForWorkspace: jest.fn(),
       getWorkspaceStates: jest.fn(),
       findActiveAccessible: jest.fn(),
+      findAllCollective: jest.fn(),
+      findAllByTeamId: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
 

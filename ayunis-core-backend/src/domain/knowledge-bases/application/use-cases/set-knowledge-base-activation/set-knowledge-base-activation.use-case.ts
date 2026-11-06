@@ -17,6 +17,8 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 
 @Injectable()
 export class SetKnowledgeBaseActivationUseCase {
@@ -42,13 +44,21 @@ export class SetKnowledgeBaseActivationUseCase {
       },
       'Setting knowledge base activation',
     );
+    // The lock keeps a concurrent owner change from being overwritten.
     const knowledgeBase = await this.repository.findById(
       command.knowledgeBaseId,
+      { lock: true },
     );
     if (!knowledgeBase) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      await this.writeAccess.requireWrite(knowledgeBase);
+      knowledgeBase.isActive = command.isActive;
+      knowledgeBase.updatedAt = new Date();
+      return this.repository.save(knowledgeBase);
+    }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.setPersonalActivation(knowledgeBase, command.isActive);
     } else {
@@ -58,7 +68,7 @@ export class SetKnowledgeBaseActivationUseCase {
   }
 
   private async setWorkspaceActivation(
-    knowledgeBase: Exclude<KnowledgeBase, PersonalKnowledgeBase>,
+    knowledgeBase: WorkspaceKnowledgeBase,
     isActive: boolean,
   ): Promise<void> {
     await this.writeAccess.requireWrite(knowledgeBase);

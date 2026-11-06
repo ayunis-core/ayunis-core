@@ -19,6 +19,9 @@ import {
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 
 @Injectable()
@@ -70,7 +73,16 @@ export class AssignKnowledgeBaseToSkillUseCase {
     if (skill instanceof PersonalSkill) {
       return knowledgeBase instanceof PersonalKnowledgeBase;
     }
-    return false;
+    if (skill instanceof TeamSkill) {
+      return (
+        knowledgeBase instanceof TeamKnowledgeBase &&
+        knowledgeBase.teamId === skill.teamId
+      );
+    }
+    return (
+      knowledgeBase instanceof OrgKnowledgeBase &&
+      knowledgeBase.orgId === skill.orgId
+    );
   }
 
   private async findAccessibleKnowledgeBase(

@@ -1,40 +1,32 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { ValidationArguments, ValidationOptions } from 'class-validator';
-import { IsEnum, isUUID, registerDecorator } from 'class-validator';
+import { IsEnum, IsIn } from 'class-validator';
 import type { UUID } from 'crypto';
-import type { KnowledgeBaseOwner } from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
+import { IsIdForOwnerType } from 'src/common/validators/is-id-for-owner-type.validator';
+import type {
+  KnowledgeBaseListScope,
+  KnowledgeBaseOwner,
+} from 'src/domain/knowledge-bases/application/models/knowledge-base-owner';
 
 export enum KnowledgeBaseOwnerType {
   PERSONAL = 'personal',
   WORKSPACE = 'workspace',
+  TEAM = 'team',
+  ORG = 'org',
 }
 
-function IsWorkspaceIdForOwner(
-  validationOptions?: ValidationOptions,
-): PropertyDecorator {
-  return (target, propertyKey) => {
-    registerDecorator({
-      name: 'isWorkspaceIdForKnowledgeBaseOwner',
-      target: target.constructor,
-      propertyName: propertyKey.toString(),
-      options: validationOptions,
-      validator: {
-        validate(value: unknown, args: ValidationArguments): boolean {
-          const dto = args.object as KnowledgeBaseOwnerDto;
-          if (dto.ownerType === KnowledgeBaseOwnerType.WORKSPACE) {
-            return typeof value === 'string' && isUUID(value);
-          }
-          return value === undefined;
-        },
-        defaultMessage(args: ValidationArguments): string {
-          const dto = args.object as KnowledgeBaseOwnerDto;
-          return dto.ownerType === KnowledgeBaseOwnerType.WORKSPACE
-            ? 'workspaceId must be a UUID for workspace ownership'
-            : 'workspaceId must not be provided for personal ownership';
-        },
-      },
-    });
-  };
+const LIST_SCOPE_TYPES = [
+  KnowledgeBaseOwnerType.PERSONAL,
+  KnowledgeBaseOwnerType.WORKSPACE,
+];
+
+export abstract class KnowledgeBaseListScopeDto {
+  @ApiProperty({ enum: LIST_SCOPE_TYPES })
+  @IsIn(LIST_SCOPE_TYPES)
+  ownerType: KnowledgeBaseOwnerType.PERSONAL | KnowledgeBaseOwnerType.WORKSPACE;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  @IsIdForOwnerType(KnowledgeBaseOwnerType.WORKSPACE)
+  workspaceId?: UUID;
 }
 
 export abstract class KnowledgeBaseOwnerDto {
@@ -43,14 +35,33 @@ export abstract class KnowledgeBaseOwnerDto {
   ownerType: KnowledgeBaseOwnerType;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
-  @IsWorkspaceIdForOwner()
+  @IsIdForOwnerType(KnowledgeBaseOwnerType.WORKSPACE)
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  @IsIdForOwnerType(KnowledgeBaseOwnerType.TEAM)
+  teamId?: UUID;
+}
+
+export function toKnowledgeBaseListScope(
+  dto: KnowledgeBaseListScopeDto,
+): KnowledgeBaseListScope {
+  return dto.ownerType === KnowledgeBaseOwnerType.WORKSPACE
+    ? { type: 'workspace', workspaceId: dto.workspaceId! }
+    : { type: 'personal' };
 }
 
 export function toKnowledgeBaseOwner(
   dto: KnowledgeBaseOwnerDto,
 ): KnowledgeBaseOwner {
-  return dto.ownerType === KnowledgeBaseOwnerType.WORKSPACE
-    ? { type: 'workspace', workspaceId: dto.workspaceId! }
-    : { type: 'personal' };
+  switch (dto.ownerType) {
+    case KnowledgeBaseOwnerType.WORKSPACE:
+      return { type: 'workspace', workspaceId: dto.workspaceId! };
+    case KnowledgeBaseOwnerType.TEAM:
+      return { type: 'team', teamId: dto.teamId! };
+    case KnowledgeBaseOwnerType.ORG:
+      return { type: 'org' };
+    case KnowledgeBaseOwnerType.PERSONAL:
+      return { type: 'personal' };
+  }
 }

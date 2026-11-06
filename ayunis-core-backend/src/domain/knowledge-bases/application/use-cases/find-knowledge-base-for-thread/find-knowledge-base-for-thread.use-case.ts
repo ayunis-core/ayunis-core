@@ -9,7 +9,7 @@ import {
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class FindKnowledgeBaseForThreadUseCase {
     if (knowledgeBase?.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
     }
-    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+    if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
       await this.access.requireRead(knowledgeBase);
       return knowledgeBase;
     }
