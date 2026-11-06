@@ -8,11 +8,19 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import type { OwnerSelection } from '@/features/resource-ownership';
+
+function duplicateNameMessage(owner: OwnerSelection | undefined): string {
+  return !owner || owner.ownerType === 'personal'
+    ? 'create.duplicateNamePersonal'
+    : 'create.duplicateNameOwner';
+}
 
 export type CreateSkillData = {
   name: string;
   shortDescription: string;
   instructions: string;
+  owner?: OwnerSelection;
 };
 
 export function useCreateSkill() {
@@ -20,21 +28,24 @@ export function useCreateSkill() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: (data: CreateSkillData) =>
-      skillsControllerCreate({ ...data, ownerType: 'personal' }),
+    mutationFn: ({ owner, ...data }: CreateSkillData) =>
+      skillsControllerCreate({
+        ...data,
+        ...(owner ?? { ownerType: 'personal' }),
+      }),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });
       void router.navigate({ to: '/skills/$id', params: { id: data.id } });
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       try {
         const { code } = extractErrorData(error);
         showError(
           t(
             code === 'DUPLICATE_SKILL_NAME'
-              ? 'create.duplicateNamePersonal'
+              ? duplicateNameMessage(variables.owner)
               : 'create.error',
           ),
         );

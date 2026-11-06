@@ -6,15 +6,9 @@ import type {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import { SharesTab } from '@/widgets/shares-tab';
+import { ConfigurationTabs } from '@/widgets/shares-tab';
 import { useMyPermissions } from '@/features/permissions';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -38,6 +32,12 @@ import {
   getKnowledgeBasesControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
+import {
+  OwnerBadge,
+  useResourceOwnership,
+} from '@/features/resource-ownership';
+import { ResourceOwnerCard } from '@/widgets/resource-owner-card';
+import { useChangeKnowledgeBaseOwner } from '@/pages/knowledge-base/api';
 
 export function KnowledgeBasePage({
   knowledgeBase,
@@ -51,6 +51,7 @@ export function KnowledgeBasePage({
   initialTab?: 'config' | 'share';
 }>) {
   const { t } = useTranslation('knowledge-bases');
+  const { t: tOwnership } = useTranslation('ownership');
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -89,12 +90,28 @@ export function KnowledgeBasePage({
     });
   }
 
-  const isReadOnly = knowledgeBase.isShared;
   const { can } = useMyPermissions();
   const canManageKb = can('manage_knowledge_bases');
+  const { canManage } = useResourceOwnership('knowledge-base');
+  const ownerChange = useChangeKnowledgeBaseOwner(knowledgeBase.id);
+  const isCollective =
+    knowledgeBase.ownerType === 'team' || knowledgeBase.ownerType === 'org';
+  const isManageable = canManage(knowledgeBase);
+  const isReadOnly =
+    Boolean(knowledgeBase.isShared) || (isCollective && !isManageable);
+  // Team and organization knowledge bases cannot be shared.
+  const canShare = knowledgeBase.ownerType === 'personal';
 
   const configContent = (
     <div className="grid gap-4">
+      {isManageable && (
+        <ResourceOwnerCard
+          kind="knowledge-base"
+          resource={knowledgeBase}
+          onPreview={ownerChange.previewOwnerChange}
+          onChange={ownerChange.changeOwner}
+        />
+      )}
       <KnowledgeBasePropertiesCard
         key={knowledgeBase.id}
         knowledgeBase={{
@@ -134,9 +151,14 @@ export function KnowledgeBasePage({
               { label: knowledgeBase.name },
             ]}
             badge={
-              isReadOnly ? (
+              knowledgeBase.isShared ? (
                 <Badge variant="secondary">{t('shared.badge')}</Badge>
-              ) : undefined
+              ) : (
+                <OwnerBadge
+                  resource={knowledgeBase}
+                  testId="knowledge-base-detail-owner-badge"
+                />
+              )
             }
             action={
               <>
@@ -144,6 +166,12 @@ export function KnowledgeBasePage({
                   knowledgeBaseId={knowledgeBase.id}
                   isActive={knowledgeBase.isActive}
                   testId="knowledge-base-detail-active-toggle"
+                  disabled={isCollective && !isManageable}
+                  tooltip={
+                    isCollective
+                      ? tOwnership('activation.managedByOwner')
+                      : undefined
+                  }
                 />
                 {!isReadOnly && canManageKb && (
                   <Tooltip>
@@ -167,32 +195,22 @@ export function KnowledgeBasePage({
           />
         }
         contentArea={
-          isReadOnly ? (
+          isReadOnly || !canShare ? (
             configContent
           ) : (
-            <Tabs
+            <ConfigurationTabs
               value={initialTab}
               onValueChange={handleTabChange}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="config">
-                  {t('tabs.configuration')}
-                </TabsTrigger>
-                <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="config" className="mt-4">
-                {configContent}
-              </TabsContent>
-              <TabsContent value="share" className="mt-4">
-                <SharesTab
-                  entityType="knowledge_base"
-                  entityId={knowledgeBase.id}
-                  shares={shares}
-                  userTeams={userTeams}
-                />
-              </TabsContent>
-            </Tabs>
+              labels={{
+                configuration: t('tabs.configuration'),
+                shares: t('tabs.shares'),
+              }}
+              configuration={configContent}
+              entityType="knowledge_base"
+              entityId={knowledgeBase.id}
+              shares={shares}
+              userTeams={userTeams}
+            />
           )
         }
       />

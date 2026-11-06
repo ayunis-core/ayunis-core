@@ -59,6 +59,7 @@ export default function ShortDescriptionField<
             <FormControl>
               {multiline ? (
                 <Textarea
+                  data-testid="entity-form-short-description"
                   placeholder={t(
                     `${translationPrefix}.form.shortDescriptionPlaceholder`,
                   )}
@@ -69,6 +70,7 @@ export default function ShortDescriptionField<
                 />
               ) : (
                 <Input
+                  data-testid="entity-form-short-description"
                   placeholder={t(
                     `${translationPrefix}.form.shortDescriptionPlaceholder`,
                   )}

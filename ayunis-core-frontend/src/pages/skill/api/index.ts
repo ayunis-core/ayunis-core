@@ -6,3 +6,4 @@ export { useUnassignMcpIntegration } from './useUnassignMcpIntegration';
 export { useSkillKnowledgeBasesQueries } from './useSkillKnowledgeBasesQueries';
 export { useAssignKnowledgeBase } from './useAssignKnowledgeBase';
 export { useUnassignKnowledgeBase } from './useUnassignKnowledgeBase';
+export { useChangeSkillOwner } from './useChangeSkillOwner';

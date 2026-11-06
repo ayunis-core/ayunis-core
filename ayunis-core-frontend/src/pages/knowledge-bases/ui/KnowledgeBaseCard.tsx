@@ -9,6 +9,10 @@ import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
+import {
+  OwnerBadge,
+  useResourceOwnership,
+} from '@/features/resource-ownership';
 
 interface KnowledgeBaseCardProps {
   knowledgeBase: KnowledgeBase;
@@ -18,6 +22,7 @@ export default function KnowledgeBaseCard({
   knowledgeBase,
 }: Readonly<KnowledgeBaseCardProps>) {
   const { t } = useTranslation('knowledge-bases');
+  const { t: tOwnership } = useTranslation('ownership');
   const deleteKnowledgeBase = useDeleteKnowledgeBase();
   const { confirm } = useConfirmation();
   const router = useRouter();
@@ -38,6 +43,9 @@ export default function KnowledgeBaseCard({
   }
 
   const isShared = knowledgeBase.isShared;
+  const { canManage } = useResourceOwnership('knowledge-base');
+  const isCollective =
+    knowledgeBase.ownerType === 'team' || knowledgeBase.ownerType === 'org';
 
   return (
     <KnowledgeBaseListItem
@@ -54,6 +62,11 @@ export default function KnowledgeBaseCard({
               {t('shared.badge')}
             </Badge>
           )}
+          <OwnerBadge
+            resource={knowledgeBase}
+            className="ml-2 text-xs"
+            testId={`knowledge-base-owner-badge-${knowledgeBase.id}`}
+          />
         </>
       }
       description={knowledgeBase.description}
@@ -69,8 +82,12 @@ export default function KnowledgeBaseCard({
             knowledgeBaseId={knowledgeBase.id}
             isActive={knowledgeBase.isActive}
             testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
+            disabled={isCollective && !canManage(knowledgeBase)}
+            tooltip={
+              isCollective ? tOwnership('activation.managedByOwner') : undefined
+            }
           />
-          {!isShared && (
+          {(isCollective ? canManage(knowledgeBase) : !isShared) && (
             <PermissionGate permission="manage_knowledge_bases">
               <Button
                 variant="ghost"

@@ -10,14 +10,8 @@ import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
-import { SharesTab } from '@/widgets/shares-tab';
+import { ConfigurationTabs } from '@/widgets/shares-tab';
 import { useMyPermissions } from '@/features/permissions';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Switch } from '@ayunis/ui/components/switch';
@@ -44,6 +38,12 @@ import {
   useSetSkillPin,
 } from '@/features/skill-actions';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import {
+  OwnerBadge,
+  useResourceOwnership,
+} from '@/features/resource-ownership';
+import { ResourceOwnerCard } from '@/widgets/resource-owner-card';
+import { useChangeSkillOwner } from '@/pages/skill/api';
 
 export function SkillPage({
   skill,
@@ -66,6 +66,7 @@ export function SkillPage({
     from: '/_authenticated/skills/$id',
   });
   const { t: tSkills } = useTranslation('skills');
+  const { t: tOwnership } = useTranslation('ownership');
   const deleteSkill = useDeleteSkill();
   const setActivation = useSetSkillActivation();
   const setPin = useSetSkillPin();
@@ -99,9 +100,57 @@ export function SkillPage({
     });
   }
 
-  const isReadOnly = skill.isShared;
   const { can } = useMyPermissions();
   const canManageSkills = can('manage_skills');
+  const { canManage } = useResourceOwnership('skill');
+  const ownerChange = useChangeSkillOwner(skill.id);
+  const isCollective = skill.ownerType === 'team' || skill.ownerType === 'org';
+  const isManageable = canManage(skill);
+  const isReadOnly = skill.isShared || (isCollective && !isManageable);
+  // Team and organization state is global, so only managers may switch it.
+  const canSetState = !isCollective || isManageable;
+  // Team and organization skills cannot be shared.
+  const canShare = skill.ownerType === 'personal';
+
+  const isEditable = !isReadOnly && canManageSkills;
+  const configContent = (
+    <div className="grid gap-4">
+      {isManageable && (
+        <ResourceOwnerCard
+          kind="skill"
+          resource={skill}
+          onPreview={ownerChange.previewOwnerChange}
+          onChange={ownerChange.changeOwner}
+        />
+      )}
+      <SkillPropertiesCard
+        key={skill.id}
+        skill={skill}
+        disabled={!isEditable}
+        onUpdate={async (data) => {
+          await skillsControllerUpdate(skill.id, data);
+          await Promise.all(
+            [
+              getSkillsControllerFindAllQueryKey(personalSkillListParams),
+              getSkillsControllerFindOneQueryKey(skill.id),
+            ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+          );
+          await router.invalidate();
+        }}
+      />
+      {isEmbeddingModelEnabled && (
+        <SkillKnowledgeBasesCard skill={skill} disabled={!isEditable} />
+      )}
+      <SkillMcpIntegrationsCard disabled={!isEditable} />
+      <KnowledgeBaseCard
+        entity={skill}
+        isEnabled={isEmbeddingModelEnabled}
+        disabled={!isEditable}
+        translationNamespace="skill"
+        sourcesHook={sourcesHook}
+      />
+    </div>
+  );
 
   return (
     <AppLayout>
@@ -113,7 +162,7 @@ export function SkillPage({
               { label: skill.name },
             ]}
             badge={
-              isReadOnly ? (
+              skill.isShared ? (
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{t('shared.badge')}</Badge>
                   {skill.creatorName && (
@@ -122,7 +171,12 @@ export function SkillPage({
                     </span>
                   )}
                 </div>
-              ) : undefined
+              ) : (
+                <OwnerBadge
+                  resource={skill}
+                  testId="skill-detail-owner-badge"
+                />
+              )
             }
             action={
               <>
@@ -144,16 +198,18 @@ export function SkillPage({
                               isActive: !skill.isActive,
                             })
                           }
-                          disabled={setActivation.isPending}
+                          disabled={setActivation.isPending || !canSetState}
                         />
                       </span>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      {tSkills('card.activeTooltip')}
+                      {isCollective
+                        ? tOwnership('activation.managedByOwner')
+                        : tSkills('card.activeTooltip')}
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                {skill.isActive && (
+                {skill.isActive && canSetState && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -208,78 +264,22 @@ export function SkillPage({
           />
         }
         contentArea={
-          isReadOnly ? (
-            <div className="grid gap-4">
-              <SkillPropertiesCard
-                skill={skill}
-                disabled
-                onUpdate={(data) => skillsControllerUpdate(skill.id, data)}
-              />
-              {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard disabled />}
-              <SkillMcpIntegrationsCard disabled />
-              <KnowledgeBaseCard
-                entity={skill}
-                isEnabled={isEmbeddingModelEnabled}
-                disabled
-                translationNamespace="skill"
-                sourcesHook={sourcesHook}
-              />
-            </div>
+          isReadOnly || !canShare ? (
+            configContent
           ) : (
-            <Tabs
+            <ConfigurationTabs
               value={initialTab}
               onValueChange={handleTabChange}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="config">
-                  {t('tabs.configuration')}
-                </TabsTrigger>
-                <TabsTrigger value="share">{t('tabs.shares')}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="config" className="mt-4">
-                <div className="grid gap-4">
-                  <SkillPropertiesCard
-                    key={skill.id}
-                    skill={skill}
-                    disabled={!canManageSkills}
-                    onUpdate={async (data) => {
-                      await skillsControllerUpdate(skill.id, data);
-                      await Promise.all(
-                        [
-                          getSkillsControllerFindAllQueryKey(
-                            personalSkillListParams,
-                          ),
-                          getSkillsControllerFindOneQueryKey(skill.id),
-                        ].map((queryKey) =>
-                          queryClient.invalidateQueries({ queryKey }),
-                        ),
-                      );
-                      await router.invalidate();
-                    }}
-                  />
-                  {isEmbeddingModelEnabled && (
-                    <SkillKnowledgeBasesCard disabled={!canManageSkills} />
-                  )}
-                  <SkillMcpIntegrationsCard disabled={!canManageSkills} />
-                  <KnowledgeBaseCard
-                    entity={skill}
-                    isEnabled={isEmbeddingModelEnabled}
-                    disabled={!canManageSkills}
-                    translationNamespace="skill"
-                    sourcesHook={sourcesHook}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="share" className="mt-4">
-                <SharesTab
-                  entityType="skill"
-                  entityId={skill.id}
-                  shares={shares}
-                  userTeams={userTeams}
-                />
-              </TabsContent>
-            </Tabs>
+              labels={{
+                configuration: t('tabs.configuration'),
+                shares: t('tabs.shares'),
+              }}
+              configuration={configContent}
+              entityType="skill"
+              entityId={skill.id}
+              shares={shares}
+              userTeams={userTeams}
+            />
           )
         }
       />

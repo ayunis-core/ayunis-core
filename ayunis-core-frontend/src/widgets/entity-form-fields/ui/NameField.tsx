@@ -35,6 +35,7 @@ export default function NameField<TFieldValues extends FieldValues>({
           <FormLabel>{t(`${translationPrefix}.form.nameLabel`)}</FormLabel>
           <FormControl>
             <Input
+              data-testid="entity-form-name"
               placeholder={t(`${translationPrefix}.form.namePlaceholder`)}
               disabled={disabled}
               {...field}
