@@ -85,7 +85,9 @@ export class ChunkAccumulator {
         call.providerMetadata = delta.providerMetadata;
       }
       this.toolCalls.set(delta.index, call);
-      snapshots.push(this.toSnapshot(delta.index, call, 'streaming'));
+      // Arguments only parse once complete; parsing the growing JSON on every
+      // delta made long tool calls quadratic. Hosts render `argumentsJson`.
+      snapshots.push(this.toSnapshot(delta.index, call, 'streaming', null));
     }
     return snapshots;
   }

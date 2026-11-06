@@ -43,6 +43,8 @@ import {
   type RunExecutionFailedError,
 } from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
+import { SnapshotThrottle } from './snapshot-throttle';
+import { ManualClock } from 'src/domain/runs/testing/snapshot-throttle.fixture';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { RuntimeModelRegistry } from './runtime-model.registry';
 import { ModelCallObservabilityHookFactory } from './hooks/model-call-observability-hook.factory';
@@ -81,13 +83,10 @@ async function collect(
   models?: RuntimeModelRegistry,
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
-  for await (const item of adaptRunEventsToStream(
-    events,
-    threadId,
-    logger,
-    undefined,
+  for await (const item of adaptRunEventsToStream(events, threadId, logger, {
     models,
-  )) {
+    throttle: new SnapshotThrottle(new ManualClock()),
+  })) {
     items.push(item);
   }
   return items;
@@ -115,6 +114,7 @@ async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
     events,
     threadId,
     createLoggerMock(),
+    { throttle: new SnapshotThrottle(new ManualClock()) },
   );
   const items: RunStreamItem[] = [];
   for (;;) {
@@ -226,7 +226,7 @@ describe('adaptRunEventsToStream', () => {
             id: 'c1',
             name: 'search',
             argumentsJson: '{"query":"budget"}',
-            input: { query: 'budget' },
+            input: null,
             status: 'streaming',
           },
         },
@@ -257,8 +257,10 @@ describe('adaptRunEventsToStream', () => {
       status: 'streaming',
       argumentsJson: '{"query":',
     });
-    expect((complete.content[0] as ToolUseMessageContent).params).toEqual({
-      query: 'budget',
+    expect((complete.content[0] as ToolUseMessageContent).params).toEqual({});
+    expect((complete.content[0] as ToolUseMessageContent).stream).toEqual({
+      status: 'streaming',
+      argumentsJson: '{"query":"budget"}',
     });
     expect((final.content[0] as ToolUseMessageContent).params).toEqual({
       query: 'budget',

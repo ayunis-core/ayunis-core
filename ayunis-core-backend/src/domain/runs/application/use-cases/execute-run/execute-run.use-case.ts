@@ -238,8 +238,7 @@ export class ExecuteRunUseCase {
         started.events,
         prepared.thread.id,
         this.runEventStreamLogger,
-        prepared.toolIntegrations,
-        started.models,
+        { integrations: prepared.toolIntegrations, models: started.models },
       );
       cleanupRequired = cleanupRequired && outcome === 'aborted';
       return outcome;
