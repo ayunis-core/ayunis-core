@@ -421,6 +421,7 @@ const baseOutcome = (
   finishReason: result.finishReason,
   providerConsumptionStarted: result.providerConsumptionStarted,
   producedOutput: result.producedOutput,
+  partialToolCalls: result.partialToolCalls,
   visibleOutput,
   durationMs: Date.now() - startedAt,
 });

@@ -15,6 +15,7 @@ export { rawBytesWithinBase64 } from './image-limits';
 export type { ImageLimits } from './image-limits';
 export {
   createTiktokenEstimator,
+  DEFAULT_MIN_TOKENS_PER_IMAGE,
   DEFAULT_TOKENS_PER_IMAGE,
   estimatedTokens,
 } from './token-estimator';

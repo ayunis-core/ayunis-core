@@ -120,6 +120,7 @@ const providerFailureOutcome = (error: ProviderError): ModelCallOutcome => ({
   providerConsumptionStarted: false,
   producedOutput: false,
   visibleOutput: false,
+  partialToolCalls: [],
   durationMs: 1,
   error,
   providerFailure: { kind: 'abort', stage: 'stream_establishment' },

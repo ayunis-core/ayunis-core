@@ -38,6 +38,7 @@ const base = (trigger: ModelCallTrigger, callSequence: number) => ({
   providerConsumptionStarted: false,
   producedOutput: false,
   visibleOutput: false,
+  partialToolCalls: [],
   durationMs: 1,
 });
 

@@ -4,6 +4,7 @@ import type {
   CustomEventInput,
   ModelCallTrigger,
   RunStatus,
+  ToolCallSnapshot,
   ToolCallSummary,
 } from './event';
 import type { AssistantMessage, Message } from './message';
@@ -86,6 +87,11 @@ interface ModelCallOutcomeBase<
   readonly producedOutput: boolean;
   /** At least one content event was exposed to the consumer. */
   readonly visibleOutput: boolean;
+  /**
+   * Tool calls the provider was still streaming when the call ended early.
+   * They are not part of `message`; empty when the call completed.
+   */
+  readonly partialToolCalls: readonly ToolCallSnapshot[];
   readonly durationMs: number;
 }
 

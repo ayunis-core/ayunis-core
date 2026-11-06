@@ -23,6 +23,7 @@ function lengthEstimator(exact = false): TokenEstimator {
     exact,
     tokensPerMessage: 0,
     tokensPerImage: 1_600,
+    minTokensPerImage: 53,
     countText: (text) => text.length,
     countTools: (tools) => (tools.length ? JSON.stringify(tools).length : 0),
   };
@@ -34,6 +35,7 @@ function fixedEstimator(tokensPerContent: number): TokenEstimator {
     exact: false,
     tokensPerMessage: 0,
     tokensPerImage: 1_600,
+    minTokensPerImage: 53,
     countText: (text) => (text ? tokensPerContent : 0),
     countTools: (tools) => (tools.length ? tokensPerContent : 0),
   };

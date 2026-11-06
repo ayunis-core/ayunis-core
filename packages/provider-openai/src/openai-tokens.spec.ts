@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   compatibleEndpointTokens,
+  openAIMinTokensPerImage,
   openAITokens,
   openAITokensPerImage,
 } from './openai-tokens';
@@ -31,10 +32,41 @@ describe('openAITokens', () => {
     },
   );
 
-  it('exposes the per-model image ceiling', () => {
-    expect(openAITokens('gpt-4o-mini').tokensPerImage).toBe(
-      openAITokensPerImage('gpt-4o-mini'),
+  it('exposes the per-model image ceiling and floor', () => {
+    expect(openAITokens('gpt-4o-mini')).toMatchObject({
+      tokensPerImage: openAITokensPerImage('gpt-4o-mini'),
+      minTokensPerImage: openAIMinTokensPerImage('gpt-4o-mini'),
+    });
+  });
+});
+
+describe('openAIMinTokensPerImage', () => {
+  it.each([
+    ['gpt-4o-mini', 8_500],
+    ['gpt-4o', 255],
+    ['gpt-4.1', 255],
+    ['gpt-4-turbo', 255],
+    ['gpt-4.1-mini', 2],
+    ['gpt-4.1-nano', 3],
+    ['o4-mini', 2],
+    ['o3-pro', 225],
+    ['gpt-5', 210],
+    ['gpt-5-mini', 2],
+    ['gpt-5.6-sol', 2],
+    ['gpt-6-astra', 2],
+  ])(
+    "prices the cheapest high-detail image on %s at OpenAI's floor of %i",
+    (model, tokens) => {
+      expect(openAIMinTokensPerImage(model)).toBe(tokens);
+      expect(tokens).toBeLessThanOrEqual(openAITokensPerImage(model));
+    },
+  );
+
+  it('under-counts an unrecognised deployment name without making it free', () => {
+    expect(openAIMinTokensPerImage('chat-prod')).toBeLessThanOrEqual(
+      openAIMinTokensPerImage('gpt-5.6-sol'),
     );
+    expect(openAIMinTokensPerImage('chat-prod')).toBeGreaterThan(0);
   });
 });
 

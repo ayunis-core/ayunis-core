@@ -452,4 +452,5 @@ const toModelCallResult = (outcome: ModelCallOutcome): ModelCallResult => ({
   invalidToolCallSnapshots: [],
   providerConsumptionStarted: outcome.providerConsumptionStarted,
   producedOutput: outcome.producedOutput,
+  partialToolCalls: [...outcome.partialToolCalls],
 });

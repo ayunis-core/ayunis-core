@@ -85,13 +85,12 @@ export function getMessageBudget(params: MessageBudgetParams): number {
 export function countMessageTokens(
   estimator: TokenEstimator,
   parts: readonly MessagePart[],
+  tokensPerImage: number = estimator.tokensPerImage,
 ): number {
   return parts.reduce(
     (total, part) =>
       total +
-      (part.kind === 'image'
-        ? estimator.tokensPerImage
-        : estimator.countText(part.text)),
+      (part.kind === 'image' ? tokensPerImage : estimator.countText(part.text)),
     estimator.tokensPerMessage,
   );
 }

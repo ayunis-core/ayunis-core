@@ -7,6 +7,7 @@ import {
   type ProviderChunk,
   type RunEvent,
 } from '@ayunis/agent-runtime';
+import type { TokenEstimator } from '@ayunis/inference';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
@@ -48,6 +49,20 @@ const freeCatalogModel = {
   name: 'Open Municipal Assistant',
   consumesCredits: false,
 } as LanguageModel;
+
+// One token per word and per message keeps the expected estimates readable.
+const IMAGE_CEILING_TOKENS = 100;
+const IMAGE_FLOOR_TOKENS = 10;
+const wordEstimator: TokenEstimator = {
+  exact: true,
+  tokensPerMessage: 1,
+  tokensPerImage: IMAGE_CEILING_TOKENS,
+  minTokensPerImage: IMAGE_FLOOR_TOKENS,
+  countText: (text) => text.split(/\s+/).filter(Boolean).length,
+  countTools: () => 0,
+};
+const INSTRUCTION_WORDS = 4;
+const REQUEST_WORDS = INSTRUCTION_WORDS + 5 + 1;
 
 function rateLimitedOnOpenStream(): ModelProviderError {
   return new ModelProviderError({
@@ -226,10 +241,10 @@ describe('UsageHookFactory', () => {
     expect(collectCritical).not.toHaveBeenCalled();
   });
 
-  it('warns instead of failing when the run is cancelled after a paid call consumed provider data', async () => {
+  it('records estimated usage when the run is cancelled after a paid call consumed provider data', async () => {
     const logger = createLoggerMock();
     const controller = new AbortController();
-    const collectCritical = jest.fn();
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
     const factory = new UsageHookFactory({
       collectCritical,
     } as unknown as CollectUsageAsyncService);
@@ -240,6 +255,7 @@ describe('UsageHookFactory', () => {
     });
     const provider: ModelProvider = {
       name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
       stream,
     };
 
@@ -261,7 +277,13 @@ describe('UsageHookFactory', () => {
     expect(completedEvents).not.toContainEqual(
       expect.objectContaining({ type: 'error' }),
     );
-    expect(collectCritical).not.toHaveBeenCalled();
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      REQUEST_WORDS,
+      0,
+      expect.any(String),
+      'agent_runtime',
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       {
         execution_path: 'agent_runtime',
@@ -273,14 +295,60 @@ describe('UsageHookFactory', () => {
         outcome: 'aborted',
         providerConsumptionStarted: true,
         producedOutput: false,
+        estimatedInputTokens: REQUEST_WORDS,
+        estimatedOutputTokens: 0,
+        exactTokenizer: true,
       },
-      'Usage unknown for a model call the consumer ended',
+      'Recorded estimated usage for a model call that ended without reporting usage',
     );
   });
 
-  it('warns instead of failing when the consumer leaves a paid stream before its usage chunk', async () => {
-    const logger = createLoggerMock();
-    const collectCritical = jest.fn();
+  it('bills the images of an interrupted call at their cheapest cost, not the context ceiling', async () => {
+    createLoggerMock();
+    const controller = new AbortController();
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
+      async *stream() {
+        yield {};
+        controller.abort();
+        throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      },
+    };
+
+    await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', data: 'aGk=', mediaType: 'image/png' },
+              { type: 'text', text: 'What does this notice say?' },
+            ],
+          },
+        ],
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      INSTRUCTION_WORDS + 1 + IMAGE_FLOOR_TOKENS + 5,
+      0,
+      expect.any(String),
+      'agent_runtime',
+    );
+  });
+
+  it('records estimated usage when the consumer leaves a paid stream before its usage chunk', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
     const factory = new UsageHookFactory({
       collectCritical,
     } as unknown as CollectUsageAsyncService);
@@ -292,6 +360,7 @@ describe('UsageHookFactory', () => {
     });
     const provider: ModelProvider = {
       name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
       stream,
     };
     const leaveAfterFirstDelta = async (): Promise<void> => {
@@ -316,20 +385,58 @@ describe('UsageHookFactory', () => {
     await expect(leaveAfterFirstDelta()).resolves.toBeUndefined();
 
     expect(outcomes).toEqual(['consumer_abandoned']);
-    expect(collectCritical).not.toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledWith(
-      {
-        execution_path: 'agent_runtime',
-        modelCallId: expect.any(String),
-        provider: 'mistral',
-        model: 'mistral-large-4',
-        trigger: 'initial',
-        callSequence: 1,
-        outcome: 'consumer_abandoned',
-        providerConsumptionStarted: true,
-        producedOutput: true,
+    expect(collectCritical).toHaveBeenCalledTimes(1);
+    const [, inputTokens, outputTokens] = collectCritical.mock.calls[0] as [
+      LanguageModel,
+      number,
+      number,
+    ];
+    expect(inputTokens).toBe(REQUEST_WORDS);
+    expect(outputTokens).toBeGreaterThan(0);
+  });
+
+  it('estimates input from the request as sent, after earlier hooks changed it', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
+      async *stream() {
+        yield { textDelta: 'Das Bürgerbüro öffnet' };
+        throw new ModelProviderError({
+          kind: 'connection',
+          stage: 'stream_consumption',
+          cause: new Error('socket hang up'),
+        });
       },
-      'Usage unknown for a model call the consumer ended',
+    };
+
+    await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [
+          {
+            name: 'drop-history',
+            beforeModelCall: (ctx) => {
+              ctx.transformMessages(() => []);
+            },
+          },
+          factory.create({ resolveModel: () => catalogModel }),
+        ],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      INSTRUCTION_WORDS,
+      3,
+      expect.any(String),
+      'agent_runtime',
     );
   });
 
@@ -486,21 +593,22 @@ describe('UsageHookFactory', () => {
     expect(collectCritical).not.toHaveBeenCalled();
   });
 
-  it('fails closed when a paid stream breaks for a non-admission reason without usage', async () => {
-    const collectCritical = jest.fn();
+  it('records estimated usage when a paid stream breaks after visible output', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
     const factory = new UsageHookFactory({
       collectCritical,
     } as unknown as CollectUsageAsyncService);
     const stream = jest.fn(async function* () {
-      yield* [];
+      yield { textDelta: 'Das Bürgerbüro öffnet' };
       throw new ModelProviderError({
-        kind: 'server',
+        kind: 'connection',
         stage: 'stream_consumption',
-        cause: new Error('upstream stream failed'),
+        cause: new Error('socket hang up'),
       });
     });
     const provider: ModelProvider = {
       name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
       stream,
     };
 
@@ -515,6 +623,149 @@ describe('UsageHookFactory', () => {
     );
 
     expect(stream).toHaveBeenCalledTimes(1);
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      REQUEST_WORDS,
+      3,
+      expect.any(String),
+      'agent_runtime',
+    );
+    expect(completedEvents).toContainEqual(
+      expect.objectContaining({ type: 'error', code: 'PROVIDER_FAILED' }),
+    );
+    expect(completedEvents).not.toContainEqual(
+      expect.objectContaining({ type: 'error', code: 'HOOK_FAILED' }),
+    );
+  });
+
+  it('counts a tool call the provider was still streaming toward estimated output', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
+      async *stream() {
+        yield { textDelta: 'Checking the permit.' };
+        yield {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'lookup-1',
+              name: 'lookup_permit',
+              argumentsDelta: '{"parcel": "Hauptstraße 4',
+            },
+          ],
+        };
+        throw new ModelProviderError({
+          kind: 'connection',
+          stage: 'stream_consumption',
+          cause: new Error('socket hang up'),
+        });
+      },
+    };
+
+    await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 0 },
+      }),
+    );
+
+    expect(collectCritical).toHaveBeenCalledWith(
+      catalogModel,
+      REQUEST_WORDS,
+      3 + 4,
+      expect.any(String),
+      'agent_runtime',
+    );
+  });
+
+  it('bills each attempt by estimate when a paid stream breaks before showing output', async () => {
+    const collectCritical = jest.fn().mockResolvedValue(undefined);
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const stream = jest
+      .fn()
+      .mockImplementationOnce(async function* () {
+        yield {};
+        throw new ModelProviderError({
+          kind: 'server',
+          stage: 'stream_consumption',
+          cause: new Error('upstream stream failed'),
+        });
+      })
+      .mockImplementationOnce(async function* () {
+        yield {
+          textDelta: 'The office opens at 8.',
+          usage: { inputTokens: 12, outputTokens: 6 },
+          finishReason: 'stop' as const,
+        };
+      });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 1, backoff: { initialDelayMs: 0 } },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(2);
+    expect(completedEvents.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+    expect(collectCritical.mock.calls.map((call) => call.slice(1, 3))).toEqual([
+      [REQUEST_WORDS, 0],
+      [12, 6],
+    ]);
+  });
+
+  it('fails closed when estimated usage cannot be persisted', async () => {
+    const collectCritical = jest
+      .fn()
+      .mockRejectedValue(new Error('Usage database unavailable'));
+    const factory = new UsageHookFactory({
+      collectCritical,
+    } as unknown as CollectUsageAsyncService);
+    const stream = jest.fn(async function* () {
+      yield { textDelta: 'Das Bürgerbüro öffnet' };
+      throw new ModelProviderError({
+        kind: 'connection',
+        stage: 'stream_consumption',
+        cause: new Error('socket hang up'),
+      });
+    });
+    const provider: ModelProvider = {
+      name: 'runtime-resolved-provider',
+      tokenEstimator: wordEstimator,
+      stream,
+    };
+
+    const completedEvents = await collectEvents(
+      run({
+        instructions: 'Answer municipal service questions.',
+        model: provider,
+        messages,
+        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        retry: { maxRetries: 2, backoff: { initialDelayMs: 0 } },
+      }),
+    );
+
+    expect(stream).toHaveBeenCalledTimes(1);
     expect(completedEvents).toContainEqual(
       expect.objectContaining({
         type: 'error',
@@ -522,7 +773,6 @@ describe('UsageHookFactory', () => {
         details: expect.objectContaining({ hookName: 'ayunis-usage' }),
       }),
     );
-    expect(collectCritical).not.toHaveBeenCalled();
   });
 
   it('allows free-model output without usage', async () => {

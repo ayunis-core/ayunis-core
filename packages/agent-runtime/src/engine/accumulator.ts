@@ -21,6 +21,7 @@ export interface ModelCallResult {
   invalidToolCallSnapshots: ToolCallSnapshot[];
   providerConsumptionStarted: boolean;
   producedOutput: boolean;
+  partialToolCalls: ToolCallSnapshot[];
 }
 
 interface FinalizedToolCalls {
@@ -112,6 +113,7 @@ export class ChunkAccumulator {
       invalidToolCallSnapshots: toolCalls.invalidSnapshots,
       providerConsumptionStarted: this.providerConsumptionStarted,
       producedOutput: this.producedOutput(),
+      partialToolCalls: [],
     };
   }
 
@@ -123,6 +125,9 @@ export class ChunkAccumulator {
       invalidToolCallSnapshots: [],
       providerConsumptionStarted: this.providerConsumptionStarted,
       producedOutput: this.producedOutput(),
+      partialToolCalls: [...this.toolCalls.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([index, call]) => this.toSnapshot(index, call, 'streaming')),
     };
   }
 

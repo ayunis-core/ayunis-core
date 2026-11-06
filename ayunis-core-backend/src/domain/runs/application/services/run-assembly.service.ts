@@ -92,14 +92,14 @@ export class RunAssemblyService {
     models: RuntimeModelRegistry,
     onMessagePersisted: (messageId: UUID) => void,
   ): Hook[] {
-    // Usage must persist before retry evaluation; refresh skills before budgeting,
-    // then observe the final request after every request-mutating hook.
+    // Refresh skills before budgeting. Usage and observability price the final
+    // request, so they follow every request-mutating hook; usage still
+    // persists before retry evaluation, which runs after all call hooks.
     return [
       this.creditGateHookFactory.create({
         principal: { userId: prepared.userId, orgId: prepared.orgId },
         resolveModel: models.resolve,
       }),
-      this.usageHookFactory.create({ resolveModel: models.resolve }),
       this.persistenceHookFactory.create({
         onMessagePersisted,
         thread: prepared.thread,
@@ -119,6 +119,7 @@ export class RunAssemblyService {
         activatedSkillName: prepared.activatedSkillName,
       }),
       this.contextBudgetHookFactory.create({ model: prepared.model }),
+      this.usageHookFactory.create({ resolveModel: models.resolve }),
       this.modelCallObservabilityHookFactory.create({
         userId: prepared.userId,
         orgId: prepared.orgId,
