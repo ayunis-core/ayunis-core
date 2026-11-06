@@ -9,8 +9,16 @@ import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/appl
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -54,10 +62,13 @@ describe(UpdateKnowledgeBaseUseCase.name, () => {
       userId: USER_ID,
       orgId: ORG_ID,
     });
-    const { useCase } = await setup(existing);
+    const { useCase, repository } = await setup(existing);
 
     const result = await useCase.execute(command(existing.id));
 
+    expect(repository.findById).toHaveBeenCalledWith(existing.id, {
+      lock: true,
+    });
     expect(result).toBeInstanceOf(PersonalKnowledgeBase);
     expect(result).toMatchObject({
       id: existing.id,
@@ -169,5 +180,24 @@ describe(UpdateKnowledgeBaseUseCase.name, () => {
     await expect(useCase.execute(command(existing.id))).rejects.toBeInstanceOf(
       UnexpectedKnowledgeBaseError,
     );
+  });
+
+  it('updates an org knowledge base while keeping its owner and global state', async () => {
+    const existing = new OrgKnowledgeBase({
+      name: 'Satzungen',
+      orgId: ORG_ID,
+      isActive: true,
+    });
+    const { useCase, writeAccess } = await setup(existing);
+
+    const result = await useCase.execute(command(existing.id));
+
+    expect(writeAccess.requireWrite).toHaveBeenCalledWith(existing);
+    expect(result).toBeInstanceOf(OrgKnowledgeBase);
+    expect(result).toMatchObject({
+      id: existing.id,
+      name: 'Updated permit regulations',
+      isActive: true,
+    });
   });
 });

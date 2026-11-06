@@ -9,6 +9,8 @@ import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/appli
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 
 export type AccessibleKnowledgeBaseContext = KnowledgeBaseContext;
 
@@ -68,12 +70,27 @@ export class GetAccessibleKnowledgeBaseContextsUseCase {
       isShared:
         knowledgeBase instanceof PersonalKnowledgeBase &&
         knowledgeBase.userId !== userId,
-      isActive:
-        knowledgeBase instanceof PersonalKnowledgeBase
-          ? activePersonalIds.has(knowledgeBase.id)
-          : (workspaceStates.get(knowledgeBase.id)?.isActive ?? false),
+      isActive: this.isActive(
+        knowledgeBase,
+        activePersonalIds,
+        workspaceStates,
+      ),
       documentCount: counts.get(knowledgeBase.id) ?? 0,
     }));
+  }
+
+  private isActive(
+    knowledgeBase: KnowledgeBase,
+    activePersonalIds: Set<UUID>,
+    workspaceStates: Map<UUID, { isActive: boolean }>,
+  ): boolean {
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      return knowledgeBase.isActive;
+    }
+    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+      return activePersonalIds.has(knowledgeBase.id);
+    }
+    return workspaceStates.get(knowledgeBase.id)?.isActive ?? false;
   }
 
   private groupWorkspaceIds(
@@ -81,7 +98,7 @@ export class GetAccessibleKnowledgeBaseContextsUseCase {
   ): Map<UUID, UUID[]> {
     const groups = new Map<UUID, UUID[]>();
     for (const knowledgeBase of knowledgeBases) {
-      if (knowledgeBase instanceof PersonalKnowledgeBase) continue;
+      if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) continue;
       groups.set(knowledgeBase.workspaceId, [
         ...(groups.get(knowledgeBase.workspaceId) ?? []),
         knowledgeBase.id,

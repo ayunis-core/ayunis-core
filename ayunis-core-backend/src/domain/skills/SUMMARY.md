@@ -55,7 +55,7 @@ Activation is represented by `skill_activations`; pinning is stored on the same 
 
 ## Relations and sources
 
-Knowledge-base assignment derives both owners from persistence and resolves read access before attachment. Personal skills reference accessible personal knowledge bases; workspace skills reference workspace knowledge bases from the same workspace; team and org skills accept no knowledge bases yet. Duplicate assignment and absent unassignment use the same documented relation errors for either skill owner. Listing resolves authorization and activation state for both personal and workspace knowledge bases in bulk, omitting references deleted during resolution.
+Knowledge-base assignment derives both owners from persistence and resolves read access before attachment. Personal skills reference accessible personal knowledge bases; workspace skills reference workspace knowledge bases from the same workspace; team skills reference knowledge bases of the same team and org skills knowledge bases of the organization (same owner only, never a wider or narrower one). Duplicate assignment and absent unassignment use the same documented relation errors for either skill owner. Listing resolves authorization and activation state for knowledge bases of every owner in bulk, omitting references deleted during resolution.
 
 File source creation authorizes the skill before external processing starts, enforces the source cap, and compensates pre-created sources if attachment fails. Relation updates use the original aggregate snapshot so persistence can apply deltas safely.
 

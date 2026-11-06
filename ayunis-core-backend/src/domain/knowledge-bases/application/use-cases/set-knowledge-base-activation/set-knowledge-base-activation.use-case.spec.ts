@@ -9,6 +9,7 @@ import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/appl
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -165,5 +166,53 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
     expect(repository.activate).not.toHaveBeenCalled();
     expect(repository.activateForWorkspace).not.toHaveBeenCalled();
+  });
+
+  describe('team-owned knowledge bases', () => {
+    const team = () =>
+      new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId: ORG_ID,
+        teamId: randomUUID(),
+        isActive: true,
+      });
+
+    it('switches it off for everyone after manage authorization', async () => {
+      const knowledgeBase = team();
+      const { useCase, repository, writeAccess, readAccess } =
+        await setup(knowledgeBase);
+      const save = jest.fn(async (saved: KnowledgeBase) => saved);
+      Object.assign(repository, { save });
+
+      const result = await useCase.execute(
+        new SetKnowledgeBaseActivationCommand(knowledgeBase.id, false),
+      );
+
+      expect(repository.findById).toHaveBeenCalledWith(knowledgeBase.id, {
+        lock: true,
+      });
+      expect(writeAccess.requireWrite).toHaveBeenCalledWith(knowledgeBase);
+      expect(readAccess.requireRead).not.toHaveBeenCalled();
+      expect(save).toHaveBeenCalledWith(
+        expect.objectContaining({ id: knowledgeBase.id, isActive: false }),
+      );
+      expect(result).toMatchObject({ isActive: false });
+      expect(repository.deactivate).not.toHaveBeenCalled();
+    });
+
+    it('does not change it for members who cannot manage it', async () => {
+      const knowledgeBase = team();
+      const { useCase, repository, writeAccess } = await setup(knowledgeBase);
+      const save = jest.fn();
+      Object.assign(repository, { save });
+      writeAccess.requireWrite.mockRejectedValue(new UnauthorizedAccessError());
+
+      await expect(
+        useCase.execute(
+          new SetKnowledgeBaseActivationCommand(knowledgeBase.id, false),
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+      expect(save).not.toHaveBeenCalled();
+    });
   });
 });

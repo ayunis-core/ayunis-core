@@ -3,7 +3,8 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
-import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import type { NonWorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -16,12 +17,13 @@ export class FindAccessibleKnowledgeBasesByIdsUseCase {
   constructor(
     private readonly repository: AccessibleKnowledgeBasesByIdsRepository,
     private readonly contextService: ContextService,
+    private readonly collectiveAccess: CollectiveKnowledgeBaseAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: {
     knowledgeBaseIds: UUID[];
-  }): Promise<PersonalKnowledgeBase[]> {
+  }): Promise<NonWorkspaceKnowledgeBase[]> {
     const knowledgeBaseIds = [...new Set(query.knowledgeBaseIds)];
     this.logger.log(
       { count: knowledgeBaseIds.length },
@@ -29,12 +31,12 @@ export class FindAccessibleKnowledgeBasesByIdsUseCase {
     );
     if (knowledgeBaseIds.length === 0) return [];
 
-    const { userId, orgId } = getRequiredUserContext(this.contextService);
+    const { userId } = getRequiredUserContext(this.contextService);
+    const owners = await this.collectiveAccess.readableOwners();
 
     const accessibleKnowledgeBases = await this.repository.findAccessibleByIds(
       knowledgeBaseIds,
-      userId,
-      orgId,
+      { userId, ...owners },
     );
     const accessibleById = new Map(
       accessibleKnowledgeBases.map((knowledgeBase) => [

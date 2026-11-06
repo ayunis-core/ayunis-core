@@ -1,7 +1,14 @@
 import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import type { UUID } from 'crypto';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+  NonWorkspaceKnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import type { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import type { ReadableCollectiveOwners } from 'src/iam/teams/application/models/collective-owner.model';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -14,6 +21,16 @@ export interface KnowledgeBaseListOptions {
 export interface KnowledgeBaseByIdsOptions {
   orgId?: UUID;
   workspaceId?: UUID | null;
+}
+
+/** Who is reading: the user, their organization and their teams in it. */
+export interface AccessibleKnowledgeBaseScope extends ReadableCollectiveOwners {
+  userId: UUID;
+}
+
+export interface KnowledgeBaseTarget {
+  knowledgeBaseId?: UUID;
+  sourceId?: UUID;
 }
 
 export interface WorkspaceKnowledgeBaseState {
@@ -59,17 +76,20 @@ export abstract class KnowledgeBaseRepository {
     workspaceId: UUID,
   ): Promise<Map<UUID, WorkspaceKnowledgeBaseState>>;
   abstract findActiveAccessible(
-    userId: UUID,
-    orgId: UUID,
-    knowledgeBaseId?: UUID,
-    sourceId?: UUID,
-  ): Promise<PersonalKnowledgeBase[]>;
+    scope: AccessibleKnowledgeBaseScope,
+    target?: KnowledgeBaseTarget,
+  ): Promise<NonWorkspaceKnowledgeBase[]>;
+  abstract findAllCollective(
+    owners: ReadableCollectiveOwners,
+  ): Promise<CollectiveKnowledgeBase[]>;
+  abstract findAllByTeamId(teamId: UUID): Promise<TeamKnowledgeBase[]>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<PersonalKnowledgeBase>>;
+    collectiveOwners?: ReadableCollectiveOwners,
+  ): Promise<Paginated<NonWorkspaceKnowledgeBase>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
@@ -81,6 +101,7 @@ export abstract class KnowledgeBaseRepository {
     workspaceId: UUID | undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
+    collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>>;
   abstract save(
     knowledgeBase: PersonalKnowledgeBase,
@@ -88,6 +109,8 @@ export abstract class KnowledgeBaseRepository {
   abstract save(
     knowledgeBase: WorkspaceKnowledgeBase,
   ): Promise<WorkspaceKnowledgeBase>;
+  abstract save(knowledgeBase: TeamKnowledgeBase): Promise<TeamKnowledgeBase>;
+  abstract save(knowledgeBase: OrgKnowledgeBase): Promise<OrgKnowledgeBase>;
   abstract save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase>;
   abstract delete(knowledgeBase: KnowledgeBase): Promise<void>;
   abstract assignSourceToKnowledgeBase(

@@ -58,7 +58,10 @@ import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowl
 
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { ListKnowledgeBasesQueryDto } from './dto/list-knowledge-bases-query.dto';
-import { toKnowledgeBaseOwner } from './dto/knowledge-base-owner.dto';
+import {
+  toKnowledgeBaseListScope,
+  toKnowledgeBaseOwner,
+} from './dto/knowledge-base-owner.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
@@ -162,7 +165,7 @@ export class KnowledgeBasesController {
     this.logger.log({ ownerType: query.ownerType }, 'findAll');
     const page = await this.listKnowledgeBasesUseCase.execute(
       new ListKnowledgeBasesQuery({
-        owner: toKnowledgeBaseOwner(query),
+        owner: toKnowledgeBaseListScope(query),
         search: query.search,
         limit: query.limit,
         offset: query.offset,

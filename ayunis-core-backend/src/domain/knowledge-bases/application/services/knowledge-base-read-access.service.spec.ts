@@ -5,6 +5,8 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import type { CollectiveKnowledgeBaseAccessService } from './collective-knowledge-base-access.service';
 import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import type { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
@@ -37,7 +39,11 @@ function setup() {
   const context = {
     get: jest.fn(getFromUserContext({ userId, orgId })),
   };
+  const collectiveAccess = {
+    requireRead: jest.fn().mockResolvedValue(undefined),
+  };
   return {
+    collectiveAccess,
     userId,
     orgId,
     personal,
@@ -53,6 +59,7 @@ function setup() {
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
+      collectiveAccess as unknown as CollectiveKnowledgeBaseAccessService,
     ),
   };
 }
@@ -159,4 +166,44 @@ describe(KnowledgeBaseReadAccessService.name, () => {
       );
     },
   );
+
+  describe('team-owned knowledge bases', () => {
+    it('delegates reads and tool execution to the collective policy', async () => {
+      const {
+        service,
+        collectiveAccess,
+        orgId,
+        findShare,
+        workspaceExecution,
+      } = setup();
+      const team = new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId,
+        teamId: randomUUID(),
+      });
+
+      await service.requireRead(team);
+      await service.requireExecution(team, randomUUID());
+
+      expect(collectiveAccess.requireRead).toHaveBeenCalledTimes(2);
+      expect(findShare.execute).not.toHaveBeenCalled();
+      expect(workspaceExecution.execute).not.toHaveBeenCalled();
+    });
+
+    it('propagates a denied collective read', async () => {
+      const { service, collectiveAccess, orgId } = setup();
+      const team = new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId,
+        teamId: randomUUID(),
+      });
+      collectiveAccess.requireRead.mockRejectedValue(
+        new KnowledgeBaseNotFoundError(team.id),
+      );
+
+      await expect(service.requireRead(team)).rejects.toBeInstanceOf(
+        KnowledgeBaseNotFoundError,
+      );
+    });
+  });
 });

@@ -1,3 +1,4 @@
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { Test } from '@nestjs/testing';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { randomUUID, type UUID } from 'crypto';
@@ -155,4 +156,26 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       useCase.execute(query(knowledgeBase.id)),
     ).rejects.toBeInstanceOf(UnexpectedKnowledgeBaseError);
   });
+
+  it.each([true, false])(
+    'returns a team knowledge base with its global state (%s)',
+    async (isActive) => {
+      const knowledgeBase = new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId: ORG_ID,
+        teamId: randomUUID(),
+        isActive,
+      });
+      const { useCase, repository, readAccess } = await setup(knowledgeBase);
+
+      await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
+        knowledgeBase,
+        isShared: false,
+        isActive,
+        documentCount: 2,
+      });
+      expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
+      expect(repository.isActive).not.toHaveBeenCalled();
+    },
+  );
 });

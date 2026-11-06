@@ -1,14 +1,18 @@
 import { assignSourceWithinCapacity } from 'src/domain/knowledge-bases/infrastructure/persistence/local/queries/knowledge-base-source-capacity.db-query';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import type { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import type { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import type { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import type { ReadableCollectiveOwners } from 'src/iam/teams/application/models/collective-owner.model';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
   In,
   IsNull,
+  Not,
   Repository,
-  SelectQueryBuilder,
   type EntityManager,
   type FindOptionsWhere,
 } from 'typeorm';
@@ -17,11 +21,17 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import { randomUUID, type UUID } from 'crypto';
 import {
   KnowledgeBaseRepository,
+  type AccessibleKnowledgeBaseScope,
   type KnowledgeBaseByIdsOptions,
   type KnowledgeBaseListOptions,
+  type KnowledgeBaseTarget,
   type WorkspaceKnowledgeBaseState,
 } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import type {
+  CollectiveKnowledgeBase,
+  KnowledgeBase,
+  NonWorkspaceKnowledgeBase,
+} from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
@@ -29,12 +39,14 @@ import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { applyKnowledgeBaseTargetFilter } from './queries/knowledge-base-access.db-query';
 import {
-  applyKnowledgeBaseTargetFilter,
-  buildKnowledgeBaseAccessSubqueries,
-} from './queries/knowledge-base-access.db-query';
+  buildAccessibleKnowledgeBaseQuery,
+  buildActiveKnowledgeBaseQuery,
+  buildListKnowledgeBasesQuery,
+  whereCollectiveKnowledgeBaseOwner,
+  type CollectiveOwnerFilter,
+} from './queries/knowledge-base-accessible.db-query';
 import { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 
 @Injectable()
@@ -122,6 +134,7 @@ export class LocalKnowledgeBaseRepository
     }
     if (options?.workspaceId === null) {
       where.workspaceId = IsNull();
+      where.userId = Not(IsNull());
     } else if (options?.workspaceId) {
       where.workspaceId = options.workspaceId;
     }
@@ -235,62 +248,78 @@ export class LocalKnowledgeBaseRepository
   }
 
   async findActiveAccessible(
-    userId: UUID,
-    orgId: UUID,
-    knowledgeBaseId?: UUID,
-    sourceId?: UUID,
-  ): Promise<PersonalKnowledgeBase[]> {
-    const query = this.buildAccessiblePersonalQuery(userId, orgId).innerJoin(
-      KnowledgeBaseActivationRecord,
-      'activation',
-      'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
+    scope: AccessibleKnowledgeBaseScope,
+    target: KnowledgeBaseTarget = {},
+  ): Promise<NonWorkspaceKnowledgeBase[]> {
+    const query = buildActiveKnowledgeBaseQuery(
+      this.knowledgeBaseRepository,
+      scope,
     );
-    applyKnowledgeBaseTargetFilter(query, { knowledgeBaseId, sourceId });
+    applyKnowledgeBaseTargetFilter(query, target);
     const records = await query
       .orderBy('LOWER(knowledgeBase.name)', 'ASC')
       .addOrderBy('knowledgeBase.id', 'ASC')
       .getMany();
-    return records.map((record) => this.mapper.toPersonal(record));
+    return records.map((record) => this.toNonWorkspace(record));
   }
 
   async findAccessibleByIds(
     ids: UUID[],
-    userId: UUID,
-    orgId: UUID,
-  ): Promise<PersonalKnowledgeBase[]> {
+    scope: AccessibleKnowledgeBaseScope,
+  ): Promise<NonWorkspaceKnowledgeBase[]> {
     if (ids.length === 0) return [];
-
-    const records = await this.buildAccessiblePersonalQuery(userId, orgId)
+    const records = await buildAccessibleKnowledgeBaseQuery(
+      this.knowledgeBaseRepository,
+      scope,
+    )
       .andWhere('knowledgeBase.id IN (:...ids)', { ids })
       .getMany();
-    return records.map((record) => this.mapper.toPersonal(record));
+    return records.map((record) => this.toNonWorkspace(record));
   }
 
-  private buildAccessiblePersonalQuery(
-    userId: UUID,
-    orgId: UUID,
-  ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const query =
-      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
-    const access = buildKnowledgeBaseAccessSubqueries(query);
-    return query
-      .where('knowledgeBase.workspaceId IS NULL')
-      .andWhere('knowledgeBase.orgId = :orgId')
-      .andWhere(
-        new Brackets((accessQuery) => {
-          accessQuery
-            .where('knowledgeBase.userId = :userId')
-            .orWhere(`EXISTS ${access.directShare}`)
-            .orWhere(`EXISTS ${access.sharedSkill}`);
-        }),
+  async findAllCollective(
+    owners: ReadableCollectiveOwners,
+  ): Promise<CollectiveKnowledgeBase[]> {
+    return this.findCollective(owners);
+  }
+
+  async findAllByTeamId(teamId: UUID): Promise<TeamKnowledgeBase[]> {
+    const knowledgeBases = await this.findCollective({ teamIds: [teamId] });
+    return knowledgeBases.filter(
+      (knowledgeBase): knowledgeBase is TeamKnowledgeBase =>
+        'teamId' in knowledgeBase,
+    );
+  }
+
+  private async findCollective(
+    owners: CollectiveOwnerFilter,
+  ): Promise<CollectiveKnowledgeBase[]> {
+    const records = await this.knowledgeBaseRepository
+      .createQueryBuilder('knowledgeBase')
+      .where(
+        new Brackets((owner) =>
+          whereCollectiveKnowledgeBaseOwner(owner, owners),
+        ),
       )
-      .setParameters({
-        userId,
-        orgId,
-        skillEntityType: SharedEntityType.SKILL,
-        orgScopeType: ShareScopeType.ORG,
-        teamScopeType: ShareScopeType.TEAM,
-      });
+      .orderBy('knowledgeBase.createdAt', 'DESC')
+      .getMany();
+    return records.map((record) => {
+      const knowledgeBase = this.mapper.toDomain(record);
+      if (!(knowledgeBase instanceof AbstractCollectiveKnowledgeBase)) {
+        throw new Error(`Expected collective knowledge base ${record.id}`);
+      }
+      return knowledgeBase;
+    });
+  }
+
+  private toNonWorkspace(
+    record: KnowledgeBaseRecord,
+  ): NonWorkspaceKnowledgeBase {
+    const knowledgeBase = this.mapper.toDomain(record);
+    if (knowledgeBase instanceof WorkspaceKnowledgeBase) {
+      throw new Error(`Unexpected workspace knowledge base ${record.id}`);
+    }
+    return knowledgeBase;
   }
 
   findPaginatedAccessible(
@@ -298,7 +327,8 @@ export class LocalKnowledgeBaseRepository
     workspaceId: undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<PersonalKnowledgeBase>>;
+    collectiveOwners?: ReadableCollectiveOwners,
+  ): Promise<Paginated<NonWorkspaceKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
@@ -310,12 +340,14 @@ export class LocalKnowledgeBaseRepository
     workspaceId: UUID | undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
+    collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
+    collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>> {
     this.logger.debug(
       {
@@ -328,10 +360,14 @@ export class LocalKnowledgeBaseRepository
       'findPaginatedAccessible',
     );
 
-    const [records, total] = await this.buildAccessibleKnowledgeBasesQuery(
-      userId,
-      workspaceId,
-      sharedKnowledgeBaseIds,
+    const [records, total] = await buildListKnowledgeBasesQuery(
+      this.knowledgeBaseRepository,
+      {
+        userId,
+        workspaceId,
+        sharedKnowledgeBaseIds,
+        collectiveOwners: workspaceId ? undefined : collectiveOwners,
+      },
       options,
     )
       .orderBy('LOWER(knowledgeBase.name)', 'ASC')
@@ -343,7 +379,7 @@ export class LocalKnowledgeBaseRepository
     return new Paginated({
       data: records.map((record) =>
         workspaceId === undefined
-          ? this.mapper.toPersonal(record)
+          ? this.toNonWorkspace(record)
           : this.mapper.toWorkspace(record),
       ),
       limit: options.limit,
@@ -352,54 +388,16 @@ export class LocalKnowledgeBaseRepository
     });
   }
 
-  private buildAccessibleKnowledgeBasesQuery(
-    userId: UUID,
-    workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
-    options: KnowledgeBaseListOptions,
-  ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const queryBuilder =
-      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
-
-    if (workspaceId) {
-      queryBuilder.where('knowledgeBase.workspaceId = :workspaceId', {
-        workspaceId,
-      });
-    } else {
-      queryBuilder
-        .where(
-          new Brackets((accessQuery) => {
-            accessQuery.where('knowledgeBase.userId = :userId', { userId });
-            if (sharedKnowledgeBaseIds.length > 0) {
-              accessQuery.orWhere(
-                'knowledgeBase.id IN (:...sharedKnowledgeBaseIds)',
-                { sharedKnowledgeBaseIds },
-              );
-            }
-          }),
-        )
-        .andWhere('knowledgeBase.workspaceId IS NULL');
-    }
-
-    if (options.search) {
-      queryBuilder.andWhere('knowledgeBase.name ILIKE :search', {
-        search: `%${options.search}%`,
-      });
-    }
-
-    return queryBuilder;
-  }
-
   save(knowledgeBase: PersonalKnowledgeBase): Promise<PersonalKnowledgeBase>;
   save(knowledgeBase: WorkspaceKnowledgeBase): Promise<WorkspaceKnowledgeBase>;
+  save(knowledgeBase: TeamKnowledgeBase): Promise<TeamKnowledgeBase>;
+  save(knowledgeBase: OrgKnowledgeBase): Promise<OrgKnowledgeBase>;
   save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase>;
   async save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase> {
     this.logger.debug({ id: knowledgeBase.id }, 'save');
     const record = this.mapper.toRecord(knowledgeBase);
     const saved = await this.knowledgeBaseRepository.save(record);
-    return knowledgeBase instanceof PersonalKnowledgeBase
-      ? this.mapper.toPersonal(saved)
-      : this.mapper.toWorkspace(saved);
+    return this.mapper.toDomain(saved);
   }
 
   async delete(knowledgeBase: KnowledgeBase): Promise<void> {
