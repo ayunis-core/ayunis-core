@@ -7,14 +7,17 @@ export class SkillResponseDto {
   @ApiProperty({ type: 'string', format: 'uuid' })
   id: UUID;
 
-  @ApiProperty({ enum: ['personal', 'workspace'] })
-  ownerType: 'personal' | 'workspace';
+  @ApiProperty({ enum: ['personal', 'workspace', 'team', 'org'] })
+  ownerType: 'personal' | 'workspace' | 'team' | 'org';
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
   userId?: UUID;
 
   @ApiPropertyOptional({ type: 'string', format: 'uuid' })
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({ type: 'string', format: 'uuid' })
+  teamId?: UUID;
 
   @ApiProperty()
   name: string;

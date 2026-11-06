@@ -3349,6 +3349,8 @@ export type SkillResponseDtoOwnerType = typeof SkillResponseDtoOwnerType[keyof t
 export const SkillResponseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface SkillResponseDto {
@@ -3356,6 +3358,7 @@ export interface SkillResponseDto {
   ownerType: SkillResponseDtoOwnerType;
   userId?: string;
   workspaceId?: string;
+  teamId?: string;
   name: string;
   shortDescription: string;
   instructions: string;
@@ -3416,6 +3419,8 @@ export type CreateSkillDtoOwnerType = typeof CreateSkillDtoOwnerType[keyof typeo
 export const CreateSkillDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface CreateSkillDto {
@@ -3431,7 +3436,8 @@ export interface CreateSkillDto {
   instructions: string;
   ownerType: CreateSkillDtoOwnerType;
   workspaceId?: string;
-  /** Whether a personal skill is active (defaults to true) */
+  teamId?: string;
+  /** Whether the skill is active (defaults to true); for team and org skills this applies to everyone with access */
   isActive?: boolean;
 }
 

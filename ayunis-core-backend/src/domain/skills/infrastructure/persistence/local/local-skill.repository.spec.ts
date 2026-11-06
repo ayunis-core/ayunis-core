@@ -1,4 +1,4 @@
-import { In, IsNull, type EntityManager, type Repository } from 'typeorm';
+import { In, IsNull, Not, type EntityManager, type Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID } from 'crypto';
@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { LocalSkillRepository } from './local-skill.repository';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
 import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
+import type { LocalCollectiveSkillFinder } from './local-collective-skill.finder';
 import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
@@ -66,6 +67,7 @@ describe('LocalSkillRepository', () => {
       skillMapper as unknown as SkillMapper,
       {} as LocalSkillAccessiblePageFinder,
       new LocalSkillKnowledgeBaseIdsFinder(),
+      {} as LocalCollectiveSkillFinder,
       txHost,
     );
   });
@@ -75,17 +77,28 @@ describe('LocalSkillRepository', () => {
     expect(mockManager.find).not.toHaveBeenCalled();
   });
 
-  it.each([null, randomUUID()])(
-    'filters scope in SQL and deduplicates IDs: %s',
-    async (workspaceId) => {
-      mockManager.find.mockResolvedValue([]);
-      await repository.findByIds([skillId, skillId], workspaceId);
-      expect(mockManager.find).toHaveBeenCalledWith({
-        where: { id: In([skillId]), workspaceId: workspaceId ?? IsNull() },
-        relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
-      });
-    },
-  );
+  it('restricts personal lookups to user-owned skills', async () => {
+    mockManager.find.mockResolvedValue([]);
+    await repository.findByIds([skillId, skillId], null);
+    expect(mockManager.find).toHaveBeenCalledWith({
+      where: {
+        id: In([skillId]),
+        workspaceId: IsNull(),
+        userId: Not(IsNull()),
+      },
+      relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+    });
+  });
+
+  it('filters workspace scope in SQL and deduplicates IDs', async () => {
+    const workspaceId = randomUUID();
+    mockManager.find.mockResolvedValue([]);
+    await repository.findByIds([skillId, skillId], workspaceId);
+    expect(mockManager.find).toHaveBeenCalledWith({
+      where: { id: In([skillId]), workspaceId },
+      relations: ['sources', 'mcpIntegrations', 'knowledgeBases'],
+    });
+  });
 
   describe('ambient transaction', () => {
     it('finds a skill with relations written earlier in the transaction', async () => {
@@ -289,6 +302,7 @@ describe('LocalSkillRepository', () => {
         tx: undefined,
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>),
       new LocalSkillKnowledgeBaseIdsFinder(),
+      {} as LocalCollectiveSkillFinder,
       {
         tx: mockManager,
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,

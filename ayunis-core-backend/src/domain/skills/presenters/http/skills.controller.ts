@@ -53,7 +53,7 @@ import {
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { InstalledMarketplaceSkillResponseDto } from './dto/installed-marketplace-skill-response.dto';
 import { ListSkillsQueryDto } from './dto/list-skills-query.dto';
-import { toSkillOwner } from './dto/skill-owner.dto';
+import { toSkillListScope, toSkillOwner } from './dto/skill-owner.dto';
 import {
   SkillListResponseDto,
   SkillResponseDto,
@@ -174,7 +174,7 @@ export class SkillsController {
   ): Promise<SkillListResponseDto> {
     const page = await this.listSkills.execute(
       new ListAccessibleSkillsQuery({
-        owner: toSkillOwner(dto),
+        owner: toSkillListScope(dto),
         search: dto.search,
         limit: dto.limit,
         offset: dto.offset,

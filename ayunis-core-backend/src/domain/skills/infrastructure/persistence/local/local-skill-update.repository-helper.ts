@@ -1,4 +1,4 @@
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import type { EntityManager } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { Skill } from 'src/domain/skills/domain/skill';
@@ -71,14 +71,26 @@ export async function updateSkill(
     if (skill.marketplaceIdentifier !== previous.marketplaceIdentifier) {
       changes.marketplaceIdentifier = skill.marketplaceIdentifier;
     }
+    Object.assign(changes, stateChanges(skill, previous));
     await repository.update(skill.id, changes);
     await updateRelations(tx, current, skill, previous);
     const record = await repository.findOneOrFail({
       where: { id: skill.id },
       relations: [...SKILL_RELATIONS],
     });
-    return skill instanceof PersonalSkill
-      ? mapper.toPersonal(record)
-      : mapper.toWorkspace(record);
+    return mapper.toDomain(record);
   });
+}
+
+function stateChanges(skill: Skill, previous: Skill): Partial<SkillRecord> {
+  if (
+    !(skill instanceof AbstractCollectiveSkill) ||
+    !(previous instanceof AbstractCollectiveSkill)
+  ) {
+    return {};
+  }
+  const changes: Partial<SkillRecord> = {};
+  if (skill.isActive !== previous.isActive) changes.isActive = skill.isActive;
+  if (skill.isPinned !== previous.isPinned) changes.isPinned = skill.isPinned;
+  return changes;
 }

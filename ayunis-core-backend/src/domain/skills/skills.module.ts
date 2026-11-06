@@ -81,6 +81,12 @@ import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
+import { FindActiveCollectiveSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-active-collective-skill-by-name/find-active-collective-skill-by-name.use-case';
+
+import { SkillSourceCleanupService } from 'src/domain/skills/application/services/skill-source-cleanup.service';
+import { SkillsTeamDeletionRequestedListener } from 'src/domain/skills/application/listeners/team-deletion-requested.listener';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -99,6 +105,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    TeamsApplicationModule,
     forwardRef(() => ModelsModule),
     QuotasModule,
     UsageModule,
@@ -113,6 +120,9 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     },
     // Services
     SkillAuthorizationService,
+    CollectiveSkillAccessService,
+    SkillSourceCleanupService,
+    FindActiveCollectiveSkillByNameUseCase,
     FindActivatableSkillUseCase,
     SkillActivationService,
     SkillCreatorNameService,
@@ -153,6 +163,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     ShareDeletedListener,
     UserCreatedListener,
     SkillsWorkspaceDeletionRequestedListener,
+    SkillsTeamDeletionRequestedListener,
 
     // Strategies
     SkillShareAuthorizationStrategy,
@@ -179,6 +190,7 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,
     FindSkillByNameUseCase,
+    FindActiveCollectiveSkillByNameUseCase,
     SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),

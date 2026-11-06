@@ -12,6 +12,12 @@ export abstract class TeamMembersRepository {
     teamId: UUID,
     userId: UUID,
   ): Promise<TeamMember | null>;
+  /** Whether the user is a member of the team and the team is in the org. */
+  abstract isMemberInOrg(
+    teamId: UUID,
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<boolean>;
   abstract findByUserId(userId: UUID): Promise<TeamMember[]>;
   abstract countByTeamIdAndRole(teamId: UUID, role: UserRole): Promise<number>;
   abstract create(teamMember: TeamMember): Promise<TeamMember>;

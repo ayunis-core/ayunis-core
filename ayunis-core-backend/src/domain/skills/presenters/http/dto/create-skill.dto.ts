@@ -10,7 +10,8 @@ export class CreateSkillDto extends IntersectionType(
   ConcreteSkillOwnerDto,
 ) {
   @ApiPropertyOptional({
-    description: 'Whether a personal skill is active (defaults to true)',
+    description:
+      'Whether the skill is active (defaults to true); for team and org skills this applies to everyone with access',
     example: true,
   })
   @IsBoolean()

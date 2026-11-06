@@ -59,6 +59,16 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     });
   }
 
+  async isMemberInOrg(
+    teamId: UUID,
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<boolean> {
+    return this.teamMembers.exists({
+      where: { teamId, userId, team: { orgId } },
+    });
+  }
+
   async findByTeamIdAndUserId(
     teamId: UUID,
     userId: UUID,

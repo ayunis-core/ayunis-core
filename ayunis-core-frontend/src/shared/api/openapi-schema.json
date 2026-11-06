@@ -18280,13 +18280,17 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "userId": {
             "type": "string",
             "format": "uuid"
           },
           "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
             "type": "string",
             "format": "uuid"
           },
@@ -18400,15 +18404,19 @@
           },
           "ownerType": {
             "type": "string",
-            "enum": ["personal", "workspace"]
+            "enum": ["personal", "workspace", "team", "org"]
           },
           "workspaceId": {
             "type": "string",
             "format": "uuid"
           },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "isActive": {
             "type": "boolean",
-            "description": "Whether a personal skill is active (defaults to true)",
+            "description": "Whether the skill is active (defaults to true); for team and org skills this applies to everyone with access",
             "example": true
           }
         },
