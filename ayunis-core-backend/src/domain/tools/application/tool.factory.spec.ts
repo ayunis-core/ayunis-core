@@ -18,6 +18,7 @@ import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-documen
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
+import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -120,6 +121,12 @@ describe('ToolFactory', () => {
       expect(tool.name).toBe(ToolType.MAP);
     });
 
+    it('should create a FinishRoutineTool', () => {
+      const tool = factory.createTool({ type: ToolType.FINISH_ROUTINE });
+      expect(tool).toBeInstanceOf(FinishRoutineTool);
+      expect(tool.name).toBe(ToolType.FINISH_ROUTINE);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -183,8 +190,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
       expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
+      expect(types).toContain(ToolType.FINISH_ROUTINE);
 
-      expect(types).toHaveLength(32);
+      expect(types).toHaveLength(33);
     });
   });
 });

@@ -4,6 +4,7 @@ import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-ca
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
@@ -31,6 +32,10 @@ describe('runtime tool policy', () => {
       ['install_marketplace_skill', new InstallMarketplaceSkillTool()],
     ])('ends the run with the %s call for the client to handle', (_, tool) => {
       expect(isExternallyHandledTool(tool)).toBe(true);
+    });
+
+    it('ends a routine run with its finish_routine call, which has no executor', () => {
+      expect(isExternallyHandledTool(new FinishRoutineTool())).toBe(true);
     });
 
     it('leaves backend-executed tools to their handlers', () => {

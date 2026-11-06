@@ -10,6 +10,12 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { ROUTINE_NUDGE_MESSAGE } from 'src/domain/runs/application/run-profiles/routine-completion.policy';
 import { RuntimeHistoryMaterializer } from './runtime-history-materializer';
 
 describe('RuntimeHistoryMaterializer', () => {
@@ -159,6 +165,81 @@ describe('RuntimeHistoryMaterializer', () => {
     ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
     expect(loadImage).not.toHaveBeenCalled();
   });
+});
+
+it('replays a routine run to a later chat that does not offer finish_routine', async () => {
+  const threadId = randomUUID();
+  const finishCall = new ToolUseMessageContent(
+    'call-finish',
+    ToolType.FINISH_ROUTINE,
+    {},
+  );
+  const messages = [
+    new UserMessage({
+      threadId,
+      content: [new TextMessageContent('Prüfe die Verkündungsplattform.')],
+    }),
+    new AssistantMessage({
+      threadId,
+      content: [new TextMessageContent('Es gibt zwei neue Verordnungen.')],
+    }),
+    new UserMessage({
+      threadId,
+      content: [new TextMessageContent(ROUTINE_NUDGE_MESSAGE)],
+    }),
+    new AssistantMessage({ threadId, content: [finishCall] }),
+    new ToolResultMessage({
+      threadId,
+      content: [
+        new ToolResultMessageContent(
+          'call-finish',
+          ToolType.FINISH_ROUTINE,
+          'Tool execution is handled externally',
+        ),
+      ],
+    }),
+    new UserMessage({
+      threadId,
+      content: [new TextMessageContent('Welche Verordnungen waren das?')],
+    }),
+  ];
+  const chatTools = [new InternetSearchTool()];
+
+  const result = await buildMaterializer(jest.fn()).materialize({
+    messages,
+    orgId: randomUUID(),
+    backendTools: chatTools,
+    request: {
+      instructions: '',
+      tools: [],
+      model: { contextWindowSize: 200_000 },
+      tokenEstimator: fixedEstimator(1),
+    },
+  });
+
+  expect(result.map((message) => message.role)).toEqual([
+    'user',
+    'assistant',
+    'user',
+    'assistant',
+    'tool_result',
+    'user',
+  ]);
+  expect(result[3].content).toEqual([
+    expect.objectContaining({
+      type: 'tool_use',
+      id: 'call-finish',
+      name: ToolType.FINISH_ROUTINE,
+      input: {},
+    }),
+  ]);
+  expect(result[4].content).toEqual([
+    expect.objectContaining({
+      type: 'tool_result',
+      toolCallId: 'call-finish',
+      result: 'Tool execution is handled externally',
+    }),
+  ]);
 });
 
 function buildMaterializer(loadImage: jest.Mock): RuntimeHistoryMaterializer {

@@ -18,7 +18,11 @@ import { McpCapability } from 'src/domain/runs/application/run-capabilities/capa
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
-import type { RunCompletionPolicy, RunProfile } from './run-profile';
+import {
+  DONE_WHEN_MODEL_STOPS,
+  type RunCompletionPolicy,
+  type RunProfile,
+} from './run-profile';
 
 const CHAT_PREAMBLE = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
@@ -32,7 +36,8 @@ export class ChatRunProfile implements RunProfile {
   readonly id = 'chat';
   readonly preamble = CHAT_PREAMBLE;
   readonly closing = 'You are now ready to assist the user.';
-  readonly completionPolicy: RunCompletionPolicy = 'done';
+  readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
+  readonly maxIterations = 50;
   readonly capabilities: readonly RunCapability[];
 
   constructor(

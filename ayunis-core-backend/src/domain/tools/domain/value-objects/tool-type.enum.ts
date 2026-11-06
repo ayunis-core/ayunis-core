@@ -32,4 +32,5 @@ export enum ToolType {
   UPDATE_SPREADSHEET = 'update_spreadsheet',
   MARKETPLACE_SEARCH = 'marketplace_search',
   INSTALL_MARKETPLACE_SKILL = 'install_marketplace_skill',
+  FINISH_ROUTINE = 'finish_routine',
 }
