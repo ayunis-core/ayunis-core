@@ -3386,7 +3386,6 @@ export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType
 
 
 export const CreateSkillShareDtoEntityType = {
-  prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
@@ -3407,7 +3406,6 @@ export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof
 
 
 export const ShareResponseDtoEntityType = {
-  prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
@@ -3451,7 +3449,6 @@ export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseSh
 
 
 export const CreateKnowledgeBaseShareDtoEntityType = {
-  prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
@@ -6503,7 +6500,6 @@ export type SharesControllerGetSharesEntityType = typeof SharesControllerGetShar
 
 
 export const SharesControllerGetSharesEntityType = {
-  prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
