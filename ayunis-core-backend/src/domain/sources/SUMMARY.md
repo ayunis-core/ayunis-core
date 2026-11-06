@@ -30,3 +30,8 @@ Upload sessions survive user deletion with a null user reference. The five-minut
 **Direct upload targets (AYC-1541).** Completion lives on the target: `POST /threads|skills|knowledge-bases/:id/uploads` reserves a session after the target authorised the caller and checked its source capacity, and `POST .../uploads/:uploadId/complete` runs `CompleteSourceUploadUseCase` with the target's capacity check and attachment callback. The legacy multipart-form endpoints (`POST .../sources/file`, `POST .../documents`) remain for API clients and stage files under `<orgId>/processing/`.
 
 `ProcessingCheckpointService` supplies the document consumer's extraction context. JSON results are keyed by organization, source and input identity under `<orgId>/processing/<sourceId>/results/`, with bounded reads and source lifecycle checks before and after writes. Completed OCR/audio parts survive retry and restart. Results are removed on success, terminal failure, settled-source skips and source deletion while uploaded originals remain retained. Final document content uses `saveProcessingTextSourceContent` so deletion cannot race an upsert and recreate the source. BullMQ progress records completed extraction units.
+
+Queue consumers run in the API by default (`INGESTION_PROCESS_ROLE=combined`).
+API-only mode (`api`) retains producers and scheduled cleanup without consumers.
+The headless `src/worker.ts` entry point (`worker`) reuses all three queues and
+repositories with configurable concurrency, no scheduler and no migration runner.

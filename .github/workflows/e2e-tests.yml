@@ -212,6 +212,7 @@ jobs:
           # seed script while keeping production-only validations off.
           PORT=3000
           MOCK_INFERENCE=true
+          INGESTION_PROCESS_ROLE=api
 
           # Database
           POSTGRES_HOST=localhost
@@ -297,6 +298,26 @@ jobs:
           nohup node dist/src/main > backend.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done' \
             || { echo '--- backend.log ---'; cat backend.log; exit 1; }
+
+      - name: Start separate ingestion worker
+        working-directory: ayunis-core-backend
+        env:
+          WORKER_HEALTH_PORT: 3003
+        run: |
+          node <<'JS'
+          const { Queue } = require('bullmq');
+          (async () => {
+            for (const name of ['document-processing', 'data-source-processing', 'url-crawl']) {
+              const queue = new Queue(name, { connection: { host: 'localhost', port: 6379 } });
+              const workers = await queue.getWorkers();
+              await queue.close();
+              if (workers.length) throw new Error(`API unexpectedly consumes ${name}`);
+            }
+          })().catch(error => { console.error(error); process.exit(1); });
+          JS
+          nohup node dist/src/worker.js > worker.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://127.0.0.1:3003/health; do sleep 2; done' \
+            || { cat worker.log; exit 1; }
 
       - name: Start backend with externally managed subscriptions
         working-directory: ayunis-core-backend
@@ -427,6 +448,7 @@ jobs:
         with:
           name: backend-log
           path: |
+            ayunis-core-backend/worker.log
             ayunis-core-backend/backend.log
             ayunis-core-backend/backend-external-subscriptions.log
           retention-days: 7

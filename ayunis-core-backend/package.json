@@ -17,6 +17,7 @@
     "prestart:dev": "pnpm run build:deps",
     "start:dev": "NODE_OPTIONS='--require ./appsignal.cjs' nest start --watch",
     "start:debug": "NODE_OPTIONS='--require ./appsignal.cjs' nest start --debug --watch",
+    "start:worker": "node --require ./appsignal.cjs dist/src/worker.js",
     "start:prod": "node --require ./appsignal.cjs dist/src/main",
     "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
     "deps:check": "dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known",

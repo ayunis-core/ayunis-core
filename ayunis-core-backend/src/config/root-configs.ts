@@ -1,3 +1,4 @@
+import ingestionConfig from './ingestion.config';
 import { modelsConfig } from './models.config';
 import { authenticationConfig } from './authentication.config';
 import { typeormConfig } from './typeorm.config';
@@ -33,6 +34,7 @@ import { coreConnectConfig } from './core-connect.config';
  * read cannot fail in one bootstrap context while working in another.
  */
 export const rootConfigs = [
+  ingestionConfig,
   modelsConfig,
   authenticationConfig,
   typeormConfig,
