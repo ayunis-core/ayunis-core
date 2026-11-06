@@ -1,12 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import { ShareAuthorizationStrategy } from '../ports/share-authorization-strategy.port';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareAuthorizationStrategy } from 'src/domain/shares/application/ports/share-authorization-strategy.port';
 
 /**
  * Injection token for registering share authorization strategies.
  * Each entity module provides its strategy using this token pattern:
- * `SHARE_AUTH_STRATEGY_<ENTITY_TYPE>` (e.g. `SHARE_AUTH_STRATEGY_agent`)
+ * `SHARE_AUTH_STRATEGY_<ENTITY_TYPE>` (e.g. `SHARE_AUTH_STRATEGY_skill`)
  */
 export const SHARE_AUTH_STRATEGY_TOKEN = 'SHARE_AUTH_STRATEGY';
 
@@ -20,7 +20,7 @@ export function getShareAuthStrategyToken(
  * Factory for getting the appropriate authorization strategy for each entity type.
  *
  * Strategies are resolved lazily via ModuleRef to avoid circular module imports.
- * Each entity module (Agents, Skills, etc.) registers its strategy as a named provider
+ * Each entity module (Skills, Knowledge Bases) registers its strategy as a named provider
  * using `getShareAuthStrategyToken(entityType)` and exports it.
  */
 @Injectable()
@@ -45,7 +45,7 @@ export class ShareAuthorizationFactory implements OnModuleInit {
 
   /**
    * Get the authorization strategy for a given entity type
-   * @param entityType - The type of entity (agent, skill, etc.)
+   * @param entityType - The type of entity (skill, knowledge base)
    * @returns The appropriate authorization strategy
    * @throws Error if entity type is not supported
    */

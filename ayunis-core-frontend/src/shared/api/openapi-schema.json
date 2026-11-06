@@ -6489,7 +6489,7 @@
             "in": "query",
             "description": "Type of the entity",
             "schema": {
-              "enum": ["prompt", "skill", "knowledge_base"],
+              "enum": ["skill", "knowledge_base"],
               "type": "string"
             }
           }
@@ -18166,7 +18166,7 @@
           "entityType": {
             "type": "string",
             "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
+            "enum": ["skill", "knowledge_base"]
           },
           "skillId": {
             "type": "string",
@@ -18192,7 +18192,7 @@
           "entityType": {
             "type": "string",
             "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
+            "enum": ["skill", "knowledge_base"]
           },
           "entityId": {
             "type": "string",
@@ -18245,7 +18245,7 @@
           "entityType": {
             "type": "string",
             "description": "Type of entity being shared",
-            "enum": ["prompt", "skill", "knowledge_base"]
+            "enum": ["skill", "knowledge_base"]
           },
           "knowledgeBaseId": {
             "type": "string",

@@ -5,7 +5,7 @@ import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-sco
 
 /**
  * Generic response DTO for shares
- * Works for any entity type (agent, prompt, etc.)
+ * Works for any entity type (skill, knowledge base)
  */
 export class ShareResponseDto {
   @ApiProperty({

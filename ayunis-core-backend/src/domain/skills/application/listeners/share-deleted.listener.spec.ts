@@ -167,19 +167,4 @@ describe('ShareDeletedListener', () => {
       new Set([sharedUserId, orgOnlyUserId, teamOnlyUserId]),
     );
   });
-
-  it('should not deactivate anything when a prompt share is deleted', async () => {
-    const event = new ShareDeletedEvent(
-      SharedEntityType.PROMPT,
-      randomUUID(),
-      randomUUID(),
-      randomUUID(),
-      [],
-    );
-
-    await listener.handleShareDeleted(event);
-
-    expect(skillRepository.deactivateAllExceptOwner).not.toHaveBeenCalled();
-    expect(skillRepository.deactivateUsersNotInSet).not.toHaveBeenCalled();
-  });
 });
