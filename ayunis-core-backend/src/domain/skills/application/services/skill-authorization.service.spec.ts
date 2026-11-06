@@ -6,6 +6,9 @@ import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import type { CollectiveSkillAccessService } from './collective-skill-access.service';
 import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import type { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
@@ -37,7 +40,13 @@ function setup() {
   const context = {
     get: jest.fn(getFromUserContext({ userId, orgId })),
   };
+  const collectiveAccess = {
+    requireRead: jest.fn().mockResolvedValue(undefined),
+    requireWrite: jest.fn().mockResolvedValue(undefined),
+    requireManage: jest.fn().mockResolvedValue(undefined),
+  };
   return {
+    collectiveAccess,
     userId,
     orgId,
     personal,
@@ -53,6 +62,7 @@ function setup() {
       workspaceWrite as unknown as AssertWorkspaceWriteAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
+      collectiveAccess as unknown as CollectiveSkillAccessService,
     ),
   };
 }
@@ -129,4 +139,78 @@ describe(SkillAuthorizationService.name, () => {
       );
     },
   );
+
+  describe.each([
+    new TeamSkill({
+      name: 'Council minutes',
+      shortDescription: 'Drafts council meeting minutes.',
+      instructions: 'Summarise each agenda item.',
+      teamId: randomUUID(),
+    }),
+    new OrgSkill({
+      name: 'Press release',
+      shortDescription: 'Writes press releases.',
+      instructions: 'Use the municipal style guide.',
+      orgId: randomUUID(),
+    }),
+  ])('collective skill %#', (skill) => {
+    it('delegates reads and execution to the collective access policy', async () => {
+      const { service, collectiveAccess, shares } = setup();
+
+      await service.requireRead(skill);
+      await service.requireExecution(skill, randomUUID());
+
+      expect(collectiveAccess.requireRead).toHaveBeenCalledTimes(2);
+      expect(collectiveAccess.requireRead).toHaveBeenCalledWith(skill);
+      expect(shares.execute).not.toHaveBeenCalled();
+    });
+
+    it('delegates writes to the collective access policy', async () => {
+      const { service, collectiveAccess } = setup();
+
+      await service.requireWrite(skill);
+
+      expect(collectiveAccess.requireWrite).toHaveBeenCalledWith(skill);
+    });
+
+    it('propagates a denied collective read', async () => {
+      const { service, collectiveAccess } = setup();
+      collectiveAccess.requireRead.mockRejectedValue(
+        new SkillNotFoundError(skill.id),
+      );
+
+      await expect(service.requireRead(skill)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+  });
+
+  describe('requireCreate', () => {
+    const params = {
+      name: 'Council minutes',
+      shortDescription: 'Drafts council meeting minutes.',
+      instructions: 'Summarise each agenda item.',
+    };
+
+    it.each([
+      new TeamSkill({ ...params, teamId: randomUUID() }),
+      new OrgSkill({ ...params, orgId: randomUUID() }),
+    ])('requires the right to manage the target owner', async (skill) => {
+      const { service, collectiveAccess } = setup();
+
+      await service.requireCreate(skill);
+
+      expect(collectiveAccess.requireManage).toHaveBeenCalledWith(skill);
+    });
+
+    it('keeps owner-only creation for personal skills', async () => {
+      const { service, personal } = setup();
+      const foreign = new PersonalSkill({ ...personal, userId: randomUUID() });
+
+      await expect(service.requireCreate(personal)).resolves.toBeUndefined();
+      await expect(service.requireCreate(foreign)).rejects.toBeInstanceOf(
+        SkillNotFoundError,
+      );
+    });
+  });
 });

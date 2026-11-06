@@ -10,6 +10,8 @@ import type { SkillRepository } from 'src/domain/skills/application/ports/skill.
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
@@ -36,6 +38,7 @@ function setup() {
     deactivateSkill: jest.fn(),
     activateWorkspaceSkill: jest.fn(),
     deactivateWorkspaceSkill: jest.fn(),
+    update: jest.fn().mockImplementation((skill) => Promise.resolve(skill)),
   };
   const authorization = {
     requireRead: jest.fn(),
@@ -95,5 +98,46 @@ describe(SetSkillActivationUseCase.name, () => {
       workspace.id,
       workspace.workspaceId,
     );
+  });
+
+  it('switches a team skill off for everyone after manage authorization', async () => {
+    const { useCase, repository, authorization } = setup();
+    const team = new TeamSkill({
+      teamId: randomUUID(),
+      name: 'Council minutes',
+      shortDescription: 'Drafts minutes.',
+      instructions: 'Summarise.',
+      isActive: true,
+      isPinned: true,
+    });
+    repository.findById.mockResolvedValue(team);
+
+    const result = await useCase.execute({ skillId: team.id, isActive: false });
+
+    expect(authorization.requireWrite).toHaveBeenCalledWith(team);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({ isActive: false, isPinned: false }),
+      team,
+    );
+    expect(result).toMatchObject({ isActive: false, isPinned: false });
+    expect(repository.activateSkill).not.toHaveBeenCalled();
+    expect(repository.deactivateSkill).not.toHaveBeenCalled();
+  });
+
+  it('does not change a team skill for members who cannot manage it', async () => {
+    const { useCase, repository, authorization } = setup();
+    const team = new TeamSkill({
+      teamId: randomUUID(),
+      name: 'Council minutes',
+      shortDescription: 'Drafts minutes.',
+      instructions: 'Summarise.',
+    });
+    repository.findById.mockResolvedValue(team);
+    authorization.requireWrite.mockRejectedValue(new UnauthorizedAccessError());
+
+    await expect(
+      useCase.execute({ skillId: team.id, isActive: true }),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 });

@@ -11,6 +11,7 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { FindOneSkillQuery } from './find-one-skill.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
@@ -36,6 +37,15 @@ export class FindOneSkillUseCase {
   }
 
   private async resolveContext(skill: Skill): Promise<SkillContext> {
+    if (skill instanceof AbstractCollectiveSkill) {
+      return {
+        skill,
+        isActive: skill.isActive,
+        isPinned: skill.isPinned,
+        isShared: false,
+        creatorName: null,
+      };
+    }
     if (!(skill instanceof PersonalSkill)) {
       const states = await this.repository.getWorkspaceSkillStates(
         [skill.id],

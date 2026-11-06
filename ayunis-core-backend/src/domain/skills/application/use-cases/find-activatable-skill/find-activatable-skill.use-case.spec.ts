@@ -7,6 +7,7 @@ import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors'
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { FindActivatableSkillUseCase } from './find-activatable-skill.use-case';
 
@@ -22,13 +23,12 @@ function fixture() {
   });
   const thread = new Thread({ userId, workspaceId, messages: [] });
   const repository = {
-    findByIds: jest.fn().mockResolvedValue([skill]),
+    findById: jest.fn().mockResolvedValue(skill),
     getWorkspaceSkillStates: jest
       .fn()
       .mockResolvedValue(
         new Map([[skill.id, { isActive: true, isPinned: false }]]),
       ),
-    findOne: jest.fn().mockResolvedValue(null),
   };
   const findShare = { execute: jest.fn().mockResolvedValue(null) };
   const principal = { userId, orgId };
@@ -85,17 +85,23 @@ describe(FindActivatableSkillUseCase.name, () => {
   });
 
   it('rejects skills outside the thread workspace', async () => {
-    const { useCase, skill, thread, repository } = fixture();
-    repository.findByIds.mockResolvedValue([]);
+    const { useCase, skill, thread, repository, authorization } = fixture();
+    thread.workspaceId = randomUUID();
 
     await expect(
       useCase.execute({ skillId: skill.id, thread }),
     ).rejects.toBeInstanceOf(SkillNotFoundError);
-    expect(repository.findByIds).toHaveBeenCalledWith(
-      [skill.id],
-      thread.workspaceId,
-    );
+    expect(authorization.requireExecution).not.toHaveBeenCalled();
     expect(repository.getWorkspaceSkillStates).not.toHaveBeenCalled();
+  });
+
+  it('rejects unknown skills', async () => {
+    const { useCase, thread, repository } = fixture();
+    repository.findById.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({ skillId: randomUUID(), thread }),
+    ).rejects.toBeInstanceOf(SkillNotFoundError);
   });
 
   it('rejects inactive workspace skills', async () => {
@@ -112,7 +118,7 @@ describe(FindActivatableSkillUseCase.name, () => {
     await expect(
       useCase.execute({ skillId: skill.id, thread }),
     ).rejects.toBeInstanceOf(SkillNotFoundError);
-    expect(repository.findByIds).not.toHaveBeenCalled();
+    expect(repository.getWorkspaceSkillStates).not.toHaveBeenCalled();
   });
 
   it('rejects another user’s thread before looking up resources', async () => {
@@ -121,7 +127,7 @@ describe(FindActivatableSkillUseCase.name, () => {
     await expect(
       useCase.execute({ skillId: skill.id, thread }),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
-    expect(repository.findByIds).not.toHaveBeenCalled();
+    expect(repository.findById).not.toHaveBeenCalled();
   });
 
   it.each(['owned', 'shared'] as const)(
@@ -135,14 +141,83 @@ describe(FindActivatableSkillUseCase.name, () => {
         instructions: 'Review the applicable regulations.',
         userId: accessType === 'owned' ? userId : randomUUID(),
       });
-      if (accessType === 'owned') repository.findOne.mockResolvedValue(skill);
-      else {
+      repository.findById.mockResolvedValue(skill);
+      if (accessType === 'shared') {
         findShare.execute.mockResolvedValue({ id: randomUUID() });
-        repository.findByIds.mockResolvedValue([skill]);
       }
       await expect(
         useCase.execute({ skillId: skill.id, thread }),
       ).resolves.toBe(skill);
     },
   );
+
+  it('rejects another user’s personal skill that is not shared', async () => {
+    const { useCase, thread, repository } = fixture();
+    thread.workspaceId = null;
+    const skill = new PersonalSkill({
+      name: 'Legal research',
+      shortDescription: 'Research legal topics',
+      instructions: 'Review the applicable regulations.',
+      userId: randomUUID(),
+    });
+    repository.findById.mockResolvedValue(skill);
+
+    await expect(
+      useCase.execute({ skillId: skill.id, thread }),
+    ).rejects.toBeInstanceOf(SkillNotFoundError);
+  });
+
+  describe('team skills', () => {
+    const teamSkill = (isActive: boolean) =>
+      new TeamSkill({
+        teamId: randomUUID(),
+        name: 'Council minutes',
+        shortDescription: 'Drafts minutes.',
+        instructions: 'Summarise.',
+        isActive,
+      });
+
+    it.each([null, randomUUID()])(
+      'returns an active team skill the member may execute (workspace: %s)',
+      async (workspaceId) => {
+        const { useCase, thread, repository, authorization } = fixture();
+        thread.workspaceId = workspaceId;
+        const skill = teamSkill(true);
+        repository.findById.mockResolvedValue(skill);
+
+        await expect(
+          useCase.execute({ skillId: skill.id, thread }),
+        ).resolves.toBe(skill);
+        expect(authorization.requireExecution).toHaveBeenCalledWith(
+          skill,
+          thread.id,
+        );
+      },
+    );
+
+    it('rejects a team skill that is switched off for everyone', async () => {
+      const { useCase, thread, repository } = fixture();
+      thread.workspaceId = null;
+      const skill = teamSkill(false);
+      repository.findById.mockResolvedValue(skill);
+
+      await expect(
+        useCase.execute({ skillId: skill.id, thread }),
+      ).rejects.toBeInstanceOf(SkillNotFoundError);
+    });
+
+    it('rejects a team skill of a team the user is not in', async () => {
+      const { useCase, thread, repository, authorization } = fixture();
+      thread.workspaceId = null;
+      const skill = teamSkill(true);
+      repository.findById.mockResolvedValue(skill);
+      authorization.requireExecution.mockRejectedValue(
+        new SkillNotFoundError(skill.id),
+      );
+
+      await expect(
+        useCase.execute({ skillId: skill.id, thread }),
+      ).rejects.toBeInstanceOf(SkillNotFoundError);
+    });
+  });
 });

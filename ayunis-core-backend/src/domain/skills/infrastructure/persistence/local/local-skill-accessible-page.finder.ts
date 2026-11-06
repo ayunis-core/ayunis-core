@@ -6,7 +6,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { SkillListOptions } from 'src/domain/skills/application/ports/skill.repository';
+import type { ReadableSkillOwners } from 'src/domain/skills/application/models/skill-owner';
 import { SkillRecord } from './schema/skill.record';
+import { whereCollectiveOwner } from './local-collective-skill.finder';
 
 @Injectable()
 export class LocalSkillAccessiblePageFinder {
@@ -26,6 +28,7 @@ export class LocalSkillAccessiblePageFinder {
     workspaceId: UUID | undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
+    collectiveOwners?: ReadableSkillOwners,
   ): SelectQueryBuilder<SkillRecord> {
     const queryBuilder = this.skillRepository.createQueryBuilder('skill');
 
@@ -37,9 +40,19 @@ export class LocalSkillAccessiblePageFinder {
           new Brackets((accessQuery) => {
             accessQuery.where('skill.userId = :userId', { userId });
             if (sharedSkillIds.length > 0) {
-              accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
-                sharedSkillIds,
-              });
+              // Only personal skills can be shared; a share row left on a
+              // skill that has since moved to a team must not widen access.
+              accessQuery.orWhere(
+                'skill.id IN (:...sharedSkillIds) AND skill.userId IS NOT NULL',
+                { sharedSkillIds },
+              );
+            }
+            if (collectiveOwners) {
+              accessQuery.orWhere(
+                new Brackets((owner) =>
+                  whereCollectiveOwner(owner, collectiveOwners),
+                ),
+              );
             }
           }),
         )

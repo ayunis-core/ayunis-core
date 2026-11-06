@@ -1,4 +1,6 @@
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
@@ -26,6 +28,8 @@ import {
   SlugCollisionError,
   SYSTEM_PREFIX,
   USER_PREFIX,
+  TEAM_PREFIX,
+  ORG_PREFIX,
   WORKSPACE_PREFIX,
   type SkillEntry,
   type SkillPrefix,
@@ -42,6 +46,13 @@ import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { mergeKnowledgeBases } from './merge-knowledge-bases';
+
+function skillSlugPrefix(skill: Skill): SkillPrefix {
+  if (skill instanceof WorkspaceSkill) return WORKSPACE_PREFIX;
+  if (skill instanceof TeamSkill) return TEAM_PREFIX;
+  if (skill instanceof OrgSkill) return ORG_PREFIX;
+  return USER_PREFIX;
+}
 
 @Injectable()
 export class ToolAssemblyService {
@@ -221,7 +232,7 @@ export class ToolAssemblyService {
     const allInputs: SkillInput[] = [
       ...activeSkills.map((s): SkillInput => ({
         name: s.name,
-        prefix: s instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX,
+        prefix: skillSlugPrefix(s),
         description: s.shortDescription,
       })),
       ...alwaysOnTemplates.map((t): SkillInput => ({
@@ -235,7 +246,7 @@ export class ToolAssemblyService {
       try {
         const slug = buildSkillSlug(input.prefix, input.name);
         const existing = slugMap.get(slug);
-        if (existing !== undefined && existing !== input.name) {
+        if (existing !== undefined) {
           throw new SlugCollisionError(slug, existing, input.name);
         }
         slugMap.set(slug, input.name);
@@ -260,9 +271,7 @@ export class ToolAssemblyService {
     const skillIds = new Map<string, string>();
     for (const skill of skills) {
       try {
-        const prefix =
-          skill instanceof WorkspaceSkill ? WORKSPACE_PREFIX : USER_PREFIX;
-        const slug = buildSkillSlug(prefix, skill.name);
+        const slug = buildSkillSlug(skillSlugPrefix(skill), skill.name);
         if (advertisedSlugs.get(slug) !== skill.name || skillIds.has(slug)) {
           throw new SlugCollisionError(
             slug,

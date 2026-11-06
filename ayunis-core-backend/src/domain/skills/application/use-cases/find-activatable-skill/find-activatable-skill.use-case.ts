@@ -12,8 +12,10 @@ import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
+import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
+import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
@@ -38,52 +40,45 @@ export class FindActivatableSkillUseCase {
     if (!userId || !orgId || query.thread.userId !== userId) {
       throw new UnauthorizedAccessError();
     }
-    if (query.thread.workspaceId) {
-      const workspaceSkill = (
-        await this.repository.findByIds(
-          [query.skillId],
-          query.thread.workspaceId,
-        )
-      ).at(0);
-      if (workspaceSkill) {
-        await this.authorization.requireExecution(
-          workspaceSkill,
-          query.thread.id,
-        );
-        await this.requireWorkspaceActivation(
-          workspaceSkill.id,
-          query.thread.workspaceId,
-        );
-        return workspaceSkill;
-      }
+    const skill = await this.repository.findById(query.skillId);
+    if (skill instanceof WorkspaceSkill) {
+      return this.requireActiveWorkspaceSkill(skill, query.thread);
     }
-    return this.findAccessiblePersonalSkill(query.skillId, userId);
+    if (skill instanceof AbstractCollectiveSkill) {
+      await this.authorization.requireExecution(skill, query.thread.id);
+      if (!skill.isActive) throw new SkillNotFoundError(query.skillId);
+      return skill;
+    }
+    if (skill && (await this.isAccessiblePersonalSkill(skill, userId))) {
+      return skill;
+    }
+    throw new SkillNotFoundError(query.skillId);
   }
 
-  private async findAccessiblePersonalSkill(
-    skillId: UUID,
-    userId: UUID,
-  ): Promise<PersonalSkill> {
-    const owned = await this.repository.findOne(skillId, userId);
-    if (owned) return owned;
-    const share = await this.findShare.execute(
-      new FindShareByEntityQuery(SharedEntityType.SKILL, skillId),
-    );
-    const shared = share
-      ? (await this.repository.findByIds([skillId], null)).at(0)
-      : undefined;
-    if (!shared) throw new SkillNotFoundError(skillId);
-    return shared;
-  }
-
-  private async requireWorkspaceActivation(
-    skillId: UUID,
-    workspaceId: UUID,
-  ): Promise<void> {
+  private async requireActiveWorkspaceSkill(
+    skill: WorkspaceSkill,
+    thread: Thread,
+  ): Promise<WorkspaceSkill> {
+    if (!thread.workspaceId || skill.workspaceId !== thread.workspaceId) {
+      throw new SkillNotFoundError(skill.id);
+    }
+    await this.authorization.requireExecution(skill, thread.id);
     const states = await this.repository.getWorkspaceSkillStates(
-      [skillId],
-      workspaceId,
+      [skill.id],
+      thread.workspaceId,
     );
-    if (!states.get(skillId)?.isActive) throw new SkillNotFoundError(skillId);
+    if (!states.get(skill.id)?.isActive) throw new SkillNotFoundError(skill.id);
+    return skill;
+  }
+
+  private async isAccessiblePersonalSkill(
+    skill: PersonalSkill,
+    userId: UUID,
+  ): Promise<boolean> {
+    if (skill.userId === userId) return true;
+    const share = await this.findShare.execute(
+      new FindShareByEntityQuery(SharedEntityType.SKILL, skill.id),
+    );
+    return share !== null;
   }
 }

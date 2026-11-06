@@ -9,6 +9,7 @@ import type { SkillAuthorizationService } from 'src/domain/skills/application/se
 import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
@@ -22,6 +23,7 @@ function setup() {
     setSkillPinned: jest.fn(),
     getWorkspaceSkillStates: jest.fn(),
     setWorkspaceSkillPinned: jest.fn(),
+    update: jest.fn().mockImplementation((skill) => Promise.resolve(skill)),
   };
   const authorization = { requireRead: jest.fn(), requireWrite: jest.fn() };
   const context = {
@@ -80,5 +82,41 @@ describe(SetSkillPinUseCase.name, () => {
       useCase.execute({ skillId: skill.id, isPinned: true }),
     ).rejects.toBeInstanceOf(SkillNotActiveError);
     expect(repository.setWorkspaceSkillPinned).not.toHaveBeenCalled();
+  });
+
+  const orgSkill = (isActive: boolean) =>
+    new OrgSkill({
+      orgId: randomUUID(),
+      name: 'Press release',
+      shortDescription: 'Writes press releases.',
+      instructions: 'Use the style guide.',
+      isActive,
+    });
+
+  it('pins an active org skill for everyone after manage authorization', async () => {
+    const { useCase, repository, authorization } = setup();
+    const skill = orgSkill(true);
+    repository.findById.mockResolvedValue(skill);
+
+    const result = await useCase.execute({ skillId: skill.id, isPinned: true });
+
+    expect(authorization.requireWrite).toHaveBeenCalledWith(skill);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({ isPinned: true }),
+      skill,
+    );
+    expect(result).toMatchObject({ isActive: true, isPinned: true });
+    expect(repository.setSkillPinned).not.toHaveBeenCalled();
+  });
+
+  it('rejects pinning an inactive org skill', async () => {
+    const { useCase, repository } = setup();
+    const skill = orgSkill(false);
+    repository.findById.mockResolvedValue(skill);
+
+    await expect(
+      useCase.execute({ skillId: skill.id, isPinned: true }),
+    ).rejects.toBeInstanceOf(SkillNotActiveError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 });

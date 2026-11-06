@@ -1,5 +1,7 @@
 import { ActivateWorkspaceSkillByNameUseCase } from 'src/domain/skills/application/use-cases/activate-workspace-skill-by-name/activate-workspace-skill-by-name.use-case';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { FindActiveCollectiveSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-active-collective-skill-by-name/find-active-collective-skill-by-name.use-case';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
@@ -22,6 +24,7 @@ describe('ActivateSkillToolHandler', () => {
   let mockFindAlwaysOnTemplateByName: jest.Mocked<FindAlwaysOnTemplateByNameUseCase>;
 
   const activateWorkspace = jest.fn();
+  const findCollective = jest.fn();
   const mockThreadId = randomUUID();
   const mockSkillId = randomUUID();
 
@@ -56,6 +59,10 @@ describe('ActivateSkillToolHandler', () => {
           provide: FindAlwaysOnTemplateByNameUseCase,
           useValue: mockFindAlwaysOnTemplateByName,
         },
+        {
+          provide: FindActiveCollectiveSkillByNameUseCase,
+          useValue: { execute: findCollective },
+        },
       ],
     }).compile();
 
@@ -87,6 +94,50 @@ describe('ActivateSkillToolHandler', () => {
     });
     expect(mockFindSkillByName.execute).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['team__budget-analysis', 'team'],
+    ['org__budget-analysis', 'org'],
+  ])(
+    'activates the %s skill on the thread without resolving a same-named personal skill',
+    async (slug, ownerType) => {
+      const skill = new TeamSkill({
+        name: 'Budget Analysis',
+        shortDescription: 'Analyzes municipal budgets',
+        instructions: 'Team instructions',
+        teamId: randomUUID(),
+        isActive: true,
+      });
+      const thread = new Thread({ userId: randomUUID(), messages: [] });
+      findCollective.mockResolvedValue(skill);
+      mockFindThread.execute.mockResolvedValue({ thread, isLongChat: false });
+      mockSkillActivationService.activateOnThread.mockResolvedValue({
+        instructions: 'Team instructions',
+        skillName: skill.name,
+      });
+
+      const result = await handler.execute({
+        tool: new ActivateSkillTool(
+          new Map([
+            [slug, 'Budget Analysis'],
+            ['user__budget-analysis', 'Budget Analysis'],
+          ]),
+        ),
+        input: { skill_slug: slug },
+        context: { threadId: mockThreadId, orgId: randomUUID() },
+      });
+
+      expect(result).toBe('Team instructions');
+      expect(findCollective).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Budget Analysis', ownerType }),
+      );
+      expect(mockSkillActivationService.activateOnThread).toHaveBeenCalledWith(
+        skill.id,
+        thread,
+      );
+      expect(mockFindSkillByName.execute).not.toHaveBeenCalled();
+    },
+  );
 
   function createMockSkill(
     overrides?: Partial<ConstructorParameters<typeof PersonalSkill>[0]>,

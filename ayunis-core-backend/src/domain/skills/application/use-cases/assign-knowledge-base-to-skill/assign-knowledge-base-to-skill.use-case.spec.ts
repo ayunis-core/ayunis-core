@@ -13,6 +13,8 @@ import {
   SkillKnowledgeBaseNotFoundError,
 } from 'src/domain/skills/application/skills.errors';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
 
@@ -98,5 +100,29 @@ describe(AssignKnowledgeBaseToSkillUseCase.name, () => {
         new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
       ),
     ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotFoundError);
+  });
+
+  it('does not attach a personal knowledge base to a team skill', async () => {
+    const { repository, findKnowledgeBase, useCase } = setup(true);
+    const teamSkill = new TeamSkill({
+      teamId: randomUUID(),
+      name: 'Council minutes',
+      shortDescription: '',
+      instructions: '',
+    });
+    const personal = new PersonalKnowledgeBase({
+      userId: randomUUID(),
+      orgId: randomUUID(),
+      name: 'My notes',
+    });
+    repository.findById.mockResolvedValue(teamSkill);
+    findKnowledgeBase.execute.mockResolvedValue({ knowledgeBase: personal });
+
+    await expect(
+      useCase.execute(
+        new AssignKnowledgeBaseToSkillCommand(teamSkill.id, personal.id),
+      ),
+    ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotFoundError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 });

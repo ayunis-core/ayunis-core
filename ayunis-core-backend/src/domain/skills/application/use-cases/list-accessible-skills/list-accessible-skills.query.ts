@@ -1,13 +1,13 @@
-import type { SkillOwner } from 'src/domain/skills/application/models/skill-owner';
+import type { SkillListScope } from 'src/domain/skills/application/models/skill-owner';
 
 export class ListAccessibleSkillsQuery {
-  public readonly owner: SkillOwner;
+  public readonly owner: SkillListScope;
   public readonly search?: string;
   public readonly limit?: number;
   public readonly offset?: number;
 
   constructor(params: {
-    owner: SkillOwner;
+    owner: SkillListScope;
     search?: string;
     limit?: number;
     offset?: number;

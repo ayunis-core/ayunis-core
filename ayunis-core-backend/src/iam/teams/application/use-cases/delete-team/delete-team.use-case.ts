@@ -5,7 +5,9 @@ import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repositor
 import { DeleteTeamCommand } from './delete-team.command';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Transactional } from '@nestjs-cls/transactional';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
+import { TeamDeletionRequestedEvent } from 'src/iam/teams/application/events/team-deletion-requested.event';
 import { getRequiredOrgId } from 'src/common/context/required-context';
 
 @Injectable()
@@ -15,9 +17,9 @@ export class DeleteTeamUseCase {
   constructor(
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @Transactional()
   @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(command: DeleteTeamCommand): Promise<void> {
     const orgId = getRequiredOrgId(this.contextService, command.orgId);
@@ -46,7 +48,16 @@ export class DeleteTeamUseCase {
     // "conversation no longer accessible" disclaimer when the user tries
     // to continue the chat. The history is preserved.
 
+    // Two-phase cleanup: team-owned resources go by FK cascade, but some of
+    // their data does not. Listeners resolve it while the rows still exist.
+    const event = new TeamDeletionRequestedEvent(team.id, team.orgId);
+    await this.eventEmitter.emitAsync(
+      TeamDeletionRequestedEvent.EVENT_NAME,
+      event,
+    );
+
     await this.teamsRepository.delete(command.teamId);
+    await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
 
     this.logger.debug({ teamId: command.teamId }, 'Team deleted successfully');
   }

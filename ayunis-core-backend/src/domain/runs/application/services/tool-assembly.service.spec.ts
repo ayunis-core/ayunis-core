@@ -1,3 +1,5 @@
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { randomUUID } from 'crypto';
@@ -423,6 +425,85 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         ['user__user-skill', activeSkill.id],
         ['workspace__project-skill', projectSkill.id],
       ]),
+    );
+  });
+
+  it('advertises team and org skills under their own prefixes next to a same-named personal skill', async () => {
+    const params = {
+      name: 'Council Minutes',
+      shortDescription: 'Drafts minutes',
+      instructions: 'Summarise.',
+    };
+    const personal = new PersonalSkill({ ...params, userId: randomUUID() });
+    const team = new TeamSkill({ ...params, teamId: randomUUID() });
+    const org = new OrgSkill({ ...params, orgId: randomUUID() });
+    const systemPromptBuild = jest.fn().mockReturnValue('prompt');
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(undefined),
+      systemPromptBuild,
+    });
+
+    await service.buildRunContext(
+      createMockThread(),
+      [personal, team, org],
+      true,
+      false,
+    );
+
+    expect(systemPromptBuild).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skills: [
+          { slug: 'user__council-minutes', description: 'Drafts minutes' },
+          { slug: 'team__council-minutes', description: 'Drafts minutes' },
+          { slug: 'org__council-minutes', description: 'Drafts minutes' },
+        ],
+      }),
+    );
+    const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
+    );
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([
+        ['user__council-minutes', personal.id],
+        ['team__council-minutes', team.id],
+        ['org__council-minutes', org.id],
+      ]),
+    );
+  });
+
+  it('advertises same-named skills of two teams once, for the first skill', async () => {
+    const params = {
+      name: 'Council Minutes',
+      shortDescription: 'Drafts minutes',
+      instructions: 'Summarise.',
+    };
+    const first = new TeamSkill({ ...params, teamId: randomUUID() });
+    const second = new TeamSkill({ ...params, teamId: randomUUID() });
+    const systemPromptBuild = jest.fn().mockReturnValue('prompt');
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(undefined),
+      systemPromptBuild,
+    });
+
+    await service.buildRunContext(
+      createMockThread(),
+      [first, second],
+      true,
+      false,
+    );
+
+    expect(systemPromptBuild).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skills: [
+          { slug: 'team__council-minutes', description: 'Drafts minutes' },
+        ],
+      }),
+    );
+    const editSkillCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) => command.type === ToolType.EDIT_SKILL,
+    );
+    expect(editSkillCall?.[0].context).toEqual(
+      new Map([['team__council-minutes', first.id]]),
     );
   });
 
