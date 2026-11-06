@@ -184,7 +184,7 @@
       "otherModelsHeading": "Other available models",
       "auto": {
         "label": "Auto",
-        "description": "Ayunis Core picks the model with the best balance of performance, speed and usage. If a model is disrupted, Ayunis Core automatically switches to another one.",
+        "description": "Ayunis Core picks the model with the best balance of performance, speed and usage.",
         "hint": "Best balance"
       },
       "max": {

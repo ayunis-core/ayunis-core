@@ -184,7 +184,7 @@
       "otherModelsHeading": "Weitere verfügbare Modelle",
       "auto": {
         "label": "Auto",
-        "description": "Ayunis Core wählt das Modell mit dem besten Verhältnis aus Leistung, Geschwindigkeit und Verbrauch. Bei Störungen weicht Ayunis Core automatisch auf ein anderes Modell aus.",
+        "description": "Ayunis Core wählt das Modell mit dem besten Verhältnis aus Leistung, Geschwindigkeit und Verbrauch.",
         "hint": "Beste Balance"
       },
       "max": {
