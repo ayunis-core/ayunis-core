@@ -3,6 +3,7 @@ import {
   ProviderUnavailableError,
 } from 'src/common/errors/provider.errors';
 import {
+  DocumentConversionTimeoutError,
   DocumentConversionUnavailableError,
   EmptyOcrResultError,
   TooManyPagesError,
@@ -15,26 +16,24 @@ import {
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
 
+type ErrorClass = abstract new (...args: never[]) => unknown;
+
+// Ordered: a subclass must come before its parent (the conversion timeout is
+// an UnprocessableDocumentError but is shown as a timeout, not as unreadable).
+const CLASSIFICATION: ReadonlyArray<[ErrorClass, Code]> = [
+  [TooManyPagesError, Code.DOCUMENT_PAGE_LIMIT_EXCEEDED],
+  [EmptyOcrResultError, Code.DOCUMENT_EMPTY],
+  [EmptyFileDataError, Code.DOCUMENT_EMPTY],
+  [DocumentConversionTimeoutError, Code.PROCESSING_TIMEOUT],
+  [UnprocessableDocumentError, Code.DOCUMENT_UNREADABLE],
+  [ProviderTimeoutError, Code.PROCESSING_TIMEOUT],
+  [SpreadsheetParseTimeoutError, Code.PROCESSING_TIMEOUT],
+  [ProviderUnavailableError, Code.PROCESSING_UNAVAILABLE],
+  [DocumentConversionUnavailableError, Code.PROCESSING_UNAVAILABLE],
+  [StorageUnavailableError, Code.PROCESSING_UNAVAILABLE],
+];
+
 export function classifySourceProcessingError(error: unknown): Code {
-  if (error instanceof TooManyPagesError)
-    return Code.DOCUMENT_PAGE_LIMIT_EXCEEDED;
-  if (
-    error instanceof EmptyOcrResultError ||
-    error instanceof EmptyFileDataError
-  )
-    return Code.DOCUMENT_EMPTY;
-  if (error instanceof UnprocessableDocumentError)
-    return Code.DOCUMENT_UNREADABLE;
-  if (
-    error instanceof ProviderTimeoutError ||
-    error instanceof SpreadsheetParseTimeoutError
-  )
-    return Code.PROCESSING_TIMEOUT;
-  if (
-    error instanceof ProviderUnavailableError ||
-    error instanceof DocumentConversionUnavailableError ||
-    error instanceof StorageUnavailableError
-  )
-    return Code.PROCESSING_UNAVAILABLE;
-  return Code.PROCESSING_FAILED;
+  const match = CLASSIFICATION.find(([type]) => error instanceof type);
+  return match ? match[1] : Code.PROCESSING_FAILED;
 }

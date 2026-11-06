@@ -4,6 +4,7 @@ import {
   EmptyOcrResultError,
   TooManyPagesError,
   UnprocessableDocumentError,
+  DocumentConversionTimeoutError,
   FileRetrieverUnauthorizedError,
   DocumentConversionUnavailableError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
@@ -37,6 +38,7 @@ describe('classifySourceProcessingError', () => {
       Code.PROCESSING_TIMEOUT,
     ],
     [new SpreadsheetParseTimeoutError(60_000), Code.PROCESSING_TIMEOUT],
+    [new DocumentConversionTimeoutError('slow.docx'), Code.PROCESSING_TIMEOUT],
     [
       new ProviderServerError({ provider: 'mistral' }),
       Code.PROCESSING_UNAVAILABLE,

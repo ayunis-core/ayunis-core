@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { getSourceProcessingErrorKey } from '@/widgets/chat-input/lib/source-processing-error';
+import { getSourceProcessingErrorKey } from '@/shared/lib/source-processing-error';
 
 // Types
 import type {
