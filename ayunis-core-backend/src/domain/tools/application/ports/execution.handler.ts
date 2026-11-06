@@ -5,6 +5,7 @@ export interface ToolExecutionContext {
   orgId: UUID;
   threadId: UUID;
   isAnonymous?: boolean;
+  signal?: AbortSignal;
 }
 
 export abstract class ToolExecutionHandler {

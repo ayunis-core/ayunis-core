@@ -7,11 +7,13 @@ import { sendMessage } from "../../src/flows/chat.flow";
 
 let server: Server;
 let documentUrl: string;
+let documentDownloads = 0;
 const marker = `AYC-1348-${randomUUID()}`;
 
 test.beforeAll(async () => {
   const document = createPdf("Municipal building regulations", marker);
   server = createServer((_request, response) => {
+    documentDownloads += 1;
     response.writeHead(200, { "content-type": "application/pdf" });
     response.end(document);
   });
@@ -31,7 +33,7 @@ test.afterAll(async () => {
   });
 });
 
-test("reuses PDF OCR across website reads in a chat run and refreshes on the next run", async ({
+test("downloads and OCRs a website PDF once per chat run and refreshes on the next run", async ({
   page,
   api,
   request,
@@ -67,6 +69,7 @@ test("reuses PDF OCR across website reads in a chat run and refreshes on the nex
     "research-complete::",
   );
   expect(await count()).toBe(1);
+  expect(documentDownloads).toBe(1);
   const persisted = await generatedApi.threadsControllerFindOne(thread.id, {
     api,
   });
@@ -86,4 +89,5 @@ test("reuses PDF OCR across website reads in a chat run and refreshes on the nex
     "research-complete::",
   );
   expect(await count()).toBe(2);
+  expect(documentDownloads).toBe(2);
 });

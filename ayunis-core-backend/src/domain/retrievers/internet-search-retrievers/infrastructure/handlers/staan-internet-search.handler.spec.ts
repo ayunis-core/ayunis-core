@@ -139,4 +139,42 @@ describe('StaanInternetSearchHandler', () => {
 
     await expect(handler.search('q')).rejects.toThrow('status 401');
   });
+
+  it('aborts the request when the caller cancels', async () => {
+    const controller = new AbortController();
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockImplementation(rejectWhenAborted);
+
+    const search = handler.search('rathaus', controller.signal);
+    controller.abort();
+
+    await expect(search).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+
+  it('bounds the request with a 10 second timeout', async () => {
+    const timeout = new AbortController();
+    const timeoutSpy = jest
+      .spyOn(AbortSignal, 'timeout')
+      .mockReturnValue(timeout.signal);
+    jest.spyOn(global, 'fetch').mockImplementation(rejectWhenAborted);
+
+    const search = handler.search('rathaus');
+    timeout.abort(new DOMException('Timed out', 'TimeoutError'));
+
+    await expect(search).rejects.toMatchObject({ name: 'TimeoutError' });
+    expect(timeoutSpy).toHaveBeenCalledWith(10_000);
+  });
 });
+
+function rejectWhenAborted(
+  _url: string | URL | Request,
+  init?: RequestInit,
+): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    init?.signal?.addEventListener('abort', () =>
+      reject(init.signal?.reason as Error),
+    );
+  });
+}

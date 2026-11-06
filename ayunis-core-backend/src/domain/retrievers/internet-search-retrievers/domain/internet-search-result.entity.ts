@@ -6,6 +6,7 @@ export class InternetSearchResult {
   public readonly description: string;
   public readonly type: InternetSearchResultType;
   public readonly pageAge?: string;
+  public readonly extraSnippets?: string[];
 
   constructor(params: {
     title: string;
@@ -13,11 +14,13 @@ export class InternetSearchResult {
     description: string;
     type: InternetSearchResultType;
     pageAge?: string;
+    extraSnippets?: string[];
   }) {
     this.title = params.title;
     this.url = params.url;
     this.description = params.description;
     this.type = params.type;
     this.pageAge = params.pageAge;
+    this.extraSnippets = params.extraSnippets;
   }
 }

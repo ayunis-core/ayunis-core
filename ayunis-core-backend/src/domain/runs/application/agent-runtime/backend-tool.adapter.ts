@@ -104,6 +104,7 @@ export class BackendToolAdapter {
       orgId: ctx.context.get<UUID>('orgId')!,
       threadId: ctx.context.get<UUID>('threadId')!,
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
+      signal: ctx.signal,
     };
     const outcome = await this.runTool(tool, input, context);
     let result = outcome.result;
@@ -163,7 +164,12 @@ export class BackendToolAdapter {
   private async runTool(
     tool: BackendTool,
     input: Record<string, unknown>,
-    context: { orgId: UUID; threadId: UUID; isAnonymous: boolean },
+    context: {
+      orgId: UUID;
+      threadId: UUID;
+      isAnonymous: boolean;
+      signal?: AbortSignal;
+    },
   ): Promise<ToolExecutionOutcome> {
     try {
       const result = await this.executeToolUseCase.execute(

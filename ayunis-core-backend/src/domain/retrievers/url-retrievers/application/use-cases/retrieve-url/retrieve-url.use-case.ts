@@ -1,6 +1,7 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UUID } from 'crypto';
 import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
+import { UrlRetrievalCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/url-retrieval-cache.port';
 import { Injectable, Logger } from '@nestjs/common';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
@@ -34,6 +35,7 @@ export class RetrieveUrlUseCase {
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly pdfExtractionCache: PdfExtractionCachePort,
+    private readonly urlRetrievalCache: UrlRetrievalCachePort,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
@@ -48,6 +50,28 @@ export class RetrieveUrlUseCase {
       new AssertCrawlDomainAccessCommand(command.url, command.orgId),
     );
 
+    // A run reads each URL once: continuation pages and repeated reads reuse
+    // the request-local result. The redirect destination is gated again
+    // because a reused result skipped the per-hop checks of the fetch.
+    const result = await this.urlRetrievalCache.getOrLoad(
+      {
+        orgId: command.orgId,
+        url: command.url,
+        privateDestinationPolicy: command.privateDestinationPolicy,
+      },
+      () => this.fetchAndParse(command),
+    );
+    if (result.url !== command.url) {
+      await this.assertCrawlDomainAccessUseCase.execute(
+        new AssertCrawlDomainAccessCommand(result.url, command.orgId),
+      );
+    }
+    return result;
+  }
+
+  private async fetchAndParse(
+    command: RetrieveUrlCommand,
+  ): Promise<UrlRetrieverResult> {
     try {
       // The infrastructure handler only fetches raw bytes and re-asserts the
       // gate on each redirect hop (see AYC-190). Interpreting the content type

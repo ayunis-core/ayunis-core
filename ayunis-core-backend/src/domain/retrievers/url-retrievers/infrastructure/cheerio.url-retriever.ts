@@ -1,6 +1,7 @@
 import { withAbortSignal } from 'src/common/util/network-address-policy';
 import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
 import { UrlDestinationGuardService } from './url-destination-guard.service';
+import { extractMainContentText } from './html-text-extraction';
 import {
   isPdfLink,
   pdfFileName,
@@ -28,65 +29,6 @@ import { classifyTransportError } from 'src/common/errors/provider-transport-err
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAX_REDIRECTS = 5;
-const NON_CONTENT_ELEMENTS =
-  'script, style, meta, link, noscript, template, iframe, canvas';
-const CONTENT_BOUNDARY = '\u001e';
-const BLOCK_ELEMENTS = [
-  'address',
-  'article',
-  'aside',
-  'blockquote',
-  'details',
-  'dialog',
-  'div',
-  'dl',
-  'dt',
-  'dd',
-  'fieldset',
-  'figcaption',
-  'figure',
-  'footer',
-  'form',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'header',
-  'hr',
-  'li',
-  'main',
-  'nav',
-  'ol',
-  'p',
-  'pre',
-  'section',
-  'summary',
-  'table',
-  'tr',
-  'ul',
-].join(', ');
-
-const normalizeExtractedText = (text: string): string =>
-  text
-    .split(CONTENT_BOUNDARY)
-    .map((block) => block.replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
-    .join('\n');
-
-const extractStructuredBodyText = ($: cheerio.CheerioAPI): string => {
-  $(NON_CONTENT_ELEMENTS).remove();
-  $('br').replaceWith(CONTENT_BOUNDARY);
-  $('td, th').each((_, element) => {
-    $(element).append(' ');
-  });
-  $(BLOCK_ELEMENTS).each((_, element) => {
-    $(element).prepend(CONTENT_BOUNDARY);
-    $(element).append(CONTENT_BOUNDARY);
-  });
-  return normalizeExtractedText($('body').text());
-};
 // Upper bound for a caller-supplied `options.timeout`, so a request-controlled
 // value can never disable the abort timer that bounds the whole fetch.
 const MAX_TIMEOUT_MS = 60_000;
@@ -340,7 +282,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
       const { links, pdfLinks } = this.extractLinks($, url);
 
-      const cleanedText = extractStructuredBodyText($);
+      const cleanedText = extractMainContentText($);
       const websiteTitle = $('title').text();
 
       return new UrlRetrieverResult(

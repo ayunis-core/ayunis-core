@@ -8,8 +8,9 @@ let researchBaseUrl: string;
 
 test.beforeAll(async () => {
   researchServer = createServer((_request, response) => {
+    // ~76,000 characters: above website_content's 60,000-character page.
     const content = Array.from(
-      { length: 300 },
+      { length: 600 },
       (_, index) =>
         `<p>Municipal research line ${index + 1} ${"x".repeat(100)}</p>`,
     ).join("");
@@ -80,7 +81,9 @@ test("completes multi-document and multi-website research with bounded tool resu
     expect(result.truncated).toBe(true);
     expect(result.actualStartLine).toBe(1);
     expect(result.nextPage.startLine).toBeGreaterThan(1);
-    expect(content.result.length).toBeLessThan(7_000);
+    expect(content.result.length).toBeLessThan(
+      content.toolName === "website_content" ? 62_000 : 7_000,
+    );
   }
 });
 

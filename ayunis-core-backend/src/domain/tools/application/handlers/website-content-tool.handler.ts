@@ -49,6 +49,16 @@ interface WebsiteContentResult {
   } | null;
 }
 
+// Continuations repeat the requested URL rather than the post-redirect one,
+// so they hit the run's retrieval cache and read the same snapshot.
+interface WebsiteContentPageRequest {
+  url: string;
+  section: WebsiteContentSection;
+  startLine: number;
+  numLines: number;
+  toolName: string;
+}
+
 @Injectable()
 export class WebsiteContentToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(WebsiteContentToolHandler.name);
@@ -73,13 +83,19 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
         url,
         section = 'content',
         startLine = 1,
-        numLines = this.config.sourceGetText.maxLines,
+        numLines = this.config.websiteContent.maxLines,
       } = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(
         new RetrieveUrlCommand(url, context.orgId),
       );
       return JSON.stringify(
-        this.buildResult(content, section, startLine, numLines, tool.name),
+        this.buildResult(content, {
+          url,
+          section,
+          startLine,
+          numLines,
+          toolName: tool.name,
+        }),
       );
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
@@ -101,11 +117,9 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
 
   private buildResult(
     result: UrlRetrieverResult,
-    section: WebsiteContentSection,
-    startLine: number,
-    numLines: number,
-    toolName: string,
+    request: WebsiteContentPageRequest,
   ): WebsiteContentResult {
+    const { section, startLine, numLines, toolName } = request;
     const linksText = result.links.join('\n');
     const { contentLines, linkLines } = this.countSectionLines(
       result.content,
@@ -118,7 +132,7 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
       text: selectedText,
       startLine,
       numLines,
-      ...this.config.sourceGetText,
+      ...this.config.websiteContent,
     });
     return {
       url: result.url,
@@ -136,14 +150,14 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
       truncationReasons: page.truncationReasons,
       ...this.sectionPayload(section, page.extractedText),
       nextPage: page.nextStartLine
-        ? { url: result.url, section, startLine: page.nextStartLine, numLines }
+        ? { url: request.url, section, startLine: page.nextStartLine, numLines }
         : null,
       paginationHint: page.nextStartLine
         ? `Call website_content again with section "${section}" and startLine ${page.nextStartLine} to continue.`
         : null,
       linksPage:
         section === 'content' && linkLines > 0
-          ? { url: result.url, section: 'links', startLine: 1, numLines }
+          ? { url: request.url, section: 'links', startLine: 1, numLines }
           : null,
     };
   }
@@ -168,7 +182,7 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
         text,
         startLine: 1,
         numLines: 1,
-        ...this.config.sourceGetText,
+        ...this.config.websiteContent,
       }).totalLines;
     return { contentLines: count(content), linkLines: count(links) };
   }

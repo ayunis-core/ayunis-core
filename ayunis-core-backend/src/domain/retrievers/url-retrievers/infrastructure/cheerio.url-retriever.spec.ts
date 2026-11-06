@@ -634,3 +634,185 @@ describe('CheerioUrlRetrieverHandler.parseHtml', () => {
     expect(result.links).toEqual(['https://acme.test/a']);
   });
 });
+
+describe('CheerioUrlRetrieverHandler.parseHtml boilerplate removal', () => {
+  const handler = makeHandler();
+  const pageUrl = 'https://stadt.example.de/abfall';
+  const siteChrome = {
+    header:
+      '<header><a href="/">Stadt Musterstadt</a><nav><a href="/rathaus">Rathaus</a><a href="/buergerservice">Bürgerservice</a></nav></header>',
+    cookieBanner:
+      '<div role="dialog"><p>Wir verwenden Cookies, um unsere Website zu verbessern.</p></div>',
+    footer:
+      '<footer><p>Impressum</p><a href="/datenschutz">Datenschutz</a></footer>',
+  };
+
+  it('extracts only the main element when the page has one', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>',
+        siteChrome.header,
+        '<main><h1>Abfallkalender</h1><p>Die Biotonne wird dienstags geleert.</p></main>',
+        siteChrome.footer,
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Abfallkalender\nDie Biotonne wird dienstags geleert.',
+    );
+  });
+
+  it('keeps the links of removed navigation in the links section', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>',
+        siteChrome.header,
+        '<main><p>Die Biotonne wird dienstags geleert.</p></main>',
+        siteChrome.footer,
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.links).toEqual([
+      'https://stadt.example.de/',
+      'https://stadt.example.de/rathaus',
+      'https://stadt.example.de/buergerservice',
+      'https://stadt.example.de/datenschutz',
+    ]);
+  });
+
+  it('keeps an article header but drops navigation and asides inside the main content', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><main><article>',
+        '<header><h1>Neue Öffnungszeiten</h1><p>Veröffentlicht am 3. März</p></header>',
+        '<nav><a href="/news">Alle Meldungen</a></nav>',
+        '<p>Das Bürgerbüro öffnet montags ab 7 Uhr.</p>',
+        '<aside>Das könnte Sie auch interessieren</aside>',
+        '</article></main></body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Neue Öffnungszeiten\nVeröffentlicht am 3. März\nDas Bürgerbüro öffnet montags ab 7 Uhr.',
+    );
+  });
+
+  it('extracts every top-level article once when the page has no main element', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>',
+        siteChrome.header,
+        '<div class="news">',
+        '<article><h2>Sperrmüll</h2><p>Termine online buchen.</p>',
+        '<article><p>Kommentar: Endlich digital!</p></article></article>',
+        '<article><h2>Grünschnitt</h2><p>Sammelstellen sind geöffnet.</p></article>',
+        '</div>',
+        siteChrome.footer,
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Sperrmüll\nTermine online buchen.\nKommentar: Endlich digital!\nGrünschnitt\nSammelstellen sind geöffnet.',
+    );
+  });
+
+  it('drops navigation, header, footer, aside, forms and dialogs on pages without main content landmarks', () => {
+    const result = handler.parseHtml(
+      [
+        '<body>',
+        siteChrome.header,
+        siteChrome.cookieBanner,
+        '<div id="content"><h1>Abfallkalender</h1><p>Die Biotonne wird dienstags geleert.</p></div>',
+        '<aside><p>Veranstaltungen</p></aside>',
+        '<form><input name="q"><button>Suchen</button></form>',
+        siteChrome.footer,
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Abfallkalender\nDie Biotonne wird dienstags geleert.',
+    );
+  });
+
+  it('keeps a form that wraps the page content, as ASP.NET WebForms pages do', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><form id="aspnetForm">',
+        '<div id="content"><h1>Bauanträge</h1><p>Anträge können digital gestellt werden.</p></div>',
+        '</form></body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Bauanträge\nAnträge können digital gestellt werden.',
+    );
+  });
+
+  it('keeps a WebForms form whose only heading is in its header', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><a href="#inhalt">Zum Inhalt springen</a><form id="aspnetForm">',
+        '<header><h1>Stadt Musterstadt</h1></header>',
+        '<div id="inhalt"><p>Anträge können digital gestellt werden.</p></div>',
+        '<footer><p>Impressum</p></footer>',
+        '</form></body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Zum Inhalt springen\nAnträge können digital gestellt werden.',
+    );
+  });
+
+  it('keeps a form that wraps paragraphs without headings', () => {
+    const result = handler.parseHtml(
+      [
+        '<body><header><h1>Stadt Musterstadt</h1></header>',
+        '<form id="aspnetForm"><div><p>Die Bürgersprechstunde findet donnerstags statt.</p></div></form>',
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      'Die Bürgersprechstunde findet donnerstags statt.',
+    );
+  });
+
+  it('falls back to the page text when the article is only a small part of it', () => {
+    const body = 'Die Biotonne wird dienstags geleert. '.repeat(10).trim();
+    const result = handler.parseHtml(
+      [
+        '<body>',
+        `<div id="content"><h1>Abfallkalender</h1><p>${body}</p></div>`,
+        '<div class="teaser"><article><p>Stadtfest am Samstag</p></article></div>',
+        '</body>',
+      ].join(''),
+      pageUrl,
+    );
+
+    expect(result.content).toBe(
+      `Abfallkalender\n${body}\nStadtfest am Samstag`,
+    );
+  });
+
+  it('falls back to the full body text when only boilerplate elements carry text', () => {
+    const result = handler.parseHtml(
+      '<body><header><h1>Stadt Musterstadt</h1></header><footer><p>Rathausplatz 1</p></footer></body>',
+      pageUrl,
+    );
+
+    expect(result.content).toBe('Stadt Musterstadt\nRathausplatz 1');
+  });
+});

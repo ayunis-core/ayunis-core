@@ -15,7 +15,7 @@ export class SearchWebUseCase {
     try {
       this.logger.debug({ input: command.query }, 'Searching web');
 
-      return this.internetSearchHandler.search(command.query);
+      return this.internetSearchHandler.search(command.query, command.signal);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

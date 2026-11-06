@@ -1,5 +1,6 @@
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/pdf-extraction-cache.port';
+import { UrlRetrievalCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/url-retrieval-cache.port';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -62,6 +63,12 @@ describe('RetrieveUrlUseCase', () => {
               _raw: unknown,
               load: () => Promise<unknown>,
             ) => load(),
+          },
+        },
+        {
+          provide: UrlRetrievalCachePort,
+          useValue: {
+            getOrLoad: (_key: unknown, load: () => Promise<unknown>) => load(),
           },
         },
         { provide: UrlRetrieverHandler, useValue: mockHandler },

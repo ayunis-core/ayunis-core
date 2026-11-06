@@ -19,6 +19,8 @@ import {
   type UrlRetrieverInput,
 } from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
 import { RequestPdfExtractionCacheService } from 'src/domain/retrievers/url-retrievers/infrastructure/cache/request-pdf-extraction-cache.service';
+import { UrlRetrievalCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/url-retrieval-cache.port';
+import { RequestUrlRetrievalCacheService } from 'src/domain/retrievers/url-retrievers/infrastructure/cache/request-url-retrieval-cache.service';
 import { UrlRetrieverHttpError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { RetrieveUrlUseCase } from './retrieve-url.use-case';
 import { RetrieveUrlCommand } from './retrieve-url.command';
@@ -56,6 +58,10 @@ async function setup() {
       {
         provide: PdfExtractionCachePort,
         useClass: RequestPdfExtractionCacheService,
+      },
+      {
+        provide: UrlRetrievalCachePort,
+        useClass: RequestUrlRetrievalCacheService,
       },
       { provide: CrawlDomainGrantRepository, useValue: { findByDomain } },
       { provide: UrlRetrieverHandler, useValue: { fetch } },
@@ -107,11 +113,13 @@ describe('PDF extraction reuse and retrieval access', () => {
     await fixture.module.close();
   });
 
-  it('does not serve old content after a failed fetch and document recreation', async () => {
+  it('does not serve old content after a failed fetch and document recreation in a later request', async () => {
     const fixture = await setup();
     const { cls, useCase, extract, fetch } = fixture;
-    await cls.runWith(owner, async () => {
-      await useCase.execute(new RetrieveUrlCommand(url, owner.orgId));
+    await cls.runWith({ ...owner }, () =>
+      useCase.execute(new RetrieveUrlCommand(url, owner.orgId)),
+    );
+    await cls.runWith({ ...owner }, async () => {
       fetch.mockRejectedValueOnce(new UrlRetrieverHttpError(url, 404));
       await expect(
         useCase.execute(new RetrieveUrlCommand(url, owner.orgId)),
