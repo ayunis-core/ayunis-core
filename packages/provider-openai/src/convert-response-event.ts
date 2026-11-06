@@ -13,10 +13,12 @@ import type {
 
 export interface ResponseConversionState {
   reasoningItems: ResponseReasoningItem[];
+  hasReasoningSummary: boolean;
 }
 
 export const createResponseConversionState = (): ResponseConversionState => ({
   reasoningItems: [],
+  hasReasoningSummary: false,
 });
 
 export const convertResponseEvent = (
@@ -24,7 +26,7 @@ export const convertResponseEvent = (
   codec: ToolNameCodec,
   state: ResponseConversionState = createResponseConversionState(),
 ): ProviderChunk | null => {
-  const delta = convertDeltaEvent(event);
+  const delta = convertDeltaEvent(event) ?? convertSummaryEvent(event, state);
   if (delta) return delta;
   if (event.type === 'response.output_item.done') {
     captureReasoningItem(event.item, state);
@@ -86,6 +88,20 @@ const convertDeltaEvent = (
       },
     ],
   };
+};
+
+// Summary text is only displayed; the encrypted reasoning item, not the
+// summary, is what is replayed to the model on later turns.
+const convertSummaryEvent = (
+  event: ResponseStreamEvent,
+  state: ResponseConversionState,
+): ProviderChunk | null => {
+  if (event.type === 'response.reasoning_summary_part.added') {
+    return state.hasReasoningSummary ? { thinkingDelta: '\n\n' } : null;
+  }
+  if (event.type !== 'response.reasoning_summary_text.delta') return null;
+  state.hasReasoningSummary = true;
+  return { thinkingDelta: event.delta };
 };
 
 const attachPendingReasoning = (

@@ -158,6 +158,40 @@ describe('MockInferenceProviderFactory runtime provider', () => {
     });
   });
 
+  it('names a tool and holds its arguments until the run is cancelled', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const controller = new AbortController();
+    const iterator = provider
+      .stream({
+        ...request,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'E2E trigger slow tool preparation' },
+            ],
+          },
+        ],
+        signal: controller.signal,
+      })
+      [Symbol.asyncIterator]();
+
+    const first = await iterator.next();
+    expect(first.value).toEqual({
+      toolCallDeltas: [
+        { index: 0, id: 'mock-tool-preparation', name: 'create_document' },
+      ],
+    });
+    const held = iterator.next();
+    const pending = Symbol('pending');
+    await expect(
+      Promise.race([held, new Promise((r) => setImmediate(() => r(pending)))]),
+    ).resolves.toBe(pending);
+
+    controller.abort();
+    expect((await held).value).toMatchObject({ finishReason: 'tool_calls' });
+  });
+
   it('requests code execution with the source IDs from the authorization E2E trigger', async () => {
     const provider = new MockInferenceProviderFactory().resolveProvider(model);
     const sourceIds = [sourceId, chunkId];

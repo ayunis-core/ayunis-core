@@ -32,6 +32,17 @@ export interface ToolCallSnapshot {
   status: 'streaming' | 'invalid';
 }
 
+/**
+ * Names a tool call as soon as the provider does, before its arguments are
+ * complete. Unlike snapshots it is not visible output: it is emitted even
+ * while snapshots are held back, and the call may still be retried.
+ */
+export interface ToolCallStart {
+  index: number;
+  id: string | null;
+  name: string;
+}
+
 export type ModelCallTrigger =
   | 'initial'
   | 'provider_retry'
@@ -52,6 +63,7 @@ export type RunEventPayload =
   | { type: 'run_start'; maxIterations: number }
   | { type: 'text_delta'; delta: string }
   | { type: 'thinking_delta'; delta: string }
+  | { type: 'tool_call_started'; toolCall: ToolCallStart }
   | { type: 'tool_call_snapshot'; toolCall: ToolCallSnapshot }
   | { type: 'tool_call'; toolCall: ToolCallSummary }
   | { type: 'assistant_message'; message: AssistantMessage; usage?: Usage }

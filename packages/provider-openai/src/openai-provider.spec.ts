@@ -153,6 +153,39 @@ describe('azure', () => {
     ]);
   });
 
+  it('requests reasoning summaries when configured', async () => {
+    responsesCreateMock.mockReturnValue(
+      fakeStream(
+        [
+          {
+            type: 'response.completed',
+            response: { output: [], usage: undefined },
+          },
+        ],
+        () => {},
+      ),
+    );
+    const provider = azure({
+      apiKey: 'azure-test',
+      endpoint: 'https://my-resource.openai.azure.com',
+      model: 'gpt-5.4',
+      reasoningEffort: 'low',
+      reasoningSummary: 'auto',
+    });
+
+    const out: ProviderChunk[] = [];
+    for await (const chunk of provider.stream(makeRequest())) out.push(chunk);
+
+    expect(out).toEqual([{ finishReason: 'stop' }]);
+    expect(responsesCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reasoning: { effort: 'low', summary: 'auto' },
+        include: ['reasoning.encrypted_content'],
+      }),
+      undefined,
+    );
+  });
+
   it('omits tool and reasoning options when they are unused', async () => {
     responsesCreateMock.mockReturnValue(
       fakeStream(

@@ -44,3 +44,16 @@ export function* toolCallSnapshotEvents(
     yield { type: 'tool_call_snapshot', toolCall };
   }
 }
+
+/** Names each call once, as soon as the provider does. */
+export function* toolCallStartedEvents(
+  call: { suppressSnapshots: boolean; startedToolCalls: Set<number> },
+  snapshots: readonly ToolCallSnapshot[],
+): Generator<RunEventPayload> {
+  if (call.suppressSnapshots) return;
+  for (const { index, id, name } of snapshots) {
+    if (!name?.trim() || call.startedToolCalls.has(index)) continue;
+    call.startedToolCalls.add(index);
+    yield { type: 'tool_call_started', toolCall: { index, id, name } };
+  }
+}

@@ -68,6 +68,7 @@ export type {
   RunStatus,
   TerminalModelCallInfo,
   ToolCallSnapshot,
+  ToolCallStart,
   ToolCallSummary,
 } from './contracts/event';
 export type {

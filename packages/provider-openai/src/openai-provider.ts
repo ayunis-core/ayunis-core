@@ -58,6 +58,8 @@ export interface AzureProviderOptions {
   /** Underlying OpenAI model id when the deployment name is an alias. */
   underlyingModel?: string;
   reasoningEffort?: 'low' | 'medium' | 'high' | 'xhigh';
+  /** Streams a summary of the reasoning as thinking; needs `reasoningEffort`. */
+  reasoningSummary?: 'auto' | 'concise' | 'detailed';
   /** SDK retries are for direct non-streaming calls only. Streaming hosts must pass 0. */
   maxRetries?: number;
   /** Per-attempt timeout in ms until the response starts. Default: 120s. */
@@ -146,8 +148,7 @@ const createResponsesProvider = (
 ): ModelProvider => ({
   name: `azure:${options.model}`,
   tokenEstimator: openAITokens(options.underlyingModel ?? options.model),
-  stream: (request) =>
-    streamResponses(client, options.model, options.reasoningEffort, request),
+  stream: (request) => streamResponses(client, options, request),
 });
 
 const createProvider = (
@@ -196,12 +197,11 @@ async function* streamChat(
 
 async function* streamResponses(
   client: OpenAI,
-  model: string,
-  reasoningEffort: AzureProviderOptions['reasoningEffort'],
+  options: AzureProviderOptions,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
-  const params = buildResponseParams(model, reasoningEffort, request, codec);
+  const params = buildResponseParams(options, request, codec);
   const stream = await createResponsesStream(client, params, request.signal);
   const conversionState = createResponseConversionState();
   const normalizedStream = normalizeProviderStreamErrors(stream, {
@@ -259,14 +259,13 @@ const createResponsesStream = async (
 };
 
 const buildResponseParams = (
-  model: string,
-  reasoningEffort: AzureProviderOptions['reasoningEffort'],
+  options: AzureProviderOptions,
   request: ProviderRequest,
   codec: ToolNameCodec,
 ): ResponseCreateParamsStreaming => {
   const hasTools = request.tools.length > 0;
   return {
-    model,
+    model: options.model,
     instructions: request.instructions,
     input: convertResponseInput(request.messages, codec),
     ...(hasTools
@@ -277,16 +276,25 @@ const buildResponseParams = (
           tool_choice: convertResponseToolChoice(request.toolChoice, codec),
         }
       : {}),
-    ...(reasoningEffort
-      ? {
-          reasoning: { effort: reasoningEffort },
-          include: ['reasoning.encrypted_content' as const],
-        }
-      : {}),
+    ...buildReasoningParams(options),
     store: false,
     stream: true,
   };
 };
+
+const buildReasoningParams = ({
+  reasoningEffort,
+  reasoningSummary,
+}: AzureProviderOptions): Partial<ResponseCreateParamsStreaming> =>
+  reasoningEffort
+    ? {
+        reasoning: {
+          effort: reasoningEffort,
+          ...(reasoningSummary ? { summary: reasoningSummary } : {}),
+        },
+        include: ['reasoning.encrypted_content'],
+      }
+    : {};
 
 const buildParams = (
   model: string,

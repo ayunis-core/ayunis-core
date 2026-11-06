@@ -100,7 +100,11 @@ changes the request may not inherit either; a child passes its own list.
 
 The runtime never retries after text, thinking, or tool-call snapshots have
 been emitted, after cancellation, or after a critical terminal hook failure.
-Usage and finish metadata are not visible output. Hook-emitted custom events do
+Usage and finish metadata are not visible output. Neither is
+`tool_call_started`, which names each tool call once (index, id, name) as soon
+as the provider does, while its snapshots may still be held back; the call can
+still be retried, so a consumer showing it must let the retry's output replace
+it. The tool-disabled fallback emits none. Hook-emitted custom events do
 not make provider replay unsafe; hooks that emit call-local events must make
 them idempotent. The internal idle-watchdog abort carries the stable
 `MODEL_CALL_IDLE_TIMEOUT` code so telemetry can suppress that raw control

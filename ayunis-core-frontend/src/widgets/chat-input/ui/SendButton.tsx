@@ -36,6 +36,7 @@ export function SendButton({
               className={cn(
                 'chat-input-send-button chat-input-send-button--stop rounded-full',
               )}
+              data-testid="cancel"
               onClick={onCancel}
               aria-label={t('chatInput.cancelTooltip')}
             >

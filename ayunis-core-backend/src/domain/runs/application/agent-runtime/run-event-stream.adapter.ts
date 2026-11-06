@@ -1,6 +1,10 @@
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
+import type {
+  RunEvent,
+  ToolCallSnapshot,
+  ToolCallStart,
+} from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
@@ -47,6 +51,12 @@ interface StreamingTurn {
   text: string;
   thinking: string;
   toolCalls: Map<number, ToolCallSnapshot>;
+  /**
+   * Calls the provider has named whose snapshots the runtime still holds
+   * back. The attempt may be retried, so the first text or thinking (which
+   * reveals every held-back snapshot of the attempt) drops them.
+   */
+  startedToolCalls: Map<number, ToolCallSnapshot>;
 }
 
 export interface RunEventStreamOptions {
@@ -175,12 +185,23 @@ class AssistantTurnAccumulator {
   /** Folds a streaming event into the turn; false for any other event. */
   accumulate(event: RunEvent): boolean {
     if (event.type === 'thinking_delta') {
-      this.ensureTurn(event.runId).thinking += event.delta;
+      const turn = this.ensureTurn(event.runId);
+      turn.thinking += event.delta;
+      turn.startedToolCalls.clear();
     } else if (event.type === 'text_delta') {
-      this.ensureTurn(event.runId).text += event.delta;
+      const turn = this.ensureTurn(event.runId);
+      turn.text += event.delta;
+      turn.startedToolCalls.clear();
     } else if (event.type === 'tool_call_snapshot') {
       const turn = this.ensureTurn(event.runId);
       turn.toolCalls.set(event.toolCall.index, event.toolCall);
+      turn.startedToolCalls.delete(event.toolCall.index);
+    } else if (event.type === 'tool_call_started') {
+      const turn = this.ensureTurn(event.runId);
+      turn.startedToolCalls.set(
+        event.toolCall.index,
+        toPlaceholderSnapshot(event.toolCall),
+      );
     } else {
       return false;
     }
@@ -220,6 +241,7 @@ class AssistantTurnAccumulator {
       text: '',
       thinking: '',
       toolCalls: new Map(),
+      startedToolCalls: new Map(),
     };
     return this.turn;
   }
@@ -296,10 +318,20 @@ function buildStreamingMessage(
   if (turn.text) {
     content.push(new TextMessageContent(turn.text));
   }
-  for (const [, call] of [...turn.toolCalls].sort(([a], [b]) => a - b)) {
+  const toolCalls = new Map([...turn.startedToolCalls, ...turn.toolCalls]);
+  for (const [, call] of [...toolCalls].sort(([a], [b]) => a - b)) {
     content.push(toStreamingToolUseContent(call, integrations));
   }
   return new AssistantMessage({ id: turn.id, threadId, content });
+}
+
+function toPlaceholderSnapshot(start: ToolCallStart): ToolCallSnapshot {
+  return {
+    ...start,
+    argumentsJson: '',
+    input: null,
+    status: 'streaming',
+  };
 }
 
 function appendInvalidToolCalls(

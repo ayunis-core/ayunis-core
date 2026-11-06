@@ -29,6 +29,7 @@ import {
   hasToolUse,
   openIterator,
   toolCallSnapshotEvents,
+  toolCallStartedEvents,
 } from './model-call-helpers';
 import { IdleTimeoutError, type ModelCallScope } from './model-call-scope';
 import type { ModelCallMode } from './request-snapshot';
@@ -102,6 +103,7 @@ const collectParams = (
   accumulator: execution.accumulator,
   scope: params.scope,
   bufferedSnapshots: execution.bufferedSnapshots,
+  startedToolCalls: new Set(),
   markVisible: () => {
     execution.visibleOutput = true;
   },
@@ -160,6 +162,7 @@ interface CollectParams {
   accumulator: ChunkAccumulator;
   scope: ModelCallScope;
   bufferedSnapshots: RunEventPayload[];
+  startedToolCalls: Set<number>;
   markVisible: () => void;
   isVisible: () => boolean;
   markConsumptionStarted: () => void;
@@ -181,6 +184,7 @@ async function* collectChunks(
     params.markConsumptionStarted();
     const snapshots = params.accumulator.accept(next.value);
     yield* contentEvents(params, next.value);
+    yield* toolCallStartedEvents(params, snapshots);
     yield* snapshotEvents(params, snapshots);
   }
 }
