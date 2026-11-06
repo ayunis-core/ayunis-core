@@ -46,6 +46,7 @@ export class DeleteShareUseCase {
       await this.sharePermissionService.requireSharePermission(
         share.entityType,
         share.scope.scopeType,
+        share.scope instanceof TeamShareScope ? share.scope.teamId : undefined,
       );
 
       await this.repository.delete(share);

@@ -4422,6 +4422,7 @@
     },
     "/teams": {
       "get": {
+        "description": "Organisation-wide team managers get every team in the organisation; anyone else gets the teams their team role lets them manage.",
         "operationId": "TeamsController_listTeams",
         "parameters": [],
         "responses": {
@@ -4441,14 +4442,11 @@
           "401": {
             "description": "User is not authenticated"
           },
-          "403": {
-            "description": "User is not authorized to view teams"
-          },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "List all teams for the current organization",
+        "summary": "List the teams the current user may manage",
         "tags": ["teams"]
       },
       "post": {
@@ -4507,7 +4505,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TeamResponseDto"
+                    "$ref": "#/components/schemas/MyTeamResponseDto"
                   }
                 }
               }
@@ -4649,9 +4647,44 @@
         "tags": ["teams"]
       }
     },
+    "/teams/{id}/role-permissions": {
+      "get": {
+        "operationId": "TeamsController_getTeamRolePermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamRolePermissionsResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed to manage members"
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        },
+        "summary": "What each team role grants within a team",
+        "tags": ["teams"]
+      }
+    },
     "/teams/{id}/members": {
       "get": {
-        "operationId": "TeamsController_listTeamMembers",
+        "operationId": "TeamMembersController_listTeamMembers",
         "parameters": [
           {
             "name": "id",
@@ -4709,7 +4742,7 @@
         "tags": ["teams"]
       },
       "post": {
-        "operationId": "TeamsController_addTeamMember",
+        "operationId": "TeamMembersController_addTeamMember",
         "parameters": [
           {
             "name": "id",
@@ -4764,7 +4797,7 @@
     "/teams/{id}/members/bulk": {
       "post": {
         "description": "Adds every listed user. Users already in the team, not found, or not in the org are skipped; the response holds only the members added.",
-        "operationId": "TeamsController_bulkAddTeamMembers",
+        "operationId": "TeamMembersController_bulkAddTeamMembers",
         "parameters": [
           {
             "name": "id",
@@ -4806,7 +4839,7 @@
     },
     "/teams/{id}/members/{userId}": {
       "delete": {
-        "operationId": "TeamsController_removeTeamMember",
+        "operationId": "TeamMembersController_removeTeamMember",
         "parameters": [
           {
             "name": "id",
@@ -4843,6 +4876,63 @@
           }
         },
         "summary": "Remove a user from a team",
+        "tags": ["teams"]
+      },
+      "patch": {
+        "operationId": "TeamMembersController_updateTeamMemberRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamMemberRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMemberResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to change team roles"
+          },
+          "404": {
+            "description": "Team not found or user is not a member of the team"
+          },
+          "409": {
+            "description": "The change would leave the team without an admin"
+          }
+        },
+        "summary": "Change a member's role within a team",
         "tags": ["teams"]
       }
     },
@@ -16493,6 +16583,120 @@
           "modelOverrideEnabled"
         ]
       },
+      "MyTeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "The organization ID the team belongs to",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was created",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was last updated",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "modelOverrideEnabled": {
+            "type": "boolean",
+            "description": "Whether model access override is enabled for this team",
+            "example": false
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "The number of members in the team. Only populated by the admin list endpoint (GET /teams).",
+            "example": 5
+          },
+          "role": {
+            "type": "string",
+            "description": "The current user's role within the team",
+            "enum": ["admin", "manager", "user"],
+            "example": "user"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "The current user's effective permissions in this team: those of their organisation role plus those of their team role",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
+                "manage_knowledge_bases",
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "orgId",
+          "createdAt",
+          "updatedAt",
+          "modelOverrideEnabled",
+          "role",
+          "permissions"
+        ]
+      },
+      "TeamRolePermissionSetDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["admin", "manager", "user"]
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Team-scoped permissions this role grants within the team",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
+                "manage_knowledge_bases",
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org"
+              ]
+            }
+          }
+        },
+        "required": ["role", "permissions"]
+      },
+      "TeamRolePermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamRolePermissionSetDto"
+            }
+          }
+        },
+        "required": ["roles"]
+      },
       "TeamMemberResponseDto": {
         "type": "object",
         "properties": {
@@ -16522,6 +16726,12 @@
             "enum": ["admin", "manager", "user"],
             "example": "user"
           },
+          "role": {
+            "type": "string",
+            "description": "The role of the member within the team",
+            "enum": ["admin", "manager", "user"],
+            "example": "user"
+          },
           "joinedAt": {
             "format": "date-time",
             "type": "string",
@@ -16535,6 +16745,7 @@
           "userName",
           "userEmail",
           "userRole",
+          "role",
           "joinedAt"
         ]
       },
@@ -16586,6 +16797,18 @@
             "default": 0
           }
         }
+      },
+      "UpdateTeamMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "The role of the member within the team",
+            "enum": ["admin", "manager", "user"],
+            "example": "manager"
+          }
+        },
+        "required": ["role"]
       },
       "BulkAddTeamMembersDto": {
         "type": "object",

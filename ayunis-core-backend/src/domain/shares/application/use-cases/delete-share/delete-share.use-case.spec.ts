@@ -234,9 +234,10 @@ describe('DeleteShareUseCase', () => {
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
   it('should require the permission matching the stored share scope', async () => {
+    const teamId = randomUUID();
     const share = new SkillShare({
       skillId: randomUUID(),
-      scope: new TeamShareScope({ teamId: randomUUID() }),
+      scope: new TeamShareScope({ teamId }),
       ownerId: mockUserId,
     });
 
@@ -248,6 +249,7 @@ describe('DeleteShareUseCase', () => {
     expect(sharePermissionService.requireSharePermission).toHaveBeenCalledWith(
       SharedEntityType.SKILL,
       ShareScopeType.TEAM,
+      teamId,
     );
     expect(repository.delete).toHaveBeenCalledWith(share);
   });
@@ -271,6 +273,7 @@ describe('DeleteShareUseCase', () => {
     expect(sharePermissionService.requireSharePermission).toHaveBeenCalledWith(
       SharedEntityType.SKILL,
       ShareScopeType.ORG,
+      undefined,
     );
     expect(repository.delete).not.toHaveBeenCalled();
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();

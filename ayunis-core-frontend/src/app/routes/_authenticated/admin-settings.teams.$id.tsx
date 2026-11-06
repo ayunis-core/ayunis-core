@@ -4,8 +4,8 @@ import { TeamDetailPage } from '@/pages/admin-settings/team-detail';
 import {
   teamsControllerGetTeam,
   getTeamsControllerGetTeamQueryKey,
-  teamsControllerListTeamMembers,
-  getTeamsControllerListTeamMembersQueryKey,
+  teamMembersControllerListTeamMembers,
+  getTeamMembersControllerListTeamMembersQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 const TEAM_MEMBERS_PER_PAGE = 50;
@@ -32,12 +32,12 @@ export const Route = createFileRoute(
         queryFn: () => teamsControllerGetTeam(id),
       }),
       queryClient.query({
-        queryKey: getTeamsControllerListTeamMembersQueryKey(id, {
+        queryKey: getTeamMembersControllerListTeamMembersQueryKey(id, {
           limit: TEAM_MEMBERS_PER_PAGE,
           offset,
         }),
         queryFn: () =>
-          teamsControllerListTeamMembers(id, {
+          teamMembersControllerListTeamMembers(id, {
             limit: TEAM_MEMBERS_PER_PAGE,
             offset,
           }),

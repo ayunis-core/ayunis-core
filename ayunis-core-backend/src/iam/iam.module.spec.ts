@@ -6,6 +6,7 @@ import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
 import { RolesGuard } from './authorization/application/guards/roles.guard';
 import { PermissionsGuard } from './authorization/application/guards/permissions.guard';
+import { TeamPermissionsGuard } from './teams/application/guards/team-permissions.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
@@ -54,6 +55,7 @@ describe('IamModule global guard order', () => {
       EmailConfirmGuard,
       RolesGuard,
       PermissionsGuard,
+      TeamPermissionsGuard,
       SystemRolesGuard,
       AddonGuard,
       SubscriptionGuard,

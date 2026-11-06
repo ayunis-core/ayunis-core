@@ -3,6 +3,7 @@ import { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { TeamRecord } from './team.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @Entity({ name: 'team_members' })
 @Index(['teamId'])
@@ -21,5 +22,8 @@ export class TeamMemberRecord extends BaseRecord {
 
   @ManyToOne(() => UserRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: UserRecord;
+  user?: UserRecord;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 }
