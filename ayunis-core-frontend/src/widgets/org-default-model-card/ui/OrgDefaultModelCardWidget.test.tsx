@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ModelWithConfigResponseDto } from '@/shared/api';
@@ -5,6 +6,24 @@ import { OrgDefaultModelCardWidget } from './OrgDefaultModelCardWidget';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('@ayunis/ui/hooks/use-mobile', () => ({
+  useIsMobile: () => false,
+}));
+
+vi.mock('@/widgets/tooltip-if/ui/TooltipIf', () => ({
+  default: ({
+    condition,
+    children,
+  }: {
+    condition: boolean;
+    children: ReactNode;
+  }) => (
+    <div data-testid="default-model-tooltip" data-active={condition}>
+      {children}
+    </div>
+  ),
 }));
 
 const defaultModel = {
@@ -17,10 +36,13 @@ const defaultModel = {
   isDefault: true,
 } as ModelWithConfigResponseDto;
 
-function renderCard(modeIsLoading: boolean) {
+function renderCard(
+  modeIsLoading: boolean,
+  models: ModelWithConfigResponseDto[] = [defaultModel],
+) {
   render(
     <OrgDefaultModelCardWidget
-      models={[defaultModel]}
+      models={models}
       isLoading={false}
       isSaving={false}
       onDefaultModelChange={vi.fn()}
@@ -49,5 +71,19 @@ describe('OrgDefaultModelCardWidget', () => {
   it('shows the model default once no mode default is set', () => {
     const trigger = renderCard(false);
     expect(trigger.textContent).toContain('Mistral Large');
+  });
+
+  it('keeps unavailable modes inspectable when no models are enabled', () => {
+    const trigger = renderCard(false, []);
+
+    expect(trigger).toHaveProperty('disabled', false);
+  });
+
+  it('does not cover the inspectable empty menu with a disabled-state tooltip', () => {
+    renderCard(false, []);
+
+    expect(
+      screen.getByTestId('default-model-tooltip').getAttribute('data-active'),
+    ).toBe('false');
   });
 });

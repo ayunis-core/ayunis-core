@@ -23,6 +23,7 @@ import {
   stripProviderSuffix,
   type ModelMode,
 } from '@/widgets/model-select-options';
+import { useIsMobile } from '@ayunis/ui/hooks/use-mobile';
 import { useModelModes } from '@/features/useModelModes';
 import { useHoverCard } from '@/widgets/chat-input/hooks/useHoverCard';
 import { MenuHoverCard } from './MenuHoverCard';
@@ -58,6 +59,7 @@ export function ModelSelectorMenu({
   isAnonymous,
   onSelect,
 }: Readonly<ModelSelectorMenuProps>) {
+  const isMobile = useIsMobile();
   const { t } = useTranslation('common');
   const modeCard = useHoverCard<ModelMode>();
   const modelCard = useHoverCard<Model>();
@@ -132,6 +134,7 @@ export function ModelSelectorMenu({
                     mode={mode}
                     label={t(`models.modes.${mode}.label`)}
                     className="gap-2"
+                    withShimmer
                   />
                   <ItemMeta className="max-mode-item__hint">
                     {t(`models.modes.${mode}.hint`)}
@@ -146,7 +149,7 @@ export function ModelSelectorMenu({
           <DropdownMenuSeparator />
         </>
       )}
-      {availableModes.length > 0 ? (
+      {availableModes.length > 0 && !isMobile ? (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger
             className="cursor-pointer"
@@ -155,7 +158,10 @@ export function ModelSelectorMenu({
           >
             {t('models.modes.moreModels')}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="min-w-[260px]">
+          <DropdownMenuSubContent
+            collisionPadding={8}
+            className="max-h-(--radix-dropdown-menu-content-available-height) min-w-[260px] overflow-auto"
+          >
             {modelList}
           </DropdownMenuSubContent>
         </DropdownMenuSub>

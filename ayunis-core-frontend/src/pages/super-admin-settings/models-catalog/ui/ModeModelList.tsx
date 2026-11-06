@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -30,7 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import { ItemGroup, ItemSeparator } from '@ayunis/ui/components/item';
+import { ItemGroup } from '@ayunis/ui/components/item';
 import type { LanguageModelResponseDto } from '@/shared/api';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 import type { ModelMode } from '@/widgets/model-select-options';
@@ -148,18 +147,16 @@ export function ModeModelList({
                 items={visibleIds}
                 strategy={verticalListSortingStrategy}
               >
-                <ItemGroup>
+                <ItemGroup className="gap-2">
                   {rankedModels.map((model, index) => (
-                    <Fragment key={model.id}>
-                      <ModeModelRow
-                        model={model}
-                        position={index + 1}
-                        isEnabled={enabledById.get(model.id) ?? true}
-                        onToggle={handleToggle}
-                        onRemove={handleRemove}
-                      />
-                      {index < rankedModels.length - 1 && <ItemSeparator />}
-                    </Fragment>
+                    <ModeModelRow
+                      key={model.id}
+                      model={model}
+                      position={index + 1}
+                      isEnabled={enabledById.get(model.id) ?? true}
+                      onToggle={handleToggle}
+                      onRemove={handleRemove}
+                    />
                   ))}
                 </ItemGroup>
               </SortableContext>
