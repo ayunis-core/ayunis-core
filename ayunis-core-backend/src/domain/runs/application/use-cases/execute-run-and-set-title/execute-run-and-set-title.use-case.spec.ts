@@ -175,6 +175,30 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     );
   });
 
+  it('runs the web chat with the chat profile', async () => {
+    executeRunUseCase.execute.mockResolvedValue(
+      (async function* (): AsyncGenerator<Message> {
+        for (const message of [] as Message[]) {
+          yield message;
+        }
+      })(),
+    );
+
+    await drain(
+      useCase.execute(
+        new ExecuteRunAndSetTitleCommand({
+          threadId,
+          input: new RunUserInput('Wann ist die Bürgersprechstunde?', []),
+          streaming: true,
+        }),
+      ),
+    );
+
+    expect(executeRunUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ profile: { id: 'chat' } }),
+    );
+  });
+
   describe('first-run title', () => {
     function makeTitledThread(): Thread {
       return {

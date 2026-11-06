@@ -54,7 +54,6 @@ import {
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import type { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
-import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
@@ -75,7 +74,11 @@ import {
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
 } from 'src/domain/runs/application/runs.errors';
-import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
+import { createSkillActivationHook } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
+import type { RunProfile } from 'src/domain/runs/application/run-profiles/run-profile';
+import type { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
@@ -113,6 +116,8 @@ interface Harness {
   anonymize: jest.Mock;
   activateOnThread: jest.Mock;
   workspaceContextFetch: jest.Mock;
+  profileContribute: jest.Mock;
+  resolveProfile: jest.Mock;
   createUser: jest.Mock;
   provider: MockProvider;
   providerSignal: () => AbortSignal | undefined;
@@ -211,23 +216,28 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     collect: jest.fn(),
     collectCritical: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<CollectUsageAsyncService>;
-  const initialRunContext = {
+  const profileContribute = jest.fn().mockResolvedValue({
     tools: overrides.backendTools ?? [],
-    instructions: 'system prompt',
-  };
-  const buildRunContext = jest.fn().mockResolvedValue(initialRunContext);
+    hooks: [createSkillActivationHook],
+  });
   if (overrides.rebuiltBackendTools) {
-    buildRunContext
-      .mockResolvedValueOnce(initialRunContext)
-      .mockResolvedValueOnce({
-        tools: overrides.rebuiltBackendTools,
-        instructions: 'activated skill prompt',
-      });
+    profileContribute.mockResolvedValueOnce({
+      tools: overrides.backendTools ?? [],
+      hooks: [createSkillActivationHook],
+    });
+    profileContribute.mockResolvedValueOnce({
+      tools: overrides.rebuiltBackendTools,
+    });
   }
-  const toolAssemblyService = {
-    buildRunContext,
-    findActiveSkills: jest.fn().mockResolvedValue([]),
-  } as unknown as ToolAssemblyService;
+  const profile: RunProfile = {
+    id: 'chat',
+    preamble: 'system prompt',
+    capabilities: [{ contribute: profileContribute }],
+    completionPolicy: 'done',
+  };
+  const runProfileRegistry = {
+    get: jest.fn().mockReturnValue(profile),
+  } as unknown as RunProfileRegistry;
   const toRuntimeTools = jest
     .fn()
     .mockReturnValue(overrides.runtimeTools ?? []);
@@ -259,11 +269,15 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const buildWorkspaceRunContextUseCase = {
     execute: workspaceContextFetch,
   } as unknown as BuildWorkspaceRunContextUseCase;
-  const skillActivationHookFactory = new SkillActivationHookFactory(
+  const runProfileAssembler = new RunProfileAssembler(
+    new RunCapabilityContextFactory(
+      buildWorkspaceRunContextUseCase,
+      { execute: jest.fn().mockResolvedValue([]) } as never,
+      { execute: jest.fn().mockResolvedValue([]) } as never,
+      { execute: jest.fn().mockResolvedValue([]) } as never,
+    ),
     findThreadUseCase,
-    toolAssemblyService,
     backendToolAdapter,
-    buildWorkspaceRunContextUseCase,
   );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
@@ -388,7 +402,6 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     modelCallObservabilityHookFactory,
     persistenceHookFactory,
     toolUsageHookFactory,
-    skillActivationHookFactory,
     contextBudgetHookFactory,
   );
   const useCase = new ExecuteRunUseCase(
@@ -396,7 +409,6 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThreadUseCase,
     effectiveRunModelResolver,
     inferenceAdmissionGuard,
-    toolAssemblyService,
     backendToolAdapter,
     skillActivationService,
     anonymizeTextForThreadUseCase,
@@ -407,7 +419,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     runTelemetryService,
     toolResultCollector as ToolResultCollectorService,
     runAssemblyService,
-    buildWorkspaceRunContextUseCase,
+    runProfileRegistry,
+    runProfileAssembler,
     new ThreadRunLock(),
   );
 
@@ -425,6 +438,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     anonymize,
     activateOnThread,
     workspaceContextFetch,
+    profileContribute,
+    resolveProfile: runProfileRegistry.get as jest.Mock,
     createUser,
     provider,
     providerSignal: () => providerSignal,
@@ -453,7 +468,7 @@ async function drain<T>(gen: AsyncIterable<T>): Promise<T[]> {
 }
 
 function userCommand(input = new RunUserInput('Hi there')): ExecuteRunCommand {
-  return new ExecuteRunCommand({ threadId, input });
+  return new ExecuteRunCommand({ profile: { id: 'chat' }, threadId, input });
 }
 
 describe('ExecuteRunUseCase', () => {
@@ -520,7 +535,12 @@ describe('ExecuteRunUseCase', () => {
     const { useCase } = buildHarness({ canVision: true });
     const controller = new AbortController();
     const stream = await useCase.execute(
-      new ExecuteRunCommand({ threadId, input, signal: controller.signal }),
+      new ExecuteRunCommand({
+        profile: { id: 'chat' },
+        threadId,
+        input,
+        signal: controller.signal,
+      }),
     );
     controller.abort();
     expect(await stream.next()).toEqual({ done: true, value: 'aborted' });
@@ -565,6 +585,7 @@ describe('ExecuteRunUseCase', () => {
     const readsBeforeWait = findThread.mock.calls.length;
     const second = useCase.execute(
       new ExecuteRunCommand({
+        profile: { id: 'chat' },
         threadId,
         input: new RunUserInput('Cancelled question'),
         signal: controller.signal,
@@ -589,6 +610,7 @@ describe('ExecuteRunUseCase', () => {
     const { useCase, createUser, cleanup } = buildHarness();
     const stream = await useCase.execute(
       new ExecuteRunCommand({
+        profile: { id: 'chat' },
         threadId,
         input: new RunUserInput('Cancelled question'),
         signal: controller.signal,
@@ -756,6 +778,7 @@ describe('ExecuteRunUseCase', () => {
       }),
     );
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
     });
@@ -806,6 +829,7 @@ describe('ExecuteRunUseCase', () => {
       });
       const stream = await useCase.execute(
         new ExecuteRunCommand({
+          profile: { id: 'chat' },
           threadId,
           input: new RunToolResultInput('chart-1', 'bar_chart', 'Displayed'),
           signal: controller.signal,
@@ -830,6 +854,7 @@ describe('ExecuteRunUseCase', () => {
         drain(
           await useCase.execute(
             new ExecuteRunCommand({
+              profile: { id: 'chat' },
               threadId,
               input: new RunToolResultInput(
                 'chart-1',
@@ -1297,6 +1322,7 @@ describe('ExecuteRunUseCase', () => {
     const controller = new AbortController();
     const { useCase, providerSignal } = buildHarness();
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunUserInput('Hi there'),
       signal: controller.signal,
@@ -1332,6 +1358,7 @@ describe('ExecuteRunUseCase', () => {
       return saveCommand.message;
     });
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunUserInput('Find the budget amendment'),
       signal: controller.signal,
@@ -1384,6 +1411,7 @@ describe('ExecuteRunUseCase', () => {
       },
     });
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunUserInput('Hi there'),
       signal: controller.signal,
@@ -1413,6 +1441,7 @@ describe('ExecuteRunUseCase', () => {
     });
     collectUsage.mockRejectedValue(new Error('usage database unavailable'));
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunUserInput('Hi there'),
       signal: controller.signal,
@@ -1757,6 +1786,7 @@ describe('ExecuteRunUseCase', () => {
       toolResultCollector: collector,
     });
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
     });
@@ -2098,6 +2128,7 @@ describe('ExecuteRunUseCase', () => {
   it('rejects a tool-result input with no pending tool call', async () => {
     const { useCase } = buildHarness();
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput('t1', 'search', 'result'),
     });
@@ -2132,6 +2163,7 @@ describe('ExecuteRunUseCase', () => {
     });
     createSeedToolResult.mockResolvedValue(null);
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
     });
@@ -2168,6 +2200,7 @@ describe('ExecuteRunUseCase', () => {
       toolResultCollector: { collectToolResults } as never,
     });
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput(
         'chart-1',
@@ -2315,6 +2348,7 @@ describe('ExecuteRunUseCase', () => {
       toolResultCollector: { collectToolResults } as never,
     });
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId,
       input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart for Jane'),
     });
@@ -2328,8 +2362,25 @@ describe('ExecuteRunUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it("runs with the tools and instructions of the command's profile", async () => {
+    const { useCase, resolveProfile, profileContribute, provider } =
+      buildHarness({ backendTools: [new SendEmailTool()] });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(resolveProfile).toHaveBeenCalledWith('chat');
+    expect(profileContribute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        thread: expect.objectContaining({ id: threadId }),
+      }),
+      { reservedToolNames: new Set() },
+    );
+    expect(provider.requests[0].instructions).toBe('system prompt');
+  });
+
   it('activates a requested skill before the run and folds in its instructions', async () => {
-    const { useCase, activateOnThread, createUser, provider } = buildHarness();
+    const { useCase, activateOnThread, createUser, profileContribute } =
+      buildHarness();
 
     const command = userCommand(
       new RunUserInput('Hi', [], 'skill-1' as unknown as UUID),
@@ -2341,8 +2392,9 @@ describe('ExecuteRunUseCase', () => {
     expect(createUser.mock.calls[0][0]).toMatchObject({
       skillInstructions: 'Be a helpful clerk',
     });
-    expect(provider.requests[0].instructions).toContain(
-      'Skill "Clerk" has already been activated on this thread.',
+    expect(profileContribute).toHaveBeenCalledWith(
+      expect.objectContaining({ activatedSkillName: 'Clerk' }),
+      expect.anything(),
     );
   });
 

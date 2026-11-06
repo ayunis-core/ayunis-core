@@ -18,9 +18,8 @@ type McpCapability = Awaited<
 type McpIntegrationMeta = { name: string; logoUrl: string | null };
 
 /**
- * Assembles MCP tools and resources for a thread's integrations. Lives
- * outside ToolAssemblyService to keep that file under the 500-line cap and
- * to keep MCP-specific logic in one place.
+ * Assembles MCP tools and resources for a thread's integrations, used by
+ * `McpCapability`.
  */
 @Injectable()
 export class McpToolAssemblerService {

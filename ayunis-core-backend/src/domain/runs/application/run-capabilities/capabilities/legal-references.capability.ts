@@ -1,4 +1,11 @@
-export const LEGAL_REFERENCE_INSTRUCTIONS = `<legal_references>
+import { Injectable } from '@nestjs/common';
+import {
+  PromptSlot,
+  type CapabilityContribution,
+  type RunCapability,
+} from 'src/domain/runs/application/run-capabilities/run-capability';
+
+const LEGAL_REFERENCES = `<legal_references>
 Use structured legal-reference markers instead of plain citations when citing German law.
 Use these markers only in assistant text shown directly in the chat.
 Never put them in tool-call arguments or generated content such as documents, emails, spreadsheets, or diagrams. Use normal human-readable citations there.
@@ -12,3 +19,12 @@ Encode locator segments as sec_NUMBER, art_NUMBER, and par_NUMBER.
 Federal example: {{legal:DE/BGB/sec_433/par_2}}
 State example: {{legal:DE-BY/POG/art_1}}
 </legal_references>`;
+
+@Injectable()
+export class LegalReferencesCapability implements RunCapability {
+  contribute(): CapabilityContribution {
+    return {
+      sections: [{ slot: PromptSlot.POLICIES, content: LEGAL_REFERENCES }],
+    };
+  }
+}

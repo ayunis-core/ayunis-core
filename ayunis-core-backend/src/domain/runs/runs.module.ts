@@ -18,13 +18,10 @@ import { PersistenceHookFactory } from './application/agent-runtime/hooks/persis
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
 import { CreditGateHookFactory } from './application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
-import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
 import { ModelCallObservabilityHookFactory } from './application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { RuntimeHistoryMaterializer } from './application/agent-runtime/runtime-history-materializer';
-import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { RunAssemblyService } from './application/services/run-assembly.service';
-import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
@@ -33,6 +30,28 @@ import { ThreadRunLock } from './application/services/thread-run-lock.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
 import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
 import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
+import { AnonymizationCapability } from './application/run-capabilities/capabilities/anonymization.capability';
+import { ArtifactsCapability } from './application/run-capabilities/capabilities/artifacts.capability';
+import { BehaviorCapability } from './application/run-capabilities/capabilities/behavior.capability';
+import { CodeExecutionCapability } from './application/run-capabilities/capabilities/code-execution.capability';
+import { CustomInstructionsCapability } from './application/run-capabilities/capabilities/custom-instructions.capability';
+import { DataHandlingCapability } from './application/run-capabilities/capabilities/data-handling.capability';
+import { DateTimeCapability } from './application/run-capabilities/capabilities/date-time.capability';
+import { EmailCalendarCapability } from './application/run-capabilities/capabilities/email-calendar.capability';
+import { FilesChartsMapCapability } from './application/run-capabilities/capabilities/files-charts-map.capability';
+import { ImageGenerationCapability } from './application/run-capabilities/capabilities/image-generation.capability';
+import { InternetCapability } from './application/run-capabilities/capabilities/internet.capability';
+import { KnowledgeBasesCapability } from './application/run-capabilities/capabilities/knowledge-bases.capability';
+import { LegalReferencesCapability } from './application/run-capabilities/capabilities/legal-references.capability';
+import { MarketplaceCapability } from './application/run-capabilities/capabilities/marketplace.capability';
+import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
+import { SkillsCapability } from './application/run-capabilities/capabilities/skills.capability';
+import { ThreadSourcesCapability } from './application/run-capabilities/capabilities/thread-sources.capability';
+import { WorkspaceInstructionsCapability } from './application/run-capabilities/capabilities/workspace-instructions.capability';
+import { RunCapabilityContextFactory } from './application/run-capabilities/run-capability-context.factory';
+import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
+import { RunProfileAssembler } from './application/run-profiles/run-profile-assembler.service';
+import { RunProfileRegistry } from './application/run-profiles/run-profile.registry';
 
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
@@ -86,7 +105,6 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     CreditGateHookFactory,
     UsageHookFactory,
     ToolUsageHookFactory,
-    SkillActivationHookFactory,
     ContextBudgetHookFactory,
     RuntimeHistoryMaterializer,
     RunAssemblyService,
@@ -97,8 +115,6 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ThreadAiContextResponseMapper,
     RunSsePresenter,
     SendMessageRequestValidator,
-    SystemPromptBuilderService,
-    ToolAssemblyService,
     ArtifactToolAssemblerService,
     McpToolAssemblerService,
     ToolResultCollectorService,
@@ -107,6 +123,28 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     RunTelemetryService,
     EffectiveRunModelResolverService,
     UnmaskedTermsService,
+    RunProfileRegistry,
+    RunProfileAssembler,
+    RunCapabilityContextFactory,
+    ChatRunProfile,
+    AnonymizationCapability,
+    ArtifactsCapability,
+    BehaviorCapability,
+    CodeExecutionCapability,
+    CustomInstructionsCapability,
+    DataHandlingCapability,
+    DateTimeCapability,
+    EmailCalendarCapability,
+    FilesChartsMapCapability,
+    ImageGenerationCapability,
+    InternetCapability,
+    KnowledgeBasesCapability,
+    LegalReferencesCapability,
+    MarketplaceCapability,
+    McpCapability,
+    SkillsCapability,
+    ThreadSourcesCapability,
+    WorkspaceInstructionsCapability,
   ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
