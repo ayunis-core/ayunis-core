@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.68.0](https://github.com/ayunis-core/ayunis-core/compare/v2.67.1...v2.68.0) (2026-11-06)
+
+
+### Features
+
+* **frontend:** warn users on outdated browsers (AYC-1597) ([#2197](https://github.com/ayunis-core/ayunis-core/issues/2197)) ([ef7242c](https://github.com/ayunis-core/ayunis-core/commit/ef7242ceafb941df336028488093c1210c90309e))
+
+
+### Bug Fixes
+
+* **chat:** resolve replacement model grants in existing chats (AYC-1623) ([#2200](https://github.com/ayunis-core/ayunis-core/issues/2200)) ([49d0ac5](https://github.com/ayunis-core/ayunis-core/commit/49d0ac5536b1d7db29f00076c6acd757d833542e))
+
+
+### Performance Improvements
+
+* **chat:** start a new chat's first answer without fixed waits (AYC-1611) ([#2196](https://github.com/ayunis-core/ayunis-core/issues/2196)) ([1e3da3b](https://github.com/ayunis-core/ayunis-core/commit/1e3da3bc3c3388cbb7db6a408d9b7c8d719ab69f))
+* **inference:** request medium effort from claude models (AYC-1606) ([#2186](https://github.com/ayunis-core/ayunis-core/issues/2186)) ([d9367ce](https://github.com/ayunis-core/ayunis-core/commit/d9367ce6f90ecde43ab76cbe20e4e0df15cc560b))
+* **retrieval:** search several documents and phrasings in one call (AYC-1612) ([#2188](https://github.com/ayunis-core/ayunis-core/issues/2188)) ([c814453](https://github.com/ayunis-core/ayunis-core/commit/c81445351d1bb7f096d8763c5fe64acf2ae9d691))
+* **runs:** throttle streamed message snapshots (AYC-1609) ([#2190](https://github.com/ayunis-core/ayunis-core/issues/2190)) ([8d2bcab](https://github.com/ayunis-core/ayunis-core/commit/8d2bcab42863abc7bc4f31d922bdd9dd7bbfef06))
+* **web-research:** return main page text in one call and fetch each url once per run (AYC-1607) ([#2189](https://github.com/ayunis-core/ayunis-core/issues/2189)) ([75151ff](https://github.com/ayunis-core/ayunis-core/commit/75151ff387ef5ccc2bd8dff5ee161e9567d1fa64))
+
 ## [2.67.1](https://github.com/ayunis-core/ayunis-core/compare/v2.67.0...v2.67.1) (2026-11-06)
 
 
