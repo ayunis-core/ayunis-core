@@ -119,6 +119,7 @@ function assembleChat(
     { toRuntimeTools: jest.fn() } as never,
   );
   return assembler.assemble(buildChatProfile(), {
+    profile: { id: 'chat' },
     thread: options.thread ?? aThread({ mcpIntegrationIds: [integrationId] }),
     model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
       .model,
@@ -138,7 +139,9 @@ describe('ChatRunProfile', () => {
   });
 
   it('ends a run when the model stops calling tools', () => {
-    expect(buildChatProfile().completionPolicy).toBe('done');
+    expect(buildChatProfile().completionPolicy.decide({ nudges: 0 })).toEqual({
+      status: 'done',
+    });
   });
 
   it('offers the chat tools with MCP integrations last', async () => {

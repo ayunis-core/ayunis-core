@@ -35,6 +35,8 @@ import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entit
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -77,7 +79,10 @@ import {
 import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
 import { createSkillActivationHook } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
-import type { RunProfile } from 'src/domain/runs/application/run-profiles/run-profile';
+import {
+  DONE_WHEN_MODEL_STOPS,
+  type RunProfile,
+} from 'src/domain/runs/application/run-profiles/run-profile';
 import type { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
@@ -233,7 +238,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     id: 'chat',
     preamble: 'system prompt',
     capabilities: [{ contribute: profileContribute }],
-    completionPolicy: 'done',
+    completionPolicy: DONE_WHEN_MODEL_STOPS,
+    maxIterations: 50,
   };
   const runProfileRegistry = {
     get: jest.fn().mockReturnValue(profile),
@@ -1498,6 +1504,104 @@ describe('ExecuteRunUseCase', () => {
     };
     expect(streamedToolResult).toBeDefined();
     expect(persistedCommand.id).toBe(streamedToolResult!.id);
+  });
+
+  it('ends a routine run after its finish_routine call without calling the model again', async () => {
+    const executeTool = jest.fn();
+    const { useCase, provider, createToolResult } = buildHarness({
+      backendTools: [new FinishRoutineTool()],
+      backendToolAdapter: realBackendToolAdapter(executeTool),
+      turns: [
+        toolCallTurn({
+          id: 'call-finish',
+          name: ToolType.FINISH_ROUTINE,
+          input: {},
+        }),
+        textTurn('Dieser Text wird nie angefordert.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(1);
+    expect(executeTool).not.toHaveBeenCalled();
+    expect(createToolResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: [
+          expect.objectContaining({
+            toolId: 'call-finish',
+            result: 'Tool execution is handled externally',
+          }),
+        ],
+      }),
+    );
+    expect(items.at(-1)).toBeInstanceOf(ToolResultMessage);
+  });
+
+  it('continues a thread as a chat when its history holds a finish_routine call the chat does not offer', async () => {
+    const weatherTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute: jest.fn(),
+    };
+    const { useCase, provider, materializeHistory } = buildHarness({
+      runtimeTools: [weatherTool],
+      turns: [textTurn('Es waren zwei Verordnungen zum Polizeirecht.')],
+    });
+    materializeHistory.mockResolvedValueOnce([
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'Prüfe die Verkündungsplattform.' }],
+      },
+      {
+        role: 'assistant',
+        content: [
+          {
+            type: 'tool_use',
+            id: 'call-finish',
+            name: ToolType.FINISH_ROUTINE,
+            input: {},
+          },
+        ],
+      },
+      {
+        role: 'tool_result',
+        content: [
+          {
+            type: 'tool_result',
+            toolCallId: 'call-finish',
+            toolName: ToolType.FINISH_ROUTINE,
+            result: 'Tool execution is handled externally',
+          },
+        ],
+      },
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'Welche Verordnungen waren das?' }],
+      },
+    ]);
+
+    const items = await drain(
+      await useCase.execute(
+        userCommand(new RunUserInput('Welche Verordnungen waren das?')),
+      ),
+    );
+
+    const [request] = provider.requests;
+    expect(request.tools.map((tool) => tool.name)).toEqual(['get_weather']);
+    expect(request.messages[1].content).toEqual([
+      expect.objectContaining({
+        type: 'tool_use',
+        name: ToolType.FINISH_ROUTINE,
+      }),
+    ]);
+    const answer = items
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .pop();
+    expect((answer?.content[0] as TextMessageContent).text).toBe(
+      'Es waren zwei Verordnungen zum Polizeirecht.',
+    );
   });
 
   it('emits each message-added event exactly once for a tool loop', async () => {

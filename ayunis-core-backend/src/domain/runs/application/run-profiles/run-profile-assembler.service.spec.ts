@@ -17,7 +17,7 @@ import {
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/runs/testing/run-capability.fixture';
-import type { RunProfile } from './run-profile';
+import { DONE_WHEN_MODEL_STOPS, type RunProfile } from './run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const tool = (name: string) => ({ name }) as Tool;
@@ -42,9 +42,11 @@ function buildAssembler(capabilities: RunCapability[]) {
     preamble: 'You are the Ayunis assistant.',
     closing: 'You are now ready to assist the user.',
     capabilities,
-    completionPolicy: 'done',
+    completionPolicy: DONE_WHEN_MODEL_STOPS,
+    maxIterations: 50,
   };
   const input: RunCapabilityInput = {
+    profile: { id: 'chat' },
     thread,
     model: aCapabilityContext().model,
     userId: TEST_USER_ID,

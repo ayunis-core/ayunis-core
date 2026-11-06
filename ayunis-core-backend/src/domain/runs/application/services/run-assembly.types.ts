@@ -18,6 +18,7 @@ export interface PreparedRun extends PreparedTools {
   userId: UUID;
   isAnonymous: boolean;
   instructions: string;
+  maxIterations: number;
   /** Contributed by the run profile's capabilities. */
   profileHooks: Hook[];
   skillInstructions?: string;

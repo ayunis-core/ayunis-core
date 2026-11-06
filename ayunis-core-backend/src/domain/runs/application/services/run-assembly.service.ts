@@ -15,8 +15,6 @@ import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/
 import { RUN_RETRY_CONFIG } from 'src/domain/runs/application/agent-runtime/run-retry.config';
 import type { PreparedRun } from './run-assembly.types';
 
-const MAX_ITERATIONS = 50;
-
 export interface AssembledRun {
   events: ReturnType<typeof run>;
   models: RuntimeModelRegistry;
@@ -77,7 +75,7 @@ export class RunAssemblyService {
         ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
         hooks: this.buildHooks(prepared, models, onMessagePersisted),
         context,
-        maxIterations: MAX_ITERATIONS,
+        maxIterations: prepared.maxIterations,
         retry: RUN_RETRY_CONFIG,
         ...(signal ? { signal } : {}),
       }),
