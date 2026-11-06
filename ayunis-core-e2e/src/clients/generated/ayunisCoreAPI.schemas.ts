@@ -2918,6 +2918,8 @@ export interface GetThreadResponseDto {
   userId: string;
   /** Permitted model ID */
   permittedModelId: string;
+  /** Catalog model ID bound to the thread */
+  modelId?: string;
   /** Title of the thread */
   title?: string;
   /** Array of messages in the thread (role-specific types) */

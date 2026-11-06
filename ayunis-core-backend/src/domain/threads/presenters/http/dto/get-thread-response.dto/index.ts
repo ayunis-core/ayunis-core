@@ -25,10 +25,10 @@ import {
   SourceResponseDto,
   UrlSourceResponseDto,
 } from './source-response.dto';
-import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
+import { KnowledgeBaseSummaryResponseDto } from 'src/domain/threads/presenters/http/dto/knowledge-base-summary-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
-import { McpIntegrationSummaryResponseDto } from '../mcp-integration-summary-response.dto';
-import { ThreadMetadataResponseDto } from '../thread-metadata-response.dto';
+import { McpIntegrationSummaryResponseDto } from 'src/domain/threads/presenters/http/dto/mcp-integration-summary-response.dto';
+import { ThreadMetadataResponseDto } from 'src/domain/threads/presenters/http/dto/thread-metadata-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -65,6 +65,12 @@ export class GetThreadResponseDto extends ThreadMetadataResponseDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   permittedModelId?: UUID;
+
+  @ApiPropertyOptional({
+    description: 'Catalog model ID bound to the thread',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  modelId?: UUID;
 
   @ApiPropertyOptional({
     description: 'Title of the thread',
