@@ -18,7 +18,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `ValidateMcpIntegrationUseCase` — Validates connection to the MCP server
 - `ListPredefinedMcpIntegrationConfigsUseCase` — Lists available predefined integration configurations
 - `DiscoverMcpCapabilitiesUseCase` — Discovers tools, resources, and prompts with a 10-second request and connection budget so an unavailable integration cannot delay run preparation for the full 30-second validation/runtime-operation timeout
-- `ExecuteMcpToolUseCase` — Executes a tool on a remote MCP server
+- `ExecuteMcpToolUseCase` — Executes a tool on a remote MCP server. An optional cancel signal is passed to the SDK request (not to the pooled connection); a cancelled call rejects with the signal's reason instead of a soft failure, timeout, or outage error
 - `RetrieveMcpResourceUseCase` — Retrieves a resource from a remote MCP server
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
 - `SetUserMcpConfigUseCase` — Saves per-user config values for a schema-configured integration

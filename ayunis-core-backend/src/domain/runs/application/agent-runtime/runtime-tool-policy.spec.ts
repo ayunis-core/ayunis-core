@@ -8,10 +8,17 @@ import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/insta
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
 import {
   isAcknowledgementOnlyTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
+  requiresExclusiveExecution,
 } from './runtime-tool-policy';
 
 describe('runtime tool policy', () => {
@@ -42,6 +49,26 @@ describe('runtime tool policy', () => {
   it('classifies document tools as hybrid artifact tools', () => {
     expect(isHybridArtifactTool(new CreateDocumentTool())).toBe(true);
     expect(isHybridArtifactTool(new InstallMarketplaceSkillTool())).toBe(false);
+  });
+
+  describe(requiresExclusiveExecution.name, () => {
+    it.each([
+      ['activate_skill', new ActivateSkillTool()],
+      ['update_document', new UpdateDocumentTool()],
+      ['edit_document', new EditDocumentTool()],
+      ['update_diagram', new UpdateDiagramTool()],
+      ['update_spreadsheet', new UpdateSpreadsheetTool()],
+    ])('runs %s apart from its sibling calls', (_, tool) => {
+      expect(requiresExclusiveExecution(tool)).toBe(true);
+    });
+
+    it.each([
+      ['internet_search', new InternetSearchTool()],
+      ['website_content', new WebsiteContentTool()],
+      ['create_document', new CreateDocumentTool()],
+    ])('lets %s run alongside its sibling calls', (_, tool) => {
+      expect(requiresExclusiveExecution(tool)).toBe(false);
+    });
   });
 });
 

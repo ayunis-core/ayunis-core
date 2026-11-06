@@ -21,6 +21,8 @@ thread-pii-masks/
 │   ├── thread-pii-masks.errors.ts
 │   ├── ports/
 │   │   └── thread-pii-mask.repository.ts
+│   ├── services/
+│   │   └── thread-mask-allocation-lock.service.ts  # per-thread mutex around mask allocation
 │   └── use-cases/
 │       ├── anonymize-text-for-thread/   # whitelist + existing masks → anonymize → persist new masks
 │       ├── get-thread-pii-masks/
@@ -39,7 +41,7 @@ thread-pii-masks/
 
 ## Key Flows
 
-- **AnonymizeTextForThreadUseCase** — Loads the org PII whitelist (via `GetPiiWhitelistUseCase` from `anonymization-settings`) and the thread's existing masks, folds the thread's manually unmasked values into the whitelist, delegates to the common `AnonymizeTextUseCase` in mask mode, persists newly created masks *before* returning, and returns the anonymized text plus the full updated dictionary. Engine failures propagate unchanged so callers keep their fail-safe handling (run aborts, original text never leaks). Org whitelist lookup, global whitelist lookup, existing-mask lookup, mask construction, and persistence failures are wrapped in stage-specific codes with privacy-safe counts; only the existing-mask lookup and persistence stages add allowlisted PostgreSQL code/constraint diagnostics; raw text, mask values, and database messages are never attached. A thread deleted mid-run surfaces from the repository as `ThreadPiiMaskThreadMissingError` (the `threadId` FK violation); it is logged as a warning and propagated unwrapped so `runs` ends the run as `aborted` instead of failing.
+- **AnonymizeTextForThreadUseCase** — Runs one call per thread at a time through `ThreadMaskAllocationLock`, because numbering reads the existing masks before saving new ones and concurrent tool results would otherwise receive the same token; different threads proceed in parallel. The lock is process-local, like the runs module's `ThreadRunLock` (AYC-1258 tracks multi-replica coordination). Loads the org PII whitelist (via `GetPiiWhitelistUseCase` from `anonymization-settings`) and the thread's existing masks, folds the thread's manually unmasked values into the whitelist, delegates to the common `AnonymizeTextUseCase` in mask mode, persists newly created masks *before* returning, and returns the anonymized text plus the full updated dictionary. Engine failures propagate unchanged so callers keep their fail-safe handling (run aborts, original text never leaks). Org whitelist lookup, global whitelist lookup, existing-mask lookup, mask construction, and persistence failures are wrapped in stage-specific codes with privacy-safe counts; only the existing-mask lookup and persistence stages add allowlisted PostgreSQL code/constraint diagnostics; raw text, mask values, and database messages are never attached. A thread deleted mid-run surfaces from the repository as `ThreadPiiMaskThreadMissingError` (the `threadId` FK violation); it is logged as a warning and propagated unwrapped so `runs` ends the run as `aborted` instead of failing.
 - **GetThreadPiiMasksUseCase** — Returns a thread's dictionary; used by the threads GET endpoint so the frontend can resolve tokens after a reload.
 - **UnmaskThreadPiiMaskUseCase** — Marks one entry as manually unmasked. Exposed via `POST /threads/:id/pii-masks/:maskId/unmask` on the threads controller (which asserts thread ownership first). Idempotent; a missing mask yields a 404 `ThreadPiiMaskNotFoundError`.
 

@@ -96,6 +96,20 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('tool guidelines', () => {
+    it('asks for independent lookups in the same turn', () => {
+      const prompt = service.build({ tools: [], currentTime: new Date() });
+
+      expect(prompt).toContain(
+        'request them together in the same turn instead of one after another',
+      );
+      expect(prompt).toContain(
+        'When a tool accepts several inputs in one call, use that single call',
+      );
+      expect(prompt).not.toContain("Don't make excessive requests");
+    });
+  });
+
   it('instructs URL references only in chat with safe complete URLs', () => {
     const prompt = service.build({ tools: [], currentTime: new Date() });
     expect(prompt).toContain('{{url:<url>}}');

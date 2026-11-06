@@ -456,6 +456,71 @@ describe('PersistenceHookFactory', () => {
     );
   });
 
+  it('persists concurrently executed tool results in call order', async () => {
+    const createToolResult = jest
+      .fn()
+      .mockImplementation((command) => Promise.resolve(command));
+    const { hook } = buildHook(saveSuccessfulMessages(), createToolResult);
+    const finished: string[] = [];
+    const delays: Record<string, number> = { a: 60, b: 30, c: 0 };
+    let calls = 0;
+    const model: ModelProvider = {
+      name: 'parallel-searches',
+      stream() {
+        calls += 1;
+        return chunks(
+          calls === 1
+            ? [
+                {
+                  toolCallDeltas: ['a', 'b', 'c'].map((query, index) => ({
+                    index,
+                    id: `call-${query}`,
+                    name: 'search',
+                    argumentsDelta: JSON.stringify({ query }),
+                  })),
+                },
+                { finishReason: 'tool_calls' },
+              ]
+            : [{ textDelta: 'Summary' }, { finishReason: 'stop' }],
+        );
+      },
+    };
+
+    await drain(
+      run({
+        instructions: '',
+        model,
+        messages: [userMessage()],
+        hooks: [hook],
+        tools: [
+          {
+            name: 'search',
+            description: 'Searches the web',
+            parameters: { type: 'object' },
+            execute: async (input) => {
+              const query = String(input.query);
+              await new Promise((resolve) =>
+                setTimeout(resolve, delays[query]),
+              );
+              finished.push(query);
+              return `results for ${query}`;
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(finished).toEqual(['c', 'b', 'a']);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    const command = createToolResult.mock
+      .calls[0][0] as CreateToolResultMessageCommand;
+    expect(command.content).toMatchObject([
+      { toolId: 'call-a', result: 'results for a' },
+      { toolId: 'call-b', result: 'results for b' },
+      { toolId: 'call-c', result: 'results for c' },
+    ]);
+  });
+
   it('defensively flushes pending tool results before the next model turn', async () => {
     const createToolResult = jest
       .fn()

@@ -17,6 +17,7 @@ import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-in
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import {
   McpAuthenticationError,
+  McpToolTimeoutError,
   McpUserAuthorizationRequiredError,
 } from 'src/domain/mcp/application/mcp.errors';
 
@@ -84,6 +85,31 @@ describe('McpClientService', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('callTool', () => {
+    it("rejects with the caller's cancellation instead of the mapped transport error", async () => {
+      const integration = aCustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+      const controller = new AbortController();
+      const cancellation = new Error('Run consumer abandoned the stream');
+      client.callTool.mockImplementation(() => {
+        controller.abort(cancellation);
+        return Promise.reject(
+          new McpToolTimeoutError('https://example.com/mcp', 30000),
+        );
+      });
+
+      const result = service.callTool(integration, {
+        toolName: 'search_registry',
+        parameters: { query: 'water supply' },
+        signal: controller.signal,
+      });
+
+      await expect(result).rejects.toBe(cancellation);
+    });
   });
 
   describe('invalidateConnections', () => {

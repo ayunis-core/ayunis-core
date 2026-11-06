@@ -188,13 +188,14 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     call: McpToolCall,
   ): Promise<McpToolResult> {
+    const requestOptions = { ...this.requestOptions, signal: call.signal };
     return this.withClient(
       config,
       async (client) => {
         const result = await client
           .callTool(
             { name: call.toolName, arguments: call.parameters },
-            this.requestOptions,
+            requestOptions,
           )
           .catch((error: unknown) => {
             throw this.toToolTimeoutError(error, config) ?? error;

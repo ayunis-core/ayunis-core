@@ -8,6 +8,7 @@ import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/applicat
 import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
 import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
+import { ThreadMaskAllocationLock } from 'src/domain/thread-pii-masks/application/services/thread-mask-allocation-lock.service';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { toUnmaskedWhitelistEntry } from 'src/domain/thread-pii-masks/domain/unmasked-mask-whitelist';
 import {
@@ -30,7 +31,8 @@ export interface ThreadAnonymizationResult extends AnonymizationResult {
  * unchanged so callers keep their fail-safe handling; lookup, build, and
  * persistence failures are wrapped in ThreadPiiMaskAnonymizationError,
  * except a thread deleted mid-run (ThreadPiiMaskThreadMissingError), which
- * propagates unchanged so runs can abort instead of failing.
+ * propagates unchanged so runs can abort instead of failing. Calls on the same
+ * thread run one at a time so concurrent tool results never share a token.
  */
 @Injectable()
 export class AnonymizeTextForThreadUseCase {
@@ -41,9 +43,18 @@ export class AnonymizeTextForThreadUseCase {
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly allocationLock: ThreadMaskAllocationLock,
   ) {}
 
-  async execute(
+  execute(
+    command: AnonymizeTextForThreadCommand,
+  ): Promise<ThreadAnonymizationResult> {
+    return this.allocationLock.runExclusive(command.threadId, () =>
+      this.anonymize(command),
+    );
+  }
+
+  private async anonymize(
     command: AnonymizeTextForThreadCommand,
   ): Promise<ThreadAnonymizationResult> {
     const logContext = this.logContext(command);

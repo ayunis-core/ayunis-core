@@ -124,6 +124,30 @@ describe('ExecuteToolUseCase', () => {
       expect(mockHandler.execute).toHaveBeenCalled();
     });
 
+    it('rethrows the cancellation when the run was cancelled during the call', async () => {
+      const controller = new AbortController();
+      const mockTool = new MockTool('Permit lookup');
+      mockHandler.execute.mockImplementation(() => {
+        controller.abort(new Error('Run consumer abandoned the stream'));
+        return Promise.reject(new Error('fetch failed'));
+      });
+
+      const result = useCase.execute(
+        new ExecuteToolCommand(
+          mockTool,
+          {},
+          {
+            orgId: '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c',
+            threadId: '7b1f2a3c-4d5e-6f70-8192-a3b4c5d6e7f8',
+            signal: controller.signal,
+          },
+        ),
+      );
+
+      await expect(result).rejects.toBe(controller.signal.reason);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
     it('should handle tool execution errors', async () => {
       // Arrange
       const mockTool = new MockTool('Test Tool', {

@@ -215,8 +215,16 @@ dimensions exactly once:
 
 ## Tools and child runs
 
-Tool calls execute sequentially. `afterToolCall` receives `isLastToolCall` and
-an outcome of `success`, `error`, or `aborted`. Executable tools may return a
+The tool calls of one model turn execute concurrently, at most eight at a
+time. `beforeToolCall` hooks run in call order and each call starts once its
+hooks have run; a tool marked `exclusive` runs alone, after the calls before it
+have settled and before the calls after it start. Tool emits, `afterToolCall`
+hooks, and `tool_result` events follow in call order regardless of completion
+order. Cancellation, a hook abort, or a fatal tool error cancels running calls
+through `ctx.signal`, gives calls that have not started a synthetic aborted
+result, and the phase still waits for every started call to settle.
+`afterToolCall` receives `isLastToolCall` and an outcome of `success`, `error`,
+or `aborted`. Executable tools may return a
 string or `{ result, isError }`. Tool output is capped at 200,000 characters.
 Malformed tool arguments are never executed. After recovery consumes the last
 retry, the final call disables tools and asks for a direct answer.

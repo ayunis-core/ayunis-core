@@ -29,6 +29,9 @@ export class ExecuteToolUseCase {
         context: command.context,
       });
     } catch (error) {
+      // A cancelled run surfaces as its own reason so the runtime records
+      // the call as aborted rather than as a tool failure.
+      command.context.signal?.throwIfAborted();
       if (error instanceof ApplicationError) {
         throw error;
       }

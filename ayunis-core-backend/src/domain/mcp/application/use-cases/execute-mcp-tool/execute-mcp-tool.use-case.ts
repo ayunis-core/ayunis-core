@@ -46,6 +46,7 @@ export class ExecuteMcpToolUseCase {
         const toolCall: McpToolCall = {
           toolName: command.toolName,
           parameters: command.parameters,
+          ...(command.signal && { signal: command.signal }),
         };
 
         const result = await this.mcpClientService.callTool(
@@ -67,6 +68,7 @@ export class ExecuteMcpToolUseCase {
           ...(result.isError && { errorMessage: 'Tool execution failed' }),
         };
       } catch (toolError) {
+        command.signal?.throwIfAborted();
         return this.toSoftFailureResult(
           toolError,
           command,
@@ -114,6 +116,7 @@ export class ExecuteMcpToolUseCase {
     command: ExecuteMcpToolCommand,
     startTime: number,
   ): never {
+    command.signal?.throwIfAborted();
     const duration = Date.now() - startTime;
 
     if (error instanceof ApplicationError) {

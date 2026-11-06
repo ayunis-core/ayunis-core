@@ -25,6 +25,7 @@ import {
   isAcknowledgementOnlyTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
+  requiresExclusiveExecution,
 } from './runtime-tool-policy';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -38,7 +39,8 @@ interface ToolExecutionOutcome {
  * Adapts backend catalog tools to the runtime's optional-execute contract.
  * Backend and hybrid tools delegate through `ExecuteToolUseCase`, charts and
  * maps acknowledge without side effects, and externally handled widgets omit
- * `execute` so the current run terminates after their tool phase.
+ * `execute` so the current run terminates after their tool phase. The
+ * runtime runs a turn's calls concurrently unless a tool is marked exclusive.
  *
  * In anonymous threads, PII-returning tool output is redacted before the mask
  * dictionary and result are streamed to the client.
@@ -72,6 +74,7 @@ export class BackendToolAdapter {
     }
     return {
       ...schema,
+      exclusive: requiresExclusiveExecution(tool),
       execute: (input, ctx) =>
         this.execute(tool, input, ctx, isHybridArtifactTool(tool)),
     };
@@ -164,12 +167,7 @@ export class BackendToolAdapter {
   private async runTool(
     tool: BackendTool,
     input: Record<string, unknown>,
-    context: {
-      orgId: UUID;
-      threadId: UUID;
-      isAnonymous: boolean;
-      signal?: AbortSignal;
-    },
+    context: ExecuteToolCommand['context'],
   ): Promise<ToolExecutionOutcome> {
     try {
       const result = await this.executeToolUseCase.execute(
@@ -177,6 +175,9 @@ export class BackendToolAdapter {
       );
       return { result, succeeded: true };
     } catch (error) {
+      // The runtime reports a call as aborted only when it rejects with the
+      // cancellation itself; handlers wrap it like any other failure.
+      context.signal?.throwIfAborted();
       if (error instanceof ToolExecutionFailedError && error.exposeToLLM) {
         return {
           result: `The tool didn't provide any result due to the following error in tool usage: ${error.message}`,

@@ -7,11 +7,13 @@ import type {
   ToolExecutionContext,
   ToolExecutionOutput,
 } from '../contracts/tool';
-import { drainEmits } from './event-queue';
+import { ConcurrencyLimiter } from './concurrency-limiter';
+import { drainEmits, EmitBuffer } from './event-queue';
 import type { RunState } from './run-state';
 import { isAborted } from './run-state';
 
 export const MAX_TOOL_RESULT_LENGTH = 200_000;
+export const MAX_CONCURRENT_TOOL_CALLS = 8;
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 interface ToolOutcome {
@@ -26,69 +28,94 @@ interface ToolPhaseOutcome {
   fatalError?: AgentRuntimeError;
 }
 
+interface ScheduledToolCall {
+  toolCall: ToolCallSummary;
+  outcome: Promise<ToolOutcome>;
+  /** Tool emits, held back so they surface next to their own result. */
+  emits: EmitBuffer;
+}
+
+/** Shared state of one iteration's tool calls while they execute. */
+class ToolPhase {
+  readonly limiter = new ConcurrencyLimiter(MAX_CONCURRENT_TOOL_CALLS);
+  readonly scheduled: ScheduledToolCall[] = [];
+  private readonly controller = new AbortController();
+  private fatalError?: AgentRuntimeError;
+
+  get signal(): AbortSignal {
+    return this.controller.signal;
+  }
+
+  shouldSkip(state: RunState): boolean {
+    return this.fatalError !== undefined || isAborted(state);
+  }
+
+  recordFatalError(error: AgentRuntimeError): void {
+    this.fatalError ??= error;
+    this.cancel();
+  }
+
+  cancel(): void {
+    this.controller.abort(new Error('Tool phase cancelled'));
+  }
+
+  async settle(): Promise<void> {
+    await Promise.allSettled(this.scheduled.map(({ outcome }) => outcome));
+  }
+}
+
 /**
- * Executes the tool calls of one iteration sequentially, firing
- * beforeToolCall/afterToolCall hooks around each and yielding tool_result
- * events. Tool failures become error-flagged results — never throws.
+ * Executes the tool calls of one iteration. beforeToolCall hooks run in call
+ * order, and each call starts executing as soon as its hooks have run, with
+ * at most MAX_CONCURRENT_TOOL_CALLS in flight; an exclusive tool runs alone.
+ * Tool emits, afterToolCall hooks and tool_result events then follow in call
+ * order, so consumers and persistence see the same sequence as if the calls
+ * had run one after another. Tool failures become error-flagged results —
+ * never throws for them.
  *
  * Once the run is aborted (via signal or a hook, including beforeToolCall
- * itself), remaining calls are not executed; they get synthetic aborted
- * results instead, so the tool_result message always pairs every tool_use
- * block and the transcript stays well-formed.
+ * itself) or a tool fails fatally, running calls are cancelled through their
+ * signal and calls that have not started get synthetic aborted results, so
+ * the tool_result message always pairs every tool_use block and the
+ * transcript stays well-formed. The phase never ends with a tool still
+ * running, so no tool outlives its run.
  */
 export async function* executeToolCalls(
   state: RunState,
   iteration: number,
   calls: readonly ToolUseContent[],
 ): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
-  const results: ToolResultContent[] = [];
-  let fatalError: AgentRuntimeError | undefined;
-  for (const [callIndex, call] of calls.entries()) {
-    const requested: ToolCallSummary = {
-      id: call.id,
-      name: call.name,
-      input: call.input,
-    };
-    const { toolCall, outcome, hookOutcome } = yield* resolveToolCall(
-      state,
-      iteration,
-      requested,
-      fatalError !== undefined,
-    );
-    fatalError ??= outcome.fatalError;
-    const result = await finalizeToolCall({
-      state,
-      iteration,
-      toolCall,
-      outcome,
-      hookOutcome,
-      isLastToolCall: callIndex === calls.length - 1,
-    });
-    yield* drainEmits(state);
-    results.push(result);
-    yield result;
+  const phase = new ToolPhase();
+  let completed = false;
+  try {
+    for (const call of calls) {
+      yield* scheduleToolCall(state, iteration, call, phase);
+    }
+    const outcome = yield* finalizeToolCalls(state, iteration, phase);
+    completed = true;
+    return outcome;
+  } finally {
+    if (!completed) phase.cancel();
+    await phase.settle();
   }
-  return { results, ...(fatalError ? { fatalError } : {}) };
 }
 
-interface ResolvedToolCall {
-  toolCall: ToolCallSummary;
-  outcome: ToolOutcome;
-  hookOutcome: ToolCallOutcome;
-}
-
-async function* resolveToolCall(
+async function* scheduleToolCall(
   state: RunState,
   iteration: number,
-  requested: ToolCallSummary,
-  skip: boolean,
-): AsyncGenerator<RunEventPayload, ResolvedToolCall> {
-  if (skip || isAborted(state)) {
-    return {
-      toolCall: requested,
-      outcome: abortedOutcome(),
-      hookOutcome: 'aborted',
-    };
+  call: ToolUseContent,
+  phase: ToolPhase,
+): AsyncGenerator<RunEventPayload> {
+  const requested: ToolCallSummary = {
+    id: call.id,
+    name: call.name,
+    input: call.input,
+  };
+  const emits = new EmitBuffer();
+  if (phase.shouldSkip(state)) {
+    const outcome = Promise.resolve(abortedOutcome());
+    phase.scheduled.push({ toolCall: requested, outcome, emits });
+    return;
   }
   const toolCall = await state.hookRunner.beforeToolCall({
     iteration,
@@ -96,19 +123,53 @@ async function* resolveToolCall(
     findTool: (name) => findTool(state, name),
   });
   yield* drainEmits(state);
-  if (isAborted(state)) {
-    return { toolCall, outcome: abortedOutcome(), hookOutcome: 'aborted' };
-  }
-  const outcome = await runTool(
-    state,
-    findTool(state, toolCall.name),
-    toolCall,
+  const tool = findTool(state, toolCall.name);
+  if (tool?.exclusive) await phase.settle();
+  const outcome = phase.limiter.run(() =>
+    startToolCall(state, phase, tool, toolCall, emits),
   );
-  return {
-    toolCall,
-    outcome,
-    hookOutcome: toolCallOutcome(outcome),
-  };
+  phase.scheduled.push({ toolCall, outcome, emits });
+  if (tool?.exclusive) await outcome;
+}
+
+const startToolCall = async (
+  state: RunState,
+  phase: ToolPhase,
+  tool: Tool | undefined,
+  toolCall: ToolCallSummary,
+  emits: EmitBuffer,
+): Promise<ToolOutcome> => {
+  if (phase.shouldSkip(state)) return abortedOutcome();
+  const outcome = await runTool(state, phase, tool, toolCall, emits);
+  if (outcome.fatalError) phase.recordFatalError(outcome.fatalError);
+  return outcome;
+};
+
+async function* finalizeToolCalls(
+  state: RunState,
+  iteration: number,
+  phase: ToolPhase,
+): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
+  const results: ToolResultContent[] = [];
+  let fatalError: AgentRuntimeError | undefined;
+  const lastIndex = phase.scheduled.length - 1;
+  for (const [callIndex, scheduled] of phase.scheduled.entries()) {
+    const outcome = await scheduled.outcome;
+    fatalError ??= outcome.fatalError;
+    for (const event of scheduled.emits.drain()) state.emits.push(event);
+    const result = await finalizeToolCall({
+      state,
+      iteration,
+      toolCall: scheduled.toolCall,
+      outcome,
+      hookOutcome: toolCallOutcome(outcome),
+      isLastToolCall: callIndex === lastIndex,
+    });
+    yield* drainEmits(state);
+    results.push(result);
+    yield result;
+  }
+  return { results, ...(fatalError ? { fatalError } : {}) };
 }
 
 const toolCallOutcome = (outcome: ToolOutcome): ToolCallOutcome => {
@@ -153,6 +214,7 @@ const buildToolResult = (
 const abortedOutcome = (): ToolOutcome => ({
   result: 'The run was aborted before this tool call was executed.',
   isError: true,
+  aborted: true,
 });
 
 const findTool = (state: RunState, name: string): Tool | undefined => {
@@ -161,8 +223,10 @@ const findTool = (state: RunState, name: string): Tool | undefined => {
 
 const runTool = async (
   state: RunState,
+  phase: ToolPhase,
   tool: Tool | undefined,
   call: ToolCallSummary,
+  emits: EmitBuffer,
 ): Promise<ToolOutcome> => {
   if (!tool) {
     return {
@@ -180,7 +244,7 @@ const runTool = async (
       isError: false,
     };
   }
-  const context = buildToolContext(state, call.id);
+  const context = buildToolContext(state, phase, call.id, emits);
   try {
     const value = await tool.execute(call.input, context);
     return normalizeToolOutput(value);
@@ -236,22 +300,29 @@ const signalCausedFailure = (
 
 const buildToolContext = (
   state: RunState,
+  phase: ToolPhase,
   toolCallId: string,
+  emits: EmitBuffer,
 ): ToolExecutionContext => {
   return {
     context: state.context,
     toolCallId,
     toolNames: state.tools.map(({ name }) => name),
-    signal: toolSignal(state),
-    emit: (event) => state.emits.push(event),
+    signal: toolSignal(state, phase),
+    emit: (event) => emits.push(event),
     runChild: state.runChild,
   };
 };
 
-const toolSignal = (state: RunState): AbortSignal =>
-  state.signal
-    ? AbortSignal.any([state.signal, state.consumerSignal])
-    : state.consumerSignal;
+const toolSignal = (state: RunState, phase: ToolPhase): AbortSignal =>
+  AbortSignal.any(
+    [
+      state.signal,
+      state.consumerSignal,
+      state.abortState.signal,
+      phase.signal,
+    ].filter((signal): signal is AbortSignal => signal !== undefined),
+  );
 
 const clampResult = (result: string): string => {
   if (result.length <= MAX_TOOL_RESULT_LENGTH) {

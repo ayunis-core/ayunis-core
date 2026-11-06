@@ -238,6 +238,36 @@ describe('ExecuteMcpToolUseCase', () => {
     expect(setError).not.toHaveBeenCalled();
   });
 
+  it("forwards the run's cancellation instead of soft-returning it to the LLM", async () => {
+    const controller = new AbortController();
+    const cancellation = new Error('Run consumer abandoned the stream');
+    repository.findById.mockResolvedValue(buildPredefined());
+    contextService.get.mockReturnValue(mockOrgId);
+    mcpClientService.callTool.mockImplementation(() => {
+      controller.abort(cancellation);
+      return Promise.reject(
+        new DOMException('This operation was aborted', 'AbortError'),
+      );
+    });
+
+    const result = useCase.execute(
+      new ExecuteMcpToolCommand(
+        mockIntegrationId,
+        mockToolName,
+        mockParameters,
+        controller.signal,
+      ),
+    );
+
+    await expect(result).rejects.toBe(cancellation);
+    expect(mcpClientService.callTool).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ signal: controller.signal }),
+      mockOrgId,
+    );
+    expect(setError).not.toHaveBeenCalled();
+  });
+
   it('throws when integration does not exist', async () => {
     repository.findById.mockResolvedValue(null);
     contextService.get.mockReturnValue(mockOrgId);
