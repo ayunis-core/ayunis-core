@@ -91,7 +91,11 @@ export default function CreateEntityDialog({
               >
                 {translations.cancel}
               </Button>
-              <Button type="submit" disabled={isLoading || isSubmitDisabled}>
+              <Button
+                type="submit"
+                disabled={isLoading || isSubmitDisabled}
+                data-testid="create-entity-submit"
+              >
                 {isLoading ? translations.creating : translations.create}
               </Button>
             </div>

@@ -6,6 +6,8 @@ import {
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
   getTeamsControllerListMyTeamsQueryKey,
+  myPermissionsControllerGetMine,
+  getMyPermissionsControllerGetMineQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateKnowledgeBaseShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { createFileRoute, redirect } from '@tanstack/react-router';
@@ -41,6 +43,12 @@ const userTeamsQueryOptions = () =>
     queryFn: () => teamsControllerListMyTeams(),
   });
 
+const myPermissionsQueryOptions = () =>
+  queryOptions({
+    queryKey: getMyPermissionsControllerGetMineQueryKey(),
+    queryFn: () => myPermissionsControllerGetMine(),
+  });
+
 export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
@@ -48,7 +56,7 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
     const knowledgeBase = await queryClient.query(
       knowledgeBaseQueryOptions(id),
     );
-    if (knowledgeBase.ownerType !== 'personal') {
+    if (knowledgeBase.ownerType === 'workspace') {
       if (!knowledgeBase.workspaceId)
         throw redirect({ to: '/knowledge-bases' });
       throw redirect({
@@ -59,12 +67,17 @@ export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
         },
       });
     }
-    const shares = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(sharesQueryOptions(id));
-    const userTeams = knowledgeBase.isShared
-      ? []
-      : await queryClient.query(userTeamsQueryOptions());
+    // Only the owner of a personal knowledge base manages its shares; team and
+    // organization knowledge bases cannot be shared.
+    const canShare =
+      knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared;
+    // Teams and permissions decide who may manage team and organization
+    // items, so they are loaded before the first paint for every owner.
+    const [shares, userTeams] = await Promise.all([
+      canShare ? queryClient.query(sharesQueryOptions(id)) : [],
+      queryClient.query(userTeamsQueryOptions()),
+      queryClient.query(myPermissionsQueryOptions()),
+    ]);
     return { knowledgeBase, shares, userTeams };
   },
 });

@@ -8,10 +8,12 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import type { OwnerSelection } from '@/features/resource-ownership';
 
 export type CreateKnowledgeBaseData = {
   name: string;
   description?: string;
+  owner?: OwnerSelection;
 };
 
 export function useCreateKnowledgeBase() {
@@ -21,7 +23,7 @@ export function useCreateKnowledgeBase() {
   const mutation = useMutation({
     mutationFn: (data: CreateKnowledgeBaseData) =>
       knowledgeBasesControllerCreate({
-        ownerType: 'personal',
+        ...(data.owner ?? { ownerType: 'personal' }),
         name: data.name,
         description: data.description ?? '',
       }),

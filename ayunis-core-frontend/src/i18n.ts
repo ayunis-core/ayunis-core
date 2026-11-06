@@ -52,6 +52,8 @@ import deInbox from './shared/locales/de/inbox.json';
 import deSkill from './shared/locales/de/skill.json';
 import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
 import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
+import enOwnership from './shared/locales/en/ownership.json';
+import deOwnership from './shared/locales/de/ownership.json';
 import enSuperAdminSettingsSkills from './shared/locales/en/super-admin-settings-skills.json';
 import deSuperAdminSettingsSkills from './shared/locales/de/super-admin-settings-skills.json';
 import enSuperAdminSettingsSuperAdmins from './shared/locales/en/super-admin-settings-super-admins.json';
@@ -119,6 +121,7 @@ const resources = {
     workspace: enWorkspace,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
+    ownership: enOwnership,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
     'super-admin-settings-users': enSuperAdminSettingsUsers,
@@ -165,6 +168,7 @@ const resources = {
     workspace: deWorkspace,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,
+    ownership: deOwnership,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
     'super-admin-settings-users': deSuperAdminSettingsUsers,
