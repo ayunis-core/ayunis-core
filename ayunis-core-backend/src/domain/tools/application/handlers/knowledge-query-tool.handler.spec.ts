@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeQueryToolHandler } from './knowledge-query-tool.handler';
 import { QueryKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
-import type { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { randomUUID } from 'crypto';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
@@ -11,22 +11,17 @@ import type { KnowledgeBaseQueryResult } from 'src/domain/knowledge-bases/applic
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
-function createMockTool(knowledgeBaseId: string) {
-  return {
-    name: 'knowledge_query',
-    validateParams: jest.fn().mockReturnValue({
-      knowledgeBaseId,
-      query: 'test query',
-    }),
-  } as unknown as KnowledgeQueryTool;
-}
-
 describe('KnowledgeQueryToolHandler', () => {
   let handler: KnowledgeQueryToolHandler;
   let mockQueryKbUseCase: jest.Mocked<QueryKnowledgeBaseUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
 
   const mockKbId = randomUUID();
+  const secondKbId = randomUUID();
+  const tool = new KnowledgeQueryTool([
+    { id: mockKbId, name: 'Personalhandbuch' },
+    { id: secondKbId, name: 'Dienstvereinbarungen' },
+  ]);
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
   const mockThreadId = randomUUID();
@@ -77,15 +72,15 @@ describe('KnowledgeQueryToolHandler', () => {
         sourceName: 'HR Policies Document',
         sourceId: mockSourceId,
         sourceCreatedBy: SourceCreator.USER,
+        matchedQueries: ['vacation policy'],
       },
     ];
 
     mockQueryKbUseCase.execute.mockResolvedValue(mockResults);
 
-    const tool = createMockTool(mockKbId);
     const result = await handler.execute({
       tool,
-      input: { knowledgeBaseId: mockKbId, query: 'vacation policy' },
+      input: { knowledgeBaseIds: [mockKbId], queries: ['vacation policy'] },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
 
@@ -100,7 +95,40 @@ describe('KnowledgeQueryToolHandler', () => {
       fileName: 'hr-policies.pdf',
       documentId: mockSourceId,
       documentName: 'HR Policies Document',
+      matchedQueries: ['vacation policy'],
     });
+  });
+
+  it('should query every requested knowledge base with every query in one call', async () => {
+    mockQueryKbUseCase.execute.mockResolvedValue([]);
+
+    await handler.execute({
+      tool,
+      input: {
+        knowledgeBaseIds: [mockKbId, secondKbId],
+        queries: ['Urlaubsanspruch', 'Sonderurlaub'],
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(mockQueryKbUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(mockQueryKbUseCase.execute).toHaveBeenCalledWith({
+      knowledgeBaseIds: [mockKbId, secondKbId],
+      queries: ['Urlaubsanspruch', 'Sonderurlaub'],
+      userId: mockUserId,
+      threadId: mockThreadId,
+    });
+  });
+
+  it('should fail without querying when the model uses the single knowledge base shape', async () => {
+    await expect(
+      handler.execute({
+        tool,
+        input: { knowledgeBaseId: mockKbId, query: 'Urlaubsanspruch' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+    expect(mockQueryKbUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should mark system-only document chunks as non-citable', async () => {
@@ -114,12 +142,13 @@ describe('KnowledgeQueryToolHandler', () => {
         sourceName: 'Internal instructions',
         sourceId: mockSourceId,
         sourceCreatedBy: SourceCreator.SYSTEM,
+        matchedQueries: ['instructions'],
       },
     ]);
 
     const result = await handler.execute({
-      tool: createMockTool(mockKbId),
-      input: { knowledgeBaseId: mockKbId, query: 'instructions' },
+      tool,
+      input: { knowledgeBaseIds: [mockKbId], queries: ['instructions'] },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
 
@@ -131,10 +160,9 @@ describe('KnowledgeQueryToolHandler', () => {
   it('should return empty array when no results found', async () => {
     mockQueryKbUseCase.execute.mockResolvedValue([]);
 
-    const tool = createMockTool(mockKbId);
     const result = await handler.execute({
       tool,
-      input: { knowledgeBaseId: mockKbId, query: 'nonexistent topic' },
+      input: { knowledgeBaseIds: [mockKbId], queries: ['nonexistent topic'] },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
 
@@ -151,15 +179,15 @@ describe('KnowledgeQueryToolHandler', () => {
         sourceName: 'Some Doc',
         sourceId: mockSourceId,
         sourceCreatedBy: SourceCreator.USER,
+        matchedQueries: ['vacation policy'],
       },
     ];
 
     mockQueryKbUseCase.execute.mockResolvedValue(mockResults);
 
-    const tool = createMockTool(mockKbId);
     const result = await handler.execute({
       tool,
-      input: { knowledgeBaseId: mockKbId, query: 'test' },
+      input: { knowledgeBaseIds: [mockKbId], queries: ['test'] },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
 
@@ -174,12 +202,10 @@ describe('KnowledgeQueryToolHandler', () => {
       new Error('Database connection lost'),
     );
 
-    const tool = createMockTool(mockKbId);
-
     await expect(
       handler.execute({
         tool,
-        input: { knowledgeBaseId: mockKbId, query: 'test' },
+        input: { knowledgeBaseIds: [mockKbId], queries: ['test'] },
         context: { orgId: mockOrgId, threadId: mockThreadId },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
@@ -190,12 +216,10 @@ describe('KnowledgeQueryToolHandler', () => {
       new KnowledgeBaseNotFoundError(mockKbId),
     );
 
-    const tool = createMockTool(mockKbId);
-
     try {
       await handler.execute({
         tool,
-        input: { knowledgeBaseId: mockKbId, query: 'test' },
+        input: { knowledgeBaseIds: [mockKbId], queries: ['test'] },
         context: { orgId: mockOrgId, threadId: mockThreadId },
       });
       fail('Expected ToolExecutionFailedError');
@@ -203,7 +227,7 @@ describe('KnowledgeQueryToolHandler', () => {
       expect(error).toBeInstanceOf(ToolExecutionFailedError);
       expect((error as ToolExecutionFailedError).exposeToLLM).toBe(true);
       expect((error as ToolExecutionFailedError).message).toContain(
-        'Knowledge base not found',
+        `Knowledge base with ID '${mockKbId}' not found`,
       );
     }
   });

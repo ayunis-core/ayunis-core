@@ -10,6 +10,7 @@ import {
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import { IndexMatch } from 'src/domain/rag/indexers/domain/index-match.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -114,14 +115,17 @@ describe('QueryKnowledgeBaseUseCase', () => {
       type: TextType.FILE,
     });
 
-    const indexEntry = new IndexEntry({
-      relatedDocumentId: sourceId,
-      relatedChunkId: chunkId,
+    const indexMatch = new IndexMatch({
+      entry: new IndexEntry({
+        relatedDocumentId: sourceId,
+        relatedChunkId: chunkId,
+      }),
+      matchedQueries: ['Grundsteuer'],
     });
 
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
-    mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
-    mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([source]);
+    mockSearchContent.executeMulti.mockResolvedValue([indexMatch]);
     mockFindChunks.execute.mockResolvedValue([
       {
         chunk,
@@ -132,8 +136,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     ]);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -143,11 +147,12 @@ describe('QueryKnowledgeBaseUseCase', () => {
     expect(results[0].chunk).toBe(chunk);
     expect(results[0].sourceName).toBe('Haushaltssatzung_2025.pdf');
     expect(results[0].sourceId).toBe(sourceId);
+    expect(results[0].matchedQueries).toEqual(['Grundsteuer']);
     expect(mockSearchContent.executeMulti).toHaveBeenCalledWith(
       expect.objectContaining({
         orgId,
         documentIds: [sourceId],
-        query: 'Grundsteuer',
+        queries: ['Grundsteuer'],
       }),
     );
     expect(mockFindChunks.execute).toHaveBeenCalledWith(
@@ -176,14 +181,17 @@ describe('QueryKnowledgeBaseUseCase', () => {
       type: TextType.FILE,
     });
 
-    const indexEntry = new IndexEntry({
-      relatedDocumentId: sourceId,
-      relatedChunkId: chunkId,
+    const indexMatch = new IndexMatch({
+      entry: new IndexEntry({
+        relatedDocumentId: sourceId,
+        relatedChunkId: chunkId,
+      }),
+      matchedQueries: ['Grundsteuer'],
     });
 
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
-    mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
-    mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([source]);
+    mockSearchContent.executeMulti.mockResolvedValue([indexMatch]);
     mockFindChunks.execute.mockResolvedValue([
       {
         chunk,
@@ -194,8 +202,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     ]);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Bebauungsplan',
+      knowledgeBaseIds: [kbId],
+      queries: ['Bebauungsplan'],
       userId,
     });
 
@@ -214,11 +222,11 @@ describe('QueryKnowledgeBaseUseCase', () => {
     });
 
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
-    mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
+    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -234,8 +242,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     );
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -250,8 +258,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     );
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -270,11 +278,11 @@ describe('QueryKnowledgeBaseUseCase', () => {
     });
 
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(sharedKb);
-    mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
+    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -299,8 +307,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -324,20 +332,23 @@ describe('QueryKnowledgeBaseUseCase', () => {
       type: TextType.FILE,
     });
 
-    const indexEntry = new IndexEntry({
-      relatedDocumentId: sourceId,
-      relatedChunkId: chunkId,
+    const indexMatch = new IndexMatch({
+      entry: new IndexEntry({
+        relatedDocumentId: sourceId,
+        relatedChunkId: chunkId,
+      }),
+      matchedQueries: ['Grundsteuer'],
     });
 
     mockFindKnowledgeBaseForThread.execute.mockResolvedValue(kb);
-    mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
-    mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([source]);
+    mockSearchContent.executeMulti.mockResolvedValue([indexMatch]);
     // Chunk not found in DB
     mockFindChunks.execute.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 
@@ -346,14 +357,163 @@ describe('QueryKnowledgeBaseUseCase', () => {
     expect(results).toEqual([]);
   });
 
+  describe('with several knowledge bases', () => {
+    const secondKbId = '88888888-8888-8888-8888-888888888888' as UUID;
+    const secondSourceId = '99999999-9999-9999-9999-999999999999' as UUID;
+
+    function knowledgeBase(id: UUID, name: string): PersonalKnowledgeBase {
+      return new PersonalKnowledgeBase({ id, name, orgId, userId });
+    }
+
+    function fileSource(id: UUID, name: string): FileSource {
+      return new FileSource({
+        id,
+        name,
+        fileType: FileType.PDF,
+        type: TextType.FILE,
+      });
+    }
+
+    it('should search the documents of every knowledge base with every query in one search', async () => {
+      mockFindKnowledgeBaseForThread.execute.mockImplementation(
+        ({ knowledgeBaseId }) =>
+          Promise.resolve(knowledgeBase(knowledgeBaseId, 'Satzungen')),
+      );
+      mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([
+        fileSource(sourceId, 'Hundesteuersatzung.pdf'),
+        fileSource(secondSourceId, 'Grundsteuersatzung.pdf'),
+      ]);
+      mockSearchContent.executeMulti.mockResolvedValue([]);
+
+      await useCase.execute(
+        new QueryKnowledgeBaseQuery({
+          knowledgeBaseIds: [kbId, secondKbId],
+          queries: ['Hebesatz', 'Steuerbefreiung'],
+          userId,
+        }),
+      );
+
+      expect(mockKbRepo.findSourcesByKnowledgeBaseIds).toHaveBeenCalledWith([
+        kbId,
+        secondKbId,
+      ]);
+      expect(mockSearchContent.executeMulti).toHaveBeenCalledTimes(1);
+      expect(mockSearchContent.executeMulti).toHaveBeenCalledWith(
+        expect.objectContaining({
+          documentIds: [sourceId, secondSourceId],
+          queries: ['Hebesatz', 'Steuerbefreiung'],
+          limit: 10,
+        }),
+      );
+    });
+
+    it('should check access to every requested knowledge base for the thread', async () => {
+      const threadId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID;
+      mockFindKnowledgeBaseForThread.execute.mockImplementation(
+        ({ knowledgeBaseId }) =>
+          Promise.resolve(knowledgeBase(knowledgeBaseId, 'Satzungen')),
+      );
+      mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([]);
+
+      await useCase.execute(
+        new QueryKnowledgeBaseQuery({
+          knowledgeBaseIds: [kbId, secondKbId],
+          queries: ['Hebesatz'],
+          userId,
+          threadId,
+        }),
+      );
+
+      expect(mockFindKnowledgeBaseForThread.execute).toHaveBeenCalledWith({
+        knowledgeBaseId: kbId,
+        threadId,
+      });
+      expect(mockFindKnowledgeBaseForThread.execute).toHaveBeenCalledWith({
+        knowledgeBaseId: secondKbId,
+        threadId,
+      });
+    });
+
+    it('should reject the whole query without searching when one knowledge base is not accessible', async () => {
+      mockFindKnowledgeBaseForThread.execute.mockImplementation(
+        ({ knowledgeBaseId }) =>
+          knowledgeBaseId === secondKbId
+            ? Promise.reject(new KnowledgeBaseNotFoundError(secondKbId))
+            : Promise.resolve(knowledgeBase(knowledgeBaseId, 'Satzungen')),
+      );
+
+      await expect(
+        useCase.execute(
+          new QueryKnowledgeBaseQuery({
+            knowledgeBaseIds: [kbId, secondKbId],
+            queries: ['Hebesatz'],
+            userId,
+          }),
+        ),
+      ).rejects.toThrow(new KnowledgeBaseNotFoundError(secondKbId));
+      expect(mockKbRepo.findSourcesByKnowledgeBaseIds).not.toHaveBeenCalled();
+      expect(mockSearchContent.executeMulti).not.toHaveBeenCalled();
+    });
+
+    it('should return at most twenty results across all queries', async () => {
+      mockFindKnowledgeBaseForThread.execute.mockResolvedValue(
+        knowledgeBase(kbId, 'Satzungen'),
+      );
+      mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([
+        fileSource(sourceId, 'Hundesteuersatzung.pdf'),
+      ]);
+      const chunkIds = Array.from(
+        { length: 25 },
+        (_, index) =>
+          `bbbbbbbb-bbbb-bbbb-bbbb-${String(index).padStart(12, '0')}` as UUID,
+      );
+      mockSearchContent.executeMulti.mockResolvedValue(
+        chunkIds.map(
+          (id) =>
+            new IndexMatch({
+              entry: new IndexEntry({
+                relatedDocumentId: sourceId,
+                relatedChunkId: id,
+              }),
+              matchedQueries: ['Hebesatz'],
+            }),
+        ),
+      );
+      mockFindChunks.execute.mockImplementation(({ chunkIds: ids }) =>
+        Promise.resolve(
+          ids.map((id) => ({
+            chunk: new TextSourceContentChunk({
+              id,
+              content: 'Der Hebesatz beträgt 400 Prozent.',
+              meta: {},
+            }),
+            sourceId,
+            sourceName: 'Hundesteuersatzung.pdf',
+            sourceCreatedBy: SourceCreator.USER,
+          })),
+        ),
+      );
+
+      const results = await useCase.execute(
+        new QueryKnowledgeBaseQuery({
+          knowledgeBaseIds: [kbId],
+          queries: ['Hebesatz'],
+          userId,
+        }),
+      );
+
+      expect(results).toHaveLength(20);
+    });
+  });
+
   it('should wrap unexpected errors in UnexpectedKnowledgeBaseError', async () => {
     mockFindKnowledgeBaseForThread.execute.mockRejectedValue(
       new Error('database connection lost'),
     );
 
     const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseId: kbId,
-      query: 'Grundsteuer',
+      knowledgeBaseIds: [kbId],
+      queries: ['Grundsteuer'],
       userId,
     });
 

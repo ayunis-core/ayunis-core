@@ -194,15 +194,15 @@ function sourceCitationResponse(
   const sourceId = firstAvailableSourceId(request);
   if (sourceId) {
     return sourceCitationToolCallResponse('source_query', {
-      sourceId,
-      query: 'source citation evidence',
+      sourceIds: [sourceId],
+      queries: ['source citation evidence'],
     });
   }
   const knowledgeBaseId = firstAvailableKnowledgeBaseId(request);
   if (knowledgeBaseId) {
     return sourceCitationToolCallResponse('knowledge_query', {
-      knowledgeBaseId,
-      query: 'source citation evidence',
+      knowledgeBaseIds: [knowledgeBaseId],
+      queries: ['source citation evidence'],
     });
   }
   const skillSlug = firstAvailableSkillSlug(request);
@@ -267,7 +267,7 @@ function isCitationToolResult(
 function firstAvailableKnowledgeBaseId(
   request: ProviderRequest,
 ): string | null {
-  return firstToolEnumValue(request, 'knowledge_query', 'knowledgeBaseId');
+  return firstToolEnumValue(request, 'knowledge_query', 'knowledgeBaseIds');
 }
 
 function firstAvailableSkillSlug(request: ProviderRequest): string | null {
@@ -282,8 +282,10 @@ function firstToolEnumValue(
   const tool = request.tools.find((item) => item.name === toolName);
   if (!tool || !isRecord(tool.parameters.properties)) return null;
   const property = tool.parameters.properties[propertyName];
-  if (!isRecord(property) || !Array.isArray(property.enum)) return null;
-  const firstValue: unknown = property.enum[0];
+  if (!isRecord(property)) return null;
+  const values = isRecord(property.items) ? property.items.enum : property.enum;
+  if (!Array.isArray(values)) return null;
+  const firstValue: unknown = values[0];
   return typeof firstValue === 'string' ? firstValue : null;
 }
 
@@ -302,7 +304,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 async function* sourceCitationToolCallResponse(
   toolName: 'source_query' | 'knowledge_query' | 'activate_skill',
-  input: Record<string, string>,
+  input: Record<string, string | string[]>,
 ): AsyncIterable<ProviderChunk> {
   await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
   yield {

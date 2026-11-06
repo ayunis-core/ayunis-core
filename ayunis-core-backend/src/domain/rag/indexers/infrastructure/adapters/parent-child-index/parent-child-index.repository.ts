@@ -3,11 +3,14 @@ import type { EntityManager } from 'typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ParentChunk } from './domain/parent-chunk.entity';
 import { UUID } from 'crypto';
-import { ParentChildIndexerRepositoryPort } from './application/ports/parent-child-indexer-repository.port';
+import {
+  ParentChildIndexerRepositoryPort,
+  ScoredParentChunk,
+} from './application/ports/parent-child-indexer-repository.port';
 import { ParentChildIndexerMapper } from './infrastructure/persistence/mappers/parent-child-indexer.mapper';
 
 const DEFAULT_LIMIT = 10;
@@ -75,37 +78,11 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       .execute();
   }
 
-  async find(
-    queryVector: number[],
-    relatedDocumentId: UUID,
-    limit?: number,
-  ): Promise<ParentChunk[]> {
-    if (queryVector.length === 0) {
-      this.logger.warn('Empty query vector provided for vector search');
-      return [];
-    }
-
-    this.logger.debug(
-      { relatedDocumentId, queryVectorLength: queryVector.length },
-      'Starting vector search',
-    );
-
-    return this.vectorSearch(
-      queryVector,
-      (qb) =>
-        qb.where('parentChunk.relatedDocumentId = :relatedDocumentId', {
-          relatedDocumentId,
-        }),
-      limit,
-      { relatedDocumentId },
-    );
-  }
-
   async findByDocumentIds(
     queryVector: number[],
     relatedDocumentIds: UUID[],
     limit?: number,
-  ): Promise<ParentChunk[]> {
+  ): Promise<ScoredParentChunk[]> {
     if (queryVector.length === 0) {
       this.logger.warn('Empty query vector provided for multi-document search');
       return [];
@@ -124,28 +101,6 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       'Starting multi-document vector search',
     );
 
-    return this.vectorSearch(
-      queryVector,
-      (qb) =>
-        qb.where('parentChunk.relatedDocumentId IN (:...documentIds)', {
-          documentIds: relatedDocumentIds,
-        }),
-      limit,
-      {
-        queryVectorLength: queryVector.length,
-        documentCount: relatedDocumentIds.length,
-      },
-    );
-  }
-
-  private async vectorSearch(
-    queryVector: number[],
-    applyWhereClause: (
-      qb: SelectQueryBuilder<ParentChunkRecord>,
-    ) => SelectQueryBuilder<ParentChunkRecord>,
-    limit: number | undefined,
-    errorContext: Record<string, unknown>,
-  ): Promise<ParentChunk[]> {
     const embeddingColumn = EMBEDDING_COLUMNS[queryVector.length];
     if (!embeddingColumn) {
       this.logger.warn(
@@ -158,28 +113,50 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       return [];
     }
 
+    return this.vectorSearch(
+      embeddingColumn,
+      queryVector,
+      relatedDocumentIds,
+      limit,
+    );
+  }
+
+  private async vectorSearch(
+    embeddingColumn: string,
+    queryVector: number[],
+    relatedDocumentIds: UUID[],
+    limit: number | undefined,
+  ): Promise<ScoredParentChunk[]> {
     try {
-      const queryVectorString = JSON.stringify(queryVector);
-      let queryBuilder = this.parentChunkRepository
+      const distance = `${embeddingColumn} <=> :queryVector::vector`;
+      const { entities, raw } = await this.parentChunkRepository
         .createQueryBuilder('parentChunk')
-        .leftJoinAndSelect('parentChunk.children', 'children');
-
-      queryBuilder = applyWhereClause(queryBuilder);
-
-      queryBuilder
+        .leftJoinAndSelect('parentChunk.children', 'children')
+        .addSelect(distance, 'distance')
+        .where('parentChunk.relatedDocumentId IN (:...documentIds)', {
+          documentIds: relatedDocumentIds,
+        })
         .andWhere(`${embeddingColumn} IS NOT NULL`)
-        .orderBy(`${embeddingColumn} <=> :queryVector::vector`, 'ASC')
-        .setParameter('queryVector', queryVectorString)
-        .limit(limit ?? DEFAULT_LIMIT);
+        .orderBy(distance, 'ASC')
+        .setParameter('queryVector', JSON.stringify(queryVector))
+        .limit(limit ?? DEFAULT_LIMIT)
+        .getRawAndEntities<{
+          parentChunk_id: UUID;
+          distance: number | string;
+        }>();
 
-      const { entities } = await queryBuilder.getRawAndEntities();
-
-      return entities.map((entity) =>
-        this.parentChildIndexerMapper.toParentChunkEntity(entity),
-      );
+      const bestDistances = this.bestDistanceByParentId(raw);
+      return entities.map((entity) => ({
+        parentChunk: this.parentChildIndexerMapper.toParentChunkEntity(entity),
+        distance: bestDistances.get(entity.id) ?? Number.POSITIVE_INFINITY,
+      }));
     } catch (error) {
       this.logger.error(
-        { err: error as Error, ...errorContext },
+        {
+          err: error as Error,
+          queryVectorLength: queryVector.length,
+          documentCount: relatedDocumentIds.length,
+        },
         'Error performing vector search',
       );
       throw new Error(
@@ -187,5 +164,18 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
         { cause: error },
       );
     }
+  }
+
+  private bestDistanceByParentId(
+    rows: { parentChunk_id: UUID; distance: number | string }[],
+  ): Map<UUID, number> {
+    const bestDistances = new Map<UUID, number>();
+    for (const row of rows) {
+      // Rows arrive ordered by distance, so a parent's first row is its best.
+      if (!bestDistances.has(row.parentChunk_id)) {
+        bestDistances.set(row.parentChunk_id, Number(row.distance));
+      }
+    }
+    return bestDistances;
   }
 }

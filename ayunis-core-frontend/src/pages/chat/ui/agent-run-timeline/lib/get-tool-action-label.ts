@@ -23,6 +23,17 @@ function asString(value: unknown): string | undefined {
   return undefined;
 }
 
+function asStringList(value: unknown): string | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return asString(
+    value
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .join(', '),
+  );
+}
+
 export function getToolActionLabel(
   toolUse: ToolUseMessageContent,
   t: TFunction,
@@ -137,13 +148,13 @@ export function getToolActionLabel(
     case 'source_get_text':
       return {
         verb: t('chat.timeline.actions.source_query'),
-        target: asString(params.query),
+        target: asStringList(params.queries) ?? asString(params.query),
       };
     case 'knowledge_query':
     case 'knowledge_get_text':
       return {
         verb: t('chat.timeline.actions.knowledge_query'),
-        target: asString(params.query),
+        target: asStringList(params.queries) ?? asString(params.query),
       };
     case 'code_execution':
       return { verb: t('chat.timeline.actions.code_execution') };

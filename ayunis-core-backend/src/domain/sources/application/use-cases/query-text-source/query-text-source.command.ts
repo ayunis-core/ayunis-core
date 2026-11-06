@@ -2,22 +2,12 @@ import type { UUID } from 'crypto';
 
 export class QueryTextSourceCommand {
   orgId: UUID;
-  filter: {
-    sourceId: UUID;
-    userId: UUID;
-  };
-  query: string;
+  sourceIds: UUID[];
+  queries: string[];
 
-  constructor(params: {
-    orgId: UUID;
-    filter: {
-      sourceId: UUID;
-      userId: UUID;
-    };
-    query: string;
-  }) {
+  constructor(params: { orgId: UUID; sourceIds: UUID[]; queries: string[] }) {
     this.orgId = params.orgId;
-    this.filter = params.filter;
-    this.query = params.query;
+    this.sourceIds = params.sourceIds;
+    this.queries = params.queries;
   }
 }

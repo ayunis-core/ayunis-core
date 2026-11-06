@@ -9,19 +9,25 @@ import {
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchMultiContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { IndexMatch } from 'src/domain/rag/indexers/domain/index-match.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredOrgId } from 'src/common/context/required-context';
 import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { UUID } from 'crypto';
+
+const MAX_MATCHES_PER_QUERY = 10;
+const MAX_TOTAL_MATCHES = 20;
 
 export interface KnowledgeBaseQueryResult {
   chunk: TextSourceContentChunk;
   sourceName: string;
   sourceId: string;
   sourceCreatedBy: SourceCreator;
+  matchedQueries: string[];
 }
 
 @Injectable()
@@ -46,72 +52,78 @@ export class QueryKnowledgeBaseUseCase {
   private async executeInternal(
     query: QueryKnowledgeBaseQuery,
   ): Promise<KnowledgeBaseQueryResult[]> {
-    const orgId = this.contextService.get('orgId');
+    const orgId = getRequiredOrgId(this.contextService);
+    const knowledgeBaseIds = [...new Set(query.knowledgeBaseIds)];
 
-    this.logger.debug(
-      {
-        knowledgeBaseId: query.knowledgeBaseId,
-      },
-      'Querying knowledge base',
+    this.logger.debug({ knowledgeBaseIds }, 'Querying knowledge bases');
+
+    await Promise.all(
+      knowledgeBaseIds.map((knowledgeBaseId) =>
+        this.assertAccessible(knowledgeBaseId, orgId, query.threadId),
+      ),
     );
-
-    const knowledgeBase = await this.findKnowledgeBaseForThread.execute({
-      knowledgeBaseId: query.knowledgeBaseId,
-      threadId: query.threadId,
-    });
-
-    if (knowledgeBase.orgId !== orgId) {
-      throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
-    }
 
     // Sources are now metadata-only (no text or chunks loaded)
     const sources =
-      await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(
-        query.knowledgeBaseId,
+      await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseIds(
+        knowledgeBaseIds,
       );
 
     if (sources.length === 0) {
       return [];
     }
 
-    const documentIds = sources.map((source) => source.id);
-
-    const indexEntries = await this.searchContentUseCase.executeMulti(
+    const matches = await this.searchContentUseCase.executeMulti(
       new SearchMultiContentQuery({
         orgId,
-        query: query.query,
-        documentIds,
+        queries: query.queries,
+        documentIds: sources.map((source) => source.id),
         type: IndexType.PARENT_CHILD,
-        limit: 5,
+        limit: MAX_MATCHES_PER_QUERY,
       }),
     );
 
-    return this.resolveResults(indexEntries);
+    return this.resolveResults(matches.slice(0, MAX_TOTAL_MATCHES));
+  }
+
+  private async assertAccessible(
+    knowledgeBaseId: UUID,
+    orgId: UUID,
+    threadId: UUID | undefined,
+  ): Promise<void> {
+    const knowledgeBase = await this.findKnowledgeBaseForThread.execute({
+      knowledgeBaseId,
+      threadId,
+    });
+    if (knowledgeBase.orgId !== orgId) {
+      throw new KnowledgeBaseNotFoundError(knowledgeBaseId);
+    }
   }
 
   private async resolveResults(
-    indexEntries: IndexEntry[],
+    matches: IndexMatch[],
   ): Promise<KnowledgeBaseQueryResult[]> {
-    if (indexEntries.length === 0) {
+    if (matches.length === 0) {
       return [];
     }
 
-    const chunkIds = indexEntries.map((entry) => entry.relatedChunkId);
+    const chunkIds = matches.map((match) => match.entry.relatedChunkId);
     const chunkResults = await this.findContentChunksByIdsUseCase.execute(
       new FindContentChunksByIdsQuery(chunkIds),
     );
     const chunkMap = new Map(
       chunkResults.map((result) => [result.chunk.id, result]),
     );
-    const results = indexEntries.flatMap((entry) => {
-      const match = chunkMap.get(entry.relatedChunkId);
-      return match
+    const results = matches.flatMap((match) => {
+      const result = chunkMap.get(match.entry.relatedChunkId);
+      return result
         ? [
             {
-              chunk: match.chunk,
-              sourceName: match.sourceName,
-              sourceId: match.sourceId,
-              sourceCreatedBy: match.sourceCreatedBy,
+              chunk: result.chunk,
+              sourceName: result.sourceName,
+              sourceId: result.sourceId,
+              sourceCreatedBy: result.sourceCreatedBy,
+              matchedQueries: match.matchedQueries,
             },
           ]
         : [];

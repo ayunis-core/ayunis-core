@@ -564,3 +564,38 @@ it('requires complete tabular file content instead of internal paths or counts',
   expect(prompt).toContain('Include all individual rows');
   expect(prompt).toContain('internal processing paths are not download links');
 });
+
+describe('retrieval guidance', () => {
+  const service = new SystemPromptBuilderService();
+
+  it('tells the model to search several files and phrasings in one source_query call', () => {
+    const result = service.build({
+      tools: [],
+      currentTime: new Date('2026-01-15T10:00:00Z'),
+      sources: [
+        new FileSource({
+          id: randomUUID(),
+          fileType: FileType.PDF,
+          name: 'Haushaltsplan.pdf',
+          type: TextType.FILE,
+        }),
+      ],
+    });
+
+    expect(result).toContain(
+      'Search all relevant files with all phrasings in a single source_query call by passing several sourceIds and queries.',
+    );
+  });
+
+  it('tells the model to search several knowledge bases and phrasings in one knowledge_query call', () => {
+    const result = service.build({
+      tools: [],
+      currentTime: new Date('2026-01-15T10:00:00Z'),
+      knowledgeBases: [{ id: randomUUID(), name: 'Satzungen' }],
+    });
+
+    expect(result).toContain(
+      'Search all relevant knowledge bases with all phrasings in a single knowledge_query call by passing several knowledgeBaseIds and queries.',
+    );
+  });
+});

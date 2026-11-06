@@ -57,7 +57,9 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
       },
     });
 
-    return embeddingsBatchResponse.data.map((data) => {
+    // Callers pair embeddings with their inputs by position; the API only
+    // guarantees the pairing through `index`, not through response order.
+    const embeddings = embeddingsBatchResponse.data.map((data) => {
       if (!data.embedding) {
         this.logger.error(
           { model: model.name },
@@ -76,7 +78,12 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
           data,
         });
       }
-      return new Embedding(data.embedding, input[data.index], model);
+      return {
+        index: data.index,
+        embedding: new Embedding(data.embedding, input[data.index], model),
+      };
     });
+    embeddings.sort((a, b) => a.index - b.index);
+    return embeddings.map(({ embedding }) => embedding);
   }
 }

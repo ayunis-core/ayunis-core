@@ -1,41 +1,64 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SourceQueryToolHandler } from './source-query-tool.handler';
-import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
-import type { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
+import type { TextSourceQueryResult } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { randomUUID } from 'crypto';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
-
-// Helper to create a mock tool with validation bypass
-function createMockTool(sourceId: string) {
-  return {
-    name: 'source_query',
-    validateParams: jest.fn().mockReturnValue({
-      sourceId,
-      query: 'test query',
-    }),
-  } as unknown as SourceQueryTool;
-}
+import { SourceNotFoundError } from 'src/domain/sources/application/sources.errors';
 
 describe('SourceQueryToolHandler', () => {
   let handler: SourceQueryToolHandler;
-  let mockGetSourceByIdUseCase: jest.Mocked<GetTextSourceByIdUseCase>;
   let mockQueryTextSourceUseCase: jest.Mocked<QueryTextSourceUseCase>;
 
-  const mockSourceId = randomUUID();
   const mockOrgId = randomUUID();
   const mockThreadId = randomUUID();
+  const contract = new FileSource({
+    id: randomUUID(),
+    name: 'Mietvertrag.pdf',
+    type: TextType.FILE,
+    fileType: FileType.PDF,
+  });
+  const statute = new FileSource({
+    id: randomUUID(),
+    name: 'Satzung.pdf',
+    type: TextType.FILE,
+    fileType: FileType.PDF,
+  });
+  const tool = new SourceQueryTool([contract, statute]);
+
+  function queryResult(
+    params: Partial<TextSourceQueryResult> & { meta?: Record<string, unknown> },
+  ): TextSourceQueryResult {
+    return {
+      chunk: new TextSourceContentChunk({
+        content: 'Die Kündigungsfrist beträgt drei Monate.',
+        meta: params.meta ?? {},
+      }),
+      sourceId: contract.id,
+      sourceName: contract.name,
+      sourceCreatedBy: SourceCreator.USER,
+      matchedQueries: ['Kündigungsfrist'],
+      ...params,
+    };
+  }
+
+  async function execute(input: Record<string, unknown>) {
+    return JSON.parse(
+      await handler.execute({
+        tool,
+        input,
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ) as Record<string, unknown>[];
+  }
 
   beforeAll(async () => {
-    mockGetSourceByIdUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<GetTextSourceByIdUseCase>;
-
     mockQueryTextSourceUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<QueryTextSourceUseCase>;
@@ -43,10 +66,6 @@ describe('SourceQueryToolHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SourceQueryToolHandler,
-        {
-          provide: GetTextSourceByIdUseCase,
-          useValue: mockGetSourceByIdUseCase,
-        },
         {
           provide: QueryTextSourceUseCase,
           useValue: mockQueryTextSourceUseCase,
@@ -56,296 +75,134 @@ describe('SourceQueryToolHandler', () => {
 
     handler = module.get<SourceQueryToolHandler>(SourceQueryToolHandler);
   });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockQueryTextSourceUseCase.execute.mockResolvedValue([]);
   });
 
-  it('should be defined', () => {
-    expect(handler).toBeDefined();
+  it('queries every requested file with every query in one call', async () => {
+    await execute({
+      sourceIds: [contract.id, statute.id],
+      queries: ['Kündigungsfrist', 'Vertragslaufzeit'],
+    });
+
+    expect(mockQueryTextSourceUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(mockQueryTextSourceUseCase.execute).toHaveBeenCalledWith({
+      orgId: mockOrgId,
+      sourceIds: [contract.id, statute.id],
+      queries: ['Kündigungsfrist', 'Vertragslaufzeit'],
+    });
   });
 
-  describe('execute with line number metadata', () => {
-    it('should include line numbers in response when metadata is present', async () => {
-      const mockSource = new FileSource({
-        id: mockSourceId,
-        name: 'test-file.pdf',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-      });
+  it('returns each chunk with its source, line metadata and matching queries', async () => {
+    const result = queryResult({
+      sourceId: statute.id,
+      sourceName: statute.name,
+      matchedQueries: ['Kündigungsfrist', 'Vertragslaufzeit'],
+      meta: { fileName: 'Satzung.pdf', startLine: 8, endLine: 20 },
+    });
+    mockQueryTextSourceUseCase.execute.mockResolvedValue([result]);
 
-      const mockChunks: TextSourceContentChunk[] = [
-        new TextSourceContentChunk({
-          content: 'First chunk content',
-          meta: {
-            fileName: 'test-file.pdf',
-            index: 0,
-            startLine: 1,
-            endLine: 10,
-            startCharOffset: 0,
-            endCharOffset: 100,
-          },
-        }),
-        new TextSourceContentChunk({
-          content: 'Second chunk content',
-          meta: {
-            fileName: 'test-file.pdf',
-            index: 1,
-            startLine: 8,
-            endLine: 20,
-            startCharOffset: 80,
-            endCharOffset: 200,
-          },
-        }),
-      ];
+    const parsed = await execute({
+      sourceIds: [contract.id, statute.id],
+      queries: ['Kündigungsfrist', 'Vertragslaufzeit'],
+    });
 
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(mockSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue(mockChunks);
-
-      const tool = createMockTool(mockSourceId);
-      const result = await handler.execute({
-        tool,
-        input: {
-          sourceId: mockSourceId,
-          query: 'test query',
-        },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      const parsedResult = JSON.parse(result);
-
-      expect(parsedResult).toHaveLength(2);
-      expect(parsedResult[0]).toEqual({
-        chunkId: mockChunks[0].id,
-        sourceId: mockSource.id,
-        sourceName: mockSource.name,
+    expect(parsed).toEqual([
+      {
+        chunkId: result.chunk.id,
+        sourceId: statute.id,
+        sourceName: 'Satzung.pdf',
         citable: true,
-        content: 'First chunk content',
-        startLine: 1,
-        endLine: 10,
-        fileName: 'test-file.pdf',
-        url: null,
-      });
-      expect(parsedResult[1]).toEqual({
-        chunkId: mockChunks[1].id,
-        sourceId: mockSource.id,
-        sourceName: mockSource.name,
-        citable: true,
-        content: 'Second chunk content',
+        content: 'Die Kündigungsfrist beträgt drei Monate.',
         startLine: 8,
         endLine: 20,
-        fileName: 'test-file.pdf',
+        fileName: 'Satzung.pdf',
         url: null,
-      });
-    });
-
-    it('should mark system-only source chunks as non-citable', async () => {
-      const systemSource = new FileSource({
-        id: mockSourceId,
-        name: 'Internal instructions.pdf',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-        createdBy: SourceCreator.SYSTEM,
-      });
-      const chunk = new TextSourceContentChunk({
-        content: 'Internal retrieval context',
-        meta: { startLine: 1, endLine: 1 },
-      });
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(systemSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue([chunk]);
-
-      const result = await handler.execute({
-        tool: createMockTool(mockSourceId),
-        input: { sourceId: mockSourceId, query: 'internal context' },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      expect(JSON.parse(result)[0]).toEqual(
-        expect.objectContaining({ chunkId: chunk.id, citable: false }),
-      );
-    });
-
-    it('should include URL in response for URL sources', async () => {
-      const mockSource = new FileSource({
-        id: mockSourceId,
-        name: 'Example Website',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-      });
-
-      const mockChunks: TextSourceContentChunk[] = [
-        new TextSourceContentChunk({
-          content: 'Web page content',
-          meta: {
-            url: 'https://example.com/page',
-            index: 0,
-            startLine: 1,
-            endLine: 50,
-          },
-        }),
-      ];
-
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(mockSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue(mockChunks);
-
-      const tool = createMockTool(mockSourceId);
-      const result = await handler.execute({
-        tool,
-        input: {
-          sourceId: mockSourceId,
-          query: 'test query',
-        },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      const parsedResult = JSON.parse(result);
-
-      expect(parsedResult[0]).toEqual({
-        chunkId: mockChunks[0].id,
-        sourceId: mockSource.id,
-        sourceName: mockSource.name,
-        citable: true,
-        content: 'Web page content',
-        startLine: 1,
-        endLine: 50,
-        fileName: null,
-        url: 'https://example.com/page',
-      });
-    });
-
-    it('should return null for line numbers when metadata is missing (graceful degradation)', async () => {
-      const mockSource = new FileSource({
-        id: mockSourceId,
-        name: 'old-file.pdf',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-      });
-
-      // Simulate old indexed content without line number metadata
-      const mockChunks: TextSourceContentChunk[] = [
-        new TextSourceContentChunk({
-          content: 'Legacy chunk without line numbers',
-          meta: {
-            fileName: 'old-file.pdf',
-          },
-        }),
-      ];
-
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(mockSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue(mockChunks);
-
-      const tool = createMockTool(mockSourceId);
-      const result = await handler.execute({
-        tool,
-        input: {
-          sourceId: mockSourceId,
-          query: 'test query',
-        },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      const parsedResult = JSON.parse(result);
-
-      expect(parsedResult[0]).toEqual({
-        chunkId: mockChunks[0].id,
-        sourceId: mockSource.id,
-        sourceName: mockSource.name,
-        citable: true,
-        content: 'Legacy chunk without line numbers',
-        startLine: null,
-        endLine: null,
-        fileName: 'old-file.pdf',
-        url: null,
-      });
-    });
-
-    it('should return null for all metadata when chunk has empty meta', async () => {
-      const mockSource = new FileSource({
-        id: mockSourceId,
-        name: 'test.pdf',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-      });
-
-      const mockChunks: TextSourceContentChunk[] = [
-        new TextSourceContentChunk({
-          content: 'Chunk with empty metadata',
-          meta: {},
-        }),
-      ];
-
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(mockSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue(mockChunks);
-
-      const tool = createMockTool(mockSourceId);
-      const result = await handler.execute({
-        tool,
-        input: {
-          sourceId: mockSourceId,
-          query: 'test query',
-        },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      const parsedResult = JSON.parse(result);
-
-      expect(parsedResult[0]).toEqual({
-        chunkId: mockChunks[0].id,
-        sourceId: mockSource.id,
-        sourceName: mockSource.name,
-        citable: true,
-        content: 'Chunk with empty metadata',
-        startLine: null,
-        endLine: null,
-        fileName: null,
-        url: null,
-      });
-    });
-
-    it('should return empty array when no chunks match', async () => {
-      const mockSource = new FileSource({
-        id: mockSourceId,
-        name: 'test.pdf',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-      });
-
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(mockSource);
-      mockQueryTextSourceUseCase.execute.mockResolvedValue([]);
-
-      const tool = createMockTool(mockSourceId);
-      const result = await handler.execute({
-        tool,
-        input: {
-          sourceId: mockSourceId,
-          query: 'test query',
-        },
-        context: { orgId: mockOrgId, threadId: mockThreadId },
-      });
-
-      const parsedResult = JSON.parse(result);
-
-      expect(parsedResult).toEqual([]);
-    });
+        matchedQueries: ['Kündigungsfrist', 'Vertragslaufzeit'],
+      },
+    ]);
   });
 
-  describe('error handling', () => {
-    it('should throw ToolExecutionFailedError when source is not found', async () => {
-      mockGetSourceByIdUseCase.execute.mockResolvedValue(
-        null as unknown as ReturnType<typeof mockGetSourceByIdUseCase.execute>,
-      );
+  it('marks system-only source chunks as non-citable', async () => {
+    const result = queryResult({ sourceCreatedBy: SourceCreator.SYSTEM });
+    mockQueryTextSourceUseCase.execute.mockResolvedValue([result]);
 
-      const tool = createMockTool(mockSourceId);
-
-      await expect(
-        handler.execute({
-          tool,
-          input: {
-            sourceId: mockSourceId,
-            query: 'test query',
-          },
-          context: { orgId: mockOrgId, threadId: mockThreadId },
-        }),
-      ).rejects.toThrow(ToolExecutionFailedError);
+    const parsed = await execute({
+      sourceIds: [contract.id],
+      queries: ['Kündigungsfrist'],
     });
+
+    expect(parsed[0]).toEqual(
+      expect.objectContaining({ chunkId: result.chunk.id, citable: false }),
+    );
+  });
+
+  it('includes the URL for chunks of web sources', async () => {
+    mockQueryTextSourceUseCase.execute.mockResolvedValue([
+      queryResult({ meta: { url: 'https://www.bitburg.de/satzungen' } }),
+    ]);
+
+    const parsed = await execute({
+      sourceIds: [contract.id],
+      queries: ['Kündigungsfrist'],
+    });
+
+    expect(parsed[0]).toEqual(
+      expect.objectContaining({
+        url: 'https://www.bitburg.de/satzungen',
+        fileName: null,
+      }),
+    );
+  });
+
+  it('returns null metadata when a legacy chunk has none', async () => {
+    mockQueryTextSourceUseCase.execute.mockResolvedValue([queryResult({})]);
+
+    const parsed = await execute({
+      sourceIds: [contract.id],
+      queries: ['Kündigungsfrist'],
+    });
+
+    expect(parsed[0]).toEqual(
+      expect.objectContaining({
+        startLine: null,
+        endLine: null,
+        fileName: null,
+        url: null,
+      }),
+    );
+  });
+
+  it('returns an empty array when no chunks match', async () => {
+    const parsed = await execute({
+      sourceIds: [contract.id],
+      queries: ['Hundesteuer'],
+    });
+
+    expect(parsed).toEqual([]);
+  });
+
+  it('fails without querying when the model uses the single-file shape', async () => {
+    await expect(
+      execute({ sourceId: contract.id, query: 'Kündigungsfrist' }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+    expect(mockQueryTextSourceUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('tells the model which requested source no longer exists', async () => {
+    mockQueryTextSourceUseCase.execute.mockRejectedValue(
+      new SourceNotFoundError(statute.id),
+    );
+
+    const error = (await execute({
+      sourceIds: [contract.id, statute.id],
+      queries: ['Kündigungsfrist'],
+    }).catch((caught: unknown) => caught)) as ToolExecutionFailedError;
+
+    expect(error).toBeInstanceOf(ToolExecutionFailedError);
+    expect(error.exposeToLLM).toBe(true);
+    expect(error.message).toContain(`Source with ID '${statute.id}' not found`);
   });
 });
