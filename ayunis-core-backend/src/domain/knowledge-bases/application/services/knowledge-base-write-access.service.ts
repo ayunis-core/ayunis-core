@@ -7,6 +7,8 @@ import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/applicati
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 
 @Injectable()
 export class KnowledgeBaseWriteAccessService {
@@ -14,7 +16,16 @@ export class KnowledgeBaseWriteAccessService {
     private readonly context: ContextService,
     @Inject(forwardRef(() => AssertWorkspaceWriteAccessUseCase))
     private readonly workspaceWriteAccess: AssertWorkspaceWriteAccessUseCase,
+    private readonly collectiveAccess: CollectiveKnowledgeBaseAccessService,
   ) {}
+
+  /** Creating for a team or the organization takes the right to manage it. */
+  async requireCreate(knowledgeBase: KnowledgeBase): Promise<void> {
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      return this.collectiveAccess.requireManage(knowledgeBase);
+    }
+    return this.requireWrite(knowledgeBase);
+  }
 
   async requireWrite(knowledgeBase: KnowledgeBase): Promise<void> {
     const knowledgeBaseId = knowledgeBase.id;
@@ -24,6 +35,10 @@ export class KnowledgeBaseWriteAccessService {
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       if (knowledgeBase.userId !== userId)
         throw new KnowledgeBaseNotFoundError(knowledgeBase.id);
+      return;
+    }
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      await this.collectiveAccess.requireWrite(knowledgeBase);
       return;
     }
     if (knowledgeBase instanceof WorkspaceKnowledgeBase) {

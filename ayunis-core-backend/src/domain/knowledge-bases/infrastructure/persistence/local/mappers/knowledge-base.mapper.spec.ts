@@ -1,5 +1,7 @@
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { KnowledgeBaseMapper } from './knowledge-base.mapper';
 
@@ -78,5 +80,85 @@ describe(KnowledgeBaseMapper.name, () => {
       expect.objectContaining({ userId }),
     );
     expect(mapper.toDomain(record)).toBeInstanceOf(PersonalKnowledgeBase);
+  });
+
+  it('round-trips team ownership and its global state', () => {
+    const teamId = randomUUID();
+    const record = mapper.toRecord(
+      new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId: randomUUID(),
+        teamId,
+        isActive: true,
+      }),
+    );
+
+    expect(record).toMatchObject({
+      userId: null,
+      workspaceId: null,
+      teamId,
+      isOrgOwned: false,
+      isActive: true,
+    });
+    expect(mapper.toDomain(record)).toBeInstanceOf(TeamKnowledgeBase);
+    expect(mapper.toDomain(record)).toMatchObject({ teamId, isActive: true });
+    expect(() => mapper.toPersonal(record)).toThrow(
+      'Expected personal knowledge base',
+    );
+  });
+
+  it('round-trips organization ownership', () => {
+    const record = mapper.toRecord(
+      new OrgKnowledgeBase({ name: 'Satzungen', orgId: randomUUID() }),
+    );
+
+    expect(record).toMatchObject({
+      userId: null,
+      workspaceId: null,
+      teamId: null,
+      isOrgOwned: true,
+      isActive: false,
+    });
+    const mapped = mapper.toDomain(record);
+    expect(mapped).toBeInstanceOf(OrgKnowledgeBase);
+    expect(mapped).not.toBeInstanceOf(TeamKnowledgeBase);
+  });
+
+  it('never treats a record without an owner as organization-owned', () => {
+    const record = mapper.toRecord(
+      new OrgKnowledgeBase({ name: 'Satzungen', orgId: randomUUID() }),
+    );
+    record.isOrgOwned = false;
+
+    expect(() => mapper.toDomain(record)).toThrow('invalid ownership');
+  });
+
+  it('rejects team ownership combined with organization ownership', () => {
+    const record = mapper.toRecord(
+      new TeamKnowledgeBase({
+        name: 'Bauordnung',
+        orgId: randomUUID(),
+        teamId: randomUUID(),
+      }),
+    );
+    record.isOrgOwned = true;
+
+    expect(() => mapper.toDomain(record)).toThrow('invalid ownership');
+  });
+
+  it('never stores global state for personal knowledge bases', () => {
+    const record = mapper.toRecord(
+      new PersonalKnowledgeBase({
+        name: 'Notizen',
+        orgId: randomUUID(),
+        userId: randomUUID(),
+      }),
+    );
+
+    expect(record).toMatchObject({
+      teamId: null,
+      isOrgOwned: false,
+      isActive: false,
+    });
   });
 });

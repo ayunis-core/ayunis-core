@@ -9,6 +9,8 @@ import {
 } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
 import type { KnowledgeBaseDocumentResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-document-response.dto';
+import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 
 @Injectable()
 export class KnowledgeBaseDtoMapper {
@@ -22,8 +24,7 @@ export class KnowledgeBaseDtoMapper {
   ): KnowledgeBaseResponseDto {
     const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
-      ownerType:
-        entity instanceof PersonalKnowledgeBase ? 'personal' : 'workspace',
+      ...this.toOwner(entity),
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
@@ -31,13 +32,24 @@ export class KnowledgeBaseDtoMapper {
       isActive: context.isActive,
       documentCount: context.documentCount,
     };
-    if (!(entity instanceof PersonalKnowledgeBase)) {
-      dto.workspaceId = entity.workspaceId;
-    }
     if (context.isShared !== undefined) {
       dto.isShared = context.isShared;
     }
     return dto;
+  }
+
+  private toOwner(
+    entity: KnowledgeBase,
+  ): Pick<KnowledgeBaseResponseDto, 'ownerType' | 'workspaceId' | 'teamId'> {
+    if (entity instanceof PersonalKnowledgeBase)
+      return { ownerType: 'personal' };
+    if (entity instanceof WorkspaceKnowledgeBase) {
+      return { ownerType: 'workspace', workspaceId: entity.workspaceId };
+    }
+    if (entity instanceof TeamKnowledgeBase) {
+      return { ownerType: 'team', teamId: entity.teamId };
+    }
+    return { ownerType: 'org' };
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {

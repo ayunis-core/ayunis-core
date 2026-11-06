@@ -15,6 +15,11 @@ import {
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
 
@@ -124,5 +129,57 @@ describe(AssignKnowledgeBaseToSkillUseCase.name, () => {
       ),
     ).rejects.toBeInstanceOf(SkillKnowledgeBaseNotFoundError);
     expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  describe('same-owner rule for team and org skills', () => {
+    const orgId = randomUUID();
+    const teamId = randomUUID();
+    const skillParams = {
+      name: 'Skill',
+      shortDescription: '',
+      instructions: '',
+    };
+    const teamSkill = new TeamSkill({ ...skillParams, teamId });
+    const orgSkill = new OrgSkill({ ...skillParams, orgId });
+    const sameTeam = new TeamKnowledgeBase({ name: 'KB', orgId, teamId });
+    const otherTeam = new TeamKnowledgeBase({
+      name: 'KB',
+      orgId,
+      teamId: randomUUID(),
+    });
+    const sameOrg = new OrgKnowledgeBase({ name: 'KB', orgId });
+    const otherOrg = new OrgKnowledgeBase({ name: 'KB', orgId: randomUUID() });
+
+    async function assign(skill: Skill, knowledgeBase: KnowledgeBase) {
+      const { repository, findKnowledgeBase, useCase } = setup(true);
+      repository.findById.mockResolvedValue(skill);
+      findKnowledgeBase.execute.mockResolvedValue({ knowledgeBase });
+      return useCase.execute(
+        new AssignKnowledgeBaseToSkillCommand(skill.id, knowledgeBase.id),
+      );
+    }
+
+    it.each([
+      ['a team skill', teamSkill, 'its team', sameTeam],
+      ['an org skill', orgSkill, 'its organization', sameOrg],
+    ])('lets %s use a knowledge base of %s', async (_, skill, __, kb) => {
+      await expect(assign(skill, kb)).resolves.toMatchObject({
+        knowledgeBaseIds: [kb.id],
+      });
+    });
+
+    it.each([
+      ['a team skill', teamSkill, 'another team', otherTeam],
+      ['a team skill', teamSkill, 'the organization', sameOrg],
+      ['an org skill', orgSkill, 'a team', sameTeam],
+      ['an org skill', orgSkill, 'another organization', otherOrg],
+    ])(
+      'does not let %s use a knowledge base of %s',
+      async (_, skill, __, kb) => {
+        await expect(assign(skill, kb)).rejects.toBeInstanceOf(
+          SkillKnowledgeBaseNotFoundError,
+        );
+      },
+    );
   });
 });

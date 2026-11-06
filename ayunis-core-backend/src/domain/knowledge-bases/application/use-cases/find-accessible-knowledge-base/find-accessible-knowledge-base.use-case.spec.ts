@@ -1,3 +1,5 @@
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { randomUUID } from 'crypto';
 import { Test } from '@nestjs/testing';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { UUID } from 'crypto';
@@ -69,5 +71,20 @@ describe(FindAccessibleKnowledgeBaseUseCase.name, () => {
       useCase.execute({ knowledgeBaseId: resource.id }),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
     expect(readAccess.requireRead).not.toHaveBeenCalled();
+  });
+
+  it('returns a readable team knowledge base so members can attach it to a chat', async () => {
+    const knowledgeBase = new TeamKnowledgeBase({
+      name: 'Bauordnung',
+      teamId: randomUUID(),
+      orgId: ORG_ID,
+    });
+    const { useCase, repository, readAccess } = await setup();
+    repository.findById.mockResolvedValue(knowledgeBase);
+
+    await expect(
+      useCase.execute({ knowledgeBaseId: knowledgeBase.id }),
+    ).resolves.toBe(knowledgeBase);
+    expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
   });
 });
