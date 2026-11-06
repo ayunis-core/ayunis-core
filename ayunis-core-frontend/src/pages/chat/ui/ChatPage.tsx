@@ -31,6 +31,7 @@ import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
+import type { PendingSourceUpload } from '@/shared/lib/source-upload';
 import { useDeleteFileSource } from '@/pages/chat/api/useDeleteFileSource';
 import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -54,13 +55,23 @@ import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState'
 import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
-
-const PROCESSING_POLL_INTERVAL = 5000;
+import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 
 interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
   readonly initialArtifactId?: string;
+}
+
+/** A file still in transfer, shown as a chip beside the thread's sources. */
+function toPendingSource(upload: PendingSourceUpload) {
+  return {
+    id: upload.id,
+    name: upload.fileName,
+    type: 'text' as const,
+    status: 'processing' as const,
+    uploadProgress: upload.progress,
+  };
 }
 
 export default function ChatPage({
@@ -77,6 +88,7 @@ export default function ChatPage({
     error: isModelsError,
   } = usePermittedModels();
   const isStreaming = useIsThreadRunActive(initialThread.id);
+  const processingPollInterval = useProcessingPollInterval(initialThread.id);
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -91,7 +103,7 @@ export default function ChatPage({
       const hasProcessing = data.sources.some(
         (s) => s.status === SourceResponseDtoStatus.processing,
       );
-      return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+      return processingPollInterval(hasProcessing);
     },
   });
 
@@ -155,10 +167,17 @@ export default function ChatPage({
   });
 
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const { createFileSource, isLoading: isCreatingFileSource } =
-    useCreateFileSource({
-      threadId: thread.id,
-    });
+  const {
+    createFileSource,
+    isLoading: isCreatingFileSource,
+    uploads: pendingUploads,
+  } = useCreateFileSource({
+    threadId: thread.id,
+  });
+  const sourcesWithUploads = useMemo(
+    () => [...thread.sources, ...pendingUploads.map(toPendingSource)],
+    [thread.sources, pendingUploads],
+  );
   const { deleteFileSource } = useDeleteFileSource({
     threadId: thread.id,
   });
@@ -387,7 +406,7 @@ export default function ChatPage({
         }
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
-        sources={thread.sources}
+        sources={sourcesWithUploads}
         knowledgeBases={thread.knowledgeBases}
         mcpIntegrations={thread.mcpIntegrations}
         isAnonymous={thread.isAnonymous}
