@@ -114,3 +114,37 @@ test("keeps every worksheet attached after uploading a workbook", async ({
     );
   }
 });
+
+test('attaches every worksheet before completing a direct upload and keeps completion idempotent', async ({ api, page }) => {
+  const skill = await generatedApi.skillsControllerCreate({
+    ownerType: 'personal', name: `Direct workbook upload ${Date.now()}`,
+    shortDescription: 'Municipal budget worksheets', instructions: 'Use the attached worksheets.',
+  }, { api });
+  try {
+    const file = await readFile(workbookPath);
+    const session = await generatedApi.skillSourcesControllerCreateUpload(skill.id, {
+      fileName: 'two-sheet-workbook.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', fileSize: file.length,
+    }, { api });
+    const signed = await generatedApi.sourceUploadsControllerSign(session.id, { method: 'PUT' }, { api });
+    const transferred = await api.fetch(signed.url, { method: 'PUT', data: file });
+    expect(transferred.ok()).toBe(true);
+
+    await generatedApi.skillSourcesControllerCompleteUpload(skill.id, session.id, { api });
+    const first = await generatedApi.skillSourcesControllerGetSkillSources(skill.id, { api });
+    expect(first).toHaveLength(2);
+    await generatedApi.skillSourcesControllerCompleteUpload(skill.id, session.id, { api });
+    const replay = await generatedApi.skillSourcesControllerGetSkillSources(skill.id, { api });
+    expect(replay.map(source => source.id)).toEqual(expect.arrayContaining(first.map(source => source.id)));
+    expect(replay).toHaveLength(2);
+
+    await expect.poll(async () => {
+      const sources = await generatedApi.skillSourcesControllerGetSkillSources(skill.id, { api });
+      return sources.map(source => source.status);
+    }, { timeout: 30_000 }).toEqual(['ready', 'ready']);
+    await page.goto(`/skills/${skill.id}`);
+    await expect(page.getByTestId(/^source-item-/)).toHaveCount(2);
+  } finally {
+    await generatedApi.skillsControllerDelete(skill.id, { api });
+  }
+});

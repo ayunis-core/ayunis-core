@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Post,
   Get,
@@ -38,6 +39,13 @@ import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-c
 import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { CreateSkillSourceUploadUseCase } from 'src/domain/skills/application/use-cases/create-skill-source-upload/create-skill-source-upload.use-case';
+import { CreateSkillSourceUploadCommand } from 'src/domain/skills/application/use-cases/create-skill-source-upload/create-skill-source-upload.command';
+import { CompleteSkillSourceUploadUseCase } from 'src/domain/skills/application/use-cases/complete-skill-source-upload/complete-skill-source-upload.use-case';
+import { CompleteSkillSourceUploadCommand } from 'src/domain/skills/application/use-cases/complete-skill-source-upload/complete-skill-source-upload.command';
+import { CreateSourceUploadDto } from 'src/domain/sources/presenters/http/dto/create-source-upload.dto';
+import { SourceUploadSessionResponseDto } from 'src/domain/sources/presenters/http/dto/source-upload-session-response.dto';
+import { toSourceUploadSessionDto } from 'src/domain/sources/presenters/http/mappers/source-upload.mapper';
 
 @ApiTags('skills')
 @Controller('skills')
@@ -49,6 +57,8 @@ export class SkillSourcesController {
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly addFileSourceToSkillUseCase: AddFileSourceToSkillUseCase,
+    private readonly createSourceUploadUseCase: CreateSkillSourceUploadUseCase,
+    private readonly completeSourceUploadUseCase: CompleteSkillSourceUploadUseCase,
     private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
@@ -117,6 +127,82 @@ export class SkillSourcesController {
       new FindOneSkillQuery(skillId),
     );
     return this.skillDtoMapper.toDto(skill, context, creatorName);
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @Post(':id/uploads')
+  @ApiOperation({
+    summary: 'Create a direct file upload for a skill',
+    description:
+      'Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /skills/{id}/uploads/{uploadId}/complete.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the skill',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 201, type: SourceUploadSessionResponseDto })
+  @ApiResponse({ status: 400, description: 'Unsupported file type' })
+  @ApiResponse({ status: 404, description: 'Skill not found' })
+  @ApiResponse({ status: 413, description: 'File exceeds the upload limit' })
+  @ApiResponse({
+    status: 409,
+    description: 'The target has no source capacity left',
+  })
+  async createUpload(
+    @Param('id', ParseUUIDPipe) skillId: UUID,
+    @Body() dto: CreateSourceUploadDto,
+  ): Promise<SourceUploadSessionResponseDto> {
+    this.logger.log({ skillId, fileName: dto.fileName }, 'createUpload');
+    return toSourceUploadSessionDto(
+      await this.createSourceUploadUseCase.execute(
+        new CreateSkillSourceUploadCommand({ skillId, ...dto }),
+      ),
+    );
+  }
+
+  @RequirePermission(Permission.MANAGE_SKILLS)
+  @Post(':id/uploads/:uploadId/complete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Complete a direct file upload and attach its sources',
+    description:
+      'Verifies the stored file, creates the processing source(s), queues them and returns the updated skill. Safe to repeat.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the skill',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'uploadId',
+    description: 'The upload id',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 200, type: SkillResponseDto })
+  @ApiResponse({ status: 404, description: 'Skill or upload not found' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'The file was not fully transferred, or the target has no source capacity left',
+  })
+  @ApiResponse({ status: 410, description: 'The upload expired' })
+  @ApiResponse({
+    status: 400,
+    description: 'The upload was reserved for another target',
+  })
+  async completeUpload(
+    @Param('id', ParseUUIDPipe) skillId: UUID,
+    @Param('uploadId', ParseUUIDPipe) uploadId: UUID,
+  ): Promise<SkillResponseDto> {
+    this.logger.log({ skillId, uploadId }, 'completeUpload');
+    await this.completeSourceUploadUseCase.execute(
+      new CompleteSkillSourceUploadCommand(skillId, uploadId),
+    );
+    return this.toSkillDtoWithCreator(skillId);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)

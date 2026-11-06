@@ -85,6 +85,7 @@ import type {
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
+  CreateSourceUploadDto,
   CreateSubscriptionRequestDto,
   CreateTeamDto,
   CreateTeamPermittedModelDto,
@@ -227,6 +228,7 @@ import type {
   SkillTemplateResponseDto,
   SkillsControllerFindAllParams,
   SourceCitationResponseDto,
+  SourceUploadSessionResponseDto,
   SsoAccountLinkStatusResponseDto,
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
@@ -11567,6 +11569,144 @@ export const useThreadSourcesControllerAddFileSource = <TError = void,
     }
 
 /**
+ * Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /threads/{id}/uploads/{uploadId}/complete.
+ * @summary Create a direct file upload for a thread
+ */
+export const threadSourcesControllerCreateUpload = (
+    id: string,
+    createSourceUploadDto: CreateSourceUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceUploadSessionResponseDto>(
+      {url: `/threads/${id}/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourcesControllerCreateUploadMutationKey = () => ['threadSourcesControllerCreateUpload'] as const;
+
+export const getThreadSourcesControllerCreateUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>, TError,ThreadSourcesControllerCreateUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>, TError,ThreadSourcesControllerCreateUploadMutationVariables, TContext> => {
+
+const mutationKey = getThreadSourcesControllerCreateUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>, ThreadSourcesControllerCreateUploadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadSourcesControllerCreateUpload(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadSourcesControllerCreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>>
+    export type ThreadSourcesControllerCreateUploadMutationBody = CreateSourceUploadDto
+    export type ThreadSourcesControllerCreateUploadMutationError = void
+    export type ThreadSourcesControllerCreateUploadMutationVariables = {id: string;data: CreateSourceUploadDto}
+
+    /**
+ * @summary Create a direct file upload for a thread
+ */
+export const useThreadSourcesControllerCreateUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>, TError,ThreadSourcesControllerCreateUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadSourcesControllerCreateUpload>>,
+        TError,
+        ThreadSourcesControllerCreateUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getThreadSourcesControllerCreateUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * Verifies the stored file, creates the processing source(s) and queues them. Safe to repeat: a second call returns the same sources.
+ * @summary Complete a direct file upload and attach its sources
+ */
+export const threadSourcesControllerCompleteUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<(FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]>(
+      {url: `/threads/${id}/uploads/${uploadId}/complete`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourcesControllerCompleteUploadMutationKey = () => ['threadSourcesControllerCompleteUpload'] as const;
+
+export const getThreadSourcesControllerCompleteUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>, TError,ThreadSourcesControllerCompleteUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>, TError,ThreadSourcesControllerCompleteUploadMutationVariables, TContext> => {
+
+const mutationKey = getThreadSourcesControllerCompleteUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>, ThreadSourcesControllerCompleteUploadMutationVariables> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  threadSourcesControllerCompleteUpload(id,uploadId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadSourcesControllerCompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>>
+
+    export type ThreadSourcesControllerCompleteUploadMutationError = void
+    export type ThreadSourcesControllerCompleteUploadMutationVariables = {id: string;uploadId: string}
+
+    /**
+ * @summary Complete a direct file upload and attach its sources
+ */
+export const useThreadSourcesControllerCompleteUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>, TError,ThreadSourcesControllerCompleteUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadSourcesControllerCompleteUpload>>,
+        TError,
+        ThreadSourcesControllerCompleteUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getThreadSourcesControllerCompleteUploadMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Remove a source from a thread
  */
 export const threadSourcesControllerRemoveSource = (
@@ -12868,6 +13008,144 @@ export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
     }
 
 /**
+ * Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /knowledge-bases/{id}/uploads/{uploadId}/complete.
+ * @summary Create a direct document upload for a knowledge base
+ */
+export const knowledgeBaseUploadsControllerCreateUpload = (
+    id: string,
+    createSourceUploadDto: CreateSourceUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceUploadSessionResponseDto>(
+      {url: `/knowledge-bases/${id}/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseUploadsControllerCreateUploadMutationKey = () => ['knowledgeBaseUploadsControllerCreateUpload'] as const;
+
+export const getKnowledgeBaseUploadsControllerCreateUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>, TError,KnowledgeBaseUploadsControllerCreateUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>, TError,KnowledgeBaseUploadsControllerCreateUploadMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseUploadsControllerCreateUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>, KnowledgeBaseUploadsControllerCreateUploadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBaseUploadsControllerCreateUpload(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseUploadsControllerCreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>>
+    export type KnowledgeBaseUploadsControllerCreateUploadMutationBody = CreateSourceUploadDto
+    export type KnowledgeBaseUploadsControllerCreateUploadMutationError = void
+    export type KnowledgeBaseUploadsControllerCreateUploadMutationVariables = {id: string;data: CreateSourceUploadDto}
+
+    /**
+ * @summary Create a direct document upload for a knowledge base
+ */
+export const useKnowledgeBaseUploadsControllerCreateUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>, TError,KnowledgeBaseUploadsControllerCreateUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCreateUpload>>,
+        TError,
+        KnowledgeBaseUploadsControllerCreateUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseUploadsControllerCreateUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * Verifies the stored file, creates the processing document and queues it. Safe to repeat: a second call returns the same document.
+ * @summary Complete a direct document upload
+ */
+export const knowledgeBaseUploadsControllerCompleteUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
+      {url: `/knowledge-bases/${id}/uploads/${uploadId}/complete`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseUploadsControllerCompleteUploadMutationKey = () => ['knowledgeBaseUploadsControllerCompleteUpload'] as const;
+
+export const getKnowledgeBaseUploadsControllerCompleteUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>, TError,KnowledgeBaseUploadsControllerCompleteUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>, TError,KnowledgeBaseUploadsControllerCompleteUploadMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseUploadsControllerCompleteUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>, KnowledgeBaseUploadsControllerCompleteUploadMutationVariables> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  knowledgeBaseUploadsControllerCompleteUpload(id,uploadId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseUploadsControllerCompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>>
+
+    export type KnowledgeBaseUploadsControllerCompleteUploadMutationError = void
+    export type KnowledgeBaseUploadsControllerCompleteUploadMutationVariables = {id: string;uploadId: string}
+
+    /**
+ * @summary Complete a direct document upload
+ */
+export const useKnowledgeBaseUploadsControllerCompleteUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>, TError,KnowledgeBaseUploadsControllerCompleteUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseUploadsControllerCompleteUpload>>,
+        TError,
+        KnowledgeBaseUploadsControllerCompleteUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseUploadsControllerCompleteUploadMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Create a share for a skill
  */
 export const sharesControllerCreateSkillShare = (
@@ -14076,6 +14354,144 @@ export const useSkillSourcesControllerAddFileSource = <TError = void,
         TContext
       > => {
       return useMutation(getSkillSourcesControllerAddFileSourceMutationOptions(options), queryClient);
+    }
+
+/**
+ * Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /skills/{id}/uploads/{uploadId}/complete.
+ * @summary Create a direct file upload for a skill
+ */
+export const skillSourcesControllerCreateUpload = (
+    id: string,
+    createSourceUploadDto: CreateSourceUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceUploadSessionResponseDto>(
+      {url: `/skills/${id}/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillSourcesControllerCreateUploadMutationKey = () => ['skillSourcesControllerCreateUpload'] as const;
+
+export const getSkillSourcesControllerCreateUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>, TError,SkillSourcesControllerCreateUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>, TError,SkillSourcesControllerCreateUploadMutationVariables, TContext> => {
+
+const mutationKey = getSkillSourcesControllerCreateUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>, SkillSourcesControllerCreateUploadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  skillSourcesControllerCreateUpload(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillSourcesControllerCreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>>
+    export type SkillSourcesControllerCreateUploadMutationBody = CreateSourceUploadDto
+    export type SkillSourcesControllerCreateUploadMutationError = void
+    export type SkillSourcesControllerCreateUploadMutationVariables = {id: string;data: CreateSourceUploadDto}
+
+    /**
+ * @summary Create a direct file upload for a skill
+ */
+export const useSkillSourcesControllerCreateUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>, TError,SkillSourcesControllerCreateUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillSourcesControllerCreateUpload>>,
+        TError,
+        SkillSourcesControllerCreateUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillSourcesControllerCreateUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * Verifies the stored file, creates the processing source(s), queues them and returns the updated skill. Safe to repeat.
+ * @summary Complete a direct file upload and attach its sources
+ */
+export const skillSourcesControllerCompleteUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${id}/uploads/${uploadId}/complete`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getSkillSourcesControllerCompleteUploadMutationKey = () => ['skillSourcesControllerCompleteUpload'] as const;
+
+export const getSkillSourcesControllerCompleteUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>, TError,SkillSourcesControllerCompleteUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>, TError,SkillSourcesControllerCompleteUploadMutationVariables, TContext> => {
+
+const mutationKey = getSkillSourcesControllerCompleteUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>, SkillSourcesControllerCompleteUploadMutationVariables> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  skillSourcesControllerCompleteUpload(id,uploadId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillSourcesControllerCompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>>
+
+    export type SkillSourcesControllerCompleteUploadMutationError = void
+    export type SkillSourcesControllerCompleteUploadMutationVariables = {id: string;uploadId: string}
+
+    /**
+ * @summary Complete a direct file upload and attach its sources
+ */
+export const useSkillSourcesControllerCompleteUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>, TError,SkillSourcesControllerCompleteUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillSourcesControllerCompleteUpload>>,
+        TError,
+        SkillSourcesControllerCompleteUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSkillSourcesControllerCompleteUploadMutationOptions(options), queryClient);
     }
 
 /**
