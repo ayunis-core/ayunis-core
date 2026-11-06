@@ -1,5 +1,6 @@
 import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
 import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
   useKnowledgeBasesControllerAddDocument,
@@ -26,7 +27,11 @@ export function useUploadDocument(knowledgeBaseId: string) {
         } else if (
           data.status === KnowledgeBaseDocumentResponseDtoStatus.failed
         ) {
-          showError(data.processingError ?? t('detail.documents.statusFailed'));
+          showError(
+            t(
+              `detail.documents.processingErrors.${getSourceProcessingErrorReason(data.processingErrorCode)}`,
+            ),
+          );
         } else {
           showSuccess(t('detail.documents.uploadSuccess'));
         }

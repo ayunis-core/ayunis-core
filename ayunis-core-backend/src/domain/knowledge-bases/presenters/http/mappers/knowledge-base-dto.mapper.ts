@@ -54,6 +54,9 @@ export class KnowledgeBaseDtoMapper {
     if (source.processingError) {
       dto.processingError = source.processingError;
     }
+    if (source.processingErrorCode) {
+      dto.processingErrorCode = source.processingErrorCode;
+    }
 
     if (source instanceof TextSource) {
       dto.textType = source.textType;

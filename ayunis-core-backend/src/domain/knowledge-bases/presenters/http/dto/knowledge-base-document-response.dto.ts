@@ -5,6 +5,7 @@ import {
 } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 
 export class KnowledgeBaseDocumentResponseDto {
   @ApiProperty({
@@ -64,6 +65,13 @@ export class KnowledgeBaseDocumentResponseDto {
     example: 'OCR extraction timed out',
   })
   processingError?: string;
+
+  @ApiPropertyOptional({
+    description: 'Why processing failed; the client localizes it',
+    enum: SourceProcessingErrorCode,
+    enumName: 'SourceProcessingErrorCode',
+  })
+  processingErrorCode?: SourceProcessingErrorCode;
 
   @ApiPropertyOptional({
     description: 'The text source subtype (e.g. file, web)',

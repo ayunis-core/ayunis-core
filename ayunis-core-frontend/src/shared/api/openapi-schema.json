@@ -18780,6 +18780,14 @@
             "description": "Error message if processing failed (only present when status is failed)",
             "example": "OCR extraction timed out"
           },
+          "processingErrorCode": {
+            "description": "Why processing failed; the client localizes it",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
+          },
           "textType": {
             "type": "string",
             "description": "The text source subtype (e.g. file, web)",

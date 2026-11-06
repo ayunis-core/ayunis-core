@@ -23,6 +23,7 @@ import {
   KnowledgeBaseDocumentResponseDtoTextType,
   KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
+  type SourceProcessingErrorCode,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   Upload,
@@ -39,6 +40,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
+import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { cn } from '@ayunis/ui/lib/cn';
 import { formatDate } from '@/shared/lib/format-date';
@@ -333,7 +335,7 @@ function DocumentItem({
           isProcessing={isProcessing}
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
-          processingError={doc.processingError}
+          processingErrorCode={doc.processingErrorCode}
           t={t}
         />
         <ItemDescription>
@@ -365,7 +367,7 @@ function DocumentItemDescription({
   isProcessing,
   isProcessingSlow,
   isFailed,
-  processingError,
+  processingErrorCode,
   t,
 }: Readonly<{
   isWeb: boolean;
@@ -373,7 +375,7 @@ function DocumentItemDescription({
   isProcessing: boolean;
   isProcessingSlow: boolean;
   isFailed: boolean;
-  processingError: string | null | undefined;
+  processingErrorCode: SourceProcessingErrorCode | undefined;
   t: (key: string) => string;
 }>) {
   if (isProcessing) {
@@ -398,7 +400,9 @@ function DocumentItemDescription({
           </ItemDescription>
         </TooltipTrigger>
         <TooltipContent>
-          {processingError ?? t('detail.documents.retryUpload')}
+          {t(
+            `detail.documents.processingErrors.${getSourceProcessingErrorReason(processingErrorCode)}`,
+          )}
         </TooltipContent>
       </Tooltip>
     );
