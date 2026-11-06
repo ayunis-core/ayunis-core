@@ -9,6 +9,7 @@ import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -39,7 +40,6 @@ import {
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
 import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
-import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
@@ -48,19 +48,17 @@ import { EffectiveRunModelResolverService } from 'src/domain/runs/application/se
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
-import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type { PreparedToolResultInput, SeededInput } from './execute-run.types';
-import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
-import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
-import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { shouldPreserveTranscript } from './rejected-transcript-policy';
 import { toRunError } from './to-run-error';
 import { openThreadRun } from './open-thread-run';
 import { findPendingToolCall } from './pending-tool-call.helper';
 import { RunAssemblyService } from 'src/domain/runs/application/services/run-assembly.service';
+import { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
+import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -72,7 +70,6 @@ export class ExecuteRunUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
     private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
-    private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
@@ -83,7 +80,8 @@ export class ExecuteRunUseCase {
     private readonly runTelemetryService: RunTelemetryService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly runAssemblyService: RunAssemblyService,
-    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
+    private readonly runProfileRegistry: RunProfileRegistry,
+    private readonly runProfileAssembler: RunProfileAssembler,
     private readonly threadRunLock: ThreadRunLock,
   ) {}
 
@@ -120,54 +118,63 @@ export class ExecuteRunUseCase {
     const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const storedPermit = found.thread.model;
-    if (!storedPermit) {
-      throw new RunNoModelFoundError({ threadId: found.thread.id });
-    }
-    const permittedModel = await this.effectiveRunModelResolver.resolve({
-      storedPermit,
+    const { model, isAnonymous } = await this.admitModel(
+      found.thread,
       userId,
       orgId,
-    });
-    const model = permittedModel.model;
-    await this.inferenceAdmissionGuard.preflight({ userId, orgId }, model);
-    const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
-    const activeSkills = await this.toolAssemblyService.findActiveSkills();
-    const workspaceContext = await this.buildWorkspaceContext(found.thread);
+    );
     const activated = await this.activateSkillIfRequested(
       command,
       found.thread,
     );
-    const { tools, instructions } =
-      await this.toolAssemblyService.buildRunContext(
-        activated.thread,
-        activeSkills,
-        model.canUseTools,
-        anonymous,
-        workspaceContext,
-      );
+    const assembled = await this.runProfileAssembler.assemble(
+      this.runProfileRegistry.get(command.profile.id),
+      {
+        thread: activated.thread,
+        model,
+        userId,
+        orgId,
+        isAnonymous,
+        activatedSkillName: activated.skillName,
+      },
+    );
+    const preparedTools = this.prepareTools(assembled.tools);
 
     return {
       thread: activated.thread,
       model,
       orgId,
       userId,
-      isAnonymous: anonymous,
-      instructions: appendSkillActivatedNote(instructions, activated.skillName),
-      ...this.prepareTools(tools),
-      activeSkills,
+      isAnonymous,
+      instructions: assembled.instructions,
+      ...preparedTools,
+      profileHooks: assembled.createHooks(preparedTools.toolIntegrations),
       skillInstructions: activated.skillInstructions,
-      activatedSkillName: activated.skillName,
     };
   }
 
-  private async buildWorkspaceContext(
+  private async admitModel(
     thread: Thread,
-  ): Promise<WorkspaceRunContext | undefined> {
-    if (!thread.workspaceId) return undefined;
-    return this.buildWorkspaceRunContextUseCase.execute(
-      new BuildWorkspaceRunContextQuery(thread.workspaceId),
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<{ model: LanguageModel; isAnonymous: boolean }> {
+    const storedPermit = thread.model;
+    if (!storedPermit) {
+      throw new RunNoModelFoundError({ threadId: thread.id });
+    }
+    const permittedModel = await this.effectiveRunModelResolver.resolve({
+      storedPermit,
+      userId,
+      orgId,
+    });
+    await this.inferenceAdmissionGuard.preflight(
+      { userId, orgId },
+      permittedModel.model,
     );
+    return {
+      model: permittedModel.model,
+      isAnonymous: thread.isAnonymous || permittedModel.anonymousOnly,
+    };
   }
 
   private prepareTools(backendTools: BackendTool[]): PreparedTools {

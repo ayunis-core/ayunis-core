@@ -88,6 +88,7 @@ export class ExecuteRunAndSetTitleUseCase {
       new ExecuteRunCommand({
         threadId: command.threadId,
         input: command.input,
+        profile: { id: 'chat' },
         streaming: command.streaming,
         signal: command.signal,
       }),
