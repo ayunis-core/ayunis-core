@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
-import type { Share } from '../../domain/share.entity';
-import type { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import type { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import type { Share } from 'src/domain/shares/domain/share.entity';
+import type { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import type { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 
 export abstract class SharesRepository {
   /**
@@ -26,7 +26,7 @@ export abstract class SharesRepository {
 
   /**
    * Finds all shares for a specific entity
-   * @param entityId - ID of the entity (agent, prompt, etc.)
+   * @param entityId - ID of the entity (skill, knowledge base)
    * @param entityType - Type of the entity
    * @returns Array of shares for the entity
    */
@@ -37,7 +37,7 @@ export abstract class SharesRepository {
 
   /**
    * Finds all shares by entity type, scope type, and scope ID
-   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param entityType - Type of the entity (skill, knowledge base)
    * @param scopeType - Type of the scope (org, user)
    * @param scopeId - ID of the scope (orgId for org scopes)
    * @returns Array of shares matching the criteria
@@ -50,7 +50,7 @@ export abstract class SharesRepository {
 
   /**
    * Finds a specific share by entity type, entity ID, scope type, and scope ID
-   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param entityType - Type of the entity (skill, knowledge base)
    * @param entityId - ID of the specific entity
    * @param scopeType - Type of the scope (org, user)
    * @param scopeId - ID of the scope (orgId for org scopes)
@@ -65,7 +65,7 @@ export abstract class SharesRepository {
 
   /**
    * Finds all shares for a specific entity type that are scoped to any of the provided team IDs
-   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param entityType - Type of the entity (skill, knowledge base)
    * @param teamIds - Array of team IDs to search for
    * @returns Array of shares matching the criteria
    */

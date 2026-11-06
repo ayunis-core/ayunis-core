@@ -122,14 +122,4 @@ describe('SharePermissionService', () => {
       ),
     ).rejects.toThrow(UnauthorizedAccessError);
   });
-
-  it('rejects entity types that have no share permission', async () => {
-    await expect(
-      service.requireSharePermission(
-        SharedEntityType.PROMPT,
-        ShareScopeType.ORG,
-      ),
-    ).rejects.toThrow(UnauthorizedAccessError);
-    expect(hasPermission.execute).not.toHaveBeenCalled();
-  });
 });

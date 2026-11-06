@@ -14,8 +14,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 import { GetTeamAccessUseCase } from 'src/iam/teams/application/use-cases/get-team-access/get-team-access.use-case';
 import { GetTeamAccessQuery } from 'src/iam/teams/application/use-cases/get-team-access/get-team-access.query';
 
-const SHARE_PERMISSIONS: Partial<
-  Record<SharedEntityType, Record<ShareScopeType, Permission>>
+const SHARE_PERMISSIONS: Record<
+  SharedEntityType,
+  Record<ShareScopeType, Permission>
 > = {
   [SharedEntityType.SKILL]: {
     [ShareScopeType.TEAM]: Permission.SHARE_SKILLS_WITH_TEAMS,
@@ -46,11 +47,7 @@ export class SharePermissionService {
     scopeType: ShareScopeType,
     teamId?: UUID,
   ): Promise<void> {
-    const permission = SHARE_PERMISSIONS[entityType]?.[scopeType];
-    if (!permission) {
-      throw new UnauthorizedAccessError({ entityType, scopeType });
-    }
-
+    const permission = SHARE_PERMISSIONS[entityType][scopeType];
     const user = getRequiredUserContext(this.context);
     const allowed =
       scopeType === ShareScopeType.TEAM

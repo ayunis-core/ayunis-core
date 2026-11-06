@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 
 /**
  * Abstract strategy for share authorization
- * Each entity type (agent, prompt, etc.) implements its own authorization logic
+ * Each entity type (skill, knowledge base) implements its own authorization logic
  */
 export abstract class ShareAuthorizationStrategy {
   /**
