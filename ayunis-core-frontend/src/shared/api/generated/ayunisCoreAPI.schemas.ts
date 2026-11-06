@@ -3386,6 +3386,25 @@ export interface AddUrlToKnowledgeBaseDto {
   maxDepth?: number;
 }
 
+export type KnowledgeBaseTransferOwnerDtoOwnerType = typeof KnowledgeBaseTransferOwnerDtoOwnerType[keyof typeof KnowledgeBaseTransferOwnerDtoOwnerType];
+
+
+export const KnowledgeBaseTransferOwnerDtoOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface KnowledgeBaseTransferOwnerDto {
+  ownerType: KnowledgeBaseTransferOwnerDtoOwnerType;
+  teamId?: string;
+}
+
+export interface KnowledgeBaseOwnerChangePreviewResponseDto {
+  /** Skills whose link to the knowledge base is removed because they have a different owner */
+  unlinkedSkillCount: number;
+}
+
 /**
  * Type of entity being shared
  */
@@ -3596,6 +3615,25 @@ export interface UpdateSkillDto {
   shortDescription: string;
   /** Detailed instructions for the skill (injected when the skill is activated) */
   instructions: string;
+}
+
+export type SkillTransferOwnerDtoOwnerType = typeof SkillTransferOwnerDtoOwnerType[keyof typeof SkillTransferOwnerDtoOwnerType];
+
+
+export const SkillTransferOwnerDtoOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface SkillTransferOwnerDto {
+  ownerType: SkillTransferOwnerDtoOwnerType;
+  teamId?: string;
+}
+
+export interface SkillOwnerChangePreviewResponseDto {
+  /** Knowledge bases whose link to the skill is removed because they have a different owner */
+  unlinkedKnowledgeBaseCount: number;
 }
 
 export interface SetSkillActivationDto {
@@ -6498,6 +6536,20 @@ export type KnowledgeBasesControllerAddDocumentBody = {
   file: Blob | File;
 };
 
+export type KnowledgeBaseOwnerControllerPreviewOwnerChangeParams = {
+ownerType: KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType;
+teamId?: string;
+};
+
+export type KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType = typeof KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType[keyof typeof KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType];
+
+
+export const KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
 export type SharesControllerGetSharesParams = {
 /**
  * ID of the entity to get shares for
@@ -6538,6 +6590,20 @@ export type SkillsControllerFindAllOwnerType = typeof SkillsControllerFindAllOwn
 export const SkillsControllerFindAllOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+} as const;
+
+export type SkillsControllerPreviewOwnerChangeParams = {
+ownerType: SkillsControllerPreviewOwnerChangeOwnerType;
+teamId?: string;
+};
+
+export type SkillsControllerPreviewOwnerChangeOwnerType = typeof SkillsControllerPreviewOwnerChangeOwnerType[keyof typeof SkillsControllerPreviewOwnerChangeOwnerType];
+
+
+export const SkillsControllerPreviewOwnerChangeOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export type SkillSourcesControllerAddFileSourceBody = {

@@ -24,6 +24,11 @@ import { KnowledgeBasesTeamDeletionRequestedListener } from 'src/domain/knowledg
 import { KnowledgeBaseProcessingCleanupService } from 'src/domain/knowledge-bases/application/services/knowledge-base-processing-cleanup.service';
 import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { FindKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-bases-by-ids/find-knowledge-bases-by-ids.use-case';
+import { KnowledgeBaseOwnerChangeService } from 'src/domain/knowledge-bases/application/services/knowledge-base-owner-change.service';
+import { ChangeKnowledgeBaseOwnerUseCase } from 'src/domain/knowledge-bases/application/use-cases/change-knowledge-base-owner/change-knowledge-base-owner.use-case';
+import { PreviewKnowledgeBaseOwnerChangeUseCase } from 'src/domain/knowledge-bases/application/use-cases/preview-knowledge-base-owner-change/preview-knowledge-base-owner-change.use-case';
+import { KnowledgeBaseOwnerController } from 'src/domain/knowledge-bases/presenters/http/knowledge-base-owner.controller';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 
@@ -71,6 +76,10 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     CountKnowledgeBaseDocumentsUseCase,
     KnowledgeBaseWriteAccessService,
     CollectiveKnowledgeBaseAccessService,
+    FindKnowledgeBasesByIdsUseCase,
+    KnowledgeBaseOwnerChangeService,
+    ChangeKnowledgeBaseOwnerUseCase,
+    PreviewKnowledgeBaseOwnerChangeUseCase,
     KnowledgeBaseReadAccessService,
     // Use Cases
     CreateKnowledgeBaseUseCase,
@@ -103,8 +112,13 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
       useExisting: KnowledgeBaseShareAuthorizationStrategy,
     },
   ],
-  controllers: [KnowledgeBasesController, KnowledgeBaseUploadsController],
+  controllers: [
+    KnowledgeBasesController,
+    KnowledgeBaseUploadsController,
+    KnowledgeBaseOwnerController,
+  ],
   exports: [
+    FindKnowledgeBasesByIdsUseCase,
     FindKnowledgeBaseForThreadUseCase,
     FindAccessibleKnowledgeBaseUseCase,
     FindAccessibleKnowledgeBasesByIdsUseCase,

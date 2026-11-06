@@ -18,7 +18,7 @@ import {
 } from 'typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { randomUUID, type UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import {
   KnowledgeBaseRepository,
   type AccessibleKnowledgeBaseScope,
@@ -33,6 +33,7 @@ import type {
   NonWorkspaceKnowledgeBase,
 } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
+import { insertActivation } from './local-knowledge-base-activation.repository-helper';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import type { Source } from 'src/domain/sources/domain/source.entity';
@@ -180,17 +181,19 @@ export class LocalKnowledgeBaseRepository
   }
 
   async activate(knowledgeBaseId: UUID, userId: UUID): Promise<void> {
-    await this.activationRepository
-      .createQueryBuilder()
-      .insert()
-      .into(KnowledgeBaseActivationRecord)
-      .values({ id: randomUUID(), knowledgeBaseId, userId })
-      .orIgnore()
-      .execute();
+    const activation = { knowledgeBaseId, userId, workspaceId: null };
+    await insertActivation(this.activationRepository, activation);
   }
 
   async deactivate(knowledgeBaseId: UUID, userId: UUID): Promise<void> {
     await this.activationRepository.delete({ knowledgeBaseId, userId });
+  }
+
+  async deactivateAllUsers(knowledgeBaseId: UUID): Promise<void> {
+    await this.activationRepository.delete({
+      knowledgeBaseId,
+      userId: Not(IsNull()),
+    });
   }
 
   async isActive(knowledgeBaseId: UUID, userId: UUID): Promise<boolean> {
@@ -209,18 +212,8 @@ export class LocalKnowledgeBaseRepository
     knowledgeBaseId: UUID,
     workspaceId: UUID,
   ): Promise<void> {
-    await this.activationRepository
-      .createQueryBuilder()
-      .insert()
-      .into(KnowledgeBaseActivationRecord)
-      .values({
-        id: randomUUID(),
-        knowledgeBaseId,
-        workspaceId,
-        userId: null,
-      })
-      .orIgnore()
-      .execute();
+    const activation = { knowledgeBaseId, workspaceId, userId: null };
+    await insertActivation(this.activationRepository, activation);
   }
 
   async deactivateForWorkspace(
