@@ -176,7 +176,15 @@
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",
       "removeNotFound": "The document was already removed from this knowledge base.",
-      "urlDialogCancel": "Cancel"
+      "urlDialogCancel": "Cancel",
+      "processingErrors": {
+        "failed": "The file could not be processed. Upload it again. If the problem persists, contact support.",
+        "unreadable": "Couldn’t read this file. Upload it again.",
+        "empty": "No text could be read from the document. Use a more legible version and upload it again.",
+        "timeout": "Document processing timed out. Splitting large documents may help; upload the file again afterwards.",
+        "tooManyPages": "The document has too many pages. Split it into smaller files and upload those.",
+        "unavailable": "The document processing service is temporarily unavailable. Upload the file again later."
+      }
     }
   },
   "sources": {
