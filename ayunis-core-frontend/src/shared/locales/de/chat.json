@@ -130,6 +130,10 @@
         "create_file": "Datei erstellt"
       }
     },
+    "routine": {
+      "finished": "Routine abgeschlossen",
+      "nudge": "Automatische Erinnerung an die Routine"
+    },
     "map": {
       "loading": "Karte wird vorbereitet…",
       "invalid": "Diese Karte kann nicht angezeigt werden, da ihre Daten leer oder ungültig sind.",

@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Store,
   GraduationCap,
+  CalendarClock,
 } from 'lucide-react';
 
 import {
@@ -43,6 +44,7 @@ import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.sc
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useMarketplaceConfig } from '@/features/marketplace';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
   allowedSettingsSections,
   useAuthorization,
@@ -54,6 +56,11 @@ import {
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/useMobileSidebarNavigationHandler';
+
+const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
+  '/chat': 'sidebar-navigation-new-chat',
+  '/routines': 'sidebar-navigation-routines',
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -67,6 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
   const marketplace = useMarketplaceConfig();
+  const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
@@ -104,6 +112,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/knowledge-bases',
       icon: Brain,
     },
+    ...(routinesEnabled
+      ? [
+          {
+            title: t('sidebar.routines'),
+            url: '/routines',
+            icon: CalendarClock,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -145,11 +162,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   <Link
                     to={item.url}
-                    data-testid={
-                      item.url === '/chat'
-                        ? 'sidebar-navigation-new-chat'
-                        : undefined
-                    }
+                    data-testid={NAVIGATION_TEST_IDS[item.url]}
                     // `disabled` is inert on an anchor; the sidebar variants
                     // style aria-disabled and block pointer events for us.
                     aria-disabled={item.disabled}

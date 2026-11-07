@@ -68,6 +68,7 @@ function revealContent<T extends MessageContent>(
       deanonymizeText(content.text, tokenToValue),
       content.providerMetadata,
       content.isSkillInstruction,
+      content.isNudge,
     ) as MessageContent as T;
   }
   if (content instanceof ToolResultMessageContent) {

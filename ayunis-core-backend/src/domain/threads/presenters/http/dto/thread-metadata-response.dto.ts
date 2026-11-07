@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 /**
  * Thread fields that both the list and the single-thread response carry.
@@ -41,4 +42,21 @@ export class ThreadMetadataResponseDto {
     nullable: true,
   })
   workspaceId: string | null;
+
+  @ApiProperty({
+    enum: ThreadType,
+    enumName: 'ThreadType',
+    description:
+      'Whether a user started the thread or a routine run created it',
+  })
+  type: ThreadType;
+
+  @ApiProperty({
+    type: String,
+    description:
+      'The routine whose run created this thread; null for chats and once the routine is deleted',
+    format: 'uuid',
+    nullable: true,
+  })
+  routineId: string | null;
 }

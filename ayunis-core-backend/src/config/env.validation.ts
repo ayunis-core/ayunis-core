@@ -57,6 +57,10 @@ export class EnvironmentVariables {
   @IsIn(BOOLEAN_STRINGS)
   FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED?: string;
 
+  @IsOptional()
+  @IsIn(BOOLEAN_STRINGS)
+  FEATURE_ROUTINES_ENABLED?: string;
+
   // Auth — JWT_SECRET / COOKIE_SECRET are required in every environment; there
   // is no insecure default fallback (a shared default would let anyone forge
   // auth tokens/cookies). COOKIE_SECURE=true is additionally required in
@@ -184,6 +188,16 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   EMBEDDINGS_MAX_CONCURRENCY?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ROUTINES_WORKER_CONCURRENCY?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ROUTINES_RUN_TIMEOUT_MINUTES?: number;
   @IsOptional()
   @Type(() => Number)
   @IsInt()

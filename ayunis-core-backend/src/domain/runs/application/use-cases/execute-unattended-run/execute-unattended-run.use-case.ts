@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  RunNudgeInput,
+  type RunUserInput,
+} from 'src/domain/runs/domain/run-input.entity';
 import { UnexpectedRunError } from 'src/domain/runs/application/runs.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
@@ -55,7 +58,7 @@ export class ExecuteUnattendedRunUseCase {
         { threadId: command.threadId, nudge: nudges + 1 },
         'Nudging unattended run',
       );
-      input = new RunUserInput(decision.message);
+      input = new RunNudgeInput(decision.message);
     }
   }
 

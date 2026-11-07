@@ -53,6 +53,12 @@ export interface PendingToolRunBlock {
 
 export type InlineToolRunBlock = RichToolRunBlock | PendingToolRunBlock;
 
+/** The `finish_routine` call that ends a routine run. */
+export interface RoutineFinishedRunBlock {
+  kind: 'routine-finished';
+  key: string;
+}
+
 export interface TextRunBlock {
   kind: 'text';
   key: string;
@@ -60,7 +66,10 @@ export interface TextRunBlock {
 }
 
 export type AgentRunBlock =
-  ActivityRunBlock | InlineToolRunBlock | TextRunBlock;
+  | ActivityRunBlock
+  | InlineToolRunBlock
+  | RoutineFinishedRunBlock
+  | TextRunBlock;
 
 export interface AgentRunUnit {
   kind: 'agent-run';

@@ -11,6 +11,7 @@ interface TextMessageContentData {
   text: string;
   providerMetadata?: ProviderMetadata;
   isSkillInstruction?: boolean;
+  isNudge?: boolean;
 }
 
 interface ToolUseMessageContentData {

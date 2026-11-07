@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, CircleCheck } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { Markdown } from '@/widgets/markdown';
 import {
@@ -88,6 +88,9 @@ const RunBlock = memo(function RunBlock({
   if (block.kind === 'activity') {
     return <ActivityBlock block={block} hasFollowingText={hasFollowingText} />;
   }
+  if (block.kind === 'routine-finished') {
+    return <RoutineFinishedMarker />;
+  }
   if (block.kind === 'rich-tool' || block.kind === 'pending-tool') {
     return (
       <InlineToolBlock
@@ -111,6 +114,19 @@ const RunBlock = memo(function RunBlock({
     </div>
   );
 });
+
+function RoutineFinishedMarker() {
+  const { t } = useTranslation('chat');
+  return (
+    <div
+      className="flex items-center gap-2 text-sm text-muted-foreground"
+      data-testid="routine-finished"
+    >
+      <CircleCheck className="size-4 text-brand" />
+      <span>{t('chat.routine.finished')}</span>
+    </div>
+  );
+}
 
 function ActivityBlock({
   block,

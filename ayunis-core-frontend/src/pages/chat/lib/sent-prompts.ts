@@ -9,7 +9,9 @@ interface PiiMask {
 function promptText(message: Message): string {
   return message.content
     .flatMap((content) =>
-      'text' in content && !content.isSkillInstruction ? [content.text] : [],
+      'text' in content && !content.isSkillInstruction && !content.isNudge
+        ? [content.text]
+        : [],
     )
     .join('\n\n');
 }

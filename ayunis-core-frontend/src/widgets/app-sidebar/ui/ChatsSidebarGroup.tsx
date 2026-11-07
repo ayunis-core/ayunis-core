@@ -15,7 +15,10 @@ import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { TOUR_TARGET, findAssignTourThread } from '@/widgets/onboarding';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import { useShowRoutineThreads } from '@/widgets/app-sidebar/hooks/useShowRoutineThreads';
 import { ChatSidebarItem } from './ChatSidebarItem';
+import { RoutineThreadsFilter } from './RoutineThreadsFilter';
 import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 
 function ChatsSearchLink() {
@@ -61,7 +64,11 @@ function EmptyChats() {
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
-  const { threads, isLoading, hasMore } = useThreads();
+  const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
+  const [showRoutineThreads, setShowRoutineThreads] = useShowRoutineThreads();
+  const { threads, isLoading, hasMore } = useThreads({
+    hideRoutineThreads: routinesEnabled && !showRoutineThreads,
+  });
   const { confirm } = useConfirmation();
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
@@ -106,7 +113,17 @@ export function ChatsSidebarGroup() {
       <SidebarCollapsibleGroup
         label={t('sidebar.chats')}
         storageKey="sidebar_chats_open"
-        action={<ChatsSearchLink />}
+        action={
+          <div className="flex items-center gap-2">
+            {routinesEnabled && (
+              <RoutineThreadsFilter
+                showRoutineThreads={showRoutineThreads}
+                onShowRoutineThreadsChange={setShowRoutineThreads}
+              />
+            )}
+            <ChatsSearchLink />
+          </div>
+        }
         testId="sidebar-chats"
       >
         {isPending ? <LoadingChats /> : null}

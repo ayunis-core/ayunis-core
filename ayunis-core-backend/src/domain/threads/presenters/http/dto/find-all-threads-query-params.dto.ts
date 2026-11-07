@@ -1,7 +1,15 @@
 import type { UUID } from 'crypto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
+import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 export class FindAllThreadsQueryParamsDto {
   @ApiPropertyOptional({ description: 'Search threads by title' })
@@ -17,6 +25,16 @@ export class FindAllThreadsQueryParamsDto {
   @IsOptional()
   @IsUUID()
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({
+    description:
+      'Only threads of this type, e.g. `chat` to hide routine threads. Omit for all threads.',
+    enum: ThreadType,
+    enumName: 'ThreadType',
+  })
+  @IsOptional()
+  @IsEnum(ThreadType)
+  type?: ThreadType;
 
   @ApiPropertyOptional({ description: 'Maximum number of threads to return' })
   @IsOptional()

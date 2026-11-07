@@ -8,6 +8,8 @@ export class CreateThreadCommand {
   instruction?: string;
   isAnonymous?: boolean;
   workspaceId?: UUID;
+  /** Makes this a routine thread created by that routine's execution. */
+  routineId?: UUID;
 
   constructor(params: {
     modelId?: UUID;
@@ -16,6 +18,7 @@ export class CreateThreadCommand {
     instruction?: string;
     isAnonymous?: boolean;
     workspaceId?: UUID;
+    routineId?: UUID;
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -23,5 +26,6 @@ export class CreateThreadCommand {
     this.instruction = params.instruction;
     this.isAnonymous = params.isAnonymous;
     this.workspaceId = params.workspaceId;
+    this.routineId = params.routineId;
   }
 }

@@ -8,7 +8,10 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  RunNudgeInput,
+  RunUserInput,
+} from 'src/domain/runs/domain/run-input.entity';
 import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { RunProfile } from 'src/domain/runs/application/run-profiles/run-profile';
@@ -148,6 +151,15 @@ describe('ExecuteUnattendedRunUseCase', () => {
     expect((commands[1].input as RunUserInput).text).toBe(
       ROUTINE_NUDGE_MESSAGE,
     );
+  });
+
+  it('marks the nudge as sent by the system, unlike the task', async () => {
+    const { useCase, commands } = buildUseCase([textOnlyRun(), finishedRun()]);
+
+    await useCase.execute(command());
+
+    expect(commands[0].input).not.toBeInstanceOf(RunNudgeInput);
+    expect(commands[1].input).toBeInstanceOf(RunNudgeInput);
   });
 
   it('fails after the second nudge is answered with text again', async () => {
