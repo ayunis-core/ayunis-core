@@ -17,11 +17,48 @@ export function finishingRoutine(name: string): CreateRoutineDto {
   };
 }
 
+/**
+ * A routine whose mock-inference run ends with plain text, so it is nudged
+ * and then fails with finish_routine_not_called. Its daily time was an hour
+ * ago, so no scheduled run interferes with the test's own runs.
+ */
+export function failingRoutine(name: string): CreateRoutineDto {
+  return {
+    name,
+    prompt: `Fasse das Amtsblatt zusammen: ${name}`,
+    dailyTime: berlinTime(new Date(Date.now() - 60 * 60 * 1000)),
+    internetEnabled: false,
+  };
+}
+
+function berlinTime(at: Date): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Berlin',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(at);
+}
+
 export function createRoutine(
   api: APIRequestContext,
   routine: CreateRoutineDto,
 ): Promise<RoutineResponseDto> {
   return generatedApi.routinesControllerCreate(routine, { api });
+}
+
+export function getRoutine(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<RoutineResponseDto> {
+  return generatedApi.routinesControllerFindOne(routineId, { api });
+}
+
+export function runRoutineNow(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<void> {
+  return generatedApi.routinesControllerRunNow(routineId, { api });
 }
 
 export function listRoutines(

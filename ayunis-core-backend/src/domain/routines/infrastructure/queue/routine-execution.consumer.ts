@@ -15,7 +15,9 @@ const DEFAULT_CONCURRENCY = 2;
 /**
  * Starts only when routines are enabled: an instance with the flag off takes
  * no jobs, so they wait for an instance that may run them instead of being
- * dropped.
+ * dropped. A stalled job (its worker died) is delivered again: it runs if its
+ * run had not started, and is skipped otherwise (the run is claimed per job),
+ * in which case the sweep later records the run left running as interrupted.
  */
 @Processor(ROUTINE_EXECUTION_QUEUE, { autorun: false })
 export class RoutineExecutionConsumer
@@ -54,7 +56,12 @@ export class RoutineExecutionConsumer
     await observeJob(job, () =>
       this.contextService.run(() =>
         this.executeRoutineUseCase.execute(
-          new ExecuteRoutineCommand(job.data.routineId),
+          new ExecuteRoutineCommand(
+            job.data.routineId,
+            job.data.trigger,
+            // BullMQ assigns every added job an id.
+            job.id as string,
+          ),
         ),
       ),
     );

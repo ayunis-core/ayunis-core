@@ -24284,16 +24284,16 @@ export const useRoutinesControllerRunNow = <TError = void,
     }
 
 /**
- * @summary Get the data-retention policy for the current org
+ * @summary Whether the current user may use Ayunis Core chat, and why not
  */
-export const retentionPoliciesControllerGet = (
+export const academyAccessControllerGetStatus = (
 
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<RetentionPolicyResponseDto>(
-      {url: `/retention-policies/org`, method: 'GET', signal
+      return customAxiosInstance<AcademyAccessStatusResponseDto>(
+      {url: `/academy-access/status`, method: 'GET', signal
     },
       );
     }
@@ -24301,69 +24301,69 @@ export const retentionPoliciesControllerGet = (
 
 
 
-export const getRetentionPoliciesControllerGetQueryKey = () => {
+export const getAcademyAccessControllerGetStatusQueryKey = () => {
     return [
-    `/retention-policies/org`
+    `/academy-access/status`
     ] as const;
     }
 
 
-export const getRetentionPoliciesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+export const getAcademyAccessControllerGetStatusQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getRetentionPoliciesControllerGetQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetStatusQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>> = ({ signal }) => retentionPoliciesControllerGet(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>> = ({ signal }) => academyAccessControllerGetStatus(signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type RetentionPoliciesControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>>
-export type RetentionPoliciesControllerGetQueryError = unknown
+export type AcademyAccessControllerGetStatusQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>>
+export type AcademyAccessControllerGetStatusQueryError = void
 
 
-export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
           TError,
-          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
           TError,
-          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get the data-retention policy for the current org
+ * @summary Whether the current user may use Ayunis Core chat, and why not
  */
 
-export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getRetentionPoliciesControllerGetQueryOptions(options)
+  const queryOptions = getAcademyAccessControllerGetStatusQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -24377,18 +24377,16 @@ export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typ
 
 
 /**
- * @summary Set or clear the data-retention policy for the current org
+ * @summary Get the org's academy certificate requirement
  */
-export const retentionPoliciesControllerUpdate = (
-    updateRetentionPolicyRequestDto: UpdateRetentionPolicyRequestDto,
+export const academyAccessControllerGetOrgSettings = (
+
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<RetentionPolicyResponseDto>(
-      {url: `/retention-policies/org`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateRetentionPolicyRequestDto, signal
+      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
+      {url: `/academy-access/org-settings`, method: 'GET', signal
     },
       );
     }
@@ -24396,13 +24394,108 @@ export const retentionPoliciesControllerUpdate = (
 
 
 
-export const getRetentionPoliciesControllerUpdateMutationKey = () => ['retentionPoliciesControllerUpdate'] as const;
+export const getAcademyAccessControllerGetOrgSettingsQueryKey = () => {
+    return [
+    `/academy-access/org-settings`
+    ] as const;
+    }
 
-export const getRetentionPoliciesControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext> => {
 
-const mutationKey = getRetentionPoliciesControllerUpdateMutationKey();
+export const getAcademyAccessControllerGetOrgSettingsQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>> = ({ signal }) => academyAccessControllerGetOrgSettings(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerGetOrgSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>>
+export type AcademyAccessControllerGetOrgSettingsQueryError = unknown
+
+
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the org's academy certificate requirement
+ */
+
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerGetOrgSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set the org's academy certificate requirement
+ */
+export const academyAccessControllerUpsertOrgSettings = (
+    upsertOrgAcademyAccessSettingsDto: UpsertOrgAcademyAccessSettingsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
+      {url: `/academy-access/org-settings`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertOrgAcademyAccessSettingsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerUpsertOrgSettingsMutationKey = () => ['academyAccessControllerUpsertOrgSettings'] as const;
+
+export const getAcademyAccessControllerUpsertOrgSettingsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext> => {
+
+const mutationKey = getAcademyAccessControllerUpsertOrgSettingsMutationKey();
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -24412,10 +24505,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, RetentionPoliciesControllerUpdateMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, AcademyAccessControllerUpsertOrgSettingsMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  retentionPoliciesControllerUpdate(data,)
+          return  academyAccessControllerUpsertOrgSettings(data,)
         }
 
 
@@ -24425,24 +24518,629 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type RetentionPoliciesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>>
-    export type RetentionPoliciesControllerUpdateMutationBody = UpdateRetentionPolicyRequestDto
-    export type RetentionPoliciesControllerUpdateMutationError = void
-    export type RetentionPoliciesControllerUpdateMutationVariables = {data: UpdateRetentionPolicyRequestDto}
+    export type AcademyAccessControllerUpsertOrgSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>>
+    export type AcademyAccessControllerUpsertOrgSettingsMutationBody = UpsertOrgAcademyAccessSettingsDto
+    export type AcademyAccessControllerUpsertOrgSettingsMutationError = unknown
+    export type AcademyAccessControllerUpsertOrgSettingsMutationVariables = {data: UpsertOrgAcademyAccessSettingsDto}
 
     /**
- * @summary Set or clear the data-retention policy for the current org
+ * @summary Set the org's academy certificate requirement
  */
-export const useRetentionPoliciesControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext>, }
+export const useAcademyAccessControllerUpsertOrgSettings = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>,
+        Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>,
         TError,
-        RetentionPoliciesControllerUpdateMutationVariables,
+        AcademyAccessControllerUpsertOrgSettingsMutationVariables,
         TContext
       > => {
-      return useMutation(getRetentionPoliciesControllerUpdateMutationOptions(options), queryClient);
+      return useMutation(getAcademyAccessControllerUpsertOrgSettingsMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Certificate standing of every member of the admin's org
+ */
+export const academyAccessControllerListOrgCertificates = (
+    params?: AcademyAccessControllerListOrgCertificatesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PaginatedOrgCertificateStatusesResponseDto>(
+      {url: `/academy-access/org-certificates`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerListOrgCertificatesQueryKey = (params?: AcademyAccessControllerListOrgCertificatesParams,) => {
+    return [
+    `/academy-access/org-certificates`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAcademyAccessControllerListOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerListOrgCertificatesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>> = ({ signal }) => academyAccessControllerListOrgCertificates(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerListOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>>
+export type AcademyAccessControllerListOrgCertificatesQueryError = unknown
+
+
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params: undefined |  AcademyAccessControllerListOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Certificate standing of every member of the admin's org
+ */
+
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerListOrgCertificatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Every member matching the search and status filter, across all pages, with name, e-mail, status, last-passed date and renewal date.
+ * @summary Export the certificate overview as CSV
+ */
+export const academyAccessControllerExportOrgCertificates = (
+    params?: AcademyAccessControllerExportOrgCertificatesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/academy-access/org-certificates/export.csv`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerExportOrgCertificatesQueryKey = (params?: AcademyAccessControllerExportOrgCertificatesParams,) => {
+    return [
+    `/academy-access/org-certificates/export.csv`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAcademyAccessControllerExportOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerExportOrgCertificatesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>> = ({ signal }) => academyAccessControllerExportOrgCertificates(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerExportOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>>
+export type AcademyAccessControllerExportOrgCertificatesQueryError = void
+
+
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params: undefined |  AcademyAccessControllerExportOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export the certificate overview as CSV
+ */
+
+export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
+ params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerExportOrgCertificatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The same Teilnahmebestätigung PDF the member can download themselves, for a member of the admin's own organization.
+ * @summary Download a member's participation confirmation
+ */
+export const academyAccessControllerGetOrgMemberCertificate = (
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/academy-access/org-certificates/${userId}/certificate`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getAcademyAccessControllerGetOrgMemberCertificateQueryKey = (userId: string,) => {
+    return [
+    `/academy-access/org-certificates/${userId}/certificate`
+    ] as const;
+    }
+
+
+export const getAcademyAccessControllerGetOrgMemberCertificateQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgMemberCertificateQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>> = ({ signal }) => academyAccessControllerGetOrgMemberCertificate(userId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerGetOrgMemberCertificateQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>>
+export type AcademyAccessControllerGetOrgMemberCertificateQueryError = void
+
+
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download a member's participation confirmation
+ */
+
+export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerGetOrgMemberCertificateQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List all add-ons with their active state for an organization
+ */
+export const superAdminAddonsControllerList = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AddonStatusResponseDto[]>(
+      {url: `/super-admin/addons/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAddonsControllerListQueryKey = (orgId: string,) => {
+    return [
+    `/super-admin/addons/${orgId}`
+    ] as const;
+    }
+
+
+export const getSuperAdminAddonsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAddonsControllerListQueryKey(orgId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAddonsControllerList>>> = ({ signal }) => superAdminAddonsControllerList(orgId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminAddonsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerList>>>
+export type SuperAdminAddonsControllerListQueryError = void
+
+
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all add-ons with their active state for an organization
+ */
+
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminAddonsControllerListQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Activate an add-on for an organization
+ */
+export const superAdminAddonsControllerActivate = (
+    orgId: string,
+    type: 'ayunis_core_academy',
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/addons/${orgId}/${type}`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAddonsControllerActivateMutationKey = () => ['superAdminAddonsControllerActivate'] as const;
+
+export const getSuperAdminAddonsControllerActivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAddonsControllerActivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, SuperAdminAddonsControllerActivateMutationVariables> = (props) => {
+          const {orgId,type} = props ?? {};
+
+          return  superAdminAddonsControllerActivate(orgId,type,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAddonsControllerActivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>>
+
+    export type SuperAdminAddonsControllerActivateMutationError = void
+    export type SuperAdminAddonsControllerActivateMutationVariables = {orgId: string;type: 'ayunis_core_academy'}
+
+    /**
+ * @summary Activate an add-on for an organization
+ */
+export const useSuperAdminAddonsControllerActivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>,
+        TError,
+        SuperAdminAddonsControllerActivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAddonsControllerActivateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Deactivate an add-on for an organization
+ */
+export const superAdminAddonsControllerDeactivate = (
+    orgId: string,
+    type: 'ayunis_core_academy',
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/addons/${orgId}/${type}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAddonsControllerDeactivateMutationKey = () => ['superAdminAddonsControllerDeactivate'] as const;
+
+export const getSuperAdminAddonsControllerDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAddonsControllerDeactivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, SuperAdminAddonsControllerDeactivateMutationVariables> = (props) => {
+          const {orgId,type} = props ?? {};
+
+          return  superAdminAddonsControllerDeactivate(orgId,type,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAddonsControllerDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>>
+
+    export type SuperAdminAddonsControllerDeactivateMutationError = void
+    export type SuperAdminAddonsControllerDeactivateMutationVariables = {orgId: string;type: 'ayunis_core_academy'}
+
+    /**
+ * @summary Deactivate an add-on for an organization
+ */
+export const useSuperAdminAddonsControllerDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>,
+        TError,
+        SuperAdminAddonsControllerDeactivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAddonsControllerDeactivateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List all add-ons with their active state for the current user's organization
+ */
+export const addonsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AddonStatusResponseDto[]>(
+      {url: `/addons`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getAddonsControllerListQueryKey = () => {
+    return [
+    `/addons`
+    ] as const;
+    }
+
+
+export const getAddonsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAddonsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof addonsControllerList>>> = ({ signal }) => addonsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AddonsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof addonsControllerList>>>
+export type AddonsControllerListQueryError = void
+
+
+export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof addonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof addonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof addonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof addonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all add-ons with their active state for the current user's organization
+ */
+
+export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAddonsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * Retrieve all chapters with nested modules, ordered by position. Requires the academy add-on to be active for the organization.
@@ -25510,6 +26208,167 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
       return useMutation(getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options), queryClient);
     }
 
+/**
+ * @summary Get the data-retention policy for the current org
+ */
+export const retentionPoliciesControllerGet = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RetentionPolicyResponseDto>(
+      {url: `/retention-policies/org`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRetentionPoliciesControllerGetQueryKey = () => {
+    return [
+    `/retention-policies/org`
+    ] as const;
+    }
+
+
+export const getRetentionPoliciesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRetentionPoliciesControllerGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>> = ({ signal }) => retentionPoliciesControllerGet(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RetentionPoliciesControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>>
+export type RetentionPoliciesControllerGetQueryError = unknown
+
+
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the data-retention policy for the current org
+ */
+
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRetentionPoliciesControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set or clear the data-retention policy for the current org
+ */
+export const retentionPoliciesControllerUpdate = (
+    updateRetentionPolicyRequestDto: UpdateRetentionPolicyRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RetentionPolicyResponseDto>(
+      {url: `/retention-policies/org`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRetentionPolicyRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRetentionPoliciesControllerUpdateMutationKey = () => ['retentionPoliciesControllerUpdate'] as const;
+
+export const getRetentionPoliciesControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getRetentionPoliciesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, RetentionPoliciesControllerUpdateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  retentionPoliciesControllerUpdate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetentionPoliciesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>>
+    export type RetentionPoliciesControllerUpdateMutationBody = UpdateRetentionPolicyRequestDto
+    export type RetentionPoliciesControllerUpdateMutationError = void
+    export type RetentionPoliciesControllerUpdateMutationVariables = {data: UpdateRetentionPolicyRequestDto}
+
+    /**
+ * @summary Set or clear the data-retention policy for the current org
+ */
+export const useRetentionPoliciesControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,RetentionPoliciesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>,
+        TError,
+        RetentionPoliciesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetentionPoliciesControllerUpdateMutationOptions(options), queryClient);
+    }
+
 export const chatCompletionsControllerCreate = (
     chatCompletionRequestDto: ChatCompletionRequestDto,
  signal?: AbortSignal
@@ -25734,326 +26593,6 @@ export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof mo
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerRetrieveQueryOptions(model,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary List all add-ons with their active state for an organization
- */
-export const superAdminAddonsControllerList = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<AddonStatusResponseDto[]>(
-      {url: `/super-admin/addons/${orgId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAddonsControllerListQueryKey = (orgId: string,) => {
-    return [
-    `/super-admin/addons/${orgId}`
-    ] as const;
-    }
-
-
-export const getSuperAdminAddonsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAddonsControllerListQueryKey(orgId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAddonsControllerList>>> = ({ signal }) => superAdminAddonsControllerList(orgId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: orgId !== null && orgId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminAddonsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerList>>>
-export type SuperAdminAddonsControllerListQueryError = void
-
-
-export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List all add-ons with their active state for an organization
- */
-
-export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminAddonsControllerListQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Activate an add-on for an organization
- */
-export const superAdminAddonsControllerActivate = (
-    orgId: string,
-    type: 'ayunis_core_academy',
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/addons/${orgId}/${type}`, method: 'POST', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAddonsControllerActivateMutationKey = () => ['superAdminAddonsControllerActivate'] as const;
-
-export const getSuperAdminAddonsControllerActivateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminAddonsControllerActivateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, SuperAdminAddonsControllerActivateMutationVariables> = (props) => {
-          const {orgId,type} = props ?? {};
-
-          return  superAdminAddonsControllerActivate(orgId,type,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAddonsControllerActivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>>
-
-    export type SuperAdminAddonsControllerActivateMutationError = void
-    export type SuperAdminAddonsControllerActivateMutationVariables = {orgId: string;type: 'ayunis_core_academy'}
-
-    /**
- * @summary Activate an add-on for an organization
- */
-export const useSuperAdminAddonsControllerActivate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,SuperAdminAddonsControllerActivateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>,
-        TError,
-        SuperAdminAddonsControllerActivateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminAddonsControllerActivateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Deactivate an add-on for an organization
- */
-export const superAdminAddonsControllerDeactivate = (
-    orgId: string,
-    type: 'ayunis_core_academy',
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/super-admin/addons/${orgId}/${type}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getSuperAdminAddonsControllerDeactivateMutationKey = () => ['superAdminAddonsControllerDeactivate'] as const;
-
-export const getSuperAdminAddonsControllerDeactivateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext> => {
-
-const mutationKey = getSuperAdminAddonsControllerDeactivateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, SuperAdminAddonsControllerDeactivateMutationVariables> = (props) => {
-          const {orgId,type} = props ?? {};
-
-          return  superAdminAddonsControllerDeactivate(orgId,type,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAddonsControllerDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>>
-
-    export type SuperAdminAddonsControllerDeactivateMutationError = void
-    export type SuperAdminAddonsControllerDeactivateMutationVariables = {orgId: string;type: 'ayunis_core_academy'}
-
-    /**
- * @summary Deactivate an add-on for an organization
- */
-export const useSuperAdminAddonsControllerDeactivate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,SuperAdminAddonsControllerDeactivateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>,
-        TError,
-        SuperAdminAddonsControllerDeactivateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSuperAdminAddonsControllerDeactivateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List all add-ons with their active state for the current user's organization
- */
-export const addonsControllerList = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<AddonStatusResponseDto[]>(
-      {url: `/addons`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getAddonsControllerListQueryKey = () => {
-    return [
-    `/addons`
-    ] as const;
-    }
-
-
-export const getAddonsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAddonsControllerListQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof addonsControllerList>>> = ({ signal }) => addonsControllerList(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AddonsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof addonsControllerList>>>
-export type AddonsControllerListQueryError = void
-
-
-export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addonsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof addonsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addonsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof addonsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List all add-ons with their active state for the current user's organization
- */
-
-export function useAddonsControllerList<TData = Awaited<ReturnType<typeof addonsControllerList>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addonsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAddonsControllerListQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -27026,545 +27565,6 @@ export const useIpAllowlistControllerRemove = <TError = unknown,
       > => {
       return useMutation(getIpAllowlistControllerRemoveMutationOptions(options), queryClient);
     }
-
-/**
- * @summary Whether the current user may use Ayunis Core chat, and why not
- */
-export const academyAccessControllerGetStatus = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<AcademyAccessStatusResponseDto>(
-      {url: `/academy-access/status`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerGetStatusQueryKey = () => {
-    return [
-    `/academy-access/status`
-    ] as const;
-    }
-
-
-export const getAcademyAccessControllerGetStatusQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetStatusQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>> = ({ signal }) => academyAccessControllerGetStatus(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyAccessControllerGetStatusQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>>
-export type AcademyAccessControllerGetStatusQueryError = void
-
-
-export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Whether the current user may use Ayunis Core chat, and why not
- */
-
-export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyAccessControllerGetStatusQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get the org's academy certificate requirement
- */
-export const academyAccessControllerGetOrgSettings = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
-      {url: `/academy-access/org-settings`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerGetOrgSettingsQueryKey = () => {
-    return [
-    `/academy-access/org-settings`
-    ] as const;
-    }
-
-
-export const getAcademyAccessControllerGetOrgSettingsQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgSettingsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>> = ({ signal }) => academyAccessControllerGetOrgSettings(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyAccessControllerGetOrgSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>>
-export type AcademyAccessControllerGetOrgSettingsQueryError = unknown
-
-
-export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the org's academy certificate requirement
- */
-
-export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyAccessControllerGetOrgSettingsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Set the org's academy certificate requirement
- */
-export const academyAccessControllerUpsertOrgSettings = (
-    upsertOrgAcademyAccessSettingsDto: UpsertOrgAcademyAccessSettingsDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
-      {url: `/academy-access/org-settings`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: upsertOrgAcademyAccessSettingsDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerUpsertOrgSettingsMutationKey = () => ['academyAccessControllerUpsertOrgSettings'] as const;
-
-export const getAcademyAccessControllerUpsertOrgSettingsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext> => {
-
-const mutationKey = getAcademyAccessControllerUpsertOrgSettingsMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, AcademyAccessControllerUpsertOrgSettingsMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  academyAccessControllerUpsertOrgSettings(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AcademyAccessControllerUpsertOrgSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>>
-    export type AcademyAccessControllerUpsertOrgSettingsMutationBody = UpsertOrgAcademyAccessSettingsDto
-    export type AcademyAccessControllerUpsertOrgSettingsMutationError = unknown
-    export type AcademyAccessControllerUpsertOrgSettingsMutationVariables = {data: UpsertOrgAcademyAccessSettingsDto}
-
-    /**
- * @summary Set the org's academy certificate requirement
- */
-export const useAcademyAccessControllerUpsertOrgSettings = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,AcademyAccessControllerUpsertOrgSettingsMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>,
-        TError,
-        AcademyAccessControllerUpsertOrgSettingsMutationVariables,
-        TContext
-      > => {
-      return useMutation(getAcademyAccessControllerUpsertOrgSettingsMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Certificate standing of every member of the admin's org
- */
-export const academyAccessControllerListOrgCertificates = (
-    params?: AcademyAccessControllerListOrgCertificatesParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<PaginatedOrgCertificateStatusesResponseDto>(
-      {url: `/academy-access/org-certificates`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerListOrgCertificatesQueryKey = (params?: AcademyAccessControllerListOrgCertificatesParams,) => {
-    return [
-    `/academy-access/org-certificates`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getAcademyAccessControllerListOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerListOrgCertificatesQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>> = ({ signal }) => academyAccessControllerListOrgCertificates(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyAccessControllerListOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>>
-export type AcademyAccessControllerListOrgCertificatesQueryError = unknown
-
-
-export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
- params: undefined |  AcademyAccessControllerListOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
- params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
- params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Certificate standing of every member of the admin's org
- */
-
-export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
- params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyAccessControllerListOrgCertificatesQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Every member matching the search and status filter, across all pages, with name, e-mail, status, last-passed date and renewal date.
- * @summary Export the certificate overview as CSV
- */
-export const academyAccessControllerExportOrgCertificates = (
-    params?: AcademyAccessControllerExportOrgCertificatesParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<Blob>(
-      {url: `/academy-access/org-certificates/export.csv`, method: 'GET',
-        params,
-        responseType: 'blob', signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerExportOrgCertificatesQueryKey = (params?: AcademyAccessControllerExportOrgCertificatesParams,) => {
-    return [
-    `/academy-access/org-certificates/export.csv`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getAcademyAccessControllerExportOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerExportOrgCertificatesQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>> = ({ signal }) => academyAccessControllerExportOrgCertificates(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyAccessControllerExportOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>>
-export type AcademyAccessControllerExportOrgCertificatesQueryError = void
-
-
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
- params: undefined |  AcademyAccessControllerExportOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
- params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
- params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Export the certificate overview as CSV
- */
-
-export function useAcademyAccessControllerExportOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError = void>(
- params?: AcademyAccessControllerExportOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerExportOrgCertificates>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyAccessControllerExportOrgCertificatesQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * The same Teilnahmebestätigung PDF the member can download themselves, for a member of the admin's own organization.
- * @summary Download a member's participation confirmation
- */
-export const academyAccessControllerGetOrgMemberCertificate = (
-    userId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<Blob>(
-      {url: `/academy-access/org-certificates/${userId}/certificate`, method: 'GET',
-        responseType: 'blob', signal
-    },
-      );
-    }
-
-
-
-
-export const getAcademyAccessControllerGetOrgMemberCertificateQueryKey = (userId: string,) => {
-    return [
-    `/academy-access/org-certificates/${userId}/certificate`
-    ] as const;
-    }
-
-
-export const getAcademyAccessControllerGetOrgMemberCertificateQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgMemberCertificateQueryKey(userId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>> = ({ signal }) => academyAccessControllerGetOrgMemberCertificate(userId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyAccessControllerGetOrgMemberCertificateQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>>
-export type AcademyAccessControllerGetOrgMemberCertificateQueryError = void
-
-
-export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
- userId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
- userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>,
-          TError,
-          Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
- userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download a member's participation confirmation
- */
-
-export function useAcademyAccessControllerGetOrgMemberCertificate<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError = void>(
- userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgMemberCertificate>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyAccessControllerGetOrgMemberCertificateQueryOptions(userId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 /**
  * @summary Get the current user’s two-factor auth status

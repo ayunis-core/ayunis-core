@@ -56,6 +56,23 @@ export class RoutineResponseDto {
   @ApiProperty()
   consecutiveFailureCount: number;
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'When the next scheduled run starts: the daily time plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.',
+    example: '2026-11-07T06:34:00.000Z',
+  })
+  nextRunAt: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'When repeated failed runs paused (disabled) the routine; null once it is enabled again',
+  })
+  pausedAt: string | null;
+
   @ApiProperty()
   createdAt: string;
 

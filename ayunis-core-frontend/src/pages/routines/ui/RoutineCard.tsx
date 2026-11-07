@@ -17,6 +17,7 @@ import { useUpdateRoutine } from '@/pages/routines/api/useUpdateRoutine';
 import type { Routine } from '@/pages/routines/model/openapi';
 import { RoutineRunStatus } from '@/pages/routines/model/openapi';
 import { RoutineRunStatusLine } from './RoutineRunStatusLine';
+import { RoutineScheduleLine } from './RoutineScheduleLine';
 
 interface RoutineCardProps {
   routine: Routine;
@@ -61,7 +62,8 @@ export default function RoutineCard({
         <ItemDescription>
           {t('card.schedule', { time: routine.dailyTime })}
         </ItemDescription>
-        <div className="text-sm">
+        <div className="flex flex-col gap-1 text-sm">
+          <RoutineScheduleLine routine={routine} />
           <RoutineRunStatusLine routine={routine} />
         </div>
       </ItemContent>

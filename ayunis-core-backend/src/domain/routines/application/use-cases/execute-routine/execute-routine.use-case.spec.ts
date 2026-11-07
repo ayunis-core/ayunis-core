@@ -24,6 +24,8 @@ import {
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
+import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
+import { AcademyCertificateRequiredError } from 'src/iam/academy-access/application/academy-access.errors';
 import {
   TEST_MODEL_ID,
   TEST_ORG_ID,
@@ -32,7 +34,7 @@ import {
   aRoutine,
   createMockRoutinesRepository,
 } from 'src/domain/routines/application/testing/routine.fixtures';
-import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
+import { RoutineRunTrigger } from 'src/domain/routines/domain/routine-run-trigger.enum';
 import { ExecuteRoutineCommand } from './execute-routine.command';
 import { ExecuteRoutineUseCase } from './execute-routine.use-case';
 
@@ -43,6 +45,7 @@ describe('ExecuteRoutineUseCase', () => {
   const threadId = '77777777-7777-4777-8777-777777777777' as UUID;
   const findUserById = { execute: jest.fn() };
   const subscriptionGate = { admit: jest.fn() };
+  const academyGate = { admit: jest.fn() };
   const routineModelService = { forRun: jest.fn() };
   const createThread = { execute: jest.fn() };
   const executeUnattendedRun = { execute: jest.fn() };
@@ -61,7 +64,11 @@ describe('ExecuteRoutineUseCase', () => {
       ...overrides,
     });
 
-  const run = () => useCase.execute(new ExecuteRoutineCommand(TEST_ROUTINE_ID));
+  const executionKey = 'routine-execution-job-42';
+  const run = (trigger = RoutineRunTrigger.RUN_NOW) =>
+    useCase.execute(
+      new ExecuteRoutineCommand(TEST_ROUTINE_ID, trigger, executionKey),
+    );
 
   beforeEach(async () => {
     jest.resetAllMocks();
@@ -69,6 +76,7 @@ describe('ExecuteRoutineUseCase', () => {
     repository.findByIdForExecution.mockResolvedValue(aRoutine());
     findUserById.execute.mockResolvedValue(owner());
     subscriptionGate.admit.mockResolvedValue(undefined);
+    academyGate.admit.mockResolvedValue(undefined);
     routineModelService.forRun.mockResolvedValue(TEST_MODEL_ID);
     createThread.execute.mockResolvedValue({ id: threadId });
     executeUnattendedRun.execute.mockResolvedValue({
@@ -87,6 +95,7 @@ describe('ExecuteRoutineUseCase', () => {
           useValue: new UserContextRunner(contextService),
         },
         { provide: RoutineSubscriptionGate, useValue: subscriptionGate },
+        { provide: RoutineAcademyGate, useValue: academyGate },
         { provide: RoutineModelService, useValue: routineModelService },
         { provide: CreateThreadUseCase, useValue: createThread },
         {
@@ -147,9 +156,10 @@ describe('ExecuteRoutineUseCase', () => {
   it('shows the routine as running, then records success', async () => {
     await expect(run()).resolves.toEqual({ status: 'succeeded' });
 
-    expect(repository.setRunStatus).toHaveBeenCalledWith(
+    expect(repository.markRunStarted).toHaveBeenCalledWith(
       TEST_ROUTINE_ID,
-      RoutineRunStatus.RUNNING,
+      expect.any(Date),
+      { executionKey, onlyIfEnabled: false },
     );
     expect(repository.recordRunOutcome).toHaveBeenCalledWith(
       TEST_ROUTINE_ID,
@@ -205,6 +215,38 @@ describe('ExecuteRoutineUseCase', () => {
     expect(createThread.execute).not.toHaveBeenCalled();
   });
 
+  it('runs a scheduled run only while the routine is still enabled', async () => {
+    await run(RoutineRunTrigger.SCHEDULED);
+
+    expect(repository.markRunStarted).toHaveBeenCalledWith(
+      TEST_ROUTINE_ID,
+      expect.any(Date),
+      { executionKey, onlyIfEnabled: true },
+    );
+    expect(executeUnattendedRun.execute).toHaveBeenCalled();
+  });
+
+  it('skips a scheduled run of a routine disabled after it was queued, or a retried job whose run already started', async () => {
+    repository.markRunStarted.mockResolvedValue(false);
+
+    await expect(run(RoutineRunTrigger.SCHEDULED)).resolves.toBeNull();
+    expect(createThread.execute).not.toHaveBeenCalled();
+    expect(subscriptionGate.admit).not.toHaveBeenCalled();
+    expect(repository.recordRunOutcome).not.toHaveBeenCalled();
+  });
+
+  it('does not start a run for an owner without the required academy certificate', async () => {
+    academyGate.admit.mockRejectedValue(new AcademyCertificateRequiredError());
+
+    await expect(run(RoutineRunTrigger.SCHEDULED)).resolves.toEqual({
+      status: 'failed',
+      failureReason: 'ACADEMY_CERTIFICATE_REQUIRED',
+    });
+    expect(academyGate.admit).toHaveBeenCalledWith(TEST_USER_ID, TEST_ORG_ID);
+    expect(subscriptionGate.admit).not.toHaveBeenCalled();
+    expect(createThread.execute).not.toHaveBeenCalled();
+  });
+
   it('runs nothing on behalf of a locked account', async () => {
     findUserById.execute.mockResolvedValue(owner({ lockedAt: new Date() }));
 
@@ -227,7 +269,35 @@ describe('ExecuteRoutineUseCase', () => {
     );
   });
 
-  it('records a failure when the owner cannot be loaded, so the routine is not left queued', async () => {
+  it('leaves a scheduled run that fails before it starts to the retry, without counting a failure', async () => {
+    findUserById.execute.mockRejectedValue(new Error('connection reset'));
+
+    await expect(run(RoutineRunTrigger.SCHEDULED)).rejects.toThrow(
+      UnexpectedRoutineError,
+    );
+    expect(repository.recordRunOutcome).not.toHaveBeenCalled();
+    expect(createThread.execute).not.toHaveBeenCalled();
+  });
+
+  it('does not count a scheduled run whose start could not be recorded', async () => {
+    repository.markRunStarted.mockRejectedValue(new Error('connection reset'));
+
+    await expect(run(RoutineRunTrigger.SCHEDULED)).rejects.toThrow(
+      UnexpectedRoutineError,
+    );
+    expect(repository.recordRunOutcome).not.toHaveBeenCalled();
+  });
+
+  it('records a scheduled run that fails after it started, once', async () => {
+    executeUnattendedRun.execute.mockRejectedValue(new Error('socket hang up'));
+
+    await expect(run(RoutineRunTrigger.SCHEDULED)).rejects.toThrow(
+      UnexpectedRoutineError,
+    );
+    expect(repository.recordRunOutcome).toHaveBeenCalledTimes(1);
+  });
+
+  it('records a Run now failure when the owner cannot be loaded, so the routine is not left queued', async () => {
     findUserById.execute.mockRejectedValue(new Error('connection reset'));
 
     await expect(run()).rejects.toThrow(UnexpectedRoutineError);
@@ -243,7 +313,7 @@ describe('ExecuteRoutineUseCase', () => {
     repository.findByIdForExecution.mockResolvedValue(null);
 
     await expect(run()).resolves.toBeNull();
-    expect(repository.setRunStatus).not.toHaveBeenCalled();
+    expect(repository.markRunStarted).not.toHaveBeenCalled();
     expect(createThread.execute).not.toHaveBeenCalled();
   });
 
