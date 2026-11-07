@@ -29,7 +29,8 @@ import {
   changedRoles,
   toggleDraft,
 } from '@/pages/admin-settings/roles-settings/lib/role-permissions-draft';
-import { PERMISSION_SECTIONS } from '@/pages/admin-settings/roles-settings/lib/catalog';
+import { visiblePermissionSections } from '@/pages/admin-settings/roles-settings/lib/catalog';
+import { useFeatureToggles } from '@/features/feature-toggles';
 import { useUpdateRolePermissions } from '@/pages/admin-settings/roles-settings/api/useUpdateRolePermissions';
 import { PermissionMatrixRow } from './PermissionMatrixRow';
 import { PermissionGroupHeader } from './PermissionGroupHeader';
@@ -43,6 +44,8 @@ export function RolesSettingsPage() {
 
   const { data, isLoading, isError, refetch } =
     useRolePermissionsControllerGet();
+  const { toggles } = useFeatureToggles();
+  const sections = visiblePermissionSections(toggles);
   const serverDraft = useMemo(() => buildDraft(data?.roles ?? []), [data]);
 
   const [draft, setDraft] = useState<RolePermissionsDraft | null>(null);
@@ -116,7 +119,7 @@ export function RolesSettingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {PERMISSION_SECTIONS.map((section) => (
+              {sections.map((section) => (
                 <Fragment key={section.group}>
                   <PermissionGroupHeader label={t(`groups.${section.group}`)} />
                   {section.permissions.map((permission) => (

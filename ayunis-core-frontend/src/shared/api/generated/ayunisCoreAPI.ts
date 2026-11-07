@@ -23852,7 +23852,7 @@ export const getRoutinesControllerFindAllQueryKey = () => {
     }
 
 
-export const getRoutinesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
+export const getRoutinesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -23871,10 +23871,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type RoutinesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof routinesControllerFindAll>>>
-export type RoutinesControllerFindAllQueryError = unknown
+export type RoutinesControllerFindAllQueryError = void
 
 
-export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = void>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof routinesControllerFindAll>>,
@@ -23884,7 +23884,7 @@ export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof r
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof routinesControllerFindAll>>,
@@ -23894,7 +23894,7 @@ export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof r
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -23902,7 +23902,7 @@ export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof r
  * @summary List the current user's routines
  */
 
-export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -23942,7 +23942,7 @@ export const routinesControllerCreate = (
 
 export const getRoutinesControllerCreateMutationKey = () => ['routinesControllerCreate'] as const;
 
-export const getRoutinesControllerCreateMutationOptions = <TError = unknown,
+export const getRoutinesControllerCreateMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext> => {
 
@@ -23971,13 +23971,13 @@ const {mutation: mutationOptions} = options ?
 
     export type RoutinesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerCreate>>>
     export type RoutinesControllerCreateMutationBody = CreateRoutineDto
-    export type RoutinesControllerCreateMutationError = unknown
+    export type RoutinesControllerCreateMutationError = void
     export type RoutinesControllerCreateMutationVariables = {data: CreateRoutineDto}
 
     /**
  * @summary Create a routine
  */
-export const useRoutinesControllerCreate = <TError = unknown,
+export const useRoutinesControllerCreate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof routinesControllerCreate>>,

@@ -95,6 +95,13 @@ export function requestRoutines(
   return api.get(`${apiURL}/api/routines`);
 }
 
+export function requestRoutineCreation(
+  api: APIRequestContext,
+  routine: CreateRoutineDto,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/routines`, { data: routine });
+}
+
 export function requestRoutine(
   api: APIRequestContext,
   routineId: string,

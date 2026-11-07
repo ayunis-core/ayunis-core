@@ -50,7 +50,8 @@
     "queued": "In Warteschlange…",
     "running": "Läuft…",
     "succeeded": "Erfolgreich",
-    "failed": "Fehlgeschlagen"
+    "failed": "Fehlgeschlagen",
+    "skipped": "Übersprungen"
   },
   "failureReason": {
     "finishNotCalled": "Die Routine endete, ohne ihre Aufgabe abzuschließen.",
@@ -62,6 +63,7 @@
     "model": "Das Modell steht Ihnen nicht mehr zur Verfügung.",
     "interrupted": "Der Lauf wurde unterbrochen.",
     "academyCertificate": "Ihre Organisation setzt zuerst die KI-Schulung nach EU AI Act voraus.",
+    "permissionMissing": "Ihrer Rolle fehlte die Berechtigung „Routinen verwalten“.",
     "unknown": "Etwas ist schiefgelaufen."
   },
   "delete": {

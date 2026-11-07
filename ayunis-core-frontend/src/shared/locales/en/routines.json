@@ -50,7 +50,8 @@
     "queued": "Queued…",
     "running": "Running…",
     "succeeded": "Succeeded",
-    "failed": "Failed"
+    "failed": "Failed",
+    "skipped": "Skipped"
   },
   "failureReason": {
     "finishNotCalled": "The routine ended without finishing its task.",
@@ -62,6 +63,7 @@
     "model": "The model is no longer available to you.",
     "interrupted": "The run was interrupted.",
     "academyCertificate": "Your organization requires the EU AI Act training first.",
+    "permissionMissing": "Your role did not have the Manage routines permission.",
     "unknown": "Something went wrong."
   },
   "delete": {
