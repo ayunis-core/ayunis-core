@@ -4,10 +4,11 @@ import {
   getRoutine,
   runRoutineNow,
 } from "../../src/clients/api/routines.client";
+import { notificationsOfRoutine } from "../../src/clients/api/notifications.client";
 import { routineCard } from "../../src/flows/routines.flow";
 import { test, expect } from "../../src/fixtures/test";
 
-test("a routine paused after three failed runs resumes its daily run when switched back on", async ({
+test("a routine paused after three failed runs says so in the inbox and resumes its daily run when switched back on", async ({
   api,
   page,
 }) => {
@@ -25,6 +26,27 @@ test("a routine paused after three failed runs resumes its daily run when switch
       )
       .toBe(failures);
   }
+
+  // Newest first: each failure posted an error notification linking its
+  // routine thread, and the third one says the routine is paused.
+  const notifications = await notificationsOfRoutine(api, routine.id);
+  expect(notifications).toHaveLength(3);
+  for (const notification of notifications) {
+    expect(notification).toMatchObject({
+      type: "routine_error",
+      routineThreadId: expect.any(String),
+    });
+  }
+  expect(notifications[0].headline).toContain("pausiert");
+  expect(notifications[0].body).toContain("wieder ein");
+  expect(notifications[1].headline).toContain("fehlgeschlagen");
+
+  await page.goto(`/inbox/${notifications[0].id}`);
+  await expect(page.getByTestId("notification-detail")).toHaveAttribute(
+    "data-type",
+    "routine_error",
+  );
+  await expect(page.getByTestId("notification-error-icon")).toBeVisible();
 
   await page.goto("/routines");
   const card = routineCard(page, name);

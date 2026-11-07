@@ -15,12 +15,15 @@ export interface OrgRetentionResult {
    * another run. False means the org was fully drained this run.
    */
   capReached: boolean;
+  /** Notifications created before the cutoff (or "would delete" in dry run). */
+  notificationsDeleted: number;
 }
 
 export interface EnforceRetentionResult {
   orgsProcessed: number;
   totalDeleted: number;
   totalFailed: number;
+  totalNotificationsDeleted: number;
   dryRun: boolean;
   perOrg: OrgRetentionResult[];
 }

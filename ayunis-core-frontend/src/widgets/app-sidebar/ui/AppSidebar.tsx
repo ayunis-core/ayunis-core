@@ -11,6 +11,7 @@ import {
   Store,
   GraduationCap,
   CalendarClock,
+  Inbox,
 } from 'lucide-react';
 
 import {
@@ -20,6 +21,7 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
@@ -56,10 +58,15 @@ import {
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/useMobileSidebarNavigationHandler';
+import {
+  formatUnreadCount,
+  useUnreadNotificationCount,
+} from '@/features/notifications';
 
 const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
   '/routines': 'sidebar-navigation-routines',
+  '/inbox': 'sidebar-navigation-inbox',
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -77,6 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
   const canManageRoutines =
     routinesEnabled && authorization.can('manage_routines');
+  const { unreadCount } = useUnreadNotificationCount();
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
@@ -120,6 +128,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t('sidebar.routines'),
             url: '/routines',
             icon: CalendarClock,
+          },
+        ]
+      : []),
+    // Not tied to manage_routines: notifications stay readable without it.
+    ...(routinesEnabled
+      ? [
+          {
+            title: t('sidebar.inbox'),
+            url: '/inbox',
+            icon: Inbox,
+            badge: formatUnreadCount(unreadCount),
           },
         ]
       : []),
@@ -173,6 +192,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
+                {'badge' in item && item.badge && (
+                  <SidebarMenuBadge data-testid="sidebar-inbox-unread-count">
+                    {item.badge}
+                  </SidebarMenuBadge>
+                )}
               </SidebarMenuItem>
             ))}
             {marketplace.enabled && marketplace.url && (

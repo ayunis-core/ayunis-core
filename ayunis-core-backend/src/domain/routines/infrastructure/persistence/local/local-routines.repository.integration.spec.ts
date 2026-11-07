@@ -489,7 +489,7 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
     const cutoff = new Date('2026-11-07T06:10:00.000Z');
     const finishedAt = new Date('2026-11-07T06:30:00.000Z');
 
-    it('fails runs left running since before the cutoff and counts them', async () => {
+    it('fails runs left running since before the cutoff and returns them', async () => {
       const stale = await stored({
         lastRunStatus: RoutineRunStatus.RUNNING,
         lastRunStartedAt: new Date('2026-11-07T06:00:00.000Z'),
@@ -507,7 +507,17 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
 
       await expect(
         repository.failRunsStartedBefore(cutoff, 'interrupted', finishedAt),
-      ).resolves.toBe(1);
+      ).resolves.toEqual([
+        {
+          routine: {
+            id: stale.id,
+            userId: stale.userId,
+            orgId: stale.orgId,
+            name: stale.name,
+          },
+          paused: true,
+        },
+      ]);
 
       expect(await repository.findByIdForExecution(stale.id)).toMatchObject({
         lastRunStatus: RoutineRunStatus.FAILED,
@@ -524,6 +534,22 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
       expect(
         (await repository.findByIdForExecution(finished.id))?.lastRunStatus,
       ).toBe(RoutineRunStatus.SUCCEEDED);
+    });
+
+    it('reports an interrupted run that did not pause its routine as not paused', async () => {
+      await stored({
+        lastRunStatus: RoutineRunStatus.RUNNING,
+        lastRunStartedAt: new Date('2026-11-07T06:00:00.000Z'),
+        consecutiveFailureCount: 0,
+      });
+
+      const [run] = await repository.failRunsStartedBefore(
+        cutoff,
+        'interrupted',
+        finishedAt,
+      );
+
+      expect(run.paused).toBe(false);
     });
   });
 

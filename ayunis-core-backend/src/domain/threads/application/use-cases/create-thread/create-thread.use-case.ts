@@ -18,6 +18,8 @@ import { ResolveModelModesUseCase } from 'src/domain/models/application/use-case
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
+import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -29,6 +31,7 @@ export class CreateThreadUseCase {
     private readonly contextService: ContextService,
     private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
     private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
+    private readonly findNotificationUseCase: FindNotificationUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -49,6 +52,13 @@ export class CreateThreadUseCase {
       });
     }
 
+    // Throws NotificationNotFoundError for an id the caller does not own.
+    if (command.sourceNotificationId) {
+      await this.findNotificationUseCase.execute(
+        new FindNotificationQuery(command.sourceNotificationId),
+      );
+    }
+
     try {
       const thread = new Thread({
         userId,
@@ -59,6 +69,7 @@ export class CreateThreadUseCase {
         title: command.title,
         type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
         routineId: command.routineId,
+        sourceNotificationId: command.sourceNotificationId,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);

@@ -13,6 +13,7 @@ vi.mock('react-i18next', () => ({
 }));
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),
+  Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
 }));
 vi.mock('@/features/chat-initiation', () => ({
   useInitiateChat: () => ({
@@ -171,5 +172,43 @@ describe('new chat model selection', () => {
     );
 
     expect(screen.queryByTestId('workspace-picker')).toBeNull();
+  });
+});
+
+describe('chat about a notification', () => {
+  const notification = { id: 'notification-id', headline: 'Neue Verordnung' };
+
+  it('names the notification and starts the chat about it', () => {
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <NewChatPage
+          selectedModelId="medium"
+          isEmbeddingModelEnabled={false}
+          sourceNotification={notification}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByTestId('new-chat-source-notification').textContent,
+    ).toContain('Neue Verordnung');
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(mocks.initiateChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        modelId: 'medium',
+        sourceNotificationId: 'notification-id',
+      }),
+    );
+  });
+
+  it('starts an ordinary chat without a notification', () => {
+    setup('medium');
+
+    expect(screen.queryByTestId('new-chat-source-notification')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(mocks.initiateChat).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceNotificationId: undefined }),
+    );
   });
 });

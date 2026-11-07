@@ -94,6 +94,7 @@ none of these packages implements the Agent Plugins standard.
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
 | [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Personal project folders ("Projekte") that group chats and own scoped skills, knowledge bases and instructions |
 | [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
+| [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine notifications with read state and "Chat about this"                                  |
 
 ### IAM Modules — Identity & Access Management
 

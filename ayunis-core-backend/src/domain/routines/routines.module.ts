@@ -13,6 +13,8 @@ import { RoutinesRepository } from './application/ports/routines.repository';
 import { RoutineModelService } from './application/services/routine-model.service';
 import { RoutineSubscriptionGate } from './application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from './application/services/routine-academy-gate.service';
+import { RoutineFailureNotifier } from './application/services/routine-failure-notifier.service';
+import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { CreateRoutineUseCase } from './application/use-cases/create-routine/create-routine.use-case';
 import { DeleteRoutineUseCase } from './application/use-cases/delete-routine/delete-routine.use-case';
 import { ExecuteRoutineUseCase } from './application/use-cases/execute-routine/execute-routine.use-case';
@@ -46,6 +48,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     TrialsModule,
     AcademyAccessModule,
     PermissionsModule,
+    NotificationsModule,
   ],
   controllers: [RoutinesController],
   providers: [
@@ -57,6 +60,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     RoutineModelService,
     RoutineSubscriptionGate,
     RoutineAcademyGate,
+    RoutineFailureNotifier,
     CreateRoutineUseCase,
     FindAllRoutinesUseCase,
     FindRoutineUseCase,

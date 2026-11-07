@@ -23,6 +23,13 @@ export interface DueRoutine {
   nextRunAt: Date;
 }
 
+/** A run the sweep recorded as interrupted. */
+export interface InterruptedRoutineRun {
+  routine: Pick<Routine, 'id' | 'userId' | 'orgId' | 'name'>;
+  /** Counting this failure paused the routine. */
+  paused: boolean;
+}
+
 export abstract class RoutinesRepository {
   abstract create(routine: Routine): Promise<Routine>;
   abstract findById(userId: UUID, id: UUID): Promise<Routine | null>;
@@ -87,11 +94,11 @@ export abstract class RoutinesRepository {
   /**
    * Records runs still shown as running that started before `startedBefore`
    * as failed with `failureReason`, counted and paused like any failure.
-   * Returns how many were recorded.
+   * Returns the runs it recorded.
    */
   abstract failRunsStartedBefore(
     startedBefore: Date,
     failureReason: string,
     finishedAt: Date,
-  ): Promise<number>;
+  ): Promise<InterruptedRoutineRun[]>;
 }

@@ -18,6 +18,7 @@ import { McpCapability } from 'src/domain/runs/application/run-capabilities/capa
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
+import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import {
   DONE_WHEN_MODEL_STOPS,
   type RunCompletionPolicy,
@@ -57,6 +58,7 @@ export class ChatRunProfile implements RunProfile {
     imageGeneration: ImageGenerationCapability,
     threadSources: ThreadSourcesCapability,
     knowledgeBases: KnowledgeBasesCapability,
+    notificationContext: NotificationContextCapability,
     workspaceInstructions: WorkspaceInstructionsCapability,
     mcp: McpCapability,
   ) {
@@ -77,6 +79,7 @@ export class ChatRunProfile implements RunProfile {
       imageGeneration,
       threadSources,
       knowledgeBases,
+      notificationContext,
       workspaceInstructions,
       mcp,
     ];

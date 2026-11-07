@@ -6,6 +6,7 @@ import { CustomInstructionsCapability } from 'src/domain/runs/application/run-ca
 import { FinishRoutineCapability } from 'src/domain/runs/application/run-capabilities/capabilities/finish-routine.capability';
 import { RoutineContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
+import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
 import type { RunCompletionPolicy, RunProfile } from './run-profile';
 import { routineCompletionPolicy } from './routine-completion.policy';
 
@@ -15,6 +16,8 @@ const ROUTINE_PREAMBLE = `You are an AI assistant powered by Ayunis Core, an ope
 - You are running unattended on a schedule. Nobody is watching this run, and nobody reads your text replies.
 - Produce output only through your tools. Text you write as a reply is lost.
 - Do not ask questions or wait for confirmation; nobody can answer. If something is unclear, make a reasonable assumption and continue.
+- If you find something important the user should know about, send it with ${ToolType.SEND_NOTIFICATION}, then call ${ToolType.FINISH_ROUTINE}.
+- If there is nothing important to report, call ${ToolType.FINISH_ROUTINE} without sending a notification.
 - When the task is done, or it cannot be done, call ${ToolType.FINISH_ROUTINE}. The run only ends when you call it.
 </unattended_run>`;
 
@@ -36,6 +39,7 @@ export class RoutineRunProfile implements RunProfile {
     anonymization: AnonymizationCapability,
     customInstructions: CustomInstructionsCapability,
     internet: RoutineInternetCapability,
+    notifications: NotificationsCapability,
     finishRoutine: FinishRoutineCapability,
   ) {
     this.capabilities = [
@@ -43,6 +47,7 @@ export class RoutineRunProfile implements RunProfile {
       anonymization,
       customInstructions,
       internet,
+      notifications,
       finishRoutine,
     ];
   }

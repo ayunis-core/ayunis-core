@@ -26,6 +26,9 @@ import {
   ConflictingModelSelectionError,
   ModelModeUnavailableError,
 } from 'src/domain/threads/application/threads.errors';
+import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
+import { NotificationNotFoundError } from 'src/domain/notifications/application/notifications.errors';
+import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -39,6 +42,7 @@ describe('CreateThreadUseCase', () => {
   const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   const resolveModelModes = { execute: jest.fn() };
+  const findNotification = { execute: jest.fn() };
 
   beforeEach(async () => {
     logger = createLoggerMock();
@@ -79,6 +83,7 @@ describe('CreateThreadUseCase', () => {
           provide: AssertWorkspaceReadAccessUseCase,
           useValue: mockAssertWorkspaceReadAccessUseCase,
         },
+        { provide: FindNotificationUseCase, useValue: findNotification },
       ],
     }).compile();
 
@@ -376,6 +381,78 @@ describe('CreateThreadUseCase', () => {
       );
 
       expect(thread.mode).toBeNull();
+    });
+  });
+
+  describe('about a notification', () => {
+    const notification = aNotification();
+    const standard = new PermittedLanguageModel({
+      id: mockModelId,
+      model: new LanguageModel({
+        name: 'mistral-large',
+        provider: ModelProvider.MISTRAL,
+        displayName: 'Mistral Large',
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+        contextWindowSize: 128_000,
+      }),
+      orgId: mockOrgId,
+      anonymousOnly: false,
+    });
+
+    beforeEach(() => {
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(standard);
+      threadsRepository.create.mockImplementation((t: Thread) =>
+        Promise.resolve(t),
+      );
+    });
+
+    it("links a regular chat to the user's notification", async () => {
+      findNotification.execute.mockResolvedValue(notification);
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({
+          modelId: mockModelId,
+          sourceNotificationId: notification.id,
+        }),
+      );
+
+      expect(findNotification.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ id: notification.id }),
+      );
+      expect(thread).toMatchObject({
+        sourceNotificationId: notification.id,
+        type: 'chat',
+        routineId: null,
+      });
+    });
+
+    it("refuses another user's notification without creating a thread", async () => {
+      findNotification.execute.mockRejectedValue(
+        new NotificationNotFoundError(notification.id),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateThreadCommand({
+            modelId: mockModelId,
+            sourceNotificationId: notification.id,
+          }),
+        ),
+      ).rejects.toThrow(NotificationNotFoundError);
+      expect(threadsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('does not look up a notification for an ordinary chat', async () => {
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ modelId: mockModelId }),
+      );
+
+      expect(findNotification.execute).not.toHaveBeenCalled();
+      expect(thread.sourceNotificationId).toBeNull();
     });
   });
 });

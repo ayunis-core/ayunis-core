@@ -24,6 +24,8 @@ export class Thread {
   type: ThreadType;
   /** The routine whose execution created this thread; null once it is deleted. */
   routineId: UUID | null;
+  /** The notification a "Chat about this" chat discusses; null once it is deleted. */
+  sourceNotificationId: UUID | null;
   lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -42,6 +44,7 @@ export class Thread {
     workspaceId?: UUID | null;
     type?: ThreadType;
     routineId?: UUID | null;
+    sourceNotificationId?: UUID | null;
     lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
@@ -59,6 +62,7 @@ export class Thread {
     this.workspaceId = params.workspaceId ?? null;
     this.type = params.type ?? ThreadType.CHAT;
     this.routineId = params.routineId ?? null;
+    this.sourceNotificationId = params.sourceNotificationId ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     // A freshly created thread's last activity is its creation time; it is

@@ -3,6 +3,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { MockInferenceProviderFactory } from './mock.inference-provider';
+import { mockRoutineNotification } from './mock-notification-responses';
 
 const model = new LanguageModel({
   name: 'claude-sonnet-4-6',
@@ -67,6 +68,109 @@ describe('MockInferenceProviderFactory runtime provider', () => {
       toolCallDeltas: [expect.objectContaining({ name: 'finish_routine' })],
       finishReason: 'tool_calls',
     });
+  });
+
+  describe('notifying routine E2E trigger', () => {
+    const routineTools = [
+      {
+        name: 'send_notification',
+        description: 'Send a notification.',
+        parameters: { type: 'object' as const, properties: {} },
+      },
+      {
+        name: 'finish_routine',
+        description: 'End this routine run.',
+        parameters: { type: 'object' as const, properties: {} },
+      },
+    ];
+    const task = {
+      role: 'user' as const,
+      content: [
+        { type: 'text' as const, text: 'E2E notify routine: Amtsblatt' },
+      ],
+    };
+
+    it('sends a notification first', async () => {
+      const provider = new MockInferenceProviderFactory().resolveProvider(
+        model,
+      );
+      const response = await collect(
+        provider.stream({ ...request, messages: [task], tools: routineTools }),
+      );
+
+      const call = response.at(-1)?.toolCallDeltas?.[0];
+      expect(call?.name).toBe('send_notification');
+      expect(JSON.parse(call?.argumentsDelta ?? '{}')).toEqual(
+        mockRoutineNotification('E2E notify routine: Amtsblatt'),
+      );
+      expect(
+        mockRoutineNotification('E2E notify routine: Amtsblatt'),
+      ).toMatchObject({
+        headline: 'Neue Verordnung: Amtsblatt',
+      });
+    });
+
+    it('finishes the routine once the notification was sent', async () => {
+      const provider = new MockInferenceProviderFactory().resolveProvider(
+        model,
+      );
+      const response = await collect(
+        provider.stream({
+          ...request,
+          messages: [
+            task,
+            {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'tool_call',
+                  id: 'mock-send-notification',
+                  name: 'send_notification',
+                  input: mockRoutineNotification(
+                    'E2E notify routine: Amtsblatt',
+                  ),
+                },
+              ],
+            },
+            {
+              role: 'tool_result',
+              content: [
+                {
+                  type: 'tool_result',
+                  toolCallId: 'mock-send-notification',
+                  toolName: 'send_notification',
+                  result: 'sent',
+                },
+              ],
+            },
+          ],
+          tools: routineTools,
+        } as ProviderRequest),
+      );
+
+      expect(response.at(-1)?.toolCallDeltas?.[0]?.name).toBe('finish_routine');
+    });
+  });
+
+  it('quotes the headline of the notification a chat is about from the system prompt', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const response = await collect(
+      provider.stream({
+        ...request,
+        instructions:
+          '<notification_under_discussion>\n<headline>Neue Verordnung zur Grundsteuer</headline>\n</notification_under_discussion>',
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'E2E quote notification' }],
+          },
+        ],
+      }),
+    );
+
+    expect(response.map((chunk) => chunk.textDelta ?? '').join('')).toBe(
+      'notification::Neue Verordnung zur Grundsteuer',
+    );
   });
 
   it('answers the routine E2E trigger with text when finish_routine is unavailable', async () => {

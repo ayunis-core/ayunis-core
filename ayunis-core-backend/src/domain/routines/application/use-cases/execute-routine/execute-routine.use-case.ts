@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UserContextRunner } from 'src/common/context/services/user-context-runner.service';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -24,6 +25,7 @@ import {
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
+import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
 import type { RoutineRunOutcome } from 'src/domain/routines/domain/routine-run-outcome';
 import { RoutineRunTrigger } from 'src/domain/routines/domain/routine-run-trigger.enum';
@@ -33,17 +35,24 @@ import { ExecuteRoutineCommand } from './execute-routine.command';
 
 const UNEXPECTED_FAILURE = 'UNEXPECTED_ERROR';
 
+/** What a run got to before it ended, for the failure notification. */
+interface RunAttempt {
+  routineThreadId: UUID | null;
+}
+
 /**
  * One execution of a routine on behalf of its owner, as a chat message would
  * run: same academy certificate and subscription/trial gates, model access
  * check (when the thread is created) and credit gate (inside the run). An
  * owner whose role lacks the manage routines permission is skipped before any
  * of these, so no trial message is consumed and no failure is counted. Every
- * outcome of a started run is recorded on the routine; only failures that are
- * not the routine's own (bugs, provider outages) are rethrown so the queue
- * reports them (and retries a scheduled job that failed before starting). Returns null when the routine or its owner no longer exists, when
- * a scheduled run's routine was disabled after it was queued, or when a
- * retried job's run already started (each job runs at most once).
+ * outcome of a started run is recorded on the routine, and a failure is posted
+ * to the owner's inbox; only failures that are not the routine's own (bugs,
+ * provider outages) are rethrown so the queue reports them (and retries a
+ * scheduled job that failed before starting). Returns null when the routine
+ * or its owner no longer exists, when a scheduled run's routine was disabled
+ * after it was queued, or when a retried job's run already started (each job
+ * runs at most once).
  */
 @Injectable()
 export class ExecuteRoutineUseCase {
@@ -60,6 +69,7 @@ export class ExecuteRoutineUseCase {
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly executeUnattendedRunUseCase: ExecuteUnattendedRunUseCase,
     private readonly configService: ConfigService,
+    private readonly failureNotifier: RoutineFailureNotifier,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRoutineError)
@@ -83,13 +93,14 @@ export class ExecuteRoutineUseCase {
     // shown as running; a retried job does not start it again.
     let outcome: RoutineRunOutcome;
     let unexpected: Error | undefined;
+    const attempt: RunAttempt = { routineThreadId: null };
     try {
-      outcome = await this.runAsOwner(routine, owner);
+      outcome = await this.runAsOwner(routine, owner, attempt);
     } catch (error) {
       outcome = failedOutcome(error);
       if (!isExpectedFailure(error)) unexpected = asError(error);
     }
-    await this.recordOutcome(routine, outcome);
+    await this.recordOutcome(routine, outcome, attempt.routineThreadId);
     if (unexpected) throw unexpected;
     return outcome;
   }
@@ -130,7 +141,7 @@ export class ExecuteRoutineUseCase {
       return owner;
     } catch (error) {
       if (trigger === RoutineRunTrigger.RUN_NOW) {
-        await this.recordOutcome(routine, failedOutcome(error));
+        await this.recordOutcome(routine, failedOutcome(error), null);
       }
       throw error;
     }
@@ -139,6 +150,7 @@ export class ExecuteRoutineUseCase {
   private runAsOwner(
     routine: Routine,
     owner: User,
+    attempt: RunAttempt,
   ): Promise<RoutineRunOutcome> {
     return this.userContextRunner.runAsUser(
       {
@@ -147,13 +159,14 @@ export class ExecuteRoutineUseCase {
         role: owner.role,
         systemRole: owner.systemRole,
       },
-      () => this.run(routine, owner),
+      () => this.run(routine, owner, attempt),
     );
   }
 
   private async recordOutcome(
     routine: Routine,
     outcome: RoutineRunOutcome,
+    routineThreadId: UUID | null,
   ): Promise<void> {
     const { paused } = await this.routinesRepository.recordRunOutcome(
       routine.id,
@@ -164,6 +177,14 @@ export class ExecuteRoutineUseCase {
       { routineId: routine.id, ...outcome, paused },
       'Routine finished',
     );
+    if (outcome.status === 'failed') {
+      await this.failureNotifier.notify({
+        routine,
+        failureReason: outcome.failureReason,
+        paused,
+        routineThreadId,
+      });
+    }
   }
 
   private async findOwner(routine: Routine): Promise<User | null> {
@@ -177,7 +198,11 @@ export class ExecuteRoutineUseCase {
     }
   }
 
-  private async run(routine: Routine, owner: User): Promise<RoutineRunOutcome> {
+  private async run(
+    routine: Routine,
+    owner: User,
+    attempt: RunAttempt,
+  ): Promise<RoutineRunOutcome> {
     if (owner.lockedAt) throw new RoutineOwnerLockedError();
     if (!(await this.mayManageRoutines(owner))) {
       return { status: 'skipped', reason: 'permission_missing' };
@@ -191,6 +216,7 @@ export class ExecuteRoutineUseCase {
         routineId: routine.id,
       }),
     );
+    attempt.routineThreadId = thread.id;
     const result = await this.executeUnattendedRunUseCase.execute(
       new ExecuteUnattendedRunCommand({
         threadId: thread.id,

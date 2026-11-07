@@ -21,6 +21,7 @@ So gehst du vor:
 2. Finde per Websuche die offizielle Verkündungsplattform oder das elektronische Gesetz- und Verordnungsblatt dieses Bundeslandes. Nutze nur die amtliche Quelle des Landes, keine Nachrichtenseiten oder Drittanbieter.
 3. Öffne die Plattform und sieh dir ausschließlich die Veröffentlichungen mit dem heutigen Datum an. Ältere Veröffentlichungen ignorierst du.
 4. Bewerte jede heutige Veröffentlichung danach, ob sie für meine Rolle und meinen Arbeitsschwerpunkt relevant ist.
-5. Gibt es heute keine Veröffentlichungen oder ist keine relevant, ist das ebenfalls ein gültiges Ergebnis.
-6. Beende die Routine anschließend mit finish_routine.`,
+5. Ist mindestens eine Veröffentlichung relevant, sende mir mit send_notification eine Benachrichtigung: eine kurze Überschrift, in der Unterzeile Quelle und Datum, und im Text eine Zusammenfassung, was neu ist und warum es für mich relevant ist, mit Links zu den Originaldokumenten. Fasse mehrere relevante Veröffentlichungen in einer Benachrichtigung zusammen.
+6. Gibt es heute keine Veröffentlichungen oder ist keine relevant, sende keine Benachrichtigung. Das ist ebenfalls ein gültiges Ergebnis.
+7. Beende die Routine anschließend mit finish_routine.`,
 };

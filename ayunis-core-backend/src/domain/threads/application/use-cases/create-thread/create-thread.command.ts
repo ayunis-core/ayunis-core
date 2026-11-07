@@ -10,6 +10,8 @@ export class CreateThreadCommand {
   workspaceId?: UUID;
   /** Makes this a routine thread created by that routine's execution. */
   routineId?: UUID;
+  /** Starts a chat about one of the user's notifications ("Chat about this"). */
+  sourceNotificationId?: UUID;
 
   constructor(params: {
     modelId?: UUID;
@@ -19,6 +21,7 @@ export class CreateThreadCommand {
     isAnonymous?: boolean;
     workspaceId?: UUID;
     routineId?: UUID;
+    sourceNotificationId?: UUID;
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -27,5 +30,6 @@ export class CreateThreadCommand {
     this.isAnonymous = params.isAnonymous;
     this.workspaceId = params.workspaceId;
     this.routineId = params.routineId;
+    this.sourceNotificationId = params.sourceNotificationId;
   }
 }
