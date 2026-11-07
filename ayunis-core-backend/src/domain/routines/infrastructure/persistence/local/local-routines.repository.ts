@@ -176,22 +176,36 @@ export class LocalRoutinesRepository extends RoutinesRepository {
     outcome: RoutineRunOutcome,
     finishedAt: Date,
   ): Promise<{ paused: boolean }> {
-    if (outcome.status === 'succeeded') {
-      await this.repo.update(
-        { id },
-        {
-          lastRunStatus: RoutineRunStatus.SUCCEEDED,
-          lastRunAt: finishedAt,
-          lastRunFailureReason: null,
-          consecutiveFailureCount: 0,
-        },
-      );
-      return { paused: false };
+    if (outcome.status === 'failed') {
+      return this.recordFailedRun(id, outcome.failureReason, finishedAt);
     }
+    await this.repo.update(
+      { id },
+      outcome.status === 'succeeded'
+        ? {
+            lastRunStatus: RoutineRunStatus.SUCCEEDED,
+            lastRunAt: finishedAt,
+            lastRunFailureReason: null,
+            consecutiveFailureCount: 0,
+          }
+        : {
+            lastRunStatus: RoutineRunStatus.SKIPPED,
+            lastRunAt: finishedAt,
+            lastRunFailureReason: outcome.reason,
+          },
+    );
+    return { paused: false };
+  }
+
+  private async recordFailedRun(
+    id: UUID,
+    failureReason: string,
+    finishedAt: Date,
+  ): Promise<{ paused: boolean }> {
     const result = await this.repo
       .createQueryBuilder()
       .update(RoutineRecord)
-      .set(failedRunChanges(outcome.failureReason, finishedAt))
+      .set(failedRunChanges(failureReason, finishedAt))
       .where('id = :id', { id })
       .setParameters(failedRunParameters(finishedAt))
       .returning('"pausedAt"')

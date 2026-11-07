@@ -74,9 +74,10 @@ export abstract class RoutinesRepository {
     options: { executionKey: string; onlyIfEnabled: boolean },
   ): Promise<boolean>;
   /**
-   * Also resets or increments the consecutive failure count, and pauses an
-   * enabled routine whose failure count reaches the limit. Returns whether
-   * this outcome paused it.
+   * Also resets (success) or increments (failure) the consecutive failure
+   * count, and pauses an enabled routine whose failure count reaches the
+   * limit; a skip leaves both as they are. Returns whether this outcome
+   * paused it.
    */
   abstract recordRunOutcome(
     id: UUID,

@@ -17,6 +17,8 @@ import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { CreateRoutineUseCase } from 'src/domain/routines/application/use-cases/create-routine/create-routine.use-case';
 import { CreateRoutineCommand } from 'src/domain/routines/application/use-cases/create-routine/create-routine.command';
 import { FindAllRoutinesUseCase } from 'src/domain/routines/application/use-cases/find-all-routines/find-all-routines.use-case';
@@ -43,6 +45,11 @@ const ROUTINE_ID_PARAM = {
 @ApiTags('routines')
 @RequireFeature(FeatureFlag.Routines)
 @RequireAcademyCertificate()
+@RequirePermission(Permission.MANAGE_ROUTINES)
+@ApiResponse({
+  status: 403,
+  description: 'The manage routines permission is required',
+})
 @Controller('routines')
 export class RoutinesController {
   private readonly logger = new Logger(RoutinesController.name);
@@ -129,7 +136,10 @@ export class RoutinesController {
   })
   @ApiParam(ROUTINE_ID_PARAM)
   @ApiResponse({ status: 202, description: 'Run queued' })
-  @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Subscription or the manage routines permission required',
+  })
   @ApiResponse({ status: 404, description: 'Routine not found' })
   async runNow(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
     this.logger.log({ id }, 'runNow');

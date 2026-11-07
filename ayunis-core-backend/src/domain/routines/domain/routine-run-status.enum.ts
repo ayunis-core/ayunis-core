@@ -3,4 +3,5 @@ export enum RoutineRunStatus {
   RUNNING = 'running',
   SUCCEEDED = 'succeeded',
   FAILED = 'failed',
+  SKIPPED = 'skipped',
 }

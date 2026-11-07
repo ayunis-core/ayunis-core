@@ -754,6 +754,7 @@ export const RolePermissionSetDtoPermissionsItem = {
   manage_knowledge_bases: 'manage_knowledge_bases',
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
 } as const;
 
 export interface RolePermissionSetDto {
@@ -778,6 +779,7 @@ export const UpdateRolePermissionsDtoPermissionsItem = {
   manage_knowledge_bases: 'manage_knowledge_bases',
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
 } as const;
 
 export interface UpdateRolePermissionsDto {
@@ -797,6 +799,7 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   manage_knowledge_bases: 'manage_knowledge_bases',
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
 } as const;
 
 export interface MyPermissionsResponseDto {
@@ -2186,6 +2189,7 @@ export const MyTeamResponseDtoPermissionsItem = {
   manage_knowledge_bases: 'manage_knowledge_bases',
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
 } as const;
 
 export interface MyTeamResponseDto {
@@ -2230,6 +2234,7 @@ export const TeamRolePermissionSetDtoPermissionsItem = {
   manage_knowledge_bases: 'manage_knowledge_bases',
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
 } as const;
 
 export interface TeamRolePermissionSetDto {
@@ -5431,6 +5436,7 @@ export const RoutineRunStatus = {
   running: 'running',
   succeeded: 'succeeded',
   failed: 'failed',
+  skipped: 'skipped',
 } as const;
 
 export interface RoutineResponseDto {

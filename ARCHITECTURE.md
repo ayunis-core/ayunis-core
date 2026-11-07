@@ -199,8 +199,8 @@ load-bearing):
 - **Permission** — fine-grained capabilities (`manage_teams`,
   `assign_users_to_teams`, `manage_skills`, `share_skills_with_teams`,
   `share_skills_with_org`, `manage_knowledge_bases`,
-  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`) that org
-  admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
+  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
+  `manage_routines`) that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
   `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the
   share's scope, so the shares use cases check them via
   `SharePermissionService`. **ADMIN implicitly holds every permission**;

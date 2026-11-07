@@ -13,6 +13,9 @@ import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-us
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import type { User } from 'src/iam/users/domain/user.entity';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
   RoutineOwnerLockedError,
@@ -33,7 +36,9 @@ const UNEXPECTED_FAILURE = 'UNEXPECTED_ERROR';
 /**
  * One execution of a routine on behalf of its owner, as a chat message would
  * run: same academy certificate and subscription/trial gates, model access
- * check (when the thread is created) and credit gate (inside the run). Every
+ * check (when the thread is created) and credit gate (inside the run). An
+ * owner whose role lacks the manage routines permission is skipped before any
+ * of these, so no trial message is consumed and no failure is counted. Every
  * outcome of a started run is recorded on the routine; only failures that are
  * not the routine's own (bugs, provider outages) are rethrown so the queue
  * reports them (and retries a scheduled job that failed before starting). Returns null when the routine or its owner no longer exists, when
@@ -50,6 +55,7 @@ export class ExecuteRoutineUseCase {
     private readonly userContextRunner: UserContextRunner,
     private readonly subscriptionGate: RoutineSubscriptionGate,
     private readonly academyGate: RoutineAcademyGate,
+    private readonly hasPermissionUseCase: HasPermissionUseCase,
     private readonly routineModelService: RoutineModelService,
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly executeUnattendedRunUseCase: ExecuteUnattendedRunUseCase,
@@ -173,6 +179,9 @@ export class ExecuteRoutineUseCase {
 
   private async run(routine: Routine, owner: User): Promise<RoutineRunOutcome> {
     if (owner.lockedAt) throw new RoutineOwnerLockedError();
+    if (!(await this.mayManageRoutines(owner))) {
+      return { status: 'skipped', reason: 'permission_missing' };
+    }
     await this.academyGate.admit(owner.id, owner.orgId);
     await this.subscriptionGate.admit(routine.orgId);
     const thread = await this.createThreadUseCase.execute(
@@ -197,6 +206,16 @@ export class ExecuteRoutineUseCase {
       }),
     );
     return toOutcome(result);
+  }
+
+  private mayManageRoutines(owner: User): Promise<boolean> {
+    return this.hasPermissionUseCase.execute(
+      new HasPermissionQuery(
+        owner.orgId,
+        owner.role,
+        Permission.MANAGE_ROUTINES,
+      ),
+    );
   }
 
   private timeoutMs(): number {
