@@ -5,6 +5,7 @@ import {
   permitLanguageModel,
   removePermittedModel,
 } from '../../src/clients/api/models.client';
+import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import {
   createEmptyThread,
   deleteThread,
@@ -25,6 +26,9 @@ test('provider fault status follows a model from catalog to an existing chat', a
   const displayName = `E2E Provider Fault ${uniqueKey}`;
 
   await login(publicApi, 'admin@demo.local', 'admin');
+  // The welcome video dialog blocks the UI; an earlier spec in the same
+  // shard may or may not have dismissed it for the seeded admin.
+  await dismissWelcomeVideo(publicApi);
   const catalogModel = await createLanguageCatalogModel(publicApi, {
     name: `e2e-provider-fault-${uniqueKey}`,
     displayName,

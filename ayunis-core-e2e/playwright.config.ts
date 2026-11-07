@@ -18,8 +18,10 @@ export default defineConfig({
   // CPU-heavy) while Chromium records traces for all of them. CI runs the
   // compiled backend on a 4-vCPU runner, so it can use one worker per core.
   workers: 4,
+  // CI shards the suite; the workflow merges the per-shard blobs into one
+  // HTML report.
   reporter: process.env.CI
-    ? [['html', { open: 'never' }], ['list'], ['json', { outputFile: 'test-results/results.json' }]]
+    ? [['blob'], ['list'], ['json', { outputFile: 'test-results/results.json' }]]
     : [['list'], ['json', { outputFile: 'test-results/results.json' }]],
   timeout: 30_000,
   expect: { timeout: 10_000 },
