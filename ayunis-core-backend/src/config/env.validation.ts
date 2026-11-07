@@ -10,6 +10,7 @@ import {
   IsNumber,
   IsOptional,
   IsUrl,
+  IsUUID,
   Min,
   Max,
   validateSync,
@@ -225,6 +226,14 @@ export class EnvironmentVariables {
 
   // Retention
   @IsOptional() @IsIn(BOOLEAN_STRINGS) RETENTION_DRY_RUN?: string;
+
+  // Release notes — validated as `releaseNotesConfig` reads it, trimmed.
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsUUID()
+  ANNOUNCABLE_ORG_ID?: string;
 }
 
 /**
