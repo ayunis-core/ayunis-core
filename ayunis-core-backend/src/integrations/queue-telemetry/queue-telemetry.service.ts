@@ -6,6 +6,7 @@ import { Queue } from 'bullmq';
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
+import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
 import { sampleQueueHealth } from './queue-health';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class QueueTelemetryService {
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
+    @InjectQueue(ROUTINE_EXECUTION_QUEUE) private readonly routines: Queue,
   ) {}
 
   @Interval(30_000)
@@ -26,7 +28,12 @@ export class QueueTelemetryService {
     if (this.sampling || !client?.isActive) return;
     this.sampling = true;
     try {
-      for (const queue of [this.documents, this.dataSources, this.urls]) {
+      for (const queue of [
+        this.documents,
+        this.dataSources,
+        this.urls,
+        this.routines,
+      ]) {
         try {
           await sampleQueueHealth(queue, client.metrics());
         } catch {

@@ -2,6 +2,10 @@ import {
   useThreadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import {
+  ThreadType,
+  type ThreadsControllerFindAllParams,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export interface SidebarThread {
   id: string;
@@ -12,19 +16,20 @@ export interface SidebarThread {
 
 const SIDEBAR_THREADS_LIMIT = 20;
 
-export function useThreads() {
+export function useThreads({
+  hideRoutineThreads = false,
+}: { hideRoutineThreads?: boolean } = {}) {
+  const params: ThreadsControllerFindAllParams = {
+    limit: SIDEBAR_THREADS_LIMIT,
+    offset: 0,
+    ...(hideRoutineThreads && { type: ThreadType.chat }),
+  };
   const { data, isLoading, isError, error, refetch } =
-    useThreadsControllerFindAll(
-      { limit: SIDEBAR_THREADS_LIMIT, offset: 0 },
-      {
-        query: {
-          queryKey: getThreadsControllerFindAllQueryKey({
-            limit: SIDEBAR_THREADS_LIMIT,
-            offset: 0,
-          }),
-        },
+    useThreadsControllerFindAll(params, {
+      query: {
+        queryKey: getThreadsControllerFindAllQueryKey(params),
       },
-    );
+    });
 
   const threads = data?.data ?? [];
   const total = data?.pagination.total ?? 0;

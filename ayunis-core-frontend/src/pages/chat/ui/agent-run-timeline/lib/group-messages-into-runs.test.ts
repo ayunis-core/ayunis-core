@@ -239,6 +239,31 @@ describe('groupMessagesIntoRuns', () => {
     expect(block.steps[0].status).toBe('done');
   });
 
+  it('shows the finish_routine call as a routine-finished marker after the work', () => {
+    const units = groupMessagesIntoRuns(
+      [
+        userMessage('Prüfe das Amtsblatt'),
+        assistantMessage([
+          { type: 'tool_use', id: 'search-1', name: 'internet_search' },
+        ]),
+        toolResultMessage('search-1', '[]'),
+        assistantMessage([
+          { type: 'tool_use', id: 'finish-1', name: 'finish_routine' },
+        ]),
+        toolResultMessage('finish-1', 'Tool execution is handled externally'),
+      ],
+      { isStreaming: false },
+    );
+
+    const run = units[1];
+    expect(run.kind).toBe('agent-run');
+    if (run.kind !== 'agent-run') return;
+    expect(run.blocks.map((block) => block.kind)).toEqual([
+      'activity',
+      'routine-finished',
+    ]);
+  });
+
   it('returns empty array for empty input', () => {
     const result = groupMessagesIntoRuns([], {
       isStreaming: false,

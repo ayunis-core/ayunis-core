@@ -42,6 +42,50 @@ async function collect(stream: AsyncIterable<ProviderChunk>) {
 }
 
 describe('MockInferenceProviderFactory runtime provider', () => {
+  it('finishes a routine run whose task carries the routine E2E trigger', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const response = await collect(
+      provider.stream({
+        ...request,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'E2E finish routine: Amtsblatt' }],
+          },
+        ],
+        tools: [
+          {
+            name: 'finish_routine',
+            description: 'End this routine run.',
+            parameters: { type: 'object', properties: {} },
+          },
+        ],
+      }),
+    );
+
+    expect(response.at(-1)).toMatchObject({
+      toolCallDeltas: [expect.objectContaining({ name: 'finish_routine' })],
+      finishReason: 'tool_calls',
+    });
+  });
+
+  it('answers the routine E2E trigger with text when finish_routine is unavailable', async () => {
+    const provider = new MockInferenceProviderFactory().resolveProvider(model);
+    const response = await collect(
+      provider.stream({
+        ...request,
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'E2E finish routine: Amtsblatt' }],
+          },
+        ],
+      }),
+    );
+
+    expect(response.some((chunk) => chunk.toolCallDeltas)).toBe(false);
+  });
+
   it('requests an image edit with the uploaded reference for the mobile E2E journey', async () => {
     const provider = new MockInferenceProviderFactory().resolveProvider(model);
     const response = await collect(

@@ -151,6 +151,7 @@ export class ThreadsController {
         {
           search: queryParams.search,
           workspaceId: queryParams.workspaceId,
+          type: queryParams.type,
         },
         {
           limit: queryParams.limit,

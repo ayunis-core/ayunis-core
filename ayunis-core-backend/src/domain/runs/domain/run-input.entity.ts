@@ -28,6 +28,13 @@ export class RunUserInput extends RunInput {
   }
 }
 
+/** A nudge the system sends to an unattended run that replied with text. */
+export class RunNudgeInput extends RunUserInput {
+  constructor(text: string) {
+    super(text);
+  }
+}
+
 export class RunToolResultInput extends RunInput {
   constructor(
     public readonly toolId: string,

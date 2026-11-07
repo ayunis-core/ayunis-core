@@ -275,6 +275,9 @@ jobs:
 
           MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+          # Flag-on contract for the main backend; the other backends below turn it off.
+          FEATURE_ROUTINES_ENABLED=true
           EOF
 
       - name: Start Mistral OCR contract server
@@ -304,11 +307,27 @@ jobs:
           PORT: 3002
           APP_ENVIRONMENT: cloud
           FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: 'true'
+          # Keeps this instance's routine worker stopped, so Run now jobs from
+          # the main backend are never executed under cloud subscription rules.
+          FEATURE_ROUTINES_ENABLED: 'false'
           CORE_CONNECT_SERVICE_TOKEN: e2e-connect-service-token
         run: |
           nohup node dist/src/main > backend-external-subscriptions.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3002/api/health; do sleep 2; done' \
             || { cat backend-external-subscriptions.log; exit 1; }
+
+      # Same database, Redis and frontend build with routines disabled: proves
+      # the flag-off contract (tests/routines/routines-disabled.spec.ts). Its
+      # routine worker stays stopped, so it takes no jobs from the main run.
+      - name: Start backend with routines disabled
+        working-directory: ayunis-core-backend
+        env:
+          PORT: 3003
+          FEATURE_ROUTINES_ENABLED: 'false'
+        run: |
+          nohup node dist/src/main > backend-routines-disabled.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3003/api/health; do sleep 2; done' \
+            || { cat backend-routines-disabled.log; exit 1; }
 
       - name: Cache Playwright browsers
         uses: actions/cache@v6
@@ -329,6 +348,7 @@ jobs:
         run: pnpm --filter ayunis-core-e2e test
         env:
           E2E_EXTERNAL_SUBSCRIPTIONS_BASE_URL: http://localhost:3002
+          E2E_ROUTINES_DISABLED_BASE_URL: http://localhost:3003
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
@@ -429,6 +449,7 @@ jobs:
           path: |
             ayunis-core-backend/backend.log
             ayunis-core-backend/backend-external-subscriptions.log
+            ayunis-core-backend/backend-routines-disabled.log
           retention-days: 7
 
   publish-pr-media:

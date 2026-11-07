@@ -11,6 +11,7 @@ import type {
 import config from '@/shared/config';
 import { Markdown } from '@/widgets/markdown';
 import type { TextMessageContentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import RoutineNudgeNotice from './RoutineNudgeNotice';
 
 interface ChatMessageProps {
   readonly message: Message;
@@ -27,6 +28,14 @@ function ChatMessage({ message }: ChatMessageProps) {
       (c) => c.type !== 'image',
     ) as TextMessageContentResponseDto[]
   ).filter((c) => !c.isSkillInstruction);
+
+  if (
+    images.length === 0 &&
+    texts.length > 0 &&
+    texts.every((c) => c.isNudge)
+  ) {
+    return <RoutineNudgeNotice text={texts.map((c) => c.text).join('\n\n')} />;
+  }
 
   return (
     <div className="flex justify-end">

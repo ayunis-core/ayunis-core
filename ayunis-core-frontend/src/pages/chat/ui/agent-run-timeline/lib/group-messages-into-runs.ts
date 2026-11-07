@@ -213,8 +213,14 @@ function appendAssistantMessage(
   flushThinking(isActiveAssistantMessage ? 'in_progress' : 'done');
 }
 
+const FINISH_ROUTINE_TOOL = 'finish_routine';
+
 function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
   const { toolUse, status } = step;
+  if (status !== 'error' && toolUse.name === FINISH_ROUTINE_TOOL) {
+    run.blocks.push({ kind: 'routine-finished', key: step.key });
+    return;
+  }
   const isPendingTool =
     toolUse.name.length === 0 && toolUse.stream?.status === 'streaming';
   if (status !== 'error' && isPendingTool) {

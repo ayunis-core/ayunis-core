@@ -1,4 +1,5 @@
 import type { MouseEventHandler, ReactNode } from 'react';
+import { CalendarClock } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import {
   Item,
@@ -39,6 +40,12 @@ export function ChatListItem({
     >
       <ItemContent>
         <ItemTitle>
+          {chat.type === 'routine' ? (
+            <CalendarClock
+              className="size-4 text-muted-foreground"
+              data-testid="chat-routine-icon"
+            />
+          ) : null}
           <span>{chat.title || untitledLabel}</span>
           {chat.isAnonymous ? (
             <Badge variant="outline" className="ml-2 text-xs">

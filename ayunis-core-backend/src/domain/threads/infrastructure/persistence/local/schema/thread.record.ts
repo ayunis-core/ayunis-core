@@ -17,6 +17,8 @@ import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-ass
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
+import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 
@@ -58,6 +60,21 @@ export class ThreadRecord extends BaseRecord {
   @ManyToOne(() => WorkspaceRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspaceId' })
   workspace?: WorkspaceRecord;
+
+  @Column({ type: 'enum', enum: ThreadType, default: ThreadType.CHAT })
+  type: ThreadType;
+
+  /**
+   * The routine that created this thread. Deleting the routine keeps its
+   * threads as conversation history; only the link goes.
+   */
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  routineId: UUID | null;
+
+  @ManyToOne(() => RoutineRecord, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'routineId' })
+  routine?: RoutineRecord;
 
   /**
    * Timestamp of the most recent conversation activity (last message added).

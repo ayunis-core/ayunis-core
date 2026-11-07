@@ -31,6 +31,8 @@ export class ThreadMapper {
     record.isAnonymous = thread.isAnonymous;
     record.mode = thread.mode;
     record.workspaceId = thread.workspaceId ?? null;
+    record.type = thread.type;
+    record.routineId = thread.routineId;
     record.messages = thread.messages.map((message) =>
       this.messageMapper.toRecord(message),
     );
@@ -63,6 +65,8 @@ export class ThreadMapper {
       isAnonymous: threadEntity.isAnonymous,
       mode: threadEntity.mode,
       workspaceId: threadEntity.workspaceId,
+      type: threadEntity.type,
+      routineId: threadEntity.routineId,
       messages: this.mapMessages(threadEntity),
       lastActivityAt: threadEntity.lastActivityAt ?? threadEntity.createdAt,
       createdAt: threadEntity.createdAt,

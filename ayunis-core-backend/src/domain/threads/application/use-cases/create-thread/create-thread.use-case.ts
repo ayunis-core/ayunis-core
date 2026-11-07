@@ -17,6 +17,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
+import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -55,6 +56,9 @@ export class CreateThreadUseCase {
         mode: command.mode,
         isAnonymous,
         workspaceId: command.workspaceId,
+        title: command.title,
+        type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
+        routineId: command.routineId,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
