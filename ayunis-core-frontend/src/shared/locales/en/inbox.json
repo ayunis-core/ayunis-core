@@ -13,7 +13,7 @@
   },
   "emptyState": {
     "title": "No notifications",
-    "description": "Notifications from your routines appear here."
+    "description": "Your notifications appear here."
   },
   "item": {
     "unread": "Unread",

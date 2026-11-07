@@ -1,4 +1,8 @@
 import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { ReleaseNoteNotificationContent } from 'src/domain/notifications/application/models/release-note-notification-content';
+import type { NotifyUsersOfReleaseNoteUseCase } from 'src/domain/notifications/application/use-cases/notify-users-of-release-note/notify-users-of-release-note.use-case';
+import type { UpdateReleaseNoteNotificationsUseCase } from 'src/domain/notifications/application/use-cases/update-release-note-notifications/update-release-note-notifications.use-case';
 import type { AnnouncableReleaseNote } from 'src/domain/release-notes/application/models/announcable-release-note';
 import type { AnnouncableFeed } from 'src/domain/release-notes/application/ports/announcable-feed.port';
 import { ReleaseNotesRepository } from 'src/domain/release-notes/application/ports/release-notes.repository';
@@ -82,4 +86,54 @@ export function createMockAnnouncableFeed(): jest.Mocked<AnnouncableFeed> {
       reason: 'not stubbed',
     }),
   };
+}
+
+interface InboxNotification extends ReleaseNoteNotificationContent {
+  readonly userId: UUID;
+  readAt: Date | null;
+}
+
+/**
+ * The release-note notifications of every user, kept in memory the way the
+ * notifications use cases and the release-note foreign key keep them.
+ */
+export class InMemoryReleaseNoteInbox {
+  /** The users there are right now (of non-archived orgs). */
+  readonly users: UUID[] = [randomUUID(), randomUUID()];
+  readonly notifications: InboxNotification[] = [];
+
+  readonly notifyUsers = {
+    execute: (content: ReleaseNoteNotificationContent) => {
+      for (const userId of this.users) {
+        this.notifications.push({ ...content, userId, readAt: null });
+      }
+      return Promise.resolve(this.users.length);
+    },
+  } as unknown as NotifyUsersOfReleaseNoteUseCase;
+
+  readonly updateNotifications = {
+    execute: (content: ReleaseNoteNotificationContent) => {
+      const notifications = this.of(content.releaseNoteId);
+      for (const notification of notifications) {
+        Object.assign(notification, {
+          headline: content.headline,
+          body: content.body,
+          media: content.media,
+        });
+      }
+      return Promise.resolve(notifications.length);
+    },
+  } as unknown as UpdateReleaseNoteNotificationsUseCase;
+
+  of(releaseNoteId: UUID): InboxNotification[] {
+    return this.notifications.filter((n) => n.releaseNoteId === releaseNoteId);
+  }
+
+  /** What the foreign key does when release notes are deleted. */
+  releaseNotesDeleted(ids: UUID[]): void {
+    const kept = this.notifications.filter(
+      (n) => !ids.includes(n.releaseNoteId),
+    );
+    this.notifications.splice(0, this.notifications.length, ...kept);
+  }
 }

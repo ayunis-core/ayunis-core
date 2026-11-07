@@ -183,6 +183,18 @@ describe('validateEnv', () => {
       },
     );
 
+    it('rejects an Announcable URL that is not an http(s) URL', () => {
+      expect(() =>
+        validateEnv(baseEnv({ ANNOUNCABLE_URL: 'release-notes.locaboo.de' })),
+      ).toThrow(/ANNOUNCABLE_URL/);
+    });
+
+    it('accepts a local stand-in for Announcable', () => {
+      expect(() =>
+        validateEnv(baseEnv({ ANNOUNCABLE_URL: 'http://127.0.0.1:3198' })),
+      ).not.toThrow();
+    });
+
     it('accepts a complete SSO OIDC relying-party configuration', () => {
       expect(() =>
         validateEnv(

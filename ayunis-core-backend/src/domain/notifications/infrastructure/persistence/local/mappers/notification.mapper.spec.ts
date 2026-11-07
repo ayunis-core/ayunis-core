@@ -41,6 +41,7 @@ describe('NotificationMapper', () => {
         media,
         routineId: null,
         routineThreadId: null,
+        releaseNoteId: '55555555-5555-4555-8555-555555555555',
       });
 
       expect(mapper.toDomain(mapper.toRecord(notification))).toEqual(

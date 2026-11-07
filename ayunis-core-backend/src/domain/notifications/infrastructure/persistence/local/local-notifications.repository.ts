@@ -3,15 +3,18 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
-import type { EntityManager } from 'typeorm';
+import type { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
+import type { ReleaseNoteNotificationContent } from 'src/domain/notifications/application/models/release-note-notification-content';
 import type { UnreadNotificationTypeCount } from 'src/domain/notifications/application/models/unread-notification-counts';
 import type { NotificationsFilter } from 'src/domain/notifications/application/ports/notifications.repository';
 import { NotificationsRepository } from 'src/domain/notifications/application/ports/notifications.repository';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
-import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
+import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { NotificationMapper } from './mappers/notification.mapper';
 import { NotificationRecord } from './schema/notification.record';
 
@@ -55,6 +58,55 @@ export class LocalNotificationsRepository extends NotificationsRepository {
       const saved = await repo.save(this.mapper.toRecord(notification));
       return this.mapper.toDomain(saved);
     });
+  }
+
+  async createReleaseNoteNotifications(
+    content: ReleaseNoteNotificationContent,
+    createdAt: Date,
+  ): Promise<number> {
+    const media = this.mapper.mediaToRecord(content.media);
+    const manager = this.repo.manager;
+    // One statement for every user, so a release never queues work per user.
+    const [{ count }] = await manager.query<[{ count: number }]>(
+      `WITH created AS (
+         INSERT INTO ${tablePath(manager, NotificationRecord)}
+           ("id", "userId", "orgId", "type", "headline", "body", "mediaType",
+            "mediaUrl", "mediaStorageKey", "mediaContentType", "releaseNoteId",
+            "createdAt", "updatedAt")
+         SELECT gen_random_uuid(), u."id", u."orgId", $1, $2, $3, $4, $5, $6, $7, $8, $9, $9
+         FROM ${tablePath(manager, UserRecord)} u
+         JOIN ${tablePath(manager, OrgRecord)} o ON o."id" = u."orgId"
+         WHERE NOT o."archived"
+         RETURNING 1
+       )
+       SELECT COUNT(*)::int AS "count" FROM created`,
+      [
+        NotificationType.RELEASE_NOTE,
+        content.headline,
+        content.body,
+        media.mediaType,
+        media.mediaUrl,
+        media.mediaStorageKey,
+        media.mediaContentType,
+        content.releaseNoteId,
+        createdAt,
+      ],
+    );
+    return count;
+  }
+
+  async updateReleaseNoteNotifications(
+    content: ReleaseNoteNotificationContent,
+  ): Promise<number> {
+    const result = await this.repo.update(
+      { releaseNoteId: content.releaseNoteId },
+      {
+        headline: content.headline,
+        body: content.body,
+        ...this.mapper.mediaToRecord(content.media),
+      },
+    );
+    return result.affected ?? 0;
   }
 
   async findById(userId: UUID, id: UUID): Promise<Notification | null> {
@@ -134,4 +186,17 @@ export class LocalNotificationsRepository extends NotificationsRepository {
     });
     return result.affected ?? 0;
   }
+}
+
+/** The table of a record, quoted and with its schema when it has one. */
+function tablePath(
+  manager: EntityManager,
+  record: EntityTarget<ObjectLiteral>,
+): string {
+  const { schema, tableName } = manager.connection.getMetadata(record);
+  const { driver } = manager.connection;
+  return [schema, tableName]
+    .filter((part): part is string => Boolean(part))
+    .map((part) => driver.escape(part))
+    .join('.');
 }

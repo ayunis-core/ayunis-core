@@ -6,7 +6,7 @@ import {
   notificationsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { isRoutinesEnabled } from './-routines-enabled-query';
+import { getFeatureToggles } from './-routines-enabled-query';
 
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),
@@ -18,8 +18,15 @@ export const Route = createFileRoute('/_authenticated/inbox/')({
   loaderDeps: ({ search }) => search,
   component: RouteComponent,
   loader: async ({ deps: { page = 1, type }, context: { queryClient } }) => {
-    if (!(await isRoutinesEnabled(queryClient))) {
+    const toggles = await getFeatureToggles(queryClient);
+    if (!toggles.routinesEnabled) {
       throw redirect({ to: '/chat' });
+    }
+    if (
+      type === NotificationType.release_note &&
+      !toggles.releaseNotesEnabled
+    ) {
+      throw redirect({ to: '/inbox' });
     }
     const params = notificationsPageParams(page, type);
     await queryClient.query({

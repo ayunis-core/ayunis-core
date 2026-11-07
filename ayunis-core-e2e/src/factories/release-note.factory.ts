@@ -17,8 +17,8 @@ export const LOOM_EMBED_URL =
   "https://www.loom.com/embed/4f7c2d9e1b8a4c6d9e2f1a3b5c7d9e0f";
 
 /**
- * A 16:9 PNG in object storage, put there by sending it in a chat. The
- * Announcable sync will store release-note images itself (AYC-1686).
+ * A 16:9 PNG in object storage, put there by sending it in a chat; the
+ * Announcable sync stores the images of the notes it imports itself.
  */
 export async function storeReleaseNoteImage(
   api: APIRequestContext,

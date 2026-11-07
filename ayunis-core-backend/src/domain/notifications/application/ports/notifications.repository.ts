@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
+import type { ReleaseNoteNotificationContent } from 'src/domain/notifications/application/models/release-note-notification-content';
 import type { UnreadNotificationTypeCount } from 'src/domain/notifications/application/models/unread-notification-counts';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
 import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
@@ -21,6 +22,18 @@ export abstract class NotificationsRepository {
     notification: Notification & { routineThreadId: UUID },
     limit: number,
   ): Promise<Notification | null>;
+  /**
+   * Creates one notification of the release note for every user whose org is
+   * not archived, in one statement. Returns how many were created.
+   */
+  abstract createReleaseNoteNotifications(
+    content: ReleaseNoteNotificationContent,
+    createdAt: Date,
+  ): Promise<number>;
+  /** Keeps their read state. Returns how many were updated. */
+  abstract updateReleaseNoteNotifications(
+    content: ReleaseNoteNotificationContent,
+  ): Promise<number>;
   abstract findById(userId: UUID, id: UUID): Promise<Notification | null>;
   /** Newest first. */
   abstract findPageByUserId(

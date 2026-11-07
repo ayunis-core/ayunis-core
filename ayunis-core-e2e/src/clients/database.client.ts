@@ -101,8 +101,8 @@ export type ReleaseNoteMedia =
   | { type: "loom"; url: string };
 
 /**
- * Nothing in the product creates release-note notifications until the
- * Announcable sync (AYC-1686, AYC-1687), so specs insert them directly.
+ * Only the hourly Announcable sync creates release-note notifications, for
+ * every user at once, so specs insert them for one user directly.
  */
 export async function insertReleaseNoteNotification(params: {
   userId: string;
@@ -134,6 +134,33 @@ export async function insertReleaseNoteNotification(params: {
       ],
     );
     return id;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * The release note the sync stored for an Announcable note, with how many
+ * notifications it has; null while it is not stored.
+ */
+export async function findSyncedReleaseNote(
+  announcableId: string,
+): Promise<{ headline: string; notifications: number } | null> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{
+      headline: string;
+      notifications: number;
+    }>(
+      `SELECT r.headline, COUNT(n.id)::int AS notifications
+       FROM release_notes r
+       LEFT JOIN notifications n ON n."releaseNoteId" = r.id
+       WHERE r."announcableId" = $1
+       GROUP BY r.id`,
+      [announcableId],
+    );
+    return result.rows[0] ?? null;
   } finally {
     await client.end();
   }

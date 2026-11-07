@@ -45,6 +45,8 @@ export function createMockNotificationsRepository(): jest.Mocked<NotificationsRe
       .mockImplementation((notification: Notification) =>
         Promise.resolve(notification),
       ),
+    createReleaseNoteNotifications: jest.fn().mockResolvedValue(0),
+    updateReleaseNoteNotifications: jest.fn().mockResolvedValue(0),
     findById: jest.fn().mockResolvedValue(null),
     findPageByUserId: jest.fn().mockResolvedValue(
       new Paginated<Notification>({

@@ -43,7 +43,6 @@ import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
 import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
@@ -151,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="w-full max-w-32"
                 />
               </Link>
-              {config.features.announcableOrgId && <ReleaseNotesButton />}
+              <ReleaseNotesButton />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>

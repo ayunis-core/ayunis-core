@@ -9,6 +9,8 @@ import { FindMyNotificationsUseCase } from './application/use-cases/find-my-noti
 import { FindNotificationUseCase } from './application/use-cases/find-notification/find-notification.use-case';
 import { MarkAllNotificationsReadUseCase } from './application/use-cases/mark-all-notifications-read/mark-all-notifications-read.use-case';
 import { MarkNotificationReadUseCase } from './application/use-cases/mark-notification-read/mark-notification-read.use-case';
+import { NotifyUsersOfReleaseNoteUseCase } from './application/use-cases/notify-users-of-release-note/notify-users-of-release-note.use-case';
+import { UpdateReleaseNoteNotificationsUseCase } from './application/use-cases/update-release-note-notifications/update-release-note-notifications.use-case';
 import { LocalNotificationsRepositoryModule } from './infrastructure/persistence/local/local-notifications-repository.module';
 import { LocalNotificationsRepository } from './infrastructure/persistence/local/local-notifications.repository';
 import { NotificationDtoMapper } from './presenters/http/mappers/notification-dto.mapper';
@@ -30,12 +32,16 @@ import { NotificationsController } from './presenters/http/notifications.control
     MarkAllNotificationsReadUseCase,
     DeleteExpiredNotificationsUseCase,
     DownloadNotificationImageUseCase,
+    NotifyUsersOfReleaseNoteUseCase,
+    UpdateReleaseNoteNotificationsUseCase,
     NotificationDtoMapper,
   ],
   exports: [
     CreateNotificationUseCase,
     FindNotificationUseCase,
     DeleteExpiredNotificationsUseCase,
+    NotifyUsersOfReleaseNoteUseCase,
+    UpdateReleaseNoteNotificationsUseCase,
   ],
 })
 export class NotificationsModule {}

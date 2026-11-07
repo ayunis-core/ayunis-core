@@ -17,6 +17,8 @@ export interface FeatureTogglesResponseDto {
   externalSubscriptionsEnabled: boolean;
   /** Users can create routines that run on their behalf */
   routinesEnabled: boolean;
+  /** Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source) */
+  releaseNotesEnabled: boolean;
 }
 
 export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
