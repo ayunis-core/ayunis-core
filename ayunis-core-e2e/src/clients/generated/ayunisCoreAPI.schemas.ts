@@ -6308,6 +6308,10 @@ workspaceId?: string;
  */
 type?: ThreadType;
 /**
+ * Only the routine threads of this routine's runs. Another user's routine yields none.
+ */
+routineId?: string;
+/**
  * Maximum number of threads to return (default: 50)
  */
 limit?: number;
@@ -6424,6 +6428,10 @@ limit?: number;
  * Number of notifications to skip
  */
 offset?: number;
+/**
+ * Only the notifications this routine sent. Another user's routine yields none.
+ */
+routineId?: string;
 };
 
 export type UsageControllerGetUserUsageParams = {

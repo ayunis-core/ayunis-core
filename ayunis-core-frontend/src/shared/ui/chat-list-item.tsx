@@ -1,4 +1,5 @@
-import type { MouseEventHandler, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
 import { CalendarClock } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import {
@@ -15,14 +16,12 @@ export function ChatListItem({
   untitledLabel,
   anonymousLabel,
   actions,
-  onClick,
   testId,
 }: Readonly<{
   chat: GetThreadsResponseDtoItem;
   untitledLabel: string;
   anonymousLabel: string;
   actions: ReactNode;
-  onClick: MouseEventHandler<HTMLDivElement>;
   testId?: string;
 }>) {
   const createdDate = new Date(chat.createdAt).toLocaleDateString(undefined, {
@@ -32,11 +31,12 @@ export function ChatListItem({
   });
 
   return (
+    // The link stretches over the whole row so the actions can sit above it
+    // instead of being nested inside an anchor.
     <Item
       variant="outline"
-      className="cursor-pointer"
+      className="relative has-[a:hover]:bg-accent/50"
       data-testid={testId}
-      onClick={onClick}
     >
       <ItemContent>
         <ItemTitle>
@@ -46,7 +46,13 @@ export function ChatListItem({
               data-testid="chat-routine-icon"
             />
           ) : null}
-          <span>{chat.title || untitledLabel}</span>
+          <Link
+            to="/chats/$threadId"
+            params={{ threadId: chat.id }}
+            className="outline-none after:absolute after:inset-0 after:rounded-md focus-visible:after:ring-[3px] focus-visible:after:ring-ring/50"
+          >
+            {chat.title || untitledLabel}
+          </Link>
           {chat.isAnonymous ? (
             <Badge variant="outline" className="ml-2 text-xs">
               {anonymousLabel}
@@ -55,9 +61,7 @@ export function ChatListItem({
         </ItemTitle>
         <ItemDescription>{createdDate}</ItemDescription>
       </ItemContent>
-      <ItemActions onClick={(event) => event.stopPropagation()}>
-        {actions}
-      </ItemActions>
+      <ItemActions className="relative z-10">{actions}</ItemActions>
     </Item>
   );
 }

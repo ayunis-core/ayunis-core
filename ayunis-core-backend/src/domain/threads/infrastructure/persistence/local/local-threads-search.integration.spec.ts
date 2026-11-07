@@ -24,6 +24,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     title: { type: String },
     workspaceId: { type: 'uuid', nullable: true },
     type: { type: String, default: ThreadType.CHAT },
+    routineId: { type: 'uuid', nullable: true },
     createdAt: { type: 'timestamp' },
   },
 });
@@ -233,6 +234,36 @@ describe('Chat title and content search (PostgreSQL)', () => {
     expect(all.total).toBe(2);
     expect(chatsOnly.data.map((item) => item.id)).toEqual([chat]);
     expect(chatsOnly.total).toBe(1);
+  });
+
+  it("lists only the owner's threads of one routine, newest first, when filtered by it", async () => {
+    const routineId = randomUUID();
+    async function routineThread(
+      createdAt: string,
+      userId = ownerId,
+      ofRoutine: ReturnType<typeof randomUUID> | null = routineId,
+    ) {
+      const record = {
+        id: randomUUID(),
+        userId,
+        title: `Amtsblatt – ${createdAt}`,
+        type: ThreadType.ROUTINE,
+        routineId: ofRoutine,
+        createdAt: new Date(createdAt),
+      };
+      await db.getRepository(ThreadRecord).insert(record);
+      return record.id;
+    }
+    const older = await routineThread('2026-11-05T06:00:00.000Z');
+    const newer = await routineThread('2026-11-07T06:00:00.000Z');
+    await routineThread('2026-11-07T06:00:00.000Z', ownerId, randomUUID());
+    await routineThread('2026-11-07T06:00:00.000Z', otherId);
+    await thread('Budget');
+
+    const page = await repository.findAll(ownerId, undefined, { routineId });
+
+    expect(page.data.map((item) => item.id)).toEqual([newer, older]);
+    expect(page.total).toBe(2);
   });
 
   it('reflects message removal and recreation without stale matches', async () => {

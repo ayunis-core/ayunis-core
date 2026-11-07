@@ -1,5 +1,6 @@
+import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Globe, Pencil, Play, Trash2 } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import {
   Item,
   ItemActions,
@@ -8,50 +9,38 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import { Switch } from '@ayunis/ui/components/switch';
-import { useConfirmation } from '@/widgets/confirmation-modal';
-import { useDeleteRoutine } from '@/pages/routines/api/useDeleteRoutine';
-import { useRunRoutineNow } from '@/pages/routines/api/useRunRoutineNow';
-import { useUpdateRoutine } from '@/pages/routines/api/useUpdateRoutine';
-import type { Routine } from '@/pages/routines/model/openapi';
-import { RoutineRunStatus } from '@/pages/routines/model/openapi';
-import { RoutineRunStatusLine } from './RoutineRunStatusLine';
-import { RoutineScheduleLine } from './RoutineScheduleLine';
+import {
+  RoutineEnabledSwitch,
+  RoutineRunNowButton,
+  RoutineRunStatusLine,
+  RoutineScheduleLine,
+  type Routine,
+} from '@/features/routines';
 
 interface RoutineCardProps {
   routine: Routine;
-  onEdit: () => void;
 }
 
-export default function RoutineCard({
-  routine,
-  onEdit,
-}: Readonly<RoutineCardProps>) {
+export default function RoutineCard({ routine }: Readonly<RoutineCardProps>) {
   const { t } = useTranslation('routines');
-  const { confirm } = useConfirmation();
-  const deleteRoutine = useDeleteRoutine();
-  const runNow = useRunRoutineNow();
-  const { updateRoutine, isUpdating } = useUpdateRoutine();
-  const isRunActive =
-    routine.lastRunStatus === RoutineRunStatus.queued ||
-    routine.lastRunStatus === RoutineRunStatus.running;
-
-  const handleDelete = () =>
-    confirm({
-      title: t('delete.title'),
-      description: t('delete.description', { name: routine.name }),
-      confirmText: t('delete.confirm'),
-      cancelText: t('delete.cancel'),
-      variant: 'destructive',
-      onConfirm: () => deleteRoutine.mutate(routine.id),
-    });
 
   return (
-    <Item variant="outline" data-testid="routine-card">
+    // The link stretches over the whole row so the switch and Run now can sit
+    // above it instead of being nested inside an anchor.
+    <Item
+      variant="outline"
+      className="relative has-[a:hover]:bg-accent/50"
+      data-testid="routine-card"
+    >
       <ItemContent>
         <ItemTitle>
-          <span data-testid="routine-card-name">{routine.name}</span>
+          <Link
+            to="/routines/$routineId"
+            params={{ routineId: routine.id }}
+            className="outline-none after:absolute after:inset-0 after:rounded-md focus-visible:after:ring-[3px] focus-visible:after:ring-ring/50"
+          >
+            <span data-testid="routine-card-name">{routine.name}</span>
+          </Link>
           {routine.internetEnabled && (
             <Badge variant="outline" className="gap-1">
               <Globe className="size-3" />
@@ -67,51 +56,9 @@ export default function RoutineCard({
           <RoutineRunStatusLine routine={routine} />
         </div>
       </ItemContent>
-      <ItemActions>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {routine.enabled ? t('card.enabled') : t('card.disabled')}
-          </span>
-          <Switch
-            checked={routine.enabled}
-            onCheckedChange={(enabled) =>
-              updateRoutine(routine.id, { enabled })
-            }
-            disabled={isUpdating}
-            aria-label={t('card.enabledLabel')}
-            data-testid="routine-card-enabled"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => runNow.mutate(routine.id)}
-          disabled={runNow.isPending || isRunActive}
-          data-testid="routine-card-run-now"
-        >
-          <Play className="h-4 w-4" />
-          {t('card.runNow')}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onEdit}
-          aria-label={t('card.edit')}
-          data-testid="routine-card-edit"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:text-destructive"
-          onClick={handleDelete}
-          disabled={deleteRoutine.isPending}
-          aria-label={t('card.delete')}
-          data-testid="routine-card-delete"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      <ItemActions className="relative z-10">
+        <RoutineEnabledSwitch routine={routine} testId="routine-card-enabled" />
+        <RoutineRunNowButton routine={routine} testId="routine-card-run-now" />
       </ItemActions>
     </Item>
   );

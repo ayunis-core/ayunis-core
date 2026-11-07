@@ -4,6 +4,7 @@ import type {
   CreateRoutineDto,
   RoutineResponseDto,
   GetThreadsResponseDtoItem,
+  UpdateRoutineDto,
 } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
@@ -84,6 +85,24 @@ export async function findRoutineThread(
   );
   if (!thread) throw new Error(`No routine thread for "${routineName}"`);
   return thread;
+}
+
+/** The threads filtered by routine on the server, as the routine page lists them. */
+export function listRoutineThreads(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<GetThreadsResponseDtoItem[]> {
+  return generatedApi
+    .threadsControllerFindAll({ routineId, limit: 100 }, { api })
+    .then((page) => page.data);
+}
+
+export function updateRoutine(
+  api: APIRequestContext,
+  routineId: string,
+  data: UpdateRoutineDto,
+): Promise<RoutineResponseDto> {
+  return generatedApi.routinesControllerUpdate(routineId, data, { api });
 }
 
 // Raw requests for asserting denied access; `apiURL` targets another backend

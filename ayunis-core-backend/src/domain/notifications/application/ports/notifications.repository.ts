@@ -3,6 +3,10 @@ import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
 
+export interface NotificationsFilter {
+  routineId?: UUID;
+}
+
 export abstract class NotificationsRepository {
   abstract create(notification: Notification): Promise<Notification>;
   /**
@@ -19,6 +23,7 @@ export abstract class NotificationsRepository {
   abstract findPageByUserId(
     userId: UUID,
     page: PaginatedQueryParams,
+    filter?: NotificationsFilter,
   ): Promise<Paginated<Notification>>;
   abstract countUnread(userId: UUID): Promise<number>;
   /** Keeps the first read time of a notification read before. */

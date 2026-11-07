@@ -7,6 +7,7 @@ import type { EntityManager } from 'typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
+import type { NotificationsFilter } from 'src/domain/notifications/application/ports/notifications.repository';
 import { NotificationsRepository } from 'src/domain/notifications/application/ports/notifications.repository';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
 import { NotificationMapper } from './mappers/notification.mapper';
@@ -62,9 +63,10 @@ export class LocalNotificationsRepository extends NotificationsRepository {
   async findPageByUserId(
     userId: UUID,
     { limit, offset }: PaginatedQueryParams,
+    { routineId }: NotificationsFilter = {},
   ): Promise<Paginated<Notification>> {
     const [records, total] = await this.repo.findAndCount({
-      where: { userId },
+      where: { userId, ...(routineId && { routineId }) },
       order: { createdAt: 'DESC', id: 'DESC' },
       take: limit,
       skip: offset,

@@ -1,9 +1,20 @@
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@ayunis/ui/components/dialog';
+import { Form } from '@ayunis/ui/components/form';
+import { Button } from '@ayunis/ui/components/button';
+import {
+  formFieldsToDto,
+  RoutineFormFieldset,
+  type RoutineFormFields,
+} from '@/features/routines';
 import { useCreateRoutine } from '@/pages/routines/api/useCreateRoutine';
-import { formFieldsToDto } from '@/pages/routines/lib/routine-form-values';
-import type { RoutineFormFields } from '@/pages/routines/model/types';
-import { RoutineFormDialog } from './RoutineFormDialog';
 
 interface CreateRoutineDialogProps {
   /** The fields to start from: empty, or a premade routine. */
@@ -20,16 +31,47 @@ export function CreateRoutineDialog({
   const { createRoutine, isCreating } = useCreateRoutine(form, onClose);
 
   return (
-    <RoutineFormDialog
-      title={t('form.createTitle')}
+    <Dialog
       open
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      form={form}
-      onSubmit={(data) => createRoutine(formFieldsToDto(data))}
-      isSubmitting={isCreating}
-      submitLabel={t('form.create')}
-    />
+    >
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[640px]">
+        <DialogHeader>
+          <DialogTitle>{t('form.createTitle')}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={(e) =>
+              void form.handleSubmit((data) =>
+                createRoutine(formFieldsToDto(data)),
+              )(e)
+            }
+            className="space-y-4"
+            data-testid="routine-form"
+          >
+            <RoutineFormFieldset form={form} disabled={isCreating} />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isCreating}
+              >
+                {t('form.cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isCreating}
+                data-testid="routine-form-submit"
+              >
+                {t('form.create')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -13,6 +13,7 @@ test("a routine run now creates a routine thread that the chat filter can hide",
     name,
     prompt: `E2E finish routine: ${name}`,
   });
+  await page.goto("/routines");
   const card = routineCard(page, name);
   await expect(card).toBeVisible();
   await expect(card.getByTestId("routine-status")).not.toHaveAttribute(

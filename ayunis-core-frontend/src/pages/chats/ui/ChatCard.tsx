@@ -1,4 +1,3 @@
-import { useRouter } from '@tanstack/react-router';
 import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
@@ -23,7 +22,6 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   const { favorites } = useFavorites();
   const { toggle: toggleFavorite } = useToggleFavorite();
   const { confirm } = useConfirmation();
-  const router = useRouter();
   const title = chat.title || t('card.untitled');
   const isPinned = isFavorite(favorites, chat.id, 'thread');
 
@@ -43,12 +41,6 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
       chat={chat}
       untitledLabel={t('card.untitled')}
       anonymousLabel={t('card.anonymous')}
-      onClick={() =>
-        void router.navigate({
-          to: '/chats/$threadId',
-          params: { threadId: chat.id },
-        })
-      }
       actions={
         <>
           <PinButton

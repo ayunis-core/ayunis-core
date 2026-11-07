@@ -1,4 +1,3 @@
-import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -102,7 +101,6 @@ function WorkspaceChatRow({ chat, onDelete }: Readonly<WorkspaceChatRowProps>) {
   const { t: tChats } = useTranslation('chats');
   const { favorites } = useFavorites();
   const { toggle: toggleFavorite } = useToggleFavorite();
-  const router = useRouter();
   const isPinned = isFavorite(favorites, chat.id, 'thread');
 
   return (
@@ -111,12 +109,6 @@ function WorkspaceChatRow({ chat, onDelete }: Readonly<WorkspaceChatRowProps>) {
       testId={`workspace-chat-${chat.id}`}
       untitledLabel={t('chat.untitled')}
       anonymousLabel={tChats('card.anonymous')}
-      onClick={() =>
-        void router.navigate({
-          to: '/chats/$threadId',
-          params: { threadId: chat.id },
-        })
-      }
       actions={
         <>
           <PinButton

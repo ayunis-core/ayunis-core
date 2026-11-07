@@ -3,6 +3,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   aNotification,
   createMockNotificationsRepository,
+  TEST_ROUTINE_ID,
   TEST_USER_ID,
 } from 'src/domain/notifications/application/testing/notification.fixtures';
 import { FindMyNotificationsQuery } from './find-my-notifications.query';
@@ -26,9 +27,32 @@ describe('FindMyNotificationsUseCase', () => {
     await expect(
       useCase.execute(new FindMyNotificationsQuery({ limit: 20, offset: 20 })),
     ).resolves.toBe(page);
-    expect(repository.findPageByUserId).toHaveBeenCalledWith(TEST_USER_ID, {
-      limit: 20,
-      offset: 20,
-    });
+    expect(repository.findPageByUserId).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      { limit: 20, offset: 20 },
+      { routineId: undefined },
+    );
+  });
+
+  it("narrows the current user's notifications to one routine", async () => {
+    const repository = createMockNotificationsRepository();
+    const useCase = new FindMyNotificationsUseCase(
+      repository,
+      createMockContextService(),
+    );
+
+    await useCase.execute(
+      new FindMyNotificationsQuery({
+        limit: 20,
+        offset: 0,
+        routineId: TEST_ROUTINE_ID,
+      }),
+    );
+
+    expect(repository.findPageByUserId).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      { limit: 20, offset: 0 },
+      { routineId: TEST_ROUTINE_ID },
+    );
   });
 });

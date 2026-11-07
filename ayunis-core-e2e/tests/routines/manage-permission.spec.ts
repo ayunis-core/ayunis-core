@@ -21,6 +21,10 @@ import {
   requestRoutines,
   runRoutineNow,
 } from "../../src/clients/api/routines.client";
+import {
+  notificationsOfRoutine,
+  notifyingRoutine,
+} from "../../src/clients/api/notifications.client";
 import { getThread } from "../../src/clients/api/threads.client";
 import type { UpdateRolePermissionsDtoPermissionsItem } from "../../src/clients/generated/ayunisCoreAPI.schemas";
 import { createApiContext } from "../../src/factories/api-context.factory";
@@ -88,10 +92,11 @@ test("an admin takes routine management away from users and gives it back", asyn
 
     const routine = await createRoutine(
       memberApi,
-      finishingRoutine(`Amtsblatt ${key}`),
+      notifyingRoutine(`Amtsblatt ${key}`, `Gewerberecht ${key}`),
     );
     await runToCompletion(memberApi, routine.id);
     const thread = await findRoutineThread(memberApi, routine.name);
+    const [notification] = await notificationsOfRoutine(memberApi, routine.id);
 
     const adminContext = await browser.newContext({
       storageState: await adminApi.storageState(),
@@ -129,6 +134,15 @@ test("an admin takes routine management away from users and gives it back", asyn
     await expect(threadItem).toBeVisible();
     await threadItem.getByRole("link").click();
     await expect(memberPage.getByTestId("routine-finished")).toBeVisible();
+    await memberPage.goto(`/routines/${routine.id}`);
+    await expect(memberPage).toHaveURL(/\/chat$/);
+    await memberPage.goto(`/inbox/${notification.id}`);
+    await expect(
+      memberPage.getByTestId("notification-chat-about-this"),
+    ).toBeVisible();
+    await expect(
+      memberPage.getByTestId("notification-open-routine"),
+    ).toHaveCount(0);
 
     const adminRoutine = await createRoutine(
       adminApi,
@@ -142,6 +156,9 @@ test("an admin takes routine management away from users and gives it back", asyn
     );
 
     await memberPage.reload();
+    await memberPage.getByTestId("notification-open-routine").click();
+    await expect(memberPage).toHaveURL(new RegExp(`/routines/${routine.id}$`));
+    await expect(memberPage.getByTestId("routine-detail")).toBeVisible();
     await memberPage.getByTestId("sidebar-navigation-routines").click();
     await expect(memberPage).toHaveURL(/\/routines$/);
     await expect(routineCard(memberPage, routine.name)).toBeVisible();
@@ -150,6 +167,7 @@ test("an admin takes routine management away from users and gives it back", asyn
       name,
       prompt: `E2E finish routine: ${name}`,
     });
+    await memberPage.goto("/routines");
     const card = routineCard(memberPage, name);
     await card.getByTestId("routine-card-run-now").click();
     await expect(card.getByTestId("routine-status")).toHaveAttribute(
