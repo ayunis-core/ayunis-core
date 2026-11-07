@@ -59,6 +59,31 @@ describe('CreateRoutineUseCase', () => {
     expect(repository.create).toHaveBeenCalledWith(routine);
   });
 
+  describe('schedule', () => {
+    // 06:00 in Berlin
+    beforeEach(() =>
+      jest.useFakeTimers().setSystemTime(new Date('2026-11-07T05:00:00Z')),
+    );
+    afterEach(() => jest.useRealTimers());
+
+    it('schedules the first run at the next daily time, within the start spread', async () => {
+      const routine = await useCase.execute(command({ dailyTime: '08:00' }));
+
+      const minutesAfterEight =
+        ((routine.nextRunAt?.getTime() ?? 0) -
+          new Date('2026-11-07T07:00:00Z').getTime()) /
+        60_000;
+      expect(minutesAfterEight).toBeGreaterThanOrEqual(0);
+      expect(minutesAfterEight).toBeLessThan(10);
+    });
+
+    it('does not schedule a routine created disabled', async () => {
+      const routine = await useCase.execute(command({ enabled: false }));
+
+      expect(routine.nextRunAt).toBeNull();
+    });
+  });
+
   it('stores the model the service selected for an omitted model', async () => {
     await useCase.execute(command({ modelId: undefined }));
 

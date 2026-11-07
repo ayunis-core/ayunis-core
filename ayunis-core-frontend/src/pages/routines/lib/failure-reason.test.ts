@@ -8,6 +8,8 @@ describe('failureReasonKey', () => {
     ['ROUTINE_SUBSCRIPTION_REQUIRED', 'failureReason.subscriptionRequired'],
     ['CREDIT_BUDGET_EXCEEDED', 'failureReason.credits'],
     ['UNAUTHORIZED_ACCESS', 'failureReason.model'],
+    ['interrupted', 'failureReason.interrupted'],
+    ['ACADEMY_CERTIFICATE_REQUIRED', 'failureReason.academyCertificate'],
   ])('explains %s', (reason, key) => {
     expect(failureReasonKey(reason)).toBe(key);
   });

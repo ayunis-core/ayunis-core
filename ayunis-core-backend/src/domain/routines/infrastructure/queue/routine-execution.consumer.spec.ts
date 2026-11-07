@@ -10,6 +10,7 @@ import {
   TEST_ROUTINE_ID,
   TEST_USER_ID,
 } from 'src/domain/routines/application/testing/routine.fixtures';
+import { RoutineRunTrigger } from 'src/domain/routines/domain/routine-run-trigger.enum';
 import { RoutineExecutionConsumer } from './routine-execution.consumer';
 
 jest.mock('src/domain/sources/infrastructure/queue/job-telemetry', () => ({
@@ -19,11 +20,12 @@ jest.mock('src/domain/sources/infrastructure/queue/job-telemetry', () => ({
 describe('RoutineExecutionConsumer', () => {
   const executeRoutine = { execute: jest.fn() };
   const job = {
-    id: '1',
+    id: 'routine-44444444-4444-4444-8444-444444444444-2026-11-07-0732',
     data: {
       routineId: TEST_ROUTINE_ID,
       userId: TEST_USER_ID,
       orgId: TEST_ORG_ID,
+      trigger: RoutineRunTrigger.SCHEDULED,
     },
   } as Job<RoutineExecutionJobData>;
 
@@ -66,13 +68,17 @@ describe('RoutineExecutionConsumer', () => {
     expect(worker.run).not.toHaveBeenCalled();
   });
 
-  it('executes the routine of the job', async () => {
+  it('executes the routine of the job with its trigger', async () => {
     executeRoutine.execute.mockResolvedValue({ status: 'succeeded' });
 
     await consumer(true).instance.process(job);
 
     expect(executeRoutine.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ routineId: TEST_ROUTINE_ID }),
+      expect.objectContaining({
+        routineId: TEST_ROUTINE_ID,
+        trigger: RoutineRunTrigger.SCHEDULED,
+        executionKey: job.id,
+      }),
     );
   });
 

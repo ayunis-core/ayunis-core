@@ -11,6 +11,9 @@ describe('RoutineMapper', () => {
       lastRunAt: new Date('2026-11-06T07:00:00.000Z'),
       lastRunFailureReason: 'timeout',
       consecutiveFailureCount: 2,
+      nextRunAt: new Date('2026-11-07T06:32:00.000Z'),
+      lastRunStartedAt: new Date('2026-11-06T06:59:00.000Z'),
+      pausedAt: new Date('2026-11-06T07:00:00.000Z'),
     });
 
     expect(mapper.toDomain(mapper.toRecord(routine))).toEqual(routine);

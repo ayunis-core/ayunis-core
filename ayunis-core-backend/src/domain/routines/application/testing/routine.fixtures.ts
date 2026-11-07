@@ -34,16 +34,24 @@ export function createMockRoutinesRepository(): jest.Mocked<RoutinesRepository> 
       .fn()
       .mockImplementation((routine: Routine) => Promise.resolve(routine)),
     findById: jest.fn().mockResolvedValue(null),
+    findByIdForUpdate: jest.fn().mockResolvedValue(null),
     findByIdForExecution: jest.fn().mockResolvedValue(null),
     findAllByUserId: jest.fn().mockResolvedValue([]),
+    findDue: jest.fn().mockResolvedValue([]),
     updateDefinition: jest.fn().mockResolvedValue(null),
     delete: jest.fn().mockResolvedValue(false),
+    moveNextRunAt: jest.fn().mockResolvedValue(true),
     markRunQueued: jest.fn().mockResolvedValue(true),
     setRunStatus: jest.fn().mockResolvedValue(undefined),
-    recordRunOutcome: jest.fn().mockResolvedValue(undefined),
+    markRunStarted: jest.fn().mockResolvedValue(true),
+    recordRunOutcome: jest.fn().mockResolvedValue({ paused: false }),
+    failRunsStartedBefore: jest.fn().mockResolvedValue(0),
   };
 }
 
 export function createMockRoutineExecutionQueue(): jest.Mocked<RoutineExecutionQueue> {
-  return { enqueueRunNow: jest.fn().mockResolvedValue(undefined) };
+  return {
+    enqueueRunNow: jest.fn().mockResolvedValue(undefined),
+    enqueueScheduled: jest.fn().mockResolvedValue(undefined),
+  };
 }

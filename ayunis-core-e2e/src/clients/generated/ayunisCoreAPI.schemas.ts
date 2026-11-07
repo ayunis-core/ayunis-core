@@ -5459,6 +5459,16 @@ export interface RoutineResponseDto {
      */
   lastRunFailureReason: string | null;
   consecutiveFailureCount: number;
+  /**
+     * When the next scheduled run starts: the daily time plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.
+     * @nullable
+     */
+  nextRunAt: string | null;
+  /**
+     * When repeated failed runs paused (disabled) the routine; null once it is enabled again
+     * @nullable
+     */
+  pausedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -5493,39 +5503,94 @@ export interface UpdateRoutineDto {
   enabled?: boolean;
 }
 
-export interface RetentionPolicyResponseDto {
+/**
+ * The certificate requirement configured for the user's org
+ */
+export type AcademyAccessMode = typeof AcademyAccessMode[keyof typeof AcademyAccessMode];
+
+
+export const AcademyAccessMode = {
+  unrestricted: 'unrestricted',
+  required_once: 'required_once',
+  required_annually: 'required_annually',
+} as const;
+
+export interface AcademyAccessStatusResponseDto {
+  /** The certificate requirement configured for the user's org */
+  mode: AcademyAccessMode;
+  /** Whether the gate applies to this user at all. False for unrestricted orgs and for orgs without the academy add-on. */
+  required: boolean;
+  /** Whether the user may currently use Ayunis Core chat */
+  allowed: boolean;
   /**
-     * Configured retention window in days, or null when retention is disabled (data kept forever).
+     * When the user last completed the academy. Null when the gate does not apply — read GET /academy/progress for the completion date in that case.
      * @nullable
      */
-  retentionDays: number | null;
-  /** Whether retention is currently enabled for the org. */
-  enabled: boolean;
-  /** Retention windows (in days) the admin may choose from. Lets the UI render the selector without hardcoding the allowlist. */
-  allowedRetentionDays: number[];
+  completedAt: string | null;
+  /**
+     * When the certificate stops being valid. Only populated when the org requires annual renewal.
+     * @nullable
+     */
+  expiresAt: string | null;
+}
+
+export interface OrgAcademyAccessSettingsResponseDto {
+  /** The certificate requirement configured for the org */
+  mode: AcademyAccessMode;
+}
+
+export interface UpsertOrgAcademyAccessSettingsDto {
+  /** The certificate requirement to apply to the org */
+  mode: AcademyAccessMode;
+}
+
+export type CertificateValidityStatus = typeof CertificateValidityStatus[keyof typeof CertificateValidityStatus];
+
+
+export const CertificateValidityStatus = {
+  not_passed: 'not_passed',
+  valid: 'valid',
+  expiring_soon: 'expiring_soon',
+  expired: 'expired',
+} as const;
+
+export interface OrgCertificateStatusResponseDto {
+  userId: string;
+  name: string;
+  email: string;
+  /**
+     * When the member last completed the academy, or null if they never have
+     * @nullable
+     */
+  completedAt: string | null;
+  /**
+     * When the certificate stops being valid. Only populated when the org requires annual renewal.
+     * @nullable
+     */
+  expiresAt: string | null;
+  status: CertificateValidityStatus;
+}
+
+export interface PaginatedOrgCertificateStatusesResponseDto {
+  data: OrgCertificateStatusResponseDto[];
+  pagination: PaginationDto;
 }
 
 /**
- * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
- * @nullable
+ * The add-on this status entry refers to
  */
-export type UpdateRetentionPolicyRequestDtoRetentionDays = typeof UpdateRetentionPolicyRequestDtoRetentionDays[keyof typeof UpdateRetentionPolicyRequestDtoRetentionDays] | null;
+export type AddonType = typeof AddonType[keyof typeof AddonType];
 
 
-export const UpdateRetentionPolicyRequestDtoRetentionDays = {
-  NUMBER_30: 30,
-  NUMBER_90: 90,
-  NUMBER_180: 180,
-  NUMBER_365: 365,
-  NUMBER_730: 730,
+export const AddonType = {
+  ayunis_core_academy: 'ayunis_core_academy',
 } as const;
 
-export interface UpdateRetentionPolicyRequestDto {
-  /**
-     * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
-     * @nullable
-     */
-  retentionDays: UpdateRetentionPolicyRequestDtoRetentionDays;
+export interface AddonStatusResponseDto {
+  /** The add-on this status entry refers to */
+  type: AddonType;
+  /** Whether the add-on is active for the organization */
+  active: boolean;
 }
 
 export interface CourseModuleResponseDto {
@@ -5688,24 +5753,42 @@ export interface UpdateCourseModuleRequestDto {
   loomUrl: string;
 }
 
-export interface ChatCompletionRequestDto { [key: string]: unknown }
+export interface RetentionPolicyResponseDto {
+  /**
+     * Configured retention window in days, or null when retention is disabled (data kept forever).
+     * @nullable
+     */
+  retentionDays: number | null;
+  /** Whether retention is currently enabled for the org. */
+  enabled: boolean;
+  /** Retention windows (in days) the admin may choose from. Lets the UI render the selector without hardcoding the allowlist. */
+  allowedRetentionDays: number[];
+}
 
 /**
- * The add-on this status entry refers to
+ * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
+ * @nullable
  */
-export type AddonType = typeof AddonType[keyof typeof AddonType];
+export type UpdateRetentionPolicyRequestDtoRetentionDays = typeof UpdateRetentionPolicyRequestDtoRetentionDays[keyof typeof UpdateRetentionPolicyRequestDtoRetentionDays] | null;
 
 
-export const AddonType = {
-  ayunis_core_academy: 'ayunis_core_academy',
+export const UpdateRetentionPolicyRequestDtoRetentionDays = {
+  NUMBER_30: 30,
+  NUMBER_90: 90,
+  NUMBER_180: 180,
+  NUMBER_365: 365,
+  NUMBER_730: 730,
 } as const;
 
-export interface AddonStatusResponseDto {
-  /** The add-on this status entry refers to */
-  type: AddonType;
-  /** Whether the add-on is active for the organization */
-  active: boolean;
+export interface UpdateRetentionPolicyRequestDto {
+  /**
+     * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
+     * @nullable
+     */
+  retentionDays: UpdateRetentionPolicyRequestDtoRetentionDays;
 }
+
+export interface ChatCompletionRequestDto { [key: string]: unknown }
 
 export interface LoginDto {
   /** Email address for authentication */
@@ -5834,79 +5917,6 @@ export interface IpAllowlistResponseDto {
 export interface UpdateIpAllowlistRequestDto {
   /** List of CIDR ranges to allow (e.g. "192.168.1.0/24") */
   cidrs: string[];
-}
-
-/**
- * The certificate requirement configured for the user's org
- */
-export type AcademyAccessMode = typeof AcademyAccessMode[keyof typeof AcademyAccessMode];
-
-
-export const AcademyAccessMode = {
-  unrestricted: 'unrestricted',
-  required_once: 'required_once',
-  required_annually: 'required_annually',
-} as const;
-
-export interface AcademyAccessStatusResponseDto {
-  /** The certificate requirement configured for the user's org */
-  mode: AcademyAccessMode;
-  /** Whether the gate applies to this user at all. False for unrestricted orgs and for orgs without the academy add-on. */
-  required: boolean;
-  /** Whether the user may currently use Ayunis Core chat */
-  allowed: boolean;
-  /**
-     * When the user last completed the academy. Null when the gate does not apply — read GET /academy/progress for the completion date in that case.
-     * @nullable
-     */
-  completedAt: string | null;
-  /**
-     * When the certificate stops being valid. Only populated when the org requires annual renewal.
-     * @nullable
-     */
-  expiresAt: string | null;
-}
-
-export interface OrgAcademyAccessSettingsResponseDto {
-  /** The certificate requirement configured for the org */
-  mode: AcademyAccessMode;
-}
-
-export interface UpsertOrgAcademyAccessSettingsDto {
-  /** The certificate requirement to apply to the org */
-  mode: AcademyAccessMode;
-}
-
-export type CertificateValidityStatus = typeof CertificateValidityStatus[keyof typeof CertificateValidityStatus];
-
-
-export const CertificateValidityStatus = {
-  not_passed: 'not_passed',
-  valid: 'valid',
-  expiring_soon: 'expiring_soon',
-  expired: 'expired',
-} as const;
-
-export interface OrgCertificateStatusResponseDto {
-  userId: string;
-  name: string;
-  email: string;
-  /**
-     * When the member last completed the academy, or null if they never have
-     * @nullable
-     */
-  completedAt: string | null;
-  /**
-     * When the certificate stops being valid. Only populated when the org requires annual renewal.
-     * @nullable
-     */
-  expiresAt: string | null;
-  status: CertificateValidityStatus;
-}
-
-export interface PaginatedOrgCertificateStatusesResponseDto {
-  data: OrgCertificateStatusResponseDto[];
-  pagination: PaginationDto;
 }
 
 export interface MfaStatusResponseDto {
