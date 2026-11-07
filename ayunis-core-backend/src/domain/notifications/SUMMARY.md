@@ -11,8 +11,8 @@ The inbox endpoints (`NotificationsController`, `/notifications`) are behind the
 
 | Method | Path | Use case |
 | ------ | ---- | -------- |
-| GET | `/notifications?limit&offset&routineId` | `FindMyNotificationsUseCase` — newest first, paginated (default 20, at most 100) with the total; `routineId` narrows them to one routine's notifications (findings and errors) for the routine detail page, and another user's routine yields none |
-| GET | `/notifications/unread-count` | `CountUnreadNotificationsUseCase` |
+| GET | `/notifications?limit&offset&routineId&type` | `FindMyNotificationsUseCase` — newest first, paginated (default 20, at most 100) with the total; `routineId` narrows them to one routine's notifications (findings and errors) for the routine detail page, and another user's routine yields none; `type` narrows them to one notification type for the inbox filter |
+| GET | `/notifications/unread-count` | `CountUnreadNotificationsUseCase` — the total (`count`) and, in one grouped query, the count per type (`byType`, only types with unread notifications) for the new chat page |
 | POST | `/notifications/read-all` | `MarkAllNotificationsReadUseCase` (204) |
 | GET | `/notifications/:id` | `FindNotificationUseCase` (exported) |
 | POST | `/notifications/:id/read` | `MarkNotificationReadUseCase` — one `UPDATE … RETURNING`; a second read keeps the first `readAt` |

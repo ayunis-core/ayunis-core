@@ -38,6 +38,7 @@ import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/g
 import { useRouter } from '@tanstack/react-router';
 import type { NotificationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SourceNotificationNotice } from './SourceNotificationNotice';
+import { UnreadNotificationButtons } from './UnreadNotificationButtons';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -282,6 +283,8 @@ export default function NewChatPage({
           >
             {greeting}
           </h1>
+
+          <UnreadNotificationButtons isCollapsed={isCreating} />
 
           <div className="new-chat-input-stack relative w-full">
             <p

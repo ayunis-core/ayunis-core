@@ -6,6 +6,7 @@ import {
   TEST_ROUTINE_ID,
   TEST_USER_ID,
 } from 'src/domain/notifications/application/testing/notification.fixtures';
+import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { FindMyNotificationsQuery } from './find-my-notifications.query';
 import { FindMyNotificationsUseCase } from './find-my-notifications.use-case';
 
@@ -30,7 +31,7 @@ describe('FindMyNotificationsUseCase', () => {
     expect(repository.findPageByUserId).toHaveBeenCalledWith(
       TEST_USER_ID,
       { limit: 20, offset: 20 },
-      { routineId: undefined },
+      { routineId: undefined, type: undefined },
     );
   });
 
@@ -52,7 +53,29 @@ describe('FindMyNotificationsUseCase', () => {
     expect(repository.findPageByUserId).toHaveBeenCalledWith(
       TEST_USER_ID,
       { limit: 20, offset: 0 },
-      { routineId: TEST_ROUTINE_ID },
+      { routineId: TEST_ROUTINE_ID, type: undefined },
+    );
+  });
+
+  it("narrows the current user's notifications to one type", async () => {
+    const repository = createMockNotificationsRepository();
+    const useCase = new FindMyNotificationsUseCase(
+      repository,
+      createMockContextService(),
+    );
+
+    await useCase.execute(
+      new FindMyNotificationsQuery({
+        limit: 20,
+        offset: 0,
+        type: NotificationType.ROUTINE_ERROR,
+      }),
+    );
+
+    expect(repository.findPageByUserId).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      { limit: 20, offset: 0 },
+      { routineId: undefined, type: NotificationType.ROUTINE_ERROR },
     );
   });
 });

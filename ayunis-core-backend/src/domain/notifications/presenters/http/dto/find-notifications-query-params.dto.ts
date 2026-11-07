@@ -1,7 +1,8 @@
 import type { UUID } from 'crypto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 
 export const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20;
 const MAX_NOTIFICATIONS_PAGE_SIZE = 100;
@@ -37,4 +38,13 @@ export class FindNotificationsQueryParamsDto {
   @IsOptional()
   @IsUUID()
   routineId?: UUID;
+
+  @ApiPropertyOptional({
+    description: 'Only the notifications of this type',
+    enum: NotificationType,
+    enumName: 'NotificationType',
+  })
+  @IsOptional()
+  @IsEnum(NotificationType)
+  type?: NotificationType;
 }

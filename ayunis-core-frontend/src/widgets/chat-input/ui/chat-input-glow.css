@@ -1,6 +1,16 @@
 /* Brand: #6055A6 — send/stop button matching the shared processing glow */
 
 :root {
+  /* Where the composer's text starts, from its outer edge: the processing
+     glow ring, the card's 1px border and the content padding. Content that
+     lines up with the text uses CHAT_INPUT_TEXT_INSET_CLASS. */
+  --chat-input-glow-ring: 2px;
+  --chat-input-card-border: 1px;
+  --chat-input-content-padding: calc(var(--spacing) * 3);
+  --chat-input-text-inset: calc(
+    var(--chat-input-glow-ring) + var(--chat-input-card-border) +
+      var(--chat-input-content-padding)
+  );
   --chat-input-ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
   --chat-input-duration: 0.52s;
   --new-chat-greeting-exit-duration: 0.55s;
@@ -9,6 +19,12 @@
   --new-chat-settle-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --new-chat-disclaimer-fade-duration: 0.9s;
   --new-chat-disclaimer-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (width >= 40rem) {
+  :root {
+    --chat-input-content-padding: calc(var(--spacing) * 4);
+  }
 }
 
 /* Height transition is opt-in via the --animate modifier: TextareaAutosize
@@ -128,6 +144,7 @@
 /* Doubled class so these win over the shared defaults regardless of
    stylesheet order. The ring follows the card's rounded-xl corners. */
 .processing-glow.chat-input-shell {
+  --processing-glow-ring: var(--chat-input-glow-ring);
   --processing-glow-content-radius: calc(var(--radius) + 4px);
   --processing-glow-surface: var(--card);
 }

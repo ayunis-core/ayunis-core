@@ -4281,9 +4281,6 @@ export interface AddGlobalPiiWhitelistWordsResponseDto {
   duplicates: string[];
 }
 
-/**
- * `routine`: sent by a routine run; `routine_error`: a routine run failed
- */
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 
@@ -4320,8 +4317,16 @@ export interface PaginatedNotificationsResponseDto {
   pagination: PaginationDto;
 }
 
-export interface UnreadNotificationCountResponseDto {
+export interface UnreadNotificationTypeCountResponseDto {
+  type: NotificationType;
   count: number;
+}
+
+export interface UnreadNotificationCountResponseDto {
+  /** All unread notifications */
+  count: number;
+  /** Unread notifications per type; only types with any */
+  byType: UnreadNotificationTypeCountResponseDto[];
 }
 
 export interface CreditsPerEuroResponseDto {
@@ -6432,6 +6437,10 @@ offset?: number;
  * Only the notifications this routine sent. Another user's routine yields none.
  */
 routineId?: string;
+/**
+ * Only the notifications of this type
+ */
+type?: NotificationType;
 };
 
 export type UsageControllerGetUserUsageParams = {

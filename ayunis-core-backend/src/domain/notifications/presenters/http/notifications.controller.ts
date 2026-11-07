@@ -67,22 +67,29 @@ export class NotificationsController {
   async findAll(
     @Query() query: FindNotificationsQueryParamsDto,
   ): Promise<PaginatedNotificationsResponseDto> {
-    this.logger.log({ routineId: query.routineId }, 'findAll');
+    this.logger.log(
+      { routineId: query.routineId, type: query.type },
+      'findAll',
+    );
     const page = await this.findMyNotificationsUseCase.execute(
       new FindMyNotificationsQuery({
         limit: query.limit ?? DEFAULT_NOTIFICATIONS_PAGE_SIZE,
         offset: query.offset ?? 0,
         routineId: query.routineId,
+        type: query.type,
       }),
     );
     return this.notificationDtoMapper.toPaginatedDto(page);
   }
 
   @Get('unread-count')
-  @ApiOperation({ summary: "Count the current user's unread notifications" })
+  @ApiOperation({
+    summary: "Count the current user's unread notifications, also per type",
+  })
   @ApiResponse({ status: 200, type: UnreadNotificationCountResponseDto })
   async countUnread(): Promise<UnreadNotificationCountResponseDto> {
-    return { count: await this.countUnreadNotificationsUseCase.execute() };
+    const counts = await this.countUnreadNotificationsUseCase.execute();
+    return { count: counts.total, byType: counts.byType };
   }
 
   @Post('read-all')

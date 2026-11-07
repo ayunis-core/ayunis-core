@@ -3,6 +3,13 @@
     "title": "Posteingang",
     "markAllRead": "Alle als gelesen markieren"
   },
+  "filter": {
+    "type": {
+      "routine": "Routine-Benachrichtigungen",
+      "routine_error": "Routine-Fehler"
+    },
+    "clear": "Filter entfernen"
+  },
   "emptyState": {
     "title": "Keine Benachrichtigungen",
     "description": "Hier erscheinen die Benachrichtigungen Ihrer Routinen."
