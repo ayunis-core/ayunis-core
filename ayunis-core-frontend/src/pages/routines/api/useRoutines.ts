@@ -5,21 +5,11 @@ import {
   getThreadsControllerFindAllQueryKey,
   useRoutinesControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { Routine } from '@/pages/routines/model/openapi';
-import { RoutineRunStatus } from '@/pages/routines/model/openapi';
-
-const ACTIVE_RUN_POLL_MS = 3000;
-
-function hasActiveRun(routines: readonly Routine[] | undefined): boolean {
-  return (routines ?? []).some(
-    (routine) =>
-      routine.lastRunStatus === RoutineRunStatus.queued ||
-      routine.lastRunStatus === RoutineRunStatus.running,
-  );
-}
+import { routinesRefetchInterval } from '@/pages/routines/lib/routines-refetch-interval';
 
 /**
- * Polls while a run is queued or running. Every status change also refreshes
+ * Polls quickly while a run is queued or running and slowly otherwise, since
+ * scheduled runs start in the background. Every status change also refreshes
  * the chat lists, since a run creates its routine thread in the background.
  */
 export function useRoutines() {
@@ -27,8 +17,7 @@ export function useRoutines() {
   const { data, isLoading, error } = useRoutinesControllerFindAll({
     query: {
       queryKey: getRoutinesControllerFindAllQueryKey(),
-      refetchInterval: (query) =>
-        hasActiveRun(query.state.data) ? ACTIVE_RUN_POLL_MS : false,
+      refetchInterval: (query) => routinesRefetchInterval(query.state.data),
     },
   });
 
