@@ -127,17 +127,16 @@ export class ExecuteRunUseCase {
       command,
       found.thread,
     );
-    const assembled = await this.runProfileAssembler.assemble(
-      this.runProfileRegistry.get(command.profile.id),
-      {
-        thread: activated.thread,
-        model,
-        userId,
-        orgId,
-        isAnonymous,
-        activatedSkillName: activated.skillName,
-      },
-    );
+    const profile = this.runProfileRegistry.get(command.profile.id);
+    const assembled = await this.runProfileAssembler.assemble(profile, {
+      profile: command.profile,
+      thread: activated.thread,
+      model,
+      userId,
+      orgId,
+      isAnonymous,
+      activatedSkillName: activated.skillName,
+    });
     const preparedTools = this.prepareTools(assembled.tools);
 
     return {
@@ -147,6 +146,7 @@ export class ExecuteRunUseCase {
       userId,
       isAnonymous,
       instructions: assembled.instructions,
+      maxIterations: profile.maxIterations,
       ...preparedTools,
       profileHooks: assembled.createHooks(preparedTools.toolIntegrations),
       skillInstructions: activated.skillInstructions,

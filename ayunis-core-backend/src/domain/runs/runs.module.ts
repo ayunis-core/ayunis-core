@@ -49,7 +49,12 @@ import { SkillsCapability } from './application/run-capabilities/capabilities/sk
 import { ThreadSourcesCapability } from './application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from './application/run-capabilities/capabilities/workspace-instructions.capability';
 import { RunCapabilityContextFactory } from './application/run-capabilities/run-capability-context.factory';
+import { FinishRoutineCapability } from './application/run-capabilities/capabilities/finish-routine.capability';
+import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
+import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
+import { RoutineRunProfile } from './application/run-profiles/routine-run-profile';
+import { ExecuteUnattendedRunUseCase } from './application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import { RunProfileAssembler } from './application/run-profiles/run-profile-assembler.service';
 import { RunProfileRegistry } from './application/run-profiles/run-profile.registry';
 
@@ -127,6 +132,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     RunProfileAssembler,
     RunCapabilityContextFactory,
     ChatRunProfile,
+    RoutineRunProfile,
     AnonymizationCapability,
     ArtifactsCapability,
     BehaviorCapability,
@@ -145,7 +151,15 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     SkillsCapability,
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
+    RoutineContextCapability,
+    RoutineInternetCapability,
+    FinishRoutineCapability,
+    ExecuteUnattendedRunUseCase,
   ],
-  exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
+  exports: [
+    ExecuteRunUseCase,
+    ExecuteRunAndSetTitleUseCase,
+    ExecuteUnattendedRunUseCase,
+  ],
 })
 export class RunsModule {}

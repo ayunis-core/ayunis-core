@@ -2,6 +2,7 @@ import type { UUID } from 'crypto';
 import type { SkillEntry } from 'src/common/util/skill-slug';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/run-profile-input';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -15,6 +16,7 @@ export interface SkillCatalog {
 }
 
 export interface RunCapabilityInput {
+  readonly profile: RunProfileInput;
   readonly thread: Thread;
   readonly model: LanguageModel;
   readonly userId: UUID;

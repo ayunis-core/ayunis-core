@@ -37,6 +37,7 @@ export function aCapabilityContext(
 ): RunCapabilityContext {
   const { canUseTools = true, ...rest } = overrides;
   return {
+    profile: { id: 'chat' },
     thread: aThread(),
     model: { name: 'mistral-large', canUseTools } as LanguageModel,
     userId: TEST_USER_ID,
