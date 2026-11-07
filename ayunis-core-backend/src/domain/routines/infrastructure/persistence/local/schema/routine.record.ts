@@ -6,12 +6,16 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import {
+  ROUTINE_EXECUTION_KEY_MAX_LENGTH,
   ROUTINE_FAILURE_REASON_MAX_LENGTH,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
 } from 'src/domain/routines/domain/routines.constants';
 
 @Entity({ name: 'routines' })
+@Index(['lastRunStartedAt'], {
+  where: `"lastRunStatus" = '${RoutineRunStatus.RUNNING}'`,
+})
 export class RoutineRecord extends BaseRecord {
   @Column({ type: 'varchar', length: ROUTINE_NAME_MAX_LENGTH })
   name: string;
@@ -69,4 +73,24 @@ export class RoutineRecord extends BaseRecord {
 
   @Column({ type: 'int', default: 0 })
   consecutiveFailureCount: number;
+
+  /** Null while disabled, so the due-run sweep only sees enabled routines. */
+  @Column({ type: 'timestamptz', nullable: true })
+  @Index()
+  nextRunAt: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastRunStartedAt: Date | null;
+
+  /** Newest first; claims each execution request (queue job) once. */
+  @Column({
+    type: 'varchar',
+    length: ROUTINE_EXECUTION_KEY_MAX_LENGTH,
+    array: true,
+    default: () => "'{}'",
+  })
+  recentExecutionKeys: string[];
+
+  @Column({ type: 'timestamptz', nullable: true })
+  pausedAt: Date | null;
 }

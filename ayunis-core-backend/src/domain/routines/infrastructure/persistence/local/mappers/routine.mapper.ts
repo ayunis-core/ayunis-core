@@ -19,6 +19,9 @@ export class RoutineMapper {
       lastRunAt: record.lastRunAt,
       lastRunFailureReason: record.lastRunFailureReason,
       consecutiveFailureCount: record.consecutiveFailureCount,
+      nextRunAt: record.nextRunAt,
+      lastRunStartedAt: record.lastRunStartedAt,
+      pausedAt: record.pausedAt,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -39,6 +42,9 @@ export class RoutineMapper {
     record.lastRunAt = domain.lastRunAt;
     record.lastRunFailureReason = domain.lastRunFailureReason;
     record.consecutiveFailureCount = domain.consecutiveFailureCount;
+    record.nextRunAt = domain.nextRunAt;
+    record.lastRunStartedAt = domain.lastRunStartedAt;
+    record.pausedAt = domain.pausedAt;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

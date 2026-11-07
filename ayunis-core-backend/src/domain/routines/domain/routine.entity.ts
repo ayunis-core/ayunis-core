@@ -18,6 +18,12 @@ export class Routine {
   readonly lastRunAt: Date | null;
   readonly lastRunFailureReason: string | null;
   readonly consecutiveFailureCount: number;
+  /** When the next scheduled run is due; null while the routine is disabled. */
+  readonly nextRunAt: Date | null;
+  /** When the current or last run started. */
+  readonly lastRunStartedAt: Date | null;
+  /** Set when repeated failures disabled the routine; cleared by re-enabling it. */
+  readonly pausedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 
@@ -35,6 +41,9 @@ export class Routine {
     lastRunAt?: Date | null;
     lastRunFailureReason?: string | null;
     consecutiveFailureCount?: number;
+    nextRunAt?: Date | null;
+    lastRunStartedAt?: Date | null;
+    pausedAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -51,6 +60,9 @@ export class Routine {
     this.lastRunAt = params.lastRunAt ?? null;
     this.lastRunFailureReason = params.lastRunFailureReason ?? null;
     this.consecutiveFailureCount = params.consecutiveFailureCount ?? 0;
+    this.nextRunAt = params.nextRunAt ?? null;
+    this.lastRunStartedAt = params.lastRunStartedAt ?? null;
+    this.pausedAt = params.pausedAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

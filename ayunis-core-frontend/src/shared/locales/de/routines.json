@@ -40,6 +40,11 @@
     "edit": "Routine bearbeiten",
     "delete": "Routine löschen"
   },
+  "schedule": {
+    "nextRun": "Nächster Lauf: {{time}}",
+    "paused": "Nach wiederholten Fehlschlägen pausiert",
+    "pausedHint": "Zum Fortsetzen wieder einschalten."
+  },
   "status": {
     "never": "Noch nicht ausgeführt",
     "queued": "In Warteschlange…",
@@ -55,6 +60,8 @@
     "maxIterations": "Der Lauf hat sein Schrittlimit erreicht.",
     "credits": "Das Credit-Limit wurde erreicht.",
     "model": "Das Modell steht Ihnen nicht mehr zur Verfügung.",
+    "interrupted": "Der Lauf wurde unterbrochen.",
+    "academyCertificate": "Ihre Organisation setzt zuerst die KI-Schulung nach EU AI Act voraus.",
     "unknown": "Etwas ist schiefgelaufen."
   },
   "delete": {

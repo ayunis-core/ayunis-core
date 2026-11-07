@@ -40,6 +40,11 @@
     "edit": "Edit routine",
     "delete": "Delete routine"
   },
+  "schedule": {
+    "nextRun": "Next run: {{time}}",
+    "paused": "Paused after repeated failures",
+    "pausedHint": "Switch it on to resume the daily run."
+  },
   "status": {
     "never": "Not run yet",
     "queued": "Queued…",
@@ -55,6 +60,8 @@
     "maxIterations": "The run reached its step limit.",
     "credits": "The credit limit was reached.",
     "model": "The model is no longer available to you.",
+    "interrupted": "The run was interrupted.",
+    "academyCertificate": "Your organization requires the EU AI Act training first.",
     "unknown": "Something went wrong."
   },
   "delete": {

@@ -14,6 +14,8 @@ const MODEL_REASONS = new Set([
 const KNOWN_REASONS: Readonly<Record<string, string>> = {
   finish_routine_not_called: 'finishNotCalled',
   timeout: 'timeout',
+  interrupted: 'interrupted',
+  ACADEMY_CERTIFICATE_REQUIRED: 'academyCertificate',
   ROUTINE_SUBSCRIPTION_REQUIRED: 'subscriptionRequired',
   ROUTINE_OWNER_LOCKED: 'ownerLocked',
   RUN_MAX_ITERATIONS_REACHED: 'maxIterations',
