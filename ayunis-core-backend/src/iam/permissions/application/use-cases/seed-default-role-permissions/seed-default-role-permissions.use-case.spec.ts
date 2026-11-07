@@ -6,6 +6,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
 } from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import type { UUID } from 'crypto';
 
 describe('SeedDefaultRolePermissionsUseCase', () => {
@@ -32,6 +33,22 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
         permissions: DEFAULT_ROLE_PERMISSIONS[role],
       })),
     );
+  });
+
+  it('lets managers and users manage routines in a new organization', async () => {
+    await useCase.execute(new SeedDefaultRolePermissionsCommand(orgId));
+
+    const [, grants] = repository.setForRoles.mock.calls[0];
+    expect(grants).toEqual([
+      {
+        role: UserRole.MANAGER,
+        permissions: expect.arrayContaining([Permission.MANAGE_ROUTINES]),
+      },
+      {
+        role: UserRole.USER,
+        permissions: expect.arrayContaining([Permission.MANAGE_ROUTINES]),
+      },
+    ]);
   });
 
   it('writes all roles in a single call so a failure cannot half-seed the matrix', async () => {

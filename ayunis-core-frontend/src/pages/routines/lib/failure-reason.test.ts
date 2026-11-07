@@ -10,6 +10,7 @@ describe('failureReasonKey', () => {
     ['UNAUTHORIZED_ACCESS', 'failureReason.model'],
     ['interrupted', 'failureReason.interrupted'],
     ['ACADEMY_CERTIFICATE_REQUIRED', 'failureReason.academyCertificate'],
+    ['permission_missing', 'failureReason.permissionMissing'],
   ])('explains %s', (reason, key) => {
     expect(failureReasonKey(reason)).toBe(key);
   });

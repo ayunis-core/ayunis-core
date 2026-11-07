@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
+import { login } from "../../src/clients/api/auth.client";
+import { getRolePermissions } from "../../src/clients/api/role-permissions.client";
 import {
   requestFeatureToggles,
   requestRoutineRun,
   requestRoutines,
 } from "../../src/clients/api/routines.client";
+import { createApiContext } from "../../src/factories/api-context.factory";
+import { createOrg } from "../../src/factories/org.factory";
 import { sendMessage } from "../../src/flows/chat.flow";
 import { test, expect } from "../../src/fixtures/test";
 
@@ -37,4 +41,44 @@ test("with routines disabled there are no routine endpoints or UI, and chats sti
   await expect(page.getByTestId("assistant-message").last()).toContainText(
     `${org.defaultModel.provider}::${org.defaultModel.name}`,
   );
+});
+
+// Changes the MANAGER role of its own organization, so it cannot affect the
+// worker organization other specs share.
+test("with routines disabled the roles settings hide the routines permission and keep its grant", async ({
+  browser,
+}) => {
+  const key = randomUUID().slice(0, 8);
+  const org = await createOrg(
+    `routines-off-roles-${key}`,
+    test.info().outputPath("routines-off-roles-org.json"),
+  );
+  const adminApi = await createApiContext({ cookies: [], origins: [] });
+  await login(adminApi, org.admin.email, org.admin.password);
+  const context = await browser.newContext({
+    storageState: await adminApi.storageState(),
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto(`${disabledBaseUrl}/admin-settings/roles`);
+    const shareWithOrg = page.getByRole("checkbox", {
+      name: "share_skills_with_org-manager",
+    });
+    await expect(shareWithOrg).toBeChecked();
+    await expect(
+      page.getByRole("checkbox", { name: "manage_routines-manager" }),
+    ).toHaveCount(0);
+
+    await shareWithOrg.click();
+    await page.getByTestId("roles-settings-save").click();
+    await expect
+      .poll(() => getRolePermissions(adminApi, "manager"))
+      .not.toContain("share_skills_with_org");
+    expect(await getRolePermissions(adminApi, "manager")).toContain(
+      "manage_routines",
+    );
+  } finally {
+    await context.close();
+    await adminApi.dispose();
+  }
 });

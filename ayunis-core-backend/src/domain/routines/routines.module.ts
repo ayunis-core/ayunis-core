@@ -7,6 +7,7 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { AcademyAccessModule } from 'src/iam/academy-access/academy-access.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { RoutineExecutionQueue } from './application/ports/routine-execution-queue.port';
 import { RoutinesRepository } from './application/ports/routines.repository';
 import { RoutineModelService } from './application/services/routine-model.service';
@@ -44,6 +45,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     SubscriptionsModule,
     TrialsModule,
     AcademyAccessModule,
+    PermissionsModule,
   ],
   controllers: [RoutinesController],
   providers: [

@@ -9,7 +9,8 @@ hold whatever an org admin grants them.
 - `Permission` — hardcoded enum of assignable capabilities, currently:
   `manage_teams`, `assign_users_to_teams`, `manage_skills`,
   `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
-  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`. Sharing
+  `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
+  `manage_routines`. Sharing
   is split by audience: `*_with_teams` covers teams the member belongs to,
   `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
   migration granted both wherever the former `share_*` permission was held).
@@ -24,9 +25,10 @@ hold whatever an org admin grants them.
 - `CONFIGURABLE_ROLES` = `[MANAGER, USER]` — the only roles that can be
   configured. `ADMIN` is intentionally excluded (implicit-all, never persisted).
 - `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation. Chosen to
-  preserve pre-RBAC behaviour (all skill + knowledge-base permissions for both
-  MANAGER and USER; teams stay admin-only). **Kept in sync with the backfill
-  VALUES list in the `CreateRolePermissions` migration.**
+  preserve pre-RBAC behaviour (all skill + knowledge-base permissions and
+  `manage_routines` for both MANAGER and USER; teams stay admin-only). **Kept
+  in sync with the backfill VALUES lists in the `CreateRolePermissions` and
+  `GrantManageRoutines` migrations.**
 
 ## Enforcement
 
@@ -53,7 +55,9 @@ team or org share permission from the share's scope).
   an org without a grant matrix leaves every non-admin with no permissions, so a
   failure must fail org creation instead of being logged and swallowed.
 - Existing orgs: backfilled by the `CreateRolePermissions` migration so no
-  member silently loses skill/knowledge-base access.
+  member silently loses skill/knowledge-base access, and by the
+  `GrantManageRoutines` migration, which grants `manage_routines` to MANAGER
+  and USER in every org that existed before the permission.
 
 ## Management
 

@@ -24,9 +24,16 @@ export function setManagerRolePermissions(
   );
 }
 
-export async function getUserRolePermissions(
+export function getUserRolePermissions(
   api: APIRequestContext,
 ): Promise<string[]> {
+  return getRolePermissions(api, 'user');
+}
+
+export async function getRolePermissions(
+  api: APIRequestContext,
+  role: 'user' | 'manager',
+): Promise<string[]> {
   const { roles } = await generatedApi.rolePermissionsControllerGet({ api });
-  return roles.find((entry) => entry.role === 'user')?.permissions ?? [];
+  return roles.find((entry) => entry.role === role)?.permissions ?? [];
 }

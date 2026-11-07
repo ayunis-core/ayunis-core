@@ -26,6 +26,9 @@ import { RoutineModelService } from 'src/domain/routines/application/services/ro
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
 import { AcademyCertificateRequiredError } from 'src/iam/academy-access/application/academy-access.errors';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import {
   TEST_MODEL_ID,
   TEST_ORG_ID,
@@ -46,6 +49,7 @@ describe('ExecuteRoutineUseCase', () => {
   const findUserById = { execute: jest.fn() };
   const subscriptionGate = { admit: jest.fn() };
   const academyGate = { admit: jest.fn() };
+  const hasPermission = { execute: jest.fn() };
   const routineModelService = { forRun: jest.fn() };
   const createThread = { execute: jest.fn() };
   const executeUnattendedRun = { execute: jest.fn() };
@@ -77,6 +81,7 @@ describe('ExecuteRoutineUseCase', () => {
     findUserById.execute.mockResolvedValue(owner());
     subscriptionGate.admit.mockResolvedValue(undefined);
     academyGate.admit.mockResolvedValue(undefined);
+    hasPermission.execute.mockResolvedValue(true);
     routineModelService.forRun.mockResolvedValue(TEST_MODEL_ID);
     createThread.execute.mockResolvedValue({ id: threadId });
     executeUnattendedRun.execute.mockResolvedValue({
@@ -96,6 +101,7 @@ describe('ExecuteRoutineUseCase', () => {
         },
         { provide: RoutineSubscriptionGate, useValue: subscriptionGate },
         { provide: RoutineAcademyGate, useValue: academyGate },
+        { provide: HasPermissionUseCase, useValue: hasPermission },
         { provide: RoutineModelService, useValue: routineModelService },
         { provide: CreateThreadUseCase, useValue: createThread },
         {
@@ -246,6 +252,38 @@ describe('ExecuteRoutineUseCase', () => {
     expect(subscriptionGate.admit).not.toHaveBeenCalled();
     expect(createThread.execute).not.toHaveBeenCalled();
   });
+
+  it("checks the owner's role for the manage routines permission", async () => {
+    await run();
+
+    expect(hasPermission.execute).toHaveBeenCalledWith(
+      new HasPermissionQuery(
+        TEST_ORG_ID,
+        UserRole.USER,
+        Permission.MANAGE_ROUTINES,
+      ),
+    );
+  });
+
+  it.each([RoutineRunTrigger.SCHEDULED, RoutineRunTrigger.RUN_NOW])(
+    'skips a %s run, without counting a failure, while the owner lacks the manage routines permission',
+    async (trigger) => {
+      hasPermission.execute.mockResolvedValue(false);
+
+      await expect(run(trigger)).resolves.toEqual({
+        status: 'skipped',
+        reason: 'permission_missing',
+      });
+      expect(repository.recordRunOutcome).toHaveBeenCalledWith(
+        TEST_ROUTINE_ID,
+        { status: 'skipped', reason: 'permission_missing' },
+        expect.any(Date),
+      );
+      expect(academyGate.admit).not.toHaveBeenCalled();
+      expect(subscriptionGate.admit).not.toHaveBeenCalled();
+      expect(createThread.execute).not.toHaveBeenCalled();
+    },
+  );
 
   it('runs nothing on behalf of a locked account', async () => {
     findUserById.execute.mockResolvedValue(owner({ lockedAt: new Date() }));

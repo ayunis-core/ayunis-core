@@ -15,7 +15,8 @@
   "groups": {
     "teams": "Teams",
     "skills": "Fähigkeiten",
-    "knowledge_bases": "Wissenssammlungen"
+    "knowledge_bases": "Wissenssammlungen",
+    "routines": "Routinen"
   },
   "permissionHints": {
     "manage_teams": "Teams erstellen, umbenennen und löschen.",
@@ -25,7 +26,8 @@
     "share_skills_with_org": "Eine Fähigkeit für die gesamte Organisation freigeben.",
     "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
     "share_knowledge_bases_with_teams": "Eine Wissenssammlung für Teams freigeben, denen das Mitglied angehört.",
-    "share_knowledge_bases_with_org": "Eine Wissenssammlung für die gesamte Organisation freigeben."
+    "share_knowledge_bases_with_org": "Eine Wissenssammlung für die gesamte Organisation freigeben.",
+    "manage_routines": "Routinen erstellen, bearbeiten, löschen und ausführen."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
@@ -35,7 +37,8 @@
     "share_skills_with_org": "Fähigkeiten mit der Organisation teilen",
     "manage_knowledge_bases": "Wissenssammlungen verwalten",
     "share_knowledge_bases_with_teams": "Wissenssammlungen mit eigenen Teams teilen",
-    "share_knowledge_bases_with_org": "Wissenssammlungen mit der Organisation teilen"
+    "share_knowledge_bases_with_org": "Wissenssammlungen mit der Organisation teilen",
+    "manage_routines": "Routinen verwalten"
   },
   "adminHint": "Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden.",
   "save": "Änderungen speichern",

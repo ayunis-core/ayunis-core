@@ -13,9 +13,7 @@ import {
 } from 'src/domain/routines/domain/routines.constants';
 
 @Entity({ name: 'routines' })
-@Index(['lastRunStartedAt'], {
-  where: `"lastRunStatus" = '${RoutineRunStatus.RUNNING}'`,
-})
+@Index(['lastRunStatus', 'lastRunStartedAt'])
 export class RoutineRecord extends BaseRecord {
   @Column({ type: 'varchar', length: ROUTINE_NAME_MAX_LENGTH })
   name: string;
