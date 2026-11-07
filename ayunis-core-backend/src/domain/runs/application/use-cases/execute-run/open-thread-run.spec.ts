@@ -18,6 +18,7 @@ describe('openThreadRun', () => {
       const lock = new ThreadRunLock();
       const controller = new AbortController();
       const command = new ExecuteRunCommand({
+        profile: { id: 'chat' },
         threadId: randomUUID(),
         input: new RunUserInput('Cancelled question', [
           { buffer: Buffer.from('photo'), contentType: 'image/jpeg' },
@@ -50,6 +51,7 @@ describe('openThreadRun', () => {
   it('keeps an unrelated preparation error when cancellation happens concurrently', async () => {
     const controller = new AbortController();
     const command = new ExecuteRunCommand({
+      profile: { id: 'chat' },
       threadId: randomUUID(),
       input: new RunUserInput('Question'),
       signal: controller.signal,

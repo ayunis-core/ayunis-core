@@ -8,7 +8,6 @@ import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runt
 import { CreditGateHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/credit-gate-hook.factory';
 import { ModelCallObservabilityHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/model-call-observability-hook.factory';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
-import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
 import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
 import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
@@ -34,7 +33,6 @@ export class RunAssemblyService {
     private readonly modelCallObservabilityHookFactory: ModelCallObservabilityHookFactory,
     private readonly persistenceHookFactory: PersistenceHookFactory,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
-    private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
   ) {}
 
@@ -92,7 +90,8 @@ export class RunAssemblyService {
     models: RuntimeModelRegistry,
     onMessagePersisted: (messageId: UUID) => void,
   ): Hook[] {
-    // Usage must persist before retry evaluation; refresh skills before budgeting,
+    // Core hooks cannot be removed by a profile. Usage must persist before retry
+    // evaluation; profile hooks (e.g. the skill refresh) run before budgeting,
     // then observe the final request after every request-mutating hook.
     return [
       this.creditGateHookFactory.create({
@@ -110,14 +109,7 @@ export class RunAssemblyService {
         orgId: prepared.orgId,
         integrations: prepared.toolIntegrations,
       }),
-      this.skillActivationHookFactory.create({
-        threadId: prepared.thread.id,
-        activeSkills: prepared.activeSkills,
-        canUseTools: prepared.model.canUseTools,
-        isAnonymous: prepared.isAnonymous,
-        integrations: prepared.toolIntegrations,
-        activatedSkillName: prepared.activatedSkillName,
-      }),
+      ...prepared.profileHooks,
       this.contextBudgetHookFactory.create({ model: prepared.model }),
       this.modelCallObservabilityHookFactory.create({
         userId: prepared.userId,

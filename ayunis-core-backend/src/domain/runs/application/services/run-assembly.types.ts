@@ -1,5 +1,4 @@
-import type { Skill } from 'src/domain/skills/domain/skill';
-import type { Tool as RuntimeTool } from '@ayunis/agent-runtime';
+import type { Hook, Tool as RuntimeTool } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -19,7 +18,7 @@ export interface PreparedRun extends PreparedTools {
   userId: UUID;
   isAnonymous: boolean;
   instructions: string;
-  activeSkills: Skill[];
+  /** Contributed by the run profile's capabilities. */
+  profileHooks: Hook[];
   skillInstructions?: string;
-  activatedSkillName?: string;
 }

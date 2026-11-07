@@ -20,10 +20,8 @@ import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
 
 /**
- * Assembles artifact-related always-on tools (document + diagram +
- * spreadsheet) for a thread. Lives outside ToolAssemblyService to keep that
- * file under the 500-line cap and to keep artifact-specific logic in one
- * place.
+ * Assembles artifact-related tools (document + diagram + spreadsheet) for a
+ * thread, used by `ArtifactsCapability`.
  */
 @Injectable()
 export class ArtifactToolAssemblerService {
