@@ -49,6 +49,7 @@ import { Route as AuthenticatedInboxNotificationIdRouteImport } from './routes/_
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
 import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
+import { Route as AuthenticatedRoutinesRoutineIdRouteImport } from './routes/_authenticated/routines.$routineId'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
@@ -303,6 +304,12 @@ const AuthenticatedRoutinesIndexRoute =
     path: '/routines/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRoutinesRoutineIdRoute =
+  AuthenticatedRoutinesRoutineIdRouteImport.update({
+    id: '/routines/$routineId',
+    path: '/routines/$routineId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
@@ -523,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -593,6 +601,7 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -667,6 +676,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/_authenticated/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -741,6 +751,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/routines/$routineId'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
@@ -811,6 +822,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/routines/$routineId'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
@@ -884,6 +896,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/inbox/$notificationId'
     | '/_authenticated/knowledge-bases/$id'
+    | '/_authenticated/routines/$routineId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
@@ -1225,6 +1238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRoutinesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/routines/$routineId': {
+      id: '/_authenticated/routines/$routineId'
+      path: '/routines/$routineId'
+      fullPath: '/routines/$routineId'
+      preLoaderRoute: typeof AuthenticatedRoutinesRoutineIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/settings'
@@ -1560,6 +1580,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedInboxNotificationIdRoute: typeof AuthenticatedInboxNotificationIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedRoutinesRoutineIdRoute: typeof AuthenticatedRoutinesRoutineIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
@@ -1591,6 +1612,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedInboxNotificationIdRoute: AuthenticatedInboxNotificationIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedRoutinesRoutineIdRoute: AuthenticatedRoutinesRoutineIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,

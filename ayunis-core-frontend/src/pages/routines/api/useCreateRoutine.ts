@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,8 +9,7 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { CreateRoutineDto } from '@/pages/routines/model/openapi';
-import type { RoutineFormFields } from '@/pages/routines/model/types';
+import type { CreateRoutineDto, RoutineFormFields } from '@/features/routines';
 
 export function useCreateRoutine(
   form: UseFormReturn<RoutineFormFields>,
@@ -17,14 +17,19 @@ export function useCreateRoutine(
 ) {
   const { t } = useTranslation('routines');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const mutation = useRoutinesControllerCreate({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (routine) => {
         void queryClient.invalidateQueries({
           queryKey: getRoutinesControllerFindAllQueryKey(),
         });
         showSuccess(t('toast.createSuccess'));
         onSuccess?.();
+        void navigate({
+          to: '/routines/$routineId',
+          params: { routineId: routine.id },
+        });
       },
       onError: (error: unknown) => {
         try {

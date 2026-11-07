@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
@@ -6,15 +5,12 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
 import { useRoutines } from '@/pages/routines/api/useRoutines';
-import type { Routine } from '@/pages/routines/model/openapi';
 import CreateRoutineMenu from './CreateRoutineMenu';
-import { EditRoutineDialog } from './EditRoutineDialog';
 import RoutineCard from './RoutineCard';
 
 export default function RoutinesPage() {
   const { t } = useTranslation('routines');
   const { routines, isLoading } = useRoutines();
-  const [editing, setEditing] = useState<Routine | null>(null);
 
   if (!isLoading && routines.length === 0) {
     return (
@@ -46,18 +42,8 @@ export default function RoutinesPage() {
         contentArea={
           <div className="space-y-3" data-testid="routines-list">
             {routines.map((routine) => (
-              <RoutineCard
-                key={routine.id}
-                routine={routine}
-                onEdit={() => setEditing(routine)}
-              />
+              <RoutineCard key={routine.id} routine={routine} />
             ))}
-            {editing && (
-              <EditRoutineDialog
-                routine={editing}
-                onClose={() => setEditing(null)}
-              />
-            )}
           </div>
         }
       />

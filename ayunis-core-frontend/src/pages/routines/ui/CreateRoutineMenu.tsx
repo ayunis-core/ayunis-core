@@ -11,9 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
-import { EMPTY_ROUTINE_FORM } from '@/pages/routines/lib/routine-form-values';
+import {
+  EMPTY_ROUTINE_FORM,
+  type RoutineFormFields,
+} from '@/features/routines';
 import { VERKUENDUNGSPLATTFORM_ROUTINE } from '@/pages/routines/model/premade-routines';
-import type { RoutineFormFields } from '@/pages/routines/model/types';
 import { CreateRoutineDialog } from './CreateRoutineDialog';
 
 interface CreateRoutineMenuProps {

@@ -6,7 +6,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   useRoutinesControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { routinesRefetchInterval } from '@/pages/routines/lib/routines-refetch-interval';
+import { routinesRefetchInterval } from '@/features/routines';
 
 /**
  * Polls quickly while a run is queued or running and slowly otherwise, since

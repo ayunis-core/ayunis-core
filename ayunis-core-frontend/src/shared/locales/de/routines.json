@@ -14,7 +14,6 @@
   },
   "form": {
     "createTitle": "Neue Routine",
-    "editTitle": "Routine bearbeiten",
     "name": "Name",
     "namePlaceholder": "z. B. Amtsblatt",
     "prompt": "Aufgabe",
@@ -37,8 +36,30 @@
     "disabled": "Pausiert",
     "enabledLabel": "Täglich ausführen",
     "runNow": "Jetzt ausführen",
-    "edit": "Routine bearbeiten",
     "delete": "Routine löschen"
+  },
+  "detail": {
+    "tabs": {
+      "configuration": "Konfiguration",
+      "notifications": "Benachrichtigungen",
+      "chats": "Chats"
+    },
+    "notificationsEmpty": {
+      "title": "Noch keine Benachrichtigungen",
+      "description": "Benachrichtigungen dieser Routine, auch Fehler, erscheinen hier."
+    },
+    "chatsEmpty": {
+      "title": "Noch keine Chats",
+      "description": "Jede Ausführung dieser Routine erstellt einen Chat, der hier erscheint."
+    },
+    "status": {
+      "title": "Status",
+      "description": "Die letzte Ausführung und die nächste geplante Ausführung."
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "description": "Name, Aufgabe, Modell, Zeitplan und Internetzugriff dieser Routine."
+    }
   },
   "schedule": {
     "nextRun": "Nächster Lauf: {{time}}",

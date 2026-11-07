@@ -6,7 +6,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
-import { invalidateNotificationQueries } from '@/features/notifications';
+import { invalidateNotificationQueries } from './invalidateNotificationQueries';
 
 export function useMarkNotificationRead() {
   const { t } = useTranslation('inbox');

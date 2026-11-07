@@ -11,7 +11,7 @@ The inbox endpoints (`NotificationsController`, `/notifications`) are behind the
 
 | Method | Path | Use case |
 | ------ | ---- | -------- |
-| GET | `/notifications?limit&offset` | `FindMyNotificationsUseCase` — newest first, paginated (default 20, at most 100) with the total |
+| GET | `/notifications?limit&offset&routineId` | `FindMyNotificationsUseCase` — newest first, paginated (default 20, at most 100) with the total; `routineId` narrows them to one routine's notifications (findings and errors) for the routine detail page, and another user's routine yields none |
 | GET | `/notifications/unread-count` | `CountUnreadNotificationsUseCase` |
 | POST | `/notifications/read-all` | `MarkAllNotificationsReadUseCase` (204) |
 | GET | `/notifications/:id` | `FindNotificationUseCase` (exported) |

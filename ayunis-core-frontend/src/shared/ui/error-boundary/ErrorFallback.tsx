@@ -13,7 +13,10 @@ export function ErrorFallback({ onReset }: Readonly<Props>) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+    <div
+      className="flex min-h-screen flex-col items-center justify-center gap-4 p-4"
+      data-testid="error-fallback"
+    >
       <div className="text-center">
         <h1 className="text-2xl font-semibold">{t('error.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('error.description')}</p>

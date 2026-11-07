@@ -7,11 +7,13 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
 import { PaginationWidget } from '@/widgets/pagination';
-import { useUnreadNotificationCount } from '@/features/notifications';
+import {
+  NotificationListItem,
+  useUnreadNotificationCount,
+} from '@/features/notifications';
 import { useNotifications } from '@/pages/inbox/api/useNotifications';
 import { useMarkAllNotificationsRead } from '@/pages/inbox/api/useMarkAllNotificationsRead';
 import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
-import { NotificationListItem } from './NotificationListItem';
 
 interface InboxPageProps {
   page: number;

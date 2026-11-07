@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
-import { failureReasonKey } from '@/pages/routines/lib/failure-reason';
-import { formatRunTime } from '@/pages/routines/lib/format-run-time';
-import type { Routine } from '@/pages/routines/model/openapi';
-import { RoutineRunStatus } from '@/pages/routines/model/openapi';
+import { failureReasonKey } from '@/features/routines/lib/failure-reason';
+import { formatRunTime } from '@/features/routines/lib/format-run-time';
+import type { Routine } from '@/features/routines/model/openapi';
+import { RoutineRunStatus } from '@/features/routines/model/openapi';
 
 export function RoutineRunStatusLine({
   routine,

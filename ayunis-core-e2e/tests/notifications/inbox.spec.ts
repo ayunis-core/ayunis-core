@@ -82,6 +82,38 @@ test("a routine's notification lands in the inbox, links to its routine chat and
   await expect(page).toHaveURL(new RegExp(`/inbox/${notification.id}`));
 });
 
+test("a notification can be marked read from the inbox list without opening it", async ({
+  api,
+  page,
+}) => {
+  const subject = `Kitagebühren ${randomUUID().slice(0, 8)}`;
+  const routine = await createRoutine(
+    api,
+    notifyingRoutine(`Amtsblatt ${subject}`, subject),
+  );
+  await runRoutineNow(api, routine.id);
+  await expect
+    .poll(async () => (await getRoutine(api, routine.id)).lastRunStatus, {
+      timeout: 30_000,
+    })
+    .toBe("succeeded");
+  await expect
+    .poll(async () => (await notificationsOfRoutine(api, routine.id)).length)
+    .toBe(1);
+  const [notification] = await notificationsOfRoutine(api, routine.id);
+
+  await page.goto("/inbox");
+  const item = inboxItem(page, notification.headline);
+  await expect(item).toHaveAttribute("data-unread", "true");
+  await item.getByTestId("notification-mark-read").click();
+
+  await expect(item).toHaveAttribute("data-unread", "false");
+  await expect(item.getByTestId("notification-unread-dot")).toHaveCount(0);
+  await expect(item.getByTestId("notification-mark-read")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/inbox$/);
+  expect((await getNotification(api, notification.id)).readAt).not.toBeNull();
+});
+
 test("a routine that finds nothing relevant ends without a notification", async ({
   api,
 }) => {

@@ -3,13 +3,14 @@ import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   getRoutinesControllerFindAllQueryKey,
+  getRoutinesControllerFindOneQueryKey,
   useRoutinesControllerUpdate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { UpdateRoutineDto } from '@/pages/routines/model/openapi';
-import type { RoutineFormFields } from '@/pages/routines/model/types';
+import type { UpdateRoutineDto } from '@/features/routines/model/openapi';
+import type { RoutineFormFields } from '@/features/routines/model/types';
 
 /** Without a form (the enable switch), validation errors become a toast. */
 export function useUpdateRoutine(
@@ -20,7 +21,11 @@ export function useUpdateRoutine(
   const queryClient = useQueryClient();
   const mutation = useRoutinesControllerUpdate({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (routine) => {
+        queryClient.setQueryData(
+          getRoutinesControllerFindOneQueryKey(routine.id),
+          routine,
+        );
         void queryClient.invalidateQueries({
           queryKey: getRoutinesControllerFindAllQueryKey(),
         });

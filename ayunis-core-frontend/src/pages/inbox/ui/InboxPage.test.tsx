@@ -31,10 +31,8 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
   default: ({ action }: { action: ReactNode }) => <header>{action}</header>,
 }));
 vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
-vi.mock('./NotificationListItem', () => ({
-  NotificationListItem: () => <div data-testid="notification-item" />,
-}));
 vi.mock('@/features/notifications', () => ({
+  NotificationListItem: () => <div data-testid="notification-item" />,
   useUnreadNotificationCount: () => ({ unreadCount: mocks.unreadCount }),
 }));
 vi.mock('@/pages/inbox/api/useNotifications', () => ({

@@ -153,11 +153,9 @@ export class ThreadsController {
           search: queryParams.search,
           workspaceId: queryParams.workspaceId,
           type: queryParams.type,
+          routineId: queryParams.routineId,
         },
-        {
-          limit: queryParams.limit,
-          offset: queryParams.offset,
-        },
+        { limit: queryParams.limit, offset: queryParams.offset },
       ),
     );
     return this.getThreadsDtoMapper.toPaginatedDto(threads);

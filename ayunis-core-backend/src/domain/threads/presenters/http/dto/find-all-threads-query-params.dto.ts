@@ -36,6 +36,15 @@ export class FindAllThreadsQueryParamsDto {
   @IsEnum(ThreadType)
   type?: ThreadType;
 
+  @ApiPropertyOptional({
+    description:
+      "Only the routine threads of this routine's runs. Another user's routine yields none.",
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID()
+  routineId?: UUID;
+
   @ApiPropertyOptional({ description: 'Maximum number of threads to return' })
   @IsOptional()
   @IsInt()
