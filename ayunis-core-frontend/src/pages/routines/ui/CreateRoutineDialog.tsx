@@ -10,7 +10,7 @@ import {
 import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import {
-  formFieldsToDto,
+  formFieldsToCreateDto,
   RoutineFormFieldset,
   type RoutineFormFields,
 } from '@/features/routines';
@@ -45,7 +45,7 @@ export function CreateRoutineDialog({
           <form
             onSubmit={(e) =>
               void form.handleSubmit((data) =>
-                createRoutine(formFieldsToDto(data)),
+                createRoutine(formFieldsToCreateDto(data)),
               )(e)
             }
             className="space-y-4"

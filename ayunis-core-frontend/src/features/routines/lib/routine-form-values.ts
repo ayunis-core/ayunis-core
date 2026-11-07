@@ -26,13 +26,24 @@ export function routineToFormFields(routine: Routine): RoutineFormFields {
   };
 }
 
-/** The default-model option sends no model, so the backend picks the user's default. */
-export function formFieldsToDto(
+/** The default-model option sends no model, so the routine uses the user's default. */
+export function formFieldsToCreateDto(
   fields: RoutineFormFields,
-): CreateRoutineDto & UpdateRoutineDto {
+): CreateRoutineDto {
   const { modelId, ...rest } = fields;
   return {
     ...rest,
     ...(modelId !== DEFAULT_MODEL_OPTION && { modelId }),
+  };
+}
+
+/** The default-model option clears a stored model; an omitted one would keep it. */
+export function formFieldsToUpdateDto(
+  fields: RoutineFormFields,
+): UpdateRoutineDto {
+  const { modelId, ...rest } = fields;
+  return {
+    ...rest,
+    modelId: modelId === DEFAULT_MODEL_OPTION ? null : modelId,
   };
 }

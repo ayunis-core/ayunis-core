@@ -38,7 +38,7 @@ export class UpdateRoutineUseCase {
     if (!current) throw new RoutineNotFoundError(id);
     const updated = await this.routinesRepository.updateDefinition(userId, id, {
       ...changes,
-      ...(modelId && {
+      ...(modelId !== undefined && {
         modelId: await this.routineModelService.select(modelId),
       }),
       ...scheduleChangesForEdit(current, changes, new Date()),

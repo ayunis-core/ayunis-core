@@ -35,10 +35,15 @@ export class UpdateRoutineDto {
   @MaxLength(ROUTINE_PROMPT_MAX_LENGTH)
   prompt?: string;
 
-  @ApiPropertyOptional({ description: 'Permitted model id', format: 'uuid' })
+  @ApiPropertyOptional({
+    type: String,
+    description: "Permitted model id; null for the user's default model",
+    format: 'uuid',
+    nullable: true,
+  })
   @IsOptional()
   @IsUUID()
-  modelId?: UUID;
+  modelId?: UUID | null;
 
   @ApiPropertyOptional({
     description: 'Daily run time as HH:mm (Europe/Berlin)',

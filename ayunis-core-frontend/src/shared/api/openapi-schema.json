@@ -22541,7 +22541,7 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Permitted model id; null once that model was removed (the run then uses the user's default)"
+            "description": "Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed"
           },
           "dailyTime": {
             "type": "string",
@@ -22660,8 +22660,9 @@
           },
           "modelId": {
             "type": "string",
-            "description": "Permitted model id",
-            "format": "uuid"
+            "description": "Permitted model id; null for the user's default model",
+            "format": "uuid",
+            "nullable": true
           },
           "dailyTime": {
             "type": "string",

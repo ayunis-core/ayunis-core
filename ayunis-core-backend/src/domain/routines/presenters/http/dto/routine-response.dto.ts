@@ -16,7 +16,7 @@ export class RoutineResponseDto {
     format: 'uuid',
     nullable: true,
     description:
-      "Permitted model id; null once that model was removed (the run then uses the user's default)",
+      "Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed",
   })
   modelId: string | null;
 

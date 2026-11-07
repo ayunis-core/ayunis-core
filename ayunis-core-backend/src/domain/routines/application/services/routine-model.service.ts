@@ -17,9 +17,16 @@ export class RoutineModelService {
     private readonly contextService: ContextService,
   ) {}
 
-  /** The model to store for a routine; omitted means the user's default. */
-  async select(modelId: UUID | undefined): Promise<UUID> {
-    if (!modelId) return this.userDefault();
+  /**
+   * The model to store for a routine. Null stands for the user's default and
+   * is stored as null, so runs follow later changes of the default; it is
+   * still resolved here so a user without a usable model is told now.
+   */
+  async select(modelId: UUID | null): Promise<UUID | null> {
+    if (!modelId) {
+      await this.userDefault();
+      return null;
+    }
     const model = await this.getPermittedLanguageModelUseCase.execute(
       new GetPermittedLanguageModelQuery({ id: modelId }),
     );

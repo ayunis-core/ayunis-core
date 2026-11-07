@@ -1,11 +1,11 @@
 import type { UUID } from 'crypto';
 
-/** Omitted properties stay unchanged. */
+/** Omitted properties stay unchanged; a null model means the user's default. */
 export class UpdateRoutineCommand {
   readonly id: UUID;
   readonly name?: string;
   readonly prompt?: string;
-  readonly modelId?: UUID;
+  readonly modelId?: UUID | null;
   readonly dailyTime?: string;
   readonly internetEnabled?: boolean;
   readonly enabled?: boolean;
@@ -14,7 +14,7 @@ export class UpdateRoutineCommand {
     id: UUID;
     name?: string;
     prompt?: string;
-    modelId?: UUID;
+    modelId?: UUID | null;
     dailyTime?: string;
     internetEnabled?: boolean;
     enabled?: boolean;
