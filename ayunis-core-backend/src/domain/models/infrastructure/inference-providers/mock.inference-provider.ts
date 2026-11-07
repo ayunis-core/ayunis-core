@@ -2,6 +2,7 @@ import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import { mockCodeExecutionResponse } from './mock-code-execution-response';
 import { mockToolPreparationResponse } from './mock-tool-preparation-response';
+import { mockFinishRoutineResponse } from './mock-finish-routine-response';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -19,7 +20,7 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * Default response: "{provider}::{model}". E2E triggers in the last user
  * message select scripted responses (chat naming, malformed tool calls,
  * slow tool preparation, paginated research, source citations,
- * inline-document echo).
+ * inline-document echo); a routine task's trigger ends the routine run.
  *
  * The text is emitted as several delta chunks with a small delay between
  * them. An instant single-chunk response completes faster than any real
@@ -82,7 +83,8 @@ function mockToolResponse(
     mockCreateFileResponse(request, userText) ??
     mockCodeExecutionResponse(request, userText) ??
     mockImageEditResponse(request, userText) ??
-    mockToolPreparationResponse(request, userText)
+    mockToolPreparationResponse(request, userText) ??
+    mockFinishRoutineResponse(request)
   );
 }
 

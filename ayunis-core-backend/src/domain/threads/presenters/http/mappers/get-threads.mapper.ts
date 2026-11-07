@@ -15,6 +15,8 @@ export class GetThreadsDtoMapper {
       isAnonymous: thread.isAnonymous,
       mode: thread.mode,
       workspaceId: thread.workspaceId ?? null,
+      type: thread.type,
+      routineId: thread.routineId,
     };
   }
 

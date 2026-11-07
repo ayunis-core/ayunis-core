@@ -21,6 +21,25 @@ describe('Externally managed subscriptions', () => {
   });
 });
 
+describe('Routines', () => {
+  const original = process.env;
+  afterEach(() => {
+    process.env = original;
+  });
+
+  it.each([
+    [undefined, false],
+    ['', false],
+    ['false', false],
+    ['true', true],
+  ])('resolves flag %p to %s', (flag, expected) => {
+    process.env = { ...original };
+    if (flag === undefined) delete process.env.FEATURE_ROUTINES_ENABLED;
+    else process.env.FEATURE_ROUTINES_ENABLED = flag;
+    expect(featuresConfig().routinesEnabled).toBe(expected);
+  });
+});
+
 describe('parseBooleanWithDefault', () => {
   it.each([undefined, '', '   '])('uses the default for %p', (value) => {
     expect(parseBooleanWithDefault(value, true)).toBe(true);

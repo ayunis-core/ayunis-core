@@ -2,6 +2,7 @@ import { registerAs } from '@nestjs/config';
 
 export enum FeatureFlag {
   ExternalSubscriptions = 'externalSubscriptionsEnabled',
+  Routines = 'routinesEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -23,4 +24,8 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
       process.env.FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED,
       false,
     ),
+  routinesEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_ROUTINES_ENABLED,
+    false,
+  ),
 }));

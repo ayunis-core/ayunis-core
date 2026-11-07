@@ -130,6 +130,10 @@
         "create_file": "Created file"
       }
     },
+    "routine": {
+      "finished": "Routine finished",
+      "nudge": "Automatic reminder to the routine"
+    },
     "map": {
       "loading": "Preparing map…",
       "invalid": "This map cannot be displayed because its data is empty or invalid.",

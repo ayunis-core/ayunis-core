@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
+  CalendarClock,
   FolderOpen,
   MessageCircle,
   MoreHorizontal,
@@ -65,7 +66,11 @@ export function ChatSidebarItem({
       <SidebarMenuItem data-testid="chat">
         <SidebarMenuButton asChild isActive={params.threadId === thread.id}>
           <Link to="/chats/$threadId" params={{ threadId: thread.id }}>
-            <MessageCircle />
+            {thread.type === 'routine' ? (
+              <CalendarClock data-testid="chat-routine-icon" />
+            ) : (
+              <MessageCircle />
+            )}
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate">
                 {thread.title ?? t('sidebar.untitled')}

@@ -5372,6 +5372,15 @@
             }
           },
           {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Only threads of this type, e.g. `chat` to hide routine threads. Omit for all threads.",
+            "schema": {
+              "$ref": "#/components/schemas/ThreadType"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -11334,6 +11343,189 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/routines": {
+      "get": {
+        "operationId": "RoutinesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoutineResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the current user's routines",
+        "tags": ["routines"]
+      },
+      "post": {
+        "operationId": "RoutinesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoutineDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a routine",
+        "tags": ["routines"]
+      }
+    },
+    "/routines/{id}": {
+      "get": {
+        "operationId": "RoutinesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Get a routine",
+        "tags": ["routines"]
+      },
+      "patch": {
+        "operationId": "RoutinesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutineDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Update a routine",
+        "tags": ["routines"]
+      },
+      "delete": {
+        "operationId": "RoutinesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Routine deleted"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Delete a routine; its threads are kept",
+        "tags": ["routines"]
+      }
+    },
+    "/routines/{id}/run": {
+      "post": {
+        "description": "Queues one execution; its result appears as a new routine thread and as the routine’s last run status.",
+        "operationId": "RoutinesController_runNow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Run queued"
+          },
+          "403": {
+            "description": "Subscription required"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Run a routine now",
+        "tags": ["routines"]
+      }
+    },
     "/retention-policies/org": {
       "get": {
         "operationId": "RetentionPoliciesController_get",
@@ -13339,9 +13531,14 @@
             "type": "boolean",
             "description": "Cloud subscriptions are managed externally",
             "default": false
+          },
+          "routinesEnabled": {
+            "type": "boolean",
+            "description": "Users can create routines that run on their behalf",
+            "default": false
           }
         },
-        "required": ["externalSubscriptionsEnabled"]
+        "required": ["externalSubscriptionsEnabled", "routinesEnabled"]
       },
       "OrgUsersSortField": {
         "type": "string",
@@ -17073,6 +17270,11 @@
             "type": "boolean",
             "description": "Whether this text content contains skill instructions",
             "example": false
+          },
+          "isNudge": {
+            "type": "boolean",
+            "description": "Whether the system sent this text to an unattended routine run that replied with plain text, rather than the user",
+            "example": false
           }
         },
         "required": ["type", "text"]
@@ -17598,6 +17800,11 @@
           "data"
         ]
       },
+      "ThreadType": {
+        "type": "string",
+        "enum": ["chat", "routine"],
+        "description": "Whether a user started the thread or a routine run created it"
+      },
       "KnowledgeBaseSummaryResponseDto": {
         "type": "object",
         "properties": {
@@ -17722,6 +17929,20 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "nullable": true
           },
+          "type": {
+            "description": "Whether a user started the thread or a routine run created it",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThreadType"
+              }
+            ]
+          },
+          "routineId": {
+            "type": "string",
+            "description": "The routine whose run created this thread; null for chats and once the routine is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -17807,6 +18028,8 @@
           "isAnonymous",
           "mode",
           "workspaceId",
+          "type",
+          "routineId",
           "id",
           "userId",
           "permittedModelId",
@@ -17851,6 +18074,20 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "nullable": true
           },
+          "type": {
+            "description": "Whether a user started the thread or a routine run created it",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThreadType"
+              }
+            ]
+          },
+          "routineId": {
+            "type": "string",
+            "description": "The routine whose run created this thread; null for chats and once the routine is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -17868,6 +18105,8 @@
           "isAnonymous",
           "mode",
           "workspaceId",
+          "type",
+          "routineId",
           "id"
         ]
       },
@@ -21953,6 +22192,152 @@
             "type": "boolean",
             "description": "Whether new chats start in anonymous mode; users can opt out",
             "example": false
+          }
+        }
+      },
+      "RoutineRunStatus": {
+        "type": "string",
+        "enum": ["queued", "running", "succeeded", "failed"],
+        "description": "Null until the routine ran for the first time"
+      },
+      "RoutineResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Permitted model id; null once that model was removed (the run then uses the user's default)"
+          },
+          "dailyTime": {
+            "type": "string",
+            "description": "HH:mm (Europe/Berlin)",
+            "example": "07:30"
+          },
+          "internetEnabled": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "lastRunStatus": {
+            "nullable": true,
+            "description": "Null until the routine ran for the first time",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineRunStatus"
+              }
+            ]
+          },
+          "lastRunAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "When the last run finished",
+            "example": "2026-11-06T06:30:12.000Z"
+          },
+          "lastRunFailureReason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Machine-readable reason of the last failed run, e.g. `timeout` or `finish_routine_not_called`"
+          },
+          "consecutiveFailureCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prompt",
+          "modelId",
+          "dailyTime",
+          "internetEnabled",
+          "enabled",
+          "lastRunStatus",
+          "lastRunAt",
+          "lastRunFailureReason",
+          "consecutiveFailureCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateRoutineDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the routine",
+            "example": "Amtsblatt"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The task the routine runs, sent as the first message"
+          },
+          "modelId": {
+            "type": "string",
+            "description": "Permitted model id; omit for the user's default model",
+            "format": "uuid"
+          },
+          "dailyTime": {
+            "type": "string",
+            "description": "Daily run time as HH:mm (Europe/Berlin)",
+            "example": "07:30"
+          },
+          "internetEnabled": {
+            "type": "boolean",
+            "description": "Whether the routine may search and read the web"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the routine runs on its schedule",
+            "default": true
+          }
+        },
+        "required": ["name", "prompt", "dailyTime", "internetEnabled"]
+      },
+      "UpdateRoutineDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the routine"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The task the routine runs"
+          },
+          "modelId": {
+            "type": "string",
+            "description": "Permitted model id",
+            "format": "uuid"
+          },
+          "dailyTime": {
+            "type": "string",
+            "description": "Daily run time as HH:mm (Europe/Berlin)",
+            "example": "07:30"
+          },
+          "internetEnabled": {
+            "type": "boolean",
+            "description": "Whether the routine may search and read the web"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the routine runs on its schedule"
           }
         }
       },

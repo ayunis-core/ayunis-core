@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "Routines"
+  },
+  "createMenu": {
+    "button": "New routine",
+    "first": "Create your first routine",
+    "blank": "Blank routine",
+    "premade": "Premade"
+  },
+  "emptyState": {
+    "title": "No routines yet",
+    "description": "A routine runs a prompt on your behalf. Start from scratch or from a premade routine."
+  },
+  "form": {
+    "createTitle": "New routine",
+    "editTitle": "Edit routine",
+    "name": "Name",
+    "namePlaceholder": "e.g. Official gazette",
+    "prompt": "Task",
+    "promptPlaceholder": "Describe what the routine should do on each run.",
+    "promptDescription": "The routine runs this task without you. Replace the parts in square brackets.",
+    "model": "Model",
+    "defaultModel": "My default model",
+    "dailyTime": "Daily at",
+    "dailyTimeDescription": "Time in Europe/Berlin.",
+    "internet": "Internet access",
+    "internetDescription": "Lets the routine search the web and read websites.",
+    "cancel": "Cancel",
+    "create": "Create",
+    "save": "Save"
+  },
+  "card": {
+    "schedule": "Daily at {{time}}",
+    "internet": "Internet",
+    "enabled": "Active",
+    "disabled": "Paused",
+    "enabledLabel": "Run daily",
+    "runNow": "Run now",
+    "edit": "Edit routine",
+    "delete": "Delete routine"
+  },
+  "status": {
+    "never": "Not run yet",
+    "queued": "Queued…",
+    "running": "Running…",
+    "succeeded": "Succeeded",
+    "failed": "Failed"
+  },
+  "failureReason": {
+    "finishNotCalled": "The routine ended without finishing its task.",
+    "timeout": "The run took too long and was stopped.",
+    "subscriptionRequired": "A subscription or remaining trial messages are required.",
+    "ownerLocked": "Your account is locked.",
+    "maxIterations": "The run reached its step limit.",
+    "credits": "The credit limit was reached.",
+    "model": "The model is no longer available to you.",
+    "unknown": "Something went wrong."
+  },
+  "delete": {
+    "title": "Delete routine",
+    "description": "\"{{name}}\" will be deleted. Chats it created are kept.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "createSuccess": "Routine created",
+    "createError": "The routine could not be created.",
+    "updateSuccess": "Routine saved",
+    "updateError": "The routine could not be saved.",
+    "deleteSuccess": "Routine deleted",
+    "deleteError": "The routine could not be deleted.",
+    "notFound": "This routine no longer exists.",
+    "modelUnavailable": "This model is not available to you.",
+    "runStarted": "Routine started. Its result appears as a new chat.",
+    "runError": "The routine could not be started.",
+    "subscriptionRequired": "A subscription or remaining trial messages are required."
+  },
+  "validation": {
+    "name": {
+      "isNotEmpty": "Name is required",
+      "matches": "Name is required",
+      "maxLength": "Name must be 100 characters or fewer",
+      "invalid": "Invalid name"
+    },
+    "prompt": {
+      "isNotEmpty": "Task is required",
+      "matches": "Task is required",
+      "maxLength": "Task must be 10,000 characters or fewer",
+      "invalid": "Invalid task"
+    },
+    "dailyTime": {
+      "matches": "Enter a time as HH:mm",
+      "invalid": "Invalid time"
+    },
+    "modelId": {
+      "invalid": "Invalid model"
+    },
+    "invalid": "Invalid input"
+  }
+}

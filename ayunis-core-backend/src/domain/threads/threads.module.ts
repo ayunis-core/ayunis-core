@@ -145,6 +145,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
   ],
   exports: [
     // Export use cases
+    CreateThreadUseCase,
     FindThreadUseCase,
     FindThreadContextRefsUseCase,
     FindThreadCitationContextUseCase,

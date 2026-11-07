@@ -12,6 +12,7 @@ import { LocalThreadsRepository } from './local-threads.repository';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import type { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
+import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 const threadSchema = new EntitySchema<ThreadRecord>({
   name: 'ThreadRecord',
@@ -22,6 +23,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     userId: { type: 'uuid' },
     title: { type: String },
     workspaceId: { type: 'uuid', nullable: true },
+    type: { type: String, default: ThreadType.CHAT },
     createdAt: { type: 'timestamp' },
   },
 });
@@ -82,12 +84,14 @@ describe('Chat title and content search (PostgreSQL)', () => {
     title = 'Budget discussion',
     userId = ownerId,
     workspaceId?: ReturnType<typeof randomUUID>,
+    type = ThreadType.CHAT,
   ) {
     const record = {
       id: randomUUID(),
       userId,
       title,
       workspaceId,
+      type,
       createdAt: new Date(),
     };
     await db.getRepository(ThreadRecord).insert(record);
@@ -196,6 +200,39 @@ describe('Chat title and content search (PostgreSQL)', () => {
       },
     ]);
     expect((await search()).total).toBe(0);
+  });
+
+  it('does not match the reminders sent to a routine run', async () => {
+    const id = await thread(
+      'Amtsblatt',
+      ownerId,
+      undefined,
+      ThreadType.ROUTINE,
+    );
+    await message(id, MessageRole.USER, [
+      { type: MessageContentType.TEXT, text: 'Beschaffung', isNudge: true },
+    ]);
+    expect((await search()).total).toBe(0);
+  });
+
+  it('lists only chats when routine threads are filtered out', async () => {
+    const chat = await thread('Budget');
+    const routineThread = await thread(
+      'Amtsblatt – 07.11.2026',
+      ownerId,
+      undefined,
+      ThreadType.ROUTINE,
+    );
+    const all = await repository.findAll(ownerId);
+    const chatsOnly = await repository.findAll(ownerId, undefined, {
+      type: ThreadType.CHAT,
+    });
+    expect(all.data.map((item) => item.id)).toEqual(
+      expect.arrayContaining([chat, routineThread]),
+    );
+    expect(all.total).toBe(2);
+    expect(chatsOnly.data.map((item) => item.id)).toEqual([chat]);
+    expect(chatsOnly.total).toBe(1);
   });
 
   it('reflects message removal and recreation without stale matches', async () => {

@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
+import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
 import { QueueTelemetryService } from './queue-telemetry.service';
 
 @Module({
@@ -11,6 +12,7 @@ import { QueueTelemetryService } from './queue-telemetry.service';
       { name: DOCUMENT_PROCESSING_QUEUE },
       { name: DATA_SOURCE_PROCESSING_QUEUE },
       { name: URL_CRAWL_QUEUE },
+      { name: ROUTINE_EXECUTION_QUEUE },
     ),
   ],
   providers: [QueueTelemetryService],

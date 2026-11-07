@@ -6,6 +6,7 @@
     "newChat": "New Chat",
     "skills": "Skills",
     "knowledge": "Knowledge",
+    "routines": "Routines",
     "marketplace": "Marketplace",
     "academy": "Academy",
     "gettingStarted": "Getting Started",
@@ -61,7 +62,9 @@
     "unpinWorkspace": "Remove from favorites",
     "deleteWorkspace": "Delete",
     "dragWorkspace": "Move workspace",
-    "settings": "Settings"
+    "settings": "Settings",
+    "showRoutineChats": "Show routine chats",
+    "chatFilter": "Chat filter"
   },
   "chatInput": {
     "placeholder": "How can I help today?",

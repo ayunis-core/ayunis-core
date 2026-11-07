@@ -48,7 +48,12 @@ describeRedis('queue health against real Redis', () => {
     }
   }, 30_000);
 
-  it.each(['document-processing', 'data-source-processing', 'url-crawl'])(
+  it.each([
+    'document-processing',
+    'data-source-processing',
+    'url-crawl',
+    'routine-execution',
+  ])(
     '%s exports waiting, active, delayed, completed, failed and worker state',
     async (name) => {
       const prefix = `telemetry-test-${randomUUID()}`;

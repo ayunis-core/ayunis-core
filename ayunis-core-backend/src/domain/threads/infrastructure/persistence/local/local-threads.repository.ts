@@ -24,7 +24,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { findThreadCitationContext } from './queries/find-thread-citation-context';
-import { applyThreadSearch } from './queries/apply-thread-search';
+import { applyThreadListFilters } from './queries/apply-thread-list-filters';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -157,7 +157,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .createQueryBuilder('thread')
       .where('thread.userId = :userId', { userId });
 
-    this.applyFindAllFilters(queryBuilder, filters);
+    applyThreadListFilters(queryBuilder, filters);
     this.applyFindAllRelations(queryBuilder, options);
 
     queryBuilder.orderBy('thread.createdAt', 'DESC');
@@ -184,21 +184,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       offset,
       total,
     });
-  }
-
-  private applyFindAllFilters(
-    queryBuilder: SelectQueryBuilder<ThreadRecord>,
-    filters?: ThreadsFindAllFilters,
-  ): void {
-    if (filters?.search) {
-      applyThreadSearch(queryBuilder, filters.search);
-    }
-
-    if (filters?.workspaceId) {
-      queryBuilder.andWhere('thread.workspaceId = :workspaceId', {
-        workspaceId: filters.workspaceId,
-      });
-    }
   }
 
   private applyFindAllRelations(

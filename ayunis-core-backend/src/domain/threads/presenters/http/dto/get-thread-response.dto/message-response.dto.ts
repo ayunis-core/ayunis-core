@@ -28,6 +28,14 @@ export class TextMessageContentResponseDto extends MessageContentResponseDto {
     required: false,
   })
   isSkillInstruction?: boolean;
+
+  @ApiProperty({
+    description:
+      'Whether the system sent this text to an unattended routine run that replied with plain text, rather than the user',
+    example: false,
+    required: false,
+  })
+  isNudge?: boolean;
 }
 
 export class ToolUseIntegrationDto {

@@ -164,7 +164,9 @@ export class CreateUserMessageUseCase {
       );
     }
     if (command.text?.trim()) {
-      content.push(new TextMessageContent(command.text));
+      content.push(
+        new TextMessageContent(command.text, null, false, command.isNudge),
+      );
     }
     content.push(
       ...images.map(

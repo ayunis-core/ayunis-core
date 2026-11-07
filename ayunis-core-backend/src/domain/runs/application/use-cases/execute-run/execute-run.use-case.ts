@@ -25,6 +25,7 @@ import { CreateUserMessageCommand } from 'src/domain/messages/application/use-ca
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import {
+  RunNudgeInput,
   RunUserInput,
   RunToolResultInput,
   type RunInput,
@@ -319,6 +320,7 @@ export class ExecuteRunUseCase {
         text,
         input.pendingImages,
         prepared.skillInstructions,
+        input instanceof RunNudgeInput,
       ),
     );
     this.addMessageToThreadUseCase.execute(

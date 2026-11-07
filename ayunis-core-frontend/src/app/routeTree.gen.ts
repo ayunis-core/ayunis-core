@@ -46,6 +46,7 @@ import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedGettingStartedIndexRouteImport } from './routes/_authenticated/getting-started.index'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
@@ -283,6 +284,12 @@ const AuthenticatedKnowledgeBasesIdRoute =
     path: '/knowledge-bases/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRoutinesIndexRoute =
+  AuthenticatedRoutinesIndexRouteImport.update({
+    id: '/routines/',
+    path: '/routines/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
@@ -514,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -581,6 +589,7 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/routines': typeof AuthenticatedRoutinesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -652,6 +661,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/_authenticated/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -723,6 +733,7 @@ export interface FileRouteTypes {
     | '/chats/'
     | '/getting-started/'
     | '/knowledge-bases/'
+    | '/routines/'
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
@@ -790,6 +801,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/getting-started'
     | '/knowledge-bases'
+    | '/routines'
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
@@ -860,6 +872,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/'
     | '/_authenticated/getting-started/'
     | '/_authenticated/knowledge-bases/'
+    | '/_authenticated/routines/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
@@ -1164,6 +1177,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases/$id'
       fullPath: '/knowledge-bases/$id'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/routines/': {
+      id: '/_authenticated/routines/'
+      path: '/routines'
+      fullPath: '/routines/'
+      preLoaderRoute: typeof AuthenticatedRoutinesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/': {
@@ -1511,6 +1531,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
@@ -1541,6 +1562,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,

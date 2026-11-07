@@ -14,10 +14,10 @@ import {
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
   ThinkingMessageContentResponseDto,
-} from '../dto/get-thread-response.dto/message-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageMessageContentResponseDto } from '../dto/get-thread-response.dto/message-response.dto';
+import { ImageMessageContentResponseDto } from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 
 interface MessageBaseProps {
   id: string;
@@ -187,6 +187,7 @@ export class MessageDtoMapper {
       type: content.type,
       text: content.text,
       ...(content.isSkillInstruction && { isSkillInstruction: true }),
+      ...(content.isNudge && { isNudge: true }),
     };
   }
 

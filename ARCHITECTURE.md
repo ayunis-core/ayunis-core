@@ -93,6 +93,7 @@ none of these packages implements the Agent Plugins standard.
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
 | [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Personal project folders ("Projekte") that group chats and own scoped skills, knowledge bases and instructions |
+| [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
 
 ### IAM Modules — Identity & Access Management
 
