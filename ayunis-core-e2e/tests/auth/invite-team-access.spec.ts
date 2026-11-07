@@ -50,30 +50,37 @@ test("single invites reject foreign and unknown teams without persisting an invi
   }
 });
 
+// Changes the USER role of its own organization, so it cannot affect the
+// worker organization other specs share.
 test("members granted the user-list permission still receive no team data and cannot invite", async ({
-  api,
   mail,
 }) => {
   test.setTimeout(90_000);
   const key = Date.now();
-  const member = await createUser(api, mail, `team-list-${key}`);
+  const org = await createOrg(
+    `team-list-${key}`,
+    test.info().outputPath("team-list-org.json"),
+  );
+  const adminApi = await createApiContext(emptySession);
   const recipientApi = await createApiContext(emptySession);
   try {
+    await login(adminApi, org.admin.email, org.admin.password);
+    const member = await createUser(adminApi, mail, `team-list-${key}`);
     await login(recipientApi, member.email, member.password);
     expect(
       (await requestUsersByEmail(recipientApi, member.email)).status(),
     ).toBe(403);
     expect(await listMyTeams(recipientApi)).toEqual([]);
-    await grantTeamAssignmentPermission(api);
+    await grantTeamAssignmentPermission(adminApi);
     const allowed = await requestUsersByEmail(recipientApi, member.email);
     expect(allowed.status()).toBe(200);
     expect((await allowed.json()).data[0]).not.toHaveProperty("teams");
-    const team = await createTeam(api, `Bamberg list ${key}`);
-    await addTeamMember(api, team.id, member.id);
+    const team = await createTeam(adminApi, `Bamberg list ${key}`);
+    await addTeamMember(adminApi, team.id, member.id);
     expect((await listMyTeams(recipientApi)).map((item) => item.id)).toEqual([
       team.id,
     ]);
-    expect((await findUserByEmail(api, member.email))?.teams).toEqual([
+    expect((await findUserByEmail(adminApi, member.email))?.teams).toEqual([
       { id: team.id, name: team.name },
     ]);
     const memberList = await requestUsersByEmail(recipientApi, member.email);
@@ -86,10 +93,12 @@ test("members granted the user-list permission still receive no team data and ca
     });
     expect(denied.status()).toBe(403);
     expect(
-      (await listPendingInvites(api, `denied-invite-${key}@e2e.local`)).data,
+      (await listPendingInvites(adminApi, `denied-invite-${key}@e2e.local`))
+        .data,
     ).toEqual([]);
   } finally {
     await recipientApi.dispose();
+    await adminApi.dispose();
   }
 });
 
