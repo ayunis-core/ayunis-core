@@ -1,5 +1,8 @@
 import type { APIRequestContext } from '@playwright/test';
-import type { ModelModeEntryDto } from '../generated/ayunisCoreAPI.schemas';
+import type {
+  DefaultModelSelectionResponseDto,
+  ModelModeEntryDto,
+} from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
 type Mode = 'auto' | 'max';
@@ -33,4 +36,11 @@ export function replaceModelModeEntries(
     { entries },
     { api: superAdminApi },
   );
+}
+
+/** What a new chat of the signed-in user starts with. */
+export function getDefaultModelSelection(
+  api: APIRequestContext,
+): Promise<DefaultModelSelectionResponseDto> {
+  return generatedApi.modelModeDefaultsControllerGetDefaultSelection({ api });
 }

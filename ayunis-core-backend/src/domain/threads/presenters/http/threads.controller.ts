@@ -105,6 +105,7 @@ export class ThreadsController {
         mode: createThreadDto.mode,
         isAnonymous: createThreadDto.isAnonymous,
         workspaceId: createThreadDto.workspaceId,
+        sourceNotificationId: createThreadDto.sourceNotificationId,
       }),
     );
     // New threads are never long chats

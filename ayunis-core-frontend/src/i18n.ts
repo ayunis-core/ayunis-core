@@ -47,6 +47,8 @@ import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
 import enRoutines from './shared/locales/en/routines.json';
 import deRoutines from './shared/locales/de/routines.json';
+import enInbox from './shared/locales/en/inbox.json';
+import deInbox from './shared/locales/de/inbox.json';
 import deSkill from './shared/locales/de/skill.json';
 import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
 import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
@@ -112,6 +114,7 @@ const resources = {
     'install-integration': enInstallIntegration,
     skills: enSkills,
     routines: enRoutines,
+    inbox: enInbox,
     workspaces: enWorkspaces,
     workspace: enWorkspace,
     skill: enSkill,
@@ -157,6 +160,7 @@ const resources = {
     'install-integration': deInstallIntegration,
     skills: deSkills,
     routines: deRoutines,
+    inbox: deInbox,
     workspaces: deWorkspaces,
     workspace: deWorkspace,
     skill: deSkill,

@@ -15,12 +15,14 @@ import {
   FindExpiredThreadRefsByOrgUseCase,
   type ExpiredThreadRef,
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
+import { DeleteExpiredNotificationsUseCase } from 'src/domain/notifications/application/use-cases/delete-expired-notifications/delete-expired-notifications.use-case';
 
 describe('EnforceRetentionUseCase', () => {
   let useCase: EnforceRetentionUseCase;
   let retentionRepo: { findAllEnabled: jest.Mock };
   let findExpired: { execute: jest.Mock };
   let deleteThread: { execute: jest.Mock };
+  let deleteNotifications: { execute: jest.Mock };
   let contextService: { run: jest.Mock; set: jest.Mock };
   let dryRun: boolean;
 
@@ -34,6 +36,7 @@ describe('EnforceRetentionUseCase', () => {
     retentionRepo = { findAllEnabled: jest.fn().mockResolvedValue([]) };
     findExpired = { execute: jest.fn().mockResolvedValue([]) };
     deleteThread = { execute: jest.fn().mockResolvedValue(undefined) };
+    deleteNotifications = { execute: jest.fn().mockResolvedValue(0) };
     contextService = {
       run: jest.fn((cb: () => Promise<void>) => cb()),
       set: jest.fn(),
@@ -45,6 +48,10 @@ describe('EnforceRetentionUseCase', () => {
         { provide: RetentionPoliciesRepository, useValue: retentionRepo },
         { provide: FindExpiredThreadRefsByOrgUseCase, useValue: findExpired },
         { provide: DeleteThreadUseCase, useValue: deleteThread },
+        {
+          provide: DeleteExpiredNotificationsUseCase,
+          useValue: deleteNotifications,
+        },
         { provide: ContextService, useValue: contextService },
         {
           provide: ConfigService,
@@ -88,6 +95,54 @@ describe('EnforceRetentionUseCase', () => {
     );
     expect(result.totalDeleted).toBe(2);
     expect(result.perOrg[0].deleted).toBe(2);
+  });
+
+  it("deletes the org's notifications created before the same cutoff", async () => {
+    const orgId = randomUUID();
+    retentionRepo.findAllEnabled.mockResolvedValue([
+      new OrgRetentionPolicy({ orgId, retentionDays: 90 }),
+    ]);
+    deleteNotifications.execute.mockResolvedValue(4);
+
+    const result = await useCase.execute();
+
+    const command = deleteNotifications.execute.mock.calls[0][0];
+    expect(command).toMatchObject({ orgId, dryRun: false });
+    expect(command.createdBefore).toEqual(
+      findExpired.execute.mock.calls[0][0].activeBefore,
+    );
+    expect(result.perOrg[0].notificationsDeleted).toBe(4);
+    expect(result.totalNotificationsDeleted).toBe(4);
+  });
+
+  it('only counts expired notifications in a dry run', async () => {
+    dryRun = true;
+    retentionRepo.findAllEnabled.mockResolvedValue([
+      new OrgRetentionPolicy({ orgId: randomUUID(), retentionDays: 30 }),
+    ]);
+
+    await useCase.execute();
+
+    expect(deleteNotifications.execute.mock.calls[0][0]).toMatchObject({
+      dryRun: true,
+    });
+  });
+
+  it('keeps enforcing other orgs when notifications of one cannot be deleted', async () => {
+    retentionRepo.findAllEnabled.mockResolvedValue([
+      new OrgRetentionPolicy({ orgId: randomUUID(), retentionDays: 30 }),
+      new OrgRetentionPolicy({ orgId: randomUUID(), retentionDays: 30 }),
+    ]);
+    deleteNotifications.execute
+      .mockRejectedValueOnce(new Error('connection reset'))
+      .mockResolvedValue(2);
+
+    const result = await useCase.execute();
+
+    expect(result.orgsProcessed).toBe(2);
+    expect(result.perOrg.map((org) => org.notificationsDeleted)).toEqual([
+      0, 2,
+    ]);
   });
 
   it('continues past a thread that fails to delete and counts the failure', async () => {

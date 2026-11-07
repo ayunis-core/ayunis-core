@@ -66,6 +66,8 @@ interface InitiateChatParams {
   isAnonymous: boolean;
   /** Files the new chat under a workspace ("Projekt"). */
   workspaceId?: string;
+  /** Starts a chat about this notification ("Chat about this"). */
+  sourceNotificationId?: string;
   skillId?: string;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
@@ -250,6 +252,7 @@ export const useInitiateChat = (options?: {
     mcpIntegrations,
     isAnonymous,
     workspaceId,
+    sourceNotificationId,
     skillId,
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
@@ -268,6 +271,7 @@ export const useInitiateChat = (options?: {
         mode,
         isAnonymous,
         workspaceId,
+        sourceNotificationId,
       };
       thread = await createThreadMutation.mutateAsync({
         data: createThreadData,

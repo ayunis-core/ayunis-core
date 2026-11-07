@@ -43,6 +43,10 @@ import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
+import {
+  SendNotificationOrigin,
+  SendNotificationTool,
+} from 'src/domain/tools/domain/tools/send-notification-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -105,6 +109,8 @@ export class ToolFactory {
         new KnowledgeGetTextTool(
           requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_GET_TEXT),
         ),
+      [ToolType.SEND_NOTIFICATION]: (p) =>
+        new SendNotificationTool(requireSendNotificationOrigin(p.context)),
     };
   }
 
@@ -200,6 +206,16 @@ function requireMapContext(
   }
   throw new ToolInvalidContextError({
     toolType,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireSendNotificationOrigin(
+  context: unknown,
+): SendNotificationOrigin {
+  if (context instanceof SendNotificationOrigin) return context;
+  throw new ToolInvalidContextError({
+    toolType: ToolType.SEND_NOTIFICATION,
     metadata: { contextType: contextTypeName(context) },
   });
 }

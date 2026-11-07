@@ -50,6 +50,9 @@ import { ThreadSourcesCapability } from './application/run-capabilities/capabili
 import { WorkspaceInstructionsCapability } from './application/run-capabilities/capabilities/workspace-instructions.capability';
 import { RunCapabilityContextFactory } from './application/run-capabilities/run-capability-context.factory';
 import { FinishRoutineCapability } from './application/run-capabilities/capabilities/finish-routine.capability';
+import { NotificationsCapability } from './application/run-capabilities/capabilities/notifications.capability';
+import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
+import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
@@ -95,6 +98,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     LetterheadsModule,
     WorkspacesModule,
     KnowledgeBasesModule,
+    NotificationsModule,
   ],
   controllers: [
     RunsController,
@@ -151,8 +155,10 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     SkillsCapability,
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
+    NotificationContextCapability,
     RoutineContextCapability,
     RoutineInternetCapability,
+    NotificationsCapability,
     FinishRoutineCapability,
     ExecuteUnattendedRunUseCase,
   ],

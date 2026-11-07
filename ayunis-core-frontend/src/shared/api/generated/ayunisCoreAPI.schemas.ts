@@ -2355,6 +2355,8 @@ export interface CreateThreadDto {
   isAnonymous?: boolean;
   /** File the new thread under this workspace */
   workspaceId?: string;
+  /** Start a chat about one of the user's notifications; its content is given to the model */
+  sourceNotificationId?: string;
 }
 
 /**
@@ -3050,6 +3052,11 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   routineId: string | null;
+  /**
+     * The notification this chat was started about; null for other chats and once the notification is deleted
+     * @nullable
+     */
+  sourceNotificationId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3095,6 +3102,11 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   routineId: string | null;
+  /**
+     * The notification this chat was started about; null for other chats and once the notification is deleted
+     * @nullable
+     */
+  sourceNotificationId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */
@@ -4267,6 +4279,49 @@ export interface AddGlobalPiiWhitelistWordsResponseDto {
   added: GlobalPiiWhitelistWordDto[];
   /** Submitted words that were already on the whitelist */
   duplicates: string[];
+}
+
+/**
+ * `routine`: sent by a routine run; `routine_error`: a routine run failed
+ */
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+
+export const NotificationType = {
+  routine: 'routine',
+  routine_error: 'routine_error',
+} as const;
+
+export interface NotificationResponseDto {
+  id: string;
+  /** `routine`: sent by a routine run; `routine_error`: a routine run failed */
+  type: NotificationType;
+  headline: string;
+  subheadline: string;
+  /** Markdown; may contain links */
+  body: string;
+  /**
+     * The routine that sent it; null once the routine is deleted
+     * @nullable
+     */
+  routineId: string | null;
+  /**
+     * The routine thread of the run that sent it; null for none or once the thread is deleted
+     * @nullable
+     */
+  routineThreadId: string | null;
+  /** @nullable */
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface PaginatedNotificationsResponseDto {
+  data: NotificationResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface UnreadNotificationCountResponseDto {
+  count: number;
 }
 
 export interface CreditsPerEuroResponseDto {
@@ -6358,6 +6413,18 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
+
+export type NotificationsControllerFindAllParams = {
+/**
+ * Maximum number of notifications to return
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * Number of notifications to skip
+ */
+offset?: number;
+};
 
 export type UsageControllerGetUserUsageParams = {
 /**

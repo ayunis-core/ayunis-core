@@ -33,4 +33,5 @@ export enum ToolType {
   MARKETPLACE_SEARCH = 'marketplace_search',
   INSTALL_MARKETPLACE_SKILL = 'install_marketplace_skill',
   FINISH_ROUTINE = 'finish_routine',
+  SEND_NOTIFICATION = 'send_notification',
 }

@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ThreadsModule } from '../threads/threads.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { OrgRetentionPolicyRecord } from './infrastructure/persistence/postgres/schema/org-retention-policy.record';
 import { RetentionPoliciesRepository } from './application/ports/retention-policies.repository';
 import { PostgresRetentionPoliciesRepository } from './infrastructure/persistence/postgres/postgres-retention-policies.repository';
@@ -15,6 +16,7 @@ import { RetentionPoliciesController } from './presenters/http/retention-policie
   imports: [
     TypeOrmModule.forFeature([OrgRetentionPolicyRecord]),
     ThreadsModule,
+    NotificationsModule,
   ],
   controllers: [RetentionPoliciesController],
   providers: [

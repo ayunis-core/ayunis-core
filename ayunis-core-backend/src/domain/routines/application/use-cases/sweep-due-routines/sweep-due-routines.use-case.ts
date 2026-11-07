@@ -7,6 +7,7 @@ import {
   type DueRoutine,
 } from 'src/domain/routines/application/ports/routines.repository';
 import { UnexpectedRoutineError } from 'src/domain/routines/application/routines.errors';
+import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
 import {
   isCatchUpDue,
   nextRoutineRunAt,
@@ -31,7 +32,8 @@ export interface SweepResult {
  * the same Berlin day is caught up; one from an earlier day is skipped. Either
  * way the next run is scheduled first, with a conditional write, so only one
  * of several concurrent sweeps acts on a due run. Also fails runs still shown
- * as running long after the run timeout (the worker that ran them is gone).
+ * as running long after the run timeout (the worker that ran them is gone)
+ * and tells their owners.
  */
 @Injectable()
 export class SweepDueRoutinesUseCase {
@@ -41,6 +43,7 @@ export class SweepDueRoutinesUseCase {
     private readonly routinesRepository: RoutinesRepository,
     private readonly routineExecutionQueue: RoutineExecutionQueue,
     private readonly configService: ConfigService,
+    private readonly failureNotifier: RoutineFailureNotifier,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRoutineError)
@@ -98,7 +101,7 @@ export class SweepDueRoutinesUseCase {
     return 'started';
   }
 
-  private failInterruptedRuns(now: Date): Promise<number> {
+  private async failInterruptedRuns(now: Date): Promise<number> {
     const timeoutMinutes = this.configService.get<number>(
       'routines.runTimeoutMinutes',
       15,
@@ -107,10 +110,20 @@ export class SweepDueRoutinesUseCase {
       now.getTime() -
         (timeoutMinutes + INTERRUPTED_RUN_MARGIN_MINUTES) * 60_000,
     );
-    return this.routinesRepository.failRunsStartedBefore(
+    const runs = await this.routinesRepository.failRunsStartedBefore(
       startedBefore,
       INTERRUPTED_RUN_REASON,
       now,
     );
+    for (const { routine, paused } of runs) {
+      await this.failureNotifier.notify({
+        routine,
+        failureReason: INTERRUPTED_RUN_REASON,
+        paused,
+        // The routine does not keep its runs' threads.
+        routineThreadId: null,
+      });
+    }
+    return runs.length;
   }
 }
