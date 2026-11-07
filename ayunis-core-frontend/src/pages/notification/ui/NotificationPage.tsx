@@ -1,20 +1,23 @@
 import { useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, MessagesSquare } from 'lucide-react';
+import { CalendarClock, MessageSquare, MessagesSquare } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Markdown } from '@/widgets/markdown';
-import { NotificationTypeIcon } from '@/features/notifications';
+import {
+  NotificationTypeIcon,
+  useMarkNotificationRead,
+} from '@/features/notifications';
+import { useMyPermissions } from '@/features/permissions';
 import {
   NotificationType,
   type NotificationResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useNotification } from '@/pages/notification/api/useNotification';
-import { useMarkNotificationRead } from '@/pages/notification/api/useMarkNotificationRead';
 
 interface NotificationPageProps {
   notification: NotificationResponseDto;
@@ -96,6 +99,7 @@ function NotificationActions({
   notification,
 }: Readonly<NotificationPageProps>) {
   const { t } = useTranslation('inbox');
+  const { can } = useMyPermissions();
   return (
     <div className="flex flex-wrap gap-2">
       <Button asChild data-testid="notification-chat-about-this">
@@ -116,6 +120,21 @@ function NotificationActions({
           >
             <MessagesSquare />
             {t('detail.openRoutineChat')}
+          </Link>
+        </Button>
+      )}
+      {notification.routineId && can('manage_routines') && (
+        <Button
+          asChild
+          variant="outline"
+          data-testid="notification-open-routine"
+        >
+          <Link
+            to="/routines/$routineId"
+            params={{ routineId: notification.routineId }}
+          >
+            <CalendarClock />
+            {t('detail.openRoutine')}
           </Link>
         </Button>
       )}

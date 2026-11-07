@@ -7,6 +7,7 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
+import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { LocalNotificationsRepository } from './local-notifications.repository';
 import { NotificationMapper } from './mappers/notification.mapper';
 import { NotificationRecord } from './schema/notification.record';
@@ -177,6 +178,51 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
         offset: 1,
       });
       expect(next.data.map((n) => n.id)).toEqual([older.id]);
+    });
+
+    it("lists only the user's notifications of one routine when filtered by it", async () => {
+      const routineId = randomUUID();
+      const error = await stored({
+        routineId,
+        type: NotificationType.ROUTINE_ERROR,
+        createdAt: new Date('2026-11-07T06:00:00.000Z'),
+      });
+      const finding = await stored({
+        routineId,
+        createdAt: new Date('2026-11-06T06:00:00.000Z'),
+      });
+      await stored({ routineId: randomUUID() });
+      await stored({ routineId: null });
+      await stored({ userId: otherUser, routineId });
+
+      const page = await repository.findPageByUserId(
+        owner,
+        { limit: 20, offset: 0 },
+        { routineId },
+      );
+
+      expect(page.total).toBe(2);
+      expect(page.data.map((n) => n.id)).toEqual([error.id, finding.id]);
+      const second = await repository.findPageByUserId(
+        owner,
+        { limit: 1, offset: 1 },
+        { routineId },
+      );
+      expect(second).toMatchObject({ total: 2 });
+      expect(second.data.map((n) => n.id)).toEqual([finding.id]);
+    });
+
+    it("finds nothing for another user's routine", async () => {
+      const routineId = randomUUID();
+      await stored({ userId: otherUser, routineId });
+
+      const page = await repository.findPageByUserId(
+        owner,
+        { limit: 20, offset: 0 },
+        { routineId },
+      );
+
+      expect(page).toMatchObject({ total: 0, data: [] });
     });
   });
 

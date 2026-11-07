@@ -47,6 +47,16 @@ export async function notificationsOfRoutine(
   );
 }
 
+/** The notifications filtered by routine on the server, as the routine page lists them. */
+export function listRoutineNotifications(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<NotificationResponseDto[]> {
+  return generatedApi
+    .notificationsControllerFindAll({ routineId, limit: 100 }, { api })
+    .then((page) => page.data);
+}
+
 // Raw requests for asserting denied access; `apiURL` targets another backend
 // (e.g. the one started with routines disabled).
 export function requestNotifications(

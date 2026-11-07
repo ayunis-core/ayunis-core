@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@ayunis/ui/components/badge';
-import { formatRunTime } from '@/pages/routines/lib/format-run-time';
-import type { Routine } from '@/pages/routines/model/openapi';
+import { formatRunTime } from '@/features/routines/lib/format-run-time';
+import type { Routine } from '@/features/routines/model/openapi';
 
 export function RoutineScheduleLine({
   routine,

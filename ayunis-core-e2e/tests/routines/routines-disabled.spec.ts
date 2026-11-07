@@ -43,6 +43,8 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
   await expect(page).toHaveURL(/\/chat$/);
   await page.goto(`${disabledBaseUrl}/routines`);
   await expect(page).toHaveURL(/\/chat$/);
+  await page.goto(`${disabledBaseUrl}/routines/${randomUUID()}`);
+  await expect(page).toHaveURL(/\/chat$/);
   await expect(page.getByTestId("sidebar")).toBeVisible();
   await expect(page.getByTestId("sidebar-navigation-routines")).toHaveCount(0);
   await expect(page.getByTestId("sidebar-chats-filter")).toHaveCount(0);

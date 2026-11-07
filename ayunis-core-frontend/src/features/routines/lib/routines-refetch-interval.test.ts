@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Routine } from '@/pages/routines/model/openapi';
-import { RoutineRunStatus } from '@/pages/routines/model/openapi';
+import type { Routine } from '@/features/routines/model/openapi';
+import { RoutineRunStatus } from '@/features/routines/model/openapi';
 import { routinesRefetchInterval } from './routines-refetch-interval';
 
 const routine = (lastRunStatus: Routine['lastRunStatus']) =>

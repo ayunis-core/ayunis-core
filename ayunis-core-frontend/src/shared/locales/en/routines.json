@@ -14,7 +14,6 @@
   },
   "form": {
     "createTitle": "New routine",
-    "editTitle": "Edit routine",
     "name": "Name",
     "namePlaceholder": "e.g. Official gazette",
     "prompt": "Task",
@@ -37,8 +36,30 @@
     "disabled": "Paused",
     "enabledLabel": "Run daily",
     "runNow": "Run now",
-    "edit": "Edit routine",
     "delete": "Delete routine"
+  },
+  "detail": {
+    "tabs": {
+      "configuration": "Configuration",
+      "notifications": "Notifications",
+      "chats": "Chats"
+    },
+    "notificationsEmpty": {
+      "title": "No notifications yet",
+      "description": "Notifications from this routine, including errors, appear here."
+    },
+    "chatsEmpty": {
+      "title": "No chats yet",
+      "description": "Every run of this routine creates a chat, which appears here."
+    },
+    "status": {
+      "title": "Status",
+      "description": "The last run and the next scheduled run."
+    },
+    "configuration": {
+      "title": "Configuration",
+      "description": "Name, task, model, schedule and internet access of this routine."
+    }
   },
   "schedule": {
     "nextRun": "Next run: {{time}}",

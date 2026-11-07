@@ -15,6 +15,9 @@ export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
     const notification = await queryClient.query({
       queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
       queryFn: () => notificationsControllerFindOne(notificationId),
+      // Deleting the routine clears the notification's routine link, which
+      // decides whether Open routine is shown.
+      staleTime: 0,
     });
     return { notification };
   },
