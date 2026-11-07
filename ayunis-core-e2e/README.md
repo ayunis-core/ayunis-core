@@ -130,8 +130,14 @@ instead of rebuilding them. It mirrors production serving: the built backend
 serves the built SPA from `dist/frontend` (same origin), with
 Postgres/Redis/MinIO/Mailcatcher as service containers and
 `MOCK_INFERENCE=true`. `E2E_BASE_URL`/`E2E_API_URL` both point at the backend
-(port 3000); Playwright report, traces, and the backend log upload as artifacts
-on failure.
+(port 3000).
+
+The suite runs on two shards (`Browser e2e (1/2)`, `Browser e2e (2/2)`), each
+with the full stack and `playwright test --shard=i/2`. Each shard uploads a
+blob report; `Merge Playwright reports` combines them into one
+`playwright-report` artifact (traces and screenshots included). Each failed
+shard uploads `backend-log-shard-<i>`. The `Browser e2e` job passes only when
+every shard passed.
 
 Temporary screenshots/GIFs are opt-in per PR. Add `.pr-media/scenes.ts` to the
 disposable `pr-media/pr-<n>` branch with

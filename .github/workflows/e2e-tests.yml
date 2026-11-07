@@ -133,22 +133,92 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  e2e:
-    name: Browser e2e
-    needs:
-      - backend-build
-      - frontend-build
+  # -- Temporary PR media ------------------------------------------------
+  # Scene code lives on pr-media/pr-<n> instead of the product branch. It is
+  # loaded here, once, so the decision is a plain job output: outputs of the
+  # sharded matrix job below would be overwritten by whichever shard finishes
+  # last. Capture runs on shard 1 with read-only permissions; publishing
+  # happens later in a no-checkout write-token job.
+  pr-media-scenes:
+    name: Load PR media scenes
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
 
     outputs:
-      pr-media-enabled: ${{ steps.pr-media-scenes.outputs.enabled }}
-      clear-pr-media-comment: ${{ steps.pr-media-scenes.outputs.clear-comment }}
+      enabled: ${{ steps.pr-media-scenes.outputs.enabled }}
+      clear-comment: ${{ steps.pr-media-scenes.outputs.clear-comment }}
 
     permissions:
       contents: read
       pull-requests: read
+
+    steps:
+      - name: Load PR media scenes
+        id: pr-media-scenes
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          ref="pr-media/pr-${PR}"
+          mkdir -p pr-media-scenes
+          if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${ref}" --silent 2>/dev/null; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+            echo "No PR media branch ${ref}"
+            exit 0
+          fi
+
+          scenes_error="$(mktemp)"
+          if ! gh api "repos/${GITHUB_REPOSITORY}/contents/.pr-media/scenes.ts?ref=${ref}" --jq .content > pr-media-scenes/scenes.ts.b64 2>"${scenes_error}"; then
+            if grep -q "Not Found" "${scenes_error}"; then
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+              echo "No .pr-media/scenes.ts on ${ref}"
+              exit 0
+            fi
+            cat "${scenes_error}" >&2
+            exit 1
+          fi
+
+          base64 -d pr-media-scenes/scenes.ts.b64 > pr-media-scenes/scenes.ts
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "clear-comment=false" >> "$GITHUB_OUTPUT"
+          echo "Loaded PR media scenes from ${ref}"
+
+      - name: Upload PR media scenes
+        if: steps.pr-media-scenes.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-media-scenes-${{ github.event.pull_request.number }}
+          path: pr-media-scenes/scenes.ts
+          if-no-files-found: error
+          retention-days: 1
+
+  # Every shard gets the full stack (containers, migrations, seed, all
+  # backends); Playwright's --shard splits the tests between them. Declare
+  # extra backends and env once here and every shard picks them up.
+  e2e-shard:
+    name: Browser e2e (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    needs:
+      - backend-build
+      - frontend-build
+      - pr-media-scenes
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      # Let the other shard finish so the merged report is complete.
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+
+    permissions:
+      contents: read
 
     services:
       postgres:
@@ -326,7 +396,8 @@ jobs:
         run: pnpm --filter ayunis-core-e2e typecheck
 
       - name: Run e2e tests
-        run: pnpm --filter ayunis-core-e2e test
+        id: run-tests
+        run: pnpm --filter ayunis-core-e2e test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           E2E_EXTERNAL_SUBSCRIPTIONS_BASE_URL: http://localhost:3002
           E2E_BASE_URL: http://localhost:3000
@@ -334,53 +405,36 @@ jobs:
           E2E_MAIL_URL: http://localhost:1080
           E2E_STUB_CODE_EXECUTION: 'true'
 
-      # -- Temporary PR media ------------------------------------------------
-      # Scene code lives on pr-media/pr-<n> instead of the product branch.
-      # This job runs PR/scene code with read-only permissions; publishing
-      # happens later in a no-checkout write-token job.
-      - name: Load PR media scenes
-        id: pr-media-scenes
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          ref="pr-media/pr-${PR}"
-          mkdir -p .pr-media
-          if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${ref}" --silent 2>/dev/null; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "clear-comment=true" >> "$GITHUB_OUTPUT"
-            echo "No PR media branch ${ref}"
-            exit 0
-          fi
+      # Before PR media capture: that run uses the same CI reporters and
+      # would replace blob-report.
+      - name: Upload blob report
+        if: ${{ !cancelled() && steps.run-tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: ayunis-core-e2e/blob-report
+          if-no-files-found: error
+          retention-days: 1
 
-          scenes_error="$(mktemp)"
-          if ! gh api "repos/${GITHUB_REPOSITORY}/contents/.pr-media/scenes.ts?ref=${ref}" --jq .content > .pr-media/scenes.ts.b64 2>"${scenes_error}"; then
-            if grep -q "Not Found" "${scenes_error}"; then
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "clear-comment=true" >> "$GITHUB_OUTPUT"
-              echo "No .pr-media/scenes.ts on ${ref}"
-              exit 0
-            fi
-            cat "${scenes_error}" >&2
-            exit 1
-          fi
+      - name: Download PR media scenes
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: pr-media-scenes-${{ github.event.pull_request.number }}
+          path: .pr-media
 
-          base64 -d .pr-media/scenes.ts.b64 > .pr-media/scenes.ts
-          cp .pr-media/scenes.ts ayunis-core-e2e/pr-media/scenes.generated.ts
-          echo "enabled=true" >> "$GITHUB_OUTPUT"
-          echo "clear-comment=false" >> "$GITHUB_OUTPUT"
-          echo "Loaded PR media scenes from ${ref}"
+      - name: Install PR media scenes
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
+        run: cp .pr-media/scenes.ts ayunis-core-e2e/pr-media/scenes.generated.ts
 
       - name: Install media tooling
-        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
       - name: Capture PR screenshots and demos
-        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
         run: pnpm --filter ayunis-core-e2e run pr-media:capture
         env:
           E2E_BASE_URL: http://localhost:3000
@@ -388,7 +442,7 @@ jobs:
           E2E_MAIL_URL: http://localhost:1080
 
       - name: Package PR media artifact
-        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
         run: |
           set -euo pipefail
           mkdir -p pr-media-artifact/.pr-media pr-media-artifact/media
@@ -402,7 +456,7 @@ jobs:
           cp "${media[@]}" pr-media-artifact/media/
 
       - name: Upload PR media artifact
-        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        if: matrix.shardIndex == 1 && needs.pr-media-scenes.outputs.enabled == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: pr-media-${{ github.event.pull_request.number }}
@@ -411,30 +465,78 @@ jobs:
           retention-days: 3
           include-hidden-files: true
 
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: |
-            ayunis-core-e2e/playwright-report
-            ayunis-core-e2e/test-results
-          retention-days: 7
-
       - name: Upload backend log
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: backend-log
+          name: backend-log-shard-${{ matrix.shardIndex }}
           path: |
             ayunis-core-backend/backend.log
             ayunis-core-backend/backend-external-subscriptions.log
           retention-days: 7
 
+  merge-reports:
+    name: Merge Playwright reports
+    needs: e2e-shard
+    if: ${{ !cancelled() && needs.e2e-shard.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      # merge-reports only needs the e2e package's Playwright.
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          install-args: --frozen-lockfile --filter ayunis-core-e2e
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: blob-report-*
+          path: ayunis-core-e2e/all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into one HTML report
+        working-directory: ayunis-core-e2e
+        run: pnpm exec playwright merge-reports --reporter=html,list ./all-blob-reports
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: ayunis-core-e2e/playwright-report
+          if-no-files-found: error
+          retention-days: 7
+
+  # Keeps the pre-sharding `Browser e2e` check name: green only when every
+  # shard passed. A skipped shard (e.g. a failed build) fails it too, since a
+  # skipped check would otherwise read as passing.
+  e2e:
+    name: Browser e2e
+    needs: e2e-shard
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'closed') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every shard to pass
+        env:
+          SHARDS_RESULT: ${{ needs.e2e-shard.result }}
+        run: |
+          echo "Browser e2e shards: ${SHARDS_RESULT}"
+          [ "${SHARDS_RESULT}" = success ]
+
   publish-pr-media:
     name: Publish PR media
-    needs: e2e
-    if: github.event_name == 'pull_request' && needs.e2e.outputs.pr-media-enabled == 'true'
+    needs:
+      - pr-media-scenes
+      - e2e
+    if: github.event_name == 'pull_request' && needs.pr-media-scenes.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -560,8 +662,10 @@ jobs:
 
   clear-pr-media-comment:
     name: Clear PR media comment
-    needs: e2e
-    if: github.event_name == 'pull_request' && needs.e2e.outputs.clear-pr-media-comment == 'true'
+    needs:
+      - pr-media-scenes
+      - e2e
+    if: github.event_name == 'pull_request' && needs.pr-media-scenes.outputs.clear-comment == 'true'
     runs-on: ubuntu-latest
     permissions:
       issues: write

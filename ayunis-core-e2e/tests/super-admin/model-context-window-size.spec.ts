@@ -4,6 +4,7 @@ import {
   createLanguageCatalogModel,
   deleteCatalogModel,
 } from '../../src/clients/api/models.client';
+import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import { test, expect } from '../../src/fixtures/test';
 import { loginThroughUi } from '../../src/flows/auth.flow';
 
@@ -31,6 +32,9 @@ test('super admin must keep a context window size on a model', async ({
   const uniqueKey = Date.now().toString();
 
   await login(publicApi, 'admin@demo.local', 'admin');
+  // The welcome video dialog blocks the UI; an earlier spec in the same
+  // shard may or may not have dismissed it for the seeded admin.
+  await dismissWelcomeVideo(publicApi);
   const catalogModel = await createLanguageCatalogModel(publicApi, {
     name: `e2e-context-window-${uniqueKey}`,
     displayName: `E2E Context Window ${uniqueKey}`,
