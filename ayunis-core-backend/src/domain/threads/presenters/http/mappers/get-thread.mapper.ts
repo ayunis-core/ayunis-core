@@ -43,6 +43,7 @@ export class GetThreadDtoMapper {
       workspaceId: thread.workspaceId ?? null,
       type: thread.type,
       routineId: thread.routineId,
+      sourceNotificationId: thread.sourceNotificationId,
       isLongChat,
       knowledgeBases: thread.getUniqueKnowledgeBases(),
       piiMasks: this.piiMaskDtoMapper.toDtoArray(piiMasks),

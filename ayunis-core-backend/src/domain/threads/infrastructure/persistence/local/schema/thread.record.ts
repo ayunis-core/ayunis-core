@@ -18,6 +18,7 @@ import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
+import { NotificationRecord } from 'src/domain/notifications/infrastructure/persistence/local/schema/notification.record';
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
@@ -75,6 +76,18 @@ export class ThreadRecord extends BaseRecord {
   @ManyToOne(() => RoutineRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'routineId' })
   routine?: RoutineRecord;
+
+  /**
+   * The notification this chat was started about ("Chat about this").
+   * Deleting the notification keeps the chat; only the link goes.
+   */
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  sourceNotificationId: UUID | null;
+
+  @ManyToOne(() => NotificationRecord, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'sourceNotificationId' })
+  sourceNotification?: NotificationRecord;
 
   /**
    * Timestamp of the most recent conversation activity (last message added).

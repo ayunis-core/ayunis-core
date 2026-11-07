@@ -1,0 +1,23 @@
+{
+  "page": {
+    "title": "Posteingang",
+    "markAllRead": "Alle als gelesen markieren"
+  },
+  "emptyState": {
+    "title": "Keine Benachrichtigungen",
+    "description": "Hier erscheinen die Benachrichtigungen Ihrer Routinen."
+  },
+  "item": {
+    "unread": "Ungelesen",
+    "error": "Fehler"
+  },
+  "detail": {
+    "chatAboutThis": "Darüber chatten",
+    "openRoutineChat": "Routine-Chat öffnen"
+  },
+  "toast": {
+    "notFound": "Die Benachrichtigung wurde nicht gefunden.",
+    "markReadError": "Die Benachrichtigung konnte nicht als gelesen markiert werden.",
+    "markAllReadError": "Die Benachrichtigungen konnten nicht als gelesen markiert werden."
+  }
+}

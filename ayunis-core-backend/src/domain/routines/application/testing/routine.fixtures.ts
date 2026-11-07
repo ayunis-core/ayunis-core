@@ -45,7 +45,7 @@ export function createMockRoutinesRepository(): jest.Mocked<RoutinesRepository> 
     setRunStatus: jest.fn().mockResolvedValue(undefined),
     markRunStarted: jest.fn().mockResolvedValue(true),
     recordRunOutcome: jest.fn().mockResolvedValue({ paused: false }),
-    failRunsStartedBefore: jest.fn().mockResolvedValue(0),
+    failRunsStartedBefore: jest.fn().mockResolvedValue([]),
   };
 }
 

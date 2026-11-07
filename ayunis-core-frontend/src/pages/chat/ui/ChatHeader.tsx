@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import {
+  Inbox,
   MoreVertical,
   PanelRight,
   Pencil,
@@ -12,6 +14,7 @@ import {
   useToggleFavorite,
 } from '@/features/favorites';
 import { useWorkspaces } from '@/features/workspaces';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Button } from '@ayunis/ui/components/button';
 import { PinButton } from '@/shared/ui/pin-button';
@@ -33,6 +36,8 @@ interface ChatHeaderProps {
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
   readonly workspaceId?: string | null;
+  /** The notification the chat was started about ("Chat about this"). */
+  readonly sourceNotificationId?: string | null;
   readonly isArtifactPanelOpen: boolean;
   readonly onToggleArtifactPanel: () => void;
   readonly onRename: () => void;
@@ -44,6 +49,7 @@ export default function ChatHeader({
   threadTitle,
   isAnonymous,
   workspaceId,
+  sourceNotificationId,
   isArtifactPanelOpen,
   onToggleArtifactPanel,
   onRename,
@@ -56,6 +62,7 @@ export default function ChatHeader({
   const { toggle: togglePinned } = useToggleFavorite();
   const { workspaces } = useWorkspaces();
   const isPinned = isFavorite(favorites, threadId, 'thread');
+  const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
 
   const displayTitle = threadTitle || t('chat.untitled');
   const workspace = workspaceId
@@ -86,10 +93,29 @@ export default function ChatHeader({
     </Tooltip>
   ) : undefined;
 
+  const notificationBadge =
+    routinesEnabled && sourceNotificationId ? (
+      <Badge variant="outline" asChild>
+        <Link
+          to="/inbox/$notificationId"
+          params={{ notificationId: sourceNotificationId }}
+          data-testid="chat-source-notification"
+        >
+          <Inbox className="h-3 w-3" />
+          {t('chat.fromNotification')}
+        </Link>
+      </Badge>
+    ) : undefined;
+
   return (
     <ContentAreaHeader
       breadcrumbs={breadcrumbs}
-      badge={anonymousBadge}
+      badge={
+        <>
+          {anonymousBadge}
+          {notificationBadge}
+        </>
+      }
       action={
         <div className="flex items-center gap-1">
           <PinButton

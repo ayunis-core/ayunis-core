@@ -8408,6 +8408,149 @@
         "tags": ["Super Admin Anonymization Whitelist"]
       }
     },
+    "/notifications": {
+      "get": {
+        "operationId": "NotificationsController_findAll",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of notifications to return",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of notifications to skip",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedNotificationsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the current user's notifications, newest first",
+        "tags": ["notifications"]
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_countUnread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadNotificationCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Count the current user's unread notifications",
+        "tags": ["notifications"]
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Mark all of the current user's notifications read",
+        "tags": ["notifications"]
+      }
+    },
+    "/notifications/{id}": {
+      "get": {
+        "operationId": "NotificationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the notification",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not the user’s"
+          }
+        },
+        "summary": "Get one of the current user’s notifications",
+        "tags": ["notifications"]
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the notification",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not the user’s"
+          }
+        },
+        "summary": "Mark one of the current user’s notifications read",
+        "tags": ["notifications"]
+      }
+    },
     "/super-admin/platform-config/credits-per-euro": {
       "get": {
         "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
@@ -17116,6 +17259,11 @@
             "description": "File the new thread under this workspace",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "sourceNotificationId": {
+            "type": "string",
+            "description": "Start a chat about one of the user's notifications; its content is given to the model",
+            "format": "uuid"
           }
         }
       },
@@ -17963,6 +18111,12 @@
             "format": "uuid",
             "nullable": true
           },
+          "sourceNotificationId": {
+            "type": "string",
+            "description": "The notification this chat was started about; null for other chats and once the notification is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -18050,6 +18204,7 @@
           "workspaceId",
           "type",
           "routineId",
+          "sourceNotificationId",
           "id",
           "userId",
           "permittedModelId",
@@ -18108,6 +18263,12 @@
             "format": "uuid",
             "nullable": true
           },
+          "sourceNotificationId": {
+            "type": "string",
+            "description": "The notification this chat was started about; null for other chats and once the notification is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -18127,6 +18288,7 @@
           "workspaceId",
           "type",
           "routineId",
+          "sourceNotificationId",
           "id"
         ]
       },
@@ -20109,6 +20271,95 @@
           }
         },
         "required": ["added", "duplicates"]
+      },
+      "NotificationType": {
+        "type": "string",
+        "enum": ["routine", "routine_error"],
+        "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed"
+      },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationType"
+              }
+            ]
+          },
+          "headline": {
+            "type": "string"
+          },
+          "subheadline": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdown; may contain links"
+          },
+          "routineId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The routine that sent it; null once the routine is deleted"
+          },
+          "routineThreadId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The routine thread of the run that sent it; null for none or once the thread is deleted"
+          },
+          "readAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "headline",
+          "subheadline",
+          "body",
+          "routineId",
+          "routineThreadId",
+          "readAt",
+          "createdAt"
+        ]
+      },
+      "PaginatedNotificationsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "UnreadNotificationCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "example": 3
+          }
+        },
+        "required": ["count"]
       },
       "CreditsPerEuroResponseDto": {
         "type": "object",

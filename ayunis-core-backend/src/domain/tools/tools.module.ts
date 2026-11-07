@@ -41,6 +41,8 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { MarketplaceSearchToolHandler } from './application/handlers/marketplace-search-tool.handler';
 import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
+import { NotificationsModule } from 'src/domain/notifications/notifications.module';
+import { SendNotificationToolHandler } from './application/handlers/send-notification-tool.handler';
 
 @Module({
   imports: [
@@ -57,6 +59,7 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
     UsageModule,
     QuotasModule,
     MarketplaceModule,
+    NotificationsModule,
   ],
   providers: [
     // Use cases
@@ -86,6 +89,7 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
     CreateSpreadsheetToolHandler,
     UpdateSpreadsheetToolHandler,
     MarketplaceSearchToolHandler,
+    SendNotificationToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

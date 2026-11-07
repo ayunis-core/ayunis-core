@@ -16,6 +16,12 @@ import {
   toComposerValue,
 } from './-default-model-selection-query';
 import { searchParamString } from '@/shared/lib/search-params';
+import {
+  getNotificationsControllerFindOneQueryKey,
+  notificationsControllerFindOne,
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { QueryClient } from '@tanstack/react-query';
+import { isRoutinesEnabled } from './-routines-enabled-query';
 
 function handleDefaultModelLoadError(error: unknown): null {
   let code: string | undefined;
@@ -45,12 +51,32 @@ const searchSchema = z.object({
   prompt: searchParamString.optional(),
   attachmentUrl: searchParamString.optional(),
   workspaceId: searchParamString.optional(),
+  notificationId: searchParamString.optional(),
 });
+
+/** The notification a "Chat about this" chat starts from, if it is still there. */
+async function loadSourceNotification(
+  queryClient: QueryClient,
+  notificationId: string | undefined,
+) {
+  if (!notificationId || !(await isRoutinesEnabled(queryClient))) {
+    return undefined;
+  }
+  return queryClient
+    .query({
+      queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
+      queryFn: () => notificationsControllerFindOne(notificationId),
+    })
+    .catch(() => undefined);
+}
 
 export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { modelId }, context: { queryClient } }) => {
+  loader: async ({
+    deps: { modelId, notificationId },
+    context: { queryClient },
+  }) => {
     await queryClient.query(anonymousModeDefaultQueryOptions());
     let selectedModelId: string | undefined;
     if (modelId) {
@@ -74,10 +100,15 @@ export const Route = createFileRoute('/_authenticated/chat/')({
         queryFn: () => chatSettingsControllerGetSystemPrompt(),
       })
       .catch(() => undefined);
+    const sourceNotification = await loadSourceNotification(
+      queryClient,
+      notificationId,
+    );
     return {
       selectedModelId,
       hasActiveSubscription,
       isEmbeddingModelEnabled,
+      sourceNotification,
     };
   },
   errorComponent: ({ error }) => {
@@ -95,16 +126,18 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 });
 
 function RouteComponent() {
-  const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
+  const { selectedModelId, isEmbeddingModelEnabled, sourceNotification } =
+    Route.useLoaderData();
   const { prompt, attachmentUrl, workspaceId } = Route.useSearch();
   return (
     <NewChatPage
-      key={workspaceId ?? 'no-workspace'}
+      key={`${workspaceId ?? 'no-workspace'}:${sourceNotification?.id ?? ''}`}
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       initialPrompt={prompt}
       initialAttachmentUrl={attachmentUrl}
       initialWorkspaceId={workspaceId}
+      sourceNotification={sourceNotification}
     />
   );
 }

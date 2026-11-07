@@ -43,4 +43,14 @@ export class CreateThreadDto {
   @IsUUID()
   @IsOptional()
   workspaceId?: UUID;
+
+  @ApiPropertyOptional({
+    description:
+      "Start a chat about one of the user's notifications; its content is given to the model",
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsUUID()
+  @IsOptional()
+  sourceNotificationId?: UUID;
 }

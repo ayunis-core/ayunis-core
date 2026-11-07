@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import {
   RoutinesRepository,
   type DueRoutine,
+  type InterruptedRoutineRun,
   type RoutineDefinitionChanges,
 } from 'src/domain/routines/application/ports/routines.repository';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
@@ -211,14 +212,14 @@ export class LocalRoutinesRepository extends RoutinesRepository {
       .returning('"pausedAt"')
       .execute();
     const rows = result.raw as Pick<RoutineRecord, 'pausedAt'>[];
-    return { paused: rows[0]?.pausedAt?.getTime() === finishedAt.getTime() };
+    return { paused: isPausedAt(rows[0]?.pausedAt, finishedAt) };
   }
 
   async failRunsStartedBefore(
     startedBefore: Date,
     failureReason: string,
     finishedAt: Date,
-  ): Promise<number> {
+  ): Promise<InterruptedRoutineRun[]> {
     const result = await this.repo
       .createQueryBuilder()
       .update(RoutineRecord)
@@ -228,8 +229,16 @@ export class LocalRoutinesRepository extends RoutinesRepository {
       })
       .andWhere('"lastRunStartedAt" < :startedBefore', { startedBefore })
       .setParameters(failedRunParameters(finishedAt))
+      .returning(['id', 'userId', 'orgId', 'name', 'pausedAt'])
       .execute();
-    return result.affected ?? 0;
+    const rows = result.raw as Pick<
+      RoutineRecord,
+      'id' | 'userId' | 'orgId' | 'name' | 'pausedAt'
+    >[];
+    return rows.map(({ pausedAt, ...routine }) => ({
+      routine,
+      paused: isPausedAt(pausedAt, finishedAt),
+    }));
   }
 }
 
@@ -261,6 +270,14 @@ function failedRunChanges(
     pausedAt: () =>
       `CASE WHEN ${PAUSES} THEN CAST(:finishedAt AS timestamptz) ELSE "pausedAt" END`,
   };
+}
+
+/** Whether the failure recorded at `finishedAt` is the one that paused. */
+function isPausedAt(
+  pausedAt: Date | null | undefined,
+  finishedAt: Date,
+): boolean {
+  return pausedAt?.getTime() === finishedAt.getTime();
 }
 
 function failedRunParameters(finishedAt: Date) {
