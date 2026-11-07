@@ -25,6 +25,7 @@ export class CreateUserMessageCommand {
     public readonly text?: string,
     public readonly pendingImages: ImageUploadData[] = [],
     public readonly skillInstructions?: string,
+    public readonly isNudge = false,
   ) {
     this.validate();
   }

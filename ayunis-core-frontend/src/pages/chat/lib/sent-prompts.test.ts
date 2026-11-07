@@ -4,7 +4,12 @@ import { sentPrompts } from './sent-prompts';
 
 function message(
   role: 'user' | 'assistant',
-  content: Array<{ type: string; text?: string; isSkillInstruction?: boolean }>,
+  content: Array<{
+    type: string;
+    text?: string;
+    isSkillInstruction?: boolean;
+    isNudge?: boolean;
+  }>,
 ): Message {
   return {
     id: crypto.randomUUID(),
@@ -34,6 +39,18 @@ describe('sentPrompts', () => {
       'Opening hours?',
       'Draft a parking permit notice',
     ]);
+  });
+
+  it('skips reminders the system sent to a routine run', () => {
+    const messages = [
+      message('user', [{ type: 'text', text: 'Prüfe das Amtsblatt' }]),
+      message('assistant', [{ type: 'text', text: 'Keine Treffer.' }]),
+      message('user', [
+        { type: 'text', text: 'Nobody can read this reply.', isNudge: true },
+      ]),
+    ];
+
+    expect(sentPrompts(messages, [])).toEqual(['Prüfe das Amtsblatt']);
   });
 
   it('skips user messages without text, such as image-only ones', () => {

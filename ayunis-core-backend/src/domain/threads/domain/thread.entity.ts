@@ -6,6 +6,7 @@ import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mod
 import type { SourceAssignment } from './thread-source-assignment.entity';
 import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import { ThreadType } from './thread-type.enum';
 
 export class Thread {
   id: UUID;
@@ -20,6 +21,9 @@ export class Thread {
   messages: Message[];
   isAnonymous: boolean;
   workspaceId: UUID | null;
+  type: ThreadType;
+  /** The routine whose execution created this thread; null once it is deleted. */
+  routineId: UUID | null;
   lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +40,8 @@ export class Thread {
     messages: Message[];
     isAnonymous?: boolean;
     workspaceId?: UUID | null;
+    type?: ThreadType;
+    routineId?: UUID | null;
     lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
@@ -51,6 +57,8 @@ export class Thread {
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;
     this.workspaceId = params.workspaceId ?? null;
+    this.type = params.type ?? ThreadType.CHAT;
+    this.routineId = params.routineId ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     // A freshly created thread's last activity is its creation time; it is

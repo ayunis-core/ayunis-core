@@ -19,6 +19,7 @@ export function applyThreadSearch(
       WHERE block->>'type' = 'text'
         AND block->>'text' ILIKE :search
         AND block->>'isSkillInstruction' IS DISTINCT FROM 'true'
+        AND block->>'isNudge' IS DISTINCT FROM 'true'
     )`,
     )
     .getQuery();

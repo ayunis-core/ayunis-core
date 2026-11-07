@@ -82,6 +82,7 @@ import type {
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
+  CreateRoutineDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -191,6 +192,7 @@ import type {
   RetentionPolicyResponseDto,
   RevertArtifactDto,
   RolePermissionsResponseDto,
+  RoutineResponseDto,
   RunErrorResponseDto,
   RunMasksResponseDto,
   RunMessageResponseDto,
@@ -284,6 +286,7 @@ import type {
   UpdatePiiWhitelistRequestDto,
   UpdateRetentionPolicyRequestDto,
   UpdateRolePermissionsDto,
+  UpdateRoutineDto,
   UpdateSeatsDto,
   UpdateSkillDto,
   UpdateSkillTemplateDto,
@@ -23822,6 +23825,462 @@ export const useOrgChatSettingsControllerUpsertOrgChatSettings = <TError = void,
         TContext
       > => {
       return useMutation(getOrgChatSettingsControllerUpsertOrgChatSettingsMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the current user's routines
+ */
+export const routinesControllerFindAll = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RoutineResponseDto[]>(
+      {url: `/routines`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerFindAllQueryKey = () => {
+    return [
+    `/routines`
+    ] as const;
+    }
+
+
+export const getRoutinesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRoutinesControllerFindAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof routinesControllerFindAll>>> = ({ signal }) => routinesControllerFindAll(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RoutinesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof routinesControllerFindAll>>>
+export type RoutinesControllerFindAllQueryError = unknown
+
+
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routinesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof routinesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routinesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof routinesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the current user's routines
+ */
+
+export function useRoutinesControllerFindAll<TData = Awaited<ReturnType<typeof routinesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRoutinesControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create a routine
+ */
+export const routinesControllerCreate = (
+    createRoutineDto: CreateRoutineDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RoutineResponseDto>(
+      {url: `/routines`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRoutineDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerCreateMutationKey = () => ['routinesControllerCreate'] as const;
+
+export const getRoutinesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerCreate>>, RoutinesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  routinesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerCreate>>>
+    export type RoutinesControllerCreateMutationBody = CreateRoutineDto
+    export type RoutinesControllerCreateMutationError = unknown
+    export type RoutinesControllerCreateMutationVariables = {data: CreateRoutineDto}
+
+    /**
+ * @summary Create a routine
+ */
+export const useRoutinesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerCreate>>, TError,RoutinesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerCreate>>,
+        TError,
+        RoutinesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerCreateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a routine
+ */
+export const routinesControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RoutineResponseDto>(
+      {url: `/routines/${id}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerFindOneQueryKey = (id: string,) => {
+    return [
+    `/routines/${id}`
+    ] as const;
+    }
+
+
+export const getRoutinesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof routinesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRoutinesControllerFindOneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof routinesControllerFindOne>>> = ({ signal }) => routinesControllerFindOne(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RoutinesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof routinesControllerFindOne>>>
+export type RoutinesControllerFindOneQueryError = void
+
+
+export function useRoutinesControllerFindOne<TData = Awaited<ReturnType<typeof routinesControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routinesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof routinesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutinesControllerFindOne<TData = Awaited<ReturnType<typeof routinesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routinesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof routinesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutinesControllerFindOne<TData = Awaited<ReturnType<typeof routinesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a routine
+ */
+
+export function useRoutinesControllerFindOne<TData = Awaited<ReturnType<typeof routinesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routinesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRoutinesControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Update a routine
+ */
+export const routinesControllerUpdate = (
+    id: string,
+    updateRoutineDto: UpdateRoutineDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RoutineResponseDto>(
+      {url: `/routines/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRoutineDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerUpdateMutationKey = () => ['routinesControllerUpdate'] as const;
+
+export const getRoutinesControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerUpdate>>, TError,RoutinesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerUpdate>>, TError,RoutinesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerUpdate>>, RoutinesControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  routinesControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerUpdate>>>
+    export type RoutinesControllerUpdateMutationBody = UpdateRoutineDto
+    export type RoutinesControllerUpdateMutationError = void
+    export type RoutinesControllerUpdateMutationVariables = {id: string;data: UpdateRoutineDto}
+
+    /**
+ * @summary Update a routine
+ */
+export const useRoutinesControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerUpdate>>, TError,RoutinesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerUpdate>>,
+        TError,
+        RoutinesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerUpdateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete a routine; its threads are kept
+ */
+export const routinesControllerDelete = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerDeleteMutationKey = () => ['routinesControllerDelete'] as const;
+
+export const getRoutinesControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerDelete>>, TError,RoutinesControllerDeleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerDelete>>, TError,RoutinesControllerDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerDeleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerDelete>>, RoutinesControllerDeleteMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  routinesControllerDelete(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerDelete>>>
+
+    export type RoutinesControllerDeleteMutationError = void
+    export type RoutinesControllerDeleteMutationVariables = {id: string}
+
+    /**
+ * @summary Delete a routine; its threads are kept
+ */
+export const useRoutinesControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerDelete>>, TError,RoutinesControllerDeleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerDelete>>,
+        TError,
+        RoutinesControllerDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerDeleteMutationOptions(options), queryClient);
+    }
+
+/**
+ * Queues one execution; its result appears as a new routine thread and as the routine’s last run status.
+ * @summary Run a routine now
+ */
+export const routinesControllerRunNow = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${id}/run`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerRunNowMutationKey = () => ['routinesControllerRunNow'] as const;
+
+export const getRoutinesControllerRunNowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerRunNow>>, TError,RoutinesControllerRunNowMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerRunNow>>, TError,RoutinesControllerRunNowMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerRunNowMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerRunNow>>, RoutinesControllerRunNowMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  routinesControllerRunNow(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerRunNowMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerRunNow>>>
+
+    export type RoutinesControllerRunNowMutationError = void
+    export type RoutinesControllerRunNowMutationVariables = {id: string}
+
+    /**
+ * @summary Run a routine now
+ */
+export const useRoutinesControllerRunNow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerRunNow>>, TError,RoutinesControllerRunNowMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerRunNow>>,
+        TError,
+        RoutinesControllerRunNowMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerRunNowMutationOptions(options), queryClient);
     }
 
 /**

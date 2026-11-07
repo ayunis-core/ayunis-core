@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "Routinen"
+  },
+  "createMenu": {
+    "button": "Neue Routine",
+    "first": "Erste Routine erstellen",
+    "blank": "Leere Routine",
+    "premade": "Vorlagen"
+  },
+  "emptyState": {
+    "title": "Noch keine Routinen",
+    "description": "Eine Routine führt einen Prompt in Ihrem Namen aus. Beginnen Sie leer oder mit einer Vorlage."
+  },
+  "form": {
+    "createTitle": "Neue Routine",
+    "editTitle": "Routine bearbeiten",
+    "name": "Name",
+    "namePlaceholder": "z. B. Amtsblatt",
+    "prompt": "Aufgabe",
+    "promptPlaceholder": "Beschreiben Sie, was die Routine bei jedem Lauf tun soll.",
+    "promptDescription": "Die Routine erledigt diese Aufgabe ohne Sie. Ersetzen Sie die Angaben in eckigen Klammern.",
+    "model": "Modell",
+    "defaultModel": "Mein Standardmodell",
+    "dailyTime": "Täglich um",
+    "dailyTimeDescription": "Uhrzeit in Europe/Berlin.",
+    "internet": "Internetzugriff",
+    "internetDescription": "Erlaubt der Routine, im Web zu suchen und Webseiten zu lesen.",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "save": "Speichern"
+  },
+  "card": {
+    "schedule": "Täglich um {{time}}",
+    "internet": "Internet",
+    "enabled": "Aktiv",
+    "disabled": "Pausiert",
+    "enabledLabel": "Täglich ausführen",
+    "runNow": "Jetzt ausführen",
+    "edit": "Routine bearbeiten",
+    "delete": "Routine löschen"
+  },
+  "status": {
+    "never": "Noch nicht ausgeführt",
+    "queued": "In Warteschlange…",
+    "running": "Läuft…",
+    "succeeded": "Erfolgreich",
+    "failed": "Fehlgeschlagen"
+  },
+  "failureReason": {
+    "finishNotCalled": "Die Routine endete, ohne ihre Aufgabe abzuschließen.",
+    "timeout": "Der Lauf dauerte zu lange und wurde abgebrochen.",
+    "subscriptionRequired": "Ein Abonnement oder verbleibende Testnachrichten sind erforderlich.",
+    "ownerLocked": "Ihr Konto ist gesperrt.",
+    "maxIterations": "Der Lauf hat sein Schrittlimit erreicht.",
+    "credits": "Das Credit-Limit wurde erreicht.",
+    "model": "Das Modell steht Ihnen nicht mehr zur Verfügung.",
+    "unknown": "Etwas ist schiefgelaufen."
+  },
+  "delete": {
+    "title": "Routine löschen",
+    "description": "„{{name}}“ wird gelöscht. Von ihr erstellte Chats bleiben erhalten.",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  },
+  "toast": {
+    "createSuccess": "Routine erstellt",
+    "createError": "Die Routine konnte nicht erstellt werden.",
+    "updateSuccess": "Routine gespeichert",
+    "updateError": "Die Routine konnte nicht gespeichert werden.",
+    "deleteSuccess": "Routine gelöscht",
+    "deleteError": "Die Routine konnte nicht gelöscht werden.",
+    "notFound": "Diese Routine existiert nicht mehr.",
+    "modelUnavailable": "Dieses Modell steht Ihnen nicht zur Verfügung.",
+    "runStarted": "Routine gestartet. Das Ergebnis erscheint als neuer Chat.",
+    "runError": "Die Routine konnte nicht gestartet werden.",
+    "subscriptionRequired": "Ein Abonnement oder verbleibende Testnachrichten sind erforderlich."
+  },
+  "validation": {
+    "name": {
+      "isNotEmpty": "Name ist erforderlich",
+      "matches": "Name ist erforderlich",
+      "maxLength": "Der Name darf höchstens 100 Zeichen lang sein",
+      "invalid": "Ungültiger Name"
+    },
+    "prompt": {
+      "isNotEmpty": "Aufgabe ist erforderlich",
+      "matches": "Aufgabe ist erforderlich",
+      "maxLength": "Die Aufgabe darf höchstens 10.000 Zeichen lang sein",
+      "invalid": "Ungültige Aufgabe"
+    },
+    "dailyTime": {
+      "matches": "Geben Sie eine Uhrzeit im Format HH:mm ein",
+      "invalid": "Ungültige Uhrzeit"
+    },
+    "modelId": {
+      "invalid": "Ungültiges Modell"
+    },
+    "invalid": "Ungültige Eingabe"
+  }
+}

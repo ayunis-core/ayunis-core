@@ -6,4 +6,10 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   externalSubscriptionsEnabled: boolean;
+
+  @ApiProperty({
+    description: 'Users can create routines that run on their behalf',
+    default: false,
+  })
+  routinesEnabled: boolean;
 }

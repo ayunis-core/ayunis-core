@@ -15,6 +15,8 @@ export interface IsCloudResponseDto {
 export interface FeatureTogglesResponseDto {
   /** Cloud subscriptions are managed externally */
   externalSubscriptionsEnabled: boolean;
+  /** Users can create routines that run on their behalf */
+  routinesEnabled: boolean;
 }
 
 export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
@@ -2381,6 +2383,8 @@ export interface TextMessageContentResponseDto {
   text: string;
   /** Whether this text content contains skill instructions */
   isSkillInstruction?: boolean;
+  /** Whether the system sent this text to an unattended routine run that replied with plain text, rather than the user */
+  isNudge?: boolean;
 }
 
 /**
@@ -2957,6 +2961,17 @@ export interface CSVDataSourceResponseDto {
   data: CSVDataSourceResponseDtoData;
 }
 
+/**
+ * Whether a user started the thread or a routine run created it
+ */
+export type ThreadType = typeof ThreadType[keyof typeof ThreadType];
+
+
+export const ThreadType = {
+  chat: 'chat',
+  routine: 'routine',
+} as const;
+
 export interface KnowledgeBaseSummaryResponseDto {
   /** Unique identifier for the knowledge base */
   id: string;
@@ -3023,6 +3038,13 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   workspaceId: string | null;
+  /** Whether a user started the thread or a routine run created it */
+  type: ThreadType;
+  /**
+     * The routine whose run created this thread; null for chats and once the routine is deleted
+     * @nullable
+     */
+  routineId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3061,6 +3083,13 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   workspaceId: string | null;
+  /** Whether a user started the thread or a routine run created it */
+  type: ThreadType;
+  /**
+     * The routine whose run created this thread; null for chats and once the routine is deleted
+     * @nullable
+     */
+  routineId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */
@@ -5391,6 +5420,79 @@ export interface UpsertOrgChatSettingsDto {
   anonymousModeByDefault?: boolean;
 }
 
+/**
+ * Null until the routine ran for the first time
+ */
+export type RoutineRunStatus = typeof RoutineRunStatus[keyof typeof RoutineRunStatus];
+
+
+export const RoutineRunStatus = {
+  queued: 'queued',
+  running: 'running',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+export interface RoutineResponseDto {
+  id: string;
+  name: string;
+  prompt: string;
+  /**
+     * Permitted model id; null once that model was removed (the run then uses the user's default)
+     * @nullable
+     */
+  modelId: string | null;
+  /** HH:mm (Europe/Berlin) */
+  dailyTime: string;
+  internetEnabled: boolean;
+  enabled: boolean;
+  /** Null until the routine ran for the first time */
+  lastRunStatus: RoutineRunStatus | null;
+  /**
+     * When the last run finished
+     * @nullable
+     */
+  lastRunAt: string | null;
+  /**
+     * Machine-readable reason of the last failed run, e.g. `timeout` or `finish_routine_not_called`
+     * @nullable
+     */
+  lastRunFailureReason: string | null;
+  consecutiveFailureCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoutineDto {
+  /** Name of the routine */
+  name: string;
+  /** The task the routine runs, sent as the first message */
+  prompt: string;
+  /** Permitted model id; omit for the user's default model */
+  modelId?: string;
+  /** Daily run time as HH:mm (Europe/Berlin) */
+  dailyTime: string;
+  /** Whether the routine may search and read the web */
+  internetEnabled: boolean;
+  /** Whether the routine runs on its schedule */
+  enabled?: boolean;
+}
+
+export interface UpdateRoutineDto {
+  /** Name of the routine */
+  name?: string;
+  /** The task the routine runs */
+  prompt?: string;
+  /** Permitted model id */
+  modelId?: string;
+  /** Daily run time as HH:mm (Europe/Berlin) */
+  dailyTime?: string;
+  /** Whether the routine may search and read the web */
+  internetEnabled?: boolean;
+  /** Whether the routine runs on its schedule */
+  enabled?: boolean;
+}
+
 export interface RetentionPolicyResponseDto {
   /**
      * Configured retention window in days, or null when retention is disabled (data kept forever).
@@ -6130,6 +6232,10 @@ search?: string;
  * Only threads filed under this workspace. Omit for all threads.
  */
 workspaceId?: string;
+/**
+ * Only threads of this type, e.g. `chat` to hide routine threads. Omit for all threads.
+ */
+type?: ThreadType;
 /**
  * Maximum number of threads to return (default: 50)
  */

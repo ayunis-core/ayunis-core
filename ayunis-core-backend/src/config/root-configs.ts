@@ -21,6 +21,7 @@ import { retentionConfig } from './retention.config';
 import { urlConfig } from './url.config';
 import { ssoOidcConfig } from 'src/config/sso-oidc.config';
 import { coreConnectConfig } from './core-connect.config';
+import { routinesConfig } from './routines.config';
 
 /**
  * Config factories for every Nest entrypoint's ConfigModule.forRoot.
@@ -56,4 +57,5 @@ export const rootConfigs = [
   urlConfig,
   ssoOidcConfig,
   coreConnectConfig,
+  routinesConfig,
 ];

@@ -118,6 +118,33 @@ describe('CreateUserMessageUseCase', () => {
       expect(result).toBe(expectedMessage);
     });
 
+    it.each([
+      [false, false],
+      [true, true],
+    ])(
+      'marks the text as a system nudge only when asked (nudge: %s)',
+      async (isNudge, expected) => {
+        const threadId = randomUUID();
+        jest
+          .spyOn(mockMessagesRepository, 'create')
+          .mockImplementation((message) => Promise.resolve(message));
+
+        const result = await useCase.execute(
+          new CreateUserMessageCommand(
+            threadId,
+            'Nobody can read this reply.',
+            [],
+            undefined,
+            isNudge,
+          ),
+        );
+
+        expect(result.content).toEqual([
+          expect.objectContaining({ isNudge: expected }),
+        ]);
+      },
+    );
+
     it('should create user message with image successfully', async () => {
       // Arrange
       const threadId = randomUUID();

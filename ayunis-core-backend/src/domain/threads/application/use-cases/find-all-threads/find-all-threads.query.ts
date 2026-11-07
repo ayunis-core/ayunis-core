@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination/paginated.query';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
+import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 export class FindAllThreadsQuery extends PaginatedQuery {
   constructor(
@@ -14,6 +15,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
     public readonly filters?: {
       search?: string;
       workspaceId?: UUID;
+      type?: ThreadType;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

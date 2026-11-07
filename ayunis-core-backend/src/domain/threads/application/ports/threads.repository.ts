@@ -3,6 +3,7 @@ import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
@@ -14,6 +15,7 @@ export interface ThreadsFindAllOptions {
 export interface ThreadsFindAllFilters {
   search?: string;
   workspaceId?: UUID;
+  type?: ThreadType;
 }
 
 export interface ThreadsPagination {
