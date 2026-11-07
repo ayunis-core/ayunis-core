@@ -20,4 +20,10 @@ export function applyThreadListFilters(
   if (filters?.type) {
     queryBuilder.andWhere('thread.type = :type', { type: filters.type });
   }
+
+  if (filters?.routineId) {
+    queryBuilder.andWhere('thread.routineId = :routineId', {
+      routineId: filters.routineId,
+    });
+  }
 }

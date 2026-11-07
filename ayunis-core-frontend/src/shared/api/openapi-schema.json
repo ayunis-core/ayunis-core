@@ -5381,6 +5381,16 @@
             }
           },
           {
+            "name": "routineId",
+            "required": false,
+            "in": "query",
+            "description": "Only the routine threads of this routine's runs. Another user's routine yields none.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -8431,6 +8441,16 @@
             "schema": {
               "default": 0,
               "type": "number"
+            }
+          },
+          {
+            "name": "routineId",
+            "required": false,
+            "in": "query",
+            "description": "Only the notifications this routine sent. Another user's routine yields none.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],

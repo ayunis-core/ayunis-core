@@ -2,11 +2,11 @@ import type {
   CreateRoutineDto,
   Routine,
   UpdateRoutineDto,
-} from '@/pages/routines/model/openapi';
+} from '@/features/routines/model/openapi';
 import {
   DEFAULT_MODEL_OPTION,
   type RoutineFormFields,
-} from '@/pages/routines/model/types';
+} from '@/features/routines/model/types';
 
 export const EMPTY_ROUTINE_FORM: RoutineFormFields = {
   name: '',

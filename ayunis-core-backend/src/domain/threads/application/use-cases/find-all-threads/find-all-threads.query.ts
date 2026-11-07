@@ -16,6 +16,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
       search?: string;
       workspaceId?: UUID;
       type?: ThreadType;
+      routineId?: UUID;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MODEL_OPTION } from '@/pages/routines/model/types';
+import { DEFAULT_MODEL_OPTION } from '@/features/routines/model/types';
 import { formFieldsToDto } from './routine-form-values';
 
 describe('formFieldsToDto', () => {

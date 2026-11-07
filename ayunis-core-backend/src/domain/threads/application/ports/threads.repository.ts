@@ -16,6 +16,7 @@ export interface ThreadsFindAllFilters {
   search?: string;
   workspaceId?: UUID;
   type?: ThreadType;
+  routineId?: UUID;
 }
 
 export interface ThreadsPagination {

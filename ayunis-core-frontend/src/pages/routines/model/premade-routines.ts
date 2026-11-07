@@ -1,5 +1,7 @@
-import type { RoutineFormFields } from './types';
-import { DEFAULT_MODEL_OPTION } from './types';
+import {
+  DEFAULT_MODEL_OPTION,
+  type RoutineFormFields,
+} from '@/features/routines';
 
 /**
  * The fixed premade routines the create menu offers. Their prompts are German

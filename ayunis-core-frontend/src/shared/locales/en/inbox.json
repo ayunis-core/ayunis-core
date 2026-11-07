@@ -9,11 +9,13 @@
   },
   "item": {
     "unread": "Unread",
-    "error": "Error"
+    "error": "Error",
+    "markRead": "Mark as read"
   },
   "detail": {
     "chatAboutThis": "Chat about this",
-    "openRoutineChat": "Open routine chat"
+    "openRoutineChat": "Open routine chat",
+    "openRoutine": "Open routine"
   },
   "toast": {
     "notFound": "The notification was not found.",

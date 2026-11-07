@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   getRoutinesControllerFindAllQueryKey,
+  getRoutinesControllerFindOneQueryKey,
   routinesControllerRunNow,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -15,9 +16,12 @@ export function useRunRoutineNow() {
     mutationFn: async (id: string) => {
       await routinesControllerRunNow(id);
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       void queryClient.invalidateQueries({
         queryKey: getRoutinesControllerFindAllQueryKey(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getRoutinesControllerFindOneQueryKey(id),
       });
       showSuccess(t('toast.runStarted'));
     },

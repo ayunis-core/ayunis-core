@@ -1,5 +1,5 @@
-import type { Routine } from '@/pages/routines/model/openapi';
-import { RoutineRunStatus } from '@/pages/routines/model/openapi';
+import type { Routine } from '@/features/routines/model/openapi';
+import { RoutineRunStatus } from '@/features/routines/model/openapi';
 
 const ACTIVE_RUN_POLL_MS = 3_000;
 /** Scheduled starts happen in the background, so an idle list goes stale. */

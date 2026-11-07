@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { Routine } from '@/pages/routines/model/openapi';
+import type { Routine } from '@/features/routines/model/openapi';
 import { RoutineScheduleLine } from './RoutineScheduleLine';
 
 vi.mock('react-i18next', () => ({

@@ -9,11 +9,13 @@
   },
   "item": {
     "unread": "Ungelesen",
-    "error": "Fehler"
+    "error": "Fehler",
+    "markRead": "Als gelesen markieren"
   },
   "detail": {
     "chatAboutThis": "Darüber chatten",
-    "openRoutineChat": "Routine-Chat öffnen"
+    "openRoutineChat": "Routine-Chat öffnen",
+    "openRoutine": "Routine öffnen"
   },
   "toast": {
     "notFound": "Die Benachrichtigung wurde nicht gefunden.",
