@@ -11182,6 +11182,136 @@
         "tags": ["runs"]
       }
     },
+    "/runs/active": {
+      "get": {
+        "operationId": "ActiveRunsController_findActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActiveThreadRunResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the current user’s runs in progress",
+        "tags": ["runs"]
+      }
+    },
+    "/runs/threads/{threadId}/events": {
+      "get": {
+        "description": "Streams the run from its start (the latest snapshot of each message) and then live until it ends. Leaving does not stop the run. Responds 204 when the thread has no run in progress.",
+        "operationId": "ActiveRunsController_attach",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events stream with discriminated response types",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "session": "#/components/schemas/RunSessionResponseDto",
+                      "message": "#/components/schemas/RunMessageResponseDto",
+                      "error": "#/components/schemas/RunErrorResponseDto",
+                      "thread": "#/components/schemas/RunThreadResponseDto",
+                      "masks": "#/components/schemas/RunMasksResponseDto"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Content type for server-sent events",
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
+              },
+              "Cache-Control": {
+                "description": "Cache control header",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Connection": {
+                "description": "Connection type",
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No run in progress"
+          }
+        },
+        "summary": "Attach to the run in progress on a thread",
+        "tags": ["runs"]
+      }
+    },
+    "/runs/threads/{threadId}/cancel": {
+      "post": {
+        "description": "The run rolls back its unfinished turn. Succeeds when there is nothing to stop.",
+        "operationId": "ActiveRunsController_cancel",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Run stopped or none in progress"
+          }
+        },
+        "summary": "Stop the run in progress on a thread",
+        "tags": ["runs"]
+      }
+    },
     "/threads/{threadId}/ai-context": {
       "get": {
         "operationId": "ThreadAiContextController_getAiContext",
@@ -22277,6 +22407,20 @@
           }
         },
         "required": ["threadId"]
+      },
+      "ActiveThreadRunResponseDto": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cancellable": {
+            "type": "boolean",
+            "description": "Whether the run can be stopped from the chat. Routine executions cannot."
+          }
+        },
+        "required": ["threadId", "cancellable"]
       },
       "ThreadAiContextSkillResponseDto": {
         "type": "object",

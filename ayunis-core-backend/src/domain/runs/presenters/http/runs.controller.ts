@@ -38,6 +38,7 @@ import {
   ToolResultMessageContentResponseDto as ToolResultContentDto,
   ThinkingMessageContentResponseDto,
 } from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
   RunSessionResponseDto,
@@ -120,24 +121,34 @@ export class RunsController {
     const uploadedFiles = files ?? [];
     this.logRequest(userId, sendMessageDto, uploadedFiles.length);
     const releaseUploads = IMAGE_UPLOAD_ADMISSION.transfer(request);
+    // The run outlives this request and releases the uploads when it ends,
+    // so only a request that never started one releases them here.
     try {
       this.requestValidator.validate(sendMessageDto, uploadedFiles);
+      // Built before the stream opens, so a failure is an ordinary error
+      // response that reaches the catch below.
+      const input = RunInputMapper.toCommand(
+        sendMessageDto,
+        uploadedFiles,
+        sendMessageDto.skillId,
+        releaseUploads,
+      );
       await this.ssePresenter.stream(
         response,
         sendMessageDto.threadId,
         (signal) =>
           this.sendMessageUseCase.execute(
-            this.createCommand(sendMessageDto, uploadedFiles, {
+            this.createCommand(sendMessageDto, input, {
               consumeTrialMessage: Boolean(
                 request.subscriptionContext?.hasRemainingTrialMessages,
               ),
               signal,
-              releaseUploads,
             }),
           ),
       );
-    } finally {
+    } catch (error) {
       releaseUploads();
+      throw error;
     }
   }
 
@@ -161,21 +172,12 @@ export class RunsController {
 
   private createCommand(
     dto: SendMessageDto,
-    files: Express.Multer.File[],
-    run: {
-      consumeTrialMessage: boolean;
-      signal: AbortSignal;
-      releaseUploads: () => void;
-    },
+    input: RunInput,
+    run: { consumeTrialMessage: boolean; signal: AbortSignal },
   ): SendMessageCommand {
     return new SendMessageCommand({
       threadId: dto.threadId,
-      input: RunInputMapper.toCommand(
-        dto,
-        files,
-        dto.skillId,
-        run.releaseUploads,
-      ),
+      input,
       streaming: dto.streaming ?? true,
       consumeTrialMessage: run.consumeTrialMessage,
       signal: run.signal,

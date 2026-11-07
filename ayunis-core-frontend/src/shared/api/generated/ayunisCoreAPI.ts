@@ -34,6 +34,7 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
+  ActiveThreadRunResponseDto,
   AddGlobalPiiWhitelistWordsRequestDto,
   AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
@@ -23263,6 +23264,260 @@ export const useRunsControllerSendMessage = <TError = void,
         TContext
       > => {
       return useMutation(getRunsControllerSendMessageMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the current user’s runs in progress
+ */
+export const activeRunsControllerFindActive = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ActiveThreadRunResponseDto[]>(
+      {url: `/runs/active`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getActiveRunsControllerFindActiveQueryKey = () => {
+    return [
+    `/runs/active`
+    ] as const;
+    }
+
+
+export const getActiveRunsControllerFindActiveQueryOptions = <TData = Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getActiveRunsControllerFindActiveQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof activeRunsControllerFindActive>>> = ({ signal }) => activeRunsControllerFindActive(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ActiveRunsControllerFindActiveQueryResult = NonNullable<Awaited<ReturnType<typeof activeRunsControllerFindActive>>>
+export type ActiveRunsControllerFindActiveQueryError = unknown
+
+
+export function useActiveRunsControllerFindActive<TData = Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activeRunsControllerFindActive>>,
+          TError,
+          Awaited<ReturnType<typeof activeRunsControllerFindActive>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useActiveRunsControllerFindActive<TData = Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activeRunsControllerFindActive>>,
+          TError,
+          Awaited<ReturnType<typeof activeRunsControllerFindActive>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useActiveRunsControllerFindActive<TData = Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the current user’s runs in progress
+ */
+
+export function useActiveRunsControllerFindActive<TData = Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerFindActive>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getActiveRunsControllerFindActiveQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Streams the run from its start (the latest snapshot of each message) and then live until it ends. Leaving does not stop the run. Responds 204 when the thread has no run in progress.
+ * @summary Attach to the run in progress on a thread
+ */
+export const activeRunsControllerAttach = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | void>(
+      {url: `/runs/threads/${threadId}/events`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getActiveRunsControllerAttachQueryKey = (threadId: string,) => {
+    return [
+    `/runs/threads/${threadId}/events`
+    ] as const;
+    }
+
+
+export const getActiveRunsControllerAttachQueryOptions = <TData = Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError = unknown>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getActiveRunsControllerAttachQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof activeRunsControllerAttach>>> = ({ signal }) => activeRunsControllerAttach(threadId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ActiveRunsControllerAttachQueryResult = NonNullable<Awaited<ReturnType<typeof activeRunsControllerAttach>>>
+export type ActiveRunsControllerAttachQueryError = unknown
+
+
+export function useActiveRunsControllerAttach<TData = Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError = unknown>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activeRunsControllerAttach>>,
+          TError,
+          Awaited<ReturnType<typeof activeRunsControllerAttach>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useActiveRunsControllerAttach<TData = Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activeRunsControllerAttach>>,
+          TError,
+          Awaited<ReturnType<typeof activeRunsControllerAttach>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useActiveRunsControllerAttach<TData = Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Attach to the run in progress on a thread
+ */
+
+export function useActiveRunsControllerAttach<TData = Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof activeRunsControllerAttach>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getActiveRunsControllerAttachQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The run rolls back its unfinished turn. Succeeds when there is nothing to stop.
+ * @summary Stop the run in progress on a thread
+ */
+export const activeRunsControllerCancel = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/runs/threads/${threadId}/cancel`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getActiveRunsControllerCancelMutationKey = () => ['activeRunsControllerCancel'] as const;
+
+export const getActiveRunsControllerCancelMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activeRunsControllerCancel>>, TError,ActiveRunsControllerCancelMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof activeRunsControllerCancel>>, TError,ActiveRunsControllerCancelMutationVariables, TContext> => {
+
+const mutationKey = getActiveRunsControllerCancelMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activeRunsControllerCancel>>, ActiveRunsControllerCancelMutationVariables> = (props) => {
+          const {threadId} = props ?? {};
+
+          return  activeRunsControllerCancel(threadId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActiveRunsControllerCancelMutationResult = NonNullable<Awaited<ReturnType<typeof activeRunsControllerCancel>>>
+
+    export type ActiveRunsControllerCancelMutationError = unknown
+    export type ActiveRunsControllerCancelMutationVariables = {threadId: string}
+
+    /**
+ * @summary Stop the run in progress on a thread
+ */
+export const useActiveRunsControllerCancel = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activeRunsControllerCancel>>, TError,ActiveRunsControllerCancelMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof activeRunsControllerCancel>>,
+        TError,
+        ActiveRunsControllerCancelMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActiveRunsControllerCancelMutationOptions(options), queryClient);
     }
 
 /**

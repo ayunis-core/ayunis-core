@@ -9,17 +9,14 @@ import { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application
 import { GenerateAndSetThreadTitleCommand } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
 import {
   RunEvent,
-  RunMasksEvent,
-  RunMessageEvent,
   RunThreadEvent,
-  RunErrorEvent,
-  RunSessionEvent,
 } from 'src/domain/runs/application/run-events';
+import type { RunStreamItem } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
-  RunPiiMasksUpdate,
-  type RunStreamItem,
-} from 'src/domain/runs/domain/run-pii-masks-update.entity';
-import type { Message } from 'src/domain/messages/domain/message.entity';
+  runErrorEvent,
+  runSessionEvent,
+  runStreamItemEvent,
+} from 'src/domain/runs/application/helpers/run-event.helper';
 import {
   RunInput,
   RunUserInput,
@@ -28,10 +25,6 @@ import { RunNoModelFoundError } from 'src/domain/runs/application/runs.errors';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
-import {
-  ApplicationError,
-  INTERNAL_SERVER_ERROR_MESSAGE,
-} from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
@@ -60,7 +53,7 @@ export class ExecuteRunAndSetTitleUseCase {
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunEvent> {
     try {
-      yield this.sessionEvent(command.threadId, true);
+      yield runSessionEvent(command.threadId, true);
       yield* this.executeRun(command);
     } catch (error) {
       this.logger.error(
@@ -71,9 +64,9 @@ export class ExecuteRunAndSetTitleUseCase {
       // global exception filter never sees this failure — report it here or
       // provider outages produce no AppSignal incident at all (AYC-653).
       reportUnexpectedError(error);
-      yield this.toErrorEvent(error, command.threadId);
+      yield runErrorEvent(error, command.threadId);
     } finally {
-      yield this.sessionEvent(command.threadId, false);
+      yield runSessionEvent(command.threadId, false);
     }
   }
 
@@ -137,7 +130,7 @@ export class ExecuteRunAndSetTitleUseCase {
           yield* this.readyTitle(title);
           return next.value;
         }
-        yield this.toStreamEvent(next.value, threadId);
+        yield runStreamItemEvent(next.value, threadId);
         yield* this.readyTitle(title);
       }
     } finally {
@@ -148,54 +141,6 @@ export class ExecuteRunAndSetTitleUseCase {
   private *readyTitle(title?: PendingThreadTitle): Generator<RunThreadEvent> {
     const event = title?.takeReady();
     if (event) yield event;
-  }
-
-  private sessionEvent(threadId: UUID, streaming: boolean): RunSessionEvent {
-    return {
-      type: 'session',
-      streaming,
-      threadId,
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  private toErrorEvent(error: unknown, threadId: UUID): RunErrorEvent {
-    const clientError =
-      error instanceof ApplicationError ? error.toClientResponse() : undefined;
-    return {
-      type: 'error',
-      message: clientError?.message ?? INTERNAL_SERVER_ERROR_MESSAGE,
-      threadId,
-      timestamp: new Date().toISOString(),
-      code: clientError?.code ?? 'EXECUTION_ERROR',
-      details: clientError?.metadata,
-    };
-  }
-
-  private toStreamEvent(
-    item: Message | RunPiiMasksUpdate,
-    threadId: string,
-  ): RunMasksEvent | RunMessageEvent {
-    if (item instanceof RunPiiMasksUpdate) {
-      return {
-        type: 'masks',
-        threadId,
-        masks: item.masks.map((mask) => ({
-          id: mask.id,
-          token: mask.token,
-          value: mask.value,
-          category: mask.category,
-          unmasked: mask.unmasked,
-        })),
-        timestamp: new Date().toISOString(),
-      };
-    }
-    return {
-      type: 'message',
-      message: item,
-      threadId,
-      timestamp: new Date().toISOString(),
-    };
   }
 
   private async generateTitle(

@@ -5,6 +5,12 @@ import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
 import { ThreadAiContextController } from './presenters/http/thread-ai-context.controller';
+import { ActiveRunsController } from './presenters/http/active-runs.controller';
+import { ActiveThreadRuns } from './application/services/active-thread-runs.service';
+import { FindActiveThreadRunsUseCase } from './application/use-cases/find-active-thread-runs/find-active-thread-runs.use-case';
+import { AttachToThreadRunUseCase } from './application/use-cases/attach-to-thread-run/attach-to-thread-run.use-case';
+import { CancelThreadRunUseCase } from './application/use-cases/cancel-thread-run/cancel-thread-run.use-case';
+import { CancelRunsOnThreadDeletionListener } from './application/listeners/cancel-runs-on-thread-deletion.listener';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message/send-message.use-case';
@@ -102,6 +108,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
   ],
   controllers: [
     RunsController,
+    ActiveRunsController,
     ThreadAiContextController,
     ThreadSourceCitationsController,
   ],
@@ -129,6 +136,11 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ToolResultCollectorService,
     MessageCleanupService,
     ThreadRunLock,
+    ActiveThreadRuns,
+    FindActiveThreadRunsUseCase,
+    AttachToThreadRunUseCase,
+    CancelThreadRunUseCase,
+    CancelRunsOnThreadDeletionListener,
     RunTelemetryService,
     EffectiveRunModelResolverService,
     UnmaskedTermsService,

@@ -22,10 +22,22 @@ import {
 } from 'src/domain/runs/application/run-profiles/routine-completion.policy';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
+import type { ContextService } from 'src/common/context/services/context.service';
+import type { RunEvent } from 'src/domain/runs/application/run-events';
+import { ActiveThreadRuns } from 'src/domain/runs/application/services/active-thread-runs.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { ExecuteUnattendedRunCommand } from './execute-unattended-run.command';
 import { ExecuteUnattendedRunUseCase } from './execute-unattended-run.use-case';
 
 const threadId = randomUUID();
+const ownerId = randomUUID();
+const ownerContext: Record<string, unknown> = {
+  userId: ownerId,
+  orgId: randomUUID(),
+  role: UserRole.USER,
+  systemRole: SystemRole.CUSTOMER,
+};
 const TASK =
   'Prüfe die Verkündungsplattform Niedersachsen auf neue Gesetze und Verordnungen.';
 const profileInput = {
@@ -76,7 +88,11 @@ const textOnlyRun = (
   outcome: 'completed',
 });
 
-function buildUseCase(runs: ScriptedRun[], onRun?: () => void) {
+function buildUseCase(
+  runs: ScriptedRun[],
+  onRun?: () => void,
+  activeThreadRuns = new ActiveThreadRuns(),
+) {
   const commands: ExecuteRunCommand[] = [];
   const execute = jest.fn((command: ExecuteRunCommand) => {
     commands.push(command);
@@ -101,8 +117,12 @@ function buildUseCase(runs: ScriptedRun[], onRun?: () => void) {
     {
       get: jest.fn().mockReturnValue(profile),
     } as unknown as RunProfileRegistry,
+    {
+      get: jest.fn((key: string) => ownerContext[key]),
+    } as unknown as ContextService,
+    activeThreadRuns,
   );
-  return { useCase, commands };
+  return { useCase, commands, activeThreadRuns };
 }
 
 const command = (signal = new AbortController().signal) =>
@@ -260,5 +280,99 @@ describe('ExecuteUnattendedRunUseCase', () => {
       RunMaxIterationsReachedError,
     );
     expect(commands).toHaveLength(1);
+  });
+
+  describe('watching', () => {
+    async function watchFirstRun(runs: ScriptedRun[]) {
+      const activeThreadRuns = new ActiveThreadRuns();
+      let watched: Promise<RunEvent[]> | undefined;
+      let listed: unknown;
+      const { useCase } = buildUseCase(
+        runs,
+        () => {
+          if (watched) return;
+          listed = activeThreadRuns.listForUser(ownerId);
+          const run = activeThreadRuns.find(threadId, ownerId);
+          watched = (async () => {
+            const events: RunEvent[] = [];
+            for await (const event of run!.subscribe()) events.push(event);
+            return events;
+          })();
+        },
+        activeThreadRuns,
+      );
+      const result = useCase.execute(command());
+      return {
+        result,
+        activeThreadRuns,
+        watched: () => watched,
+        listed: () => listed,
+      };
+    }
+
+    it('lists the run for its owner while it runs, without letting it be cancelled', async () => {
+      const { result, listed } = await watchFirstRun([finishedRun()]);
+      await result;
+
+      expect(listed()).toEqual([{ threadId, cancellable: false }]);
+    });
+
+    it('streams every run of the execution, nudges included, to a watcher', async () => {
+      const { result, watched } = await watchFirstRun([
+        textOnlyRun(),
+        finishedRun(),
+      ]);
+      await result;
+      const events = await watched()!;
+
+      expect(events.map((event) => event.type)).toEqual([
+        'session',
+        'message',
+        'message',
+        'message',
+        'message',
+        'message',
+        'session',
+      ]);
+      expect(events.at(-1)).toMatchObject({
+        type: 'session',
+        streaming: false,
+      });
+    });
+
+    it('stops being listed once the execution ends', async () => {
+      const { result, activeThreadRuns } = await watchFirstRun([finishedRun()]);
+      await result;
+
+      expect(activeThreadRuns.listForUser(ownerId)).toEqual([]);
+    });
+
+    it('tells a watcher why the execution failed before it ends', async () => {
+      const { result, watched } = await watchFirstRun([
+        {
+          items: [userMessage(TASK)],
+          error: new RunMaxIterationsReachedError(20),
+        },
+      ]);
+      await expect(result).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+      const events = await watched()!;
+
+      expect(events.slice(-2)).toMatchObject([
+        { type: 'error', code: 'RUN_MAX_ITERATIONS_REACHED' },
+        { type: 'session', streaming: false },
+      ]);
+    });
+
+    it('stops being listed when a run fails', async () => {
+      const { result, activeThreadRuns } = await watchFirstRun([
+        {
+          items: [userMessage(TASK)],
+          error: new RunMaxIterationsReachedError(20),
+        },
+      ]);
+      await expect(result).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+
+      expect(activeThreadRuns.listForUser(ownerId)).toEqual([]);
+    });
   });
 });

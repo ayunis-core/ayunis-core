@@ -5366,6 +5366,12 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
+export interface ActiveThreadRunResponseDto {
+  threadId: string;
+  /** Whether the run can be stopped from the chat. Routine executions cannot. */
+  cancellable: boolean;
+}
+
 export interface ThreadAiContextSkillResponseDto {
   id: string;
   name: string;
