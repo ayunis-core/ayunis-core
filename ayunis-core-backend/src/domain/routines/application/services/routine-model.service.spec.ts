@@ -52,10 +52,18 @@ describe('RoutineModelService', () => {
       );
     });
 
-    it("falls back to the user's default model when none is given", async () => {
-      await expect(service.select(undefined)).resolves.toBe(defaultModelId);
+    it("stores no model for the user's default, so runs follow later changes of it", async () => {
+      await expect(service.select(null)).resolves.toBeNull();
       expect(getDefaultModel.execute).toHaveBeenCalledWith(
         expect.objectContaining({ orgId: TEST_ORG_ID, userId: TEST_USER_ID }),
+      );
+    });
+
+    it('rejects the default model when the user has none', async () => {
+      getDefaultModel.execute.mockRejectedValue(new UnauthorizedAccessError());
+
+      await expect(service.select(null)).rejects.toThrow(
+        UnauthorizedAccessError,
       );
     });
   });

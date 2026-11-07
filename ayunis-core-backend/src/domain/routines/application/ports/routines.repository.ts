@@ -8,7 +8,7 @@ import type { RoutineScheduleChanges } from 'src/domain/routines/domain/routine-
 export interface RoutineDefinitionChanges {
   name?: string;
   prompt?: string;
-  modelId?: UUID;
+  modelId?: UUID | null;
   dailyTime?: string;
   internetEnabled?: boolean;
   enabled?: boolean;

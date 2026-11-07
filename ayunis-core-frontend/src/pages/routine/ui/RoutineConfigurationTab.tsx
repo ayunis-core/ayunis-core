@@ -10,7 +10,7 @@ import {
 } from '@ayunis/ui/components/card';
 import { Form } from '@ayunis/ui/components/form';
 import {
-  formFieldsToDto,
+  formFieldsToUpdateDto,
   RoutineFormFieldset,
   RoutineRunStatusLine,
   RoutineScheduleLine,
@@ -67,7 +67,7 @@ function RoutineConfigurationCard({ routine }: Readonly<{ routine: Routine }>) {
           <form
             onSubmit={(e) =>
               void form.handleSubmit((data) =>
-                updateRoutine(routine.id, formFieldsToDto(data)),
+                updateRoutine(routine.id, formFieldsToUpdateDto(data)),
               )(e)
             }
             className="space-y-4"

@@ -139,6 +139,21 @@ describe('UpdateRoutineUseCase', () => {
     );
   });
 
+  it("goes back to the owner's default model when the model is cleared", async () => {
+    routineModelService.select.mockResolvedValue(null);
+
+    await useCase.execute(
+      new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, modelId: null }),
+    );
+
+    expect(routineModelService.select).toHaveBeenCalledWith(null);
+    expect(repository.updateDefinition).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      TEST_ROUTINE_ID,
+      { modelId: null },
+    );
+  });
+
   it('keeps the routine unchanged when the new model is not allowed', async () => {
     routineModelService.select.mockRejectedValue(new UnauthorizedAccessError());
 

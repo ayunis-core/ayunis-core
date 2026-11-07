@@ -194,6 +194,18 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
       });
     });
 
+    it('clears a stored model', async () => {
+      const routine = await stored();
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { modelId: null },
+      );
+
+      expect(updated?.modelId).toBeNull();
+    });
+
     it('moves updatedAt forward', async () => {
       const routine = await stored();
       await db.query(

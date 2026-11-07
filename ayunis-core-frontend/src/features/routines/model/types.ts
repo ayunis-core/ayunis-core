@@ -1,4 +1,4 @@
-/** Select value standing for "the user's default model" (no model sent). */
+/** Select value standing for "the user's default model" (stored as no model). */
 export const DEFAULT_MODEL_OPTION = 'default';
 
 export interface RoutineFormFields {

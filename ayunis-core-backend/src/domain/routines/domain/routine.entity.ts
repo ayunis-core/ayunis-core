@@ -8,7 +8,7 @@ export class Routine {
   readonly orgId: UUID;
   readonly name: string;
   readonly prompt: string;
-  /** Permitted model id; null when the permit was removed (falls back to the owner's default). */
+  /** Permitted model id; null means the owner's default model, also once the permit was removed. */
   readonly modelId: UUID | null;
   /** HH:mm in Europe/Berlin. */
   readonly dailyTime: string;

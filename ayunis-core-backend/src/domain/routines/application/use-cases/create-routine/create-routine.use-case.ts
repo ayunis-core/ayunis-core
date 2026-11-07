@@ -24,7 +24,9 @@ export class CreateRoutineUseCase {
   async execute(command: CreateRoutineCommand): Promise<Routine> {
     this.logger.log('Creating routine');
     const { userId, orgId } = getRequiredUserContext(this.contextService);
-    const modelId = await this.routineModelService.select(command.modelId);
+    const modelId = await this.routineModelService.select(
+      command.modelId ?? null,
+    );
     const id = randomUUID();
     return this.routinesRepository.create(
       new Routine({

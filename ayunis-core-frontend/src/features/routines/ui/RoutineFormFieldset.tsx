@@ -150,7 +150,10 @@ function ModelField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value={DEFAULT_MODEL_OPTION}>
+              <SelectItem
+                value={DEFAULT_MODEL_OPTION}
+                data-testid="routine-form-model-default"
+              >
                 {t('form.defaultModel')}
               </SelectItem>
               {models.map((model) => (

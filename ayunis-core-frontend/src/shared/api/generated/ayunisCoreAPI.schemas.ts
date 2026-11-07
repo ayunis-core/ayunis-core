@@ -5504,7 +5504,7 @@ export interface RoutineResponseDto {
   name: string;
   prompt: string;
   /**
-     * Permitted model id; null once that model was removed (the run then uses the user's default)
+     * Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed
      * @nullable
      */
   modelId: string | null;
@@ -5559,8 +5559,11 @@ export interface UpdateRoutineDto {
   name?: string;
   /** The task the routine runs */
   prompt?: string;
-  /** Permitted model id */
-  modelId?: string;
+  /**
+     * Permitted model id; null for the user's default model
+     * @nullable
+     */
+  modelId?: string | null;
   /** Daily run time as HH:mm (Europe/Berlin) */
   dailyTime?: string;
   /** Whether the routine may search and read the web */

@@ -1,7 +1,8 @@
 export { useUpdateRoutine } from './api/useUpdateRoutine';
 export {
   EMPTY_ROUTINE_FORM,
-  formFieldsToDto,
+  formFieldsToCreateDto,
+  formFieldsToUpdateDto,
   routineToFormFields,
 } from './lib/routine-form-values';
 export { routinesRefetchInterval } from './lib/routines-refetch-interval';

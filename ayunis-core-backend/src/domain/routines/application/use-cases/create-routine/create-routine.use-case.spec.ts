@@ -84,10 +84,13 @@ describe('CreateRoutineUseCase', () => {
     });
   });
 
-  it('stores the model the service selected for an omitted model', async () => {
-    await useCase.execute(command({ modelId: undefined }));
+  it("stores no model when the user's default is chosen", async () => {
+    routineModelService.select.mockResolvedValue(null);
 
-    expect(routineModelService.select).toHaveBeenCalledWith(undefined);
+    const routine = await useCase.execute(command({ modelId: undefined }));
+
+    expect(routineModelService.select).toHaveBeenCalledWith(null);
+    expect(routine.modelId).toBeNull();
   });
 
   it('does not create a routine with a model the user may not use', async () => {
