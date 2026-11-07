@@ -5,6 +5,7 @@ import {
   getNotificationsControllerFindAllQueryKey,
   useNotificationsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
 
 /**
@@ -13,16 +14,17 @@ import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
  */
 const NOTIFICATIONS_REFETCH_INTERVAL_MS = 60_000;
 
-export function notificationsPageParams(page: number) {
+export function notificationsPageParams(page: number, type?: NotificationType) {
   return {
     limit: NOTIFICATIONS_PER_PAGE,
     offset: (page - 1) * NOTIFICATIONS_PER_PAGE,
+    ...(type && { type }),
   };
 }
 
-export function useNotifications(page: number) {
+export function useNotifications(page: number, type?: NotificationType) {
   const queryClient = useQueryClient();
-  const params = notificationsPageParams(page);
+  const params = notificationsPageParams(page, type);
   const { data, isLoading, error } = useNotificationsControllerFindAll(params, {
     query: {
       queryKey: getNotificationsControllerFindAllQueryKey(params),

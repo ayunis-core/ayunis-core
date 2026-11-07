@@ -1,10 +1,13 @@
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
+import type { UnreadNotificationTypeCount } from 'src/domain/notifications/application/models/unread-notification-counts';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
+import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 
 export interface NotificationsFilter {
   routineId?: UUID;
+  type?: NotificationType;
 }
 
 export abstract class NotificationsRepository {
@@ -25,7 +28,10 @@ export abstract class NotificationsRepository {
     page: PaginatedQueryParams,
     filter?: NotificationsFilter,
   ): Promise<Paginated<Notification>>;
-  abstract countUnread(userId: UUID): Promise<number>;
+  /** Only the types with unread notifications, ordered by type. */
+  abstract countUnreadByType(
+    userId: UUID,
+  ): Promise<UnreadNotificationTypeCount[]>;
   /** Keeps the first read time of a notification read before. */
   abstract markRead(
     userId: UUID,

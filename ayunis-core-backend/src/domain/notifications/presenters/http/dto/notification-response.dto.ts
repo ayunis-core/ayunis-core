@@ -55,7 +55,21 @@ export class PaginatedNotificationsResponseDto {
   pagination: PaginationDto;
 }
 
-export class UnreadNotificationCountResponseDto {
-  @ApiProperty({ example: 3 })
+export class UnreadNotificationTypeCountResponseDto {
+  @ApiProperty({ enum: NotificationType, enumName: 'NotificationType' })
+  type: NotificationType;
+
+  @ApiProperty({ example: 2 })
   count: number;
+}
+
+export class UnreadNotificationCountResponseDto {
+  @ApiProperty({ example: 3, description: 'All unread notifications' })
+  count: number;
+
+  @ApiProperty({
+    type: [UnreadNotificationTypeCountResponseDto],
+    description: 'Unread notifications per type; only types with any',
+  })
+  byType: UnreadNotificationTypeCountResponseDto[];
 }

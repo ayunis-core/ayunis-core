@@ -8452,6 +8452,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Only the notifications of this type",
+            "schema": {
+              "$ref": "#/components/schemas/NotificationType"
+            }
           }
         ],
         "responses": {
@@ -8486,7 +8495,7 @@
             }
           }
         },
-        "summary": "Count the current user's unread notifications",
+        "summary": "Count the current user's unread notifications, also per type",
         "tags": ["notifications"]
       }
     },
@@ -20294,8 +20303,7 @@
       },
       "NotificationType": {
         "type": "string",
-        "enum": ["routine", "routine_error"],
-        "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed"
+        "enum": ["routine", "routine_error"]
       },
       "NotificationResponseDto": {
         "type": "object",
@@ -20371,15 +20379,40 @@
         },
         "required": ["data", "pagination"]
       },
+      "UnreadNotificationTypeCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationType"
+              }
+            ]
+          },
+          "count": {
+            "type": "number",
+            "example": 2
+          }
+        },
+        "required": ["type", "count"]
+      },
       "UnreadNotificationCountResponseDto": {
         "type": "object",
         "properties": {
           "count": {
             "type": "number",
-            "example": 3
+            "example": 3,
+            "description": "All unread notifications"
+          },
+          "byType": {
+            "description": "Unread notifications per type; only types with any",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnreadNotificationTypeCountResponseDto"
+            }
           }
         },
-        "required": ["count"]
+        "required": ["count", "byType"]
       },
       "CreditsPerEuroResponseDto": {
         "type": "object",

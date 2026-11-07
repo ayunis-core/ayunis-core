@@ -65,6 +65,9 @@ vi.mock('@/widgets/academy-gate-notice', () => ({
   AcademyGateNotice: () => null,
 }));
 vi.mock('./PinnedSkills', () => ({ PinnedSkills: () => null }));
+vi.mock('./UnreadNotificationButtons', () => ({
+  UnreadNotificationButtons: () => null,
+}));
 vi.mock('./WorkspacePicker', () => ({
   WorkspacePicker: () => <div data-testid="workspace-picker" />,
 }));

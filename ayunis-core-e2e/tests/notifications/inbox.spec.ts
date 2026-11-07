@@ -37,7 +37,7 @@ test("a routine's notification lands in the inbox, links to its routine chat and
 
   await page.goto("/chat");
   await expect(page.getByTestId("sidebar-inbox-unread-count")).toBeVisible();
-  await page.getByTestId("sidebar-navigation-inbox").click();
+  await page.getByTestId("sidebar-footer-inbox").click();
   const item = inboxItem(page, headline);
   await expect(item).toHaveAttribute("data-unread", "true");
   await item.click();

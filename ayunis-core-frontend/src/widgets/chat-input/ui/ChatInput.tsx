@@ -334,7 +334,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 showProcessingGlow && !isDragging && 'bg-card',
               )}
             >
-              <CardContent className="px-3 sm:px-4">
+              <CardContent className="px-(--chat-input-content-padding)">
                 <div className="chat-input-body flex flex-col gap-4">
                   {hasAttachmentChips && (
                     <ChatInputExpandable show>

@@ -17351,7 +17351,7 @@ export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typ
 
 
 /**
- * @summary Count the current user's unread notifications
+ * @summary Count the current user's unread notifications, also per type
  */
 export const notificationsControllerCountUnread = (
 
@@ -17422,7 +17422,7 @@ export function useNotificationsControllerCountUnread<TData = Awaited<ReturnType
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Count the current user's unread notifications
+ * @summary Count the current user's unread notifications, also per type
  */
 
 export function useNotificationsControllerCountUnread<TData = Awaited<ReturnType<typeof notificationsControllerCountUnread>>, TError = unknown>(

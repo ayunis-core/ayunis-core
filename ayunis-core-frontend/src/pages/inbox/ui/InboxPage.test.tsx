@@ -6,6 +6,7 @@ import InboxPage from './InboxPage';
 const mocks = vi.hoisted(() => ({
   notifications: [] as { id: string; readAt: string | null }[],
   unreadCount: 0,
+  useNotifications: vi.fn(),
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -27,20 +28,34 @@ vi.mock('@/layouts/content-area-layout/ui/ContentAreaLayout', () => ({
     </>
   ),
 }));
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, ...props }: { children: ReactNode }) => (
+    <a {...props}>{children}</a>
+  ),
+}));
 vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
-  default: ({ action }: { action: ReactNode }) => <header>{action}</header>,
+  default: ({ action, badge }: { action: ReactNode; badge: ReactNode }) => (
+    <header>
+      {badge}
+      {action}
+    </header>
+  ),
 }));
 vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
 vi.mock('@/features/notifications', () => ({
   NotificationListItem: () => <div data-testid="notification-item" />,
+  NotificationTypeIcon: () => null,
   useUnreadNotificationCount: () => ({ unreadCount: mocks.unreadCount }),
 }));
 vi.mock('@/pages/inbox/api/useNotifications', () => ({
-  useNotifications: () => ({
-    notifications: mocks.notifications,
-    total: mocks.notifications.length,
-    isLoading: false,
-  }),
+  useNotifications: (...args: unknown[]) => {
+    mocks.useNotifications(...args);
+    return {
+      notifications: mocks.notifications,
+      total: mocks.notifications.length,
+      isLoading: false,
+    };
+  },
 }));
 vi.mock('@/pages/inbox/api/useMarkAllNotificationsRead', () => ({
   useMarkAllNotificationsRead: () => ({ mutate: vi.fn(), isPending: false }),
@@ -69,5 +84,35 @@ describe('InboxPage', () => {
     render(<InboxPage page={1} />);
 
     expect(markAllRead().disabled).toBe(true);
+  });
+
+  it('lists all types without a filter', () => {
+    mocks.notifications = [{ id: 'n1', readAt: null }];
+
+    render(<InboxPage page={1} />);
+
+    expect(mocks.useNotifications).toHaveBeenLastCalledWith(1, undefined);
+    expect(screen.queryByTestId('inbox-type-filter')).toBeNull();
+  });
+
+  it('lists only the filtered type, names the filter and offers to clear it', () => {
+    mocks.notifications = [{ id: 'n1', readAt: null }];
+
+    render(<InboxPage page={2} type="routine_error" />);
+
+    expect(mocks.useNotifications).toHaveBeenLastCalledWith(2, 'routine_error');
+    expect(screen.getByTestId('inbox-type-filter').textContent).toContain(
+      'filter.type.routine_error',
+    );
+    expect(screen.getByTestId('inbox-type-filter-clear')).toBeTruthy();
+  });
+
+  it('keeps the filter visible when the filtered type has no notifications', () => {
+    mocks.notifications = [];
+
+    render(<InboxPage page={1} type="routine" />);
+
+    expect(screen.getByTestId('inbox-type-filter')).toBeTruthy();
+    expect(screen.getByTestId('inbox-type-filter-clear')).toBeTruthy();
   });
 });

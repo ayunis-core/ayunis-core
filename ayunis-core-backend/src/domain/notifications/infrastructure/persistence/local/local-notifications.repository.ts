@@ -7,9 +7,11 @@ import type { EntityManager } from 'typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
+import type { UnreadNotificationTypeCount } from 'src/domain/notifications/application/models/unread-notification-counts';
 import type { NotificationsFilter } from 'src/domain/notifications/application/ports/notifications.repository';
 import { NotificationsRepository } from 'src/domain/notifications/application/ports/notifications.repository';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
+import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { NotificationMapper } from './mappers/notification.mapper';
 import { NotificationRecord } from './schema/notification.record';
 
@@ -63,10 +65,10 @@ export class LocalNotificationsRepository extends NotificationsRepository {
   async findPageByUserId(
     userId: UUID,
     { limit, offset }: PaginatedQueryParams,
-    { routineId }: NotificationsFilter = {},
+    { routineId, type }: NotificationsFilter = {},
   ): Promise<Paginated<Notification>> {
     const [records, total] = await this.repo.findAndCount({
-      where: { userId, ...(routineId && { routineId }) },
+      where: { userId, ...(routineId && { routineId }), ...(type && { type }) },
       order: { createdAt: 'DESC', id: 'DESC' },
       take: limit,
       skip: offset,
@@ -79,8 +81,19 @@ export class LocalNotificationsRepository extends NotificationsRepository {
     });
   }
 
-  countUnread(userId: UUID): Promise<number> {
-    return this.repo.count({ where: { userId, readAt: IsNull() } });
+  async countUnreadByType(
+    userId: UUID,
+  ): Promise<UnreadNotificationTypeCount[]> {
+    const rows = await this.repo
+      .createQueryBuilder('notification')
+      .select('notification.type', 'type')
+      .addSelect('COUNT(*)::int', 'count')
+      .where('notification.userId = :userId', { userId })
+      .andWhere('notification.readAt IS NULL')
+      .groupBy('notification.type')
+      .orderBy('notification.type', 'ASC')
+      .getRawMany<{ type: NotificationType; count: number }>();
+    return rows.map(({ type, count }) => ({ type, count }));
   }
 
   async markRead(

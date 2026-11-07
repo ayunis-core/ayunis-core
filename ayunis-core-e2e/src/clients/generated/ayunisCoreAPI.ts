@@ -3259,7 +3259,7 @@ const notificationsControllerFindAll = (
     }
 
 /**
- * @summary Count the current user's unread notifications
+ * @summary Count the current user's unread notifications, also per type
  */
 const notificationsControllerCountUnread = (
 

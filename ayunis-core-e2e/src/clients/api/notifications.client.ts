@@ -3,6 +3,8 @@ import { config } from '../../config';
 import type {
   CreateRoutineDto,
   NotificationResponseDto,
+  NotificationType,
+  UnreadNotificationCountResponseDto,
 } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
@@ -24,10 +26,17 @@ export function notifyingRoutine(
 
 export function listNotifications(
   api: APIRequestContext,
+  type?: NotificationType,
 ): Promise<NotificationResponseDto[]> {
   return generatedApi
-    .notificationsControllerFindAll({ limit: 100 }, { api })
+    .notificationsControllerFindAll({ limit: 100, type }, { api })
     .then((page) => page.data);
+}
+
+export function unreadNotificationCount(
+  api: APIRequestContext,
+): Promise<UnreadNotificationCountResponseDto> {
+  return generatedApi.notificationsControllerCountUnread({ api });
 }
 
 export function getNotification(

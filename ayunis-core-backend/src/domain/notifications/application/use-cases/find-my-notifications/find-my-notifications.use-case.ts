@@ -22,14 +22,19 @@ export class FindMyNotificationsUseCase {
     query: FindMyNotificationsQuery,
   ): Promise<Paginated<Notification>> {
     this.logger.log(
-      { limit: query.limit, offset: query.offset, routineId: query.routineId },
+      {
+        limit: query.limit,
+        offset: query.offset,
+        routineId: query.routineId,
+        type: query.type,
+      },
       'Finding notifications',
     );
     const { userId } = getRequiredUserContext(this.contextService);
     return this.notificationsRepository.findPageByUserId(
       userId,
       { limit: query.limit, offset: query.offset },
-      { routineId: query.routineId },
+      { routineId: query.routineId, type: query.type },
     );
   }
 }

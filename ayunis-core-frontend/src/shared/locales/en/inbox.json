@@ -3,6 +3,13 @@
     "title": "Inbox",
     "markAllRead": "Mark all as read"
   },
+  "filter": {
+    "type": {
+      "routine": "Routine notifications",
+      "routine_error": "Routine errors"
+    },
+    "clear": "Clear filter"
+  },
   "emptyState": {
     "title": "No notifications",
     "description": "Notifications from your routines appear here."
