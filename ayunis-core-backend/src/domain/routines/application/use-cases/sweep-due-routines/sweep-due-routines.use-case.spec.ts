@@ -5,6 +5,7 @@ import type { DueRoutine } from 'src/domain/routines/application/ports/routines.
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import { RoutineExecutionQueue } from 'src/domain/routines/application/ports/routine-execution-queue.port';
 import { UnexpectedRoutineError } from 'src/domain/routines/application/routines.errors';
+import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
 import {
   TEST_ORG_ID,
   TEST_USER_ID,
@@ -21,6 +22,7 @@ describe('SweepDueRoutinesUseCase', () => {
   let useCase: SweepDueRoutinesUseCase;
   let repository: jest.Mocked<RoutinesRepository>;
   let queue: jest.Mocked<RoutineExecutionQueue>;
+  const failureNotifier = { notify: jest.fn() };
   // 08:00 in Berlin (CET)
   const now = new Date('2026-11-07T07:00:00.000Z');
 
@@ -33,6 +35,11 @@ describe('SweepDueRoutinesUseCase', () => {
   });
 
   const sweep = () => useCase.execute(new SweepDueRoutinesCommand(now));
+
+  const interrupted = (name: string, paused: boolean) => ({
+    routine: { id: ROUTINE_ID, userId: TEST_USER_ID, orgId: TEST_ORG_ID, name },
+    paused,
+  });
 
   beforeEach(async () => {
     jest.resetAllMocks();
@@ -47,6 +54,7 @@ describe('SweepDueRoutinesUseCase', () => {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(15) },
         },
+        { provide: RoutineFailureNotifier, useValue: failureNotifier },
       ],
     }).compile();
     useCase = module.get(SweepDueRoutinesUseCase);
@@ -128,7 +136,10 @@ describe('SweepDueRoutinesUseCase', () => {
   });
 
   it('fails runs still shown as running after the run timeout plus a margin', async () => {
-    repository.failRunsStartedBefore.mockResolvedValue(2);
+    repository.failRunsStartedBefore.mockResolvedValue([
+      interrupted('Amtsblatt', false),
+      interrupted('Verkündungsplattform', true),
+    ]);
 
     await expect(sweep()).resolves.toMatchObject({ interrupted: 2 });
 
@@ -137,5 +148,31 @@ describe('SweepDueRoutinesUseCase', () => {
       'interrupted',
       now,
     );
+  });
+
+  it("tells each interrupted routine's owner, including whether it is now paused", async () => {
+    repository.failRunsStartedBefore.mockResolvedValue([
+      interrupted('Amtsblatt', false),
+      interrupted('Verkündungsplattform', true),
+    ]);
+
+    await sweep();
+
+    expect(
+      failureNotifier.notify.mock.calls.map(([failure]) => failure),
+    ).toEqual([
+      {
+        routine: expect.objectContaining({ name: 'Amtsblatt' }),
+        failureReason: 'interrupted',
+        paused: false,
+        routineThreadId: null,
+      },
+      {
+        routine: expect.objectContaining({ name: 'Verkündungsplattform' }),
+        failureReason: 'interrupted',
+        paused: true,
+        routineThreadId: null,
+      },
+    ]);
   });
 });

@@ -26,6 +26,8 @@ import { McpCapability } from 'src/domain/runs/application/run-capabilities/capa
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
+import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import {
   aCapabilityContext,
   aThread,
@@ -37,6 +39,9 @@ import { ChatRunProfile } from './chat-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
+const notification = aNotification({
+  headline: 'Neue Verordnung zur Grundsteuer',
+});
 
 function buildChatProfile(): ChatRunProfile {
   const assembleTool = createAssembleToolUseCase();
@@ -91,6 +96,10 @@ function buildChatProfile(): ChatRunProfile {
     new ImageGenerationCapability(resolved({}) as never, assembleTool),
     new ThreadSourcesCapability(assembleTool),
     new KnowledgeBasesCapability(assembleTool),
+    new NotificationContextCapability(
+      resolved(notification) as never,
+      { get: () => true } as never,
+    ),
     new WorkspaceInstructionsCapability(),
     new McpCapability(mcpTools),
   );
@@ -166,6 +175,25 @@ describe('ChatRunProfile', () => {
       `mcp__tool__code.execution__${integrationId.slice(0, 8)}`,
     );
     expect(names.filter((name) => name === 'code_execution')).toHaveLength(1);
+  });
+
+  it('gives a chat about a notification its content after the stable prompt prefix, without routine tools', async () => {
+    const { tools, instructions } = await assembleChat({
+      thread: aThread({ sourceNotificationId: notification.id }),
+    });
+
+    expect(instructions).toMatch(
+      /^You are an AI assistant powered by Ayunis Core[\s\S]*<\/behavior_instructions>[\s\S]*<notification_under_discussion>[\s\S]*<headline>Neue Verordnung zur Grundsteuer<\/headline>[\s\S]*You are now ready to assist the user\.$/,
+    );
+    expect(tools.map((tool) => tool.name)).not.toContain(
+      ToolType.SEND_NOTIFICATION,
+    );
+  });
+
+  it('adds no notification to an ordinary chat', async () => {
+    const { instructions } = await assembleChat();
+
+    expect(instructions).not.toContain('<notification_under_discussion>');
   });
 
   it('starts the prompt with the date-only preamble so the cached prefix stays stable', async () => {

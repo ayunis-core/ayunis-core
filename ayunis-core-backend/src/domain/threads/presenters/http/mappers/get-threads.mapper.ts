@@ -17,6 +17,7 @@ export class GetThreadsDtoMapper {
       workspaceId: thread.workspaceId ?? null,
       type: thread.type,
       routineId: thread.routineId,
+      sourceNotificationId: thread.sourceNotificationId,
     };
   }
 

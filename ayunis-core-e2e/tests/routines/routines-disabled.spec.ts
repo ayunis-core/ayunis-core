@@ -6,6 +6,10 @@ import {
   requestRoutineRun,
   requestRoutines,
 } from "../../src/clients/api/routines.client";
+import {
+  requestNotifications,
+  requestUnreadNotificationCount,
+} from "../../src/clients/api/notifications.client";
 import { createApiContext } from "../../src/factories/api-context.factory";
 import { createOrg } from "../../src/factories/org.factory";
 import { sendMessage } from "../../src/flows/chat.flow";
@@ -19,7 +23,7 @@ const disabledBaseUrl =
 const disabledApiUrl =
   process.env.E2E_ROUTINES_DISABLED_API_URL ?? disabledBaseUrl;
 
-test("with routines disabled there are no routine endpoints or UI, and chats still work", async ({
+test("with routines disabled there are no routine or inbox endpoints or UI, and chats still work", async ({
   api,
   org,
   page,
@@ -30,12 +34,19 @@ test("with routines disabled there are no routine endpoints or UI, and chats sti
   expect(
     (await requestRoutineRun(api, randomUUID(), disabledApiUrl)).status(),
   ).toBe(404);
+  expect((await requestNotifications(api, disabledApiUrl)).status()).toBe(404);
+  expect(
+    (await requestUnreadNotificationCount(api, disabledApiUrl)).status(),
+  ).toBe(404);
 
+  await page.goto(`${disabledBaseUrl}/inbox`);
+  await expect(page).toHaveURL(/\/chat$/);
   await page.goto(`${disabledBaseUrl}/routines`);
   await expect(page).toHaveURL(/\/chat$/);
   await expect(page.getByTestId("sidebar")).toBeVisible();
   await expect(page.getByTestId("sidebar-navigation-routines")).toHaveCount(0);
   await expect(page.getByTestId("sidebar-chats-filter")).toHaveCount(0);
+  await expect(page.getByTestId("sidebar-navigation-inbox")).toHaveCount(0);
 
   await sendMessage(page, "Wann hat das Bürgerbüro geöffnet?");
   await expect(page.getByTestId("assistant-message").last()).toContainText(

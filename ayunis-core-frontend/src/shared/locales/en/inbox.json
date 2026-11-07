@@ -1,0 +1,23 @@
+{
+  "page": {
+    "title": "Inbox",
+    "markAllRead": "Mark all as read"
+  },
+  "emptyState": {
+    "title": "No notifications",
+    "description": "Notifications from your routines appear here."
+  },
+  "item": {
+    "unread": "Unread",
+    "error": "Error"
+  },
+  "detail": {
+    "chatAboutThis": "Chat about this",
+    "openRoutineChat": "Open routine chat"
+  },
+  "toast": {
+    "notFound": "The notification was not found.",
+    "markReadError": "The notification could not be marked as read.",
+    "markAllReadError": "The notifications could not be marked as read."
+  }
+}

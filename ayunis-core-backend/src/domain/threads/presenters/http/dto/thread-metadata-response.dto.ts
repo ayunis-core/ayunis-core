@@ -59,4 +59,13 @@ export class ThreadMetadataResponseDto {
     nullable: true,
   })
   routineId: string | null;
+
+  @ApiProperty({
+    type: String,
+    description:
+      'The notification this chat was started about; null for other chats and once the notification is deleted',
+    format: 'uuid',
+    nullable: true,
+  })
+  sourceNotificationId: string | null;
 }

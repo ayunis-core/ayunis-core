@@ -9,6 +9,8 @@ import {
   type ExpiredThreadRef,
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { FindExpiredThreadRefsByOrgQuery } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.query';
+import { DeleteExpiredNotificationsUseCase } from 'src/domain/notifications/application/use-cases/delete-expired-notifications/delete-expired-notifications.use-case';
+import { DeleteExpiredNotificationsCommand } from 'src/domain/notifications/application/use-cases/delete-expired-notifications/delete-expired-notifications.command';
 import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import type { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import type {
@@ -26,7 +28,8 @@ export const MAX_BATCHES_PER_ORG = 10_000;
  * Opt-in: only orgs with an enabled policy are touched. Threads are deleted
  * one at a time through DeleteThreadUseCase (which also purges storage objects
  * and cascades messages/artifacts/images) rather than via bulk SQL. Failures
- * are isolated per thread so one bad thread can't abort the run.
+ * are isolated per thread so one bad thread can't abort the run. Inbox
+ * notifications created before the same cutoff are deleted too.
  */
 @Injectable()
 export class EnforceRetentionUseCase {
@@ -36,6 +39,7 @@ export class EnforceRetentionUseCase {
     private readonly retentionPoliciesRepository: RetentionPoliciesRepository,
     private readonly findExpiredThreadRefsByOrg: FindExpiredThreadRefsByOrgUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
+    private readonly deleteExpiredNotificationsUseCase: DeleteExpiredNotificationsUseCase,
     private readonly contextService: ContextService,
     private readonly configService: ConfigService,
   ) {}
@@ -62,6 +66,10 @@ export class EnforceRetentionUseCase {
       orgsProcessed: perOrg.length,
       totalDeleted: perOrg.reduce((sum, o) => sum + o.deleted, 0),
       totalFailed: perOrg.reduce((sum, o) => sum + o.failed, 0),
+      totalNotificationsDeleted: perOrg.reduce(
+        (sum, o) => sum + o.notificationsDeleted,
+        0,
+      ),
       dryRun,
       perOrg,
     };
@@ -70,6 +78,7 @@ export class EnforceRetentionUseCase {
         orgsProcessed: result.orgsProcessed,
         totalDeleted: result.totalDeleted,
         totalFailed: result.totalFailed,
+        totalNotificationsDeleted: result.totalNotificationsDeleted,
         dryRun,
       },
       'Retention enforcement complete',
@@ -91,6 +100,7 @@ export class EnforceRetentionUseCase {
       failed: 0,
       dryRun,
       capReached: false,
+      notificationsDeleted: 0,
     };
     // Should never happen (findAllEnabled excludes disabled), but guards the
     // type narrowing and avoids deleting everything on a null cutoff.
@@ -106,8 +116,37 @@ export class EnforceRetentionUseCase {
       );
     }
 
+    result.notificationsDeleted = await this.deleteExpiredNotifications(
+      policy.orgId,
+      cutoff,
+      dryRun,
+    );
+
     this.logger.log({ cutoff, ...result }, 'Retention enforced for org');
     return result;
+  }
+
+  /** Isolated like a thread deletion: a failure leaves the other orgs to run. */
+  private async deleteExpiredNotifications(
+    orgId: UUID,
+    cutoff: Date,
+    dryRun: boolean,
+  ): Promise<number> {
+    try {
+      return await this.deleteExpiredNotificationsUseCase.execute(
+        new DeleteExpiredNotificationsCommand({
+          orgId,
+          createdBefore: cutoff,
+          dryRun,
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        { orgId, err: error as Error },
+        'Failed to delete expired notifications',
+      );
+      return 0;
+    }
   }
 
   /**

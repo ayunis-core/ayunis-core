@@ -7,6 +7,7 @@ import { FinishRoutineCapability } from 'src/domain/runs/application/run-capabil
 import { InternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/internet.capability';
 import { RoutineContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
+import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
 import {
   aCapabilityContext,
   aThread,
@@ -36,6 +37,7 @@ function buildRoutineProfile(orgAllowsInternet = true): RoutineRunProfile {
         assembleTool,
       ),
     ),
+    new NotificationsCapability(assembleTool, { get: () => true } as never),
     new FinishRoutineCapability(assembleTool),
   );
 }
@@ -66,7 +68,7 @@ function assembleRoutine(
         internetEnabled: options.internetEnabled ?? true,
       },
     },
-    thread: aThread(),
+    thread: aThread({ routineId: '44444444-4444-4444-8444-444444444444' }),
     model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
       .model,
     userId: TEST_USER_ID,
@@ -83,26 +85,41 @@ describe('RoutineRunProfile', () => {
     jest.useRealTimers();
   });
 
-  it('offers the web tools and finish_routine when the routine and the org allow internet access', async () => {
+  it('offers the web tools, send_notification and finish_routine when the routine and the org allow internet access', async () => {
     const { tools } = await assembleRoutine();
 
     expect(tools.map((tool) => tool.name)).toEqual([
       ToolType.WEBSITE_CONTENT,
       ToolType.INTERNET_SEARCH,
+      ToolType.SEND_NOTIFICATION,
       ToolType.FINISH_ROUTINE,
     ]);
   });
 
-  it('offers only finish_routine when the routine has internet access turned off', async () => {
+  it('offers only send_notification and finish_routine when the routine has internet access turned off', async () => {
     const { tools } = await assembleRoutine({ internetEnabled: false });
 
-    expect(tools.map((tool) => tool.name)).toEqual([ToolType.FINISH_ROUTINE]);
+    expect(tools.map((tool) => tool.name)).toEqual([
+      ToolType.SEND_NOTIFICATION,
+      ToolType.FINISH_ROUTINE,
+    ]);
   });
 
-  it('offers only finish_routine when the org disabled internet access', async () => {
+  it('offers only send_notification and finish_routine when the org disabled internet access', async () => {
     const { tools } = await assembleRoutine({ orgAllowsInternet: false });
 
-    expect(tools.map((tool) => tool.name)).toEqual([ToolType.FINISH_ROUTINE]);
+    expect(tools.map((tool) => tool.name)).toEqual([
+      ToolType.SEND_NOTIFICATION,
+      ToolType.FINISH_ROUTINE,
+    ]);
+  });
+
+  it('tells the model to notify only about something important and otherwise finish silently', async () => {
+    const { instructions } = await assembleRoutine();
+
+    expect(instructions).toMatch(
+      /<unattended_run>[\s\S]*important[\s\S]*send_notification[\s\S]*then call finish_routine[\s\S]*nothing important[\s\S]*finish_routine without sending a notification[\s\S]*<\/unattended_run>/,
+    );
   });
 
   it('starts the prompt with the unattended preamble and the routine name', async () => {

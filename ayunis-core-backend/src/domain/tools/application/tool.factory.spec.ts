@@ -1,5 +1,6 @@
 import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { ToolFactory } from './tool.factory';
+import { ToolInvalidContextError } from './tools.errors';
 import {
   HttpToolConfig,
   HttpToolMethod,
@@ -19,6 +20,10 @@ import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-documen
 import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
+import {
+  SendNotificationOrigin,
+  SendNotificationTool,
+} from 'src/domain/tools/domain/tools/send-notification-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -191,8 +196,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
       expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
       expect(types).toContain(ToolType.FINISH_ROUTINE);
+      expect(types).toContain(ToolType.SEND_NOTIFICATION);
 
-      expect(types).toHaveLength(33);
+      expect(types).toHaveLength(34);
     });
   });
 });
@@ -201,5 +207,25 @@ describe('create_file factory registration', () => {
   it('creates a file tool without configuration', () => {
     const tool = new ToolFactory().createTool({ type: ToolType.CREATE_FILE });
     expect(tool).toBeInstanceOf(CreateFileTool);
+  });
+});
+
+describe('send_notification factory registration', () => {
+  it('creates the tool for the routine a run belongs to', () => {
+    const origin = new SendNotificationOrigin(
+      '44444444-4444-4444-8444-444444444444',
+    );
+    const tool = new ToolFactory().createTool({
+      type: ToolType.SEND_NOTIFICATION,
+      context: origin,
+    });
+    expect(tool).toBeInstanceOf(SendNotificationTool);
+    expect((tool as SendNotificationTool).origin).toBe(origin);
+  });
+
+  it('refuses to create it without the routine origin', () => {
+    expect(() =>
+      new ToolFactory().createTool({ type: ToolType.SEND_NOTIFICATION }),
+    ).toThrow(ToolInvalidContextError);
   });
 });

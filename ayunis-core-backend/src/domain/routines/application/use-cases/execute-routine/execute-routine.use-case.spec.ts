@@ -25,6 +25,7 @@ import {
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
+import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
 import { AcademyCertificateRequiredError } from 'src/iam/academy-access/application/academy-access.errors';
 import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
@@ -53,6 +54,7 @@ describe('ExecuteRoutineUseCase', () => {
   const routineModelService = { forRun: jest.fn() };
   const createThread = { execute: jest.fn() };
   const executeUnattendedRun = { execute: jest.fn() };
+  const failureNotifier = { notify: jest.fn() };
 
   const owner = (overrides: Partial<User> = {}) =>
     new User({
@@ -112,6 +114,7 @@ describe('ExecuteRoutineUseCase', () => {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(15) },
         },
+        { provide: RoutineFailureNotifier, useValue: failureNotifier },
       ],
     }).compile();
     useCase = module.get(ExecuteRoutineUseCase);
@@ -361,5 +364,105 @@ describe('ExecuteRoutineUseCase', () => {
     await expect(run()).resolves.toBeNull();
     expect(createThread.execute).not.toHaveBeenCalled();
     expect(repository.recordRunOutcome).not.toHaveBeenCalled();
+  });
+
+  describe('error notifications', () => {
+    const notified = () =>
+      failureNotifier.notify.mock.calls.map(([failure]) => failure as unknown);
+
+    it('tells the owner about a failed run and links its routine thread', async () => {
+      executeUnattendedRun.execute.mockResolvedValue({
+        status: 'failed',
+        nudges: 2,
+        reason: 'finish_routine_not_called',
+      });
+
+      await run();
+
+      expect(notified()).toEqual([
+        {
+          routine: expect.objectContaining({ id: TEST_ROUTINE_ID }),
+          failureReason: 'finish_routine_not_called',
+          paused: false,
+          routineThreadId: threadId,
+        },
+      ]);
+    });
+
+    it('says so when the failure paused the routine', async () => {
+      executeUnattendedRun.execute.mockResolvedValue({
+        status: 'aborted',
+        nudges: 0,
+      });
+      repository.recordRunOutcome.mockResolvedValue({ paused: true });
+
+      await run(RoutineRunTrigger.SCHEDULED);
+
+      expect(notified()).toEqual([
+        expect.objectContaining({ failureReason: 'timeout', paused: true }),
+      ]);
+    });
+
+    it('notifies without a thread when the run failed before it had one', async () => {
+      subscriptionGate.admit.mockRejectedValue(
+        new RoutineSubscriptionRequiredError(),
+      );
+
+      await run();
+
+      expect(notified()).toEqual([
+        expect.objectContaining({
+          failureReason: 'ROUTINE_SUBSCRIPTION_REQUIRED',
+          routineThreadId: null,
+        }),
+      ]);
+    });
+
+    it('notifies about an unexpected failure with its thread and still surfaces it', async () => {
+      executeUnattendedRun.execute.mockRejectedValue(
+        new Error('socket hang up'),
+      );
+
+      await expect(run()).rejects.toThrow(UnexpectedRoutineError);
+
+      expect(notified()).toEqual([
+        expect.objectContaining({
+          failureReason: 'UNEXPECTED_ERROR',
+          routineThreadId: threadId,
+        }),
+      ]);
+    });
+
+    it('notifies about a Run now that could not start', async () => {
+      findUserById.execute.mockRejectedValue(new Error('Connection lost'));
+
+      await expect(run(RoutineRunTrigger.RUN_NOW)).rejects.toThrow();
+
+      expect(notified()).toEqual([
+        expect.objectContaining({ routineThreadId: null }),
+      ]);
+    });
+
+    it('sends nothing for a successful run', async () => {
+      await run();
+
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+    });
+
+    it('sends nothing for a run skipped for a missing permission', async () => {
+      hasPermission.execute.mockResolvedValue(false);
+
+      await run();
+
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+    });
+
+    it('sends nothing for a scheduled run that fails before it starts and is retried', async () => {
+      findUserById.execute.mockRejectedValue(new Error('Connection lost'));
+
+      await expect(run(RoutineRunTrigger.SCHEDULED)).rejects.toThrow();
+
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+    });
   });
 });
