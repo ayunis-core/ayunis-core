@@ -11,10 +11,6 @@ export const THREAD_RUN_WAIT_MS = 15_000;
  * queue in arrival order; a run that cannot start within THREAD_RUN_WAIT_MS
  * fails with RunThreadBusyError instead of interleaving its messages with
  * the run still in progress.
- *
- * The lock lives in this process, which is correct while the backend runs
- * as a single instance. AYC-1258 tracks the move to shared coordination
- * before scaling past one replica.
  */
 @Injectable()
 export class ThreadRunLock {

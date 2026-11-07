@@ -6,10 +6,6 @@ import type { UUID } from 'crypto';
  * existing masks and numbers new values after them, so two redactions on one
  * thread running at the same time would otherwise hand out the same
  * `{{pii:CATEGORY_n}}` token. Different threads never wait for each other.
- *
- * The lock lives in this process, which is correct while the backend runs as
- * a single instance (the same assumption ThreadRunLock makes); AYC-1258
- * tracks shared coordination before scaling past one replica.
  */
 @Injectable()
 export class ThreadMaskAllocationLock {

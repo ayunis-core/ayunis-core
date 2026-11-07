@@ -32,9 +32,6 @@ interface CooldownState {
  * Notification persistence remains responsible for preventing duplicate
  * alerts; BudgetAlertEvaluator serializes runs per org so a run that
  * outlives the cooldown never overlaps the trailing one.
- *
- * Note: the cooldown is not distributed. When multiple application replicas
- * are running, each replica may evaluate the same organization independently.
  */
 @Injectable()
 export class BudgetAlertsListener implements OnModuleDestroy {
