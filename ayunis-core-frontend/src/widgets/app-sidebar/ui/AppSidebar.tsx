@@ -75,6 +75,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
   const marketplace = useMarketplaceConfig();
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
+  const canManageRoutines =
+    routinesEnabled && authorization.can('manage_routines');
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
@@ -112,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/knowledge-bases',
       icon: Brain,
     },
-    ...(routinesEnabled
+    ...(canManageRoutines
       ? [
           {
             title: t('sidebar.routines'),

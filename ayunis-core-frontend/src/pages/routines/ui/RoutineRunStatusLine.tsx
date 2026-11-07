@@ -35,6 +35,7 @@ export function RoutineRunStatusLine({
     );
   }
   const failed = status === RoutineRunStatus.failed;
+  const explained = failed || status === RoutineRunStatus.skipped;
   return (
     <span
       className="inline-flex flex-wrap items-center gap-1.5"
@@ -49,7 +50,7 @@ export function RoutineRunStatusLine({
           {formatRunTime(routine.lastRunAt)}
         </span>
       )}
-      {failed && (
+      {explained && (
         <span className="text-muted-foreground">
           {t(failureReasonKey(routine.lastRunFailureReason))}
         </span>

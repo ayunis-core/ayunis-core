@@ -1,3 +1,4 @@
+import type { FeatureTogglesResponseDto } from '@/shared/api';
 import type {
   Permission,
   PermissionGroup,
@@ -6,6 +7,8 @@ import type {
 export interface PermissionGroupSection {
   group: PermissionGroup;
   permissions: Permission[];
+  /** Shown only while this feature is enabled. */
+  feature?: keyof FeatureTogglesResponseDto;
 }
 
 // Section order and membership for the permission matrix. Labels for both the
@@ -28,4 +31,17 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
       'share_knowledge_bases_with_org',
     ],
   },
+  {
+    group: 'routines',
+    permissions: ['manage_routines'],
+    feature: 'routinesEnabled',
+  },
 ];
+
+export function visiblePermissionSections(
+  toggles: Partial<FeatureTogglesResponseDto> | undefined,
+): PermissionGroupSection[] {
+  return PERMISSION_SECTIONS.filter(
+    (section) => !section.feature || toggles?.[section.feature] === true,
+  );
+}

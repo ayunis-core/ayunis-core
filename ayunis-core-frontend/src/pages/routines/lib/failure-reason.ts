@@ -19,9 +19,10 @@ const KNOWN_REASONS: Readonly<Record<string, string>> = {
   ROUTINE_SUBSCRIPTION_REQUIRED: 'subscriptionRequired',
   ROUTINE_OWNER_LOCKED: 'ownerLocked',
   RUN_MAX_ITERATIONS_REACHED: 'maxIterations',
+  permission_missing: 'permissionMissing',
 };
 
-/** The `failureReason.*` translation key for a stored failure reason code. */
+/** The `failureReason.*` translation key for a stored failure or skip reason code. */
 export function failureReasonKey(reason: string | null): string {
   if (reason === null) return 'failureReason.unknown';
   if (CREDIT_REASONS.has(reason)) return 'failureReason.credits';

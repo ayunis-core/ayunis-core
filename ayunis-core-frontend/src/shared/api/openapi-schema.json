@@ -11360,6 +11360,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "The manage routines permission is required"
           }
         },
         "summary": "List the current user's routines",
@@ -11388,6 +11391,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "The manage routines permission is required"
           }
         },
         "summary": "Create a routine",
@@ -11419,6 +11425,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "The manage routines permission is required"
           },
           "404": {
             "description": "Routine not found"
@@ -11462,6 +11471,9 @@
               }
             }
           },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
           "404": {
             "description": "Routine not found"
           }
@@ -11486,6 +11498,9 @@
         "responses": {
           "204": {
             "description": "Routine deleted"
+          },
+          "403": {
+            "description": "The manage routines permission is required"
           },
           "404": {
             "description": "Routine not found"
@@ -11516,7 +11531,7 @@
             "description": "Run queued"
           },
           "403": {
-            "description": "Subscription required"
+            "description": "Subscription or the manage routines permission required"
           },
           "404": {
             "description": "Routine not found"
@@ -14702,7 +14717,8 @@
                 "share_skills_with_org",
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
-                "share_knowledge_bases_with_org"
+                "share_knowledge_bases_with_org",
+                "manage_routines"
               ]
             }
           }
@@ -14738,7 +14754,8 @@
                 "share_skills_with_org",
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
-                "share_knowledge_bases_with_org"
+                "share_knowledge_bases_with_org",
+                "manage_routines"
               ]
             }
           }
@@ -14761,7 +14778,8 @@
                 "share_skills_with_org",
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
-                "share_knowledge_bases_with_org"
+                "share_knowledge_bases_with_org",
+                "manage_routines"
               ]
             }
           }
@@ -16839,7 +16857,8 @@
                 "share_skills_with_org",
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
-                "share_knowledge_bases_with_org"
+                "share_knowledge_bases_with_org",
+                "manage_routines"
               ]
             }
           }
@@ -16875,7 +16894,8 @@
                 "share_skills_with_org",
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
-                "share_knowledge_bases_with_org"
+                "share_knowledge_bases_with_org",
+                "manage_routines"
               ]
             }
           }
@@ -22197,7 +22217,7 @@
       },
       "RoutineRunStatus": {
         "type": "string",
-        "enum": ["queued", "running", "succeeded", "failed"],
+        "enum": ["queued", "running", "succeeded", "failed", "skipped"],
         "description": "Null until the routine ran for the first time"
       },
       "RoutineResponseDto": {

@@ -150,6 +150,30 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
         consecutiveFailureCount: 0,
       });
     });
+
+    it('records a skipped run with its reason, without counting a failure or pausing', async () => {
+      const nextRunAt = new Date('2026-11-08T06:30:00.000Z');
+      const routine = await stored({ consecutiveFailureCount: 2, nextRunAt });
+      const finishedAt = new Date('2026-11-07T06:30:00.000Z');
+
+      await expect(
+        repository.recordRunOutcome(
+          routine.id,
+          { status: 'skipped', reason: 'permission_missing' },
+          finishedAt,
+        ),
+      ).resolves.toEqual({ paused: false });
+
+      expect(await repository.findByIdForExecution(routine.id)).toMatchObject({
+        lastRunStatus: RoutineRunStatus.SKIPPED,
+        lastRunFailureReason: 'permission_missing',
+        lastRunAt: finishedAt,
+        consecutiveFailureCount: 2,
+        enabled: true,
+        nextRunAt,
+        pausedAt: null,
+      });
+    });
   });
 
   describe('updateDefinition', () => {

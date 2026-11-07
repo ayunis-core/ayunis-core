@@ -15,7 +15,8 @@
   "groups": {
     "teams": "Teams",
     "skills": "Skills",
-    "knowledge_bases": "Knowledge bases"
+    "knowledge_bases": "Knowledge bases",
+    "routines": "Routines"
   },
   "permissionHints": {
     "manage_teams": "Create, rename and delete teams.",
@@ -25,7 +26,8 @@
     "share_skills_with_org": "Make a skill available to the whole organisation.",
     "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
     "share_knowledge_bases_with_teams": "Make a knowledge base available to teams the member belongs to.",
-    "share_knowledge_bases_with_org": "Make a knowledge base available to the whole organisation."
+    "share_knowledge_bases_with_org": "Make a knowledge base available to the whole organisation.",
+    "manage_routines": "Create, edit, delete and run routines."
   },
   "permissions": {
     "manage_teams": "Manage teams",
@@ -35,7 +37,8 @@
     "share_skills_with_org": "Share skills with the organisation",
     "manage_knowledge_bases": "Manage knowledge bases",
     "share_knowledge_bases_with_teams": "Share knowledge bases with own teams",
-    "share_knowledge_bases_with_org": "Share knowledge bases with the organisation"
+    "share_knowledge_bases_with_org": "Share knowledge bases with the organisation",
+    "manage_routines": "Manage routines"
   },
   "adminHint": "Admins always have every permission and cannot be restricted.",
   "save": "Save changes",
