@@ -1,6 +1,16 @@
 export { useDeleteThread } from './api/useDeleteThread';
 export { postRunMessage, type RunMessagePayload } from './api/postRunMessage';
-export { useIsThreadRunActive } from './model/useIsThreadRunActive';
+export { attachThreadRun } from './api/attachThreadRun';
+export { stopThreadRun } from './api/stopThreadRun';
+export { isThreadRunStopped } from './model/stopped-thread-runs';
+export {
+  activeThreadRunsQueryKey,
+  useActiveThreadRuns,
+} from './api/useActiveThreadRuns';
+export {
+  useIsThreadRunActive,
+  useLocalActiveThreadRunIds,
+} from './model/useIsThreadRunActive';
 export {
   abortActiveThreadRun,
   registerActiveThreadRun,

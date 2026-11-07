@@ -1,7 +1,9 @@
 const activeRuns = new Map<string, AbortController>();
 const listeners = new Set<() => void>();
+let activeThreadIds: ReadonlySet<string> = new Set();
 
 function notifyListeners(): void {
+  activeThreadIds = new Set(activeRuns.keys());
   listeners.forEach((listener) => listener());
 }
 
@@ -36,6 +38,11 @@ export function abortActiveThreadRun(threadId: string): void {
 
 export function isThreadRunActive(threadId: string): boolean {
   return activeRuns.has(threadId);
+}
+
+/** Stable between changes, so it can back `useSyncExternalStore`. */
+export function getActiveThreadRunIds(): ReadonlySet<string> {
+  return activeThreadIds;
 }
 
 export function subscribeToActiveThreadRuns(listener: () => void): () => void {

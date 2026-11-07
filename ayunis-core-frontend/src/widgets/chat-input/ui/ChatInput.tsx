@@ -98,6 +98,8 @@ interface ChatInputProps {
   ) => void;
   /** Fired when the user clicks the cancel button while in-flight. */
   onCancel: () => void;
+  /** Disables the cancel button for a run that cannot be stopped. */
+  isCancelDisabled?: boolean;
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
@@ -144,6 +146,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onRemoveIntegration,
       onSend,
       onCancel,
+      isCancelDisabled = false,
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
@@ -414,6 +417,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     canSend={!!canSend}
                     onSend={handleSend}
                     onCancel={onCancel}
+                    isCancelDisabled={isCancelDisabled}
                     setMessage={setMessage}
                     textareaRef={textareaRef}
                   />

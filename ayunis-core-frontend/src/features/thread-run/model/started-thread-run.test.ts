@@ -6,6 +6,13 @@ import {
 } from './started-thread-run';
 import { abortActiveThreadRun, isThreadRunActive } from './active-thread-run';
 
+const { cancelRun } = vi.hoisted(() => ({
+  cancelRun: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+  activeRunsControllerCancel: cancelRun,
+}));
+
 const threadId = '00000000-0000-0000-0000-000000000001';
 
 function sentForm(fetchMock: ReturnType<typeof vi.fn>): FormData {
@@ -69,11 +76,22 @@ describe('started thread run', () => {
     expect(takeStartedThreadRun(threadId)).toBeNull();
   });
 
+  it('cancels a cancelled run on the server, where it outlives the request', () => {
+    startThreadRun({ threadId, text: 'Hallo', images: [] });
+
+    cancelStartedThreadRun(threadId);
+
+    expect(cancelRun).toHaveBeenCalledWith(threadId);
+  });
+
   it('leaves a run alone once it was taken', () => {
     startThreadRun({ threadId, text: 'Hallo', images: [] });
     const run = takeStartedThreadRun(threadId);
+    cancelRun.mockClear();
 
     cancelStartedThreadRun(threadId);
+
+    expect(cancelRun).not.toHaveBeenCalled();
 
     expect(run?.request.controller.signal.aborted).toBe(false);
     expect(isThreadRunActive(threadId)).toBe(true);

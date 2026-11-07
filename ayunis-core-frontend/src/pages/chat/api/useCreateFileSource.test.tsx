@@ -22,6 +22,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
     'ai-context',
     id,
   ],
+  getActiveRunsControllerFindActiveQueryKey: () => ['active-runs'],
 }));
 vi.mock('@/shared/lib/handle-source-upload-error', () => ({
   default: mocks.handleError,

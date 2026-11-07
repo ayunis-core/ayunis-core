@@ -16,6 +16,7 @@ interface SendButtonProps {
   canSend: boolean;
   onSend: () => void;
   onCancel: () => void;
+  isCancelDisabled?: boolean;
 }
 
 export function SendButton({
@@ -23,6 +24,7 @@ export function SendButton({
   canSend,
   onSend,
   onCancel,
+  isCancelDisabled = false,
 }: Readonly<SendButtonProps>) {
   const { t } = useTranslation('common');
 
@@ -37,6 +39,7 @@ export function SendButton({
                 'chat-input-send-button chat-input-send-button--stop rounded-full',
               )}
               data-testid="cancel"
+              disabled={isCancelDisabled}
               onClick={onCancel}
               aria-label={t('chatInput.cancelTooltip')}
             >

@@ -17,6 +17,7 @@ import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { TOUR_TARGET, findAssignTourThread } from '@/widgets/onboarding';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { useShowRoutineThreads } from '@/widgets/app-sidebar/hooks/useShowRoutineThreads';
+import { useRunningThreadIds } from '@/widgets/app-sidebar/hooks/useRunningThreadIds';
 import { ChatSidebarItem } from './ChatSidebarItem';
 import { RoutineThreadsFilter } from './RoutineThreadsFilter';
 import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
@@ -73,6 +74,7 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+  const runningThreadIds = useRunningThreadIds();
 
   const { favorites, isLoading: areFavoritesLoading } = useFavorites();
   const isPending = isLoading || areFavoritesLoading;
@@ -135,6 +137,7 @@ export function ChatsSidebarGroup() {
                 key={thread.id}
                 thread={thread}
                 isPinned={pinnedThreadIds.has(thread.id)}
+                isRunning={runningThreadIds.has(thread.id)}
                 onRename={(threadId, title) =>
                   setThreadToRename({ id: threadId, title })
                 }
