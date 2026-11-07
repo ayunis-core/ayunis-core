@@ -89,6 +89,13 @@ export function requestNotification(
   return api.get(`${config.apiURL}/api/notifications/${notificationId}`);
 }
 
+export function requestNotificationImage(
+  api: APIRequestContext,
+  notificationId: string,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/notifications/${notificationId}/image`);
+}
+
 export function requestNotificationRead(
   api: APIRequestContext,
   notificationId: string,

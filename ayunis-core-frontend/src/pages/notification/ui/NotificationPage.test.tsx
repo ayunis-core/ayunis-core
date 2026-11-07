@@ -67,6 +67,7 @@ function notification(
     headline: 'Neue Verordnung zur Grundsteuer',
     subheadline: 'GVBl. NRW vom 07.11.2026',
     body: 'Die Hebesätze ändern sich ab 2027.',
+    media: null,
     routineId: '0b7d9c3e-2f4a-4c8e-b1d6-5a9e8f7c6b5a',
     routineThreadId: null,
     readAt: '2026-11-07T08:00:00.000Z',
@@ -113,5 +114,60 @@ describe('NotificationPage', () => {
     mocks.canManageRoutines = false;
     renderPage();
     expect(screen.queryByTestId('notification-open-routine')).toBeNull();
+  });
+
+  describe('release notes', () => {
+    const renderReleaseNote = (
+      overrides: Partial<NotificationResponseDto> = {},
+    ) =>
+      renderPage({
+        type: 'release_note',
+        headline: 'Routinen sind da',
+        subheadline: null,
+        routineId: null,
+        ...overrides,
+      });
+
+    it('leaves out the subheadline when there is none', () => {
+      renderReleaseNote();
+
+      expect(
+        screen.getByTestId('notification-detail-headline').textContent,
+      ).toBe('Routinen sind da');
+      expect(
+        screen.queryByTestId('notification-detail-subheadline'),
+      ).toBeNull();
+    });
+
+    it('shows the image from the notification image endpoint', () => {
+      renderReleaseNote({ media: { type: 'image', url: null } });
+
+      const image = screen.getByTestId<HTMLImageElement>(
+        'notification-detail-image',
+      );
+      expect(image.src).toMatch(
+        new RegExp(`/notifications/${notification().id}/image$`),
+      );
+      expect(screen.queryByTestId('notification-detail-loom')).toBeNull();
+    });
+
+    it('embeds a Loom video', () => {
+      const url = 'https://www.loom.com/embed/4f7c2d9e1b8a4c6d9e2f1a3b5c7d9e0f';
+      renderReleaseNote({ media: { type: 'loom', url } });
+
+      const video = screen.getByTestId<HTMLIFrameElement>(
+        'notification-detail-loom',
+      );
+      expect(video.src).toBe(url);
+      expect(video.title).toBe('Routinen sind da');
+      expect(screen.queryByTestId('notification-detail-image')).toBeNull();
+    });
+
+    it('shows no media for a notification without any', () => {
+      renderReleaseNote();
+
+      expect(screen.queryByTestId('notification-detail-image')).toBeNull();
+      expect(screen.queryByTestId('notification-detail-loom')).toBeNull();
+    });
   });
 });

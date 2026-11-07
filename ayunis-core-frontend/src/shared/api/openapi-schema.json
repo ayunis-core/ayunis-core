@@ -8546,6 +8546,33 @@
         "tags": ["notifications"]
       }
     },
+    "/notifications/{id}/image": {
+      "get": {
+        "operationId": "NotificationsController_downloadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the notification",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image streamed successfully"
+          },
+          "404": {
+            "description": "Not found, not the user’s, or without an image"
+          }
+        },
+        "summary": "Download the image of one of the current user’s notifications",
+        "tags": ["notifications"]
+      }
+    },
     "/notifications/{id}/read": {
       "post": {
         "operationId": "NotificationsController_markRead",
@@ -20433,7 +20460,29 @@
       },
       "NotificationType": {
         "type": "string",
-        "enum": ["routine", "routine_error"]
+        "enum": ["routine", "routine_error", "release_note"]
+      },
+      "NotificationMediaType": {
+        "type": "string",
+        "enum": ["image", "loom"]
+      },
+      "NotificationMediaResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationMediaType"
+              }
+            ]
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Loom embed URL of a Loom video; null for an image, which `GET /notifications/{id}/image` serves"
+          }
+        },
+        "required": ["type", "url"]
       },
       "NotificationResponseDto": {
         "type": "object",
@@ -20443,7 +20492,7 @@
             "format": "uuid"
           },
           "type": {
-            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed",
+            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed; `release_note`: a release note of Ayunis",
             "allOf": [
               {
                 "$ref": "#/components/schemas/NotificationType"
@@ -20454,11 +20503,21 @@
             "type": "string"
           },
           "subheadline": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "body": {
             "type": "string",
             "description": "Markdown; may contain links"
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationMediaResponseDto"
+              }
+            ]
           },
           "routineId": {
             "type": "string",
@@ -20488,6 +20547,7 @@
           "headline",
           "subheadline",
           "body",
+          "media",
           "routineId",
           "routineThreadId",
           "readAt",

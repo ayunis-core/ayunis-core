@@ -6,7 +6,8 @@
   "filter": {
     "type": {
       "routine": "Routine notifications",
-      "routine_error": "Routine errors"
+      "routine_error": "Routine errors",
+      "release_note": "Release notes"
     },
     "clear": "Clear filter"
   },

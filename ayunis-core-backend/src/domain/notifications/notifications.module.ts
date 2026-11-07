@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { StorageModule } from 'src/domain/storage/storage.module';
 import { NotificationsRepository } from './application/ports/notifications.repository';
 import { CountUnreadNotificationsUseCase } from './application/use-cases/count-unread-notifications/count-unread-notifications.use-case';
 import { CreateNotificationUseCase } from './application/use-cases/create-notification/create-notification.use-case';
+import { DownloadNotificationImageUseCase } from './application/use-cases/download-notification-image/download-notification-image.use-case';
 import { DeleteExpiredNotificationsUseCase } from './application/use-cases/delete-expired-notifications/delete-expired-notifications.use-case';
 import { FindMyNotificationsUseCase } from './application/use-cases/find-my-notifications/find-my-notifications.use-case';
 import { FindNotificationUseCase } from './application/use-cases/find-notification/find-notification.use-case';
@@ -13,7 +15,7 @@ import { NotificationDtoMapper } from './presenters/http/mappers/notification-dt
 import { NotificationsController } from './presenters/http/notifications.controller';
 
 @Module({
-  imports: [LocalNotificationsRepositoryModule],
+  imports: [LocalNotificationsRepositoryModule, StorageModule],
   controllers: [NotificationsController],
   providers: [
     {
@@ -27,6 +29,7 @@ import { NotificationsController } from './presenters/http/notifications.control
     MarkNotificationReadUseCase,
     MarkAllNotificationsReadUseCase,
     DeleteExpiredNotificationsUseCase,
+    DownloadNotificationImageUseCase,
     NotificationDtoMapper,
   ],
   exports: [

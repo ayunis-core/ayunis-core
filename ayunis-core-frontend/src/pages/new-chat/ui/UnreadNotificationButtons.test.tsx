@@ -78,6 +78,23 @@ describe('UnreadNotificationButtons', () => {
     ]);
   });
 
+  it('gives unread release notes their own button after the routine ones', () => {
+    mocks.unreadByType = [
+      { type: 'release_note', count: 1 },
+      { type: 'routine', count: 2 },
+    ];
+
+    render(<UnreadNotificationButtons isCollapsed={false} />);
+
+    expect(buttons().map((button) => button.getAttribute('href'))).toEqual([
+      '/inbox?type=routine',
+      '/inbox?type=release_note',
+    ]);
+    expect(buttons()[1].getAttribute('aria-label')).toBe(
+      'newChat.unreadNotifications.release_note:1',
+    );
+  });
+
   it('renders nothing when nothing is unread', () => {
     mocks.unreadByType = [];
 
@@ -87,7 +104,7 @@ describe('UnreadNotificationButtons', () => {
   });
 
   it('ignores a type the app has no icon for', () => {
-    mocks.unreadByType = [{ type: 'release_notes', count: 2 }];
+    mocks.unreadByType = [{ type: 'survey', count: 2 }];
 
     render(<UnreadNotificationButtons isCollapsed={false} />);
 

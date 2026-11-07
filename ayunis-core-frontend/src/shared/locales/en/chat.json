@@ -380,7 +380,9 @@
       "routine_one": "{{count}} new routine notification",
       "routine_other": "{{count}} new routine notifications",
       "routine_error_one": "{{count}} new routine error",
-      "routine_error_other": "{{count}} new routine errors"
+      "routine_error_other": "{{count}} new routine errors",
+      "release_note_one": "{{count}} new release note",
+      "release_note_other": "{{count}} new release notes"
     }
   }
 }

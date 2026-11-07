@@ -63,6 +63,12 @@ describe('SecurityHeadersMiddleware', () => {
     expect(policy).not.toContain('https://analytics.ayunis.de');
   });
 
+  it('allows release-note Loom videos to be embedded', async () => {
+    const policy = await contentSecurityPolicy();
+
+    expect(policy).toContain("frame-src 'self' https://www.loom.com");
+  });
+
   it('allows the default basemap origin for map tile requests', async () => {
     delete process.env.VITE_MAP_BASEMAP_TILE_URL;
 

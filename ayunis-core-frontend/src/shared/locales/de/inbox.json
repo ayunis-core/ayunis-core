@@ -6,7 +6,8 @@
   "filter": {
     "type": {
       "routine": "Routine-Benachrichtigungen",
-      "routine_error": "Routine-Fehler"
+      "routine_error": "Routine-Fehler",
+      "release_note": "Neuigkeiten"
     },
     "clear": "Filter entfernen"
   },
