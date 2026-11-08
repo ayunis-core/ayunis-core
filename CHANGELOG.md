@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.70.0](https://github.com/ayunis-core/ayunis-core/compare/v2.69.0...v2.70.0) (2026-11-08)
+
+
+### Features
+
+* **budget-alerts:** warn admins when an API key nears its credit limit (AYC-000) ([#1801](https://github.com/ayunis-core/ayunis-core/issues/1801)) ([4742602](https://github.com/ayunis-core/ayunis-core/commit/474260250f19dfa07ab8b14217cd092145a5027d))
+* **chat:** read assistant messages aloud in a matching voice (AYC-1690) ([#2234](https://github.com/ayunis-core/ayunis-core/issues/2234)) ([f11485b](https://github.com/ayunis-core/ayunis-core/commit/f11485bf6f3f4ac27592808d43d1a96da66ce6d2))
+* **chat:** reattach to running chats and show them in the sidebar (AYC-1689) ([#2230](https://github.com/ayunis-core/ayunis-core/issues/2230)) ([03ba1dd](https://github.com/ayunis-core/ayunis-core/commit/03ba1dd8ecb80646ece4e6009792c6602780655e))
+* **inbox:** start a chat about a notification directly from its page (AYC-1692) ([#2231](https://github.com/ayunis-core/ayunis-core/issues/2231)) ([9a70f50](https://github.com/ayunis-core/ayunis-core/commit/9a70f508b6c1bf629d8f2ad4922e47a7968f5731))
+* **notifications:** show release notes in the inbox instead of the Announcable widget (AYC-1687) ([#2227](https://github.com/ayunis-core/ayunis-core/issues/2227)) ([595cfd6](https://github.com/ayunis-core/ayunis-core/commit/595cfd6a0d703340f4f22d22d180b75cdddc82d3))
+* **routines:** add scheduled routines with a notifications inbox (AYC-1670) ([#2220](https://github.com/ayunis-core/ayunis-core/issues/2220)) ([fa55f17](https://github.com/ayunis-core/ayunis-core/commit/fa55f177588dd566250f5d1ade78c8163b6139f1))
+
+
+### Bug Fixes
+
+* **routines:** show a manually started routine run in the sidebar at once (AYC-1693) ([#2233](https://github.com/ayunis-core/ayunis-core/issues/2233)) ([99fd79f](https://github.com/ayunis-core/ayunis-core/commit/99fd79f3d2bd674e642b94409048c13f92dd56bc))
+* **sources:** keep one slow office document from failing other conversions (AYC-1641) ([#2206](https://github.com/ayunis-core/ayunis-core/issues/2206)) ([5a499f0](https://github.com/ayunis-core/ayunis-core/commit/5a499f0bc94c8471a4b3d0fe56024e8b44d30f55))
+* **sources:** show a conversion timeout as a timeout, in the user's language (AYC-1641) ([#2207](https://github.com/ayunis-core/ayunis-core/issues/2207)) ([c9347e7](https://github.com/ayunis-core/ayunis-core/commit/c9347e723fa8044805140ffad5a6c606bf4b5b7d))
+
+
+### Documentation
+
+* **agent:** remove scalability-review and scale-out references (AYC-000) ([#2228](https://github.com/ayunis-core/ayunis-core/issues/2228)) ([92d864a](https://github.com/ayunis-core/ayunis-core/commit/92d864a92c26fb9bb93823bab6957996b62b1a9c))
+* **agents:** centralize testing guidance in backend-testing and frontend-testing (AYC-000) ([#2236](https://github.com/ayunis-core/ayunis-core/issues/2236)) ([6edbf30](https://github.com/ayunis-core/ayunis-core/commit/6edbf30189bb6f22e3e599386292962881fbce50))
+* **agents:** sync agent skills and instructions from agentfiles (AYC-000) ([#2238](https://github.com/ayunis-core/ayunis-core/issues/2238)) ([8d7a287](https://github.com/ayunis-core/ayunis-core/commit/8d7a28719df655c7a9bf86b4662dbd42c582dc06))
+* **skills:** sync gh stack workflow and finish-pr from agentfiles (AYC-000) ([#2237](https://github.com/ayunis-core/ayunis-core/issues/2237)) ([4c40d13](https://github.com/ayunis-core/ayunis-core/commit/4c40d13bbb7fe3af5d1852496b4ac0b015d97639))
+
+
+### Tests
+
+* **e2e:** make the routine owner-scope spec deterministic (AYC-1669) ([#2222](https://github.com/ayunis-core/ayunis-core/issues/2222)) ([3fd3088](https://github.com/ayunis-core/ayunis-core/commit/3fd3088e0db3c0d00b3908ab2cc8e0b007467467))
+
+
+### CI/CD
+
+* **e2e:** shard the browser e2e tests across two runners (AYC-1683) ([#2223](https://github.com/ayunis-core/ayunis-core/issues/2223)) ([24081f3](https://github.com/ayunis-core/ayunis-core/commit/24081f32e315dffbf2c005ac68b7c4977a1a4a14))
+
 ## [2.69.0](https://github.com/ayunis-core/ayunis-core/compare/v2.68.0...v2.69.0) (2026-11-06)
 
 
