@@ -4,6 +4,8 @@ import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/que
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { forwardRef, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import transcriptionConfig from 'src/config/transcription.config';
 import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/local-source-repository.module';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
@@ -65,6 +67,8 @@ const SOURCE_UPLOAD_USE_CASES = [
 
 @Module({
   imports: [
+    // The upload-session cap for recordings comes from the transcription config.
+    ConfigModule.forFeature(transcriptionConfig),
     BullModule.registerQueue(
       ...[
         DOCUMENT_PROCESSING_QUEUE,

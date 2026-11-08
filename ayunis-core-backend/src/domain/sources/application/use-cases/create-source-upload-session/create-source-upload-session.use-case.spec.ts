@@ -1,4 +1,6 @@
 import type { ContextService } from 'src/common/context/services/context.service';
+import type { ConfigType } from '@nestjs/config';
+import type transcriptionConfig from 'src/config/transcription.config';
 import { CreateSourceUploadSessionUseCase } from './create-source-upload-session.use-case';
 import { CreateSourceUploadSessionCommand } from './create-source-upload-session.command';
 import {
@@ -21,11 +23,13 @@ describe('CreateSourceUploadSessionUseCase', () => {
   const getPermittedEmbeddingModel = {
     execute: jest.fn().mockResolvedValue({}),
   };
+  const AUDIO_MAX = 200 * 1024 * 1024;
   const useCase = new CreateSourceUploadSessionUseCase(
     sessions,
     assertOrgActive as never,
     getPermittedEmbeddingModel as never,
     createOwnerContext() as unknown as ContextService,
+    { maxUploadBytes: AUDIO_MAX } as ConfigType<typeof transcriptionConfig>,
   );
   const MAX = 25 * 1024 * 1024;
 
@@ -105,6 +109,30 @@ describe('CreateSourceUploadSessionUseCase', () => {
     await expect(
       useCase.execute(command({ fileSize: MAX + 1 })),
     ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE', statusCode: 413 });
+  });
+
+  it('applies the configured recording cap to audio instead of the document limit', async () => {
+    await expect(
+      useCase.execute(
+        command({
+          fileName: 'sitzung.mp3',
+          mimeType: 'audio/mpeg',
+          fileSize: MAX + 1,
+        }),
+      ),
+    ).resolves.toMatchObject({ session: { fileSize: MAX + 1 } });
+    await expect(
+      useCase.execute(
+        command({
+          fileName: 'sitzung.mp3',
+          mimeType: 'audio/mpeg',
+          fileSize: AUDIO_MAX + 1,
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: 'FILE_TOO_LARGE',
+      metadata: expect.objectContaining({ maxFileSizeBytes: AUDIO_MAX }),
+    });
   });
 
   it('rejects empty files', async () => {

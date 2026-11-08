@@ -168,6 +168,37 @@ describe('MistralTranscriptionService', () => {
   });
 
   it.each([
+    [413, '{"message":"Request Entity Too Large"}'],
+    [
+      400,
+      '{"object":"error","message":"Prompt > 65536 maximum context length","type":"invalid_request_error"}',
+    ],
+    [
+      400,
+      '{"message":"Audio duration exceeds the supported limit","type":"invalid_request_file","code":"3310"}',
+    ],
+  ])(
+    'maps a provider refusal (%s) of a long recording to a too-long error',
+    async (statusCode, body) => {
+      const service = await createService({
+        'models.mistral.apiKey': 'test-api-key',
+        'models.mistral.transcriptionModel': 'voxtral-mini-2602',
+      });
+      mockClient.audio.transcriptions.complete.mockRejectedValue(
+        createMistralError(statusCode, body),
+      );
+
+      await expect(
+        service.transcribe(
+          Buffer.from('three hours of council'),
+          'sitzung.mp3',
+          'audio/mpeg',
+        ),
+      ).rejects.toMatchObject({ code: 'RECORDING_TOO_LONG', statusCode: 422 });
+    },
+  );
+
+  it.each([
     [
       'different error type',
       '{"message":"Audio input could not be decoded. ","type":"invalid_audio","code":"3310"}',
@@ -175,10 +206,6 @@ describe('MistralTranscriptionService', () => {
     [
       'different error code',
       '{"message":"Audio input could not be decoded. ","type":"invalid_request_file","code":"3320"}',
-    ],
-    [
-      'different message',
-      '{"message":"Audio duration exceeds the supported limit","type":"invalid_request_file","code":"3310"}',
     ],
     [
       'malformed response body',

@@ -11,6 +11,7 @@ describe('getSourceProcessingErrorKey', () => {
     [Code.DOCUMENT_EMPTY, 'empty'],
     [Code.PROCESSING_TIMEOUT, 'timeout'],
     [Code.DOCUMENT_PAGE_LIMIT_EXCEEDED, 'tooManyPages'],
+    [Code.RECORDING_TOO_LONG, 'recordingTooLong'],
     [Code.PROCESSING_UNAVAILABLE, 'unavailable'],
     [Code.PROCESSING_FAILED, 'failed'],
     [undefined, 'failed'],

@@ -7,6 +7,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum TranscriptionErrorCode {
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
   INVALID_AUDIO_FILE = 'INVALID_AUDIO_FILE',
+  RECORDING_TOO_LONG = 'RECORDING_TOO_LONG',
 }
 
 /**
@@ -38,6 +39,17 @@ export class InvalidAudioFileError extends TranscriptionError {
     metadata?: ErrorMetadata,
   ) {
     super(message, TranscriptionErrorCode.INVALID_AUDIO_FILE, 400, metadata);
+  }
+}
+
+/**
+ * The recording cannot be transcribed in one request: it exceeds the duration
+ * cap, or the provider refused it as too large. Deterministic, so the job is
+ * not retried; the user is asked to cut the recording.
+ */
+export class RecordingTooLongError extends TranscriptionError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(message, TranscriptionErrorCode.RECORDING_TOO_LONG, 422, metadata);
   }
 }
 

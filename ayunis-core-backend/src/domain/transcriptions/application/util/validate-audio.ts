@@ -9,11 +9,15 @@ const SUPPORTED_MIME_TYPES = [
   'audio/x-m4a',
 ];
 
-export function validateAudio(file: Buffer, mimeType: string): void {
+export function validateAudio(
+  file: Buffer,
+  mimeType: string,
+  maxBytes: number = MAX_AUDIO_FILE_SIZE_BYTES,
+): void {
   if (file.length === 0) throw new InvalidAudioFileError('Empty audio file');
-  if (file.length > MAX_AUDIO_FILE_SIZE_BYTES) {
+  if (file.length > maxBytes) {
     throw new InvalidAudioFileError(
-      'Audio file size exceeds maximum allowed size of 25 MB',
+      `Audio file size exceeds maximum allowed size of ${Math.floor(maxBytes / (1024 * 1024))} MB`,
     );
   }
   if (!SUPPORTED_MIME_TYPES.includes(mimeType)) {

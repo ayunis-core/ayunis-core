@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import os from 'os';
 import transcriptionConfig from 'src/config/transcription.config';
 import { FfmpegAudioSegmenterAdapter } from './ffmpeg-audio-segmenter.adapter';
+import { RecordingTooLongError } from 'src/domain/transcriptions/application/transcription.errors';
 
 function wav(seconds: number): Buffer {
   const dataBytes = Math.round(seconds * 16000) * 2;
@@ -176,6 +177,25 @@ describe('FFmpeg audio segmentation', () => {
         force: true,
       });
     }
+  });
+
+  it('rejects a recording longer than the duration cap as too long', async () => {
+    const capped = new FfmpegAudioSegmenterAdapter(
+      new ConfigService({
+        transcription: { tempDirectory: directory, maxDurationSeconds: 1 },
+      }),
+    );
+    const read = async () => {
+      const parts = [];
+      for await (const part of capped.split(input(2), {
+        maxSeconds: 10,
+        maxBytes: 1_000_000,
+      }))
+        parts.push(part);
+      return parts;
+    };
+
+    await expect(read()).rejects.toBeInstanceOf(RecordingTooLongError);
   });
 
   it('sends a small recording as one original file', async () => {

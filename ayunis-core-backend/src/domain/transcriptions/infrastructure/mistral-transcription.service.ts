@@ -5,6 +5,7 @@ import { MistralError } from '@mistralai/mistralai/models/errors';
 import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
 import {
   InvalidAudioFileError,
+  RecordingTooLongError,
   TranscriptionFailedError,
 } from 'src/domain/transcriptions/application/transcription.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
@@ -133,6 +134,11 @@ export class MistralTranscriptionService extends TranscriptionPort {
     });
     if (providerError) return providerError;
     if (isUndecodableAudioError(error)) return new InvalidAudioFileError();
+    if (isRecordingTooLongError(error)) {
+      return new RecordingTooLongError(
+        'The provider refused the recording as too large for one request',
+      );
+    }
     return new TranscriptionFailedError(
       `Mistral transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
@@ -164,6 +170,16 @@ export class MistralTranscriptionService extends TranscriptionPort {
       retryIfError: (error: Error) => isTransientMistralError(error),
     });
   }
+}
+
+// 413, or the two 400s a too-long recording triggers: the context-length
+// refusal of the current models ("Prompt > 65536 maximum context length") and
+// the duration refusal ("Audio duration exceeds the supported limit").
+function isRecordingTooLongError(error: unknown): boolean {
+  if (!(error instanceof MistralError)) return false;
+  if (error.statusCode === 413) return true;
+  if (error.statusCode !== 400) return false;
+  return /maximum context length|duration exceeds/i.test(error.body);
 }
 
 function isUndecodableAudioError(error: unknown): boolean {

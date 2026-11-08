@@ -15,6 +15,7 @@ import {
 } from 'src/domain/sources/application/sources.errors';
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
+import { RecordingTooLongError } from 'src/domain/transcriptions/application/transcription.errors';
 
 type ErrorClass = abstract new (...args: never[]) => unknown;
 
@@ -22,6 +23,7 @@ type ErrorClass = abstract new (...args: never[]) => unknown;
 // an UnprocessableDocumentError but is shown as a timeout, not as unreadable).
 const CLASSIFICATION: ReadonlyArray<[ErrorClass, Code]> = [
   [TooManyPagesError, Code.DOCUMENT_PAGE_LIMIT_EXCEEDED],
+  [RecordingTooLongError, Code.RECORDING_TOO_LONG],
   [EmptyOcrResultError, Code.DOCUMENT_EMPTY],
   [EmptyFileDataError, Code.DOCUMENT_EMPTY],
   [DocumentConversionTimeoutError, Code.PROCESSING_TIMEOUT],

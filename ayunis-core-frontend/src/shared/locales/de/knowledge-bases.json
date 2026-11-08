@@ -183,6 +183,7 @@
         "empty": "Aus dem Dokument konnte kein Text gelesen werden. Verwenden Sie eine besser lesbare Version und laden Sie sie erneut hoch.",
         "timeout": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Bei großen Dokumenten kann eine Aufteilung helfen; laden Sie die Datei danach erneut hoch.",
         "tooManyPages": "Das Dokument hat zu viele Seiten. Teilen Sie es in kleinere Dateien auf und laden Sie diese hoch.",
+        "recordingTooLong": "Die Aufnahme ist zu lang für eine Transkription. Teilen Sie sie in kürzere Abschnitte und laden Sie diese einzeln hoch.",
         "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Laden Sie die Datei später erneut hoch."
       }
     }
@@ -191,7 +192,7 @@
     "failedToAdd": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
-    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 25 MB.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Sie überschreitet die maximale Dateigröße.",
     "fileSourceTooManyPagesError": "Das Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
