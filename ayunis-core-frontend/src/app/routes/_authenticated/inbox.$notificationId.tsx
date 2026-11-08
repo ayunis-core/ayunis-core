@@ -1,9 +1,16 @@
+import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { NotificationPage } from '@/pages/notification';
 import {
+  getModelsControllerIsEmbeddingModelEnabledQueryKey,
   getNotificationsControllerFindOneQueryKey,
+  modelsControllerIsEmbeddingModelEnabled,
   notificationsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import {
+  defaultModelSelectionQueryOptions,
+  toComposerValue,
+} from './-default-model-selection-query';
 import { isRoutinesEnabled } from './-routines-enabled-query';
 
 export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
@@ -12,18 +19,44 @@ export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
     if (!(await isRoutinesEnabled(queryClient))) {
       throw redirect({ to: '/chat' });
     }
-    const notification = await queryClient.query({
-      queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
-      queryFn: () => notificationsControllerFindOne(notificationId),
-      // Deleting the routine clears the notification's routine link, which
-      // decides whether Open routine is shown.
-      staleTime: 0,
-    });
-    return { notification };
+    const [notification, defaultSelection, embeddingModelResponse] =
+      await Promise.all([
+        queryClient.query({
+          queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
+          queryFn: () => notificationsControllerFindOne(notificationId),
+          // Deleting the routine clears the notification's routine link, which
+          // decides whether Open routine is shown.
+          staleTime: 0,
+        }),
+        queryClient
+          .query(defaultModelSelectionQueryOptions())
+          .catch(() => null),
+        queryClient
+          .query({
+            queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+            queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+          })
+          .catch(() => null),
+        queryClient.query(anonymousModeDefaultQueryOptions()),
+      ]);
+    return {
+      notification,
+      selectedModelId: toComposerValue(defaultSelection),
+      isEmbeddingModelEnabled:
+        embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
+    };
   },
 });
 
 function RouteComponent() {
-  const { notification } = Route.useLoaderData();
-  return <NotificationPage notification={notification} />;
+  const { notification, selectedModelId, isEmbeddingModelEnabled } =
+    Route.useLoaderData();
+  return (
+    <NotificationPage
+      key={notification.id}
+      notification={notification}
+      selectedModelId={selectedModelId}
+      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+    />
+  );
 }

@@ -78,11 +78,11 @@ test("another member of the organization can neither see nor read a user's notif
   await memberPage.goto("/inbox");
   await expect(memberPage.getByTestId("sidebar-footer-inbox")).toBeVisible();
   await expect(inboxItem(memberPage, headline)).toHaveCount(0);
-  await memberPage.goto(`/chat?notificationId=${notification.id}`);
-  await expect(memberPage.getByTestId("input")).toBeVisible();
-  await expect(
-    memberPage.getByTestId("new-chat-source-notification"),
-  ).toHaveCount(0);
+  await memberPage.goto(`/inbox/${notification.id}`);
+  await expect(memberPage.getByTestId("error-fallback")).toBeVisible();
+  await expect(memberPage.getByTestId("notification-chat-starter")).toHaveCount(
+    0,
+  );
   await memberContext.close();
   await memberApi.dispose();
 

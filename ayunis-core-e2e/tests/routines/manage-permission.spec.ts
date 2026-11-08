@@ -138,7 +138,7 @@ test("an admin takes routine management away from users and gives it back", asyn
     await expect(memberPage).toHaveURL(/\/chat$/);
     await memberPage.goto(`/inbox/${notification.id}`);
     await expect(
-      memberPage.getByTestId("notification-chat-about-this"),
+      memberPage.getByTestId("notification-chat-starter"),
     ).toBeVisible();
     await expect(
       memberPage.getByTestId("notification-open-routine"),

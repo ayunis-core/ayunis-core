@@ -376,7 +376,6 @@
       "retry": "Try again",
       "getStarted": "Get started"
     },
-    "aboutNotification": "Chat about the notification",
     "unreadNotifications": {
       "routine_one": "{{count}} new routine notification",
       "routine_other": "{{count}} new routine notifications",

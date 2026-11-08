@@ -45,6 +45,13 @@ vi.mock('@/features/permissions', () => ({
       permission === 'manage_routines' && mocks.canManageRoutines,
   }),
 }));
+vi.mock('@/widgets/chat-starter', () => ({
+  ChatStarter: (props: {
+    sourceNotificationId?: string;
+    workspaceId?: string;
+    selectedModelId?: string;
+  }) => <output data-testid="chat-starter">{JSON.stringify(props)}</output>,
+}));
 vi.mock('@/pages/notification/api/useNotification', () => ({
   useNotification: () => ({ notification: undefined }),
 }));
@@ -68,24 +75,43 @@ function notification(
   };
 }
 
+function renderPage(overrides: Partial<NotificationResponseDto> = {}) {
+  return render(
+    <NotificationPage
+      notification={notification(overrides)}
+      selectedModelId="medium"
+      isEmbeddingModelEnabled={false}
+    />,
+  );
+}
+
 describe('NotificationPage', () => {
+  it('starts a chat about the notification outside any workspace', () => {
+    renderPage();
+    expect(
+      JSON.parse(screen.getByTestId('chat-starter').textContent ?? ''),
+    ).toMatchObject({
+      sourceNotificationId: '6f0e4a52-8c1b-4f7e-9a51-3d2c1b0a9e8f',
+      selectedModelId: 'medium',
+      isEmbeddingModelEnabled: false,
+    });
+  });
+
   it('offers to open the routine that sent it', () => {
     mocks.canManageRoutines = true;
-    render(<NotificationPage notification={notification()} />);
+    renderPage();
     expect(screen.getByTestId('notification-open-routine')).toBeTruthy();
   });
 
   it('hides Open routine once the routine is deleted', () => {
     mocks.canManageRoutines = true;
-    render(
-      <NotificationPage notification={notification({ routineId: null })} />,
-    );
+    renderPage({ routineId: null });
     expect(screen.queryByTestId('notification-open-routine')).toBeNull();
   });
 
   it('hides Open routine without the manage routines permission', () => {
     mocks.canManageRoutines = false;
-    render(<NotificationPage notification={notification()} />);
+    renderPage();
     expect(screen.queryByTestId('notification-open-routine')).toBeNull();
   });
 });

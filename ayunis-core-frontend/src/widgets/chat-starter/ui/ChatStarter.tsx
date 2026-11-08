@@ -21,8 +21,10 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 
-interface WorkspaceChatStarterProps {
-  workspaceId: string;
+interface ChatStarterProps {
+  workspaceId?: string;
+  sourceNotificationId?: string;
+  placeholder?: string;
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
 }
@@ -55,15 +57,17 @@ function applySourceStatus(
 }
 
 /**
- * The full chat composer embedded in the workspace page. Sends through the
- * same initiation flow as the new-chat page, with the workspace fixed, and
- * lands directly in the created chat.
+ * The full chat composer embedded in a page other than the new-chat page.
+ * Sends through the same initiation flow, with the workspace and source
+ * notification fixed, and lands directly in the created chat.
  */
-export function WorkspaceChatStarter({
+export function ChatStarter({
   workspaceId,
+  sourceNotificationId,
+  placeholder,
   selectedModelId,
   isEmbeddingModelEnabled,
-}: Readonly<WorkspaceChatStarterProps>) {
+}: Readonly<ChatStarterProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat({
     settleAnimation: false,
@@ -128,6 +132,7 @@ export function WorkspaceChatStarter({
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
       workspaceId,
+      sourceNotificationId,
       skillId,
       onSourceStatus: handleSourceStatus,
     });
@@ -182,6 +187,7 @@ export function WorkspaceChatStarter({
         onAnonymousChange={setIsAnonymous}
         isAnonymousEnforced={isAnonymousEnforced}
         isVisionEnabled={isVisionEnabled}
+        placeholder={placeholder}
       />
     </div>
   );

@@ -376,7 +376,6 @@
       "retry": "Erneut versuchen",
       "getStarted": "Los geht's"
     },
-    "aboutNotification": "Chat zur Benachrichtigung",
     "unreadNotifications": {
       "routine_one": "{{count}} neue Routine-Benachrichtigung",
       "routine_other": "{{count}} neue Routine-Benachrichtigungen",

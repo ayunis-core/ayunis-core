@@ -16,7 +16,7 @@ import { sendMessage } from "../../src/flows/chat.flow";
 import { inboxItem } from "../../src/flows/notifications.flow";
 import { test, expect } from "../../src/fixtures/test";
 
-test("a routine's notification lands in the inbox, links to its routine chat and can be discussed in a new chat", async ({
+test("a routine's notification lands in the inbox, links to its routine chat and can be discussed in a chat started from its page", async ({
   api,
   page,
 }) => {
@@ -62,10 +62,7 @@ test("a routine's notification lands in the inbox, links to its routine chat and
   await expect(page.getByTestId("routine-finished")).toBeVisible();
 
   await page.goBack();
-  await page.getByTestId("notification-chat-about-this").click();
-  await expect(page.getByTestId("new-chat-source-notification")).toContainText(
-    headline,
-  );
+  await expect(page.getByTestId("notification-chat-starter")).toBeVisible();
   await sendMessage(page, "E2E quote notification");
   await expect(page).toHaveURL(/\/chats\/[0-9a-f-]+/);
   await expect(page.getByTestId("assistant-message").last()).toContainText(
@@ -76,6 +73,7 @@ test("a routine's notification lands in the inbox, links to its routine chat and
   expect(chat).toMatchObject({
     type: "chat",
     sourceNotificationId: notification.id,
+    workspaceId: null,
   });
 
   await page.getByTestId("chat-source-notification").click();
