@@ -19,6 +19,16 @@ gh pr view <branch-or-number> --json number,url,headRefName,headRefOid
 
 Use the remote `headRefOid` as the revision under verification. If the remote head changes while waiting, discard the stale result and restart verification for the new SHA.
 
+### Trigger Bugbot — it does not run on its own
+
+Cursor Bugbot no longer reviews PRs automatically on open or push. Without a trigger comment, no `Cursor Bugbot` check run appears on the head SHA, and the wait in §2 never ends. After **every** submission (PR creation and every later push or `gt submit`), comment on each PR whose head changed:
+
+```bash
+gh pr comment <pr-number> --body "@bugbot run"
+```
+
+For a Graphite stack, comment on every submitted PR in the stack, not only the top. A trigger posted before the latest push does not cover the new head; post it again.
+
 ## 2. Wait for CI and Bugbot
 
 Wait for all checks on every submitted PR. For an ordinary PR:
@@ -49,7 +59,7 @@ gh pr checks <pr-number> --json name,bucket,state,link
 
 Continue while any non-sentinel check is pending; handle any non-sentinel failure or cancellation normally. Once all non-sentinel checks have passed or intentionally skipped, record the sentinel and its downstack PR in the verification report and continue to Bugbot comment triage. The sentinel is expected stack state, not a blocker and not evidence that CI is still running.
 
-If no checks are visible immediately after submission, wait 30 seconds and query again. Do not interpret absent checks as success.
+If no checks are visible immediately after submission, wait 30 seconds and query again. Do not interpret absent checks as success. If CI checks appear but `Cursor Bugbot` doesn't, first confirm you posted `@bugbot run` after the latest push (§1).
 
 ### Zero runs created — check the platform before the repo
 
