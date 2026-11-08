@@ -6,6 +6,7 @@ import {
   routinesControllerRunNow,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { expectActiveThreadRun } from '@/features/thread-run';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useRunRoutineNow() {
@@ -23,6 +24,7 @@ export function useRunRoutineNow() {
       void queryClient.invalidateQueries({
         queryKey: getRoutinesControllerFindOneQueryKey(id),
       });
+      expectActiveThreadRun(queryClient);
       showSuccess(t('toast.runStarted'));
     },
     onError: (error) => {

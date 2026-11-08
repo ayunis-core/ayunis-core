@@ -5,6 +5,7 @@ export { stopThreadRun } from './api/stopThreadRun';
 export { isThreadRunStopped } from './model/stopped-thread-runs';
 export {
   activeThreadRunsQueryKey,
+  expectActiveThreadRun,
   useActiveThreadRuns,
 } from './api/useActiveThreadRuns';
 export {
