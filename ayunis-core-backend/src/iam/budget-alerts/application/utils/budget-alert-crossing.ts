@@ -1,11 +1,12 @@
 import type { UUID } from 'crypto';
-import { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from 'src/iam/budget-alerts/domain/value-objects/budget-alert-scope.enum';
 
 const WARNING_THRESHOLDS_BY_SCOPE: Record<BudgetAlertScope, readonly number[]> =
   {
     [BudgetAlertScope.ORG]: [50, 80, 100],
     [BudgetAlertScope.USER]: [80, 100],
     [BudgetAlertScope.TEAM]: [80, 100],
+    [BudgetAlertScope.API_KEY]: [80, 100],
   };
 
 export interface BudgetTarget {
