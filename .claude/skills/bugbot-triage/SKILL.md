@@ -19,7 +19,7 @@ gh api --paginate repos/{owner}/{repo}/pulls/<number>/comments \
 
 **Always pass `--paginate`.** The comments endpoint returns 30 per page; without it, bugbot findings past the first page are silently dropped and you will report a PR clean while findings are still open. If you must build the URL yourself, add `?per_page=100` as a backstop, but `--paginate` is the reliable fix.
 
-**On a stacked PR, triage every PR in the stack — not just the top.** Bugbot comments on each PR independently, so a stack that looks clean at the tip can still carry open findings on a lower branch. After a restack or a round of fixes, re-fetch comments for *all* PRs in the stack (`gt log`/`gh pr list` to enumerate them) and confirm each is resolved before declaring the stack review-clean.
+**On a stacked PR, triage every PR in the stack — not just the top.** Bugbot comments on each PR independently, so a stack that looks clean at the tip can still carry open findings on a lower branch. After a restack or a round of fixes, re-fetch comments for *all* PRs in the stack (`gh api "repos/{owner}/{repo}/stacks?pull_request=<pr-number>" --jq '.[].pull_requests[].number'` lists them bottom to top) and confirm each is resolved before declaring the stack review-clean.
 
 Strip the HTML boilerplate (Fix-in-Cursor buttons, `BUGBOT_BUG_ID`); the substance is the severity line, the description, and the `LOCATIONS` block.
 

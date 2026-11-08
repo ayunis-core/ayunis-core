@@ -9,7 +9,7 @@ description: "Address PR review comments. Use when the user says \"check comment
 
 - GitHub user: **devbydaniel**
 - Relevant comment authors: `devbydaniel`, `cursor[bot]` (Bugbot)
-- Ignore automated/bot comments: Graphite stack comments, `github-actions` size warnings
+- Ignore automated/bot comments: stack tooling comments, `github-actions` size warnings
 
 ## Fetching Comments
 

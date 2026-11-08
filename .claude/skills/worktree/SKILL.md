@@ -27,7 +27,7 @@ Examples: `ayc-1050-provider-factories`, `ayc-000-minio-image`, `ayc-703-qa`.
 
 Location: `<repo parent>/.worktrees/<repo name>/<name>`, e.g. `~/dev/ayunis/.worktrees/ayunis-core/ayc-1050-provider-factories`.
 
-Never use a Graphite-generated branch name (`08-21-feat_workspaces_…`) or a free-form slug without a ticket ID as the directory name. When the work is on an existing branch, the directory still gets the convention name; if your tool derives the directory from the branch name, create the worktree under the convention name and check out the existing branch inside it.
+Never use a date-slug branch name (`08-21-feat_workspaces_…`) or a free-form slug without a ticket ID as the directory name. When the work is on an existing branch, the directory still gets the convention name; if your tool derives the directory from the branch name, create the worktree under the convention name and check out the existing branch inside it.
 
 ## Creating a Worktree
 
@@ -41,9 +41,11 @@ The user gives you a **task ID** and optionally an **existing branch** to work o
 ```bash
 cd "$WORKTREE_DIR"
 
-# Track the base branch in Graphite — REQUIRED before any `gt create`, which
-# otherwise fails with "Cannot perform this operation on untracked branch".
-gt track --parent main
+# Start the stack with the worktree branch as its first layer — REQUIRED before
+# any other `gh stack` command, which otherwise fails with "not part of a stack".
+# For an existing branch, use its name instead, or `gh stack checkout <pr-number>`
+# if its PR is already in a stack (git-workflow: references/submit-troubleshooting.md).
+gh stack init <ticket-id>-<slug>
 
 # ayunis-core is a pnpm workspace. Never `npm install` inside a sub-project —
 # that creates a stray package-lock.json and resolves the wrong tree.
@@ -75,33 +77,9 @@ cd "$WORKTREE_DIR" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
 pnpm exec tsc --noEmit                       # now TS2307 noise is gone; real errors surface
 ```
 
-## Empty Base Branch Gotcha
+## The Worktree Branch Is the First Layer
 
-The worktree's `<ticket-id>-<slug>` branch is the **base** — Graphite stacks are
-built on top of it (see the `git-workflow` skill). Following git-workflow,
-the first commit goes on a `gt create` child branch, leaving the worktree
-base intentionally empty.
-
-That's fine until you push. `gt submit --stack` refuses to submit an empty
-base branch:
-
-```text
-WARNING: This branch does not introduce any changes: ▸ <ticket-id>-<slug>
-Nothing to submit!
-```
-
-Fix: re-parent the child directly onto `main` so the empty base drops out
-of the stack:
-
-```bash
-gt track --parent main --force   # run on the CHILD branch, not the base
-gt submit --stack --force --no-interactive
-```
-
-Alternative (single-PR tasks): skip the `gt create` and commit on the
-worktree base branch directly with `gt modify --commit` so the base
-isn't empty in the first place. Prefer this when the task is a single
-self-contained change, not a stack.
+The worktree's `<ticket-id>-<slug>` branch is the bottom of the stack and gets its own PR (see the `git-workflow` skill). Commit the first logical unit directly on it; later units go on branches added with `gh stack add <ticket-id>-<layer-slug>`. A single-PR task is a one-branch stack: commit on the worktree branch and submit.
 
 ## Scenario C — Use an existing worktree
 

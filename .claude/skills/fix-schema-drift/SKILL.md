@@ -16,7 +16,7 @@ cd ayunis-core-frontend
 pnpm run openapi:update
 ```
 
-Then stage and commit the changed files with `gt modify` or `gt create`.
+Then stage and commit the changed files per `git-workflow`: amend the branch that changed the backend, or commit them as their own change.
 
 ## Notes
 

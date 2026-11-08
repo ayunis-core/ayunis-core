@@ -79,7 +79,7 @@ The FSD rules above are the theory; **this repo's actual conventions are the tie
 
 ### Confirm placement before mutating a stacked PR chain
 
-Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a _preliminary_ placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
+Do not execute structural moves and amend commits across a stacked-PR chain (e.g. amend a parent, then check out and amend the child) off a _preliminary_ placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
 
 ## Shared UI Package — Registry-Managed Primitives
 
