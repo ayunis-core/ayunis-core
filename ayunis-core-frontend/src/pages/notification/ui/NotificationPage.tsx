@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { CalendarClock, MessageSquare, MessagesSquare } from 'lucide-react';
+import { CalendarClock, MessagesSquare } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Markdown } from '@/widgets/markdown';
+import { ChatStarter } from '@/widgets/chat-starter';
 import {
   NotificationTypeIcon,
   useMarkNotificationRead,
@@ -19,8 +20,13 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useNotification } from '@/pages/notification/api/useNotification';
 
-interface NotificationPageProps {
+interface NotificationProps {
   notification: NotificationResponseDto;
+}
+
+interface NotificationPageProps extends NotificationProps {
+  selectedModelId?: string;
+  isEmbeddingModelEnabled: boolean;
 }
 
 export default function NotificationPage(
@@ -59,6 +65,14 @@ export default function NotificationPage(
               {notification.body}
             </Markdown>
             <NotificationActions notification={notification} />
+            <div data-testid="notification-chat-starter">
+              <ChatStarter
+                sourceNotificationId={notification.id}
+                placeholder={t('detail.chatPlaceholder')}
+                selectedModelId={props.selectedModelId}
+                isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
+              />
+            </div>
           </article>
         }
       />
@@ -66,9 +80,7 @@ export default function NotificationPage(
   );
 }
 
-function NotificationHeading({
-  notification,
-}: Readonly<NotificationPageProps>) {
+function NotificationHeading({ notification }: Readonly<NotificationProps>) {
   const { t } = useTranslation('inbox');
   return (
     <header className="flex gap-3">
@@ -95,19 +107,13 @@ function NotificationHeading({
   );
 }
 
-function NotificationActions({
-  notification,
-}: Readonly<NotificationPageProps>) {
+function NotificationActions({ notification }: Readonly<NotificationProps>) {
   const { t } = useTranslation('inbox');
   const { can } = useMyPermissions();
+  const canOpenRoutine = !!notification.routineId && can('manage_routines');
+  if (!notification.routineThreadId && !canOpenRoutine) return null;
   return (
     <div className="flex flex-wrap gap-2">
-      <Button asChild data-testid="notification-chat-about-this">
-        <Link to="/chat" search={{ notificationId: notification.id }}>
-          <MessageSquare />
-          {t('detail.chatAboutThis')}
-        </Link>
-      </Button>
       {notification.routineThreadId && (
         <Button
           asChild
@@ -123,7 +129,7 @@ function NotificationActions({
           </Link>
         </Button>
       )}
-      {notification.routineId && can('manage_routines') && (
+      {notification.routineId && canOpenRoutine && (
         <Button
           asChild
           variant="outline"

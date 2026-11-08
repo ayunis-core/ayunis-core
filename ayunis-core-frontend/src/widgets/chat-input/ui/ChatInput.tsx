@@ -113,6 +113,8 @@ interface ChatInputProps {
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
   initialMessage?: string;
+  /** Replaces the default "How can I help?" prompt. */
+  placeholder?: string;
   draftChatId?: string;
   /** The thread's sent prompts, oldest first, recalled with ArrowUp/ArrowDown. */
   sentPrompts?: readonly string[];
@@ -156,6 +158,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillName,
       onSkillRemove,
       initialMessage,
+      placeholder,
       draftChatId,
       sentPrompts = NO_PROMPTS,
     },
@@ -380,8 +383,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     }
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    placeholder={t('chatInput.placeholder')}
-                    aria-label={t('chatInput.placeholder')}
+                    placeholder={placeholder ?? t('chatInput.placeholder')}
+                    aria-label={placeholder ?? t('chatInput.placeholder')}
                     className={cn(
                       'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
                       isHeightAnimationEnabled &&

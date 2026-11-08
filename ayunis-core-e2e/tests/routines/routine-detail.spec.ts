@@ -126,6 +126,6 @@ test("a routine's page shows its configuration, notifications and chats, and its
     .poll(async () => (await getNotification(api, finding.id)).routineId)
     .toBeNull();
   await page.goto(`/inbox/${finding.id}`);
-  await expect(page.getByTestId("notification-chat-about-this")).toBeVisible();
+  await expect(page.getByTestId("notification-chat-starter")).toBeVisible();
   await expect(page.getByTestId("notification-open-routine")).toHaveCount(0);
 });

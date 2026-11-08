@@ -36,8 +36,6 @@ import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalizat
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
-import type { NotificationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { SourceNotificationNotice } from './SourceNotificationNotice';
 import { UnreadNotificationButtons } from './UnreadNotificationButtons';
 
 interface NewChatPageProps {
@@ -47,8 +45,6 @@ interface NewChatPageProps {
   initialAttachmentUrl?: string;
   /** Preselects a workspace, e.g. when arriving from a workspace page. */
   initialWorkspaceId?: string;
-  /** The notification the new chat is about ("Chat about this"). */
-  sourceNotification?: Pick<NotificationResponseDto, 'id' | 'headline'>;
 }
 
 export default function NewChatPage({
@@ -57,7 +53,6 @@ export default function NewChatPage({
   initialPrompt,
   initialAttachmentUrl,
   initialWorkspaceId,
-  sourceNotification,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -224,7 +219,6 @@ export default function NewChatPage({
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
       workspaceId: workspaceId ?? undefined,
-      sourceNotificationId: sourceNotification?.id,
       skillId,
       onSourceStatus: handleSourceStatus,
     });
@@ -298,10 +292,6 @@ export default function NewChatPage({
             </p>
 
             <AcademyGateNotice className="mb-2" />
-
-            {sourceNotification && (
-              <SourceNotificationNotice notification={sourceNotification} />
-            )}
 
             <ChatInput
               ref={chatInputRef}

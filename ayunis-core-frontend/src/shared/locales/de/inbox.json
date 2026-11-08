@@ -20,7 +20,7 @@
     "markRead": "Als gelesen markieren"
   },
   "detail": {
-    "chatAboutThis": "Darüber chatten",
+    "chatPlaceholder": "Was möchten Sie zu dieser Benachrichtigung wissen?",
     "openRoutineChat": "Routine-Chat öffnen",
     "openRoutine": "Routine öffnen"
   },

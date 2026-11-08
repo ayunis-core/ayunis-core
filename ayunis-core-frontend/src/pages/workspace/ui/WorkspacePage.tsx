@@ -11,6 +11,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { ChatStarter } from '@/widgets/chat-starter';
 import {
   WorkspaceDeleteDialog,
   WorkspaceSettingsDialog,
@@ -23,7 +24,6 @@ import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKn
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
 import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
-import { WorkspaceChatStarter } from './WorkspaceChatStarter';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
 import {
@@ -102,7 +102,7 @@ export default function WorkspacePage({
           <div className="space-y-6" data-testid="workspace-page">
             <WorkspaceHero workspace={workspace} />
 
-            <WorkspaceChatStarter
+            <ChatStarter
               workspaceId={workspace.id}
               selectedModelId={selectedModelId}
               isEmbeddingModelEnabled={isEmbeddingModelEnabled}

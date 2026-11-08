@@ -20,7 +20,7 @@
     "markRead": "Mark as read"
   },
   "detail": {
-    "chatAboutThis": "Chat about this",
+    "chatPlaceholder": "What would you like to know about this notification?",
     "openRoutineChat": "Open routine chat",
     "openRoutine": "Open routine"
   },
