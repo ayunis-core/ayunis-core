@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { abortActiveThreadRun } from '@/features/thread-run';
 import { showError } from '@/shared/lib/toast';
+import type * as GeneratedApi from '@/shared/api/generated/ayunisCoreAPI';
 import { useMessageSend } from './useMessageSend';
 
 vi.mock('react-i18next', () => ({
@@ -11,6 +12,14 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
+
+const { cancelRun } = vi.hoisted(() => ({
+  cancelRun: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('@/shared/api/generated/ayunisCoreAPI', async (importOriginal) => ({
+  ...(await importOriginal<typeof GeneratedApi>()),
+  activeRunsControllerCancel: cancelRun,
+}));
 
 const { redirectToLogin } = vi.hoisted(() => ({
   redirectToLogin: vi.fn(),
@@ -279,6 +288,83 @@ describe('useMessageSend', () => {
     );
   });
 
+  it('delivers the latest state that streamed while the chat was closed once it is reopened', async () => {
+    const stream = createControlledSseResponse();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(stream.response));
+    const reopenedMessages = vi.fn();
+    const reopenedMasks = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const firstHook = renderHook(() => useMessageSend({ threadId }), {
+      wrapper,
+    });
+    let sendPromise: Promise<void> | undefined;
+    act(() => {
+      sendPromise = firstHook.result.current.sendTextMessage({
+        text: 'Was gilt für Hunde?',
+      });
+    });
+    firstHook.unmount();
+    await act(async () => {
+      stream.send({ type: 'masks', masks: [{ id: 'mask-1' }] });
+      stream.send({ type: 'message', message: { id: 'answer', text: 'Laut' } });
+      stream.send({
+        type: 'message',
+        message: { id: 'answer', text: 'Laut Satzung' },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    renderHook(
+      () =>
+        useMessageSend({
+          threadId,
+          onMessageEvent: reopenedMessages,
+          onMasksEvent: reopenedMasks,
+        }),
+      { wrapper },
+    );
+
+    expect(reopenedMasks).toHaveBeenCalledWith(
+      expect.objectContaining({ masks: [{ id: 'mask-1' }] }),
+    );
+    expect(reopenedMessages).toHaveBeenCalledOnce();
+    expect(reopenedMessages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: { id: 'answer', text: 'Laut Satzung' },
+      }),
+    );
+    act(() => stream.close());
+    await act(async () => await sendPromise);
+  });
+
+  it('does not report a failed attach as a message that could not be sent', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response('boom', { status: 500 })),
+    );
+    const onError = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageSend({ threadId, onError }), {
+      wrapper,
+    });
+
+    let attachError: unknown;
+    await act(async () => {
+      await result.current.attach().catch((error: unknown) => {
+        attachError = error;
+      });
+    });
+
+    expect(attachError).toBeInstanceOf(Error);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
   it('keeps concurrent thread request outcomes independent', async () => {
     const firstStream = createControlledSseResponse();
     const secondStream = createControlledSseResponse();
@@ -375,6 +461,97 @@ describe('useMessageSend', () => {
     await act(async () => await sendPromise);
 
     expect(request?.signal?.aborted).toBe(true);
+  });
+
+  it('cancels the run on the server when stopped, since it outlives the request', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_input: RequestInfo | URL, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => {
+              reject(
+                new DOMException('The operation was aborted', 'AbortError'),
+              );
+            });
+          }),
+      ),
+    );
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageSend({ threadId }), {
+      wrapper,
+    });
+    let sendPromise: Promise<void> | undefined;
+    act(() => {
+      sendPromise = result.current.sendTextMessage({ text: 'Lange Aufgabe' });
+    });
+
+    act(() => result.current.abort());
+    await act(async () => await sendPromise);
+
+    expect(cancelRun).toHaveBeenCalledWith(threadId);
+  });
+
+  it('attaches to the run in progress on the thread and streams it', async () => {
+    const stream = createControlledSseResponse();
+    const fetchMock = vi.fn().mockResolvedValue(stream.response);
+    vi.stubGlobal('fetch', fetchMock);
+    const onSessionEvent = vi.fn();
+    const onComplete = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () => useMessageSend({ threadId, onSessionEvent, onComplete }),
+      { wrapper },
+    );
+
+    let attachPromise: Promise<void> | undefined;
+    act(() => {
+      attachPromise = result.current.attach();
+    });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    await act(async () => {
+      stream.send({ type: 'session', streaming: true, threadId });
+      stream.close();
+      await attachPromise;
+    });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(new RegExp(`/runs/threads/${threadId}/events$`));
+    expect(init.method).toBe('GET');
+    expect(onSessionEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'session', streaming: true }),
+    );
+    expect(onComplete).toHaveBeenCalledWith(false);
+  });
+
+  it('finishes quietly when the thread has no run left to attach to', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+    );
+    const onError = vi.fn();
+    const onComplete = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () => useMessageSend({ threadId, onError, onComplete }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.attach();
+    });
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalledWith(false);
   });
 
   describe('message batching', () => {

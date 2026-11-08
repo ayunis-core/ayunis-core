@@ -39,6 +39,7 @@ interface ChatInputActionBarProps {
   canSend: boolean;
   onSend: () => void;
   onCancel: () => void;
+  isCancelDisabled: boolean;
   setMessage: Dispatch<SetStateAction<string>>;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
 }
@@ -92,6 +93,7 @@ export function ChatInputActionBar({
   canSend,
   onSend,
   onCancel,
+  isCancelDisabled,
   setMessage,
   textareaRef,
 }: Readonly<ChatInputActionBarProps>) {
@@ -158,6 +160,7 @@ export function ChatInputActionBar({
             canSend={canSend}
             onSend={onSend}
             onCancel={onCancel}
+            isCancelDisabled={isCancelDisabled}
           />
         </>
       }

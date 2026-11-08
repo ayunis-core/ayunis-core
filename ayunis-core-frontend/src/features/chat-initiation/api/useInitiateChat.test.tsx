@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   createThread: vi.fn(),
   addFileSource: vi.fn(),
   findThread: vi.fn(),
+  cancelRun: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -39,6 +40,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getThreadsControllerFindOneQueryKey: (id: string) => ['threads', id],
   getWorkspacesControllerFindAllQueryKey: () => ['workspaces'],
   getWorkspacesControllerFindOneQueryKey: (id: string) => ['workspaces', id],
+  activeRunsControllerCancel: mocks.cancelRun,
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -122,6 +124,7 @@ describe(useInitiateChat.name, () => {
     await act(() => vi.advanceTimersByTimeAsync(SETTLE_ANIMATION_MS));
 
     expect(sentRunRequests()[0].signal?.aborted).toBe(true);
+    expect(mocks.cancelRun).toHaveBeenCalledWith(threadId);
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(takeStartedThreadRun(threadId)).toBeNull();
   });

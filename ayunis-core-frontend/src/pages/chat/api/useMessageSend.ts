@@ -16,9 +16,11 @@ import {
   getThreadAiContextControllerGetAiContextQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
-  abortActiveThreadRun,
+  activeThreadRunsQueryKey,
+  attachThreadRun,
   postRunMessage,
   registerActiveThreadRun,
+  stopThreadRun,
   unregisterActiveThreadRun,
   type RunMessagePayload,
   type StartedRunRequest,
@@ -59,8 +61,41 @@ interface UseMessageSendParams {
 
 const mountedParamsByThread = new Map<string, UseMessageSendParams>();
 
+/**
+ * What a run streamed while its chat was not open. Message events are full
+ * snapshots and masks the full dictionary, so the latest of each is enough
+ * to bring a reopened chat up to date.
+ */
+interface UndeliveredRunEvents {
+  masks?: RunMasksResponseDto;
+  thread?: RunThreadResponseDto;
+  messages: Map<string, RunMessageResponseDto>;
+}
+
+const undeliveredByThread = new Map<string, UndeliveredRunEvents>();
+
+function undeliveredFor(threadId: string): UndeliveredRunEvents {
+  let undelivered = undeliveredByThread.get(threadId);
+  if (!undelivered) {
+    undelivered = { messages: new Map() };
+    undeliveredByThread.set(threadId, undelivered);
+  }
+  return undelivered;
+}
+
+function deliverUndelivered(params: UseMessageSendParams): void {
+  const undelivered = undeliveredByThread.get(params.threadId);
+  if (!undelivered) return;
+  undeliveredByThread.delete(params.threadId);
+  if (undelivered.masks) params.onMasksEvent?.(undelivered.masks);
+  if (undelivered.thread) params.onThreadEvent?.(undelivered.thread);
+  undelivered.messages.forEach((event) => params.onMessageEvent?.(event));
+}
+
 interface SendMessagePayload extends RunMessagePayload {
   startedRequest?: StartedRunRequest;
+  /** Attaching to a run in progress; its failures are not send failures. */
+  isAttach?: boolean;
 }
 
 async function refreshThreadQueriesAfterRun(
@@ -78,6 +113,7 @@ async function refreshThreadQueriesAfterRun(
 
   [
     getThreadsControllerFindAllQueryKey(),
+    activeThreadRunsQueryKey(),
     getArtifactsControllerFindByThreadQueryKey(threadId),
     getThreadAiContextControllerGetAiContextQueryKey(threadId),
   ].forEach((queryKey) => {
@@ -105,6 +141,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   useLayoutEffect(() => {
     currentParamsRef.current = params;
     mountedParamsByThread.set(params.threadId, params);
+    deliverUndelivered(params);
     return () => {
       if (mountedParamsByThread.get(params.threadId) === params) {
         mountedParamsByThread.delete(params.threadId);
@@ -131,7 +168,12 @@ export function useMessageSend(params: UseMessageSendParams) {
         (events) => {
           requestParams.onMessageReceived?.();
           const currentParams = getCurrentParams();
-          events.forEach((event) => currentParams?.onMessageEvent?.(event));
+          if (!currentParams) {
+            const { messages } = undeliveredFor(requestThreadId);
+            events.forEach((event) => messages.set(event.message.id, event));
+            return;
+          }
+          events.forEach((event) => currentParams.onMessageEvent?.(event));
         },
       );
       try {
@@ -151,6 +193,9 @@ export function useMessageSend(params: UseMessageSendParams) {
           redirectToLogin();
           return;
         }
+
+        // Attaching found no run in progress: it ended in the meantime.
+        if (response.status === 204) return;
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -184,14 +229,26 @@ export function useMessageSend(params: UseMessageSendParams) {
                   data as RunSessionResponseDto,
                 );
                 break;
-              case 'thread':
-                getCurrentParams()?.onThreadEvent?.(
-                  data as RunThreadResponseDto,
-                );
+              case 'thread': {
+                const currentParams = getCurrentParams();
+                if (currentParams) {
+                  currentParams.onThreadEvent?.(data as RunThreadResponseDto);
+                } else {
+                  undeliveredFor(requestThreadId).thread =
+                    data as RunThreadResponseDto;
+                }
                 break;
-              case 'masks':
-                getCurrentParams()?.onMasksEvent?.(data as RunMasksResponseDto);
+              }
+              case 'masks': {
+                const currentParams = getCurrentParams();
+                if (currentParams) {
+                  currentParams.onMasksEvent?.(data as RunMasksResponseDto);
+                } else {
+                  undeliveredFor(requestThreadId).masks =
+                    data as RunMasksResponseDto;
+                }
                 break;
+              }
               case 'error':
                 hadError = true;
                 requestParams.onErrorEvent?.(data as RunErrorResponseDto);
@@ -250,6 +307,8 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         hadError = true;
 
+        if (payload.isAttach) throw error;
+
         if (error instanceof Error) {
           // Handle specific error status codes
           if (error.message.includes('IMAGE_UPLOADS_BUSY')) {
@@ -283,6 +342,9 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       } finally {
         messageEvents.flush();
+        // The saved thread is refetched below, which supersedes anything
+        // still waiting for its chat to reopen.
+        undeliveredByThread.delete(requestThreadId);
         if (requestController) {
           unregisterActiveThreadRun(requestThreadId, requestController);
         }
@@ -343,8 +405,20 @@ export function useMessageSend(params: UseMessageSendParams) {
     [params.threadId, sendMessage],
   );
 
+  const attach = useCallback(() => {
+    const controller = new AbortController();
+    return sendMessage({
+      threadId: params.threadId,
+      isAttach: true,
+      startedRequest: {
+        controller,
+        response: attachThreadRun(params.threadId, controller.signal),
+      },
+    });
+  }, [params.threadId, sendMessage]);
+
   const abort = useCallback(() => {
-    abortActiveThreadRun(params.threadId);
+    stopThreadRun(params.threadId);
 
     // Don't invalidate queries immediately on abort
     // The backend will save the message asynchronously, and we'll get the update
@@ -355,6 +429,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   return {
     sendTextMessage,
     sendToolResult,
+    attach,
     abort,
   };
 }

@@ -28,6 +28,7 @@ import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.sc
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
+import { useThreadRunReattach } from '@/pages/chat/hooks/useThreadRunReattach';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
@@ -234,7 +235,7 @@ export default function ChatPage({
     [queryClient, setThreadTitle],
   );
 
-  const { sendTextMessage, abort } = useMessageSend({
+  const { sendTextMessage, attach, abort } = useMessageSend({
     threadId: thread.id,
     onMessageReceived: () => clearPendingSubmission(thread.id),
     onMessageEvent: (data) => handleMessage(data.message),
@@ -246,6 +247,12 @@ export default function ChatPage({
       showError(t('chat.errorSendMessage'));
     },
     onComplete: (failed) => completeSubmission(thread.id, failed),
+  });
+
+  const { isRunCancellable } = useThreadRunReattach({
+    threadId: thread.id,
+    isStreaming,
+    attach,
   });
 
   const hasProcessingSources = thread.sources.some(
@@ -406,6 +413,7 @@ export default function ChatPage({
         onRemoveIntegration={removeIntegration}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
         onCancel={handleSendCancelled}
+        isCancelDisabled={!isRunCancellable}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
       />

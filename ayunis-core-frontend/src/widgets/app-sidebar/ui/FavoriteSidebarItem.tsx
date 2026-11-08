@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   FolderOpen,
+  Loader2,
   MessageCircle,
   MoreHorizontal,
   Pencil,
@@ -43,6 +44,20 @@ interface FavoriteSidebarItemProps {
   onRename: (threadId: string, title: string | null) => void;
   onDelete: (item: Favorite) => void;
   onOpenWorkspaceSettings: (workspace: Workspace) => void;
+  isRunning?: boolean;
+}
+
+function FavoriteThreadIcon({ isRunning }: Readonly<{ isRunning: boolean }>) {
+  const { t } = useTranslation('common');
+  return isRunning ? (
+    <Loader2
+      className="animate-spin"
+      data-testid="chat-running-indicator"
+      aria-label={t('sidebar.chatRunning')}
+    />
+  ) : (
+    <MessageCircle />
+  );
 }
 
 export function FavoriteSidebarItem({
@@ -54,6 +69,7 @@ export function FavoriteSidebarItem({
   onRename,
   onDelete,
   onOpenWorkspaceSettings,
+  isRunning = false,
 }: Readonly<FavoriteSidebarItemProps>) {
   const { t } = useTranslation('common');
   const { t: tWorkspaces } = useTranslation('workspaces');
@@ -98,7 +114,7 @@ export function FavoriteSidebarItem({
                 className="size-4"
               />
             ) : (
-              <MessageCircle />
+              <FavoriteThreadIcon isRunning={isRunning} />
             )}
             <span className="truncate">{title}</span>
           </Link>

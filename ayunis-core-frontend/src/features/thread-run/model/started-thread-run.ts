@@ -1,8 +1,6 @@
 import { postRunMessage } from '@/features/thread-run/api/postRunMessage';
-import {
-  abortActiveThreadRun,
-  registerActiveThreadRun,
-} from './active-thread-run';
+import { stopThreadRun } from '@/features/thread-run/api/stopThreadRun';
+import { registerActiveThreadRun } from './active-thread-run';
 
 export interface StartedRunRequest {
   controller: AbortController;
@@ -68,5 +66,5 @@ export function takeStartedThreadRun(
 
 export function cancelStartedThreadRun(threadId: string): void {
   if (!startedRuns.delete(threadId)) return;
-  abortActiveThreadRun(threadId);
+  stopThreadRun(threadId);
 }

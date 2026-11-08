@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   CalendarClock,
   FolderOpen,
+  Loader2,
   MessageCircle,
   MoreHorizontal,
   Pencil,
@@ -37,14 +38,37 @@ import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTra
 interface ChatSidebarItemProps {
   thread: GetThreadsResponseDtoItem;
   isPinned: boolean;
+  isRunning?: boolean;
   onRename: (threadId: string, currentTitle: string | null) => void;
   onDelete: (threadId: string) => void;
   tourTarget?: TourTargetName;
 }
 
+function ChatIcon({
+  isRunning,
+  isRoutine,
+}: Readonly<{ isRunning: boolean; isRoutine: boolean }>) {
+  const { t } = useTranslation('common');
+  if (isRunning) {
+    return (
+      <Loader2
+        className="animate-spin"
+        data-testid="chat-running-indicator"
+        aria-label={t('sidebar.chatRunning')}
+      />
+    );
+  }
+  return isRoutine ? (
+    <CalendarClock data-testid="chat-routine-icon" />
+  ) : (
+    <MessageCircle />
+  );
+}
+
 export function ChatSidebarItem({
   thread,
   isPinned,
+  isRunning = false,
   onRename,
   onDelete,
   tourTarget,
@@ -66,11 +90,10 @@ export function ChatSidebarItem({
       <SidebarMenuItem data-testid="chat">
         <SidebarMenuButton asChild isActive={params.threadId === thread.id}>
           <Link to="/chats/$threadId" params={{ threadId: thread.id }}>
-            {thread.type === 'routine' ? (
-              <CalendarClock data-testid="chat-routine-icon" />
-            ) : (
-              <MessageCircle />
-            )}
+            <ChatIcon
+              isRunning={isRunning}
+              isRoutine={thread.type === 'routine'}
+            />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate">
                 {thread.title ?? t('sidebar.untitled')}

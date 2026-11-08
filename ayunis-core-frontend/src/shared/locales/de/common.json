@@ -28,6 +28,7 @@
     "updates": "Updates",
     "chats": "Chats",
     "loadingChats": "Chats werden geladen...",
+    "chatRunning": "KI arbeitet an diesem Chat",
     "failedToLoadChats": "Chats konnten nicht geladen werden",
     "emptyChatsTitle": "Ihre Chats werden hier angezeigt.",
     "emptyChatsDescription": "Interagieren Sie mit Ayunis Core und stellen Sie Fragen.",

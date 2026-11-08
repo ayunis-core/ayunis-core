@@ -14,6 +14,7 @@ import { useFavorites, type Favorite } from '@/features/favorites';
 import { moveById } from '@/shared/lib/move-by-id';
 import { useReorderFavorites } from '@/widgets/app-sidebar/api/useReorderFavorites';
 import { applyPendingOrder } from '@/widgets/app-sidebar/lib/applyPendingOrder';
+import { useRunningThreadIds } from '@/widgets/app-sidebar/hooks/useRunningThreadIds';
 import { FavoriteSidebarItem } from './FavoriteSidebarItem';
 import { SidebarCollapsibleGroup } from './SidebarCollapsibleGroup';
 
@@ -26,6 +27,7 @@ export function FavoritesSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const navigate = useNavigate();
   const params = useParams({ strict: false });
+  const runningThreadIds = useRunningThreadIds();
   const [pendingOrder, setPendingOrder] = useState<string[] | null>(null);
   const [settingsWorkspace, setSettingsWorkspace] = useState<Workspace | null>(
     null,
@@ -122,6 +124,10 @@ export function FavoritesSidebarGroup() {
               onRename={(id, title) => setThreadToRename({ id, title })}
               onDelete={handleDelete}
               onOpenWorkspaceSettings={setSettingsWorkspace}
+              isRunning={
+                item.referenceType === 'thread' &&
+                runningThreadIds.has(item.referenceId)
+              }
             />
           ))}
         </SidebarMenu>

@@ -28,6 +28,7 @@
     "updates": "Updates",
     "chats": "Chats",
     "loadingChats": "Loading chats...",
+    "chatRunning": "AI is working on this chat",
     "failedToLoadChats": "Failed to load chats",
     "emptyChatsTitle": "Your chats will be displayed here.",
     "emptyChatsDescription": "Interact with Ayunis Core and ask any questions.",
