@@ -59,6 +59,13 @@ Do the work. This is deliberately open-ended — the ticket may ask for a code c
 - Validate as the repository instructions require; without repository guidance, run tests, build, and lint
 - When the repository instructions require E2E coverage, load the `e2e` skill; done means the focused journey spec exists or is updated and runs green with that skill's test command
 - If execution surfaces a blocker, a wrong premise, or a decision that needs the user, stop and surface it — don't plow through
+- If the ticket can't be delivered as one coherent PR, stop before committing and propose a split: the parts, a one-line scope each, and the dependencies between them. Don't ship an oversized PR and don't split it on your own
+
+Bugs are fixed where they occur:
+
+- **In code this ticket changes:** fix it in this PR, whenever it surfaces, including during QA and `finish-pr`.
+- **In code from an earlier, unmerged PR of the same feature:** don't fix it here. Report the PR, location and evidence so it is fixed in the PR that introduced it. Continue unless it blocks this ticket.
+- **Anywhere else:** propose a follow-up (step 7).
 
 ### 5. Deliver code changes
 
@@ -125,6 +132,14 @@ For a non-code ticket with no release artifact, use the team's normal completion
 
 If a blocker follow-up was created, leave the ticket in the started state and
 call that out instead.
+
+## Running under `orchestrate`
+
+When an orchestrator assigned the ticket, its brief overrides the defaults above:
+
+- Build on the branch parent and use the PR type it names.
+- Report split proposals, earlier-PR bugs and follow-ups to the orchestrator instead of the user. Don't create tickets or edit the parent; the orchestrator owns both.
+- End with the status the brief asks for (`DONE`, `SPLIT`, or `BLOCKED`) and evidence.
 
 ## Rules
 

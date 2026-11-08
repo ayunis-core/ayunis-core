@@ -242,3 +242,9 @@ Investigation reports, PR summaries, and status write-ups are decision tools, no
 - Skip preamble, restated context, and multi-header scaffolding unless the depth was asked for.
 
 Expand only on request. When the user wants more, they'll say so — then go deep.
+
+### Answered questions are settled
+
+Once the user has answered a scoping or design question, it is decided. Don't put it back on a later "remaining questions" list, and don't re-raise it in a different form. Re-open it only when new evidence changes the trade-off, and name that evidence.
+
+Child agents don't inherit the conversation. When you write the ticket, spec, or plan that children will read, record every decision the user made in conversation under its key decisions, including "don't revisit X". A child that finds nothing about a decided question in the durable source will escalate it again.

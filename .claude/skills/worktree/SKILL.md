@@ -52,14 +52,14 @@ gh stack init <ticket-id>-<slug>
 pnpm install
 
 # Build the workspace packages so @ayunis/* types resolve (see below).
-pnpm run build:deps
+(cd ayunis-core-backend && pnpm run build:deps)
 ```
 
 ## Build @ayunis/* deps before trusting a full typecheck
 
 A fresh worktree has `node_modules` (after `pnpm install`) but **not** the built
 `dist/index.d.ts` for the `@ayunis/*` workspace packages — those only exist after
-the `tsup` build. Until you run `pnpm run build:deps`, a full `pnpm exec tsc --noEmit`
+the `tsup` build. Until you run `build:deps`, a full `pnpm exec tsc --noEmit`
 emits ~60 `TS2307 "Cannot find module '@ayunis/…'"` errors **on your branch AND on
 clean HEAD**.
 
@@ -73,9 +73,14 @@ blind spots that only a full post-build typecheck covers. So, in any worktree, b
 running or trusting `tsc --noEmit`:
 
 ```bash
-cd "$WORKTREE_DIR" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
+cd "$WORKTREE_DIR/ayunis-core-backend" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
 pnpm exec tsc --noEmit                       # now TS2307 noise is gone; real errors surface
 ```
+
+`build:deps` is a script in `ayunis-core-backend/package.json`, not in the root
+`package.json`. Run from the repo root, it fails with
+`ERR_PNPM_NO_SCRIPT Missing script: build:deps`. Give the backend directory in
+every command, and in every child-agent brief that tells an agent to run it.
 
 ## The Worktree Branch Is the First Layer
 

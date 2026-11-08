@@ -103,6 +103,30 @@ The backend runs `nest start --watch` — it auto-reloads on code changes. If it
 ./dev down
 ```
 
+## Extra processes outside `./dev`
+
+Some checks need a process that `./dev` doesn't manage, such as a second backend
+with a feature flag off, or a replica for a concurrency test. `./dev down` won't
+stop it, and killing processes is forbidden. Its own exit is the only way it
+will stop, so start it in a way that makes it end by itself:
+
+```bash
+# From ayunis-core-backend/: one process, bounded lifetime, log to a file
+(timeout 600 env PORT=<spare-port> FEATURE_<NAME>_ENABLED=false \
+  node dist/src/main > /tmp/<task>/backend-extra.log 2>&1 &)
+```
+
+- Wrap it in `timeout <seconds>`, sized to the check plus some margin.
+- Run the built artifact (`pnpm run build`, then `node dist/src/main`), not
+  `pnpm run start:dev`. `timeout` signals only its direct child, and the
+  `pnpm → nest → node` watcher tree survives that.
+- Never start it with bare `nohup … &` or `disown`. CI's flag-off step does
+  this because the runner is discarded afterwards. On the host, nothing but a
+  forbidden `kill` can end such a process.
+- Before reporting done, check that the port is free
+  (`lsof -nP -iTCP:<port> -sTCP:LISTEN` prints nothing). If something is still
+  listening, report its PID and port to the user. Do not kill it.
+
 ## Troubleshooting
 
 If `./dev up` fails, check logs:
