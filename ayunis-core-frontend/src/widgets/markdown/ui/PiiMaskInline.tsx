@@ -19,24 +19,29 @@ interface PiiMaskInlineProps {
  * the original value is shown highlighted with an explanatory tooltip;
  * unknown tokens fall back to the literal token text. Manually unmasked
  * entries render as plain text. Where an unmask handler is provided (the
- * chat page), masked entries are clickable to request unmasking.
+ * chat page), masked entries are clickable to request unmasking. Read aloud,
+ * every variant is its category so no value reaches the speech provider.
  */
 export default function PiiMaskInline({ token }: PiiMaskInlineProps) {
   const { t } = useTranslation('chat');
   const entry = usePiiMasks().get(token);
   const onUnmaskRequest = usePiiUnmaskRequest();
+  const categoryLabel = t(
+    `chat.piiMask.categories.${entry?.category ?? 'other'}`,
+    { defaultValue: t('chat.piiMask.categories.other') },
+  );
 
   if (!entry) {
-    return <span>{token}</span>;
+    return <span data-speech-text={categoryLabel}>{token}</span>;
   }
 
   if (entry.unmasked) {
-    return <span data-testid="pii-mask-unmasked">{entry.value}</span>;
+    return (
+      <span data-testid="pii-mask-unmasked" data-speech-text={categoryLabel}>
+        {entry.value}
+      </span>
+    );
   }
-
-  const categoryLabel = t(`chat.piiMask.categories.${entry.category}`, {
-    defaultValue: t('chat.piiMask.categories.other'),
-  });
 
   const tooltip = onUnmaskRequest
     ? t('chat.piiMask.tooltipClickable', { category: categoryLabel })
@@ -51,13 +56,18 @@ export default function PiiMaskInline({ token }: PiiMaskInlineProps) {
           <button
             type="button"
             data-testid="pii-mask"
+            data-speech-text={categoryLabel}
             className={cn(highlight, 'cursor-pointer hover:bg-brand/25')}
             onClick={() => onUnmaskRequest(entry)}
           >
             {entry.value}
           </button>
         ) : (
-          <span data-testid="pii-mask" className={highlight}>
+          <span
+            data-testid="pii-mask"
+            data-speech-text={categoryLabel}
+            className={highlight}
+          >
             {entry.value}
           </span>
         )}

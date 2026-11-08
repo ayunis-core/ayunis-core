@@ -93,6 +93,9 @@
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
     "skillInstructions": "Fähigkeits-Anweisungen",
     "copyToClipboard": "In die Zwischenablage kopieren",
+    "readAloud": "Vorlesen",
+    "stopReadingAloud": "Vorlesen beenden",
+    "readAloudError": "Die Nachricht konnte nicht vorgelesen werden.",
     "timeline": {
       "working": "Arbeite…",
       "thoughtProcess": "Gedankengang",

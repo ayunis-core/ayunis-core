@@ -12740,6 +12740,52 @@
         "tags": ["Super Admin Academy"]
       }
     },
+    "/speech": {
+      "post": {
+        "description": "Streams the text as MP3 speech while it is generated. The voice matches the detected language of the text, or the UI language when the text is too short or its language has no voice.",
+        "operationId": "SpeechController_synthesize",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SynthesizeSpeechDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MP3 audio, streamed while it is generated",
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty or too long text, or an unsupported UI language"
+          },
+          "404": {
+            "description": "Read aloud is not enabled"
+          },
+          "500": {
+            "description": "Speech generation failed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read text aloud",
+        "tags": ["speech"]
+      }
+    },
     "/retention-policies/org": {
       "get": {
         "operationId": "RetentionPoliciesController_get",
@@ -13885,12 +13931,24 @@
             "type": "boolean",
             "description": "Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source)",
             "default": false
+          },
+          "voiceEnabled": {
+            "type": "boolean",
+            "description": "Voice input is available (needs a configured Mistral API key)",
+            "default": false
+          },
+          "readAloudEnabled": {
+            "type": "boolean",
+            "description": "Assistant messages can be read aloud (opt-in, needs voice to be available)",
+            "default": false
           }
         },
         "required": [
           "externalSubscriptionsEnabled",
           "routinesEnabled",
-          "releaseNotesEnabled"
+          "releaseNotesEnabled",
+          "voiceEnabled",
+          "readAloudEnabled"
         ]
       },
       "OrgUsersSortField": {
@@ -23380,6 +23438,22 @@
           }
         },
         "required": ["title", "loomUrl"]
+      },
+      "SynthesizeSpeechDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Plain text to read aloud, without markup",
+            "maxLength": 30000
+          },
+          "language": {
+            "type": "string",
+            "enum": ["de", "en"],
+            "description": "Current UI language, used when the language of the text is unidentifiable; defaults to English"
+          }
+        },
+        "required": ["text"]
       },
       "RetentionPolicyResponseDto": {
         "type": "object",

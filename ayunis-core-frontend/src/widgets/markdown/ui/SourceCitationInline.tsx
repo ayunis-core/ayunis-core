@@ -11,7 +11,11 @@ export default function SourceCitationInline({
   const onCitationClick = useSourceCitationClick();
 
   if (!onCitationClick) {
-    return <span>{`{{source:${citation.chunkId}|${citation.label}}}`}</span>;
+    return (
+      <span data-speech-text="">
+        {`{{source:${citation.chunkId}|${citation.label}}}`}
+      </span>
+    );
   }
 
   return (
@@ -19,6 +23,7 @@ export default function SourceCitationInline({
       type="button"
       data-testid="source-citation"
       data-source-chunk-id={citation.chunkId}
+      data-speech-text=""
       className="bg-muted text-foreground px-1 py-0.5 rounded font-medium underline underline-offset-2 cursor-pointer hover:bg-muted/70"
       onClick={() => onCitationClick(citation)}
     >

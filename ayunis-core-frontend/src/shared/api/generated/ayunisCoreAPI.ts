@@ -255,6 +255,7 @@ import type {
   SuperAdminUserListControllerGetAllUsersParams,
   SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
+  SynthesizeSpeechDto,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
   TeamMemberResponseDto,
@@ -26970,6 +26971,76 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
         TContext
       > => {
       return useMutation(getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options), queryClient);
+    }
+
+/**
+ * Streams the text as MP3 speech while it is generated. The voice matches the detected language of the text, or the UI language when the text is too short or its language has no voice.
+ * @summary Read text aloud
+ */
+export const speechControllerSynthesize = (
+    synthesizeSpeechDto: SynthesizeSpeechDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/speech`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: synthesizeSpeechDto,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getSpeechControllerSynthesizeMutationKey = () => ['speechControllerSynthesize'] as const;
+
+export const getSpeechControllerSynthesizeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof speechControllerSynthesize>>, TError,SpeechControllerSynthesizeMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof speechControllerSynthesize>>, TError,SpeechControllerSynthesizeMutationVariables, TContext> => {
+
+const mutationKey = getSpeechControllerSynthesizeMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof speechControllerSynthesize>>, SpeechControllerSynthesizeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  speechControllerSynthesize(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SpeechControllerSynthesizeMutationResult = NonNullable<Awaited<ReturnType<typeof speechControllerSynthesize>>>
+    export type SpeechControllerSynthesizeMutationBody = SynthesizeSpeechDto
+    export type SpeechControllerSynthesizeMutationError = void
+    export type SpeechControllerSynthesizeMutationVariables = {data: SynthesizeSpeechDto}
+
+    /**
+ * @summary Read text aloud
+ */
+export const useSpeechControllerSynthesize = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof speechControllerSynthesize>>, TError,SpeechControllerSynthesizeMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof speechControllerSynthesize>>,
+        TError,
+        SpeechControllerSynthesizeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSpeechControllerSynthesizeMutationOptions(options), queryClient);
     }
 
 /**

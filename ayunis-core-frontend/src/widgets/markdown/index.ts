@@ -13,3 +13,4 @@ export {
 export type { SourceCitation } from './lib/source-citation';
 export type { SourceCitationClickHandler } from './model/source-citation-context';
 export { resolvePiiTokens } from './lib/pii-token';
+export { SPEECH_TEXT_ATTRIBUTE } from './lib/speech-text';

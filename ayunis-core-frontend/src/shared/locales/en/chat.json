@@ -93,6 +93,9 @@
     "errorRemoveAgent": "Agent could not be removed",
     "skillInstructions": "Skill instructions",
     "copyToClipboard": "Copy to clipboard",
+    "readAloud": "Read aloud",
+    "stopReadingAloud": "Stop reading aloud",
+    "readAloudError": "The message could not be read aloud.",
     "timeline": {
       "working": "Working…",
       "thoughtProcess": "Thought process",

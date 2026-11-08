@@ -19,4 +19,18 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   releaseNotesEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'Voice input is available (needs a configured Mistral API key)',
+    default: false,
+  })
+  voiceEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'Assistant messages can be read aloud (opt-in, needs voice to be available)',
+    default: false,
+  })
+  readAloudEnabled: boolean;
 }

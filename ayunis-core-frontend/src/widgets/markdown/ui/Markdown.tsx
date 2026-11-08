@@ -145,7 +145,11 @@ function MarkdownImage({ src, alt, title }: Readonly<ImageComponentProps>) {
 }
 
 function MarkdownPre({ children }: Readonly<TableComponentProps>) {
-  return <div className="my-4">{children}</div>;
+  return (
+    <div className="my-4" data-speech-text="">
+      {children}
+    </div>
+  );
 }
 
 function MarkdownTable({ children }: Readonly<TableComponentProps>) {

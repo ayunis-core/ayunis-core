@@ -86,6 +86,7 @@ none of these packages implements the Agent Plugins standard.
 | [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                            | Integrations   | Model Context Protocol server connections                                                                      |
 | [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                      | Sharing        | Organization-wide resource sharing                                                                             |
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
+| [speech](ayunis-core-backend/src/domain/speech/SUMMARY.md)                      | Voice          | Streams assistant messages as speech in a voice matching their language                                        |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)    | Blueprints     | Admin-managed skill templates with distribution modes                                                          |
 | [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md)                    | Learning       | Academy chapters, videos, learner confirmations, and completion                                                |
