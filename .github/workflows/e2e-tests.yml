@@ -319,9 +319,11 @@ jobs:
           AWS_BEDROCK_REGION=eu-central-1
           AZURE_OPENAI_API_KEY=e2e-ci-dummy
 
-          # Deterministic Mistral OCR contract server
+          # Deterministic Mistral OCR and speech contract server
           MISTRAL_API_KEY=e2e-ci-mistral-key
           MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
+          MISTRAL_SPEECH_SERVER_URL=http://127.0.0.1:3199
+          FEATURE_READ_ALOUD_ENABLED=true
 
           # MinIO
           MINIO_INTERNAL_ENDPOINT=localhost
@@ -354,7 +356,7 @@ jobs:
           ANNOUNCABLE_URL=http://127.0.0.1:3198
           EOF
 
-      - name: Start Mistral OCR contract server
+      - name: Start Mistral OCR and speech contract server
         run: |
           nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \

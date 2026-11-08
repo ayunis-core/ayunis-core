@@ -65,6 +65,51 @@ describe('Release notes', () => {
   );
 });
 
+describe('Voice', () => {
+  const original = process.env;
+  afterEach(() => {
+    process.env = original;
+  });
+
+  it.each([
+    [undefined, false],
+    ['', false],
+    ['   ', false],
+    ['mistral-key', true],
+  ])('resolves Mistral API key %p to %s', (apiKey, expected) => {
+    process.env = { ...original };
+    if (apiKey === undefined) delete process.env.MISTRAL_API_KEY;
+    else process.env.MISTRAL_API_KEY = apiKey;
+    expect(featuresConfig().voiceEnabled).toBe(expected);
+  });
+});
+
+describe('Read aloud', () => {
+  const original = process.env;
+  afterEach(() => {
+    process.env = original;
+  });
+
+  it.each([
+    [undefined, 'mistral-key', false],
+    ['', 'mistral-key', false],
+    ['false', 'mistral-key', false],
+    ['true', 'mistral-key', true],
+    ['true', undefined, false],
+    ['true', ' ', false],
+  ])(
+    'with flag %p and Mistral API key %p resolves to %s',
+    (flag, apiKey, expected) => {
+      process.env = { ...original };
+      if (flag === undefined) delete process.env.FEATURE_READ_ALOUD_ENABLED;
+      else process.env.FEATURE_READ_ALOUD_ENABLED = flag;
+      if (apiKey === undefined) delete process.env.MISTRAL_API_KEY;
+      else process.env.MISTRAL_API_KEY = apiKey;
+      expect(featuresConfig().readAloudEnabled).toBe(expected);
+    },
+  );
+});
+
 describe('parseBooleanWithDefault', () => {
   it.each([undefined, '', '   '])('uses the default for %p', (value) => {
     expect(parseBooleanWithDefault(value, true)).toBe(true);

@@ -153,6 +153,7 @@
   "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}",
   "/skills/{skillId}/mcp-integrations",
   "/skills/{skillId}/mcp-integrations/{integrationId}",
+  "/speech",
   "/subscriptions/active",
   "/subscriptions/price",
   "/super-admin/academy/chapters",

@@ -3,6 +3,8 @@ import { cn } from '@ayunis/ui/lib/cn';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
+import ReadAloudButton from './ReadAloudButton';
+import { hasSpeakableText } from '@/pages/chat/lib/speakable-message-text';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -20,6 +22,11 @@ function AssistantRunBlock({
 }: Readonly<AssistantRunBlockProps>) {
   const contentRef = useRef<HTMLDivElement>(null);
   const hasText = unit.blocks.some((block) => block.kind === 'text');
+  const canReadAloud =
+    !unit.isStreaming &&
+    unit.blocks.some(
+      (block) => block.kind === 'text' && hasSpeakableText(block.content.text),
+    );
 
   return (
     <div
@@ -40,7 +47,14 @@ function AssistantRunBlock({
             onOpenArtifact={onOpenArtifact}
           />
         </div>
-        {hasText && <CopyAssistantTextButton contentRef={contentRef} />}
+        {hasText && (
+          <div className="flex items-center gap-0.5">
+            <CopyAssistantTextButton contentRef={contentRef} />
+            {canReadAloud && (
+              <ReadAloudButton messageKey={unit.key} contentRef={contentRef} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -19,6 +19,10 @@ export interface FeatureTogglesResponseDto {
   routinesEnabled: boolean;
   /** Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source) */
   releaseNotesEnabled: boolean;
+  /** Voice input is available (needs a configured Mistral API key) */
+  voiceEnabled: boolean;
+  /** Assistant messages can be read aloud (opt-in, needs voice to be available) */
+  readAloudEnabled: boolean;
 }
 
 export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
@@ -5849,6 +5853,27 @@ export interface UpdateCourseModuleRequestDto {
      * @maxLength 500
      */
   loomUrl: string;
+}
+
+/**
+ * Current UI language, used when the language of the text is unidentifiable; defaults to English
+ */
+export type SynthesizeSpeechDtoLanguage = typeof SynthesizeSpeechDtoLanguage[keyof typeof SynthesizeSpeechDtoLanguage];
+
+
+export const SynthesizeSpeechDtoLanguage = {
+  de: 'de',
+  en: 'en',
+} as const;
+
+export interface SynthesizeSpeechDto {
+  /**
+     * Plain text to read aloud, without markup
+     * @maxLength 30000
+     */
+  text: string;
+  /** Current UI language, used when the language of the text is unidentifiable; defaults to English */
+  language?: SynthesizeSpeechDtoLanguage;
 }
 
 export interface RetentionPolicyResponseDto {

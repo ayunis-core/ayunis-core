@@ -100,6 +100,7 @@
     "exceljs": "^4.4.0",
     "fast-formula-parser": "1.0.19",
     "form-data": "^4.0.6",
+    "franc-all": "^7.2.0",
     "helmet": "^8.3.0",
     "ioredis": "^5.11.1",
     "jose": "^6.2.10",

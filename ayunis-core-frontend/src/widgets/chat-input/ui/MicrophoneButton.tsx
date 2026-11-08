@@ -6,11 +6,12 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
-import { useVoiceRecording } from '../hooks/useVoiceRecording';
-import { useTranscribe } from '../api/useTranscribe';
+import { useVoiceRecording } from '@/widgets/chat-input/hooks/useVoiceRecording';
+import { useTranscribe } from '@/widgets/chat-input/api/useTranscribe';
 import { showError } from '@/shared/lib/toast';
 import { cn } from '@ayunis/ui/lib/cn';
 import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 interface MicrophoneButtonProps {
   onTranscriptionComplete: (text: string) => void;
@@ -20,6 +21,7 @@ export function MicrophoneButton({
   onTranscriptionComplete,
 }: Readonly<MicrophoneButtonProps>) {
   const { t } = useTranslation('common');
+  const voiceEnabled = useIsFeatureEnabled('voiceEnabled');
   const { transcribe, isTranscribing: isApiTranscribing } = useTranscribe();
 
   const handleError = (errorKey: string) => {
@@ -35,7 +37,7 @@ export function MicrophoneButton({
     isSupported,
   } = useVoiceRecording(onTranscriptionComplete, handleError, transcribe);
 
-  if (!isSupported) {
+  if (!isSupported || !voiceEnabled) {
     return null;
   }
 
@@ -71,6 +73,7 @@ export function MicrophoneButton({
               onClick={handleClick}
               disabled={busy}
               aria-label={tooltipText}
+              data-testid="chat-input-microphone"
             >
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -8,6 +8,8 @@ const mistralConfig = () => ({
   // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
   transcriptionModel:
     process.env.MISTRAL_TRANSCRIPTION_MODEL?.trim() || 'voxtral-mini-latest',
+  ttsModel: process.env.MISTRAL_TTS_MODEL?.trim() || 'voxtral-mini-tts-3-0',
+  speechServerUrl: process.env.MISTRAL_SPEECH_SERVER_URL?.trim() || undefined,
 });
 
 export const modelsConfig = registerAs('models', () => ({

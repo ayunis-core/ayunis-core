@@ -5,6 +5,7 @@ import process from "node:process";
 const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
 
 const extractionCounts = new Map();
+const speech = { requests: [], hold: false, releases: [] };
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
@@ -16,6 +17,14 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, {
       count: extractionCounts.get(marker) ?? 0,
     });
+  }
+
+  if (request.url.startsWith("/speech/")) {
+    return handleSpeechControl(request, response);
+  }
+
+  if (request.method === "POST" && request.url === "/v1/audio/speech") {
+    return streamSpeech(JSON.parse(await readBody(request)), response);
   }
 
   if (request.method === "POST" && request.url === "/v1/ocr") {
@@ -87,6 +96,83 @@ function ocrResponse() {
     model: "mistral-ocr-latest",
     usage_info: { pages_processed: 1, doc_size_bytes: 1024 },
   };
+}
+
+// Test controls for the read-aloud journey: inspect the received requests,
+// and hold a stream open after its first audio so a test can observe
+// playback that started before the audio was complete.
+function handleSpeechControl(request, response) {
+  if (request.method === "GET" && request.url === "/speech/requests") {
+    return sendJson(response, 200, speech.requests);
+  }
+  if (request.method === "POST" && request.url === "/speech/reset") {
+    speech.requests = [];
+    speech.hold = false;
+    releaseHeldSpeech();
+    return sendJson(response, 200, {});
+  }
+  if (request.method === "POST" && request.url === "/speech/hold") {
+    speech.hold = true;
+    return sendJson(response, 200, {});
+  }
+  if (request.method === "POST" && request.url === "/speech/release") {
+    speech.hold = false;
+    releaseHeldSpeech();
+    return sendJson(response, 200, {});
+  }
+  return sendJson(response, 404, { message: "Not found" });
+}
+
+function releaseHeldSpeech() {
+  for (const release of speech.releases.splice(0)) release();
+}
+
+async function streamSpeech(body, response) {
+  if (body.stream !== true || body.response_format !== "mp3") {
+    return sendJson(response, 400, {
+      message: "Expected a streamed MP3 speech request",
+    });
+  }
+  speech.requests.push({
+    input: body.input,
+    voiceId: body.voice_id,
+    model: body.model,
+  });
+  response.writeHead(200, { "content-type": "text/event-stream" });
+  // About two seconds of audio, so playback is still running when a test
+  // checks on it.
+  const frames = silentMp3Frames(80);
+  const half = frames.length / 2;
+  sendAudioDelta(response, Buffer.concat(frames.slice(0, half)));
+  if (speech.hold) {
+    await new Promise((resolve) => speech.releases.push(resolve));
+  }
+  if (response.destroyed) return;
+  sendAudioDelta(response, Buffer.concat(frames.slice(half)));
+  response.write(
+    `event: speech.audio.done\ndata: ${JSON.stringify({
+      type: "speech.audio.done",
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    })}\n\n`,
+  );
+  response.end();
+}
+
+function sendAudioDelta(response, audio) {
+  response.write(
+    `event: speech.audio.delta\ndata: ${JSON.stringify({
+      type: "speech.audio.delta",
+      audio_data: audio.toString("base64"),
+    })}\n\n`,
+  );
+}
+
+// Silent MPEG-1 Layer III frames (128 kbit/s, 44.1 kHz, mono): a valid header
+// with empty side information decodes to 26 ms of silence each.
+function silentMp3Frames(count) {
+  const frame = Buffer.alloc(417);
+  frame.set([0xff, 0xfb, 0x90, 0xc0]);
+  return Array.from({ length: count }, () => frame);
 }
 
 function sendJson(response, status, body) {

@@ -31,6 +31,10 @@ vi.mock('@/pages/chat/ui/CopyAssistantTextButton', () => ({
   default: () => null,
 }));
 
+vi.mock('@/pages/chat/ui/ReadAloudButton', () => ({
+  default: () => null,
+}));
+
 function message(
   id: string,
   role: 'user' | 'assistant',
