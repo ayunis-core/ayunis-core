@@ -54,6 +54,20 @@ describe('validateEnv', () => {
     },
   );
 
+  it.each(['0', '-1', '1.5', 'three'])(
+    'rejects invalid Gotenberg conversion limit %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ GOTENBERG_MAX_CONCURRENT_CONVERSIONS: value })),
+      ).toThrow('GOTENBERG_MAX_CONCURRENT_CONVERSIONS');
+    },
+  );
+  it.each(['', '1', '3'])('accepts Gotenberg conversion limit %s', (value) => {
+    expect(() =>
+      validateEnv(baseEnv({ GOTENBERG_MAX_CONCURRENT_CONVERSIONS: value })),
+    ).not.toThrow();
+  });
+
   it.each(['yes', 'TRUE', '1'])(
     'rejects invalid external subscription management flag %s',
     (value) => {
