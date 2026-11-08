@@ -28,7 +28,9 @@ Give users enough information to choose confidently, with minimal repetition.
 
 ## Validation Sequence
 
-Choose validation breadth using the repository's Proportional Workflow.
+Choose validation breadth using the repository's Proportional Workflow. Load
+the `frontend-testing` skill before writing, changing, or deleting a test, or
+deciding how to verify a change.
 
 For Standard and High-Risk changes:
 

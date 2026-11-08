@@ -29,7 +29,7 @@ Before implementation, state the observable behavior with the flag enabled and d
 2. Add property to `FeatureTogglesResponseDto` with `@ApiProperty`.
 3. Return it in `AppController.featureToggles()`.
 4. Apply `@RequireFeature(FeatureFlag.Xxx)` to the controller(s). Controller-level = gates all routes. The decorator composes `UseGuards` internally — do not add `@UseGuards(FeatureGuard)` separately.
-5. Run guard tests: `pnpm run test -- --testPathPattern=feature.guard`
+5. Run the guard specs: `pnpm test feature.guard`
 
 ### Frontend
 
@@ -45,9 +45,8 @@ Edit the default value in `features.config.ts`. `parseBooleanWithDefault` uses t
 
 ## Verification
 
-1. **Config** — add the default and the explicit-`true` case to `ayunis-core-backend/src/config/features.config.spec.ts`.
-2. **Flag ON** — the normal e2e run; enable the flag in the backend `.env` heredoc in `.github/workflows/e2e-tests.yml`.
-3. **Flag OFF** — required when the gate lands on something that already existed: a route, controller, navigation entry, or persisted state an existing workflow already depends on. If the gate covers only new code, OFF means "feature absent" and no OFF test is needed. One focused spec when it is needed, never a duplicated suite.
+1. **Flag ON** — the normal e2e run; enable the flag in the backend `.env` heredoc in `.github/workflows/e2e-tests.yml`.
+2. **Flag OFF** — required when the gate lands on something that already existed: a route, controller, navigation entry, or persisted state an existing workflow already depends on. If the gate covers only new code, OFF means "feature absent" and no OFF test is needed. One focused spec when it is needed, never a duplicated suite.
 
 ### Flag-off e2e recipe
 
