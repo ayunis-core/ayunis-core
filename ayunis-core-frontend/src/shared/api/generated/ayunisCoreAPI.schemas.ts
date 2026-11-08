@@ -3285,6 +3285,8 @@ export interface KnowledgeBaseDocumentResponseDto {
   status: KnowledgeBaseDocumentResponseDtoStatus;
   /** Error message if processing failed (only present when status is failed) */
   processingError?: string;
+  /** Why processing failed; the client localizes it */
+  processingErrorCode?: SourceProcessingErrorCode;
   /** The text source subtype (e.g. file, web) */
   textType?: KnowledgeBaseDocumentResponseDtoTextType;
   /** The URL of the source (only for web sources) */

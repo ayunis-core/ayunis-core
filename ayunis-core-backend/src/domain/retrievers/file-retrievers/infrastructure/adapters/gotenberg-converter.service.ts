@@ -6,6 +6,7 @@ import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
 import { ConversionGate } from './conversion-gate';
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import {
+  DocumentConversionTimeoutError,
   DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileRetrieverError,
@@ -87,10 +88,7 @@ export class GotenbergConverterService extends DocumentConverterPort {
 
     if (status === 503) {
       return isConversionTimeout(error)
-        ? new UnprocessableDocumentError(
-            `Conversion of ${fileName} exceeded the converter's time limit`,
-            { converter: 'gotenberg', upstreamStatus: 503, fileName },
-          )
+        ? new DocumentConversionTimeoutError(fileName)
         : new DocumentConversionUnavailableError(fileName);
     }
 

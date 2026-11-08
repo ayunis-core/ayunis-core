@@ -5,6 +5,7 @@ import axios from 'axios';
 import { GotenbergConverterService } from './gotenberg-converter.service';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import {
+  DocumentConversionTimeoutError,
   DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileTooLargeError,
@@ -109,6 +110,7 @@ describe('GotenbergConverterService', () => {
     );
 
     const result = convert();
+    await expect(result).rejects.toBeInstanceOf(DocumentConversionTimeoutError);
     await expect(result).rejects.toBeInstanceOf(UnprocessableDocumentError);
     await expect(result).rejects.toMatchObject({
       statusCode: 422,

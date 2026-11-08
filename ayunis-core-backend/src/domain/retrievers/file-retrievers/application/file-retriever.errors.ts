@@ -72,6 +72,22 @@ export class UnprocessableDocumentError extends FileRetrieverError {
   }
 }
 
+/**
+ * LibreOffice ran out of time on this document itself. A subclass of
+ * UnprocessableDocumentError so the queue settles it without retrying; the
+ * processing-error classifier tells it apart to show a timeout, not an
+ * unreadable file (AYC-1641).
+ */
+export class DocumentConversionTimeoutError extends UnprocessableDocumentError {
+  constructor(fileName: string) {
+    super(`Conversion of ${fileName} exceeded the converter's time limit`, {
+      converter: 'gotenberg',
+      upstreamStatus: 503,
+      fileName,
+    });
+  }
+}
+
 export class EmptyOcrResultError extends UnprocessableDocumentError {
   constructor(metadata?: ErrorMetadata) {
     super('No text could be extracted from the document', metadata);

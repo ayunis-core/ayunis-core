@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SourceProcessingErrorCode as Code } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { getSourceProcessingErrorKey } from './source-processing-error';
+import {
+  getSourceProcessingErrorKey,
+  getSourceProcessingErrorReason,
+} from './source-processing-error';
 
 describe('getSourceProcessingErrorKey', () => {
   it.each([
@@ -15,6 +18,7 @@ describe('getSourceProcessingErrorKey', () => {
     ['__proto__' as Code, 'failed'],
     ['The document could not be processed' as Code, 'failed'],
   ])('maps %s to localized %s guidance', (code, reason) => {
+    expect(getSourceProcessingErrorReason(code)).toBe(reason);
     expect(getSourceProcessingErrorKey(code)).toBe(
       `sources.processingErrors.${reason}`,
     );
