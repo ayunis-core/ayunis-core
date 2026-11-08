@@ -63,11 +63,16 @@ attributes present?", query the v2 API — never answer that question from the C
 
 This is a narrow blind spot, not a reason to avoid the CLI for everything else.
 
+`appsignal-cli logs search` (2.2.0) can also fail outright with "AppSignal returned
+an unexpected response" when a line's `json` field arrives as a string
+(`APPSIGNAL_CLI_DEBUG=1` shows `invalid type: string ..., expected a map`). Use the
+v2 API below when that happens.
+
 ## Query the v2 logs API for attributes
 
 Structured attributes live in the `.json` field of each returned line. The request
-shape below is the one that currently works — `source_ids` is an **array**, and a
-`pagination` object is **required**:
+shape below is the one that currently works — `site_id` is **required**,
+`source_ids` is an **array**, and a `pagination` object is **required**:
 
 ```bash
 # TOKEN: the appsignal-cli OAuth token from its config.toml (see above), or an
@@ -76,6 +81,7 @@ curl -sS -X POST 'https://appsignal.com/api/v2/logs/lines' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
   -d '{
+        "site_id":    "<app id>",
         "from":       "2026-08-06T08:30:00Z",
         "to":         "2026-08-06T08:55:00Z",
         "source_ids": ["<log source id>"],
@@ -86,15 +92,20 @@ curl -sS -X POST 'https://appsignal.com/api/v2/logs/lines' \
 ```
 
 - Auth is the **`Authorization: Bearer` header**. The old `?token=` query parameter
-  and the `site_id` / `source_id` / `limit` body fields no longer work.
+  and the singular `source_id` / `limit` body fields no longer work.
+- **`site_id` is the AppSignal app id** — the ID column of `appsignal-cli apps list`
+  (staging `6a8038c73ebc17489e0e97f7`, production `6a611f0dd841ff7c22841fb2`,
+  internal `6a805bf03ebc17489e0e992f`). Omitting it fails with
+  `missing field site_id`. It also picks the environment, so name it in the report.
 - The **`.json`** field is where `user.id`, `org.id`, `nestjs.context` and custom
   metadata appear. `.attributes` is the legacy field the CLI reads — expect it empty.
-- Get the log `source_id` from `appsignal-cli` (log sources) or the AppSignal UI URL
-  for the logs view.
-- Scope with `from`/`to` and `query`; set `per_page` explicitly.
+- Get the log source id from `appsignal-cli logs sources --app-id <app id>` or the
+  AppSignal UI URL for the logs view.
+- Scope with `from`/`to` and `query`; set `per_page` explicitly (100 works). To page,
+  repeat the request with `cursor.time` set to the last line's `timestamp`.
 
 If the API rejects a request, check AppSignal's current API docs before
-reverse-engineering — the schema has changed at least once.
+reverse-engineering — the schema has changed at least twice.
 
 ## Secrets
 

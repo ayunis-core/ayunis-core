@@ -105,6 +105,25 @@ For each failing or cancelled check:
 
 After any resubmission, refresh every affected PR's remote head SHA and restart the full CI and Bugbot loop. Results from the previous SHA no longer count.
 
+### CI experiments go on a throwaway branch, never the PR branch
+
+Some evidence needs CI to run code that must not ship: diagnostic logging to catch a CI-only failure, or a deliberately failing test that proves a required check goes red. Keep that code off the real PR branch. Pushing it there and amending it out later costs an extra CI round. It also leaves a diagnostic head that reviewers and Bugbot may see, and the clean run on the real change no longer counts as the final verification.
+
+Instead, run the probe in parallel with the real PR's CI:
+
+```bash
+git switch -c probe/<ticket>-<what> <real-pr-head-sha>
+# add the probe commit
+git push origin probe/<ticket>-<what>      # plain git push; never add it to a stack
+git switch <real-pr-branch>                # back to the real branch
+gh pr create --draft --base <real-pr-base-branch> --head probe/<ticket>-<what> \
+  --title "DO NOT MERGE: <ticket> <what> probe" --body "Throwaway CI probe for #<real-pr>."
+# wait for the run, record its URL as evidence in the real PR's description or report
+gh pr close <probe-pr> --delete-branch
+```
+
+The real PR branch only ever carries the real change. If a diagnostic already landed on it, amend it out (`git commit --amend` on the PR branch, then push per `git-workflow`), return the PR to ready-for-review, and re-run this loop on the clean head.
+
 ## 4. Address Bugbot findings
 
 Load `bugbot-triage` and use its paginated comment fetching, full-stack scan, root-cause tracing, and verdicts. Do not recreate a shallower Bugbot review here.

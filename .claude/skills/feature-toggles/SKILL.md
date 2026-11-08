@@ -56,7 +56,7 @@ The flag resolves from `process.env` at boot, so one stack cannot serve both sta
 - `ayunis-core-e2e/playwright.config.ts` — the `sso-disabled` project. The spec must also be listed in the `chromium` project's `testIgnore`, or it runs in both states.
 - `ayunis-core-e2e/tests/auth/sso-disabled-logout.spec.ts` — prove the feature is gone first (gated route 404s; `publicApi` fixture for unauthenticated endpoints), then exercise the shared workflow that must stay available.
 
-Locally: `FEATURE_<NAME>_ENABLED=false pnpm run start:dev` in a second slot. Shell env wins over `.env.dev` and `.env`, but `ayunis-core-backend/.env.local` overrides the shell — remove the flag from it first. Never hand-edit the generated `.env.dev`.
+Locally: start the flag-off backend as described in **Extra processes outside `./dev`** in `dev-environment`. Use a `timeout`-wrapped `node dist/src/main` with `FEATURE_<NAME>_ENABLED=false` on a spare port. Never use the CI step's `nohup … &`, because nobody may kill the process afterwards. Shell env wins over `.env.dev` and `.env`, but `ayunis-core-backend/.env.local` overrides the shell — remove the flag from it first. Never hand-edit the generated `.env.dev`.
 
 Mocked guards, mocked API clients, and direct controller invocation exercise wiring, not runtime composition: they do not satisfy the OFF contract for a shared path.
 

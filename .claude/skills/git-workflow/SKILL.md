@@ -152,7 +152,7 @@ gh stack push              # updates branches that already have PRs
 
 - `gh stack submit --auto` creates new PRs as drafts; add `--open` to create them ready for review (and to mark existing ones ready).
 - The PR title is the commit subject when the branch has exactly one commit, otherwise the humanized branch name. The body is the commit body. Check titles after submitting and fix them with `gh pr edit <number> --title "..."`: release-please builds the changelog from the squash-merged PR title, so it must follow the commit format above.
-- `gh pr merge` cannot merge a stacked PR. Merging is the user's call; when asked, use `gh stack merge <pr-number> --yes`, which merges that PR and every unmerged PR below it.
+- Merging is the user's call. When asked, merge a stacked PR with `gh stack merge <pr-number> --yes`, which merges that PR and every unmerged PR below it; `gh pr merge` cannot merge a stacked PR. A one-branch stack has no stack on GitHub, so its PR is merged with `gh pr merge <pr-number> --squash`. `gh stack merge` rejects it (`is not a stack number or a stacked pull request`) and still exits 0, so check the PR state afterwards.
 
 ### Verifying stack state after rebase / push / submit
 
