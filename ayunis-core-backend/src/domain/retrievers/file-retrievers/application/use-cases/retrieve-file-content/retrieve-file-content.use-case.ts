@@ -10,7 +10,10 @@ import {
   FileRetrieverPage,
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
-import { RetrieveFileContentCommand } from './retrieve-file-content.command';
+import {
+  RetrieveFileContentCommand,
+  type RecordingFileRef,
+} from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/application/file-retriever-handler.registry';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
@@ -156,6 +159,7 @@ export class RetrieveFileContentUseCase {
     if (isAudioFile(fileType)) {
       return await this.processAudio(
         command.fileData,
+        command.recording,
         command.fileName,
         command.fileType,
         command.processingContext,
@@ -373,6 +377,7 @@ export class RetrieveFileContentUseCase {
    */
   private async processAudio(
     fileData: Buffer,
+    recording: RecordingFileRef | undefined,
     fileName: string,
     mimeType: string,
     processingContext?: ProcessingContext,
@@ -380,6 +385,7 @@ export class RetrieveFileContentUseCase {
     const transcript = await this.transcribeUseCase.execute(
       new TranscribeCommand({
         file: fileData,
+        recording,
         fileName,
         mimeType,
         processingContext,

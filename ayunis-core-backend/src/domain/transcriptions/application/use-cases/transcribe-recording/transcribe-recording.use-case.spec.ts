@@ -106,6 +106,21 @@ describe('uploaded recording transcription', () => {
     expect(requests).toBe(0);
   });
 
+  it('transcribes a recording handed over as a file on disk', async () => {
+    const onDisk = new TranscribeCommand({
+      file: Buffer.alloc(0),
+      recording: { path: join(directory, '0.wav'), size: 10, sha256: 'ab' },
+      fileName: 'meeting.wav',
+      mimeType: 'audio/wav',
+      processingContext: context,
+    });
+
+    await expect(useCase().execute(onDisk)).resolves.toContain(
+      'Council decision.',
+    );
+    expect(requests).toBe(2);
+  });
+
   it('adds original recording offsets to provider timestamps', async () => {
     const text = await useCase().execute(command());
     expect(text).toContain('[00:00:01.250 - 00:00:03.500] Council decision.');

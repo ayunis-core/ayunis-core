@@ -1,6 +1,9 @@
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { mkdtemp, rm, writeFile } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { MistralTranscriptionService } from './mistral-transcription.service';
 
@@ -123,6 +126,33 @@ describe('MistralTranscriptionService', () => {
       }),
       expect.objectContaining({ timeoutMs: 300_000 }),
     );
+  });
+
+  it('uploads a recording segment from disk', async () => {
+    const service = await createService({
+      'models.mistral.apiKey': 'test-api-key',
+      'models.mistral.transcriptionModel': 'voxtral-mini-2602',
+    });
+    const directory = await mkdtemp(join(tmpdir(), 'segment-'));
+    try {
+      const path = join(directory, 'segment.wav');
+      await writeFile(path, Buffer.from('audio segment on disk'));
+
+      await service.transcribeSegment(
+        { path, size: 21 },
+        'segment.wav',
+        'audio/wav',
+      );
+
+      const [request] = mockClient.audio.transcriptions.complete.mock
+        .calls[0] as [{ file: File }];
+      expect(request.file.name).toBe('segment.wav');
+      expect(request.file.type).toBe('audio/wav');
+      expect(request.file.size).toBe(21);
+      await expect(request.file.text()).resolves.toBe('audio segment on disk');
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it('should send the transcription model configured via models.mistral.transcriptionModel', async () => {

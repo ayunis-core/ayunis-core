@@ -10,12 +10,13 @@ const SUPPORTED_MIME_TYPES = [
 ];
 
 export function validateAudio(
-  file: Buffer,
+  file: Buffer | { size: number },
   mimeType: string,
   maxBytes: number = MAX_AUDIO_FILE_SIZE_BYTES,
 ): void {
-  if (file.length === 0) throw new InvalidAudioFileError('Empty audio file');
-  if (file.length > maxBytes) {
+  const size = Buffer.isBuffer(file) ? file.length : file.size;
+  if (size === 0) throw new InvalidAudioFileError('Empty audio file');
+  if (size > maxBytes) {
     throw new InvalidAudioFileError(
       `Audio file size exceeds maximum allowed size of ${Math.floor(maxBytes / (1024 * 1024))} MB`,
     );

@@ -1,6 +1,8 @@
 import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import transcriptionConfig from 'src/config/transcription.config';
 import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { BullModule } from '@nestjs/bullmq';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
@@ -21,6 +23,8 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
 
 @Module({
   imports: [
+    // The consumer stages recordings under the transcription temp directory.
+    ConfigModule.forFeature(transcriptionConfig),
     OrgsModule,
     BullModule.registerQueue({
       name: DOCUMENT_PROCESSING_QUEUE,

@@ -1,5 +1,9 @@
 import type { Logger } from '@nestjs/common';
+import { createHash } from 'crypto';
+import { createWriteStream } from 'fs';
 import * as path from 'path';
+import { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -47,6 +51,46 @@ export async function downloadMinioFile(
     chunks.push(buffer);
   }
   return Buffer.concat(chunks);
+}
+
+export interface DownloadedFile {
+  size: number;
+  sha256: string;
+}
+
+/**
+ * Same bounds as `downloadMinioFile`, but the bytes go straight to
+ * `destination` and are hashed on the way, so a large recording never sits in
+ * the process; the caller owns the file.
+ */
+export async function downloadMinioFileToPath(
+  downloadObjectUseCase: DownloadObjectUseCase,
+  minioPath: string,
+  destination: string,
+  maxBytes?: number,
+  expectedETag?: string,
+): Promise<DownloadedFile> {
+  const stream = await downloadObjectUseCase.execute(
+    new DownloadObjectCommand(minioPath, undefined, expectedETag),
+  );
+  const hash = createHash('sha256');
+  let total = 0;
+  const bounded = async function* () {
+    for await (const chunk of stream) {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      total += buffer.length;
+      if (maxBytes !== undefined && total > maxBytes) {
+        throw new StoredFileMismatchError(minioPath, { maxBytes });
+      }
+      hash.update(buffer);
+      yield buffer;
+    }
+  };
+  await pipeline(
+    Readable.from(bounded()),
+    createWriteStream(destination, { mode: 0o600 }),
+  );
+  return { size: total, sha256: hash.digest('hex') };
 }
 
 /** Best-effort: a failed cleanup is logged, never thrown. */

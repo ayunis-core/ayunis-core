@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { openAsBlob } from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
 import { MistralError } from '@mistralai/mistralai/models/errors';
-import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
+import {
+  TranscriptionPort,
+  type AudioFileRef,
+} from 'src/domain/transcriptions/application/ports/transcription.port';
 import {
   InvalidAudioFileError,
   RecordingTooLongError,
@@ -59,7 +63,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
   }
 
   async transcribeSegment(
-    file: Buffer,
+    file: Buffer | AudioFileRef,
     fileName: string,
     mimeType: string,
     language?: string,
@@ -93,7 +97,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
 
   private async perform(
     input: {
-      file: Buffer;
+      file: Buffer | AudioFileRef;
       fileName: string;
       mimeType: string;
       language?: string;
@@ -101,13 +105,15 @@ export class MistralTranscriptionService extends TranscriptionPort {
     timestamps: boolean,
   ): Promise<TranscriptionResponse> {
     this.logger.log(
-      { fileName: input.fileName, fileSize: input.file.length },
+      { fileName: input.fileName, fileSize: sizeOf(input.file) },
       'Starting transcription',
     );
     try {
-      const audioFile = new File([new Uint8Array(input.file)], input.fileName, {
-        type: input.mimeType,
-      });
+      const audioFile = await toUploadFile(
+        input.file,
+        input.fileName,
+        input.mimeType,
+      );
       const result = await this.requestTranscription(
         audioFile,
         input.language,
@@ -200,4 +206,21 @@ function isUndecodableAudioError(error: unknown): boolean {
   } catch {
     return false;
   }
+}
+
+function sizeOf(file: Buffer | AudioFileRef): number {
+  return Buffer.isBuffer(file) ? file.length : file.size;
+}
+
+// A file-backed blob is read from disk while the request body streams, so a
+// segment on disk is never copied into the process.
+async function toUploadFile(
+  file: Buffer | AudioFileRef,
+  fileName: string,
+  mimeType: string,
+): Promise<File> {
+  const part = Buffer.isBuffer(file)
+    ? new Uint8Array(file)
+    : await openAsBlob(file.path, { type: mimeType });
+  return new File([part], fileName, { type: mimeType });
 }
