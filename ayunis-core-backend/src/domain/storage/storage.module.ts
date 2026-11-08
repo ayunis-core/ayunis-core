@@ -5,6 +5,7 @@ import { MinioObjectStorageProvider } from './infrastructure/providers/minio-obj
 import { ObjectStoragePort } from './application/ports/object-storage.port';
 import { UploadObjectUseCase } from './application/use-cases/upload-object/upload-object.use-case';
 import { UploadOrgObjectUseCase } from './application/use-cases/upload-org-object/upload-org-object.use-case';
+import { UploadSystemObjectUseCase } from './application/use-cases/upload-system-object/upload-system-object.use-case';
 import { DownloadObjectUseCase } from './application/use-cases/download-object/download-object.use-case';
 import { GetObjectInfoUseCase } from './application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from './application/use-cases/delete-object/delete-object.use-case';
@@ -25,6 +26,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     },
     UploadObjectUseCase,
     UploadOrgObjectUseCase,
+    UploadSystemObjectUseCase,
     DownloadObjectUseCase,
     GetObjectInfoUseCase,
     DeleteObjectUseCase,
@@ -38,6 +40,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
   exports: [
     ObjectStoragePort,
     UploadOrgObjectUseCase,
+    UploadSystemObjectUseCase,
     DownloadObjectUseCase,
     GetObjectInfoUseCase,
     DeleteObjectUseCase,

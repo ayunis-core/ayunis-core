@@ -165,6 +165,24 @@ describe('validateEnv', () => {
       );
     });
 
+    it('rejects an Announcable org ID that is not a UUID', () => {
+      expect(() =>
+        validateEnv(baseEnv({ ANNOUNCABLE_ORG_ID: '../admin' })),
+      ).toThrow(/ANNOUNCABLE_ORG_ID/);
+    });
+
+    it.each([
+      'bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154',
+      ' bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154\n',
+    ])(
+      'accepts the Announcable org ID %p, read trimmed like the config',
+      (value) => {
+        expect(() =>
+          validateEnv(baseEnv({ ANNOUNCABLE_ORG_ID: value })),
+        ).not.toThrow();
+      },
+    );
+
     it('accepts a complete SSO OIDC relying-party configuration', () => {
       expect(() =>
         validateEnv(

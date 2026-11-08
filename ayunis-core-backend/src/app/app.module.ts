@@ -14,6 +14,7 @@ import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsModule } from 'src/domain/runs/runs.module';
 import { RoutinesModule } from 'src/domain/routines/routines.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
+import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
@@ -132,6 +133,7 @@ import { LoggingModule } from 'src/common/logger/logging.module';
     RunsModule,
     RoutinesModule,
     NotificationsModule,
+    ReleaseNotesModule,
     SplitterModule,
     EmbeddingsModule,
     RetrieverModule,
