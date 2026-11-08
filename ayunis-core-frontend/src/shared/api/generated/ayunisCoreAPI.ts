@@ -17604,6 +17604,99 @@ export function useNotificationsControllerFindOne<TData = Awaited<ReturnType<typ
 
 
 /**
+ * @summary Download the image of one of the current user’s notifications
+ */
+export const notificationsControllerDownloadImage = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/notifications/${id}/image`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getNotificationsControllerDownloadImageQueryKey = (id: string,) => {
+    return [
+    `/notifications/${id}/image`
+    ] as const;
+    }
+
+
+export const getNotificationsControllerDownloadImageQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerDownloadImageQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>> = ({ signal }) => notificationsControllerDownloadImage(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type NotificationsControllerDownloadImageQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>>
+export type NotificationsControllerDownloadImageQueryError = void
+
+
+export function useNotificationsControllerDownloadImage<TData = Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerDownloadImage>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerDownloadImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerDownloadImage<TData = Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerDownloadImage>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerDownloadImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerDownloadImage<TData = Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the image of one of the current user’s notifications
+ */
+
+export function useNotificationsControllerDownloadImage<TData = Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerDownloadImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getNotificationsControllerDownloadImageQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Mark one of the current user’s notifications read
  */
 export const notificationsControllerMarkRead = (

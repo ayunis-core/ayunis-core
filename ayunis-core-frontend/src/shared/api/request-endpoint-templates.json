@@ -117,6 +117,7 @@
   "/notifications/read-all",
   "/notifications/unread-count",
   "/notifications/{id}",
+  "/notifications/{id}/image",
   "/notifications/{id}/read",
   "/onboarding",
   "/onboarding/welcome-video-seen",

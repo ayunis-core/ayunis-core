@@ -4287,16 +4287,37 @@ export type NotificationType = typeof NotificationType[keyof typeof Notification
 export const NotificationType = {
   routine: 'routine',
   routine_error: 'routine_error',
+  release_note: 'release_note',
 } as const;
+
+export type NotificationMediaType = typeof NotificationMediaType[keyof typeof NotificationMediaType];
+
+
+export const NotificationMediaType = {
+  image: 'image',
+  loom: 'loom',
+} as const;
+
+export interface NotificationMediaResponseDto {
+  type: NotificationMediaType;
+  /**
+     * The Loom embed URL of a Loom video; null for an image, which `GET /notifications/{id}/image` serves
+     * @nullable
+     */
+  url: string | null;
+}
 
 export interface NotificationResponseDto {
   id: string;
-  /** `routine`: sent by a routine run; `routine_error`: a routine run failed */
+  /** `routine`: sent by a routine run; `routine_error`: a routine run failed; `release_note`: a release note of Ayunis */
   type: NotificationType;
   headline: string;
-  subheadline: string;
+  /** @nullable */
+  subheadline: string | null;
   /** Markdown; may contain links */
   body: string;
+  /** @nullable */
+  media: NotificationMediaResponseDto | null;
   /**
      * The routine that sent it; null once the routine is deleted
      * @nullable

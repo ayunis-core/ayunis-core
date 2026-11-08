@@ -70,7 +70,11 @@ export function NotificationListItem({
           </Link>
           {isError && <Badge variant="destructive">{t('item.error')}</Badge>}
         </ItemTitle>
-        <ItemDescription>{notification.subheadline}</ItemDescription>
+        {notification.subheadline && (
+          <ItemDescription data-testid="notification-item-subheadline">
+            {notification.subheadline}
+          </ItemDescription>
+        )}
       </ItemContent>
       <span className="shrink-0 text-xs text-muted-foreground">
         {formatNotificationTime(notification.createdAt)}

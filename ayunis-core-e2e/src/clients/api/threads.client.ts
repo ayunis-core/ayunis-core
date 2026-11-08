@@ -30,6 +30,17 @@ export function sendThreadMessage(
   });
 }
 
+export function sendThreadMessageWithImage(
+  api: APIRequestContext,
+  threadId: string,
+  text: string,
+  image: { name: string; mimeType: string; buffer: Buffer },
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/runs/send-message`, {
+    multipart: { threadId, text, streaming: 'true', images: image },
+  });
+}
+
 export function uploadThreadCsv(
   api: APIRequestContext,
   threadId: string,

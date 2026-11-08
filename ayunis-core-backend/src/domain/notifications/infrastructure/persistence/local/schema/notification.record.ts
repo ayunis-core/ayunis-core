@@ -1,19 +1,24 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
 import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import {
   NOTIFICATION_HEADLINE_MAX_LENGTH,
+  NOTIFICATION_MEDIA_URL_MAX_LENGTH,
   NOTIFICATION_SUBHEADLINE_MAX_LENGTH,
 } from 'src/domain/notifications/domain/notifications.constants';
 
 @Entity({ name: 'notifications' })
 @Index(['userId', 'createdAt'])
 @Index(['orgId', 'createdAt'])
+@Check(
+  `("mediaType" IS NULL AND "mediaUrl" IS NULL AND "mediaStorageKey" IS NULL AND "mediaContentType" IS NULL) OR ("mediaType" = 'loom' AND "mediaUrl" IS NOT NULL AND "mediaStorageKey" IS NULL AND "mediaContentType" IS NULL) OR ("mediaType" = 'image' AND "mediaUrl" IS NULL AND "mediaStorageKey" IS NOT NULL AND "mediaContentType" IS NOT NULL)`,
+)
 export class NotificationRecord extends BaseRecord {
   /** Deleting the user deletes their notifications. */
   @Column()
@@ -36,11 +41,33 @@ export class NotificationRecord extends BaseRecord {
   @Column({ type: 'varchar', length: NOTIFICATION_HEADLINE_MAX_LENGTH })
   headline: string;
 
-  @Column({ type: 'varchar', length: NOTIFICATION_SUBHEADLINE_MAX_LENGTH })
-  subheadline: string;
+  @Column({
+    type: 'varchar',
+    length: NOTIFICATION_SUBHEADLINE_MAX_LENGTH,
+    nullable: true,
+  })
+  subheadline: string | null;
 
   @Column({ type: 'text' })
   body: string;
+
+  @Column({ type: 'enum', enum: NotificationMediaType, nullable: true })
+  mediaType: NotificationMediaType | null;
+
+  /** The Loom embed URL of a Loom video. */
+  @Column({
+    type: 'varchar',
+    length: NOTIFICATION_MEDIA_URL_MAX_LENGTH,
+    nullable: true,
+  })
+  mediaUrl: string | null;
+
+  /** The storage object of an image; shared by the notifications of one release note. */
+  @Column({ type: 'varchar', nullable: true })
+  mediaStorageKey: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  mediaContentType: string | null;
 
   /** Deleting the routine keeps the notification; only the link goes. */
   @Column({ type: 'varchar', nullable: true })

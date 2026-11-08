@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { NotificationMedia } from 'src/domain/notifications/domain/notification-media';
 import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 
 /**
@@ -10,8 +11,9 @@ export class CreateNotificationCommand {
   readonly orgId: UUID;
   readonly type: NotificationType;
   readonly headline: string;
-  readonly subheadline: string;
+  readonly subheadline: string | null;
   readonly body: string;
+  readonly media: NotificationMedia | null;
   readonly routineId: UUID | null;
   readonly routineThreadId: UUID | null;
   /** At most this many notifications per routine thread (one routine run). */
@@ -22,8 +24,9 @@ export class CreateNotificationCommand {
     orgId: UUID;
     type: NotificationType;
     headline: string;
-    subheadline: string;
+    subheadline?: string | null;
     body: string;
+    media?: NotificationMedia | null;
     routineId?: UUID | null;
     routineThreadId?: UUID | null;
     limitPerRoutineThread?: number;
@@ -32,8 +35,9 @@ export class CreateNotificationCommand {
     this.orgId = params.orgId;
     this.type = params.type;
     this.headline = params.headline;
-    this.subheadline = params.subheadline;
+    this.subheadline = params.subheadline ?? null;
     this.body = params.body;
+    this.media = params.media ?? null;
     this.routineId = params.routineId ?? null;
     this.routineThreadId = params.routineThreadId ?? null;
     this.limitPerRoutineThread = params.limitPerRoutineThread;

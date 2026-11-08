@@ -8,12 +8,18 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
+import { Response } from 'express';
+import { Readable } from 'stream';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { CountUnreadNotificationsUseCase } from 'src/domain/notifications/application/use-cases/count-unread-notifications/count-unread-notifications.use-case';
+import { DownloadNotificationImageQuery } from 'src/domain/notifications/application/use-cases/download-notification-image/download-notification-image.query';
+import { DownloadNotificationImageUseCase } from 'src/domain/notifications/application/use-cases/download-notification-image/download-notification-image.use-case';
 import { FindMyNotificationsQuery } from 'src/domain/notifications/application/use-cases/find-my-notifications/find-my-notifications.query';
 import { FindMyNotificationsUseCase } from 'src/domain/notifications/application/use-cases/find-my-notifications/find-my-notifications.use-case';
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
@@ -56,6 +62,7 @@ export class NotificationsController {
     private readonly findNotificationUseCase: FindNotificationUseCase,
     private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
     private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadUseCase,
+    private readonly downloadNotificationImageUseCase: DownloadNotificationImageUseCase,
     private readonly notificationDtoMapper: NotificationDtoMapper,
   ) {}
 
@@ -116,6 +123,31 @@ export class NotificationsController {
       new FindNotificationQuery(id),
     );
     return this.notificationDtoMapper.toDto(notification);
+  }
+
+  @Get(':id/image')
+  @ApiOperation({
+    summary: 'Download the image of one of the current user’s notifications',
+  })
+  @ApiParam(NOTIFICATION_ID_PARAM)
+  @ApiResponse({ status: 200, description: 'Image streamed successfully' })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found, not the user’s, or without an image',
+  })
+  async downloadImage(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    this.logger.log({ id }, 'downloadImage');
+    const download = await this.downloadNotificationImageUseCase.execute(
+      new DownloadNotificationImageQuery(id),
+    );
+    res.set('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(download.stream as unknown as Readable, {
+      type: download.contentType,
+      disposition: `inline; filename="${download.filename}"`,
+    });
   }
 
   @Post(':id/read')

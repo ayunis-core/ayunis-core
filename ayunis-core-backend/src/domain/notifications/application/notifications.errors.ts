@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum NotificationErrorCode {
   NOTIFICATION_NOT_FOUND = 'NOTIFICATION_NOT_FOUND',
+  NOTIFICATION_IMAGE_NOT_FOUND = 'NOTIFICATION_IMAGE_NOT_FOUND',
   NOTIFICATION_INVALID = 'NOTIFICATION_INVALID',
   NOTIFICATION_LIMIT_REACHED = 'NOTIFICATION_LIMIT_REACHED',
   UNEXPECTED_NOTIFICATION_ERROR = 'UNEXPECTED_NOTIFICATION_ERROR',
@@ -25,6 +26,17 @@ export class NotificationNotFoundError extends NotificationError {
     super(
       `Notification with ID '${notificationId}' not found`,
       NotificationErrorCode.NOTIFICATION_NOT_FOUND,
+      404,
+      { notificationId, ...metadata },
+    );
+  }
+}
+
+export class NotificationImageNotFoundError extends NotificationError {
+  constructor(notificationId: string, metadata?: ErrorMetadata) {
+    super(
+      `Notification with ID '${notificationId}' has no image`,
+      NotificationErrorCode.NOTIFICATION_IMAGE_NOT_FOUND,
       404,
       { notificationId, ...metadata },
     );

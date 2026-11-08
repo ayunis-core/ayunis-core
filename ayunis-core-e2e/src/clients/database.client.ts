@@ -95,3 +95,70 @@ export async function seedCertificateOverviewMembers(
     await client.end();
   }
 }
+
+export type ReleaseNoteMedia =
+  | { type: "image"; storageKey: string; contentType: string }
+  | { type: "loom"; url: string };
+
+/**
+ * Nothing in the product creates release-note notifications until the
+ * Announcable sync (AYC-1686, AYC-1687), so specs insert them directly.
+ */
+export async function insertReleaseNoteNotification(params: {
+  userId: string;
+  orgId: string;
+  headline: string;
+  body: string;
+  media: ReleaseNoteMedia | null;
+}): Promise<string> {
+  const id = randomUUID();
+  const { media } = params;
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO notifications
+         (id, "userId", "orgId", type, headline, body,
+          "mediaType", "mediaUrl", "mediaStorageKey", "mediaContentType")
+       VALUES ($1, $2, $3, 'release_note', $4, $5, $6, $7, $8, $9)`,
+      [
+        id,
+        params.userId,
+        params.orgId,
+        params.headline,
+        params.body,
+        media?.type ?? null,
+        media?.type === "loom" ? media.url : null,
+        media?.type === "image" ? media.storageKey : null,
+        media?.type === "image" ? media.contentType : null,
+      ],
+    );
+    return id;
+  } finally {
+    await client.end();
+  }
+}
+
+/** The first image of a thread's first user message. */
+export async function findUserMessageImage(
+  threadId: string,
+): Promise<{ messageId: string; contentType: string }> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ id: string; contentType: string }>(
+      `SELECT m.id, image->>'contentType' AS "contentType"
+       FROM messages m, jsonb_array_elements(m.content) AS image
+       WHERE m."threadId" = $1 AND m.role = 'user'
+         AND image->>'type' = 'image' AND (image->>'index')::int = 0
+       ORDER BY m."createdAt"
+       LIMIT 1`,
+      [threadId],
+    );
+    const [row] = result.rows;
+    if (!row) throw new Error(`Thread ${threadId} has no user message image`);
+    return { messageId: row.id, contentType: row.contentType };
+  } finally {
+    await client.end();
+  }
+}

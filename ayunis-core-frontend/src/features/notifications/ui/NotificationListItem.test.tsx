@@ -30,17 +30,22 @@ afterEach(() => {
   mocks.markRead.mockReset();
 });
 
-function aNotification(readAt: string | null): Notification {
+function aNotification(
+  readAt: string | null,
+  overrides: Partial<Notification> = {},
+): Notification {
   return {
     id: 'n1',
     type: 'routine',
     headline: 'Neue Verordnung',
     subheadline: 'GV. NRW. Nr. 31',
     body: 'Text',
+    media: null,
     routineId: null,
     routineThreadId: null,
     readAt,
     createdAt: '2026-11-07T08:00:00.000Z',
+    ...overrides,
   };
 }
 
@@ -63,5 +68,26 @@ describe('NotificationListItem', () => {
     );
 
     expect(screen.queryByTestId('notification-mark-read')).toBeNull();
+  });
+
+  it('shows the subheadline under the headline', () => {
+    render(<NotificationListItem notification={aNotification(null)} />);
+
+    expect(
+      screen.getByTestId('notification-item-subheadline').textContent,
+    ).toBe('GV. NRW. Nr. 31');
+  });
+
+  it('leaves no empty line for a notification without a subheadline', () => {
+    render(
+      <NotificationListItem
+        notification={aNotification(null, {
+          type: 'release_note',
+          subheadline: null,
+        })}
+      />,
+    );
+
+    expect(screen.queryByTestId('notification-item-subheadline')).toBeNull();
   });
 });

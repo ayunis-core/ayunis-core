@@ -22,6 +22,7 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
         'script-src': ["'self'", "'unsafe-inline'"],
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'blob:', basemapOrigin()],
+        'frame-src': ["'self'", 'https://www.loom.com'],
         'connect-src': [
           "'self'",
           'https://appsignal-endpoint.net',

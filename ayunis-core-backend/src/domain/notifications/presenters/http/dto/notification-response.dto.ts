@@ -1,6 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
 import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
+
+export class NotificationMediaResponseDto {
+  @ApiProperty({
+    enum: NotificationMediaType,
+    enumName: 'NotificationMediaType',
+  })
+  type: NotificationMediaType;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'The Loom embed URL of a Loom video; null for an image, which `GET /notifications/{id}/image` serves',
+  })
+  url: string | null;
+}
 
 export class NotificationResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -10,18 +27,21 @@ export class NotificationResponseDto {
     enum: NotificationType,
     enumName: 'NotificationType',
     description:
-      '`routine`: sent by a routine run; `routine_error`: a routine run failed',
+      '`routine`: sent by a routine run; `routine_error`: a routine run failed; `release_note`: a release note of Ayunis',
   })
   type: NotificationType;
 
   @ApiProperty()
   headline: string;
 
-  @ApiProperty()
-  subheadline: string;
+  @ApiProperty({ type: String, nullable: true })
+  subheadline: string | null;
 
   @ApiProperty({ description: 'Markdown; may contain links' })
   body: string;
+
+  @ApiProperty({ type: NotificationMediaResponseDto, nullable: true })
+  media: NotificationMediaResponseDto | null;
 
   @ApiProperty({
     type: String,

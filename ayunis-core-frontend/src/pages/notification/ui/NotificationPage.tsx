@@ -19,6 +19,7 @@ import {
   type NotificationResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useNotification } from '@/pages/notification/api/useNotification';
+import { NotificationMedia } from './NotificationMedia';
 
 interface NotificationProps {
   notification: NotificationResponseDto;
@@ -61,6 +62,7 @@ export default function NotificationPage(
             data-type={notification.type}
           >
             <NotificationHeading notification={notification} />
+            <NotificationMedia notification={notification} />
             <Markdown renderImages={false} className="text-sm">
               {notification.body}
             </Markdown>
@@ -95,7 +97,14 @@ function NotificationHeading({ notification }: Readonly<NotificationProps>) {
             <Badge variant="destructive">{t('item.error')}</Badge>
           )}
         </h1>
-        <p className="text-muted-foreground">{notification.subheadline}</p>
+        {notification.subheadline && (
+          <p
+            className="text-muted-foreground"
+            data-testid="notification-detail-subheadline"
+          >
+            {notification.subheadline}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
           {new Date(notification.createdAt).toLocaleString(undefined, {
             dateStyle: 'full',

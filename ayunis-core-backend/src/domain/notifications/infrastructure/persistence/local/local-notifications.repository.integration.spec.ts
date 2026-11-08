@@ -7,6 +7,7 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
+import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
 import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { LocalNotificationsRepository } from './local-notifications.repository';
 import { NotificationMapper } from './mappers/notification.mapper';
@@ -26,8 +27,12 @@ const notificationSchema = new EntitySchema<NotificationRecord>({
     orgId: { type: 'uuid' },
     type: { type: String },
     headline: { type: String },
-    subheadline: { type: String },
+    subheadline: { type: String, nullable: true },
     body: { type: 'text' },
+    mediaType: { type: String, nullable: true },
+    mediaUrl: { type: String, nullable: true },
+    mediaStorageKey: { type: String, nullable: true },
+    mediaContentType: { type: String, nullable: true },
     routineId: { type: 'uuid', nullable: true },
     routineThreadId: { type: 'uuid', nullable: true },
     readAt: { type: 'timestamptz', nullable: true },
@@ -129,6 +134,31 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
           3,
         ),
       ).resolves.not.toBeNull();
+    });
+  });
+
+  it('reads back a release note without subheadline and with its image', async () => {
+    const notification = await stored({
+      type: NotificationType.RELEASE_NOTE,
+      subheadline: null,
+      media: {
+        type: NotificationMediaType.IMAGE,
+        storageKey: 'release-notes/routinen-sind-da.png',
+        contentType: 'image/png',
+      },
+      routineId: null,
+      routineThreadId: null,
+    });
+
+    await expect(
+      repository.findById(owner, notification.id),
+    ).resolves.toMatchObject({
+      subheadline: null,
+      media: {
+        type: NotificationMediaType.IMAGE,
+        storageKey: 'release-notes/routinen-sind-da.png',
+        contentType: 'image/png',
+      },
     });
   });
 

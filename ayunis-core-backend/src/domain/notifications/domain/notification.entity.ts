@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import type { NotificationMedia } from './notification-media';
 import type { NotificationType } from './notification-type.enum';
 
 /**
@@ -13,9 +14,10 @@ export class Notification {
   readonly orgId: UUID;
   readonly type: NotificationType;
   readonly headline: string;
-  readonly subheadline: string;
+  readonly subheadline: string | null;
   /** Markdown; may contain links. */
   readonly body: string;
+  readonly media: NotificationMedia | null;
   readonly routineId: UUID | null;
   readonly routineThreadId: UUID | null;
   readonly readAt: Date | null;
@@ -27,8 +29,9 @@ export class Notification {
     orgId: UUID;
     type: NotificationType;
     headline: string;
-    subheadline: string;
+    subheadline?: string | null;
     body: string;
+    media?: NotificationMedia | null;
     routineId?: UUID | null;
     routineThreadId?: UUID | null;
     readAt?: Date | null;
@@ -39,8 +42,9 @@ export class Notification {
     this.orgId = params.orgId;
     this.type = params.type;
     this.headline = params.headline;
-    this.subheadline = params.subheadline;
+    this.subheadline = params.subheadline ?? null;
     this.body = params.body;
+    this.media = params.media ?? null;
     this.routineId = params.routineId ?? null;
     this.routineThreadId = params.routineThreadId ?? null;
     this.readAt = params.readAt ?? null;

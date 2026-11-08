@@ -4,4 +4,6 @@ export enum NotificationType {
   ROUTINE = 'routine',
   /** Posted by the system when a routine run failed. */
   ROUTINE_ERROR = 'routine_error',
+  /** A release note of Ayunis. */
+  RELEASE_NOTE = 'release_note',
 }
