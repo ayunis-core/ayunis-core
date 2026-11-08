@@ -3,13 +3,19 @@ import {
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
+export function getFeatureToggles(
+  queryClient: QueryClient,
+): Promise<FeatureTogglesResponseDto> {
+  return queryClient.query({
+    queryKey: getAppControllerFeatureTogglesQueryKey(),
+    queryFn: () => appControllerFeatureToggles(),
+  });
+}
 
 export async function isRoutinesEnabled(
   queryClient: QueryClient,
 ): Promise<boolean> {
-  const toggles = await queryClient.query({
-    queryKey: getAppControllerFeatureTogglesQueryKey(),
-    queryFn: () => appControllerFeatureToggles(),
-  });
-  return toggles.routinesEnabled;
+  return (await getFeatureToggles(queryClient)).routinesEnabled;
 }

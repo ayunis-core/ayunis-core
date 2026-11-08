@@ -20,6 +20,8 @@ export class Notification {
   readonly media: NotificationMedia | null;
   readonly routineId: UUID | null;
   readonly routineThreadId: UUID | null;
+  /** The release note it announces; its notifications follow its edits. */
+  readonly releaseNoteId: UUID | null;
   readonly readAt: Date | null;
   readonly createdAt: Date;
 
@@ -34,6 +36,7 @@ export class Notification {
     media?: NotificationMedia | null;
     routineId?: UUID | null;
     routineThreadId?: UUID | null;
+    releaseNoteId?: UUID | null;
     readAt?: Date | null;
     createdAt?: Date;
   }) {
@@ -47,6 +50,7 @@ export class Notification {
     this.media = params.media ?? null;
     this.routineId = params.routineId ?? null;
     this.routineThreadId = params.routineThreadId ?? null;
+    this.releaseNoteId = params.releaseNoteId ?? null;
     this.readAt = params.readAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
   }

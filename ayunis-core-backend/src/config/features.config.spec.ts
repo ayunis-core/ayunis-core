@@ -40,6 +40,31 @@ describe('Routines', () => {
   });
 });
 
+describe('Release notes', () => {
+  const original = process.env;
+  afterEach(() => {
+    process.env = original;
+  });
+
+  it.each([
+    ['true', 'bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154', true],
+    ['true', undefined, false],
+    ['true', ' ', false],
+    ['false', 'bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154', false],
+    [undefined, 'bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154', false],
+  ])(
+    'with routines flag %p and Announcable org ID %p resolves to %s',
+    (routines, orgId, expected) => {
+      process.env = { ...original };
+      if (routines === undefined) delete process.env.FEATURE_ROUTINES_ENABLED;
+      else process.env.FEATURE_ROUTINES_ENABLED = routines;
+      if (orgId === undefined) delete process.env.ANNOUNCABLE_ORG_ID;
+      else process.env.ANNOUNCABLE_ORG_ID = orgId;
+      expect(featuresConfig().releaseNotesEnabled).toBe(expected);
+    },
+  );
+});
+
 describe('parseBooleanWithDefault', () => {
   it.each([undefined, '', '   '])('uses the default for %p', (value) => {
     expect(parseBooleanWithDefault(value, true)).toBe(true);

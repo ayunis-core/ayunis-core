@@ -10,7 +10,14 @@ import {
   TEST_ANNOUNCABLE_ORG_ID,
   TEST_IMAGE_SRC,
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import type { ConfigService } from '@nestjs/config';
 import { AnnouncableHttpFeed } from './announcable-http.feed';
+
+const feedAt = (origin: string) =>
+  new AnnouncableHttpFeed({
+    get: (key: string) =>
+      key === 'releaseNotes.announcableOrigin' ? origin : undefined,
+  } as unknown as ConfigService);
 
 /** A note exactly as Announcable's widget feed sends it. */
 function feedNote(id: string, overrides: Record<string, unknown> = {}) {
@@ -37,7 +44,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 describe('AnnouncableHttpFeed', () => {
-  const feed = new AnnouncableHttpFeed();
+  const feed = feedAt('https://release-notes.locaboo.de');
   let fetchMock: jest.SpiedFunction<typeof fetch>;
 
   beforeEach(() => {
@@ -151,6 +158,18 @@ describe('AnnouncableHttpFeed', () => {
       ).rejects.toThrow(AnnouncableFeedInvalidError);
     });
 
+    it('reads the feed of a stand-in for Announcable', async () => {
+      fetchMock.mockResolvedValue(json({ data: [] }));
+
+      await feedAt('http://127.0.0.1:3198').fetchReleaseNotes(
+        TEST_ANNOUNCABLE_ORG_ID,
+      );
+
+      expect(requestedUrls()).toEqual([
+        `http://127.0.0.1:3198/api/release-notes/${TEST_ANNOUNCABLE_ORG_ID}?for=widget&page=1`,
+      ]);
+    });
+
     it('rejects a feed that never ends', async () => {
       let page = 0;
       fetchMock.mockImplementation(() =>
@@ -221,6 +240,16 @@ describe('AnnouncableHttpFeed', () => {
       await expect(feed.downloadImage(TEST_IMAGE_SRC)).rejects.toThrow(
         ProviderServerError,
       );
+    });
+
+    it('downloads images only from the stand-in it reads the feed from', async () => {
+      const standIn = feedAt('http://127.0.0.1:3198');
+
+      await expect(standIn.downloadImage(TEST_IMAGE_SRC)).resolves.toEqual({
+        status: 'rejected',
+        reason: 'the image is not on Announcable',
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('does not download an image from another host', async () => {

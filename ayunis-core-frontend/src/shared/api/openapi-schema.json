@@ -13880,9 +13880,18 @@
             "type": "boolean",
             "description": "Users can create routines that run on their behalf",
             "default": false
+          },
+          "releaseNotesEnabled": {
+            "type": "boolean",
+            "description": "Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source)",
+            "default": false
           }
         },
-        "required": ["externalSubscriptionsEnabled", "routinesEnabled"]
+        "required": [
+          "externalSubscriptionsEnabled",
+          "routinesEnabled",
+          "releaseNotesEnabled"
+        ]
       },
       "OrgUsersSortField": {
         "type": "string",

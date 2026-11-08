@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import type { AnnouncableReleaseNote } from 'src/domain/release-notes/application/models/announcable-release-note';
 import {
@@ -10,7 +11,6 @@ import {
   AnnouncableRequestRejectedError,
 } from 'src/domain/release-notes/application/release-notes.errors';
 
-const ANNOUNCABLE_ORIGIN = 'https://release-notes.locaboo.de';
 const PROVIDER = { provider: 'announcable' };
 const REQUEST_TIMEOUT_MS = 15_000;
 /** Far beyond the release notes there are; a feed this long is broken. */
@@ -25,6 +25,17 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 @Injectable()
 export class AnnouncableHttpFeed extends AnnouncableFeed {
   private readonly logger = new Logger(AnnouncableHttpFeed.name);
+
+  constructor(private readonly configService: ConfigService) {
+    super();
+  }
+
+  /** Announcable, or the stand-in of the e2e tests. */
+  private get origin(): string {
+    return this.configService.get<string>(
+      'releaseNotes.announcableOrigin',
+    ) as string;
+  }
 
   async fetchReleaseNotes(orgId: string): Promise<AnnouncableReleaseNote[]> {
     const notes = new Map<string, AnnouncableReleaseNote>();
@@ -44,7 +55,7 @@ export class AnnouncableHttpFeed extends AnnouncableFeed {
   }
 
   async downloadImage(url: string): Promise<AnnouncableImageDownload> {
-    if (!URL.canParse(url) || new URL(url).origin !== ANNOUNCABLE_ORIGIN) {
+    if (!URL.canParse(url) || new URL(url).origin !== this.origin) {
       return { status: 'rejected', reason: 'the image is not on Announcable' };
     }
     const response = await request(url);
@@ -68,7 +79,7 @@ export class AnnouncableHttpFeed extends AnnouncableFeed {
     page: number,
   ): Promise<AnnouncableReleaseNote[]> {
     const response = await request(
-      `${ANNOUNCABLE_ORIGIN}/api/release-notes/${encodeURIComponent(orgId)}?for=widget&page=${page}`,
+      `${this.origin}/api/release-notes/${encodeURIComponent(orgId)}?for=widget&page=${page}`,
     );
     if (!response.ok) {
       throwIfUnavailable(response.status);

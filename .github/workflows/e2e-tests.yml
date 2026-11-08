@@ -348,6 +348,10 @@ jobs:
 
           # Flag-on contract for the main backend; the other backends below turn it off.
           FEATURE_ROUTINES_ENABLED=true
+
+          # Release notes on, read from the Announcable stand-in, never the live feed.
+          ANNOUNCABLE_ORG_ID=bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154
+          ANNOUNCABLE_URL=http://127.0.0.1:3198
           EOF
 
       - name: Start Mistral OCR contract server
@@ -355,6 +359,12 @@ jobs:
           nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \
             || { cat mistral-ocr-mock.log; exit 1; }
+
+      - name: Start Announcable stand-in
+        run: |
+          nohup node ayunis-core-e2e/src/servers/announcable-mock.mjs > announcable-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3198/health; do sleep 1; done' \
+            || { cat announcable-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend
@@ -399,6 +409,19 @@ jobs:
           timeout 60 bash -c 'until curl -sf http://localhost:3003/api/health; do sleep 2; done' \
             || { cat backend-routines-disabled.log; exit 1; }
 
+      # Routines on but no Announcable org ID: proves the release-notes-off
+      # contract (tests/notifications/release-notes-disabled.spec.ts). It runs
+      # the same routine worker as the main backend, so it may take its jobs.
+      - name: Start backend without release notes
+        working-directory: ayunis-core-backend
+        env:
+          PORT: 3004
+          ANNOUNCABLE_ORG_ID: ''
+        run: |
+          nohup node dist/src/main > backend-release-notes-disabled.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3004/api/health; do sleep 2; done' \
+            || { cat backend-release-notes-disabled.log; exit 1; }
+
       - name: Cache Playwright browsers
         uses: actions/cache@v6
         with:
@@ -420,6 +443,7 @@ jobs:
         env:
           E2E_EXTERNAL_SUBSCRIPTIONS_BASE_URL: http://localhost:3002
           E2E_ROUTINES_DISABLED_BASE_URL: http://localhost:3003
+          E2E_RELEASE_NOTES_DISABLED_BASE_URL: http://localhost:3004
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080

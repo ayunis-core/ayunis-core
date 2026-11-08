@@ -2,8 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { SidebarMenuButton } from '@ayunis/ui/components/sidebar';
 import { useReleaseNotes } from '@/features/useReleaseNotes';
+import { useFeatureToggles } from '@/features/feature-toggles';
+import config from '@/shared/config';
 
+/**
+ * With routines on, release notes arrive in the inbox instead. Waits for the
+ * toggles, because the Announcable script cannot be unloaded once injected.
+ */
 export function ReleaseNotesButton() {
+  const { toggles } = useFeatureToggles();
+  if (toggles?.routinesEnabled !== false || !config.features.announcableOrgId) {
+    return null;
+  }
+  return <AnnouncableReleaseNotesButton />;
+}
+
+function AnnouncableReleaseNotesButton() {
   useReleaseNotes();
 
   const buttonRef = useRef<HTMLButtonElement>(null);

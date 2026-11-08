@@ -17,8 +17,8 @@ import {
  * hour for all replicas together (upserting it from every instance is
  * idempotent), and one worker takes each job. Its own queue keeps it from
  * waiting behind document ingestion and ingestion from waiting behind it.
- * Registered and started only with an Announcable org ID, so without one
- * Announcable is never asked.
+ * Registered and started only with release notes on (routines on and an
+ * Announcable org ID), so otherwise Announcable is never asked.
  */
 @Processor(RELEASE_NOTE_SYNC_QUEUE, { autorun: false })
 export class ReleaseNoteSyncConsumer
@@ -37,10 +37,8 @@ export class ReleaseNoteSyncConsumer
   }
 
   onApplicationBootstrap(): void {
-    if (
-      !this.configService.get<string | null>('releaseNotes.announcableOrgId')
-    ) {
-      this.logger.log('No Announcable org ID, not syncing release notes');
+    if (!this.configService.get<boolean>('features.releaseNotesEnabled')) {
+      this.logger.log('Release notes are off, not syncing them');
       return;
     }
     // Not awaited: an unreachable Redis must not block the boot.

@@ -12,4 +12,11 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   routinesEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source)',
+    default: false,
+  })
+  releaseNotesEnabled: boolean;
 }
