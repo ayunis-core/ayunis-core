@@ -5,55 +5,11 @@ description: Backend development with NestJS, TypeORM, and hexagonal architectur
 
 # NestJS Hexagonal Backend Development
 
-## Red-Green TDD Workflow
+## Testing
 
-Behavior and logic changes, including bug fixes, follow red-green TDD. Do NOT write production code for changed behavior without a failing test first. For a behavior-preserving refactor, identify and run the focused existing tests before editing, then keep them green; do not invent a new failing test when no behavior should change.
-
-### Cycle
-
-1. **Red** — Write a test that captures the desired behavior. Run it. It MUST fail.
-   - If the test passes immediately, it's not testing anything new — delete it or rethink.
-2. **Green** — Write the minimum production code to make the test pass. Nothing more.
-3. **Refactor** — Clean up while keeping tests green. Run the validation required by the repository's Proportional Workflow.
-4. **Repeat** — Next behavior, next test.
-
-```bash
-# During each cycle:
-pnpm run test -- --testPathPatterns=<module>  # Run focused tests (red → green)
-```
-
-> The Jest flag is `--testPathPatterns` (plural). The singular `--testPathPattern` was removed and now errors out: `Option testPathPattern was replaced by --testPathPatterns`.
-
-### What Makes a Meaningful Test
-
-- **Test behavior, not implementation** — assert on outputs and side effects, not internal method calls.
-- **One logical assertion per test** — each test proves one thing. Name it after what it proves.
-- **Use realistic data** — don't use `"test"`, `"foo"`, `"bar"`. Use domain-realistic values.
-- **Cover the edges** — happy path alone is insufficient. Test error cases, boundary values, empty inputs, duplicates.
-- **Tests are documentation** — a reader should understand the feature by reading tests alone.
-
-```typescript
-// GOOD ✓ — behavior-focused, descriptive name, realistic data
-it("should reject agent creation when name exceeds 200 characters", async () => {
-  const longName = "A".repeat(201);
-  await expect(useCase.execute({ name: longName })).rejects.toThrow(
-    AgentNameTooLongError,
-  );
-});
-
-// BAD ✗ — tests implementation, vague name, no real assertion
-it("should work", async () => {
-  const result = await useCase.execute({ name: "test" });
-  expect(result).toBeDefined();
-});
-```
-
-### Test Structure
-
-- **Use cases** — test through the public `execute()` method with stubbed ports.
-- **Domain entities** — test invariants and business rules directly.
-- **Mappers** — test round-trip: domain → record → domain preserves all fields.
-- **Controllers** — only test HTTP-specific concerns (status codes, serialization). Business logic is tested via use cases.
+Load the `backend-testing` skill before writing, changing, or deleting a spec,
+or deciding how to verify a change. It defines when a change needs a committed
+test, which layer it belongs to, and how to run the suite.
 
 ## Validation Sequence
 
@@ -65,17 +21,17 @@ Fast Path:
 pnpm exec eslint <touched-files>              # Lint without rewriting unrelated files
 ```
 
-Run `pnpm run test -- --testPathPatterns=<module>` when behavior or test code changed. Also run `pnpm exec tsc --noEmit` when types, imports, dependency injection, or other compile-time behavior could be affected.
+Run `pnpm test <module-path>` when behavior or test code changed. Also run `pnpm exec tsc --noEmit` when types, imports, dependency injection, or other compile-time behavior could be affected.
 
 Standard Path:
 
 ```bash
 pnpm exec eslint <touched-files>     # Lint without rewriting unrelated files
 pnpm exec tsc --noEmit               # 0 type errors
-pnpm run test -- --testPathPatterns=<module>  # Affected module suites pass
+pnpm test <module-path>              # Affected module suites pass
 ```
 
-High-Risk changes and changes to shared test infrastructure or broad behavior also run `pnpm run test` for the full suite.
+High-Risk changes and changes to shared test infrastructure or broad behavior also run `pnpm test` for the full suite.
 
 > ⚠ **`pnpm run lint` is wired with `--fix`** in `ayunis-core-backend/package.json` — running it as a verification step will auto-rewrite unrelated files (migrations, fixtures, entities) and leave them in the working tree. Prefer `pnpm exec eslint <paths>` for verification. If you do run `pnpm run lint`, immediately check `git status --short` and `git restore` any files outside your change set.
 
@@ -204,7 +160,5 @@ Use a real PostgreSQL rollback test for multi-statement atomicity.
 
 | Don't                                                 | Why                                  | Instead                                |
 | ----------------------------------------------------- | ------------------------------------ | -------------------------------------- |
-| Test implementation details (mock internals)          | Brittle tests that break on refactor | Test inputs → outputs and side effects |
-| Use vague test names (`should work`, `handles error`) | Tests are documentation              | Name the specific behavior being proven|
 | Throw HTTP exceptions from use cases                  | Couples domain to HTTP               | Throw domain errors                    |
 | Name a portless read helper `*.repository`            | Implies a port-backed adapter        | `*.finder.ts` / `*Finder`              |

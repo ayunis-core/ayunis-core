@@ -107,19 +107,11 @@ if (providerError) throw providerError; // ProviderUnavailableError family
 
 > [!IMPORTANT] Always update `ARCHITECTURE.md` and the module's `SUMMARY.md` file if necessary!
 
-## Running Tests
+## Testing
 
-Run backend tests with **`pnpm test`** from `ayunis-core-backend/` — never bare `jest` or `npx jest`.
-
-```bash
-cd ayunis-core-backend
-pnpm test                      # full suite
-pnpm test <path-or-pattern>    # a subset
-```
-
-`pnpm test` runs Jest through the project's configured runner (Node ESM flags, module-name mapping). Invoking `jest` / `npx jest` directly bypasses that setup, and the ESM-only `p-queue` dependency then fails to resolve — the `embeddings-throttle` and `ingest-bulk-content` RAG suites blow up with module-resolution errors.
-
-**Those failures are an artifact of the wrong invocation, not a real regression.** Do not report them as "pre-existing failures on main" or hang caveats on a PR summary because of them — re-run with `pnpm test` and they pass. A suite that fails under `pnpm test` is a genuine signal worth investigating.
+Load the `backend-testing` skill before writing, changing, or deleting a spec,
+or deciding how to verify a change. It also covers how to run Jest (always
+`pnpm test`, never bare `jest`).
 
 ## Runtime Health Check
 

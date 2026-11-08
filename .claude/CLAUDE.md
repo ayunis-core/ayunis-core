@@ -29,6 +29,8 @@ ayunis-core/
 
 Do NOT trust your own assessment of code correctness. Verify through observable behavior using the smallest set of checks that covers the change's credible failure modes. See **Proportional Workflow** below for the required depth and the development skills for surface-specific patterns.
 
+Verifying a change and committing a test are separate decisions. Verification is always required and may be throwaway: a focused run of existing tests, a request against the dev stack, a browser check, a scratch script. A committed test is a permanent maintenance cost. Commit one only when it guards a regression you can name that types, lint, and existing tests would not catch. `backend-testing` and `frontend-testing` define the criterion and the layer for each surface.
+
 ### 2. Evidence Before Diagnosis
 
 Principle 1 governs code you wrote. This one governs everything you *assert*: root causes, config values, provider behavior, "this is already fixed", "this should work".
@@ -118,7 +120,7 @@ Before changing behavior, write a compact failure-mode matrix for the affected c
 - authorization, authentication, tenant, and provider variants that take different code paths;
 - secrets or persisted values that must be preserved, cleared, masked, or invalidated.
 
-Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign an observable check to every credible failure mode. If a layer does not participate, record that rather than silently omitting it.
+Trace each relevant transition across the full ownership path — UI, transport contract, application/domain logic, persistence, related per-user or organization data, and caches — and assign evidence to every credible failure mode. Evidence is not automatically a new committed test; the testing skills decide which failure modes warrant one. If a layer does not participate, record that rather than silently omitting it.
 
 #### Fast Path
 
@@ -133,7 +135,7 @@ Typical examples are documentation, copy, static styling, test-only maintenance,
 
 Required:
 
-1. For a behavior bug, first reproduce it with the smallest practical failing test.
+1. For a behavior bug, first reproduce it at the smallest layer where it is observable. When the fix warrants a regression test under the testing skills, that test must fail before the fix.
 2. Run a focused test when behavior or test code changed, plus any lint or type check applicable to the changed files.
 3. Render and inspect a visible UI change when automated checks cannot prove its result.
 4. Inspect the final diff for unintended changes.
@@ -147,7 +149,7 @@ This is the default for ordinary features and behavior changes, including work t
 Required:
 
 1. Define the observable acceptance criteria; reproduce bugs before fixing them.
-2. Use test-driven development for changed logic or behavior.
+2. Load `backend-testing` / `frontend-testing` for the affected surface. Where a change meets their commit criterion, write the test before the code and watch it fail; otherwise verify without adding tests.
 3. Run the relevant unit or integration tests.
 4. Run lint and type-check or build for each affected package.
 5. Add E2E coverage when a browser journey or system boundary changes and lower-level tests do not sufficiently prove it.
@@ -227,7 +229,7 @@ The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations
 
 ## Development Skills
 
-Load the implementation skills for the files and surfaces being changed. Load validation workflow skills such as `e2e`, `pr-media`, or `qa` when required by the classification above, by a credible failure mode, or by the user's explicit request. Surface-specific safety rules remain mandatory; the proportional workflow controls the breadth of otherwise generic validation checklists.
+Load the implementation skills for the files and surfaces being changed. Load `backend-testing` or `frontend-testing` before writing, changing, or deleting tests on that surface, or deciding how to verify a change there. Load validation workflow skills such as `e2e`, `pr-media`, or `qa` when required by the classification above, by a credible failure mode, or by the user's explicit request. Surface-specific safety rules remain mandatory; the proportional workflow controls the breadth of otherwise generic validation checklists.
 
 ---
 
