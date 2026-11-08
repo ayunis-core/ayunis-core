@@ -11,22 +11,22 @@ description: Rebase a branch onto another — resolve merge conflicts carefully 
 
 Blanket strategies like `git checkout --ours .` or `git checkout --theirs .` or scripted mass-resolution are **strictly forbidden**. They silently discard work and introduce subtle bugs.
 
-## Rebasing with Graphite
+## Rebasing a stack
 
-This project uses Graphite (see `git-workflow` skill). Prefer Graphite commands:
+This project uses GitHub stacked PRs through `gh stack` (see `git-workflow` skill). Prefer `gh stack` commands:
 
 ```bash
-# Restack the current stack onto latest main
-gt restack
+# Rebase the whole stack onto latest main
+gh stack rebase
 
-# If you need to rebase onto a specific branch
-gt restack --onto <branch>
+# Only the current branch and the branches above it
+gh stack rebase --upstack
 ```
 
-If raw git rebase is needed (rare):
+If raw git rebase is needed (rare, e.g. re-parenting onto a different branch):
 
 ```bash
-git rebase <target-branch>
+git rebase --onto <new-parent> <old-parent> <branch>
 ```
 
 ## Resolving Conflicts — Step by Step
@@ -84,8 +84,10 @@ git add <file>
 ### 6. After all files are resolved
 
 ```bash
-git rebase --continue
+gh stack rebase --continue   # or git rebase --continue for a raw git rebase
 ```
+
+`gh stack rebase --abort` restores every branch in the stack, not just the current one.
 
 If more conflicts arise on the next commit, repeat from step 1.
 
@@ -122,7 +124,7 @@ If the only difference is formatting or import order, accept theirs and let the 
 
 If a rebase produces dozens of conflicts across many files:
 
-1. **Stop and assess** — `git rebase --abort` is always an option
+1. **Stop and assess** — `gh stack rebase --abort` (or `git rebase --abort`) is always an option
 2. **Inform the user** — describe the scope: how many files, which areas of code
 3. **Propose a strategy** — e.g., interactive rebase to squash first, or rebase commit-by-commit
 4. **Never take shortcuts** — even if there are 50 conflicts, each one gets individual attention
@@ -132,6 +134,6 @@ If a rebase produces dozens of conflicts across many files:
 - ❌ `git checkout --ours .` or `git checkout --theirs .`
 - ❌ `xargs git checkout --ours` or any scripted bulk resolution
 - ❌ Accepting all changes from one side without reading the diffs
-- ❌ Using `rerere` results without verifying they're still correct
+- ❌ Using `rerere` results without verifying they're still correct (`gh stack init` turns `rerere` on, so a resolution recorded on one branch is replayed on every branch above it)
 - ❌ Skipping conflict review because "it's just formatting"
 - ❌ Using `--strategy-option=ours` or `--strategy-option=theirs` on the entire rebase

@@ -9,15 +9,26 @@ Treat PR submission as the start of verification, not the end of the task. Keep 
 
 ## 1. Resolve the submitted PRs
 
-Load `git-workflow` and follow its Graphite safety rules throughout this workflow.
+Load `git-workflow` and follow its push safety rules throughout this workflow.
 
-Identify every PR whose branch was created or updated by the submission. For a Graphite stack, include every submitted PR in the stack, not only the current or top PR. Record each PR number, URL, branch, and remote head SHA:
+Identify every PR whose branch was created or updated by the submission. For a stack, include every submitted PR in the stack, not only the current or top PR. Record each PR number, URL, branch, and remote head SHA:
 
 ```bash
+gh api "repos/{owner}/{repo}/stacks?pull_request=<pr-number>" --jq '.[].pull_requests[].number'   # every PR in the stack, bottom to top
 gh pr view <branch-or-number> --json number,url,headRefName,headRefOid
 ```
 
 Use the remote `headRefOid` as the revision under verification. If the remote head changes while waiting, discard the stale result and restart verification for the new SHA.
+
+### Trigger Bugbot — it does not run on its own
+
+Cursor Bugbot no longer reviews PRs automatically on open or push. Without a trigger comment, no `Cursor Bugbot` check run appears on the head SHA, and the wait in §2 never ends. After **every** submission (PR creation and every later `gh stack push` or `gh stack submit`), comment on each PR whose head changed:
+
+```bash
+gh pr comment <pr-number> --body "@bugbot run"
+```
+
+For a stack, comment on every submitted PR in the stack, not only the top. A trigger posted before the latest push does not cover the new head; post it again.
 
 ## 2. Wait for CI and Bugbot
 
@@ -27,29 +38,19 @@ Wait for all checks on every submitted PR. For an ordinary PR:
 gh pr checks <pr-number> --watch --interval 30
 ```
 
-### Graphite downstack sentinel — do not use `--watch`
+### Legacy Graphite check — do not use `--watch` while it is pending
 
-On a stacked PR, Graphite deliberately keeps `Graphite / mergeability_check` in progress until every downstack PR merges. `gh pr checks --watch` waits for that sentinel forever even after all real verification has passed.
+The Graphite GitHub app may still post `Graphite / mergeability_check`. It is not a required check and not part of the workflow. On a stacked PR it stays in progress until every downstack PR merges, so `gh pr checks --watch` waits for it forever even after all real verification has passed.
 
-Before watching a stacked PR, inspect the check run on the recorded head SHA:
-
-```bash
-gh api repos/{owner}/{repo}/commits/<head-sha>/check-runs \
-  --jq '.check_runs[] | select(.name == "Graphite / mergeability_check") |
-    {status, conclusion, title: .output.title, summary: .output.summary}'
-```
-
-Treat it as an intentional pending sentinel **only** when its current-SHA output explicitly says that it will pass when downstack PRs merge (and names the downstack dependency). Do not ignore the check merely because its name contains `Graphite`; any other output or a failed conclusion requires investigation.
-
-When the sentinel is confirmed, do not run `gh pr checks --watch` for that PR. Poll the JSON state instead and evaluate every check except that exact sentinel:
+If that exact check is pending on the recorded head SHA, do not run `--watch` for that PR. Poll the JSON state instead and evaluate every check except that one:
 
 ```bash
 gh pr checks <pr-number> --json name,bucket,state,link
 ```
 
-Continue while any non-sentinel check is pending; handle any non-sentinel failure or cancellation normally. Once all non-sentinel checks have passed or intentionally skipped, record the sentinel and its downstack PR in the verification report and continue to Bugbot comment triage. The sentinel is expected stack state, not a blocker and not evidence that CI is still running.
+Continue while any other check is pending; handle any other failure or cancellation normally. Record the pending Graphite check in the verification report.
 
-If no checks are visible immediately after submission, wait 30 seconds and query again. Do not interpret absent checks as success.
+If no checks are visible immediately after submission, wait 30 seconds and query again. Do not interpret absent checks as success. If CI checks appear but `Cursor Bugbot` doesn't, first confirm you posted `@bugbot run` after the latest push (§1).
 
 ### Zero runs created — check the platform before the repo
 
@@ -121,7 +122,7 @@ For valid findings, amend the existing PR rather than creating a separate fix PR
 Do not declare the task complete until all of these are true for every submitted PR:
 
 - The recorded remote head SHA is still the PR's current head.
-- Every CI check has completed successfully or was intentionally skipped with a documented reason; a current-SHA Graphite downstack sentinel verified as described in §2 is also acceptable and must be documented.
+- Every CI check has completed successfully or was intentionally skipped with a documented reason; a pending legacy `Graphite / mergeability_check` as described in §2 is also acceptable and must be documented.
 - Cursor Bugbot completed on the current head.
 - All Bugbot comments across the submitted stack were triaged and no actionable finding remains.
 - The local worktree is clean and the submitted branches contain every fix.

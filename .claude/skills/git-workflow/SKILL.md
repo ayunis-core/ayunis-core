@@ -1,16 +1,18 @@
 ---
 name: git-workflow
-description: "MUST be loaded before ANY commit, push, or branch operation. Never use raw git commit/push — this project uses Graphite (gt). Load this skill first whenever you need to commit, push, branch, or ask about git workflow."
+description: "MUST be loaded before ANY commit, push, or branch operation. This project uses GitHub stacked PRs via the gh stack extension — branches, pushes, and PRs go through `gh stack`, never raw `git push`. Load this skill first whenever you need to commit, push, branch, or ask about git workflow."
 ---
 
 # Git Workflow
 
-This project uses **Graphite** for stacked PRs. Always use `gt`, never raw `git commit` or `git push`.
+This project uses **GitHub stacked pull requests** through the `gh stack` extension for GitHub CLI. Commits are plain `git commit`; branches, pushes, rebases, and PRs go through `gh stack`, never raw `git push`.
+
+Setup, once per machine: `gh extension install github/gh-stack`. `gh stack init` enables `git rerere` in the repository.
 
 | Situation | Read first |
 | --- | --- |
 | Starting or resuming any work in a stacked-PR context—including amendments—or choosing a base for a new/follow-up PR | `references/starting-work.md` — sync and verify the base **before** the first edit |
-| A `gt` command aborted, warned, or no-op'd (untracked branch, must-restack, worktree collision, remote divergence) | `references/submit-troubleshooting.md` |
+| A `gh stack` command failed, exited non-zero, or printed `Sync aborted` (not in a stack, rebase conflict, diverged stack, worktree collision, remote-only commits) | `references/submit-troubleshooting.md` |
 
 ## Commit Message Format
 
@@ -68,77 +70,109 @@ Only the last PR uses `feat:` — that's the single changelog entry. Use a seman
 
 ## Branching & Stacking
 
-The worktree branch (if using worktrees) is the **base branch**; Graphite stacks are built on top of it. Being clean is not the same as being on `main`, and the default base is **not** always `main` — verify per `references/starting-work.md` before editing.
+A stack is a linear chain of branches on a trunk (usually `main`); each branch gets one PR based on the branch below it. The worktree branch (if using worktrees) is the **first layer** of the stack (see the `worktree` skill). Being clean is not the same as being on `main`, and the default base is **not** always `main` — verify per `references/starting-work.md` before editing.
+
+### Never open an interactive screen
+
+`gh stack` opens prompts or full-screen TUIs when it thinks it has a terminal, and an agent session then hangs. Always use the non-interactive form:
+
+| Use | Never |
+| --- | --- |
+| `gh stack view --json` (or `--short`) | `gh stack view` |
+| `gh stack init <branch>` | `gh stack init` |
+| `gh stack add <branch>` | `gh stack add` |
+| `gh stack submit --auto` | `gh stack submit` |
+| `gh stack checkout <branch-or-pr>` | `gh stack checkout` |
+| `gh stack up` / `down` / `top` / `bottom` | `gh stack switch` |
+| — | `gh stack modify` (TUI only; restructure per `references/submit-troubleshooting.md`) |
+
+Status messages go to stderr; parse only `--json` output and branch on exit codes.
 
 ### Working-tree hygiene
 
-Before staging for `gt create` or `gt modify`, and again before `gt submit`, run `git status --short` and review the working tree. If files you didn't touch in this session are modified (formatter passes, watcher artifacts, removed comments, or other unrelated changes), surface them to the user explicitly before staging. Restore them or get explicit confirmation that they belong in the commit; never bundle them silently.
+Before every commit or amend, and again before `gh stack push` / `gh stack submit`, run `git status --short` and review the working tree. If files you didn't touch in this session are modified (formatter passes, watcher artifacts, removed comments, or other unrelated changes), surface them to the user explicitly before staging. Restore them or get explicit confirmation that they belong in the commit; never bundle them silently.
+
+### Start the stack
+
+On the worktree branch, before the first commit:
+
+```bash
+gh stack init <ticket-id>-<slug>      # adopts the current branch as the first layer
+```
 
 ### New commit → new stacked branch
 
-Each logical unit of work gets its own `gt create`:
+Each logical unit of work gets its own branch. The first unit is committed on the first layer; every later unit gets a new branch from the **top** of the stack:
 
 ```bash
+gh stack add <ticket-id>-<layer-slug>                              # new branch on top, checked out
 git add <files>
-git status --short                                                  # verify what's staged
-gt create -m "<type>(<scope>): <description> (<ticket-id>)"          # auto-stacks on current branch
-# if pre-commit hooks fail, fix the issues and retry with gt modify
+git status --short                                                # verify what's staged
+git commit -m "<type>(<scope>): <description> (<ticket-id>)"
+# if pre-commit hooks fail, fix the issues and retry the same commit
 ```
 
-### Amending the current branch
+- Name every branch yourself: `<ticket-id>-<layer-slug>`, e.g. `ayc-1050-source-entity`. Do not pass `-m` to `gh stack add` without a branch name — that generates a date-slug name.
+- `gh stack add` without `-m` leaves the working tree alone, so uncommitted changes carry over to the new branch. Commit them on the layer they belong to first.
+- `gh stack add` only works on the topmost branch. A change that belongs to a lower layer goes into that layer — see the next section.
 
-Use when fixing QA findings, PR review comments, or bug bot findings. **Never `gt create` for these** — they belong to the same logical change:
+### Amending a branch
+
+Use when fixing QA findings, PR review comments, or bug bot findings. **Never add a new branch for these** — they belong to the same logical change. Keep one commit per branch: `gh stack submit` uses that commit's subject as the PR title.
 
 ```bash
+gh stack checkout <branch>             # or gh stack down / up — the layer that owns the change
 git add <files>
-gt modify              # amends, keeps the message, restacks descendants
+git commit --amend --no-edit           # amends, keeps the message
+gh stack rebase --upstack              # replays every branch above onto the amended one
+gh stack top                           # back to where you were
 ```
 
-- `gt modify -a` auto-stages all changes and amends in one step.
-- `gt modify -m "..."` only when the message must **change**.
-- `--commit` adds another commit to the branch — not what we want for fixes.
+- `git commit --amend -m "..."` only when the message must **change**.
+- Never skip `gh stack rebase --upstack` after amending a lower layer; the branches above still contain the old commit.
 
 ### Pushing to remote
 
-**Never raw `git push`** — it bypasses Graphite's metadata and desynchronizes remote base branches. **Always push the full stack**; pushing one branch after a restack or amend leaves descendants' remote refs stale, causing duplicate-commit conflicts the next time anyone restacks a child.
+**Never raw `git push`.** **Always push the full stack**: `gh stack push` pushes every active branch atomically with a per-branch `--force-with-lease`. Pushing one branch after a rebase or amend leaves the branches above stale on the remote.
 
-Pre-flight, every time — `--force` overwrites remote commits, and under `--no-interactive` the warning does not halt:
+`--force-with-lease` only protects against commits your last fetch didn't see. After a fetch, it overwrites remote-only commits without warning. Pre-flight, every time:
 
 ```bash
 git fetch origin
-gt log short                                  # list every branch in the stack
-git log --oneline HEAD..origin/<branch>       # remote-only commits — for EACH branch, not just the edited ones
+gh stack view --short                         # list every branch in the stack
+git log --oneline <branch>..origin/<branch>   # remote-only commits — for EACH branch, not just the edited ones
 ```
 
-Any commits in `HEAD..origin/<branch>` → **stop and reconcile** (`git pull --rebase` or `gt restack`). Never `--force` past them: Cursor agent autofixes, CI commits, and teammate pushes routinely land on branches you didn't touch this session.
+Any commits in `<branch>..origin/<branch>` → **stop and reconcile** (see `references/submit-troubleshooting.md`). Never push past them: Cursor agent autofixes, CI commits, and teammate pushes routinely land on branches you didn't touch this session.
 
 ```bash
-gt submit --stack --force --no-interactive     # --publish to take PRs out of draft
+gh stack submit --auto     # pushes, creates PRs for branches that have none, links the stack on GitHub
+gh stack push              # updates branches that already have PRs
 ```
 
-`WARNING: Branch <name> has been updated remotely. Force submitting local version to remote...` is a **halt condition** → `references/submit-troubleshooting.md`.
+- `gh stack submit --auto` creates new PRs as drafts; add `--open` to create them ready for review (and to mark existing ones ready).
+- The PR title is the commit subject when the branch has exactly one commit, otherwise the humanized branch name. The body is the commit body. Check titles after submitting and fix them with `gh pr edit <number> --title "..."`: release-please builds the changelog from the squash-merged PR title, so it must follow the commit format above.
+- `gh pr merge` cannot merge a stacked PR. Merging is the user's call; when asked, use `gh stack merge <pr-number> --yes`, which merges that PR and every unmerged PR below it.
 
-### Verifying stack state after restack / submit
+### Verifying stack state after rebase / push / submit
 
-Graphite operations can no-op silently. Don't claim "done" until you've checked:
+Don't claim "done" until you've checked:
 
 ```bash
-gt log short                       # current stack and which branch is checked out
+gh stack view --json               # every branch, its PR, needsRebase must be false
 git branch --show-current          # confirm you're not on main
 git status                         # confirm working tree is clean
 ```
 
-If `gt restack` produced no visible output, the stack was either already restacked or you're not on a stacked branch. Re-check `gt log short` before reporting success.
-
 ### Rules
 
-- Each logical unit of work gets its own `gt create` — one stacked branch per batch/task
-- Fixes and amendments use `gt modify`, never `gt create`
+- Each logical unit of work gets its own branch (`gh stack add <branch>`) — one stacked branch per batch/task
+- Fixes and amendments use `git commit --amend` on the owning branch, then `gh stack rebase --upstack`, never a new branch
 - Never use `--no-verify` — let the hooks run
-- Never use raw `git commit` — always go through `gt`
-- Never use raw `git push` — always go through `gt submit`
-- Before `--force`-submitting, `git fetch origin` and check for remote-only commits per branch
-- After `gt restack` / `gt submit`, verify the stack state (`gt log short`) before reporting success
+- Never use raw `git push` — always `gh stack push` or `gh stack submit --auto`
+- Never run `gh stack` commands in their interactive form
+- Before pushing, `git fetch origin` and check for remote-only commits per branch
+- After `gh stack rebase` / `push` / `submit`, verify the stack state (`gh stack view --json`) before reporting success
 
 ## Pre-commit Hooks
 
