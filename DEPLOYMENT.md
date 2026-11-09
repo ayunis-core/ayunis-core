@@ -5,12 +5,13 @@ This guide covers deploying Ayunis Core to production and managing configuration
 ## Table of Contents
 
 1. [Initial Deployment](#initial-deployment)
-2. [Environment Configuration](#environment-configuration)
-3. [Database Migrations](#database-migrations)
-4. [MCP Integration Setup](#mcp-integration-setup)
-5. [Outlook Add-in](#outlook-add-in)
-6. [Configuration Updates](#configuration-updates)
-7. [Troubleshooting](#troubleshooting)
+2. [Upgrade Notes](#upgrade-notes)
+3. [Environment Configuration](#environment-configuration)
+4. [Database Migrations](#database-migrations)
+5. [MCP Integration Setup](#mcp-integration-setup)
+6. [Outlook Add-in](#outlook-add-in)
+7. [Configuration Updates](#configuration-updates)
+8. [Troubleshooting](#troubleshooting)
 
 ## Initial Deployment
 
@@ -173,6 +174,41 @@ Any other proxy or load balancer in front of the app needs the same minimum.
    - Frontend: <http://your-domain:3000>
    - Backend API: <http://your-domain:3000/api>
    - Swagger UI: <http://your-domain:3000/api/docs>
+
+## Upgrade Notes
+
+Releases that need an operator action before or during the deploy. Entries
+stay until the next major version; everything else upgrades by pulling the
+new images and restarting.
+
+### 2.71.0: direct uploads need a public MinIO host and an upload user
+
+File uploads now go from the browser straight to MinIO (AYC-1541). Two things
+must be in place before the deploy, otherwise every upload fails at the
+browser step while the rest of the application keeps working.
+
+1. **MinIO must be reachable from the browser.** Set `MINIO_PUBLIC_ENDPOINT`,
+   `MINIO_PUBLIC_USE_SSL` and, if not 443, `MINIO_PUBLIC_PORT`; terminate TLS
+   for that host in the reverse proxy and allow CORS for the app origin on the
+   `minio` service (`MINIO_API_CORS_ALLOW_ORIGIN`). See
+   [Object Storage (MinIO)](#object-storage-minio).
+2. **Create the upload user.** Set `MINIO_UPLOAD_ACCESS_KEY` and
+   `MINIO_UPLOAD_SECRET_KEY`. The shipped `docker-compose.yml` runs the
+   `minio-init` service on every start; it creates the user with a write-only
+   policy on `<bucket>/*/uploads/*` and the app waits for it. Deployments with
+   their own compose file mirror that service and the `app` dependency, or run
+   `scripts/minio-init-upload-user.sh` once. Without the two secrets the app
+   signs with the root identity and logs a warning: uploads work, but a signed
+   URL could then be turned into a copy of any object the holder can name.
+
+Verify: `docker compose logs minio-init` ends with
+`MinIO upload user '…' limited to <bucket>/*/uploads/*`, the backend log has no
+"Signing browser uploads as the server-side storage identity" warning, and a
+PDF uploaded in a chat becomes ready.
+
+Optional: `AUDIO_MAX_UPLOAD_BYTES` raises the recording cap (default 25 MiB);
+recordings up to three hours are transcribed whole with speaker labels.
+`ffmpeg` is part of the image. Migrations run automatically.
 
 ## Environment Configuration
 
