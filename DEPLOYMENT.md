@@ -239,8 +239,38 @@ These variables MUST be configured before deployment:
 - `MINIO_INTERNAL_PORT` / `MINIO_INTERNAL_USE_SSL`: Internal connection port
   and TLS setting (defaults: `9000` / `false`).
 
-Browsers never connect to MinIO directly; file downloads are streamed through
-the application after its normal access checks.
+- `MINIO_PUBLIC_ENDPOINT` / `MINIO_PUBLIC_PORT` / `MINIO_PUBLIC_USE_SSL`:
+  Browser-reachable MinIO host used only to sign direct source-upload URLs
+  (AYC-1541). The application never sends requests to it. When unset, the
+  internal endpoint is used, which is what browsers reach in local development
+  and CI. Deployments behind a reverse proxy set it to the public MinIO host
+  (port defaults to `443` with SSL, `80` without) and must allow that host's
+  CORS for the app origin (`MINIO_API_CORS_ALLOW_ORIGIN` on the MinIO service),
+  including the `PUT` method and the `ETag` response header multipart uploads
+  read.
+
+- `MINIO_UPLOAD_ACCESS_KEY` / `MINIO_UPLOAD_SECRET_KEY`: Dedicated MinIO user
+  the application signs direct source-upload URLs with. **Required in
+  production**; the app refuses to boot without it or when it equals the
+  server-side identity. The user may only write under `<bucket>/*/uploads/*`
+  and cannot read: MinIO honours a signed `PUT` as a server-side copy
+  (`x-amz-copy-source`) authorised as the signer, so signing with the root user
+  would let a URL holder copy any object they know the key of onto their
+  upload. The bundled Compose stack provisions the user on every start through
+  the `minio-init` service (`scripts/minio-init-upload-user.sh`). Deployments
+  that run MinIO elsewhere run the same script against it once, with `mc` and
+  the root credentials:
+
+  ```bash
+  MINIO_INIT_ENDPOINT=https://minio.example.org \
+  MINIO_ROOT_USER=… MINIO_ROOT_PASSWORD=… \
+  MINIO_UPLOAD_ACCESS_KEY=ayunis-uploads MINIO_UPLOAD_SECRET_KEY="$(openssl rand -hex 24)" \
+  MINIO_BUCKET=ayunis ./scripts/minio-init-upload-user.sh
+  ```
+
+File downloads are streamed through the application after its normal access
+checks. Browsers connect to MinIO directly only to upload source files via
+short-lived pre-signed URLs issued per upload session.
 
 #### Redis (Queues)
 
@@ -298,6 +328,8 @@ Before starting the application:
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
 - [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
 - [ ] `MINIO_INTERNAL_ENDPOINT` targets this deployment's own MinIO service
+- [ ] `MINIO_PUBLIC_ENDPOINT` is the browser-reachable MinIO host and its CORS allows the app origin
+- [ ] `MINIO_UPLOAD_ACCESS_KEY` / `MINIO_UPLOAD_SECRET_KEY` name a MinIO user limited to `<bucket>/*/uploads/*`
 - [ ] `REDIS_PASSWORD` is set to a secure random string
 - [ ] `POSTGRES_*` variables point to valid database
 - [ ] `FRONTEND_BASEURL` is set correctly

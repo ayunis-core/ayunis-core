@@ -20,6 +20,8 @@ function prodEnv(
     MINIO_INTERNAL_ENDPOINT: 'minio',
     MINIO_ROOT_USER: 'minio-user',
     MINIO_ROOT_PASSWORD: 'minio-password',
+    MINIO_UPLOAD_ACCESS_KEY: 'minio-uploads',
+    MINIO_UPLOAD_SECRET_KEY: 'minio-uploads-secret',
     REDIS_PASSWORD: 'redis-password',
     ...overrides,
   });
@@ -345,6 +347,35 @@ describe('validateEnv', () => {
 
       expect(() => validateEnv(env)).toThrow(/MINIO_ACCESS_KEY/);
       expect(() => validateEnv(env)).toThrow(/MINIO_SECRET_KEY/);
+    });
+
+    it('requires a dedicated MinIO upload identity', () => {
+      const env = without(
+        prodEnv(),
+        'MINIO_UPLOAD_ACCESS_KEY',
+        'MINIO_UPLOAD_SECRET_KEY',
+      );
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_UPLOAD_ACCESS_KEY/);
+      expect(() =>
+        validateEnv(prodEnv({ MINIO_UPLOAD_ACCESS_KEY: 'minio-user' })),
+      ).toThrow(/not the server-side MinIO identity/);
+      expect(() =>
+        validateEnv(
+          prodEnv({
+            MINIO_ACCESS_KEY: 'app-user',
+            MINIO_UPLOAD_ACCESS_KEY: 'app-user',
+          }),
+        ),
+      ).toThrow(/not the server-side MinIO identity/);
+      expect(() =>
+        validateEnv(
+          prodEnv({
+            MINIO_ACCESS_KEY: 'app-user',
+            MINIO_UPLOAD_ACCESS_KEY: 'minio-user',
+          }),
+        ),
+      ).toThrow(/not the server-side MinIO identity/);
     });
 
     it('requires the internal MinIO endpoint', () => {
