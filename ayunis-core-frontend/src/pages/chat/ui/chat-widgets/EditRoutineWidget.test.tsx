@@ -37,6 +37,7 @@ const STORED_ROUTINE = {
   modelId: 'model-id',
   dailyTime: '07:00',
   internetEnabled: false,
+  mcpIntegrationIds: [],
 };
 
 const content = {

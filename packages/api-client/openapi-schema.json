@@ -27076,6 +27076,14 @@
           "internetEnabled": {
             "type": "boolean"
           },
+          "mcpIntegrationIds": {
+            "description": "Integrations whose tools the routine may use",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           "enabled": {
             "type": "boolean"
           },
@@ -27132,6 +27140,7 @@
           "modelId",
           "dailyTime",
           "internetEnabled",
+          "mcpIntegrationIds",
           "enabled",
           "lastRunStatus",
           "lastRunAt",
@@ -27170,6 +27179,15 @@
             "type": "boolean",
             "description": "Whether the routine may search and read the web"
           },
+          "mcpIntegrationIds": {
+            "description": "Integrations whose tools the routine may use; each must be enabled and connected for the user",
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           "enabled": {
             "type": "boolean",
             "description": "Whether the routine runs on its schedule",
@@ -27207,6 +27225,14 @@
           "internetEnabled": {
             "type": "boolean",
             "description": "Whether the routine may search and read the web"
+          },
+          "mcpIntegrationIds": {
+            "description": "Integrations whose tools the routine may use, replacing the current ones; each must be enabled and connected for the user",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "enabled": {
             "type": "boolean",

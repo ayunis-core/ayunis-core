@@ -25,6 +25,10 @@ import { FindNotificationUseCase } from 'src/domain/notifications/application/us
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
 import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
 import { FindReleaseNoteQuery } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.query';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -38,6 +42,7 @@ export class CreateThreadUseCase {
     private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
     private readonly findNotificationUseCase: FindNotificationUseCase,
     private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -51,7 +56,7 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
-    await this.assertLinksReadable(command);
+    const mcpIntegrationIds = await this.assertLinksAccessible(command);
 
     try {
       const thread = new Thread({
@@ -63,6 +68,7 @@ export class CreateThreadUseCase {
         title: command.title,
         origin: command.origin,
         client: this.contextService.get('client') ?? null,
+        mcpIntegrationIds,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
@@ -81,9 +87,10 @@ export class CreateThreadUseCase {
     }
   }
 
-  private async assertLinksReadable(
+  /** Checks every resource the thread links to; returns its integration ids. */
+  private async assertLinksAccessible(
     command: CreateThreadCommand,
-  ): Promise<void> {
+  ): Promise<UUID[]> {
     // Throws WorkspaceNotFoundError for an id the caller does not own.
     if (command.workspaceId) {
       await this.workspaceReadAccess.execute({
@@ -91,6 +98,23 @@ export class CreateThreadUseCase {
       });
     }
     await this.assertOriginReadable(command.origin);
+    return this.findMcpIntegrations(command.mcpIntegrationIds ?? []);
+  }
+
+  /** The same check as adding an integration to an existing thread. */
+  private async findMcpIntegrations(ids: UUID[]): Promise<UUID[]> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return [];
+    const found = new Set(
+      (
+        await this.getMcpIntegrationsByIdsUseCase.execute(
+          new GetMcpIntegrationsByIdsQuery(unique),
+        )
+      ).map(({ id }) => id),
+    );
+    const missing = unique.find((id) => !found.has(id));
+    if (missing) throw new McpIntegrationNotFoundError(missing);
+    return unique;
   }
 
   private async assertOriginReadable(origin?: ThreadOrigin): Promise<void> {

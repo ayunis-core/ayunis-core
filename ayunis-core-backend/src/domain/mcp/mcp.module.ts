@@ -210,6 +210,7 @@ import { McpToolAllowanceResponseMapper } from './presenters/http/mappers/mcp-to
     PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,
+    ListAvailableMcpIntegrationsUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
     GetMcpIntegrationsByIdsUseCase,

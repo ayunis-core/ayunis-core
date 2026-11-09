@@ -30,6 +30,8 @@ const REASON_SENTENCES: Readonly<Record<string, string>> = {
   ROUTINE_SUBSCRIPTION_REQUIRED:
     'Ein Abonnement oder verbleibende Testnachrichten sind erforderlich.',
   ROUTINE_OWNER_LOCKED: 'Ihr Konto ist gesperrt.',
+  ROUTINE_INTEGRATION_UNAVAILABLE:
+    'Eine aktivierte Integration ist nicht verfügbar.',
   RUN_MAX_ITERATIONS_REACHED: 'Der Lauf hat sein Schrittlimit erreicht.',
 };
 const UNKNOWN_REASON = 'Etwas ist schiefgelaufen.';

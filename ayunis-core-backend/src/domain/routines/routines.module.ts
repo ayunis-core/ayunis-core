@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
+import { McpModule } from 'src/domain/mcp/mcp.module';
 import { RunsModule } from 'src/domain/runs/runs.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
@@ -11,6 +12,7 @@ import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { RoutineExecutionQueue } from './application/ports/routine-execution-queue.port';
 import { RoutinesRepository } from './application/ports/routines.repository';
 import { RoutineModelService } from './application/services/routine-model.service';
+import { RoutineIntegrationService } from './application/services/routine-integration.service';
 import { RoutineSubscriptionGate } from './application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from './application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from './application/services/routine-failure-notifier.service';
@@ -42,6 +44,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     ),
     LocalRoutinesRepositoryModule,
     ModelsModule,
+    McpModule,
     ThreadsModule,
     forwardRef(() => RunsModule), // Runs → Routines → Runs (circular)
     UsersModule,
@@ -59,6 +62,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     RoutineExecutionConsumer,
     RoutineSweepConsumer,
     RoutineModelService,
+    RoutineIntegrationService,
     RoutineSubscriptionGate,
     RoutineAcademyGate,
     RoutineFailureNotifier,

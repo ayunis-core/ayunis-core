@@ -4,12 +4,15 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 import { Test } from '@nestjs/testing';
+import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import { RoutineNotFoundError } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
+import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
+import { RoutineIntegrationUnavailableError } from 'src/domain/routines/application/routines.errors';
 import {
   TEST_MODEL_ID,
   TEST_ROUTINE_ID,
@@ -24,6 +27,8 @@ describe('UpdateRoutineUseCase', () => {
   let useCase: UpdateRoutineUseCase;
   let repository: jest.Mocked<RoutinesRepository>;
   const routineModelService = { select: jest.fn() };
+  const routineIntegrationService = { select: jest.fn() };
+  const ticketsIntegrationId = '88888888-8888-4888-8888-888888888888' as UUID;
   const scheduled = new Date('2026-11-07T06:32:00.000Z');
   const current = aRoutine({ enabled: true, nextRunAt: scheduled });
 
@@ -33,11 +38,18 @@ describe('UpdateRoutineUseCase', () => {
     repository.findByIdForUpdate.mockResolvedValue(current);
     repository.updateDefinition.mockResolvedValue(aRoutine({ enabled: false }));
     routineModelService.select.mockResolvedValue(TEST_MODEL_ID);
+    routineIntegrationService.select.mockImplementation((ids: UUID[]) =>
+      Promise.resolve(ids),
+    );
     const module = await Test.createTestingModule({
       providers: [
         UpdateRoutineUseCase,
         { provide: RoutinesRepository, useValue: repository },
         { provide: RoutineModelService, useValue: routineModelService },
+        {
+          provide: RoutineIntegrationService,
+          useValue: routineIntegrationService,
+        },
         { provide: ContextService, useValue: createMockContextService() },
       ],
     }).compile();
@@ -165,6 +177,57 @@ describe('UpdateRoutineUseCase', () => {
         }),
       ),
     ).rejects.toThrow(UnauthorizedAccessError);
+    expect(repository.updateDefinition).not.toHaveBeenCalled();
+  });
+
+  it('replaces the integrations with ones the user may use', async () => {
+    await useCase.execute(
+      new UpdateRoutineCommand({
+        id: TEST_ROUTINE_ID,
+        mcpIntegrationIds: [ticketsIntegrationId],
+      }),
+    );
+
+    expect(repository.updateDefinition).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      TEST_ROUTINE_ID,
+      { mcpIntegrationIds: [ticketsIntegrationId] },
+    );
+  });
+
+  it('checks only the integrations the edit adds, so a routine with one that became unavailable still saves', async () => {
+    const calendarIntegrationId =
+      '99999999-9999-4999-8999-999999999999' as UUID;
+    repository.findByIdForUpdate.mockResolvedValue(
+      aRoutine({ mcpIntegrationIds: [calendarIntegrationId] }),
+    );
+
+    await useCase.execute(
+      new UpdateRoutineCommand({
+        id: TEST_ROUTINE_ID,
+        mcpIntegrationIds: [calendarIntegrationId, ticketsIntegrationId],
+      }),
+    );
+
+    expect(routineIntegrationService.select).toHaveBeenCalledWith(
+      [calendarIntegrationId, ticketsIntegrationId],
+      [calendarIntegrationId],
+    );
+  });
+
+  it('keeps the routine unchanged when an integration is unavailable', async () => {
+    routineIntegrationService.select.mockRejectedValue(
+      new RoutineIntegrationUnavailableError(ticketsIntegrationId),
+    );
+
+    await expect(
+      useCase.execute(
+        new UpdateRoutineCommand({
+          id: TEST_ROUTINE_ID,
+          mcpIntegrationIds: [ticketsIntegrationId],
+        }),
+      ),
+    ).rejects.toThrow(RoutineIntegrationUnavailableError);
     expect(repository.updateDefinition).not.toHaveBeenCalled();
   });
 

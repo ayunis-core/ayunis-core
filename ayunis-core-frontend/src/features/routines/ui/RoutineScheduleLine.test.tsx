@@ -15,6 +15,7 @@ function routine(overrides: Partial<Routine>): Routine {
     modelId: null,
     dailyTime: '07:30',
     internetEnabled: false,
+    mcpIntegrationIds: [],
     enabled: true,
     lastRunStatus: null,
     lastRunAt: null,

@@ -52,6 +52,7 @@ function aStoredRoutine(overrides: object = {}) {
     modelId: null,
     dailyTime: '07:00',
     internetEnabled: false,
+    mcpIntegrationIds: [],
     sourceToolCallId: TOOL_CALL_ID,
     ...overrides,
   };

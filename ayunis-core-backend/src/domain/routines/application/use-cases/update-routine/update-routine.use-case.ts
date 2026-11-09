@@ -9,6 +9,7 @@ import {
   UnexpectedRoutineError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
+import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
 import { scheduleChangesForEdit } from 'src/domain/routines/domain/routine-schedule';
 import { UpdateRoutineCommand } from './update-routine.command';
@@ -25,6 +26,7 @@ export class UpdateRoutineUseCase {
   constructor(
     private readonly routinesRepository: RoutinesRepository,
     private readonly routineModelService: RoutineModelService,
+    private readonly routineIntegrationService: RoutineIntegrationService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -33,13 +35,19 @@ export class UpdateRoutineUseCase {
   async execute(command: UpdateRoutineCommand): Promise<Routine> {
     this.logger.log({ routineId: command.id }, 'Updating routine');
     const { userId } = getRequiredUserContext(this.contextService);
-    const { id, modelId, ...changes } = command;
+    const { id, modelId, mcpIntegrationIds, ...changes } = command;
     const current = await this.routinesRepository.findByIdForUpdate(userId, id);
     if (!current) throw new RoutineNotFoundError(id);
     const updated = await this.routinesRepository.updateDefinition(userId, id, {
       ...changes,
       ...(modelId !== undefined && {
         modelId: await this.routineModelService.select(modelId),
+      }),
+      ...(mcpIntegrationIds !== undefined && {
+        mcpIntegrationIds: await this.routineIntegrationService.select(
+          mcpIntegrationIds,
+          current.mcpIntegrationIds,
+        ),
       }),
       ...scheduleChangesForEdit(current, changes, new Date()),
     });
