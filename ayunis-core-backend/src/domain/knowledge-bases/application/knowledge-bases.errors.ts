@@ -7,6 +7,7 @@ export enum KnowledgeBaseErrorCode {
   DOCUMENT_NOT_IN_KNOWLEDGE_BASE = 'DOCUMENT_NOT_IN_KNOWLEDGE_BASE',
   MISSING_FILE = 'MISSING_FILE',
   SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
+  OWNER_CHANGE_NOT_ALLOWED = 'KNOWLEDGE_BASE_OWNER_CHANGE_NOT_ALLOWED',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -75,6 +76,17 @@ export class MissingFileError extends KnowledgeBaseError {
       KnowledgeBaseErrorCode.MISSING_FILE,
       400,
       metadata,
+    );
+  }
+}
+
+export class KnowledgeBaseOwnerChangeNotAllowedError extends KnowledgeBaseError {
+  constructor(knowledgeBaseId: string) {
+    super(
+      'Workspace knowledge bases cannot change owner',
+      KnowledgeBaseErrorCode.OWNER_CHANGE_NOT_ALLOWED,
+      400,
+      { knowledgeBaseId },
     );
   }
 }

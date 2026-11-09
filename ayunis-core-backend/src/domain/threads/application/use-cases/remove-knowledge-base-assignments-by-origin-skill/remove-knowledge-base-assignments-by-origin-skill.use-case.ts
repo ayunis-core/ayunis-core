@@ -16,13 +16,13 @@ export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
     this.logger.log(
       {
         skillId: command.skillId,
-        userCount: command.userIds.length,
+        userCount: command.userIds?.length ?? 'all',
         knowledgeBaseId: command.knowledgeBaseId,
       },
       'execute',
     );
 
-    if (command.userIds.length === 0) {
+    if (command.userIds?.length === 0) {
       return;
     }
 

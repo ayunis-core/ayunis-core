@@ -7,7 +7,6 @@ import { FindKnowledgeBaseQuery } from 'src/domain/knowledge-bases/application/u
 import { FindKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
-import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
@@ -17,11 +16,8 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import type { Skill } from 'src/domain/skills/domain/skill';
-import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
-import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
-import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
-import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { isSameOwner } from 'src/domain/skills/application/util/is-same-owner';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 
 @Injectable()
@@ -64,25 +60,12 @@ export class AssignKnowledgeBaseToSkillUseCase {
   }
 
   private isCompatible(skill: Skill, knowledgeBase: KnowledgeBase): boolean {
-    if (skill instanceof WorkspaceSkill) {
-      return (
-        knowledgeBase instanceof WorkspaceKnowledgeBase &&
-        knowledgeBase.workspaceId === skill.workspaceId
-      );
-    }
+    // Personal skills may still use personal knowledge bases shared with the
+    // user; every other owner needs exactly the same owner.
     if (skill instanceof PersonalSkill) {
       return knowledgeBase instanceof PersonalKnowledgeBase;
     }
-    if (skill instanceof TeamSkill) {
-      return (
-        knowledgeBase instanceof TeamKnowledgeBase &&
-        knowledgeBase.teamId === skill.teamId
-      );
-    }
-    return (
-      knowledgeBase instanceof OrgKnowledgeBase &&
-      knowledgeBase.orgId === skill.orgId
-    );
+    return isSameOwner(skill, knowledgeBase);
   }
 
   private async findAccessibleKnowledgeBase(

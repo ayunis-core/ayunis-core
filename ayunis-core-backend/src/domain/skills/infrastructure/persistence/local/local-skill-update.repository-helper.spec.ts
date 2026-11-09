@@ -2,6 +2,7 @@ import { randomUUID, type UUID } from 'crypto';
 import type { EntityManager } from 'typeorm';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import {
   SkillSourceLimitExceededError,
@@ -166,5 +167,48 @@ describe('skill update deltas', () => {
     );
     expect(result).toBeInstanceOf(TeamSkill);
     expect(result).toMatchObject({ isActive: true, isPinned: true });
+  });
+
+  it('moves every owner column in one write when the owner changes', async () => {
+    const personal = new PersonalSkill({
+      name: 'Council minutes',
+      shortDescription: 'Drafts council meeting minutes.',
+      instructions: 'Summarise each agenda item.',
+      userId: randomUUID(),
+    });
+    const teamId = randomUUID();
+    const moved = new TeamSkill({ ...personal, teamId, isActive: true });
+    const { manager, repository } = setup(personal);
+
+    const result = await updateSkill(manager, mapper, moved, personal);
+
+    expect(repository.update).toHaveBeenCalledTimes(1);
+    expect(repository.update).toHaveBeenCalledWith(
+      personal.id,
+      expect.objectContaining({
+        userId: null,
+        workspaceId: null,
+        teamId,
+        orgId: null,
+        isActive: true,
+      }),
+    );
+    expect(result).toBeInstanceOf(TeamSkill);
+  });
+
+  it('leaves owner columns alone when the owner is unchanged', async () => {
+    const { manager, repository } = setup(original);
+
+    await updateSkill(
+      manager,
+      mapper,
+      original.withUpdates({ name: 'Renamed' }),
+      original,
+    );
+
+    expect(repository.update).toHaveBeenCalledWith(
+      original.id,
+      expect.not.objectContaining({ workspaceId: expect.anything() }),
+    );
   });
 });

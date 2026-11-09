@@ -301,19 +301,19 @@ export class LocalThreadAssignmentsRepository {
 
   async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
-    userIds: UUID[];
+    userIds: UUID[] | null;
     knowledgeBaseId?: UUID;
   }): Promise<void> {
     this.logger.log(
       {
         originSkillId: params.originSkillId,
-        userCount: params.userIds.length,
+        userCount: params.userIds?.length ?? 'all',
         knowledgeBaseId: params.knowledgeBaseId,
       },
       'removeKnowledgeBaseAssignmentsByOriginSkill',
     );
 
-    if (params.userIds.length === 0) {
+    if (params.userIds?.length === 0) {
       return;
     }
 
@@ -321,19 +321,17 @@ export class LocalThreadAssignmentsRepository {
       .createQueryBuilder('tkba')
       .select('tkba.id')
       .innerJoin('tkba.thread', 'thread')
-      .where('tkba.originSkillId = :originSkillId')
-      .andWhere('thread.userId IN (:...userIds)');
-
-    if (params.knowledgeBaseId) {
-      subQuery.andWhere('tkba.knowledgeBaseId = :knowledgeBaseId');
-    }
-
+      .where('tkba.originSkillId = :originSkillId');
     const queryParams: Record<string, unknown> = {
       originSkillId: params.originSkillId,
-      userIds: params.userIds,
     };
 
+    if (params.userIds) {
+      subQuery.andWhere('thread.userId IN (:...userIds)');
+      queryParams.userIds = params.userIds;
+    }
     if (params.knowledgeBaseId) {
+      subQuery.andWhere('tkba.knowledgeBaseId = :knowledgeBaseId');
       queryParams.knowledgeBaseId = params.knowledgeBaseId;
     }
 

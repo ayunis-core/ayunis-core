@@ -36,6 +36,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
+import { RemoveEntitySharesUseCase } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.use-case';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -62,6 +64,7 @@ import { PermissionsModule } from 'src/iam/permissions/permissions.module';
     // Use Cases
     CreateShareUseCase,
     DeleteShareUseCase,
+    RemoveEntitySharesUseCase,
     GetSharesUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
@@ -83,6 +86,7 @@ import { PermissionsModule } from 'src/iam/permissions/permissions.module';
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    RemoveEntitySharesUseCase,
     ShareScopeResolverService,
   ],
 })

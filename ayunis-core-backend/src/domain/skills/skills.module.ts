@@ -90,6 +90,10 @@ import { FindActiveCollectiveSkillByNameUseCase } from 'src/domain/skills/applic
 
 import { SkillSourceCleanupService } from 'src/domain/skills/application/services/skill-source-cleanup.service';
 import { SkillsTeamDeletionRequestedListener } from 'src/domain/skills/application/listeners/team-deletion-requested.listener';
+import { SkillOwnerChangeService } from 'src/domain/skills/application/services/skill-owner-change.service';
+import { ChangeSkillOwnerUseCase } from 'src/domain/skills/application/use-cases/change-skill-owner/change-skill-owner.use-case';
+import { PreviewSkillOwnerChangeUseCase } from 'src/domain/skills/application/use-cases/preview-skill-owner-change/preview-skill-owner-change.use-case';
+import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/application/use-cases/unlink-knowledge-base-from-other-owners/unlink-knowledge-base-from-other-owners.use-case';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -125,6 +129,10 @@ import { SkillsTeamDeletionRequestedListener } from 'src/domain/skills/applicati
     SkillAuthorizationService,
     CollectiveSkillAccessService,
     SkillSourceCleanupService,
+    SkillOwnerChangeService,
+    ChangeSkillOwnerUseCase,
+    PreviewSkillOwnerChangeUseCase,
+    UnlinkKnowledgeBaseFromOtherOwnersUseCase,
     FindActiveCollectiveSkillByNameUseCase,
     FindActivatableSkillUseCase,
     SkillActivationService,
@@ -190,6 +198,7 @@ import { SkillsTeamDeletionRequestedListener } from 'src/domain/skills/applicati
     SkillKnowledgeBasesController,
   ],
   exports: [
+    UnlinkKnowledgeBaseFromOtherOwnersUseCase,
     ActivateWorkspaceSkillByNameUseCase,
     GetWorkspaceSkillsUseCase,
     SkillRepository,

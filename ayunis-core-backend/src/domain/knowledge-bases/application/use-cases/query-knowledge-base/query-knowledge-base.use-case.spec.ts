@@ -51,6 +51,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
       countSourcesByKnowledgeBaseIds: jest.fn(),
       activate: jest.fn(),
       deactivate: jest.fn(),
+      deactivateAllUsers: jest.fn(),
       isActive: jest.fn(),
       getActiveIds: jest.fn(),
       activateForWorkspace: jest.fn(),

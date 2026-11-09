@@ -17,3 +17,6 @@ export type SkillListScope = Extract<
 
 /** The team and organization owners whose skills a user can read. */
 export type ReadableSkillOwners = ReadableCollectiveOwners;
+
+/** The owners a skill can be moved between; workspace skills stay put. */
+export type SkillTransferOwner = Exclude<SkillOwner, { type: 'workspace' }>;
