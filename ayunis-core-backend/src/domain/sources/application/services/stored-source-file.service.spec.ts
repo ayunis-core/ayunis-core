@@ -1,3 +1,7 @@
+import { createHash } from 'crypto';
+import { mkdtemp, readFile, rm } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { ObjectChangedError } from 'src/domain/storage/application/storage.errors';
 import { StoredSourceFileService } from './stored-source-file.service';
 import { StoredFileMismatchError } from 'src/domain/sources/application/sources.errors';
@@ -71,6 +75,46 @@ describe('StoredSourceFileService', () => {
     }
     expect(downloadObject.execute).not.toHaveBeenCalled();
     expect(deleteObject.execute).not.toHaveBeenCalled();
+  });
+
+  it('streams a retained original to a file and reports its size and hash', async () => {
+    getObjectInfo.execute.mockResolvedValue({ size: 6 });
+    const directory = await mkdtemp(join(tmpdir(), 'stored-file-'));
+    try {
+      const destination = join(directory, 'recording');
+
+      await expect(
+        service.readRetainedToFile(key, destination, 6, 'verified'),
+      ).resolves.toEqual({
+        size: 6,
+        sha256: createHash('sha256').update('abcdef').digest('hex'),
+      });
+
+      await expect(readFile(destination, 'utf8')).resolves.toBe('abcdef');
+      expect(downloadObject.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ expectedETag: 'verified' }),
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('stops a streamed read that outgrows the verified size and removes the object', async () => {
+    getObjectInfo.execute.mockResolvedValue({ size: 6 });
+    downloadObject.execute.mockImplementation(() =>
+      Promise.resolve(stream('abc', 'def', 'ghi')),
+    );
+    const directory = await mkdtemp(join(tmpdir(), 'stored-file-'));
+    try {
+      await expect(
+        service.readToFile(key, join(directory, 'recording'), 6),
+      ).rejects.toBeInstanceOf(StoredFileMismatchError);
+      expect(deleteObject.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ objectName: key }),
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it('reads a retained original with both checks in place', async () => {

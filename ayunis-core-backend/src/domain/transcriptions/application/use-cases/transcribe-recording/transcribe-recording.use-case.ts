@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_AUDIO_UPLOAD_BYTES } from 'src/config/transcription.config';
 import { createHash } from 'crypto';
-import { readFile, stat } from 'fs/promises';
+import { stat } from 'fs/promises';
 import pLimit from 'p-limit';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -12,6 +12,7 @@ import {
   AudioSegmenterPort,
   type AudioSegment,
   type AudioSegmentLimits,
+  type RecordingInput,
 } from 'src/domain/transcriptions/application/ports/audio-segmenter.port';
 import { TranscriptionPort } from 'src/domain/transcriptions/application/ports/transcription.port';
 import {
@@ -62,16 +63,17 @@ export class TranscribeRecordingUseCase {
       'Transcribing uploaded recording',
     );
     getRequiredOrgId(this.contextService);
-    validateAudio(command.file, command.mimeType, this.maxUploadBytes);
+    const { recording, fileName, mimeType } = command;
+    validateAudio(recording ?? command.file, mimeType, this.maxUploadBytes);
     await assertProcessingActive(command.processingContext);
-    const identity = createHash('sha256').update(command.file).digest('hex');
+    const identity =
+      recording?.sha256 ??
+      createHash('sha256').update(command.file).digest('hex');
     const lines: string[] = [];
     let completed = 0;
-    const input = {
-      data: command.file,
-      fileName: command.fileName,
-      mimeType: command.mimeType,
-    };
+    const input: RecordingInput = recording
+      ? { path: recording.path, size: recording.size, fileName, mimeType }
+      : { data: command.file, fileName, mimeType };
     for await (const segment of this.segmenter.split(
       input,
       this.limits,
@@ -100,15 +102,15 @@ export class TranscribeRecordingUseCase {
       .digest('hex');
     const saved = await command.processingContext?.read(key);
     if (saved !== undefined) return restoreTranscript(saved, segment.duration);
-    if ((await stat(segment.path)).size > this.limits.maxBytes)
+    const { size } = await stat(segment.path);
+    if (size > this.limits.maxBytes)
       throw new InvalidAudioFileError(
         'Audio segment exceeds the request byte limit',
       );
-    const data = await readFile(segment.path);
     const result = await this.limit(async () => {
       await assertProcessingActive(command.processingContext);
       return this.transcription.transcribeSegment(
-        data,
+        { path: segment.path, size },
         segment.fileName,
         segment.mimeType,
         command.language,

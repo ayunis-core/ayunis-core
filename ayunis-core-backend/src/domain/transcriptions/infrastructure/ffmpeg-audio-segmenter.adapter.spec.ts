@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { mkdir, readFile, readdir, rm } from 'fs/promises';
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { execFile } from 'child_process';
@@ -196,6 +196,36 @@ describe('FFmpeg audio segmentation', () => {
     };
 
     await expect(read()).rejects.toBeInstanceOf(RecordingTooLongError);
+  });
+
+  it("reads a recording from the caller's file and leaves it in place", async () => {
+    const callerDirectory = join(directory, '..', `caller-${randomUUID()}`);
+    await mkdir(callerDirectory, { recursive: true });
+    const callerPath = join(callerDirectory, 'caller.wav');
+    const data = wav(0.5);
+    await writeFile(callerPath, data);
+    try {
+      const parts = [];
+      for await (const part of segmenter.split(
+        {
+          path: callerPath,
+          size: data.length,
+          fileName: 'caller.wav',
+          mimeType: 'audio/wav',
+        },
+        { maxSeconds: 1, maxBytes: 40_000 },
+      ))
+        parts.push(part);
+
+      expect(parts).toEqual([
+        expect.objectContaining({ path: callerPath, start: 0 }),
+      ]);
+      await expect(stat(callerPath)).resolves.toMatchObject({
+        size: data.length,
+      });
+    } finally {
+      await rm(callerDirectory, { recursive: true, force: true });
+    }
   });
 
   it('sends a small recording as one original file', async () => {

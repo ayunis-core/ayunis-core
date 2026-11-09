@@ -3,7 +3,12 @@ import {
   type ProcessingContext,
 } from 'src/common/types/processing-context';
 import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { mkdir, mkdtemp, rm } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import transcriptionConfig from 'src/config/transcription.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -29,6 +34,7 @@ import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spre
 import { tableToText } from 'src/domain/sources/application/util/table-to-text';
 import {
   detectFileType,
+  isAudioFile,
   isCSVFile,
   isSpreadsheetFile,
 } from 'src/common/util/file-type';
@@ -56,6 +62,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
     private readonly heartbeat: SourceProcessingHeartbeatService,
     private readonly checkpoints: ProcessingCheckpointService,
+    @Inject(transcriptionConfig.KEY)
+    private readonly transcription: ConfigType<typeof transcriptionConfig>,
   ) {
     super();
   }
@@ -219,22 +227,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
   private async downloadAndExtractText(
     job: Job<DocumentProcessingJobData>,
   ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
-    const { minioPath, fileName, fileType, expectedSize, expectedETag } =
-      job.data;
-
-    const fileBuffer = await processingStage('document.download', () =>
-      job.data.retainFile
-        ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
-        : this.storedFiles.read(minioPath, expectedSize, expectedETag),
-    );
+    const { fileName, fileType } = job.data;
     const context = this.checkpoints.create(
       job.data.orgId,
       job.data.sourceId,
       (completed) => job.updateProgress({ stage: 'extraction', completed }),
     );
-    const text = await processingStage('document.extraction', () =>
-      this.extractText(fileBuffer, fileName, fileType, context),
-    );
+    const text = isAudioFile(detectFileType(fileType, fileName))
+      ? await this.transcribeRecording(job, context)
+      : await this.extractDocument(job, context);
 
     const splitResult = processingStage('document.splitting', () =>
       this.splitTextUseCase.execute(
@@ -253,6 +254,68 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
 
     return { text, chunks };
+  }
+
+  private async extractDocument(
+    job: Job<DocumentProcessingJobData>,
+    context?: ProcessingContext,
+  ): Promise<string> {
+    const { minioPath, fileName, fileType, expectedSize, expectedETag } =
+      job.data;
+    const fileBuffer = await processingStage('document.download', () =>
+      job.data.retainFile
+        ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
+        : this.storedFiles.read(minioPath, expectedSize, expectedETag),
+    );
+    return processingStage('document.extraction', () =>
+      this.extractText(fileBuffer, fileName, fileType, context),
+    );
+  }
+
+  // A recording is streamed to disk and transcribed from there: the process
+  // never holds the file, the segmenter and the provider upload read the path.
+  private async transcribeRecording(
+    job: Job<DocumentProcessingJobData>,
+    context?: ProcessingContext,
+  ): Promise<string> {
+    const { minioPath, fileName, fileType, expectedSize, expectedETag } =
+      job.data;
+    const root =
+      this.transcription.tempDirectory ?? join(tmpdir(), 'ayunis-audio');
+    await mkdir(root, { recursive: true, mode: 0o700 });
+    const directory = await mkdtemp(join(root, 'download-'));
+    try {
+      const path = join(directory, 'recording');
+      const stored = await processingStage('document.download', () =>
+        job.data.retainFile
+          ? this.storedFiles.readRetainedToFile(
+              minioPath,
+              path,
+              expectedSize,
+              expectedETag,
+            )
+          : this.storedFiles.readToFile(
+              minioPath,
+              path,
+              expectedSize,
+              expectedETag,
+            ),
+      );
+      const result = await processingStage('document.extraction', () =>
+        this.retrieveFileContentUseCase.execute(
+          new RetrieveFileContentCommand({
+            fileData: Buffer.alloc(0),
+            recording: { path, ...stored },
+            fileName,
+            fileType,
+            processingContext: context,
+          }),
+        ),
+      );
+      return result.pages.map((page) => page.text).join('\n');
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   }
 
   private async extractText(

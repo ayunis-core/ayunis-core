@@ -1,10 +1,9 @@
 import type { ProcessingContext } from 'src/common/types/processing-context';
 
-export interface RecordingInput {
-  data: Buffer;
-  fileName: string;
-  mimeType: string;
-}
+/** The recording either as bytes, or as a file the caller owns on local disk. */
+export type RecordingInput = { fileName: string; mimeType: string } & (
+  { data: Buffer } | { path: string; size: number }
+);
 
 export interface AudioSegmentLimits {
   maxSeconds: number;

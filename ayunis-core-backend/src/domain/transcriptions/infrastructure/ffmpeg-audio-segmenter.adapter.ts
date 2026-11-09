@@ -49,13 +49,12 @@ export class FfmpegAudioSegmenterAdapter extends AudioSegmenterPort {
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     const directory = await mkdtemp(join(this.directory, 'recording-'));
     try {
-      const path = join(directory, 'input');
-      await writeFile(path, input.data, { mode: 0o600 });
+      const path = 'data' in input ? join(directory, 'input') : input.path;
+      if ('data' in input) await writeFile(path, input.data, { mode: 0o600 });
+      const size = 'data' in input ? input.data.length : input.size;
       const duration = await this.duration(path, input.mimeType);
       const whole = await this.prepareWhole(
-        path,
-        directory,
-        duration,
+        { path, size, directory, duration },
         input,
         limits,
       );
@@ -110,14 +109,13 @@ export class FfmpegAudioSegmenterAdapter extends AudioSegmenterPort {
   }
 
   private async prepareWhole(
-    path: string,
-    directory: string,
-    duration: number,
+    source: { path: string; size: number; directory: string; duration: number },
     input: RecordingInput,
     limits: AudioSegmentLimits,
   ): Promise<AudioSegment | null> {
+    const { path, size, directory, duration } = source;
     if (duration > limits.maxSeconds) return null;
-    if (input.data.length <= limits.maxBytes)
+    if (size <= limits.maxBytes)
       return {
         path,
         start: 0,

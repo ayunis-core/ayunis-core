@@ -87,6 +87,10 @@ const splitTextUseCase = {
 const storedFiles = {
   read: jest.fn().mockResolvedValue(Buffer.from('pdf-bytes')),
   readRetained: jest.fn().mockResolvedValue(Buffer.from('pdf-bytes')),
+  readToFile: jest.fn().mockResolvedValue({ size: 1234, sha256: 'abc' }),
+  readRetainedToFile: jest
+    .fn()
+    .mockResolvedValue({ size: 1234, sha256: 'abc' }),
 };
 
 const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
@@ -155,6 +159,7 @@ describe('DocumentProcessingConsumer', () => {
       admitOrgProcessing as never,
       new SourceProcessingHeartbeatService(sourceRepository as never),
       checkpoints as never,
+      { tempDirectory: undefined } as never,
     );
   });
 
@@ -278,6 +283,38 @@ describe('DocumentProcessingConsumer', () => {
       'verified',
     );
     expect(storedFiles.read).not.toHaveBeenCalled();
+  });
+
+  it('streams a recording to disk and transcribes it from that path', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          retainFile: true,
+          expectedSize: 1234,
+          expectedETag: 'verified',
+          fileName: 'sitzung.mp3',
+          fileType: 'audio/mpeg',
+        }),
+      } as never),
+    );
+
+    expect(storedFiles.readRetainedToFile).toHaveBeenCalledWith(
+      MINIO_PATH,
+      expect.stringContaining('download-'),
+      1234,
+      'verified',
+    );
+    expect(storedFiles.readRetained).not.toHaveBeenCalled();
+    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recording: expect.objectContaining({ size: 1234, sha256: 'abc' }),
+        fileName: 'sitzung.mp3',
+      }),
+    );
   });
 
   it('fails the source without OCR when the stored file no longer matches', async () => {

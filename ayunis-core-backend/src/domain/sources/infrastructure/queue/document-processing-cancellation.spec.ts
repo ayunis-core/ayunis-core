@@ -85,6 +85,7 @@ async function interruptedDelivery(
     { execute: async () => true } as never,
     new SourceProcessingHeartbeatService(repository),
     checkpoints,
+    { tempDirectory: undefined } as never,
   );
   await consumer.process({
     id: 'overlapping-delivery',
