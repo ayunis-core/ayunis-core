@@ -47,6 +47,21 @@ path. Changing a dependency's image or configuration is also a maintenance
 operation: restart its dependent services so they reconnect to the replacement
 instead of relying on client-specific connection recovery.
 
+### Preview deployments
+
+Adding the `preview` label to a pull request deploys its head commit to
+`https://pr-<number>.preview.ayunis.de`. For a stack, label the top PR: its
+head contains every layer below it. `build-images.yml` publishes
+`sha-<head commit>` images for labelled PRs, and the preview controller on
+hetzner-08 (ayunis-infra, `servers/hetzner-08/preview-controller`) runs them
+with `compose.preview.yml` on top of the release overlay, one Compose project
+per PR with its own database and object storage, seeded with the minimal seed.
+
+The controller compares the open PRs labelled `preview` with what runs, every
+minute: a new head commit redeploys the preview, and merging or closing the PR
+or removing the label deletes it with its data. Its progress and URL show up
+as the `preview` commit status on the PR.
+
 ### Update page during the app restart
 
 While the `app` container restarts (about 13–18s on staging), the reverse proxy
