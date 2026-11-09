@@ -8,7 +8,7 @@ import { AssertWorkspaceWriteAccessUseCase } from './assert-workspace-write-acce
 
 function setup() {
   const access = {
-    requireOwned: jest.fn().mockResolvedValue(undefined),
+    requireMember: jest.fn().mockResolvedValue(undefined),
   } as unknown as jest.Mocked<WorkspaceAccessService>;
   return {
     access,
@@ -18,20 +18,20 @@ function setup() {
 }
 
 describe(AssertWorkspaceWriteAccessUseCase.name, () => {
-  it('delegates the workspace ownership check', async () => {
+  it('delegates the workspace membership check', async () => {
     const { access, useCase, query } = setup();
     await expect(useCase.execute(query)).resolves.toBeUndefined();
-    expect(access.requireOwned).toHaveBeenCalledWith(query.workspaceId);
+    expect(access.requireMember).toHaveBeenCalledWith(query.workspaceId);
   });
-  it('preserves an ownership denial', async () => {
+  it('preserves a membership denial', async () => {
     const { access, useCase, query } = setup();
     const error = new WorkspaceNotFoundError(query.workspaceId);
-    access.requireOwned.mockRejectedValue(error);
+    access.requireMember.mockRejectedValue(error);
     await expect(useCase.execute(query)).rejects.toBe(error);
   });
   it('wraps unexpected policy failures', async () => {
     const { access, useCase, query } = setup();
-    access.requireOwned.mockRejectedValue(new Error('Database unavailable'));
+    access.requireMember.mockRejectedValue(new Error('Database unavailable'));
     await expect(useCase.execute(query)).rejects.toBeInstanceOf(
       UnexpectedWorkspaceError,
     );

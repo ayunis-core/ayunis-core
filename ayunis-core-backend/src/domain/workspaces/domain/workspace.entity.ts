@@ -7,7 +7,6 @@ import {
 
 export class Workspace {
   public readonly id: UUID;
-  public readonly userId: UUID;
   public readonly orgId: UUID;
   public readonly createdAt: Date;
   public name: string;
@@ -19,7 +18,6 @@ export class Workspace {
 
   constructor(params: {
     id?: UUID;
-    userId: UUID;
     orgId: UUID;
     name: string;
     description?: string | null;
@@ -30,7 +28,6 @@ export class Workspace {
     updatedAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
-    this.userId = params.userId;
     this.orgId = params.orgId;
     this.name = params.name;
     this.description = params.description ?? null;

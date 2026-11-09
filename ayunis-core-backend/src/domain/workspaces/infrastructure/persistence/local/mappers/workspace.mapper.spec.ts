@@ -4,7 +4,6 @@ import { WorkspaceMapper } from './workspace.mapper';
 import {
   aWorkspace,
   TEST_ORG_ID,
-  TEST_USER_ID,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 
@@ -27,7 +26,6 @@ describe('WorkspaceMapper', () => {
   it('maps a record to the domain entity', () => {
     const record = new WorkspaceRecord();
     record.id = TEST_WORKSPACE_ID;
-    record.userId = TEST_USER_ID;
     record.orgId = TEST_ORG_ID;
     record.name = 'Gebühren';
     record.description = null;

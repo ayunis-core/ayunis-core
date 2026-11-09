@@ -21,11 +21,11 @@ function setup() {
 }
 
 describe(WorkspaceAccessService.name, () => {
-  it('allows an owned workspace using the authenticated user scope', async () => {
+  it('allows a workspace the authenticated user is a member of', async () => {
     const { service, repository } = setup();
     repository.findById.mockResolvedValue(aWorkspace());
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).resolves.toBeUndefined();
     expect(repository.findById).toHaveBeenCalledWith(
       TEST_USER_ID,
@@ -37,7 +37,7 @@ describe(WorkspaceAccessService.name, () => {
     const { service, repository, context } = setup();
     context.get.mockReturnValue(undefined);
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
     expect(repository.findById).not.toHaveBeenCalled();
   });
@@ -48,7 +48,7 @@ describe(WorkspaceAccessService.name, () => {
       key === 'userId' ? TEST_USER_ID : undefined,
     );
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
     expect(repository.findById).not.toHaveBeenCalled();
   });
@@ -57,15 +57,15 @@ describe(WorkspaceAccessService.name, () => {
     const { service, repository } = setup();
     repository.findById.mockResolvedValue(aWorkspace({ orgId: randomUUID() }));
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
   });
 
-  it('rejects a workspace absent from the authenticated user scope', async () => {
+  it('rejects a workspace the authenticated user is not a member of', async () => {
     const { service, repository } = setup();
     repository.findById.mockResolvedValue(null);
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
     expect(repository.findById).toHaveBeenCalledWith(
       TEST_USER_ID,
@@ -73,16 +73,16 @@ describe(WorkspaceAccessService.name, () => {
     );
   });
 
-  it('uses the current caller rather than a previously authorized owner', async () => {
+  it('uses the current caller rather than a previously authorized member', async () => {
     const { service, repository, context } = setup();
     repository.findById.mockImplementation(async (userId) =>
       userId === TEST_USER_ID ? aWorkspace() : null,
     );
-    await service.requireOwned(TEST_WORKSPACE_ID);
+    await service.requireMember(TEST_WORKSPACE_ID);
     const otherUserId = randomUUID();
     context.get.mockReturnValue(otherUserId);
     await expect(
-      service.requireOwned(TEST_WORKSPACE_ID),
+      service.requireMember(TEST_WORKSPACE_ID),
     ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
     expect(repository.findById).toHaveBeenLastCalledWith(
       otherUserId,
@@ -94,6 +94,6 @@ describe(WorkspaceAccessService.name, () => {
     const { service, repository } = setup();
     const error = new Error('Database unavailable');
     repository.findById.mockRejectedValue(error);
-    await expect(service.requireOwned(TEST_WORKSPACE_ID)).rejects.toBe(error);
+    await expect(service.requireMember(TEST_WORKSPACE_ID)).rejects.toBe(error);
   });
 });

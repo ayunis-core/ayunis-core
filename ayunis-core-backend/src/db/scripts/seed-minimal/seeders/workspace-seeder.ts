@@ -12,6 +12,8 @@ import type { TextSourceDetailsRecord } from 'src/domain/sources/infrastructure/
 import { FileSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
 import { TextSourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { WorkspaceMemberRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-member.record';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
 import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
 import { log } from 'src/db/scripts/utils/seed-log';
@@ -35,9 +37,9 @@ interface WorkspaceResourceFixtures {
 }
 
 /**
- * Seeds the org's workspaces ("Projekte"), owned by the org admin, plus demo
- * context for AYC-701: project instructions, workspace-owned skills and
- * knowledge bases.
+ * Seeds the org's workspaces ("Projekte"), with the org admin as their admin
+ * member, plus demo context for AYC-701: project instructions, workspace-owned
+ * skills and knowledge bases.
  *
  * Sidebar pin state and order are favorites rows, not workspace columns.
  * Pinned demo fixtures get explicit favorite rows; application-created
@@ -162,7 +164,8 @@ export class WorkspaceSeeder extends OrgSeeder {
     workspace: WorkspaceFixture,
     resources: WorkspaceResourceFixtures,
   ): Promise<void> {
-    const record = await this.findOrCreateWorkspace(orgId, userId, workspace);
+    const record = await this.findOrCreateWorkspace(orgId, workspace);
+    await this.seedWorkspaceAdmin(userId, record);
     await this.syncWorkspaceInstruction(record, workspace.instruction ?? null);
     await this.seedWorkspaceFavorites(userId, record, workspace);
     await this.seedWorkspaceSkills(record.id, workspace, resources.skills);
@@ -176,16 +179,14 @@ export class WorkspaceSeeder extends OrgSeeder {
 
   private async findOrCreateWorkspace(
     orgId: UUID,
-    userId: UUID,
     workspace: WorkspaceFixture,
   ): Promise<WorkspaceRecord> {
     return this.findOrCreate(
       this.repo(WorkspaceRecord),
-      { orgId, userId, name: workspace.name },
+      { orgId, name: workspace.name },
       () => ({
         id: randomUUID(),
         orgId,
-        userId,
         name: workspace.name,
         description: workspace.description ?? null,
         instruction: workspace.instruction ?? null,
@@ -193,6 +194,23 @@ export class WorkspaceSeeder extends OrgSeeder {
         color: workspace.color,
       }),
       { entity: 'Workspace', name: workspace.name },
+    );
+  }
+
+  private async seedWorkspaceAdmin(
+    userId: UUID,
+    record: WorkspaceRecord,
+  ): Promise<void> {
+    await this.findOrCreate(
+      this.repo(WorkspaceMemberRecord),
+      { workspaceId: record.id, userId },
+      () => ({
+        id: randomUUID(),
+        workspaceId: record.id,
+        userId,
+        role: UserRole.ADMIN,
+      }),
+      { entity: 'Workspace admin', name: record.name },
     );
   }
 
