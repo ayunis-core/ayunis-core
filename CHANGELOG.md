@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.71.0](https://github.com/ayunis-core/ayunis-core/compare/v2.70.0...v2.71.0) (2026-11-09)
+
+
+### Features
+
+* **sources:** transcribe uploaded recordings whole and cap them by configuration (AYC-1544) ([#2235](https://github.com/ayunis-core/ayunis-core/issues/2235)) ([7bf7217](https://github.com/ayunis-core/ayunis-core/commit/7bf7217d23a2a0ab0e001971ef26b1fef81f2b65))
+* **sources:** upload files from the browser straight to object storage (AYC-1541) ([#2148](https://github.com/ayunis-core/ayunis-core/issues/2148)) ([44ba914](https://github.com/ayunis-core/ayunis-core/commit/44ba914996855618e17f6f355c098712f47db4a4))
+
+
+### Bug Fixes
+
+* **budget-alerts:** warn admins when users on the default credit limit near it (AYC-1704) ([#2248](https://github.com/ayunis-core/ayunis-core/issues/2248)) ([3d64e57](https://github.com/ayunis-core/ayunis-core/commit/3d64e57bb9316083bb7d68e6440a8f26bc5eb4f5))
+
+
+### Performance Improvements
+
+* **sources:** stream uploaded recordings to disk instead of buffering them (AYC-1694) ([#2239](https://github.com/ayunis-core/ayunis-core/issues/2239)) ([1cea073](https://github.com/ayunis-core/ayunis-core/commit/1cea0735ed8ec76a1f7c6fdbe54939893429dbd8))
+
+
+### Documentation
+
+* **outlook:** add ground-work spike for the outlook integration (AYC-1463) ([#2132](https://github.com/ayunis-core/ayunis-core/issues/2132)) ([4e50e3f](https://github.com/ayunis-core/ayunis-core/commit/4e50e3fe91bdef63ce1372227cbe3c567ef2bf22))
+* **outlook:** correct the framing premise in the spike (AYC-1463) ([#2249](https://github.com/ayunis-core/ayunis-core/issues/2249)) ([22707d3](https://github.com/ayunis-core/ayunis-core/commit/22707d36517a375d34707af882bdee91518aaec8))
+
+
+### Tests
+
+* **models:** keep each user's default when users share a model (AYC-1478) ([#2250](https://github.com/ayunis-core/ayunis-core/issues/2250)) ([4ee2c0e](https://github.com/ayunis-core/ayunis-core/commit/4ee2c0e901d640f322bd1061626b36f6e97bf117))
+
 ## [2.70.0](https://github.com/ayunis-core/ayunis-core/compare/v2.69.0...v2.70.0) (2026-11-08)
 
 
