@@ -8,7 +8,6 @@ import { KnowledgeBasesWorkspaceDeletionRequestedListener } from './workspace-de
 
 describe(KnowledgeBasesWorkspaceDeletionRequestedListener.name, () => {
   const workspaceId = randomUUID();
-  const userId = randomUUID();
   const orgId = randomUUID();
   let repository: {
     findAllByWorkspaceId: jest.Mock;
@@ -35,7 +34,7 @@ describe(KnowledgeBasesWorkspaceDeletionRequestedListener.name, () => {
   });
 
   function event(): WorkspaceDeletionRequestedEvent {
-    return new WorkspaceDeletionRequestedEvent(workspaceId, userId, orgId);
+    return new WorkspaceDeletionRequestedEvent(workspaceId, orgId);
   }
 
   it('loads all sources in one bulk query and defers only external processing cleanup', async () => {

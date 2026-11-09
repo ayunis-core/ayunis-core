@@ -4,7 +4,10 @@ import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { WorkspaceAccessService } from './application/services/workspace-access.service';
+import { WorkspaceDeletionService } from './application/services/workspace-deletion.service';
+import { WorkspacesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { WorkspacesRepository } from './application/ports/workspaces-repository.port';
+import { WorkspaceMembersRepository } from './application/ports/workspace-members-repository.port';
 import { AssertWorkspaceExecutionAccessUseCase } from './application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import { AssertWorkspaceReadAccessUseCase } from './application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { AssertWorkspaceWriteAccessUseCase } from './application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
@@ -19,6 +22,7 @@ import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/updat
 import { UpdateWorkspaceUseCase } from './application/use-cases/update-workspace/update-workspace.use-case';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
 import { LocalWorkspacesRepository } from './infrastructure/persistence/local/local-workspaces.repository';
+import { LocalWorkspaceMembersRepository } from './infrastructure/persistence/local/local-workspace-members.repository';
 import { WorkspaceContextController } from './presenters/http/workspace-context.controller';
 import { WorkspacesController } from './presenters/http/workspaces.controller';
 import { WorkspaceContextDtoMapper } from './presenters/http/mappers/workspace-context-dto.mapper';
@@ -38,6 +42,10 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
       provide: WorkspacesRepository,
       useExisting: LocalWorkspacesRepository,
     },
+    {
+      provide: WorkspaceMembersRepository,
+      useExisting: LocalWorkspaceMembersRepository,
+    },
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
@@ -48,6 +56,8 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
     WorkspaceAccessService,
+    WorkspaceDeletionService,
+    WorkspacesUserDeletionRequestedListener,
     AssertWorkspaceReadAccessUseCase,
     AssertWorkspaceWriteAccessUseCase,
     AssertWorkspaceExecutionAccessUseCase,

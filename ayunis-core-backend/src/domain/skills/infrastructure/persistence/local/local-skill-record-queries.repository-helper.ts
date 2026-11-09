@@ -29,10 +29,8 @@ export async function findSourceIdsOwnedByUser(
   const rows = await repository
     .createQueryBuilder('skill')
     .innerJoin('skill.sources', 'source')
-    .leftJoin('skill.workspace', 'workspace')
     .select('DISTINCT source.id', 'sourceId')
     .where('skill.userId = :userId', { userId })
-    .orWhere('workspace.userId = :userId', { userId })
     .getRawMany<{ sourceId: UUID }>();
   return rows.map((row) => row.sourceId);
 }

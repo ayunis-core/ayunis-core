@@ -22,7 +22,6 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
       findById: jest.fn(),
       findByIds: jest.fn(),
       findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
       findAllByWorkspaceId: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),

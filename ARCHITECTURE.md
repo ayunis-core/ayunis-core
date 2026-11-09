@@ -92,7 +92,7 @@ none of these packages implements the Agent Plugins standard.
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode                                                                     |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
-| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Personal project folders ("Projekte") that group chats and own scoped skills, knowledge bases and instructions |
+| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Member-owned project folders ("Projekte") grouping chats with scoped skills, knowledge bases and instructions  |
 | [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
 | [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine and release-note notifications with media, read state and "Chat about this"          |
 | [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, sent to every user's inbox                                       |
