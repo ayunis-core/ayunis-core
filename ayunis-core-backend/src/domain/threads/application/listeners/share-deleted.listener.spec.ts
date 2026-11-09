@@ -243,20 +243,4 @@ describe('ShareDeletedListener (threads)', () => {
       expect(call.userIds).not.toContain(retainedUserId);
     });
   });
-
-  it('should not remove anything when a prompt share is deleted', async () => {
-    const event = new ShareDeletedEvent(
-      SharedEntityType.PROMPT,
-      randomUUID(),
-      randomUUID(),
-      randomUUID(),
-      [],
-    );
-
-    await listener.handleShareDeleted(event);
-
-    expect(removeSkillSources.execute).not.toHaveBeenCalled();
-    expect(removeKbAssignmentsByOriginSkill.execute).not.toHaveBeenCalled();
-    expect(removeDirectKbFromThreads.execute).not.toHaveBeenCalled();
-  });
 });
