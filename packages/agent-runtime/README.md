@@ -227,8 +227,11 @@ hooks, and `tool_result` events follow in call order regardless of completion
 order. Cancellation, a hook abort, or a fatal tool error cancels running calls
 through `ctx.signal`, gives calls that have not started a synthetic aborted
 result, and the phase still waits for every started call to settle.
-`afterToolCall` receives `isLastToolCall` and an outcome of `success`, `error`,
-or `aborted`. Executable tools may return a
+`afterToolCall` receives `isLastToolCall`, an outcome of `success`, `error`,
+or `aborted`, and `endsRun`, which is true when the run completes after this
+tool phase because the turn called an externally handled tool and every call
+passed input validation. The `tool_result_message` event carries the same
+`endsRun`. Executable tools may return a
 string or `{ result, isError }`. Tool output is capped at 200,000 characters.
 Malformed tool arguments are never executed. After recovery consumes the last
 retry, the final call disables tools and asks for a direct answer.

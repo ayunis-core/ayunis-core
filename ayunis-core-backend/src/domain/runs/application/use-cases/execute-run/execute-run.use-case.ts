@@ -57,18 +57,15 @@ import { EffectiveRunModelResolverService } from 'src/domain/runs/application/se
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { isAwaitingClientResultTool } from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
-import type {
-  OwnMessage,
-  PreparedToolResultInput,
-  SeededInput,
-} from './execute-run.types';
+import type { OwnMessage, SeededInput } from './execute-run.types';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { shouldPreserveTranscript } from './rejected-transcript-policy';
 import { toRunError } from './to-run-error';
 import { openThreadRun } from './open-thread-run';
-import { findPendingToolCall } from './pending-tool-call.helper';
+import { prepareToolResultInput } from './prepare-tool-result-input';
 import { RunAssemblyService } from 'src/domain/runs/application/services/run-assembly.service';
 import { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
 import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
@@ -157,6 +154,7 @@ export class ExecuteRunUseCase {
       userId,
       orgId,
       isAnonymous,
+      client: this.contextService.get('client') ?? null,
       activatedSkillName: activated.skillName,
     });
     const preparedTools = this.prepareTools(
@@ -214,6 +212,9 @@ export class ExecuteRunUseCase {
       tools,
       backendTools,
       toolIntegrations: new RuntimeToolIntegrationRegistry(backendTools, tools),
+      awaitingClientResultToolNames: new Set(
+        backendTools.filter(isAwaitingClientResultTool).map((t) => t.name),
+      ),
     };
   }
 
@@ -268,17 +269,7 @@ export class ExecuteRunUseCase {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield* seeded.messages;
-      const started = await this.runAssemblyService.assemble(
-        prepared,
-        own,
-        signal,
-      );
-      const outcome = yield* adaptRunEventsToStream(
-        started.events,
-        prepared.thread.id,
-        this.runEventStreamLogger,
-        { integrations: prepared.toolIntegrations, models: started.models },
-      );
+      const outcome = yield* this.streamRuntime(prepared, own, signal);
       cleanupRequired = cleanupRequired && outcome === 'aborted';
       return outcome;
     } catch (error) {
@@ -292,6 +283,28 @@ export class ExecuteRunUseCase {
         );
       }
     }
+  }
+
+  private async *streamRuntime(
+    prepared: PreparedRun,
+    own: OwnMessage,
+    signal?: AbortSignal,
+  ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
+    const started = await this.runAssemblyService.assemble(
+      prepared,
+      own,
+      signal,
+    );
+    return yield* adaptRunEventsToStream(
+      started.events,
+      prepared.thread.id,
+      this.runEventStreamLogger,
+      {
+        integrations: prepared.toolIntegrations,
+        models: started.models,
+        awaitingClientResultToolNames: prepared.awaitingClientResultToolNames,
+      },
+    );
   }
 
   private async seedInput(
@@ -435,7 +448,12 @@ export class ExecuteRunUseCase {
   ): Promise<SeededInput | null> {
     const safeInput =
       input instanceof RunToolResultInput
-        ? await this.prepareToolResultInput(prepared, input)
+        ? await prepareToolResultInput(
+            prepared.thread,
+            prepared.isAnonymous,
+            input,
+            (text) => this.anonymizeUserText(prepared, text),
+          )
         : { input, masks: null };
     const { contents, piiMasks } =
       await this.toolResultCollectorService.collectToolResults({
@@ -470,27 +488,5 @@ export class ExecuteRunUseCase {
       new AddMessageCommand(prepared.thread, message),
     );
     return message;
-  }
-
-  private async prepareToolResultInput(
-    prepared: PreparedRun,
-    input: RunToolResultInput,
-  ): Promise<PreparedToolResultInput> {
-    const pending = findPendingToolCall(prepared.thread, input.toolId);
-    if (!prepared.isAnonymous) {
-      return {
-        input: new RunToolResultInput(pending.id, pending.name, input.result),
-        masks: null,
-      };
-    }
-    const anonymized = await this.anonymizeUserText(prepared, input.result);
-    return {
-      input: new RunToolResultInput(
-        pending.id,
-        pending.name,
-        anonymized.anonymizedText,
-      ),
-      masks: anonymized.masks,
-    };
   }
 }

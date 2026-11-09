@@ -49,6 +49,11 @@ import {
   SendNotificationOrigin,
   SendNotificationTool,
 } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
+import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
+import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
+import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
+import { OutlookMoveEmailToComposerTool } from 'src/domain/tools/domain/tools/outlook/outlook-move-email-to-composer-tool.entity';
+import { OutlookSaveEmailToDraftTool } from 'src/domain/tools/domain/tools/outlook/outlook-save-email-to-draft-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -76,6 +81,13 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
   [ToolType.FINISH_ROUTINE]: () => new FinishRoutineTool(),
   [ToolType.CREATE_ROUTINE]: () => new CreateRoutineTool(),
+  [ToolType.OUTLOOK_READ_EMAIL]: () => new OutlookReadEmailTool(),
+  [ToolType.OUTLOOK_READ_ATTACHMENT]: () => new OutlookReadAttachmentTool(),
+  [ToolType.OUTLOOK_DRAFT_EMAIL]: () => new OutlookDraftEmailTool(),
+  [ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER]: () =>
+    new OutlookMoveEmailToComposerTool(),
+  [ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT]: () =>
+    new OutlookSaveEmailToDraftTool(),
 };
 
 @Injectable()

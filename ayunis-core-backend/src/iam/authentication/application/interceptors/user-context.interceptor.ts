@@ -8,8 +8,8 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { setTag } from '@appsignal/nodejs';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ActiveUser } from '../../domain/active-user.entity';
-import type { ApiKeyPrincipal } from '../strategies/api-key.strategy';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import type { ApiKeyPrincipal } from 'src/iam/authentication/application/strategies/api-key.strategy';
 
 type RequestPrincipal = ActiveUser | ApiKeyPrincipal;
 
@@ -30,6 +30,7 @@ export class UserContextInterceptor implements NestInterceptor {
       this.contextService.set('role', principal.role);
       this.contextService.set('systemRole', principal.systemRole);
       this.contextService.set('refreshToken', this.extractRefreshToken(req));
+      this.contextService.set('client', principal.client ?? undefined);
 
       setTag('user_id', principal.id);
       setTag('org_id', principal.orgId);

@@ -86,6 +86,7 @@ function assembleRoutine(
       userId: TEST_USER_ID,
       orgId: TEST_ORG_ID,
       isAnonymous: options.isAnonymous ?? false,
+      client: null,
     },
   );
 }

@@ -198,7 +198,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.FINISH_ROUTINE);
       expect(types).toContain(ToolType.SEND_NOTIFICATION);
 
-      expect(types).toHaveLength(36);
+      expect(types).toHaveLength(41);
     });
   });
 });

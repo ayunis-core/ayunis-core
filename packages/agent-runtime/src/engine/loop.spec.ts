@@ -240,6 +240,9 @@ describe('the agent loop', () => {
       result: 'Tool execution is handled externally',
       isError: false,
     });
+    expect(
+      events.find((event) => event.type === 'tool_result_message'),
+    ).toMatchObject({ endsRun: true });
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'completed',
@@ -359,13 +362,34 @@ describe('the agent loop', () => {
       }),
     ]);
 
+    const endsRun: Record<string, boolean> = {};
     const events = await collectEvents(
-      baseInput(model, { tools: [externallyHandled] }),
+      baseInput(model, {
+        tools: [externallyHandled],
+        hooks: [
+          {
+            name: 'record',
+            afterToolCall: (ctx) => {
+              endsRun[ctx.toolCall.id] = ctx.endsRun;
+            },
+          },
+        ],
+      }),
     );
 
     // The valid sibling must not end the turn while the invalid call still
     // needs a retry: the model gets both results and goes again.
     expect(model.requests).toHaveLength(2);
+    expect(endsRun).toEqual({
+      'call-1': false,
+      'call-2': false,
+      'call-3': true,
+    });
+    expect(
+      events
+        .filter((event) => event.type === 'tool_result_message')
+        .map((event) => event.endsRun),
+    ).toEqual([false, true]);
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'completed',

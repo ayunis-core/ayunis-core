@@ -28,6 +28,8 @@ import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { ClientContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/client-context.capability';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import {
   aCapabilityContext,
@@ -79,6 +81,7 @@ function buildChatProfile(): ChatRunProfile {
     new AnonymizationCapability(),
     new BehaviorCapability(),
     new LegalReferencesCapability(),
+    new ClientContextCapability(assembleTool),
     new CustomInstructionsCapability(
       resolved({ systemPrompt: 'Antworten Sie stets auf Deutsch.' }) as never,
       resolved(null) as never,
@@ -113,6 +116,7 @@ function assembleChat(
     isAnonymous?: boolean;
     activatedSkillName?: string;
     thread?: Thread;
+    client?: SessionClient;
   } = {},
 ) {
   const resolved = <T>(value: T) =>
@@ -138,6 +142,7 @@ function assembleChat(
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: options.isAnonymous ?? false,
+    client: options.client ?? null,
     activatedSkillName: options.activatedSkillName,
   });
 }
@@ -260,6 +265,44 @@ describe('ChatRunProfile', () => {
       expect(instructions).toContain(section);
     }
     expect(instructions).not.toContain('<available_knowledge_bases>');
+  });
+
+  it('adds the Outlook tools and context to an Outlook session after the platform information and before the custom instructions', async () => {
+    const outlook = await assembleChat({ client: 'outlook' });
+
+    expect(outlook.instructions).toMatch(
+      /<\/platform_information>[\s\S]*<outlook_context>[\s\S]*<\/outlook_context>[\s\S]*<organization_instructions>/,
+    );
+    expect(outlook.tools.map((tool) => tool.name)).toEqual(
+      expect.arrayContaining([
+        ToolType.OUTLOOK_READ_EMAIL,
+        ToolType.OUTLOOK_READ_ATTACHMENT,
+        ToolType.OUTLOOK_DRAFT_EMAIL,
+        ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER,
+        ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT,
+      ]),
+    );
+  });
+
+  it('leaves the web chat prompt and tools exactly as an Outlook session has them without its additions', async () => {
+    const web = await assembleChat();
+    const outlook = await assembleChat({ client: 'outlook' });
+
+    expect(web.instructions).not.toContain('outlook__');
+    expect(
+      outlook.instructions.replace(
+        /\n\n<outlook_context>[\s\S]*<\/outlook_context>/,
+        '',
+      ),
+    ).toBe(web.instructions);
+    expect(
+      outlook.tools
+        .map((tool) => tool.name)
+        .filter((name) => !name.startsWith('outlook__')),
+    ).toEqual(web.tools.map((tool) => tool.name));
+    expect(web.tools.map((tool) => tool.name)).not.toEqual(
+      expect.arrayContaining([expect.stringMatching(/^outlook__/)]),
+    );
   });
 
   it('adds the anonymization rules only to anonymous runs', async () => {

@@ -72,6 +72,7 @@ function buildFactory(
       userId: TEST_USER_ID,
       orgId: TEST_ORG_ID,
       isAnonymous: false,
+      client: null,
     });
   return {
     create,
