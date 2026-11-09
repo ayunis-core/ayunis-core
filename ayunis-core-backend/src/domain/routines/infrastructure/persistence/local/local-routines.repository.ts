@@ -36,8 +36,8 @@ export class LocalRoutinesRepository extends RoutinesRepository {
   }
 
   async create(routine: Routine): Promise<Routine> {
-    const saved = await this.repo.save(this.mapper.toRecord(routine));
-    return this.mapper.toDomain(saved);
+    await this.repo.save(this.mapper.toRecord(routine));
+    return (await this.findById(routine.userId, routine.id)) as Routine;
   }
 
   async findById(userId: UUID, id: UUID): Promise<Routine | null> {
@@ -94,21 +94,55 @@ export class LocalRoutinesRepository extends RoutinesRepository {
   async updateDefinition(
     userId: UUID,
     id: UUID,
-    changes: RoutineDefinitionChanges & RoutineScheduleChanges,
+    {
+      mcpIntegrationIds,
+      ...changes
+    }: RoutineDefinitionChanges & RoutineScheduleChanges,
   ): Promise<Routine | null> {
     const set = Object.fromEntries(
-      Object.entries(changes).filter(([, value]) => value !== undefined),
+      Object.entries(changes as Record<string, unknown>).filter(
+        ([, value]) => value !== undefined,
+      ),
     ) as QueryDeepPartialEntity<RoutineRecord>;
-    if (Object.keys(set).length === 0) return this.findById(userId, id);
-    const result = await this.repo
+    // The integrations live in a join table; touching the row keeps updatedAt
+    // current when they are the only change.
+    if (mcpIntegrationIds !== undefined && Object.keys(set).length === 0) {
+      set.updatedAt = () => 'CURRENT_TIMESTAMP';
+    }
+    if (Object.keys(set).length > 0) {
+      const result = await this.repo
+        .createQueryBuilder()
+        .update(RoutineRecord)
+        .set(set)
+        .where('id = :id AND "userId" = :userId', { id, userId })
+        .execute();
+      if ((result.affected ?? 0) === 0) return null;
+    }
+    if (mcpIntegrationIds !== undefined) {
+      const stored = await this.findById(userId, id);
+      if (!stored) return null;
+      await this.replaceMcpIntegrations(
+        id,
+        stored.mcpIntegrationIds,
+        mcpIntegrationIds,
+      );
+    }
+    return this.findById(userId, id);
+  }
+
+  private async replaceMcpIntegrations(
+    id: UUID,
+    stored: UUID[],
+    desired: UUID[],
+  ): Promise<void> {
+    await this.repo
       .createQueryBuilder()
-      .update(RoutineRecord)
-      .set(set)
-      .where('id = :id AND "userId" = :userId', { id, userId })
-      .returning('*')
-      .execute();
-    const rows = result.raw as RoutineRecord[];
-    return rows.length > 0 ? this.mapper.toDomain(rows[0]) : null;
+      .relation(RoutineRecord, 'mcpIntegrations')
+      .of(id)
+      .addAndRemove(
+        desired.filter((integrationId) => !stored.includes(integrationId)),
+        stored.filter((integrationId) => !desired.includes(integrationId)),
+      );
   }
 
   async delete(userId: UUID, id: UUID): Promise<boolean> {

@@ -20,6 +20,10 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -32,6 +36,7 @@ export class CreateThreadUseCase {
     private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
     private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
     private readonly findNotificationUseCase: FindNotificationUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -45,19 +50,7 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
-    // Throws WorkspaceNotFoundError for an id the caller does not own.
-    if (command.workspaceId) {
-      await this.workspaceReadAccess.execute({
-        workspaceId: command.workspaceId,
-      });
-    }
-
-    // Throws NotificationNotFoundError for an id the caller does not own.
-    if (command.sourceNotificationId) {
-      await this.findNotificationUseCase.execute(
-        new FindNotificationQuery(command.sourceNotificationId),
-      );
-    }
+    const mcpIntegrationIds = await this.assertLinksAccessible(command);
 
     try {
       const thread = new Thread({
@@ -70,6 +63,7 @@ export class CreateThreadUseCase {
         type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
         routineId: command.routineId,
         sourceNotificationId: command.sourceNotificationId,
+        mcpIntegrationIds,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
@@ -86,6 +80,41 @@ export class CreateThreadUseCase {
       );
       throw new ThreadCreationError(error as Error, userId);
     }
+  }
+
+  /** Checks every resource the thread links to; returns its integration ids. */
+  private async assertLinksAccessible(
+    command: CreateThreadCommand,
+  ): Promise<UUID[]> {
+    // Throws WorkspaceNotFoundError for an id the caller does not own.
+    if (command.workspaceId) {
+      await this.workspaceReadAccess.execute({
+        workspaceId: command.workspaceId,
+      });
+    }
+    // Throws NotificationNotFoundError for an id the caller does not own.
+    if (command.sourceNotificationId) {
+      await this.findNotificationUseCase.execute(
+        new FindNotificationQuery(command.sourceNotificationId),
+      );
+    }
+    return this.findMcpIntegrations(command.mcpIntegrationIds ?? []);
+  }
+
+  /** The same check as adding an integration to an existing thread. */
+  private async findMcpIntegrations(ids: UUID[]): Promise<UUID[]> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return [];
+    const found = new Set(
+      (
+        await this.getMcpIntegrationsByIdsUseCase.execute(
+          new GetMcpIntegrationsByIdsQuery(unique),
+        )
+      ).map(({ id }) => id),
+    );
+    const missing = unique.find((id) => !found.has(id));
+    if (missing) throw new McpIntegrationNotFoundError(missing);
+    return unique;
   }
 
   private async resolveModel(

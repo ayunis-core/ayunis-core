@@ -74,3 +74,10 @@ export function completeIntegration(
     { api },
   );
 }
+
+export function disableIntegration(
+  api: APIRequestContext,
+  integrationId: string,
+): Promise<McpIntegrationResponseDto> {
+  return generatedApi.mcpIntegrationsControllerDisable(integrationId, { api });
+}

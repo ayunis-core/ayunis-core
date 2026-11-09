@@ -18,6 +18,7 @@ const KNOWN_REASONS: Readonly<Record<string, string>> = {
   ACADEMY_CERTIFICATE_REQUIRED: 'academyCertificate',
   ROUTINE_SUBSCRIPTION_REQUIRED: 'subscriptionRequired',
   ROUTINE_OWNER_LOCKED: 'ownerLocked',
+  ROUTINE_INTEGRATION_UNAVAILABLE: 'integrationUnavailable',
   RUN_MAX_ITERATIONS_REACHED: 'maxIterations',
   permission_missing: 'permissionMissing',
 };

@@ -12,6 +12,8 @@ export class CreateThreadCommand {
   routineId?: UUID;
   /** Starts a chat about one of the user's notifications ("Chat about this"). */
   sourceNotificationId?: UUID;
+  /** Integrations attached to the new thread, as if added one by one. */
+  mcpIntegrationIds?: UUID[];
 
   constructor(params: {
     modelId?: UUID;
@@ -22,6 +24,7 @@ export class CreateThreadCommand {
     workspaceId?: UUID;
     routineId?: UUID;
     sourceNotificationId?: UUID;
+    mcpIntegrationIds?: UUID[];
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -31,5 +34,6 @@ export class CreateThreadCommand {
     this.workspaceId = params.workspaceId;
     this.routineId = params.routineId;
     this.sourceNotificationId = params.sourceNotificationId;
+    this.mcpIntegrationIds = params.mcpIntegrationIds;
   }
 }

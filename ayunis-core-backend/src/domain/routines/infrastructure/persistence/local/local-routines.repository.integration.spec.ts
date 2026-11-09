@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { DataSource, EntitySchema } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import type { TransactionHost } from '@nestjs-cls/transactional';
@@ -11,6 +11,13 @@ import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.
 import { LocalRoutinesRepository } from './local-routines.repository';
 import { RoutineMapper } from './mappers/routine.mapper';
 import { RoutineRecord } from './schema/routine.record';
+
+// Only the id, so routines can reference integrations.
+const mcpIntegrationSchema = new EntitySchema<{ id: string }>({
+  name: 'McpIntegrationRecord',
+  tableName: 'mcp_integrations',
+  columns: { id: { type: 'uuid', primary: true } },
+});
 
 // The table without its foreign keys, so the test needs no users or orgs.
 const routineSchema = new EntitySchema<RoutineRecord>({
@@ -38,6 +45,16 @@ const routineSchema = new EntitySchema<RoutineRecord>({
     recentExecutionKeys: { type: String, array: true, default: () => "'{}'" },
     pausedAt: { type: 'timestamptz', nullable: true },
   },
+  relations: {
+    mcpIntegrations: {
+      type: 'many-to-many',
+      target: 'McpIntegrationRecord',
+      joinTable: { name: 'routine_mcp_integrations' },
+    },
+  },
+  relationIds: {
+    mcpIntegrationIds: { relationName: 'mcpIntegrations' },
+  },
 });
 
 describe('LocalRoutinesRepository (PostgreSQL)', () => {
@@ -52,7 +69,7 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [routineSchema],
+      entities: [routineSchema, mcpIntegrationSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -73,7 +90,9 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
 
   beforeEach(async () => {
     ambient = undefined;
-    await db.getRepository(RoutineRecord).clear();
+    await db.query(
+      `TRUNCATE "${schema}"."routines", "${schema}"."mcp_integrations" CASCADE`,
+    );
   });
 
   afterAll(async () => {
@@ -173,6 +192,122 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
         nextRunAt,
         pausedAt: null,
       });
+    });
+  });
+
+  describe('integrations', () => {
+    async function integrations(count: number): Promise<UUID[]> {
+      const ids = Array.from({ length: count }, () => randomUUID());
+      await db
+        .getRepository('McpIntegrationRecord')
+        .insert(ids.map((id) => ({ id })));
+      return ids;
+    }
+
+    it('stores the integrations of a new routine', async () => {
+      const [tickets, calendar] = await integrations(2);
+
+      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+
+      expect(routine.mcpIntegrationIds).toHaveLength(2);
+      expect(routine.mcpIntegrationIds).toEqual(
+        expect.arrayContaining([tickets, calendar]),
+      );
+      await db.transaction(async (manager) => {
+        ambient = manager;
+        expect(
+          (await repository.findByIdForUpdate(routine.userId, routine.id))
+            ?.mcpIntegrationIds,
+        ).toHaveLength(2);
+        ambient = undefined;
+      });
+    });
+
+    it('replaces the integrations, together with other fields', async () => {
+      const [tickets, calendar, files] = await integrations(3);
+      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { name: 'Tickets und Dateien', mcpIntegrationIds: [calendar, files] },
+      );
+
+      expect(updated?.name).toBe('Tickets und Dateien');
+      expect(updated?.mcpIntegrationIds).toHaveLength(2);
+      expect(updated?.mcpIntegrationIds).toEqual(
+        expect.arrayContaining([calendar, files]),
+      );
+    });
+
+    it('keeps the integrations when they are not sent', async () => {
+      const [tickets] = await integrations(1);
+      const routine = await stored({ mcpIntegrationIds: [tickets] });
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { name: 'Nur umbenannt' },
+      );
+
+      expect(updated?.mcpIntegrationIds).toEqual([tickets]);
+    });
+
+    it('moves updatedAt forward when only the integrations change', async () => {
+      const [tickets] = await integrations(1);
+      const routine = await stored();
+      await db.query(
+        `UPDATE "${schema}"."routines" SET "updatedAt" = '2026-01-01T00:00:00' WHERE id = $1`,
+        [routine.id],
+      );
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { mcpIntegrationIds: [tickets] },
+      );
+
+      expect(updated?.updatedAt.getTime()).toBeGreaterThan(
+        new Date('2026-01-01T00:00:00').getTime(),
+      );
+    });
+
+    it('removes all integrations', async () => {
+      const [tickets] = await integrations(1);
+      const routine = await stored({ mcpIntegrationIds: [tickets] });
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { mcpIntegrationIds: [] },
+      );
+
+      expect(updated?.mcpIntegrationIds).toEqual([]);
+    });
+
+    it("does not change another user's integrations", async () => {
+      const [tickets, calendar] = await integrations(2);
+      const routine = await stored({ mcpIntegrationIds: [tickets] });
+
+      await expect(
+        repository.updateDefinition(randomUUID(), routine.id, {
+          mcpIntegrationIds: [calendar],
+        }),
+      ).resolves.toBeNull();
+      expect(
+        (await repository.findByIdForExecution(routine.id))?.mcpIntegrationIds,
+      ).toEqual([tickets]);
+    });
+
+    it('drops a deleted integration from the routine', async () => {
+      const [tickets, calendar] = await integrations(2);
+      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+
+      await db.getRepository('McpIntegrationRecord').delete({ id: tickets });
+
+      expect(
+        (await repository.findByIdForExecution(routine.id))?.mcpIntegrationIds,
+      ).toEqual([calendar]);
     });
   });
 

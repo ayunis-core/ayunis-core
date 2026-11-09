@@ -12,6 +12,7 @@ export const VERKUENDUNGSPLATTFORM_ROUTINE: RoutineFormFields = {
   name: 'Verkündungsplattform',
   dailyTime: '07:00',
   internetEnabled: true,
+  mcpIntegrationIds: [],
   modelId: DEFAULT_MODEL_OPTION,
   prompt: `Prüfe die Verkündungsplattform bzw. das elektronische Gesetz- und Verordnungsblatt meines Bundeslandes auf heute veröffentlichte Gesetze und Verordnungen und bewerte ihre Relevanz für meine Arbeit.
 

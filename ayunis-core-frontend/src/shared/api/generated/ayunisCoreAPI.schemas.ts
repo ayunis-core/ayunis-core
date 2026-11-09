@@ -5546,6 +5546,8 @@ export interface RoutineResponseDto {
   /** HH:mm (Europe/Berlin) */
   dailyTime: string;
   internetEnabled: boolean;
+  /** Integrations whose tools the routine may use */
+  mcpIntegrationIds: string[];
   enabled: boolean;
   /** Null until the routine ran for the first time */
   lastRunStatus: RoutineRunStatus | null;
@@ -5585,6 +5587,8 @@ export interface CreateRoutineDto {
   dailyTime: string;
   /** Whether the routine may search and read the web */
   internetEnabled: boolean;
+  /** Integrations whose tools the routine may use; each must be enabled and connected for the user */
+  mcpIntegrationIds?: string[];
   /** Whether the routine runs on its schedule */
   enabled?: boolean;
 }
@@ -5603,6 +5607,8 @@ export interface UpdateRoutineDto {
   dailyTime?: string;
   /** Whether the routine may search and read the web */
   internetEnabled?: boolean;
+  /** Integrations whose tools the routine may use, replacing the current ones; each must be enabled and connected for the user */
+  mcpIntegrationIds?: string[];
   /** Whether the routine runs on its schedule */
   enabled?: boolean;
 }

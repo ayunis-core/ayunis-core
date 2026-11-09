@@ -43,6 +43,9 @@ export function useCreateRoutine(
             case 'MODEL_NOT_FOUND':
               showError(t('toast.modelUnavailable'));
               break;
+            case 'ROUTINE_INTEGRATION_UNAVAILABLE':
+              showError(t('toast.integrationUnavailable'));
+              break;
             default:
               showError(t('toast.createError'));
           }

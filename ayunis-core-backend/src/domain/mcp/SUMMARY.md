@@ -77,4 +77,5 @@ The MCP module manages connections to external Model Context Protocol servers at
 **Dependent Modules:**
 
 - **agents** — Uses MCP integration assignment for agent tool access
+- **routines** — Checks a routine's integrations with `ListAvailableMcpIntegrationsUseCase` and `DiscoverMcpCapabilitiesUseCase`
 - **tools** — Wraps discovered MCP tools, resources, and prompts as executable tool entities

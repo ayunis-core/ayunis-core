@@ -13,6 +13,8 @@ export class Routine {
   /** HH:mm in Europe/Berlin. */
   readonly dailyTime: string;
   readonly internetEnabled: boolean;
+  /** Integrations whose tools the routine's runs may use. */
+  readonly mcpIntegrationIds: UUID[];
   readonly enabled: boolean;
   readonly lastRunStatus: RoutineRunStatus | null;
   readonly lastRunAt: Date | null;
@@ -36,6 +38,7 @@ export class Routine {
     modelId: UUID | null;
     dailyTime: string;
     internetEnabled: boolean;
+    mcpIntegrationIds?: UUID[];
     enabled: boolean;
     lastRunStatus?: RoutineRunStatus | null;
     lastRunAt?: Date | null;
@@ -55,6 +58,7 @@ export class Routine {
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
     this.internetEnabled = params.internetEnabled;
+    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.enabled = params.enabled;
     this.lastRunStatus = params.lastRunStatus ?? null;
     this.lastRunAt = params.lastRunAt ?? null;

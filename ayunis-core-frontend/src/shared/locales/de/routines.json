@@ -25,6 +25,9 @@
     "dailyTimeDescription": "Uhrzeit in Europe/Berlin.",
     "internet": "Internetzugriff",
     "internetDescription": "Erlaubt der Routine, im Web zu suchen und Webseiten zu lesen.",
+    "integrations": "Integrationen",
+    "integrationsDescription": "Die Routine kann die Werkzeuge der eingeschalteten Integrationen nutzen, ohne Sie vorher zu fragen.",
+    "integrationUnavailable": "Nicht verfügbare Integration",
     "cancel": "Abbrechen",
     "create": "Erstellen",
     "save": "Speichern"
@@ -58,7 +61,7 @@
     },
     "configuration": {
       "title": "Konfiguration",
-      "description": "Name, Aufgabe, Modell, Zeitplan und Internetzugriff dieser Routine."
+      "description": "Name, Aufgabe, Modell, Zeitplan, Internetzugriff und Integrationen dieser Routine."
     }
   },
   "schedule": {
@@ -82,6 +85,7 @@
     "maxIterations": "Der Lauf hat sein Schrittlimit erreicht.",
     "credits": "Das Credit-Limit wurde erreicht.",
     "model": "Das Modell steht Ihnen nicht mehr zur Verfügung.",
+    "integrationUnavailable": "Eine aktivierte Integration ist nicht verfügbar.",
     "interrupted": "Der Lauf wurde unterbrochen.",
     "academyCertificate": "Ihre Organisation setzt zuerst die KI-Schulung nach EU AI Act voraus.",
     "permissionMissing": "Ihrer Rolle fehlte die Berechtigung „Routinen verwalten“.",
@@ -102,6 +106,7 @@
     "deleteError": "Die Routine konnte nicht gelöscht werden.",
     "notFound": "Diese Routine existiert nicht mehr.",
     "modelUnavailable": "Dieses Modell steht Ihnen nicht zur Verfügung.",
+    "integrationUnavailable": "Eine ausgewählte Integration ist für Sie nicht verfügbar.",
     "runStarted": "Routine gestartet. Das Ergebnis erscheint als neuer Chat.",
     "runError": "Die Routine konnte nicht gestartet werden.",
     "subscriptionRequired": "Ein Abonnement oder verbleibende Testnachrichten sind erforderlich."

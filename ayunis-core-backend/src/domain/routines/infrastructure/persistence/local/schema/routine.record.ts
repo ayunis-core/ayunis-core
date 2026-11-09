@@ -1,8 +1,18 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  RelationId,
+} from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import {
@@ -52,6 +62,14 @@ export class RoutineRecord extends BaseRecord {
 
   @Column({ default: false })
   internetEnabled: boolean;
+
+  /** Deleting an integration removes it from the routine. */
+  @ManyToMany(() => McpIntegrationRecord)
+  @JoinTable({ name: 'routine_mcp_integrations' })
+  mcpIntegrations?: McpIntegrationRecord[];
+
+  @RelationId((routine: RoutineRecord) => routine.mcpIntegrations)
+  mcpIntegrationIds?: UUID[];
 
   @Column({ default: true })
   enabled: boolean;

@@ -19,10 +19,12 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
+  RoutineIntegrationUnavailableError,
   RoutineSubscriptionRequiredError,
   UnexpectedRoutineError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
+import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
@@ -52,6 +54,7 @@ describe('ExecuteRoutineUseCase', () => {
   const academyGate = { admit: jest.fn() };
   const hasPermission = { execute: jest.fn() };
   const routineModelService = { forRun: jest.fn() };
+  const routineIntegrationService = { assertUsable: jest.fn() };
   const createThread = { execute: jest.fn() };
   const executeUnattendedRun = { execute: jest.fn() };
   const failureNotifier = { notify: jest.fn() };
@@ -85,6 +88,7 @@ describe('ExecuteRoutineUseCase', () => {
     academyGate.admit.mockResolvedValue(undefined);
     hasPermission.execute.mockResolvedValue(true);
     routineModelService.forRun.mockResolvedValue(TEST_MODEL_ID);
+    routineIntegrationService.assertUsable.mockResolvedValue(undefined);
     createThread.execute.mockResolvedValue({ id: threadId });
     executeUnattendedRun.execute.mockResolvedValue({
       status: 'done',
@@ -105,6 +109,10 @@ describe('ExecuteRoutineUseCase', () => {
         { provide: RoutineAcademyGate, useValue: academyGate },
         { provide: HasPermissionUseCase, useValue: hasPermission },
         { provide: RoutineModelService, useValue: routineModelService },
+        {
+          provide: RoutineIntegrationService,
+          useValue: routineIntegrationService,
+        },
         { provide: CreateThreadUseCase, useValue: createThread },
         {
           provide: ExecuteUnattendedRunUseCase,
@@ -222,6 +230,37 @@ describe('ExecuteRoutineUseCase', () => {
       failureReason: 'ROUTINE_SUBSCRIPTION_REQUIRED',
     });
     expect(createThread.execute).not.toHaveBeenCalled();
+  });
+
+  it("creates the routine thread with the routine's integrations", async () => {
+    const integrationIds = [
+      '88888888-8888-4888-8888-888888888888',
+      '99999999-9999-4999-8999-999999999999',
+    ] as UUID[];
+    repository.findByIdForExecution.mockResolvedValue(
+      aRoutine({ mcpIntegrationIds: integrationIds }),
+    );
+
+    await run();
+
+    const thread = createThread.execute.mock.calls[0][0] as CreateThreadCommand;
+    expect(thread.mcpIntegrationIds).toEqual(integrationIds);
+  });
+
+  it('fails the run when an integration is unavailable, before it consumes a trial message', async () => {
+    routineIntegrationService.assertUsable.mockRejectedValue(
+      new RoutineIntegrationUnavailableError(
+        '88888888-8888-4888-8888-888888888888',
+      ),
+    );
+
+    await expect(run()).resolves.toEqual({
+      status: 'failed',
+      failureReason: 'ROUTINE_INTEGRATION_UNAVAILABLE',
+    });
+    expect(subscriptionGate.admit).not.toHaveBeenCalled();
+    expect(createThread.execute).not.toHaveBeenCalled();
+    expect(executeUnattendedRun.execute).not.toHaveBeenCalled();
   });
 
   it('runs a scheduled run only while the routine is still enabled', async () => {

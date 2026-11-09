@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@ayunis/ui/components/select';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { RoutineIntegrationsField } from '@/features/routines/ui/RoutineIntegrationsField';
 import {
   DEFAULT_MODEL_OPTION,
   type RoutineFormFields,
@@ -121,6 +122,7 @@ export function RoutineFormFieldset({
           </FormItem>
         )}
       />
+      <RoutineIntegrationsField form={form} disabled={disabled} />
     </>
   );
 }

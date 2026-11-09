@@ -29,8 +29,8 @@ import {
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
-import { SourcesModule } from '../sources/sources.module';
-import { MarketplaceModule } from '../marketplace/marketplace.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
@@ -175,6 +175,7 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
     PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,
+    ListAvailableMcpIntegrationsUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
     GetMcpIntegrationsByIdsUseCase,
