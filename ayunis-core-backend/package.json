@@ -51,7 +51,8 @@
     "test:subscription-sync-lifecycle": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-subscription-sync-lifecycle.cjs --runInBand",
     "contracts:fixtures": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-fixtures.ts",
     "contracts:openapi": "ts-node -r tsconfig-paths/register scripts/generate-core-connect-openapi.ts",
-    "contracts:test-openapi": "ts-node -r tsconfig-paths/register scripts/build-core-connect-openapi.test.ts"
+    "contracts:test-openapi": "ts-node -r tsconfig-paths/register scripts/build-core-connect-openapi.test.ts",
+    "office-addins:outlook-manifest": "ts-node -r tsconfig-paths/register scripts/render-outlook-manifest.ts"
   },
   "dependencies": {
     "@appsignal/nodejs": "^3.8.1",

@@ -1,0 +1,31 @@
+name: Outlook manifest
+
+# Validates the rendered Outlook add-in manifest with Microsoft's validator.
+# The validator sends the manifest to Microsoft's online validation service,
+# so this job needs network access to validationgateway.omex.office.net.
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/src/domain/office-addins/**'
+      - 'ayunis-core-backend/scripts/render-outlook-manifest.ts'
+      - '.github/workflows/outlook-manifest.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ayunis-core-backend/src/domain/office-addins/**'
+      - 'ayunis-core-backend/scripts/render-outlook-manifest.ts'
+      - '.github/workflows/outlook-manifest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Render manifest
+        run: pnpm --filter core-backend office-addins:outlook-manifest https://ayunis.example "$RUNNER_TEMP/outlook-manifest.xml"
+      - name: Validate manifest
+        run: npx --yes office-addin-manifest@3.0.1 validate "$RUNNER_TEMP/outlook-manifest.xml"
