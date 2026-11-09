@@ -7,38 +7,48 @@ import {
   PopoverContent,
 } from '@ayunis/ui/components/popover';
 import { SelectItem } from '@ayunis/ui/components/select';
-import {
-  TEAM_ROLES,
-  type TeamRole,
-  type TeamRolePermissionSet,
-} from '@/pages/admin-settings/team-detail/model/types';
+import type {
+  MemberRole,
+  MemberRolePermissionSet,
+  MemberRoleTranslation,
+} from '@/widgets/member-role-select/model/types';
 
-interface TeamRoleOptionsProps {
-  rolePermissions: TeamRolePermissionSet[] | undefined;
+interface MemberRoleOptionsProps {
+  roles: readonly MemberRole[];
+  rolePermissions: readonly MemberRolePermissionSet[] | undefined;
+  adminOnlyItems: readonly string[];
+  translation: MemberRoleTranslation;
+  testIdPrefix: string;
 }
 
 /**
  * Role options with a card beside the open list listing what the focused role
- * may do in this team, like the model picker's info card.
+ * may do, like the model picker's info card.
  */
-export function TeamRoleOptions({
+export function MemberRoleOptions({
+  roles,
   rolePermissions,
-}: Readonly<TeamRoleOptionsProps>) {
-  const { t } = useTranslation('admin-settings-teams');
-  const [focused, setFocused] = useState<TeamRole | null>(null);
+  adminOnlyItems,
+  translation,
+  testIdPrefix,
+}: Readonly<MemberRoleOptionsProps>) {
+  const { t } = useTranslation(translation.namespace, {
+    keyPrefix: translation.keyPrefix,
+  });
+  const [focused, setFocused] = useState<MemberRole | null>(null);
 
   return (
     <Popover open={!!focused}>
       <PopoverAnchor asChild>
         <div>
-          {TEAM_ROLES.map((role) => (
+          {roles.map((role) => (
             <SelectItem
               key={role}
               value={role}
               onFocus={() => setFocused(role)}
-              data-testid={`team-member-role-option-${role}`}
+              data-testid={`${testIdPrefix}-option-${role}`}
             >
-              {t(`teamDetail.memberRole.roles.${role}`)}
+              {t(`roles.${role}`)}
             </SelectItem>
           ))}
         </div>
@@ -50,14 +60,17 @@ export function TeamRoleOptions({
         alignOffset={-4}
         className="w-80"
         onOpenAutoFocus={(e) => e.preventDefault()}
-        data-testid="team-member-role-hint"
+        data-testid={`${testIdPrefix}-hint`}
       >
         {focused && (
-          <TeamRoleCard
+          <MemberRoleCard
             role={focused}
             permissions={
               rolePermissions?.find((set) => set.role === focused)?.permissions
             }
+            adminOnlyItems={adminOnlyItems}
+            translation={translation}
+            testIdPrefix={testIdPrefix}
           />
         )}
       </PopoverContent>
@@ -65,52 +78,52 @@ export function TeamRoleOptions({
   );
 }
 
-function TeamRoleCard({
+function MemberRoleCard({
   role,
   permissions,
+  adminOnlyItems,
+  translation,
+  testIdPrefix,
 }: Readonly<{
-  role: TeamRole;
-  permissions: TeamRolePermissionSet['permissions'] | undefined;
+  role: MemberRole;
+  permissions: readonly string[] | undefined;
+  adminOnlyItems: readonly string[];
+  translation: MemberRoleTranslation;
+  testIdPrefix: string;
 }>) {
-  const { t } = useTranslation('admin-settings-teams');
-  // Not a matrix permission: the backend reserves role changes and removing
-  // team admins for team admins.
+  const { t } = useTranslation(translation.namespace, {
+    keyPrefix: translation.keyPrefix,
+  });
   const items = [
     ...(permissions ?? []),
-    ...(role === 'admin' ? ['manage_roles'] : []),
+    ...(role === 'admin' ? adminOnlyItems : []),
   ];
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold">
-        {t(`teamDetail.memberRole.roles.${role}`)}
-      </p>
+      <p className="text-sm font-semibold">{t(`roles.${role}`)}</p>
       {permissions &&
         (items.length > 0 ? (
           <div className="space-y-1.5">
-            <p className="text-sm">{t('teamDetail.memberRole.card.intro')}</p>
+            <p className="text-sm">{t('card.intro')}</p>
             <ul className="space-y-1">
               {items.map((item) => (
                 <li
                   key={item}
                   className="flex items-start gap-2 text-sm"
-                  data-testid={`team-member-role-hint-item-${item}`}
+                  data-testid={`${testIdPrefix}-hint-item-${item}`}
                 >
                   <Check className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  {t(`teamDetail.memberRole.card.items.${item}`)}
+                  {t(`card.items.${item}`)}
                 </li>
               ))}
             </ul>
           </div>
         ) : (
-          <p className="text-sm">{t('teamDetail.memberRole.card.none')}</p>
+          <p className="text-sm">{t('card.none')}</p>
         ))}
       <p className="-mx-4 border-t px-4 pt-3 text-xs text-muted-foreground">
-        {t(
-          role === 'admin'
-            ? 'teamDetail.memberRole.card.adminFooter'
-            : 'teamDetail.memberRole.card.footer',
-        )}
+        {t(role === 'admin' ? 'card.adminFooter' : 'card.footer')}
       </p>
     </div>
   );
