@@ -5,6 +5,7 @@ import { skipChatPersonalization } from "../../src/clients/api/chat-settings.cli
 import { generatedApi } from "../../src/clients/api/generated-api";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import { setUserRolePermissions } from "../../src/clients/api/role-permissions.client";
+import { requestSkillShare } from "../../src/clients/api/shares.client";
 import {
   addTeamMember,
   createTeam,
@@ -146,9 +147,9 @@ test("a team admin can share with their team when their role cannot", async ({
     await page.reload();
     await expect(teamSwitch).toBeEnabled();
     await expect(page.getByTestId("shares-org-switch")).toBeDisabled();
-    await teamSwitch.click();
-    await page.getByTestId("confirmation-confirm").click();
-    await expect(teamSwitch).toBeChecked();
+    expect(
+      (await requestSkillShare(lead.api, skill.id, team.id)).status(),
+    ).toBe(201);
   } finally {
     await leadContext.close();
     await Promise.all([adminApi, lead.api].map((api) => api.dispose()));

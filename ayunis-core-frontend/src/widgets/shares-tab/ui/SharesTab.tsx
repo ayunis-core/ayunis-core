@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@ayunis/ui/components/switch';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -6,9 +7,10 @@ import type {
   ShareResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useCreateShare } from '@/widgets/shares-tab/api/useCreateShare';
 import { useDeleteShare } from '@/widgets/shares-tab/api/useDeleteShare';
 import { useMyPermissions } from '@/features/permissions';
+import { SharingBlockedDialog } from './SharingBlockedDialog';
+import { SharingDeprecationNotice } from './SharingDeprecationNotice';
 import {
   Item,
   ItemContent,
@@ -39,7 +41,7 @@ export default function SharesTab({
   const translationNs = translationNsMap[entityType];
   const { t } = useTranslation(translationNs);
   const { confirm } = useConfirmation();
-  const { createShare, isCreating } = useCreateShare(entityType, entityId);
+  const [isSharingBlockedOpen, setIsSharingBlockedOpen] = useState(false);
   const { deleteShare, isDeleting } = useDeleteShare(entityType, entityId);
   const { can } = useMyPermissions();
   // Sharing is permissioned per audience and the backend 403s the rest;
@@ -74,15 +76,7 @@ export default function SharesTab({
   const handleOrgToggleChange = (checked: boolean) => {
     // eslint-disable-next-line sonarjs/no-selector-parameter -- Required by Switch component's onCheckedChange callback signature
     if (checked) {
-      confirm({
-        title: t('shares.create.title'),
-        description: t('shares.create.description'),
-        confirmText: t('shares.create.confirm'),
-        cancelText: t('shares.create.cancel'),
-        onConfirm: () => {
-          createShare();
-        },
-      });
+      setIsSharingBlockedOpen(true);
     } else {
       if (organizationShare) {
         confirm({
@@ -106,15 +100,7 @@ export default function SharesTab({
   ) => {
     // eslint-disable-next-line sonarjs/no-selector-parameter -- Required by Switch component's onCheckedChange callback signature
     if (checked) {
-      confirm({
-        title: t('shares.teams.create.title'),
-        description: t('shares.teams.create.description', { teamName }),
-        confirmText: t('shares.teams.create.confirm'),
-        cancelText: t('shares.teams.create.cancel'),
-        onConfirm: () => {
-          createShare(teamId);
-        },
-      });
+      setIsSharingBlockedOpen(true);
     } else {
       const teamShare = getTeamShare(teamId);
       if (teamShare) {
@@ -133,6 +119,12 @@ export default function SharesTab({
   };
   return (
     <div className="space-y-4">
+      <SharingDeprecationNotice translationNs={translationNs} />
+      <SharingBlockedDialog
+        translationNs={translationNs}
+        open={isSharingBlockedOpen}
+        onOpenChange={setIsSharingBlockedOpen}
+      />
       <Item variant="outline">
         <ItemContent>
           <ItemTitle>{t('shares.org.title')}</ItemTitle>
@@ -142,7 +134,7 @@ export default function SharesTab({
           <Switch
             checked={!!organizationShare}
             onCheckedChange={handleOrgToggleChange}
-            disabled={isCreating || isDeleting || !canShareWithOrg}
+            disabled={isDeleting || !canShareWithOrg}
             data-testid="shares-org-switch"
           />
         </ItemActions>
@@ -167,9 +159,7 @@ export default function SharesTab({
                     onCheckedChange={(checked) =>
                       handleTeamToggleChange(team.id, team.name, checked)
                     }
-                    disabled={
-                      isCreating || isDeleting || !canShareWithTeam(team)
-                    }
+                    disabled={isDeleting || !canShareWithTeam(team)}
                     data-testid={`shares-team-switch-${team.id}`}
                   />
                 </ItemActions>

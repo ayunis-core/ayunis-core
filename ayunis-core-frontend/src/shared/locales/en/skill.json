@@ -11,6 +11,17 @@
     "shares": "Share"
   },
   "shares": {
+    "deprecation": {
+      "notice": {
+        "title": "Sharing is being discontinued",
+        "description": "To make this skill available to a team or the organisation, change its owner instead."
+      },
+      "blocked": {
+        "title": "Sharing is no longer possible",
+        "description": "Create skills directly in the team or the organisation instead, or change the owner of this skill.",
+        "close": "Close"
+      }
+    },
     "org": {
       "title": "Share with organisation",
       "descriptionOn": "This skill is shared with all users of your organisation",
@@ -19,25 +30,12 @@
     "teams": {
       "title": "Teams",
       "description": "Share with team members",
-      "create": {
-        "title": "Share Skill with Team",
-        "description": "This will make the skill available to all members of {{teamName}}",
-        "confirm": "Share",
-        "cancel": "Cancel"
-      },
       "delete": {
         "title": "Remove Team Share",
         "description": "This will remove access to the skill for all members of {{teamName}}",
         "confirm": "Remove",
         "cancel": "Cancel"
       }
-    },
-    "create": {
-      "button": "Share Skill",
-      "title": "Share Skill with Organization",
-      "description": "This will make the skill available to all members of your organization",
-      "confirm": "Share",
-      "cancel": "Cancel"
     },
     "delete": {
       "tooltip": "Remove share",
@@ -51,11 +49,9 @@
     },
     "sharedOn": "Shared on",
     "success": {
-      "created": "Skill shared successfully",
       "deleted": "Share removed successfully"
     },
     "error": {
-      "create": "Failed to share skill",
       "delete": "Failed to remove share"
     }
   },

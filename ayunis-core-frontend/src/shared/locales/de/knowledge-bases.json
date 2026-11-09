@@ -12,6 +12,17 @@
     "shared": "Geteilte Wissenssammlungen"
   },
   "shares": {
+    "deprecation": {
+      "notice": {
+        "title": "Das Teilen wird eingestellt",
+        "description": "Um diese Wissenssammlung einem Team oder der Organisation bereitzustellen, ändern Sie stattdessen ihren Besitzer."
+      },
+      "blocked": {
+        "title": "Teilen ist nicht mehr möglich",
+        "description": "Erstellen Sie Wissenssammlungen stattdessen direkt im Team oder in der Organisation oder ändern Sie den Besitzer dieser Wissenssammlung.",
+        "close": "Schließen"
+      }
+    },
     "org": {
       "title": "Freigabe für Organisation",
       "descriptionOn": "Diese Wissenssammlung ist für alle Nutzer Ihrer Organisation freigegeben",
@@ -20,25 +31,12 @@
     "teams": {
       "title": "Teams",
       "description": "Mit Teammitgliedern teilen",
-      "create": {
-        "title": "Wissenssammlung mit Team teilen",
-        "description": "Dadurch wird die Wissenssammlung für alle Mitglieder von {{teamName}} verfügbar",
-        "confirm": "Teilen",
-        "cancel": "Abbrechen"
-      },
       "delete": {
         "title": "Team-Freigabe entfernen",
         "description": "Der Zugriff für alle Mitglieder von {{teamName}} wird entfernt",
         "confirm": "Entfernen",
         "cancel": "Abbrechen"
       }
-    },
-    "create": {
-      "button": "Wissenssammlung teilen",
-      "title": "Wissenssammlung mit Organisation teilen",
-      "description": "Dadurch wird die Wissenssammlung für alle Mitglieder Ihrer Organisation verfügbar",
-      "confirm": "Teilen",
-      "cancel": "Abbrechen"
     },
     "delete": {
       "tooltip": "Freigabe entfernen",
@@ -48,11 +46,9 @@
       "cancel": "Abbrechen"
     },
     "success": {
-      "created": "Wissenssammlung erfolgreich geteilt",
       "deleted": "Freigabe erfolgreich entfernt"
     },
     "error": {
-      "create": "Fehler beim Teilen der Wissenssammlung",
       "delete": "Fehler beim Entfernen der Freigabe"
     }
   },
