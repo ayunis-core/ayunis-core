@@ -4,10 +4,12 @@ import { registerAs } from '@nestjs/config';
 // ConfigModule has loaded .env files.
 const mistralConfig = () => ({
   apiKey: process.env.MISTRAL_API_KEY,
+  transcriptionServerUrl:
+    process.env.MISTRAL_TRANSCRIPTION_SERVER_URL?.trim() || undefined,
   // Default must be a model with the audio_transcription capability —
   // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
   transcriptionModel:
-    process.env.MISTRAL_TRANSCRIPTION_MODEL?.trim() || 'voxtral-mini-latest',
+    process.env.MISTRAL_TRANSCRIPTION_MODEL?.trim() || 'voxtral-mini-2602',
   ttsModel: process.env.MISTRAL_TTS_MODEL?.trim() || 'voxtral-mini-tts-3-0',
   speechServerUrl: process.env.MISTRAL_SPEECH_SERVER_URL?.trim() || undefined,
 });

@@ -40,3 +40,9 @@ export class InvalidAudioFileError extends TranscriptionError {
     super(message, TranscriptionErrorCode.INVALID_AUDIO_FILE, 400, metadata);
   }
 }
+
+export class UnexpectedTranscriptionError extends TranscriptionFailedError {
+  constructor(error: Error) {
+    super('Unexpected error processing the recording', { error });
+  }
+}
