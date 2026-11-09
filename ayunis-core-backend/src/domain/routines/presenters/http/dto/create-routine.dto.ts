@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
@@ -55,6 +56,18 @@ export class CreateRoutineDto {
   })
   @IsBoolean()
   internetEnabled: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Integrations whose tools the routine may use; each must be enabled and connected for the user',
+    type: [String],
+    format: 'uuid',
+    default: [],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  mcpIntegrationIds?: UUID[];
 
   @ApiPropertyOptional({
     description: 'Whether the routine runs on its schedule',

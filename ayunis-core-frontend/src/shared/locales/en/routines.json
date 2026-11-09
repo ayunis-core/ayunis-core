@@ -25,6 +25,9 @@
     "dailyTimeDescription": "Time in Europe/Berlin.",
     "internet": "Internet access",
     "internetDescription": "Lets the routine search the web and read websites.",
+    "integrations": "Integrations",
+    "integrationsDescription": "Lets the routine use the tools of the integrations you turn on, without asking you first.",
+    "integrationUnavailable": "Unavailable integration",
     "cancel": "Cancel",
     "create": "Create",
     "save": "Save"
@@ -58,7 +61,7 @@
     },
     "configuration": {
       "title": "Configuration",
-      "description": "Name, task, model, schedule and internet access of this routine."
+      "description": "Name, task, model, schedule, internet access and integrations of this routine."
     }
   },
   "schedule": {
@@ -82,6 +85,7 @@
     "maxIterations": "The run reached its step limit.",
     "credits": "The credit limit was reached.",
     "model": "The model is no longer available to you.",
+    "integrationUnavailable": "An integration it uses is not available.",
     "interrupted": "The run was interrupted.",
     "academyCertificate": "Your organization requires the EU AI Act training first.",
     "permissionMissing": "Your role did not have the Manage routines permission.",
@@ -102,6 +106,7 @@
     "deleteError": "The routine could not be deleted.",
     "notFound": "This routine no longer exists.",
     "modelUnavailable": "This model is not available to you.",
+    "integrationUnavailable": "An integration you selected is not available to you.",
     "runStarted": "Routine started. Its result appears as a new chat.",
     "runError": "The routine could not be started.",
     "subscriptionRequired": "A subscription or remaining trial messages are required."

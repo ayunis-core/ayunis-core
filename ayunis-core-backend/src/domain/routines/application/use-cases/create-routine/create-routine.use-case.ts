@@ -6,6 +6,7 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import { UnexpectedRoutineError } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
+import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
 import { nextRoutineRunAt } from 'src/domain/routines/domain/routine-schedule';
 import { CreateRoutineCommand } from './create-routine.command';
@@ -17,6 +18,7 @@ export class CreateRoutineUseCase {
   constructor(
     private readonly routinesRepository: RoutinesRepository,
     private readonly routineModelService: RoutineModelService,
+    private readonly routineIntegrationService: RoutineIntegrationService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -26,6 +28,9 @@ export class CreateRoutineUseCase {
     const { userId, orgId } = getRequiredUserContext(this.contextService);
     const modelId = await this.routineModelService.select(
       command.modelId ?? null,
+    );
+    const mcpIntegrationIds = await this.routineIntegrationService.select(
+      command.mcpIntegrationIds,
     );
     const id = randomUUID();
     return this.routinesRepository.create(
@@ -38,6 +43,7 @@ export class CreateRoutineUseCase {
         modelId,
         dailyTime: command.dailyTime,
         internetEnabled: command.internetEnabled,
+        mcpIntegrationIds,
         enabled: command.enabled,
         nextRunAt: command.enabled
           ? nextRoutineRunAt({ id, dailyTime: command.dailyTime }, new Date())

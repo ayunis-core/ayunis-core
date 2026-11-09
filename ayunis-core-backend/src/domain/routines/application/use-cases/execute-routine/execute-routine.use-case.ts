@@ -23,6 +23,7 @@ import {
   UnexpectedRoutineError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
+import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
@@ -66,6 +67,7 @@ export class ExecuteRoutineUseCase {
     private readonly academyGate: RoutineAcademyGate,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
     private readonly routineModelService: RoutineModelService,
+    private readonly routineIntegrationService: RoutineIntegrationService,
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly executeUnattendedRunUseCase: ExecuteUnattendedRunUseCase,
     private readonly configService: ConfigService,
@@ -208,12 +210,15 @@ export class ExecuteRoutineUseCase {
       return { status: 'skipped', reason: 'permission_missing' };
     }
     await this.academyGate.admit(owner.id, owner.orgId);
+    // Before the subscription gate, which consumes a trial message.
+    await this.routineIntegrationService.assertUsable(routine);
     await this.subscriptionGate.admit(routine.orgId);
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: await this.routineModelService.forRun(routine),
         title: routineThreadTitle(routine.name, new Date()),
         routineId: routine.id,
+        mcpIntegrationIds: routine.mcpIntegrationIds,
       }),
     );
     attempt.routineThreadId = thread.id;

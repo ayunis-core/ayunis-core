@@ -5,6 +5,7 @@ export enum RoutineErrorCode {
   ROUTINE_NOT_FOUND = 'ROUTINE_NOT_FOUND',
   ROUTINE_SUBSCRIPTION_REQUIRED = 'ROUTINE_SUBSCRIPTION_REQUIRED',
   ROUTINE_OWNER_LOCKED = 'ROUTINE_OWNER_LOCKED',
+  ROUTINE_INTEGRATION_UNAVAILABLE = 'ROUTINE_INTEGRATION_UNAVAILABLE',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -50,6 +51,21 @@ export class RoutineOwnerLockedError extends RoutineError {
       RoutineErrorCode.ROUTINE_OWNER_LOCKED,
       403,
       metadata,
+    );
+  }
+}
+
+/**
+ * A selected integration is not enabled in the org, not connected for the
+ * user, or (at run time) its server cannot be reached.
+ */
+export class RoutineIntegrationUnavailableError extends RoutineError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `Integration '${integrationId}' is not available`,
+      RoutineErrorCode.ROUTINE_INTEGRATION_UNAVAILABLE,
+      422,
+      { integrationId, ...metadata },
     );
   }
 }

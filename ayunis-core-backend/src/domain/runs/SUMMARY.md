@@ -79,6 +79,7 @@ The routine profile (`RoutineRunProfile`) runs a routine unattended on behalf of
 - **RoutineInternetCapability** — delegates to `InternetCapability` only while the routine's `internetEnabled` is on, so the org's internet setting and the search-provider check still apply.
 - **NotificationsCapability** — `send_notification` with the run's routine as origin (only with the `routines` flag on). The tools module's handler posts to the owner's inbox with the routine thread as origin, at most 3 per routine thread, so per execution including its nudges.
 - **FinishRoutineCapability** — `finish_routine`; rejects models without `canUseTools` with `RunInvalidInputError` before anything is persisted, because such a run could never finish.
+- **McpCapability** — tools and resources of the routine thread's MCP integrations (the routine's integrations, attached when the routine creates the thread), last as in the chat. Their tools run without anyone confirming them, like every routine tool call.
 
 `finish_routine` is externally handled (no `execute`), so the runtime ends the run after the call and persists its `Tool execution is handled externally` result. `routineCompletionPolicy` is `done` only when the run's final assistant turn called `finish_routine`; otherwise it nudges with `ROUTINE_NUDGE_MESSAGE` ("Nobody can read this reply. Use your tools to report results and call finish_routine when you are done."), and after two nudges it fails with `finish_routine_not_called`.
 

@@ -26,6 +26,13 @@ export class RoutineResponseDto {
   @ApiProperty()
   internetEnabled: boolean;
 
+  @ApiProperty({
+    type: [String],
+    format: 'uuid',
+    description: 'Integrations whose tools the routine may use',
+  })
+  mcpIntegrationIds: string[];
+
   @ApiProperty()
   enabled: boolean;
 

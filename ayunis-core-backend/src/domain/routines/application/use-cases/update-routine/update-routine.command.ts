@@ -8,6 +8,8 @@ export class UpdateRoutineCommand {
   readonly modelId?: UUID | null;
   readonly dailyTime?: string;
   readonly internetEnabled?: boolean;
+  /** Replaces the routine's integrations. */
+  readonly mcpIntegrationIds?: UUID[];
   readonly enabled?: boolean;
 
   constructor(params: {
@@ -17,6 +19,7 @@ export class UpdateRoutineCommand {
     modelId?: UUID | null;
     dailyTime?: string;
     internetEnabled?: boolean;
+    mcpIntegrationIds?: UUID[];
     enabled?: boolean;
   }) {
     this.id = params.id;
@@ -25,6 +28,7 @@ export class UpdateRoutineCommand {
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
     this.internetEnabled = params.internetEnabled;
+    this.mcpIntegrationIds = params.mcpIntegrationIds;
     this.enabled = params.enabled;
   }
 }

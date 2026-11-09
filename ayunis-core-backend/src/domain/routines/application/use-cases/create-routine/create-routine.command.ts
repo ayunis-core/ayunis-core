@@ -7,6 +7,7 @@ export class CreateRoutineCommand {
   readonly modelId?: UUID;
   readonly dailyTime: string;
   readonly internetEnabled: boolean;
+  readonly mcpIntegrationIds: UUID[];
   readonly enabled: boolean;
 
   constructor(params: {
@@ -15,6 +16,7 @@ export class CreateRoutineCommand {
     modelId?: UUID;
     dailyTime: string;
     internetEnabled: boolean;
+    mcpIntegrationIds?: UUID[];
     enabled?: boolean;
   }) {
     this.name = params.name;
@@ -22,6 +24,7 @@ export class CreateRoutineCommand {
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
     this.internetEnabled = params.internetEnabled;
+    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.enabled = params.enabled ?? true;
   }
 }

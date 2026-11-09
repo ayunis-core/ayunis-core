@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class RoutineMapper {
       modelId: record.modelId,
       dailyTime: record.dailyTime,
       internetEnabled: record.internetEnabled,
+      mcpIntegrationIds: record.mcpIntegrationIds ?? [],
       enabled: record.enabled,
       lastRunStatus: record.lastRunStatus,
       lastRunAt: record.lastRunAt,
@@ -37,6 +39,9 @@ export class RoutineMapper {
     record.modelId = domain.modelId;
     record.dailyTime = domain.dailyTime;
     record.internetEnabled = domain.internetEnabled;
+    record.mcpIntegrations = domain.mcpIntegrationIds.map(
+      (id) => ({ id }) as McpIntegrationRecord,
+    );
     record.enabled = domain.enabled;
     record.lastRunStatus = domain.lastRunStatus;
     record.lastRunAt = domain.lastRunAt;

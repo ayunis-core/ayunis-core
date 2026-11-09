@@ -29,6 +29,8 @@ import {
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import { NotificationNotFoundError } from 'src/domain/notifications/application/notifications.errors';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -43,6 +45,7 @@ describe('CreateThreadUseCase', () => {
 
   const resolveModelModes = { execute: jest.fn() };
   const findNotification = { execute: jest.fn() };
+  const getMcpIntegrationsByIds = { execute: jest.fn() };
 
   beforeEach(async () => {
     logger = createLoggerMock();
@@ -84,6 +87,10 @@ describe('CreateThreadUseCase', () => {
           useValue: mockAssertWorkspaceReadAccessUseCase,
         },
         { provide: FindNotificationUseCase, useValue: findNotification },
+        {
+          provide: GetMcpIntegrationsByIdsUseCase,
+          useValue: getMcpIntegrationsByIds,
+        },
       ],
     }).compile();
 
@@ -443,6 +450,36 @@ describe('CreateThreadUseCase', () => {
           }),
         ),
       ).rejects.toThrow(NotificationNotFoundError);
+      expect(threadsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it("attaches integrations of the user's org to the new thread", async () => {
+      const integrationId = '88888888-8888-4888-8888-888888888888' as UUID;
+      getMcpIntegrationsByIds.execute.mockResolvedValue([
+        { id: integrationId },
+      ]);
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({
+          modelId: mockModelId,
+          mcpIntegrationIds: [integrationId],
+        }),
+      );
+
+      expect(thread.mcpIntegrationIds).toEqual([integrationId]);
+    });
+
+    it('refuses an integration outside the user’s org without creating a thread', async () => {
+      getMcpIntegrationsByIds.execute.mockResolvedValue([]);
+
+      await expect(
+        useCase.execute(
+          new CreateThreadCommand({
+            modelId: mockModelId,
+            mcpIntegrationIds: ['99999999-9999-4999-8999-999999999999'],
+          }),
+        ),
+      ).rejects.toThrow(McpIntegrationNotFoundError);
       expect(threadsRepository.create).not.toHaveBeenCalled();
     });
 
