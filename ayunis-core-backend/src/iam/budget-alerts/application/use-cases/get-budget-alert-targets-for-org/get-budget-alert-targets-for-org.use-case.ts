@@ -67,7 +67,7 @@ export class GetBudgetAlertTargetsForOrgUseCase {
         new GetMonthlyCreditUsageQuery(query.orgId, startsAt ?? undefined),
       ),
       this.getUserCreditLimitsOverviewUseCase.execute(
-        new GetUserCreditLimitsOverviewQuery(),
+        new GetUserCreditLimitsOverviewQuery(undefined, true),
       ),
       this.getTeamCreditLimitsOverviewUseCase.execute(
         new GetTeamCreditLimitsOverviewQuery(),

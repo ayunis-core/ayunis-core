@@ -6,11 +6,14 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
+import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
+import { FindAllUserIdsByOrgIdQuery } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.query';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForUsersQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.query';
 import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
 import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import { selectUserCreditLimits } from 'src/iam/credit-limits/application/utils/select-user-credit-limits';
+import type { UserCreditAllowance } from 'src/iam/credit-limits/application/utils/select-user-credit-limits';
 import { UnexpectedCreditLimitError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 import { getRequiredOrgId } from 'src/common/context/required-context';
@@ -24,6 +27,7 @@ export class GetUserCreditLimitsOverviewUseCase {
     private readonly contextService: ContextService,
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
     private readonly getMonthlyCreditUsageForUsersUseCase: GetMonthlyCreditUsageForUsersUseCase,
+    private readonly findAllUserIdsByOrgIdUseCase: FindAllUserIdsByOrgIdUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedCreditLimitError)
@@ -35,15 +39,42 @@ export class GetUserCreditLimitsOverviewUseCase {
     this.logger.log({ orgId }, 'Listing user credit limits');
 
     const limits = await this.creditLimitRepository.findUserLimits(orgId);
-    return this.enrich(orgId, limits, query.since);
+    const userLimits = selectUserCreditLimits(limits);
+    if (query.includeDefaultLimitedUsers) {
+      userLimits.push(...(await this.findDefaultLimitedUsers(orgId, limits)));
+    }
+    return this.enrich(orgId, userLimits, query.since);
+  }
+
+  private async findDefaultLimitedUsers(
+    orgId: UUID,
+    individualLimits: UserCreditLimit[],
+  ): Promise<UserCreditAllowance[]> {
+    const defaultLimit =
+      await this.creditLimitRepository.findDefaultUserLimit(orgId);
+    if (!defaultLimit) {
+      return [];
+    }
+
+    const individuallyLimited = new Set(
+      individualLimits.map((limit) => limit.userId),
+    );
+    const userIds = await this.findAllUserIdsByOrgIdUseCase.execute(
+      new FindAllUserIdsByOrgIdQuery(orgId),
+    );
+    return userIds
+      .filter((userId) => !individuallyLimited.has(userId))
+      .map((userId) => ({
+        userId,
+        monthlyCredits: defaultLimit.monthlyCredits,
+      }));
   }
 
   private async enrich(
     orgId: UUID,
-    limits: UserCreditLimit[],
+    userLimits: UserCreditAllowance[],
     since?: Date,
   ): Promise<UserCreditLimitOverviewItem[]> {
-    const userLimits = selectUserCreditLimits(limits);
     if (userLimits.length === 0) {
       return [];
     }

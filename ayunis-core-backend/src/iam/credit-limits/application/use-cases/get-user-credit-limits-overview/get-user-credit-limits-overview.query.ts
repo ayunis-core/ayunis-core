@@ -1,3 +1,6 @@
 export class GetUserCreditLimitsOverviewQuery {
-  constructor(public readonly since?: Date) {}
+  constructor(
+    public readonly since?: Date,
+    public readonly includeDefaultLimitedUsers = false,
+  ) {}
 }

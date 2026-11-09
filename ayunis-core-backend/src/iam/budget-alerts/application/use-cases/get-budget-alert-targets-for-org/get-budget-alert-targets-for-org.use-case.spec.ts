@@ -124,6 +124,11 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
     // (see CreditLimitGuardService, ApiKeyCreditLimitGuardService), so alerts
     // must not narrow the window to the subscription start.
     expect(userOverview.execute.mock.calls[0][0].since).toBeUndefined();
+    // Users on the org-wide default limit are enforced like individual limits,
+    // so they must be alerted too (AYC-1704).
+    expect(
+      userOverview.execute.mock.calls[0][0].includeDefaultLimitedUsers,
+    ).toBe(true);
     expect(teamOverview.execute.mock.calls[0][0].since).toBeUndefined();
     expect(apiKeyOverview.execute.mock.calls[0][0].since).toBeUndefined();
     expect(apiKeyOverview.execute.mock.calls[0][0].onlyActiveKeys).toBe(true);
