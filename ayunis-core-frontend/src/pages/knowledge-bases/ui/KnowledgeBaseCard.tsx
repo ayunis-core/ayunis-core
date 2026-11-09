@@ -9,10 +9,7 @@ import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
-import {
-  OwnerBadge,
-  useResourceOwnership,
-} from '@/features/resource-ownership';
+import { useResourceOwnership } from '@/features/resource-ownership';
 
 interface KnowledgeBaseCardProps {
   knowledgeBase: KnowledgeBase;
@@ -62,11 +59,6 @@ export default function KnowledgeBaseCard({
               {t('shared.badge')}
             </Badge>
           )}
-          <OwnerBadge
-            resource={knowledgeBase}
-            className="ml-2 text-xs"
-            testId={`knowledge-base-owner-badge-${knowledgeBase.id}`}
-          />
         </>
       }
       description={knowledgeBase.description}

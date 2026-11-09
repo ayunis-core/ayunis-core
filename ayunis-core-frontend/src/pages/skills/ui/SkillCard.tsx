@@ -19,10 +19,7 @@ import type { Skill } from '@/pages/skills/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import { SkillListItem } from '@/shared/ui/skill-list-item';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import {
-  OwnerBadge,
-  useResourceOwnership,
-} from '@/features/resource-ownership';
+import { useResourceOwnership } from '@/features/resource-ownership';
 
 interface SkillCardProps {
   skill: Skill;
@@ -114,11 +111,6 @@ export default function SkillCard({
               {t('shared.by', { name: skill.creatorName })}
             </span>
           )}
-          <OwnerBadge
-            resource={skill}
-            className="ml-2 text-xs"
-            testId={`skill-owner-badge-${skill.id}`}
-          />
         </>
       }
       description={skill.shortDescription}

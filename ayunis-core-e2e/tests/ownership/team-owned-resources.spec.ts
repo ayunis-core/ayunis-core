@@ -60,15 +60,11 @@ test('team skills are visible to team members only and can move to the organizat
 
     const memberPage = await memberContext.newPage();
     await memberPage.goto('/skills');
-    await memberPage.getByTestId('skills-tab-shared').click();
-    await expect(
-      memberPage.getByTestId(`skill-owner-badge-${skillId}`),
-    ).toHaveAttribute('data-owner-type', 'team');
+    await expect(memberPage.getByTestId(`skill-card-${skillId}`)).toBeVisible();
 
     // Granting membership opens access.
     await fixture.addToTeam(fixture.outsider);
     await outsiderPage.reload();
-    await outsiderPage.getByTestId('skills-tab-shared').click();
     await expect(outsiderPage.getByTestId(`skill-card-${skillId}`)).toBeVisible();
 
     // Moving it to the organization.
@@ -136,14 +132,12 @@ test('team knowledge bases are visible to team members only', async ({
 
     const memberPage = await memberContext.newPage();
     await memberPage.goto('/knowledge-bases');
-    await memberPage.getByTestId('knowledge-base-tab-shared').click();
     await expect(
-      memberPage.getByTestId(`knowledge-base-owner-badge-${knowledgeBaseId}`),
-    ).toHaveAttribute('data-owner-type', 'team');
+      memberPage.getByTestId(`knowledge-base-card-${knowledgeBaseId}`),
+    ).toBeVisible();
 
     await fixture.addToTeam(fixture.outsider);
     await outsiderPage.reload();
-    await outsiderPage.getByTestId('knowledge-base-tab-shared').click();
     await expect(
       outsiderPage.getByTestId(`knowledge-base-card-${knowledgeBaseId}`),
     ).toBeVisible();

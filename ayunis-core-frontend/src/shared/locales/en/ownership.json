@@ -8,6 +8,11 @@
   "badge": {
     "team": "Team {{name}}"
   },
+  "section": {
+    "personal": "Personal",
+    "org": "Organisation",
+    "shared": "Shared with me"
+  },
   "card": {
     "title": "Owner",
     "skillDescription": "Who this skill belongs to. Team and organisation skills can be used by all members and edited by everyone allowed to manage them.",
