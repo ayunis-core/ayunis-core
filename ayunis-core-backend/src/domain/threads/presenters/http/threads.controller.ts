@@ -154,6 +154,7 @@ export class ThreadsController {
           workspaceId: queryParams.workspaceId,
           type: queryParams.type,
           routineId: queryParams.routineId,
+          client: queryParams.client,
         },
         { limit: queryParams.limit, offset: queryParams.offset },
       ),

@@ -5497,6 +5497,15 @@
             }
           },
           {
+            "name": "client",
+            "required": false,
+            "in": "query",
+            "description": "Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.",
+            "schema": {
+              "$ref": "#/components/schemas/SessionClient"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -19382,6 +19391,10 @@
           "sourceNotificationId",
           "id"
         ]
+      },
+      "SessionClient": {
+        "type": "string",
+        "enum": ["outlook"]
       },
       "GetThreadsResponseDto": {
         "type": "object",

@@ -384,6 +384,54 @@ describe('CreateThreadUseCase', () => {
     });
   });
 
+  describe('from a token client', () => {
+    beforeEach(() => {
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
+        new PermittedLanguageModel({
+          id: mockModelId,
+          model: new LanguageModel({
+            name: 'mistral-large',
+            provider: ModelProvider.MISTRAL,
+            displayName: 'Mistral Large',
+            canStream: true,
+            isReasoning: false,
+            isArchived: false,
+            canUseTools: true,
+            canVision: false,
+            contextWindowSize: 128_000,
+          }),
+          orgId: mockOrgId,
+        }),
+      );
+      threadsRepository.create.mockImplementation((t: Thread) =>
+        Promise.resolve(t),
+      );
+    });
+
+    it("marks a chat started in the Outlook pane with the session's client", async () => {
+      contextService.get.mockImplementation(
+        ((key: string) =>
+          ({ userId: mockUserId, orgId: mockOrgId, client: 'outlook' })[
+            key
+          ]) as never,
+      );
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ modelId: mockModelId }),
+      );
+
+      expect(thread.client).toBe('outlook');
+    });
+
+    it('leaves a web chat without a client', async () => {
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ modelId: mockModelId }),
+      );
+
+      expect(thread.client).toBeNull();
+    });
+  });
+
   describe('about a notification', () => {
     const notification = aNotification();
     const standard = new PermittedLanguageModel({

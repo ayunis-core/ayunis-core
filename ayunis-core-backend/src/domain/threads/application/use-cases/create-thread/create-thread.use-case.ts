@@ -70,6 +70,7 @@ export class CreateThreadUseCase {
         type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
         routineId: command.routineId,
         sourceNotificationId: command.sourceNotificationId,
+        client: this.contextService.get('client') ?? null,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);

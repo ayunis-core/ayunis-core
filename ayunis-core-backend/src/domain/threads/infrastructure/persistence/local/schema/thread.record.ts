@@ -22,6 +22,7 @@ import { NotificationRecord } from 'src/domain/notifications/infrastructure/pers
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -88,6 +89,13 @@ export class ThreadRecord extends BaseRecord {
   @ManyToOne(() => NotificationRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'sourceNotificationId' })
   sourceNotification?: NotificationRecord;
+
+  /**
+   * The token client the chat was started from. A varchar, not an enum, so a
+   * new entry in the session client registry needs no migration.
+   */
+  @Column({ type: 'varchar', nullable: true })
+  client: SessionClient | null;
 
   /**
    * Timestamp of the most recent conversation activity (last message added).
