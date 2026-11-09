@@ -1,0 +1,20 @@
+{
+  "pane": {
+    "description": "Sign in with your Ayunis account to use Ayunis in Outlook.",
+    "loading": "Loading …",
+    "signIn": "Sign in",
+    "signingIn": "Signing in …",
+    "signOut": "Sign out",
+    "dialogClosed": "If you finished signing in in the sign-in window, select Sign in again to connect.",
+    "error": {
+      "signInFailed": "Sign-in failed. Please try again.",
+      "sessionExpired": "Your session has expired. Please sign in again.",
+      "unreachable": "Ayunis can't be reached right now. Please try again later.",
+      "outlookRequired": "Open Ayunis from the add-in in Outlook."
+    }
+  },
+  "dialog": {
+    "connecting": "Connecting to Outlook …",
+    "outlookRequired": "Close this window and select Sign in in the Ayunis add-in in Outlook to finish."
+  }
+}

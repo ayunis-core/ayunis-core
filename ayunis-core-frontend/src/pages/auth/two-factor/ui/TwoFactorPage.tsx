@@ -8,6 +8,7 @@ import {
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { Button } from '@ayunis/ui/components/button';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
+import { loginRestartSearch } from '@/pages/auth/two-factor/model/login-restart';
 import { useMfaLoginEnroll } from '@/pages/auth/two-factor/api/useMfaLoginEnroll';
 import { TwoFactorVerifyForm } from './TwoFactorVerifyForm';
 
@@ -29,6 +30,7 @@ export function TwoFactorPage({ redirect, enroll }: Readonly<Props>) {
           {t('twoFactor.backToLogin')}{' '}
           <Link
             to="/login"
+            search={loginRestartSearch(redirect)}
             className="font-medium text-primary hover:underline"
           >
             {t('twoFactor.signIn')}
@@ -56,7 +58,7 @@ function EnrollFlow({ redirect }: Readonly<{ redirect?: string }>) {
     isConfirming,
     recoveryCodes,
     errorMessage,
-  } = useMfaLoginEnroll();
+  } = useMfaLoginEnroll({ redirect });
 
   if (recoveryCodes) {
     return (

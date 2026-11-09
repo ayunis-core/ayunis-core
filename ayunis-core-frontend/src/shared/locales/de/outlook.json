@@ -1,0 +1,20 @@
+{
+  "pane": {
+    "description": "Melden Sie sich mit Ihrem Ayunis-Konto an, um Ayunis in Outlook zu nutzen.",
+    "loading": "Wird geladen …",
+    "signIn": "Anmelden",
+    "signingIn": "Anmeldung läuft …",
+    "signOut": "Abmelden",
+    "dialogClosed": "Wenn Sie die Anmeldung im Anmeldefenster abgeschlossen haben, wählen Sie erneut „Anmelden“, um die Verbindung herzustellen.",
+    "error": {
+      "signInFailed": "Die Anmeldung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "unreachable": "Ayunis ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut.",
+      "outlookRequired": "Öffnen Sie Ayunis über das Add-in in Outlook."
+    }
+  },
+  "dialog": {
+    "connecting": "Verbindung mit Outlook wird hergestellt …",
+    "outlookRequired": "Schließen Sie dieses Fenster und wählen Sie im Ayunis-Add-in in Outlook „Anmelden“, um die Anmeldung abzuschließen."
+  }
+}

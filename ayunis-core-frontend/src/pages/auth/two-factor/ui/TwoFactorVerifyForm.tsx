@@ -7,7 +7,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@ayunis/ui/components/input-otp';
-import { useVerifyMfa } from '../api/useVerifyMfa';
+import { useVerifyMfa } from '@/pages/auth/two-factor/api/useVerifyMfa';
 
 export function TwoFactorVerifyForm({
   redirect,
@@ -41,6 +41,7 @@ export function TwoFactorVerifyForm({
           onChange={(e) => setCode(e.target.value)}
           placeholder={t('twoFactor.verify.recoveryCodePlaceholder')}
           className="font-mono"
+          data-testid="two-factor-recovery-code"
         />
       ) : (
         <div className="flex justify-center">
@@ -56,7 +57,12 @@ export function TwoFactorVerifyForm({
       {errorMessage && (
         <p className="text-center text-sm text-destructive">{errorMessage}</p>
       )}
-      <Button type="submit" className="w-full" disabled={!canSubmit}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={!canSubmit}
+        data-testid="two-factor-submit"
+      >
         {isLoading
           ? t('twoFactor.verify.verifying')
           : t('twoFactor.verify.submit')}
@@ -66,6 +72,7 @@ export function TwoFactorVerifyForm({
         variant="link"
         className="w-full"
         onClick={toggleMode}
+        data-testid="two-factor-toggle-recovery-code"
       >
         {useRecoveryCode
           ? t('twoFactor.verify.useAuthenticator')

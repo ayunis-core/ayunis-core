@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ayunis</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <!-- Office.js must load from Microsoft's CDN before any other script. -->
+    <script src="https://officeapis.public.onecdn.static.microsoft/1/office.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        color: #52525b;
+      }
+      main {
+        padding: 48px 24px;
+        font-size: 14px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="status" role="status"></main>
+    <script type="module" src="/src/outlook/dialog.ts"></script>
+  </body>
+</html>

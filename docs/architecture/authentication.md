@@ -76,6 +76,7 @@ data.
 | `/sso/success` | Records a successful SSO organization in browser session storage, then continues to the saved internal path. |
 | `/sso/error?code=...` | Displays a stable, non-sensitive SSO failure outcome. |
 | `/password/forgot`, `/password/reset`, `/account/activate` | Local password recovery and initial-password paths. |
+| `/outlook/login?client=outlook` | Office dialog of the Outlook add-in: the `/login` page with `/outlook/handoff` as redirect, which continues to `/outlook/dialog.html` to hand the session to the pane (see [Token clients](#token-clients)). |
 | `/accept-invite` | Invitation acceptance follows the invited organization's policy: password when allowed, otherwise organization-pinned SSO. Broker admission consumes the pending invite. |
 
 For a domain identifier, the frontend discovers the connection by submitting a
@@ -401,8 +402,8 @@ not configuration.
 
 | Step | Behavior |
 | --- | --- |
-| Login | The add-in opens an Office dialog on Core's own origin. Password, SSO, and MFA run there unchanged and end with the usual session cookies in the dialog. |
-| `POST /api/auth/session/handoff` `{ client }` | Authenticates the dialog's refresh cookie with the refresh checks (reuse revokes its family), starts a separate family bound to `client` with the same provenance and SSO deadline, and returns `{ accessToken, refreshToken, expiresIn }`. Only accepted from the frontend origin (`Origin` header), since the dialog always runs there and a permissive CORS setup would otherwise let a same-site page read the tokens. The cookie session and its cookies stay untouched: on Outlook on the web the dialog shares cookies with the web app. |
+| Login | The add-in opens an Office dialog on Core's own origin (`/outlook/login`). Password, SSO, and MFA run there unchanged and end with the usual session cookies in the dialog, then on `/outlook/dialog.html`, a separate page that loads Office.js. |
+| `POST /api/auth/session/handoff` `{ client }` | Authenticates the dialog's refresh cookie with the refresh checks (reuse revokes its family), starts a separate family bound to `client` with the same provenance and SSO deadline, and returns `{ accessToken, refreshToken, expiresIn }`. Only accepted from the frontend origin (`Origin` header), since the dialog always runs there and a permissive CORS setup would otherwise let a same-site page read the tokens. The cookie session and its cookies stay untouched: on Outlook on the web the dialog shares cookies with the web app. The dialog page passes the tokens to the pane with `messageParent`; the pane keeps the access token in memory and the refresh token in `localStorage`. |
 | API calls | `Authorization: Bearer <access JWT>`. `JwtStrategy` reads the cookie first and the header second; the token carries a `client` claim. |
 | `POST /api/auth/refresh` `{ refreshToken }` | Used only when no refresh cookie is present. Same rotation, grace, and reuse revocation as the cookie path; tokens come back in the body and no cookies are written. `JwtAuthGuard`'s inline refresh stays cookie-only. |
 | `POST /api/auth/logout` `{ refreshToken }` | Same fallback: revokes the family without cookie writes. |

@@ -9,13 +9,14 @@ import type { MfaSetupResponseDto } from '@/shared/api/generated/ayunisCoreAPI.s
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { rememberSuccessfulSsoLogin } from '@/features/sso';
+import { loginRestartSearch } from '@/pages/auth/two-factor/model/login-restart';
 
 /**
  * Forced enrollment during login: starts TOTP setup on mount, confirms the
  * code, and surfaces the one-time recovery codes. Session cookies are set by
  * the confirm call, so navigation only happens after the codes are saved.
  */
-export function useMfaLoginEnroll() {
+export function useMfaLoginEnroll({ redirect }: { redirect?: string } = {}) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const [setup, setSetup] = useState<MfaSetupResponseDto | null>(null);
@@ -34,7 +35,7 @@ export function useMfaLoginEnroll() {
         errorCode === 'MFA_ENROLLMENT_NOT_ALLOWED'
       ) {
         showError(t('twoFactor.error.expired'));
-        void navigate({ to: '/login' });
+        void navigate({ to: '/login', search: loginRestartSearch(redirect) });
       } else if (errorCode === 'SERVICE_UNAVAILABLE') {
         showError(t('serviceUnavailable'));
       } else {

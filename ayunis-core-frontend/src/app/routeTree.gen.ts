@@ -22,6 +22,8 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
 import { Route as AuthenticatedSuperAdminSettingsRouteImport } from './routes/_authenticated/super-admin-settings'
 import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
+import { Route as onboardingOutlookHandoffRouteImport } from './routes/(onboarding)/outlook.handoff'
+import { Route as onboardingOutlookLoginRouteImport } from './routes/(onboarding)/outlook.login'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingSsoIdentifierRouteImport } from './routes/(onboarding)/sso.$identifier'
@@ -149,6 +151,17 @@ const onboardingAccountActivateRoute =
     path: '/account/activate',
     getParentRoute: () => rootRouteImport,
   } as any)
+const onboardingOutlookHandoffRoute =
+  onboardingOutlookHandoffRouteImport.update({
+    id: '/(onboarding)/outlook/handoff',
+    path: '/outlook/handoff',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const onboardingOutlookLoginRoute = onboardingOutlookLoginRouteImport.update({
+  id: '/(onboarding)/outlook/login',
+  path: '/outlook/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const onboardingPasswordForgotRoute =
   onboardingPasswordForgotRouteImport.update({
     id: '/(onboarding)/password/forgot',
@@ -511,6 +524,8 @@ export interface FileRoutesByFullPath {
   '/install': typeof AuthenticatedInstallRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   '/account/activate': typeof onboardingAccountActivateRoute
+  '/outlook/handoff': typeof onboardingOutlookHandoffRoute
+  '/outlook/login': typeof onboardingOutlookLoginRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/sso/$identifier': typeof onboardingSsoIdentifierRoute
@@ -582,6 +597,8 @@ export interface FileRoutesByTo {
   '/two-factor': typeof onboardingTwoFactorRoute
   '/install': typeof AuthenticatedInstallRoute
   '/account/activate': typeof onboardingAccountActivateRoute
+  '/outlook/handoff': typeof onboardingOutlookHandoffRoute
+  '/outlook/login': typeof onboardingOutlookLoginRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/sso/$identifier': typeof onboardingSsoIdentifierRoute
@@ -657,6 +674,8 @@ export interface FileRoutesById {
   '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/_authenticated/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
+  '/(onboarding)/outlook/handoff': typeof onboardingOutlookHandoffRoute
+  '/(onboarding)/outlook/login': typeof onboardingOutlookLoginRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/(onboarding)/sso/$identifier': typeof onboardingSsoIdentifierRoute
@@ -732,6 +751,8 @@ export interface FileRouteTypes {
     | '/install'
     | '/super-admin-settings'
     | '/account/activate'
+    | '/outlook/handoff'
+    | '/outlook/login'
     | '/password/forgot'
     | '/password/reset'
     | '/sso/$identifier'
@@ -803,6 +824,8 @@ export interface FileRouteTypes {
     | '/two-factor'
     | '/install'
     | '/account/activate'
+    | '/outlook/handoff'
+    | '/outlook/login'
     | '/password/forgot'
     | '/password/reset'
     | '/sso/$identifier'
@@ -877,6 +900,8 @@ export interface FileRouteTypes {
     | '/_authenticated/install'
     | '/_authenticated/super-admin-settings'
     | '/(onboarding)/account/activate'
+    | '/(onboarding)/outlook/handoff'
+    | '/(onboarding)/outlook/login'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
     | '/(onboarding)/sso/$identifier'
@@ -949,6 +974,8 @@ export interface RootRouteChildren {
   onboardingRegisterRoute: typeof onboardingRegisterRoute
   onboardingTwoFactorRoute: typeof onboardingTwoFactorRoute
   onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
+  onboardingOutlookHandoffRoute: typeof onboardingOutlookHandoffRoute
+  onboardingOutlookLoginRoute: typeof onboardingOutlookLoginRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
   onboardingSsoIdentifierRoute: typeof onboardingSsoIdentifierRoute
@@ -1047,6 +1074,20 @@ declare module '@tanstack/react-router' {
       path: '/account/activate'
       fullPath: '/account/activate'
       preLoaderRoute: typeof onboardingAccountActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/outlook/handoff': {
+      id: '/(onboarding)/outlook/handoff'
+      path: '/outlook/handoff'
+      fullPath: '/outlook/handoff'
+      preLoaderRoute: typeof onboardingOutlookHandoffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/outlook/login': {
+      id: '/(onboarding)/outlook/login'
+      path: '/outlook/login'
+      fullPath: '/outlook/login'
+      preLoaderRoute: typeof onboardingOutlookLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(onboarding)/password/forgot': {
@@ -1656,6 +1697,8 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingTwoFactorRoute: onboardingTwoFactorRoute,
   onboardingAccountActivateRoute: onboardingAccountActivateRoute,
+  onboardingOutlookHandoffRoute: onboardingOutlookHandoffRoute,
+  onboardingOutlookLoginRoute: onboardingOutlookLoginRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
   onboardingSsoIdentifierRoute: onboardingSsoIdentifierRoute,
