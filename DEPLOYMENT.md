@@ -8,8 +8,9 @@ This guide covers deploying Ayunis Core to production and managing configuration
 2. [Environment Configuration](#environment-configuration)
 3. [Database Migrations](#database-migrations)
 4. [MCP Integration Setup](#mcp-integration-setup)
-5. [Configuration Updates](#configuration-updates)
-6. [Troubleshooting](#troubleshooting)
+5. [Outlook Add-in](#outlook-add-in)
+6. [Configuration Updates](#configuration-updates)
+7. [Troubleshooting](#troubleshooting)
 
 ## Initial Deployment
 
@@ -395,6 +396,53 @@ Encryption happens transparently; no application code changes needed for key rot
 - **No automatic refresh**: Bearer tokens are stored and used as-is
 - **Manual rotation**: Users can update tokens through the UI
 - **Encryption key rotation**: See [Rotating MCP_ENCRYPTION_KEY](#rotating-mcp_encryption_key) below
+
+## Outlook Add-in
+
+Each deployment serves its own Outlook add-in manifest, rendered for its
+`FRONTEND_BASEURL`:
+
+```text
+https://<your-ayunis-host>/api/office-addins/outlook/manifest.xml
+```
+
+The manifest points Outlook at `<FRONTEND_BASEURL>/outlook/`, so
+`FRONTEND_BASEURL` must be the public HTTPS address users reach Ayunis on.
+Outlook refuses add-ins served over plain HTTP. The add-in ID is derived from
+that address: changing `FRONTEND_BASEURL` makes Outlook see a different add-in,
+and admins have to deploy the new manifest and remove the old one.
+
+Outlook on the web and the new Outlook for Windows show the add-in in an
+iframe. Ayunis sends no framing headers for `/outlook/`; if your reverse proxy
+adds `X-Frame-Options` or a `Content-Security-Policy` with `frame-ancestors`,
+leave `/outlook/` out of it or allow `https://outlook.office.com`,
+`https://outlook.office365.com` and `https://outlook.cloud.microsoft` there.
+
+### Exchange Online (Microsoft 365)
+
+In the Microsoft 365 admin center, go to **Settings > Integrated apps >
+Upload custom apps**, choose **Office Add-in**, and upload the manifest file
+or enter its URL.
+
+### Exchange Server (on-premises)
+
+The Microsoft 365 admin center does not reach on-premises mailboxes. Install
+the add-in for the organization in the Exchange admin center
+(**Organization > Add-ins > + > Add from URL** or **Add from file**), or with
+Exchange PowerShell:
+
+```powershell
+New-App -OrganizationApp -Url https://<your-ayunis-host>/api/office-addins/outlook/manifest.xml -ProvidedTo Everyone -DefaultStateForUser Enabled
+```
+
+With `-Url`, the Exchange server itself downloads the manifest, so it must
+reach that address directly; Exchange does not follow redirects. Otherwise
+download the file and install it with
+`New-App -OrganizationApp -FileData ([System.IO.File]::ReadAllBytes('<path>\manifest.xml'))`.
+
+Exchange Server supports Outlook API requirement sets up to Mailbox 1.5, which
+is what the add-in requires. Microsoft documents pinning the add-in pane for
+Microsoft 365 subscribers only.
 
 ## Configuration Updates
 

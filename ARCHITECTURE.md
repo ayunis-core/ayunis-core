@@ -97,6 +97,7 @@ none of these packages implements the Agent Plugins standard.
 | [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
 | [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine and release-note notifications with media, read state and "Chat about this"          |
 | [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, sent to every user's inbox                                       |
+| [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)        | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                           |
 
 ### IAM Modules — Identity & Access Management
 
