@@ -12,6 +12,17 @@
     "shared": "Shared Knowledge Bases"
   },
   "shares": {
+    "deprecation": {
+      "notice": {
+        "title": "Sharing is being discontinued",
+        "description": "To make this knowledge base available to a team or the organisation, change its owner instead."
+      },
+      "blocked": {
+        "title": "Sharing is no longer possible",
+        "description": "Create knowledge bases directly in the team or the organisation instead, or change the owner of this knowledge base.",
+        "close": "Close"
+      }
+    },
     "org": {
       "title": "Share with organisation",
       "descriptionOn": "This knowledge base is shared with all users of your organisation",
@@ -20,25 +31,12 @@
     "teams": {
       "title": "Teams",
       "description": "Share with team members",
-      "create": {
-        "title": "Share Knowledge Base with Team",
-        "description": "This will make the knowledge base available to all members of {{teamName}}",
-        "confirm": "Share",
-        "cancel": "Cancel"
-      },
       "delete": {
         "title": "Remove Team Share",
         "description": "This will remove access to the knowledge base for all members of {{teamName}}",
         "confirm": "Remove",
         "cancel": "Cancel"
       }
-    },
-    "create": {
-      "button": "Share Knowledge Base",
-      "title": "Share Knowledge Base with Organization",
-      "description": "This will make the knowledge base available to all members of your organization",
-      "confirm": "Share",
-      "cancel": "Cancel"
     },
     "delete": {
       "tooltip": "Remove share",
@@ -48,11 +46,9 @@
       "cancel": "Cancel"
     },
     "success": {
-      "created": "Knowledge base shared successfully",
       "deleted": "Share removed successfully"
     },
     "error": {
-      "create": "Failed to share knowledge base",
       "delete": "Failed to remove share"
     }
   },

@@ -109,9 +109,9 @@ test("members share skills only with the audiences their role permits", async ({
     await memberPage.reload();
     await expect(teamSwitch).toBeEnabled();
     await expect(orgSwitch).toBeDisabled();
-    await teamSwitch.click();
-    await memberPage.getByTestId("confirmation-confirm").click();
-    await expect(teamSwitch).toBeChecked();
+    expect(
+      (await requestSkillShare(memberApi, skill.id, teamId)).status(),
+    ).toBe(201);
     expect((await requestSkillShare(memberApi, skill.id)).status()).toBe(403);
 
     await setUserRolePermissions(adminApi, [
