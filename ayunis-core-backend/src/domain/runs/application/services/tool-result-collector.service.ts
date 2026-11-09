@@ -9,6 +9,7 @@ import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execu
 import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.command';
 import {
   isAcknowledgementOnlyTool,
+  isAwaitingClientResultTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
 } from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
@@ -42,9 +43,14 @@ import {
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { REJECTED_TOOL_RESULT } from 'src/domain/runs/application/services/tool-call-confirmation.service';
+import { findOpenToolCalls } from 'src/domain/runs/application/helpers/open-tool-calls.helper';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
+// The client posts one result per request; a sibling call awaiting its own
+// result was not answered and must not look handled.
+const MISSING_CLIENT_RESULT =
+  'Not completed: no result was returned for this call. Call the tool again if you still need its result.';
 
 interface ProcessedToolResult {
   content: ToolResultMessageContent;
@@ -90,17 +96,10 @@ export class ToolResultCollectorService {
     this.logger.debug('collectToolResults');
     const { thread, tools, input, orgId, isAnonymous } = params;
 
-    const lastMessage = thread.getLastMessage();
-    const toolUseMessageContent = lastMessage
-      ? lastMessage.content.filter(
-          (content) => content instanceof ToolUseMessageContent,
-        )
-      : [];
-
     const contents: ToolResultMessageContent[] = [];
     let piiMasks: ThreadPiiMask[] | null = null;
 
-    for (const content of toolUseMessageContent) {
+    for (const content of findOpenToolCalls(thread)) {
       const result = await this.settleToolUse(content, tools, input, {
         orgId,
         threadId: thread.id,
@@ -283,7 +282,9 @@ export class ToolResultCollectorService {
           tool,
           content,
           clientResult,
-          EXTERNAL_TOOL_RESULT,
+          isAwaitingClientResultTool(tool)
+            ? MISSING_CLIENT_RESULT
+            : EXTERNAL_TOOL_RESULT,
         ),
         piiMasks: null,
       };

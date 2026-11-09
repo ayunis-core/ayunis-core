@@ -160,6 +160,7 @@ describe('adaptRunEventsToStream snapshot throttling', () => {
       'a tool result message',
       {
         type: 'tool_result_message',
+        endsRun: false,
         message: {
           role: 'tool_result',
           content: [

@@ -60,10 +60,12 @@ import { RunCapabilityContextFactory } from './application/run-capabilities/run-
 import { FinishRoutineCapability } from './application/run-capabilities/capabilities/finish-routine.capability';
 import { NotificationsCapability } from './application/run-capabilities/capabilities/notifications.capability';
 import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
+import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
+import { OutlookRunProfile } from './application/run-profiles/outlook-run-profile';
 import { RoutineRunProfile } from './application/run-profiles/routine-run-profile';
 import { ExecuteUnattendedRunUseCase } from './application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import { RunProfileAssembler } from './application/run-profiles/run-profile-assembler.service';
@@ -153,10 +155,12 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     RunProfileAssembler,
     RunCapabilityContextFactory,
     ChatRunProfile,
+    OutlookRunProfile,
     RoutineRunProfile,
     AnonymizationCapability,
     ArtifactsCapability,
     BehaviorCapability,
+    OutlookAddInCapability,
     CodeExecutionCapability,
     CustomInstructionsCapability,
     DataHandlingCapability,

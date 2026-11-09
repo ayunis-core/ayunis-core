@@ -22,6 +22,11 @@ import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.ent
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
+import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
+import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
+import { OutlookMoveEmailToComposerTool } from 'src/domain/tools/domain/tools/outlook/outlook-move-email-to-composer-tool.entity';
+import { OutlookSaveEmailToDraftTool } from 'src/domain/tools/domain/tools/outlook/outlook-save-email-to-draft-tool.entity';
 
 export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   return (
@@ -33,16 +38,54 @@ export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   );
 }
 
+const EXTERNALLY_HANDLED_TOOLS = [
+  SendEmailTool,
+  CreateCalendarEventTool,
+  CreateSkillTool,
+  EditSkillTool,
+  InstallMarketplaceSkillTool,
+  CreateRoutineTool,
+  EditRoutineTool,
+  FinishRoutineTool,
+  OutlookReadEmailTool,
+  OutlookReadAttachmentTool,
+  OutlookDraftEmailTool,
+  OutlookMoveEmailToComposerTool,
+  OutlookSaveEmailToDraftTool,
+];
+
 export function isExternallyHandledTool(tool: Tool): boolean {
+  return EXTERNALLY_HANDLED_TOOLS.some((type) => tool instanceof type);
+}
+
+/**
+ * Externally handled tools whose result the model needs: the run still ends
+ * on the call, but no placeholder result is stored, so the call stays open
+ * on the thread until the client posts its result and the run resumes.
+ */
+export function isAwaitingClientResultTool(tool: Tool): boolean {
   return (
-    tool instanceof SendEmailTool ||
-    tool instanceof CreateCalendarEventTool ||
-    tool instanceof CreateSkillTool ||
-    tool instanceof EditSkillTool ||
-    tool instanceof InstallMarketplaceSkillTool ||
-    tool instanceof CreateRoutineTool ||
-    tool instanceof EditRoutineTool ||
-    tool instanceof FinishRoutineTool
+    tool instanceof OutlookReadEmailTool ||
+    tool instanceof OutlookReadAttachmentTool
+  );
+}
+
+/**
+ * A valid call of a tool awaiting a client result settles with the runtime's
+ * placeholder, which is not its result: when the run ends on that tool phase,
+ * the placeholder is neither stored nor streamed. When the loop goes on
+ * because a sibling call was invalid, the model has seen the placeholder, so
+ * it is stored like any other result.
+ */
+export function awaitsClientResult(
+  result: { toolName: string; isError?: boolean },
+  endsRun: boolean,
+  awaitingClientResultToolNames: ReadonlySet<string>,
+): boolean {
+  return (
+    endsRun &&
+    !result.isError &&
+    awaitingClientResultToolNames.has(result.toolName)
   );
 }
 

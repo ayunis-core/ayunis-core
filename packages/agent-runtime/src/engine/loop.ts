@@ -76,7 +76,7 @@ async function* runIteration(
   if (hasToolCallNeedingApproval(result.message, state.tools)) {
     return { status: 'completed' };
   }
-  yield* runToolPhase(state, iteration, toolCalls, breaker);
+  yield* runToolPhase(state, iteration, toolCalls, breaker, exitAfterTools);
   if (isAborted(state)) return { status: 'aborted' };
   return exitAfterTools ? { status: 'completed' } : null;
 }
@@ -403,15 +403,17 @@ async function* runToolPhase(
   iteration: number,
   toolCalls: readonly ToolUseContent[],
   breaker: ToolFailureBreaker,
+  endsRun: boolean,
 ): AsyncGenerator<RunEventPayload> {
   const { results, deferredToolCallIds, fatalError } = yield* executeToolCalls(
     state,
     iteration,
     toolCalls,
+    endsRun,
   );
   const message: Message = { role: 'tool_result', content: results };
   state.messages.push(message);
-  yield { type: 'tool_result_message', message };
+  yield { type: 'tool_result_message', message, endsRun };
   if (fatalError) throw fatalError;
   if (isAborted(state)) return;
   const tripped = breaker.record(

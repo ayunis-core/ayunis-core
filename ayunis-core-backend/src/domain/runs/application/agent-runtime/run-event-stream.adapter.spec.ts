@@ -447,6 +447,7 @@ describe('adaptRunEventsToStream', () => {
       eventsFrom([
         {
           type: 'tool_result_message',
+          endsRun: false,
           message: {
             role: 'tool_result',
             content: [

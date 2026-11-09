@@ -19,6 +19,12 @@ export interface RoutineRunProfileInput {
   };
 }
 
-export type RunProfileInput = ChatRunProfileInput | RoutineRunProfileInput;
+/** The same chat, run from the Outlook add-in pane instead of the web app. */
+export interface OutlookRunProfileInput {
+  readonly id: 'outlook';
+}
+
+export type RunProfileInput =
+  ChatRunProfileInput | OutlookRunProfileInput | RoutineRunProfileInput;
 
 export type RunProfileId = RunProfileInput['id'];

@@ -589,6 +589,7 @@ function buildHook(
   const hook = factory.create({
     thread,
     integrations: new RuntimeToolIntegrationRegistry([]),
+    awaitingClientResultToolNames: new Set(),
     onMessagePersisted,
   });
   return { hook, addMessage, onMessagePersisted };

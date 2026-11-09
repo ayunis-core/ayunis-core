@@ -18,6 +18,8 @@ import {
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
+import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
+import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
 import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
@@ -323,6 +325,32 @@ describe('ToolResultCollectorService', () => {
     const result = await collect(service, thread, [calendar], input);
 
     expect(result.contents[0].result).toBe('Calendar event downloaded');
+  });
+
+  it('tells the model that a sibling read call the pane did not answer is not completed, so it is not taken as done', async () => {
+    const readEmail = new OutlookReadEmailTool();
+    const readAttachment = new OutlookReadAttachmentTool();
+    const thread = threadWith(
+      toolUse('read-1', readEmail.name),
+      toolUse('attachment-1', readAttachment.name, { name: 'Antrag.pdf' }),
+    );
+    const input = new RunToolResultInput(
+      'read-1',
+      readEmail.name,
+      '{"subject":"Antrag"}',
+    );
+
+    const result = await collect(
+      service,
+      thread,
+      [readEmail, readAttachment],
+      input,
+    );
+
+    expect(result.contents.map((content) => content.result)).toEqual([
+      '{"subject":"Antrag"}',
+      expect.stringMatching(/^Not completed: no result was returned/),
+    ]);
   });
 
   it('anonymizes PII returned by a backend tool', async () => {

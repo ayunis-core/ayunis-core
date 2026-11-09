@@ -89,6 +89,7 @@ export async function* executeToolCalls(
   state: RunState,
   iteration: number,
   calls: readonly ToolUseContent[],
+  endsRun: boolean,
 ): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
   const phase = new ToolPhase();
   let completed = false;
@@ -96,7 +97,7 @@ export async function* executeToolCalls(
     for (const call of calls) {
       yield* scheduleToolCall(state, iteration, call, phase);
     }
-    const outcome = yield* finalizeToolCalls(state, iteration, phase);
+    const outcome = yield* finalizeToolCalls(state, iteration, phase, endsRun);
     completed = true;
     return outcome;
   } finally {
@@ -154,6 +155,7 @@ async function* finalizeToolCalls(
   state: RunState,
   iteration: number,
   phase: ToolPhase,
+  endsRun: boolean,
 ): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
   const results: ToolResultContent[] = [];
   const deferredToolCallIds: string[] = [];
@@ -170,6 +172,7 @@ async function* finalizeToolCalls(
       outcome,
       hookOutcome: toolCallOutcome(outcome),
       isLastToolCall: callIndex === lastIndex,
+      endsRun,
     });
     yield* drainEmits(state);
     results.push(result);
@@ -195,6 +198,7 @@ interface FinalizeToolCallParams {
   outcome: ToolOutcome;
   hookOutcome: ToolCallOutcome;
   isLastToolCall: boolean;
+  endsRun: boolean;
 }
 
 async function finalizeToolCall(
@@ -207,6 +211,7 @@ async function finalizeToolCall(
     isError: params.outcome.isError,
     outcome: params.hookOutcome,
     isLastToolCall: params.isLastToolCall,
+    endsRun: params.endsRun,
   });
   return buildToolResult(params.toolCall, params.outcome);
 }
