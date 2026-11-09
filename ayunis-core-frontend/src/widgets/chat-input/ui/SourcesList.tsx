@@ -48,6 +48,8 @@ interface Source {
   status?: SourceResponseDtoStatus;
   processingError?: string;
   processingErrorCode?: SourceProcessingErrorCode;
+  /** Set while the file is still being transferred to storage, 0..1. */
+  uploadProgress?: number;
 }
 
 interface SourcesListProps {
@@ -140,8 +142,9 @@ export function SourcesList({
         </Badge>
       ))}
       {visibleSources.map((source) => {
+        const isUploading = source.uploadProgress !== undefined;
         const isProcessing =
-          source.status === SourceResponseDtoStatus.processing;
+          !isUploading && source.status === SourceResponseDtoStatus.processing;
         const isFailed = source.status === SourceResponseDtoStatus.failed;
 
         const badge = (
@@ -149,7 +152,7 @@ export function SourcesList({
             key={source.id}
             data-testid="chat-source"
             data-source-id={source.id}
-            data-source-status={source.status}
+            data-source-status={isUploading ? 'uploading' : source.status}
             tabIndex={isFailed ? 0 : undefined}
             variant="secondary"
             className={cn(
@@ -158,11 +161,23 @@ export function SourcesList({
               isFailed && 'bg-destructive/10 text-destructive',
             )}
           >
-            {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
+            {(isUploading || isProcessing) && (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            )}
             {isFailed && <AlertCircle className="h-3 w-3" />}
-            {!isProcessing && !isFailed && getSourceIcon(source)}
+            {!isUploading &&
+              !isProcessing &&
+              !isFailed &&
+              getSourceIcon(source)}
             <span>{source.name}</span>
-            {!isProcessing && (
+            {isUploading && (
+              <span className="text-muted-foreground">
+                {t('sources.uploading', {
+                  percent: Math.round((source.uploadProgress ?? 0) * 100),
+                })}
+              </span>
+            )}
+            {!isUploading && !isProcessing && (
               <button
                 type="button"
                 data-testid="chat-source-remove"

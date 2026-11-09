@@ -197,6 +197,8 @@
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A knowledge base can have at most 500 documents. Please remove one before adding another.",
-    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading documents."
+    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading documents.",
+    "uploading": "Uploading… {{percent}}%",
+    "uploadInterruptedError": "The upload was interrupted. Please try again."
   }
 }

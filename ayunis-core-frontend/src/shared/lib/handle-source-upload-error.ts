@@ -54,6 +54,12 @@ export default function handleSourceUploadError(
       case 'SOURCE_LIMIT_EXCEEDED':
         showError(t('sources.sourceLimitExceededError'));
         break;
+      case 'SOURCE_UPLOAD_NOT_FOUND':
+      case 'SOURCE_UPLOAD_EXPIRED':
+      case 'SOURCE_UPLOAD_INCOMPLETE':
+      case 'SOURCE_UPLOAD_REQUEST_NOT_ALLOWED':
+        showError(t('sources.uploadInterruptedError'));
+        break;
       case 'NO_PERMITTED_EMBEDDING_MODEL':
         showError(t('sources.noEmbeddingModelError'));
         break;
