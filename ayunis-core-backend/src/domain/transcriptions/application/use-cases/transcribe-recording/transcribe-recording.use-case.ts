@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DEFAULT_AUDIO_UPLOAD_BYTES } from 'src/config/transcription.config';
 import { createHash } from 'crypto';
 import { readFile, stat } from 'fs/promises';
 import pLimit from 'p-limit';
@@ -17,10 +18,7 @@ import {
   InvalidAudioFileError,
   UnexpectedTranscriptionError,
 } from 'src/domain/transcriptions/application/transcription.errors';
-import {
-  MAX_AUDIO_FILE_SIZE_BYTES,
-  validateAudio,
-} from 'src/domain/transcriptions/application/util/validate-audio';
+import { validateAudio } from 'src/domain/transcriptions/application/util/validate-audio';
 import type { RecordingTranscript } from 'src/domain/transcriptions/domain/recording-transcript';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import {
@@ -32,6 +30,7 @@ import {
 export class TranscribeRecordingUseCase {
   private readonly logger = new Logger(TranscribeRecordingUseCase.name);
   private readonly limits: AudioSegmentLimits;
+  private readonly maxUploadBytes: number;
   private readonly limit: ReturnType<typeof pLimit>;
   private readonly model: string;
 
@@ -47,10 +46,9 @@ export class TranscribeRecordingUseCase {
         config.get('transcription.segmentBytes', 25 * 1024 * 1024),
       ),
     };
-    if (this.limits.maxBytes > MAX_AUDIO_FILE_SIZE_BYTES)
-      throw new Error(
-        'Audio segment bytes exceed the application request limit',
-      );
+    this.maxUploadBytes = positive(
+      config.get('transcription.maxUploadBytes', DEFAULT_AUDIO_UPLOAD_BYTES),
+    );
     this.limit = pLimit(positive(config.get('transcription.concurrency', 2)));
     this.model =
       config.get<string>('models.mistral.transcriptionModel') ??
@@ -64,7 +62,7 @@ export class TranscribeRecordingUseCase {
       'Transcribing uploaded recording',
     );
     getRequiredOrgId(this.contextService);
-    validateAudio(command.file, command.mimeType);
+    validateAudio(command.file, command.mimeType, this.maxUploadBytes);
     await assertProcessingActive(command.processingContext);
     const identity = createHash('sha256').update(command.file).digest('hex');
     const lines: string[] = [];

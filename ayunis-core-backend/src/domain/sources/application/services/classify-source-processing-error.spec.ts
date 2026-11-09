@@ -1,3 +1,4 @@
+import { RecordingTooLongError } from 'src/domain/transcriptions/application/transcription.errors';
 import { classifySourceProcessingError } from './classify-source-processing-error';
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import {
@@ -32,6 +33,12 @@ describe('classifySourceProcessingError', () => {
     [
       new TooManyPagesError({ pageCount: 120, maxPages: 100 }),
       Code.DOCUMENT_PAGE_LIMIT_EXCEEDED,
+    ],
+    [
+      new RecordingTooLongError(
+        'Recording of 12000 s exceeds the 10800 s limit',
+      ),
+      Code.RECORDING_TOO_LONG,
     ],
     [
       new ProviderTimeoutError({ provider: 'mistral' }),

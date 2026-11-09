@@ -183,6 +183,7 @@
         "empty": "No text could be read from the document. Use a more legible version and upload it again.",
         "timeout": "Document processing timed out. Splitting large documents may help; upload the file again afterwards.",
         "tooManyPages": "The document has too many pages. Split it into smaller files and upload those.",
+        "recordingTooLong": "The recording is too long to transcribe. Split it into shorter parts and upload them separately.",
         "unavailable": "The document processing service is temporarily unavailable. Upload the file again later."
       }
     }
@@ -191,7 +192,7 @@
     "failedToAdd": "Failed to upload document. Please try again.",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
+    "fileSourceTooLargeError": "File is too large. It exceeds the maximum file size.",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",

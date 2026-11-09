@@ -27,6 +27,15 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
 // src/common/util/source-file-upload.ts.
 export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
+const AUDIO_EXTENSIONS = ['.mp3', '.m4a', '.wav', '.webm'];
+
+// Recordings have a server-configured cap (AUDIO_MAX_UPLOAD_BYTES); the API
+// answers an oversized one with FILE_TOO_LARGE, so they skip the local check.
+function isAudioFileName(name: string): boolean {
+  const lower = name.toLowerCase();
+  return AUDIO_EXTENSIONS.some((extension) => lower.endsWith(extension));
+}
+
 const BYTES_PER_MB = 1024 * 1024;
 
 // Rejects oversized files before any upload request is sent, with one toast
@@ -34,6 +43,7 @@ const BYTES_PER_MB = 1024 * 1024;
 // as "25 MB" next to a 25 MB limit.
 export function keepFilesWithinSizeLimit(files: File[], t: TFunction): File[] {
   return files.filter((file) => {
+    if (isAudioFileName(file.name)) return true;
     if (file.size <= MAX_SOURCE_FILE_SIZE_BYTES) return true;
     showError(
       t('chatInput.fileTooLarge', {

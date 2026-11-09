@@ -1,11 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import transcriptionConfig from 'src/config/transcription.config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isCSVFile,
   isDocumentSourceFile,
   isSpreadsheetFile,
@@ -52,6 +55,8 @@ export class CreateSourceUploadSessionUseCase {
     private readonly assertOrgActive: AssertOrgActiveUseCase,
     private readonly getPermittedEmbeddingModel: GetPermittedEmbeddingModelUseCase,
     private readonly contextService: ContextService,
+    @Inject(transcriptionConfig.KEY)
+    private readonly transcription: ConfigType<typeof transcriptionConfig>,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSourceError)
@@ -114,12 +119,19 @@ export class CreateSourceUploadSessionUseCase {
     return canonical;
   }
 
+  // Recordings have their own cap (AUDIO_MAX_UPLOAD_BYTES): they are sent to
+  // the transcription provider whole, so the cap follows what one request may
+  // carry, not the document limit the target passes in.
   private assertFileSize(command: CreateSourceUploadSessionCommand): void {
     if (!Number.isInteger(command.fileSize) || command.fileSize <= 0) {
       throw new EmptyFileDataError(command.fileName);
     }
-    if (command.fileSize > command.maxFileSizeBytes) {
-      throw new FileTooLargeError(command.maxFileSizeBytes);
+    const detected = detectFileType(command.mimeType, command.fileName);
+    const maxBytes = isAudioFile(detected)
+      ? this.transcription.maxUploadBytes
+      : command.maxFileSizeBytes;
+    if (command.fileSize > maxBytes) {
+      throw new FileTooLargeError(maxBytes);
     }
   }
 }

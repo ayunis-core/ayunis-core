@@ -13,6 +13,7 @@ import {
 } from 'src/domain/transcriptions/application/ports/audio-segmenter.port';
 import {
   InvalidAudioFileError,
+  RecordingTooLongError,
   TranscriptionFailedError,
 } from 'src/domain/transcriptions/application/transcription.errors';
 import {
@@ -186,13 +187,13 @@ export class FfmpegAudioSegmenterAdapter extends AudioSegmenterPort {
     const duration = Number.isFinite(metadata)
       ? metadata
       : await this.decodedDuration(path, mimeType);
-    if (
-      !Number.isFinite(duration) ||
-      duration <= 0 ||
-      duration > this.maxDuration
-    ) {
-      throw new InvalidAudioFileError(
-        `Recording duration must be between 0 and ${this.maxDuration} seconds`,
+    if (!Number.isFinite(duration) || duration <= 0) {
+      throw new InvalidAudioFileError('Recording duration could not be read');
+    }
+    if (duration > this.maxDuration) {
+      throw new RecordingTooLongError(
+        `Recording of ${Math.round(duration)} s exceeds the ${this.maxDuration} s limit`,
+        { durationSeconds: duration, maxDurationSeconds: this.maxDuration },
       );
     }
     return duration;

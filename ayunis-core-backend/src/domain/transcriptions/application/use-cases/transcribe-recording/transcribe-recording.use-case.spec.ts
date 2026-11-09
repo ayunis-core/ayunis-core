@@ -24,7 +24,7 @@ describe('uploaded recording transcription', () => {
     progress: () => Promise.resolve(),
   };
 
-  function useCase() {
+  function useCase(config = new ConfigService()) {
     const segmenter = {
       split: async function* () {
         for (let index = 0; index < 2; index++)
@@ -51,7 +51,7 @@ describe('uploaded recording transcription', () => {
       segmenter,
       provider as never,
       { get: () => '604a15e4-563b-44f9-bef6-a67ba9b5c05f' } as never,
-      new ConfigService(),
+      config,
     );
   }
 
@@ -77,6 +77,33 @@ describe('uploaded recording transcription', () => {
     active = true;
     requests = 0;
     failSecond = false;
+  });
+
+  it('accepts a segment budget above the dictation cap so long recordings stay whole', async () => {
+    const whole = useCase(
+      new ConfigService({
+        transcription: {
+          segmentBytes: 48 * 1024 * 1024,
+          segmentSeconds: 10_800,
+        },
+      }),
+    );
+
+    await expect(whole.execute(command())).resolves.toContain(
+      'Council decision.',
+    );
+  });
+
+  it('rejects a recording above the configured upload cap', async () => {
+    const capped = useCase(
+      new ConfigService({ transcription: { maxUploadBytes: 4 } }),
+    );
+
+    await expect(capped.execute(command())).rejects.toMatchObject({
+      code: 'INVALID_AUDIO_FILE',
+      message: expect.stringContaining('exceeds maximum allowed size'),
+    });
+    expect(requests).toBe(0);
   });
 
   it('adds original recording offsets to provider timestamps', async () => {
