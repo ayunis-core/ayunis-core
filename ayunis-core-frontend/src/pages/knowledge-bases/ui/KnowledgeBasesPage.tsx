@@ -8,15 +8,8 @@ import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
-import { useMyPermissions } from '@/features/permissions';
+import { OwnerSections } from '@/features/resource-ownership';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
-import { EmptyState } from '@/widgets/empty-state';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
@@ -26,21 +19,6 @@ export default function KnowledgeBasesPage({
   knowledgeBases,
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
-  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
-
-  const isOwnPersonal = (kb: KnowledgeBase) =>
-    kb.ownerType === 'personal' && !kb.isShared;
-
-  const personalKnowledgeBases = knowledgeBases
-    .filter(isOwnPersonal)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Team and organization knowledge bases are available like shared ones.
-  const sharedKnowledgeBases = knowledgeBases
-    .filter((kb) => !isOwnPersonal(kb))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
   const headerAction = (
     <div className="flex min-w-0 w-full flex-wrap items-center justify-end gap-2">
       <HelpLink path="knowledge-collections/" />
@@ -77,57 +55,13 @@ export default function KnowledgeBasesPage({
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger
-                value="shared"
-                data-testid="knowledge-base-tab-shared"
-              >
-                {t('tabs.shared')}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="personal" className="mt-4">
-              {personalKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={
-                    canCreate
-                      ? t('emptyState.personal.description')
-                      : t('emptyState.noAccessDescription')
-                  }
-                  action={
-                    canCreate ? (
-                      <CreateKnowledgeBaseDialog
-                        buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon={true}
-                      />
-                    ) : undefined
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {personalKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="shared" className="mt-4">
-              {sharedKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <OwnerSections
+            items={knowledgeBases}
+            testIdPrefix="knowledge-bases"
+            renderItem={(kb) => (
+              <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+            )}
+          />
         }
       />
     </AppLayout>

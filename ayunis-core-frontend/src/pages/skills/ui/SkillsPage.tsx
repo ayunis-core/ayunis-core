@@ -10,14 +10,7 @@ import SkillsEmptyState from './SkillsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@ayunis/ui/components/tabs';
-import { EmptyState } from '@/widgets/empty-state';
-import { useMyPermissions } from '@/features/permissions';
+import { OwnerSections } from '@/features/resource-ownership';
 
 interface SkillsPageProps {
   skills: Skill[];
@@ -25,19 +18,8 @@ interface SkillsPageProps {
 
 export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
-  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
-  const canCreate = isLoadingPermissions || can('manage_skills');
-
-  const isOwnPersonal = (skill: Skill) =>
-    skill.ownerType === 'personal' && !skill.isShared;
-
   const personalSkills = skills
-    .filter(isOwnPersonal)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Team and organization skills are available to the user like shared ones.
-  const sharedSkills = skills
-    .filter((skill) => !isOwnPersonal(skill))
+    .filter((skill) => skill.ownerType === 'personal' && !skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   // The "pin a skill" tour step anchors on the first active personal skill.
@@ -93,61 +75,20 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList>
-              <TabsTrigger value="personal" data-testid="skills-tab-personal">
-                {t('tabs.personal')}
-              </TabsTrigger>
-              <TabsTrigger value="shared" data-testid="skills-tab-shared">
-                {t('tabs.shared')}
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-4">
             <MarketplacePromoCard />
-            <TabsContent value="personal" className="mt-4">
-              {personalSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={
-                    canCreate
-                      ? t('emptyState.personal.description')
-                      : t('emptyState.noAccessDescription')
-                  }
-                  action={
-                    canCreate ? (
-                      <CreateSkillMenu
-                        buttonText={t('createDialog.buttonTextFirst')}
-                        showIcon
-                      />
-                    ) : undefined
-                  }
+            <OwnerSections
+              items={skills}
+              testIdPrefix="skills"
+              renderItem={(skill) => (
+                <SkillCard
+                  key={skill.id}
+                  skill={skill}
+                  pinTourTarget={skill.id === pinTargetSkillId}
                 />
-              ) : (
-                <div className="space-y-3">
-                  {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
-                  ))}
-                </div>
               )}
-            </TabsContent>
-            <TabsContent value="shared" className="mt-4">
-              {sharedSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedSkills.map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            />
+          </div>
         }
       />
     </AppLayout>

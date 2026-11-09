@@ -51,7 +51,6 @@ test("shows a knowledge base linked to a skill shared with another user", async 
     );
 
     await memberPage.goto("/knowledge-bases");
-    await memberPage.getByTestId("knowledge-base-tab-shared").click();
     await expect(
       memberPage.getByTestId(`knowledge-base-card-${fixture.knowledgeBase.id}`),
     ).toBeVisible();
