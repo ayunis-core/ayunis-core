@@ -1,11 +1,14 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntitySchema } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
-import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import {
+  ThreadNotFoundError,
+  ThreadSourceLimitExceededError,
+} from 'src/domain/threads/application/threads.errors';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
@@ -33,7 +36,12 @@ const sourceAssignmentSchema = new EntitySchema<ThreadSourceAssignmentRecord>({
   name: 'ThreadSourceAssignmentRecord',
   target: ThreadSourceAssignmentRecord,
   tableName: 'source_assignments',
-  columns: { id: { type: 'uuid', primary: true } },
+  columns: {
+    id: { type: 'uuid', primary: true },
+    threadId: { type: 'uuid' },
+    sourceId: { type: 'uuid' },
+    originSkillId: { type: 'uuid', nullable: true },
+  },
 });
 
 describe('Thread assignment transaction', () => {
@@ -105,6 +113,21 @@ describe('Thread assignment transaction', () => {
       .countBy({ threadId });
   }
 
+  async function sourceCount(): Promise<number> {
+    return db.getRepository(ThreadSourceAssignmentRecord).countBy({ threadId });
+  }
+
+  function attachSources(sourceIds: UUID[], userId = ownerId) {
+    return txHost.withTransaction(() =>
+      repository.attachSourcesWithinCapacity({
+        threadId,
+        userId,
+        sourceIds,
+        maxSources: 3,
+      }),
+    );
+  }
+
   it('rolls back an assignment when the enclosing operation fails', async () => {
     await expect(
       txHost.withTransaction(async () => {
@@ -155,6 +178,36 @@ describe('Thread assignment transaction', () => {
       }),
     );
     expect(await assignmentCount()).toBe(1);
+  });
+
+  it('attaches sources in one batch only while the batch fits the cap', async () => {
+    await expect(
+      attachSources([randomUUID()], randomUUID()),
+    ).rejects.toBeInstanceOf(ThreadNotFoundError);
+    await attachSources([randomUUID(), randomUUID()]);
+    expect(await sourceCount()).toBe(2);
+    await expect(
+      attachSources([randomUUID(), randomUUID()]),
+    ).rejects.toBeInstanceOf(ThreadSourceLimitExceededError);
+    expect(await sourceCount()).toBe(2);
+    await attachSources([randomUUID()]);
+    expect(await sourceCount()).toBe(3);
+  });
+
+  it('lets only one of two concurrent completions take the last slot', async () => {
+    await attachSources([randomUUID(), randomUUID()]);
+    const outcomes = await Promise.allSettled([
+      attachSources([randomUUID()]),
+      attachSources([randomUUID()]),
+    ]);
+    const fulfilled = outcomes.filter((o) => o.status === 'fulfilled');
+    const rejected = outcomes.filter(
+      (o): o is PromiseRejectedResult => o.status === 'rejected',
+    );
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason).toBeInstanceOf(ThreadSourceLimitExceededError);
+    expect(await sourceCount()).toBe(3);
   });
 
   it('restores removed assignments on failure and supports committed recreation', async () => {

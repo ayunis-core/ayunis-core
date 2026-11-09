@@ -36,6 +36,8 @@ Create and list are owner-discriminated while retaining one behavioral contract:
 | PATCH           | `/skills/:id/pin`                                   | Idempotently set `{ isPinned }`                       |
 | GET             | `/skills/:id/sources`                               | List sources                                          |
 | POST            | `/skills/:id/sources/file`                          | Add a file source                                     |
+| POST            | `/skills/:id/uploads`                               | Reserve a direct upload session for a source file     |
+| POST            | `/skills/:id/uploads/:uploadId/complete`            | Turn a transferred upload into skill sources          |
 | DELETE          | `/skills/:id/sources/:sourceId`                     | Remove a source                                       |
 | GET             | `/skills/:skillId/knowledge-bases`                  | List assigned knowledge bases with state              |
 | POST            | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign a knowledge base                               |

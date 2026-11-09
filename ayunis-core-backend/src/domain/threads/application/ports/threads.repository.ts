@@ -96,6 +96,17 @@ export abstract class ThreadsRepository {
     userId: UUID;
     sourceAssignment: SourceAssignment;
   }): Promise<void>;
+  /**
+   * Attaches freshly created sources in one statement under a row lock on
+   * the thread, so two completions racing for the last slots cannot push the
+   * thread past `maxSources`. Must run inside the caller's transaction.
+   */
+  abstract attachSourcesWithinCapacity(params: {
+    threadId: UUID;
+    userId: UUID;
+    sourceIds: UUID[];
+    maxSources: number;
+  }): Promise<void>;
   abstract updateMcpIntegrations(params: {
     threadId: UUID;
     userId: UUID;

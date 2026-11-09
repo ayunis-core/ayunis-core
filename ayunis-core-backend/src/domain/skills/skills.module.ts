@@ -27,6 +27,8 @@ import { SetSkillPinUseCase } from './application/use-cases/set-skill-pin/set-sk
 import { FindActiveSkillsUseCase } from './application/use-cases/find-active-skills/find-active-skills.use-case';
 import { AddSourceToSkillUseCase } from './application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import { AddFileSourceToSkillUseCase } from './application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
+import { CreateSkillSourceUploadUseCase } from './application/use-cases/create-skill-source-upload/create-skill-source-upload.use-case';
+import { CompleteSkillSourceUploadUseCase } from './application/use-cases/complete-skill-source-upload/complete-skill-source-upload.use-case';
 import { RemoveSourceFromSkillUseCase } from './application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
 import { ListSkillSourcesUseCase } from './application/use-cases/list-skill-sources/list-skill-sources.use-case';
 import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
@@ -132,6 +134,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     FindActiveSkillsUseCase,
     AddSourceToSkillUseCase,
     AddFileSourceToSkillUseCase,
+    CreateSkillSourceUploadUseCase,
+    CompleteSkillSourceUploadUseCase,
     RemoveSourceFromSkillUseCase,
     ListSkillSourcesUseCase,
     AssignMcpIntegrationToSkillUseCase,
