@@ -146,6 +146,22 @@ describe('LocalDefaultModelSelectionsRepository writes', () => {
     ).toBe(1);
   });
 
+  it('keeps both users on a permit they both chose as their default', async () => {
+    const firstUserId = randomUUID();
+    const secondUserId = randomUUID();
+    const permitId = randomUUID();
+
+    await repository.setModel({ userId: firstUserId }, permitId);
+    await repository.setModel({ userId: secondUserId }, permitId);
+
+    const users = db.getRepository(DefaultModelSelectionRecord);
+    for (const userId of [firstUserId, secondUserId]) {
+      expect(await users.findBy({ userId })).toEqual([
+        expect.objectContaining({ kind: 'model', permittedModelId: permitId }),
+      ]);
+    }
+  });
+
   it('clears an owner and removes defaults by catalog model', async () => {
     const orgId = randomUUID();
     const userId = randomUUID();
