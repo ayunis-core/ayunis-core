@@ -6,9 +6,15 @@ export interface RetrievalConfig {
     serverUrl: string | undefined;
   };
   processingMaxPdfPages: number;
+  ocrBatchPages?: number;
+  ocrBatchBytes?: number;
+  ocrConcurrency?: number;
 }
 
 export default registerAs('retrieval', (): RetrievalConfig => ({
+  ocrBatchPages: Number(process.env.OCR_BATCH_MAX_PAGES || 20),
+  ocrBatchBytes: Number(process.env.OCR_BATCH_MAX_BYTES || 10 * 1024 * 1024),
+  ocrConcurrency: Number(process.env.OCR_MAX_CONCURRENCY || 4),
   mistral: {
     apiKey: process.env.MISTRAL_API_KEY,
     serverUrl: process.env.MISTRAL_OCR_SERVER_URL,

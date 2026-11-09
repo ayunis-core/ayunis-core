@@ -1,3 +1,4 @@
+import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { Module } from '@nestjs/common';
 import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
@@ -34,6 +35,7 @@ import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/ta
   ],
   providers: [
     StoredSourceFileService,
+    ProcessingCheckpointService,
     DocumentProcessingProducer,
     {
       provide: DocumentProcessingPort,
