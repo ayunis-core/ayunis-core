@@ -42,6 +42,7 @@ describe('CreateSessionUseCase', () => {
       familyId: TEST_FAMILY_ID,
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
+      client: null,
     });
     expect(repository.insert).toHaveBeenCalledTimes(1);
   });

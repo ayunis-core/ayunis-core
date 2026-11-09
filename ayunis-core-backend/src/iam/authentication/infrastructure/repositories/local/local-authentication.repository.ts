@@ -60,6 +60,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
         role: user.role,
         systemRole: user.systemRole,
         name: user.name,
+        ...(user.client && { client: user.client }),
       },
       {
         expiresIn: jwtConfig.expiresIn,

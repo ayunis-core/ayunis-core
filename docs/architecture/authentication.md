@@ -308,7 +308,7 @@ atomically. Accepted TOTP counters can only move forward, preventing replay.
 | --- | --- |
 | `access_token` cookie | Signed JWT containing the Core user, organization, and roles. HTTP-only; one hour by default. |
 | `refresh_token` cookie | Opaque random value. Only its SHA-256 hash is stored. Seven days by default. |
-| `refresh_tokens` rows | One row per token in a device/login family, including `password` or `sso` provenance, optional Zitadel `sid`, rotation state, and expiry. |
+| `refresh_tokens` rows | One row per token in a device/login family, including `password` or `sso` provenance, optional Zitadel `sid`, optional token client, rotation state, and expiry. |
 | `mfa_pending_token` cookie | Signed short-lived proof of primary authentication; never accepted by the normal JWT strategy. |
 | SSO correlation cookie | Ten-minute browser binding for one authorization transaction. |
 | Browser `sessionStorage` | Safe post-login path, pending SSO org, and remembered successful SSO org. It is UX state, not trusted identity state. |
@@ -390,6 +390,30 @@ the expected issuer, audience, expiry, `jti`, logout event, and no nonce. A
 `sid` revokes the exact session. Subject fallback resolves the federated mapping
 and revokes only SSO families, never password families. Unknown identities and
 repeated valid notifications are idempotent.
+
+## Token clients
+
+Office add-ins run in a cross-site iframe or WebView where session cookies are
+blocked or partitioned, so they hold their session as tokens instead. The value
+identifying such a client (`outlook` today) lives in the session client
+registry (`iam/sessions/domain/value-objects/session-client.ts`); it is data,
+not configuration.
+
+| Step | Behavior |
+| --- | --- |
+| Login | The add-in opens an Office dialog on Core's own origin. Password, SSO, and MFA run there unchanged and end with the usual session cookies in the dialog. |
+| `POST /api/auth/session/handoff` `{ client }` | Authenticates the dialog's refresh cookie with the refresh checks (reuse revokes its family), starts a separate family bound to `client` with the same provenance and SSO deadline, and returns `{ accessToken, refreshToken, expiresIn }`. Only accepted from the frontend origin (`Origin` header), since the dialog always runs there and a permissive CORS setup would otherwise let a same-site page read the tokens. The cookie session and its cookies stay untouched: on Outlook on the web the dialog shares cookies with the web app. |
+| API calls | `Authorization: Bearer <access JWT>`. `JwtStrategy` reads the cookie first and the header second; the token carries a `client` claim. |
+| `POST /api/auth/refresh` `{ refreshToken }` | Used only when no refresh cookie is present. Same rotation, grace, and reuse revocation as the cookie path; tokens come back in the body and no cookies are written. `JwtAuthGuard`'s inline refresh stays cookie-only. |
+| `POST /api/auth/logout` `{ refreshToken }` | Same fallback: revokes the family without cookie writes. |
+
+The refresh-token row stores `client`, and rotation copies it to every
+successor, so a refreshed token stays restricted. `AllowedClientsGuard` runs
+directly after `JwtAuthGuard`: a session with a `client` may only call routes
+marked `@AllowedClients(<client>)` and receives 403 `CLIENT_NOT_ALLOWED`
+everywhere else. Browser sessions and API keys carry no client and are not
+affected. A token whose `client` is no longer in the registry is rejected
+rather than treated as a browser session.
 
 ## Organization authentication policy
 

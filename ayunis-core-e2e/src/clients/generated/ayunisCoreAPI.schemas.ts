@@ -6074,6 +6074,20 @@ export interface SuccessResponseDto {
   success: boolean;
 }
 
+export interface SessionTokensResponseDto {
+  /** Access JWT for the Authorization header */
+  accessToken: string;
+  /** Opaque refresh token, rotated on every use */
+  refreshToken: string;
+  /** Access token lifetime in seconds */
+  expiresIn: number;
+}
+
+export interface RefreshTokenRequestDto {
+  /** Refresh token of a token client. Read only when no refresh cookie is present; the new tokens are then returned in the body. */
+  refreshToken?: string;
+}
+
 /**
  * User role
  */
@@ -6131,6 +6145,21 @@ export interface MfaLoginConfirmResponseDto {
   success: boolean;
   /** Single-use recovery codes issued on enrollment. Shown exactly once. */
   recoveryCodes: string[];
+}
+
+/**
+ * Token client that takes over the session
+ */
+export type SessionHandoffRequestDtoClient = typeof SessionHandoffRequestDtoClient[keyof typeof SessionHandoffRequestDtoClient];
+
+
+export const SessionHandoffRequestDtoClient = {
+  outlook: 'outlook',
+} as const;
+
+export interface SessionHandoffRequestDto {
+  /** Token client that takes over the session */
+  client: SessionHandoffRequestDtoClient;
 }
 
 export interface OnboardingResponseDto {
@@ -6283,6 +6312,11 @@ export interface SsoBackchannelLogoutRequestDto {
 export interface SsoAccountLinkStatusResponseDto {
   canLink: boolean;
   isLinked: boolean;
+}
+
+export interface LogoutRequestDto {
+  /** Refresh token of a token client. Read only when no refresh cookie is present; no cookies are written on that path. */
+  refreshToken?: string;
 }
 
 export interface LogoutResponseDto {

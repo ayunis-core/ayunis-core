@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
-import type { UserRole } from '../../users/domain/value-objects/role.object';
+import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export class ActiveUser {
   readonly id: UUID;
@@ -10,6 +11,8 @@ export class ActiveUser {
   readonly systemRole: SystemRole;
   readonly orgId: UUID;
   readonly name: string;
+  /** Token client the session belongs to; null for browser sessions. */
+  readonly client: SessionClient | null;
 
   constructor(params: {
     id: UUID;
@@ -19,6 +22,7 @@ export class ActiveUser {
     systemRole: SystemRole;
     orgId: UUID;
     name: string;
+    client?: SessionClient | null;
   }) {
     this.id = params.id;
     this.email = params.email;
@@ -27,5 +31,6 @@ export class ActiveUser {
     this.systemRole = params.systemRole;
     this.orgId = params.orgId;
     this.name = params.name;
+    this.client = params.client ?? null;
   }
 }

@@ -139,6 +139,7 @@ import type {
   LetterheadResponseDto,
   LoginDto,
   LoginResponseDto,
+  LogoutRequestDto,
   LogoutResponseDto,
   MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
@@ -189,6 +190,7 @@ import type {
   ProviderUsageResponseDto,
   RecordModuleHeartbeatRequestDto,
   RecoveryCodesResponseDto,
+  RefreshTokenRequestDto,
   RegisterDto,
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
@@ -208,6 +210,8 @@ import type {
   RunSessionResponseDto,
   RunThreadResponseDto,
   RunsControllerSendMessageBody,
+  SessionHandoffRequestDto,
+  SessionTokensResponseDto,
   SetAppAlertRequestDto,
   SetCreditLimitDto,
   SetCreditsPerEuroRequestDto,
@@ -28548,17 +28552,19 @@ export const useAuthenticationControllerRegister = <TError = ErrorResponseDto,
     }
 
 /**
- * Refresh expired access tokens using the refresh token stored in cookies. Returns new authentication cookies.
+ * Refresh expired access tokens using the refresh token stored in cookies and set new authentication cookies. Without a refresh cookie, a token client sends its refresh token in the body and receives the new tokens in the body; no cookies are written on that path.
  * @summary Refresh authentication tokens
  */
 export const authenticationControllerRefresh = (
-
+    refreshTokenRequestDto?: RefreshTokenRequestDto,
  signal?: AbortSignal
 ) => {
 
 
-      return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/refresh`, method: 'POST', signal
+      return customAxiosInstance<SuccessResponseDto | SessionTokensResponseDto>(
+      {url: `/auth/refresh`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: refreshTokenRequestDto, signal
     },
       );
     }
@@ -28569,8 +28575,8 @@ export const authenticationControllerRefresh = (
 export const getAuthenticationControllerRefreshMutationKey = () => ['authenticationControllerRefresh'] as const;
 
 export const getAuthenticationControllerRefreshMutationOptions = <TError = ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,AuthenticationControllerRefreshMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,AuthenticationControllerRefreshMutationVariables, TContext> => {
 
 const mutationKey = getAuthenticationControllerRefreshMutationKey();
 const {mutation: mutationOptions} = options ?
@@ -28582,10 +28588,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authenticationControllerRefresh>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authenticationControllerRefresh>>, AuthenticationControllerRefreshMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  authenticationControllerRefresh()
+          return  authenticationControllerRefresh(data,)
         }
 
 
@@ -28596,19 +28602,19 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type AuthenticationControllerRefreshMutationResult = NonNullable<Awaited<ReturnType<typeof authenticationControllerRefresh>>>
-
+    export type AuthenticationControllerRefreshMutationBody = RefreshTokenRequestDto | undefined
     export type AuthenticationControllerRefreshMutationError = ErrorResponseDto
-
+    export type AuthenticationControllerRefreshMutationVariables = {data?: RefreshTokenRequestDto}
 
     /**
  * @summary Refresh authentication tokens
  */
 export const useAuthenticationControllerRefresh = <TError = ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerRefresh>>, TError,AuthenticationControllerRefreshMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authenticationControllerRefresh>>,
         TError,
-        void,
+        AuthenticationControllerRefreshMutationVariables,
         TContext
       > => {
       return useMutation(getAuthenticationControllerRefreshMutationOptions(options), queryClient);
@@ -28911,6 +28917,75 @@ export const useMfaLoginControllerConfirmSetup = <TError = unknown,
         TContext
       > => {
       return useMutation(getMfaLoginControllerConfirmSetupMutationOptions(options), queryClient);
+    }
+
+/**
+ * Authenticates the refresh cookie, starts a separate session bound to the given client and returns its tokens in the body. The cookie session and its cookies stay as they are. Used by the Office add-in dialog after a regular login.
+ * @summary Start a token client session from the cookie session
+ */
+export const sessionHandoffControllerHandoff = (
+    sessionHandoffRequestDto: SessionHandoffRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SessionTokensResponseDto>(
+      {url: `/auth/session/handoff`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: sessionHandoffRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSessionHandoffControllerHandoffMutationKey = () => ['sessionHandoffControllerHandoff'] as const;
+
+export const getSessionHandoffControllerHandoffMutationOptions = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>, TError,SessionHandoffControllerHandoffMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>, TError,SessionHandoffControllerHandoffMutationVariables, TContext> => {
+
+const mutationKey = getSessionHandoffControllerHandoffMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>, SessionHandoffControllerHandoffMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  sessionHandoffControllerHandoff(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SessionHandoffControllerHandoffMutationResult = NonNullable<Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>>
+    export type SessionHandoffControllerHandoffMutationBody = SessionHandoffRequestDto
+    export type SessionHandoffControllerHandoffMutationError = ErrorResponseDto
+    export type SessionHandoffControllerHandoffMutationVariables = {data: SessionHandoffRequestDto}
+
+    /**
+ * @summary Start a token client session from the cookie session
+ */
+export const useSessionHandoffControllerHandoff = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>, TError,SessionHandoffControllerHandoffMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sessionHandoffControllerHandoff>>,
+        TError,
+        SessionHandoffControllerHandoffMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSessionHandoffControllerHandoffMutationOptions(options), queryClient);
     }
 
 /**
@@ -30810,16 +30885,19 @@ export function useSsoAccountControllerGetStatus<TData = Awaited<ReturnType<type
 
 
 /**
+ * Revokes the session of the refresh cookie and clears the cookies. Without a refresh cookie, a token client sends its refresh token in the body and no cookies are written.
  * @summary Revoke the current session and log out
  */
 export const logoutControllerLogout = (
-
+    logoutRequestDto?: LogoutRequestDto,
  signal?: AbortSignal
 ) => {
 
 
       return customAxiosInstance<LogoutResponseDto>(
-      {url: `/auth/logout`, method: 'POST', signal
+      {url: `/auth/logout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: logoutRequestDto, signal
     },
       );
     }
@@ -30830,8 +30908,8 @@ export const logoutControllerLogout = (
 export const getLogoutControllerLogoutMutationKey = () => ['logoutControllerLogout'] as const;
 
 export const getLogoutControllerLogoutMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,LogoutControllerLogoutMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,LogoutControllerLogoutMutationVariables, TContext> => {
 
 const mutationKey = getLogoutControllerLogoutMutationKey();
 const {mutation: mutationOptions} = options ?
@@ -30843,10 +30921,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutControllerLogout>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutControllerLogout>>, LogoutControllerLogoutMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  logoutControllerLogout()
+          return  logoutControllerLogout(data,)
         }
 
 
@@ -30857,19 +30935,19 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type LogoutControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logoutControllerLogout>>>
-
+    export type LogoutControllerLogoutMutationBody = LogoutRequestDto | undefined
     export type LogoutControllerLogoutMutationError = unknown
-
+    export type LogoutControllerLogoutMutationVariables = {data?: LogoutRequestDto}
 
     /**
  * @summary Revoke the current session and log out
  */
 export const useLogoutControllerLogout = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,LogoutControllerLogoutMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof logoutControllerLogout>>,
         TError,
-        void,
+        LogoutControllerLogoutMutationVariables,
         TContext
       > => {
       return useMutation(getLogoutControllerLogoutMutationOptions(options), queryClient);

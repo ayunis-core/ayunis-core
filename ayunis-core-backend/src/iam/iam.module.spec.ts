@@ -5,6 +5,7 @@ import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
 import { RolesGuard } from './authorization/application/guards/roles.guard';
+import { AllowedClientsGuard } from './authorization/application/guards/allowed-clients.guard';
 import { PermissionsGuard } from './authorization/application/guards/permissions.guard';
 import { TeamPermissionsGuard } from './teams/application/guards/team-permissions.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
@@ -51,6 +52,7 @@ describe('IamModule global guard order', () => {
   it('binds every APP_GUARD in the intended order', () => {
     expect(appGuardOrder()).toEqual([
       JwtAuthGuard,
+      AllowedClientsGuard,
       IpAllowlistGuard,
       EmailConfirmGuard,
       RolesGuard,

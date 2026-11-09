@@ -8,6 +8,9 @@ import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-ca
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
+import { SessionTokensResponseDtoMapper } from './mappers/session-tokens-response-dto.mapper';
+import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import type { Request, Response } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -70,6 +73,12 @@ describe('AuthenticationController', () => {
         {
           provide: MeResponseDtoMapper,
           useValue: { toDto: (u: any) => ({ email: u.email, role: u.role }) },
+        },
+        {
+          provide: SessionTokensResponseDtoMapper,
+          useFactory: (config: ConfigService) =>
+            new SessionTokensResponseDtoMapper(config),
+          inject: [ConfigService],
         },
       ],
     }).compile();
@@ -214,6 +223,119 @@ describe('AuthenticationController', () => {
     });
   });
 
+  describe('refresh', () => {
+    let mockResponse: Partial<Response>;
+
+    beforeEach(() => {
+      mockResponse = {
+        json: jest.fn().mockReturnThis(),
+        status: jest.fn().mockReturnThis(),
+        cookie: jest.fn().mockReturnThis(),
+        clearCookie: jest.fn().mockReturnThis(),
+      };
+      jest.spyOn(mockConfigService, 'get').mockImplementation(
+        (key: string, defaultValue?: unknown) =>
+          ({
+            'auth.cookie.refreshTokenName': 'refresh_token',
+            'auth.jwt.expiresIn': '1h',
+          })[key] ?? defaultValue,
+      );
+    });
+
+    const request = (cookies: Record<string, string>) =>
+      ({ cookies, headers: {} }) as unknown as Request;
+
+    it('returns a token client its rotated tokens in the body without cookies', async () => {
+      jest
+        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .mockResolvedValue(new AuthTokens('pane-access', 'pane-refresh-2'));
+
+      await controller.refresh(request({}), mockResponse as Response, {
+        refreshToken: 'pane-refresh-1',
+      });
+
+      expect(mockRefreshTokenUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refreshToken: 'pane-refresh-1',
+          clientBound: true,
+        }),
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        accessToken: 'pane-access',
+        refreshToken: 'pane-refresh-2',
+        expiresIn: 3600,
+      });
+      expect(mockResponse.cookie).not.toHaveBeenCalled();
+      expect(mockResponse.clearCookie).not.toHaveBeenCalled();
+    });
+
+    it('answers 401 without cookie writes when a body token is replayed', async () => {
+      jest
+        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .mockRejectedValue(new RefreshTokenReuseError());
+
+      await controller.refresh(request({}), mockResponse as Response, {
+        refreshToken: 'already-rotated',
+      });
+
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
+      expect(mockResponse.cookie).not.toHaveBeenCalled();
+      expect(mockResponse.clearCookie).not.toHaveBeenCalled();
+    });
+
+    it('prefers the refresh cookie over a body token', async () => {
+      jest
+        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .mockResolvedValue(new AuthTokens('web-access', 'web-refresh-2'));
+
+      await controller.refresh(
+        request({ refresh_token: 'web-refresh-1' }),
+        mockResponse as Response,
+        { refreshToken: 'pane-refresh-1' },
+      );
+
+      expect(mockRefreshTokenUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refreshToken: 'web-refresh-1',
+          clientBound: false,
+        }),
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith({ success: true });
+      expect(mockResponse.cookie).toHaveBeenCalled();
+    });
+
+    // A 401 tells the client its session is gone and it drops the token; an
+    // outage must surface as the error it is so the client keeps the session.
+    it('keeps a token client signed in when the refresh fails unexpectedly', async () => {
+      const outage = new UnexpectedAuthenticationError(new Error('db down'));
+      jest.spyOn(mockRefreshTokenUseCase, 'execute').mockRejectedValue(outage);
+
+      await expect(
+        controller.refresh(request({}), mockResponse as Response, {
+          refreshToken: 'pane-refresh-1',
+        }),
+      ).rejects.toBe(outage);
+
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+
+    it('keeps the cookies when the cookie refresh fails unexpectedly', async () => {
+      const outage = new UnexpectedAuthenticationError(new Error('db down'));
+      jest.spyOn(mockRefreshTokenUseCase, 'execute').mockRejectedValue(outage);
+
+      await expect(
+        controller.refresh(
+          request({ refresh_token: 'web-refresh-1' }),
+          mockResponse as Response,
+          {},
+        ),
+      ).rejects.toBe(outage);
+
+      expect(mockResponse.clearCookie).not.toHaveBeenCalled();
+      expect(mockResponse.status).not.toHaveBeenCalled();
+    });
+  });
+
   describe('me', () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
@@ -221,6 +343,7 @@ describe('AuthenticationController', () => {
     beforeEach(() => {
       mockRequest = {
         cookies: {},
+        headers: {},
       };
       mockResponse = {
         json: jest.fn().mockReturnThis(),
@@ -270,6 +393,36 @@ describe('AuthenticationController', () => {
       });
     });
 
+    it('reads the access token of a token client from the Authorization header', async () => {
+      jest.spyOn(mockConfigService, 'get').mockImplementation((key) => {
+        if (key === 'auth.cookie.accessTokenName') return 'access_token';
+        if (key === 'auth.cookie.refreshTokenName') return 'refresh_token';
+        return null;
+      });
+      mockRequest.headers = { authorization: 'Bearer pane-access-token' };
+      jest.spyOn(mockGetCurrentUserUseCase, 'execute').mockResolvedValue(
+        new ActiveUser({
+          id: 'user-id' as UUID,
+          email: 'pane@example.com',
+          emailVerified: true,
+          role: UserRole.USER,
+          systemRole: SystemRole.CUSTOMER,
+          orgId: 'org-id' as UUID,
+          name: 'name',
+        }),
+      );
+
+      await controller.me(mockRequest as Request, mockResponse as Response);
+
+      expect(mockGetCurrentUserUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ accessToken: 'pane-access-token' }),
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        email: 'pane@example.com',
+        role: UserRole.USER,
+      });
+    });
+
     it('should refresh tokens and return user info when access token is invalid but refresh token is valid', async () => {
       const mockUser = new ActiveUser({
         id: 'user-id' as UUID,
@@ -286,18 +439,20 @@ describe('AuthenticationController', () => {
       );
 
       // Mock config with all required values
-      jest
-        .spyOn(mockConfigService, 'get')
-        .mockImplementation((key, defaultValue) => {
-          if (key === 'auth.cookie.accessTokenName') return 'access_token';
-          if (key === 'auth.cookie.refreshTokenName') return 'refresh_token';
-          if (key === 'auth.jwt.expiresIn') return '1h';
-          if (key === 'auth.jwt.refreshTokenExpiresIn') return '7d';
-          if (key === 'auth.cookie.httpOnly') return true;
-          if (key === 'auth.cookie.secure') return false;
-          if (key === 'auth.cookie.sameSite') return 'lax';
-          return defaultValue ?? null;
-        });
+      jest.spyOn(mockConfigService, 'get').mockImplementation(
+        (key: string, defaultValue?: unknown): unknown =>
+          ({
+            'auth.cookie.accessTokenName': 'access_token',
+            'auth.cookie.refreshTokenName': 'refresh_token',
+            'auth.jwt.expiresIn': '1h',
+            'auth.jwt.refreshTokenExpiresIn': '7d',
+            'auth.cookie.httpOnly': true,
+            'auth.cookie.secure': false,
+            'auth.cookie.sameSite': 'lax',
+          })[key] ??
+          defaultValue ??
+          null,
+      );
 
       // Mock cookies
       mockRequest.cookies = {

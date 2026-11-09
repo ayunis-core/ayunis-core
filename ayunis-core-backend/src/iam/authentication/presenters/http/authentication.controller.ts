@@ -15,7 +15,6 @@ import {
   ApiOperation,
   ApiBody,
   ApiResponse,
-  ApiCookieAuth,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
@@ -33,12 +32,18 @@ import {
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import {
   setCookies,
   clearCookies,
-  getAccessTokenCookieName,
   setMfaPendingCookie,
 } from 'src/common/util/cookie.util';
+import { extractAccessToken } from 'src/common/util/access-token.util';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { RefreshTokenRequestDto } from './dtos/session-tokens.dto';
+import { SessionTokensResponseDtoMapper } from './mappers/session-tokens-response-dto.mapper';
+import { ApiRefresh } from './decorators/api-refresh.decorator';
 import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
 import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 
@@ -56,6 +61,17 @@ import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
+// Clients drop their refresh token on a 401, so only a rejected session may
+// answer it. An outage or unexpected failure keeps its own status and the
+// client keeps the session.
+function isSessionRejection(error: unknown): boolean {
+  return (
+    error instanceof ApplicationError &&
+    error.statusCode < 500 &&
+    !(error instanceof UnexpectedAuthenticationError)
+  );
+}
+
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
@@ -71,6 +87,7 @@ export class AuthenticationController {
     private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
     private readonly configService: ConfigService,
     private readonly meResponseDtoMapper: MeResponseDtoMapper,
+    private readonly sessionTokensMapper: SessionTokensResponseDtoMapper,
   ) {}
 
   @Public()
@@ -191,6 +208,7 @@ export class AuthenticationController {
   }
 
   @Public()
+  @AllowedClients('outlook')
   @Post('refresh')
   // Every rotation writes a refresh-token row, so an uncapped endpoint lets a
   // token holder grow the table without bound. The limit is per IP and refresh
@@ -198,27 +216,12 @@ export class AuthenticationController {
   // enough for many municipal users sharing one NAT address.
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Refresh authentication tokens',
-    description:
-      'Refresh expired access tokens using the refresh token stored in cookies. Returns new authentication cookies.',
-  })
-  @ApiCookieAuth('refreshToken')
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description:
-      'Token refresh successful. New authentication cookies are set.',
-    type: SuccessResponseDto,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid or expired refresh token',
-    type: ErrorResponseDto,
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Authentication configuration error',
-    type: ErrorResponseDto,
-  })
-  async refresh(@Req() req: Request, @Res() res: Response) {
+  @ApiRefresh()
+  async refresh(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: RefreshTokenRequestDto,
+  ) {
     this.logger.log('refresh');
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
@@ -232,13 +235,15 @@ export class AuthenticationController {
     const cookies = req.cookies as Record<string, string>;
     const refreshToken = cookies[refreshTokenName];
 
-    if (!refreshToken) {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        message: 'Refresh token not provided',
-      });
+    if (refreshToken) {
+      return this.performRefresh(res, refreshToken);
     }
-
-    return this.performRefresh(res, refreshToken);
+    if (body.refreshToken) {
+      return this.performBodyRefresh(res, body.refreshToken);
+    }
+    return res.status(HttpStatus.UNAUTHORIZED).json({
+      message: 'Refresh token not provided',
+    });
   }
 
   private async performRefresh(
@@ -247,11 +252,12 @@ export class AuthenticationController {
   ): Promise<Response> {
     try {
       const tokens = await this.refreshTokenUseCase.execute(
-        new RefreshTokenCommand(refreshToken),
+        new RefreshTokenCommand(refreshToken, false),
       );
       setCookies(res, tokens, this.configService, true);
       return res.json({ success: true });
     } catch (error) {
+      if (!isSessionRejection(error)) throw error;
       // Any refresh failure (expired, reuse/theft, unknown) leaves the browser
       // holding a useless refresh cookie — clear it so the client logs out
       // cleanly instead of retrying a doomed token.
@@ -266,6 +272,25 @@ export class AuthenticationController {
     }
   }
 
+  private async performBodyRefresh(
+    res: Response,
+    refreshToken: string,
+  ): Promise<Response> {
+    try {
+      const tokens = await this.refreshTokenUseCase.execute(
+        new RefreshTokenCommand(refreshToken, true),
+      );
+      return res.json(this.sessionTokensMapper.toDto(tokens));
+    } catch (error) {
+      if (!isSessionRejection(error)) throw error;
+      this.logger.warn({ err: error as Error }, 'Body refresh failed');
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .json({ message: 'Invalid refresh token' });
+    }
+  }
+
+  @AllowedClients('outlook')
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -290,19 +315,18 @@ export class AuthenticationController {
   async me(@Req() req: Request, @Res() res: Response) {
     this.logger.log('me');
 
-    const accessTokenName = getAccessTokenCookieName(this.configService);
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
 
-    if (!accessTokenName || !refreshTokenName) {
+    if (!refreshTokenName) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Authentication configuration error',
       });
     }
 
     const cookies = req.cookies as Record<string, string>;
-    const accessToken = cookies[accessTokenName];
+    const accessToken = extractAccessToken(req, this.configService);
     const refreshToken = cookies[refreshTokenName];
 
     // First, try to get user info from access token

@@ -5,6 +5,7 @@ import { sha256Hex } from 'src/common/util/sha256.util';
 import { getMillisecondsFromJwtExpiry } from 'src/common/util/jwt.util';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 /**
  * Builds opaque refresh tokens. The plaintext (32 random bytes, base64url) is
@@ -20,6 +21,7 @@ export class RefreshTokenFactory {
     authenticationMethod: SessionAuthenticationMethod;
     zitadelSessionId: string | null;
     familyExpiresAt?: Date | null;
+    client?: SessionClient | null;
   }): {
     token: RefreshToken;
     plaintext: string;
@@ -33,6 +35,7 @@ export class RefreshTokenFactory {
       authenticationMethod: params.authenticationMethod,
       zitadelSessionId: params.zitadelSessionId,
       familyExpiresAt,
+      client: params.client ?? null,
       expiresAt: this.expiresAt(params.authenticationMethod, familyExpiresAt),
     });
     return { token, plaintext };

@@ -9,7 +9,11 @@ import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { JWT_SECRET } from 'src/iam/authentication/application/tokens/jwt-secret.token';
-import { getAccessTokenCookieName } from 'src/common/util/cookie.util';
+import { extractAccessToken } from 'src/common/util/access-token.util';
+import {
+  isSessionClient,
+  type SessionClient,
+} from 'src/iam/sessions/domain/value-objects/session-client';
 
 interface JwtPayload {
   sub: UUID;
@@ -21,6 +25,7 @@ interface JwtPayload {
   name: string;
   type?: string;
   orgSessionVersion?: number;
+  client?: SessionClient;
 }
 
 @Injectable()
@@ -34,15 +39,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        const cookieName = getAccessTokenCookieName(configService);
-
-        const token = req.cookies[cookieName] as string;
+        const token = extractAccessToken(req, configService);
 
         if (!token) {
-          this.logger.debug({ cookieName }, 'No JWT token found in cookie');
+          this.logger.debug('No JWT found in cookie or Authorization header');
         }
 
-        return token;
+        return token ?? null;
       },
       ignoreExpiration: false,
       secretOrKey: secret,
@@ -66,6 +69,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null;
     }
 
+    // A client removed from the registry must not fall back to an
+    // unrestricted browser session.
+    if (payload.client !== undefined && !isSessionClient(payload.client)) {
+      this.logger.warn('Rejected token for an unknown session client');
+      return null;
+    }
+
     await this.assertOrgActive.execute({
       orgId: payload.orgId,
       sessionVersion: payload.orgSessionVersion ?? 0,
@@ -78,6 +88,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       systemRole: payload.systemRole,
       orgId: payload.orgId,
       name: payload.name,
+      client: payload.client ?? null,
     });
   }
 }

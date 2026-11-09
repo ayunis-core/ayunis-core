@@ -102,8 +102,8 @@ none of these packages implements the Agent Plugins standard.
 
 | Module                                                                        | Summary            | Detail                                                                                |
 | ----------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
-| [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md)       | User Auth          | Login, registration, JWT tokens                                                       |
-| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)         | Access Control     | Role & permission guards                                                              |
+| [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md)       | User Auth          | Login, registration, JWT tokens, session handoff to token clients                     |
+| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)         | Access Control     | Role, permission & token-client route guards                                          |
 | [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md)             | RBAC               | Per-org role/permission grants (MANAGER/USER configurable)                            |
 | [users](ayunis-core-backend/src/iam/users/SUMMARY.md)                         | Accounts           | User profiles and credentials                                                         |
 | [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md)                           | Tenants            | Multi-tenant organization management                                                  |

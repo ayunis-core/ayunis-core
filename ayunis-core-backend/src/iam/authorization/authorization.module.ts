@@ -2,15 +2,16 @@ import { Module } from '@nestjs/common';
 import { RolesGuard } from './application/guards/roles.guard';
 import { SubscriptionGuard } from './application/guards/subscription.guard';
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { TrialsModule } from '../trials/trials.module';
-import { AddonsModule } from '../addons/addons.module';
-import { PermissionsModule } from '../permissions/permissions.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
+import { AddonsModule } from 'src/iam/addons/addons.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
 import { AddonGuard } from './application/guards/addon.guard';
 import { PermissionsGuard } from './application/guards/permissions.guard';
 import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-subscription.guard';
+import { AllowedClientsGuard } from './application/guards/allowed-clients.guard';
 
 /**
  * Authorization guards live here as regular providers and are exported for
@@ -35,6 +36,7 @@ import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-su
     AddonGuard,
     PermissionsGuard,
     UsageBasedSubscriptionGuard,
+    AllowedClientsGuard,
   ],
   exports: [
     EmailConfirmGuard,
@@ -45,6 +47,7 @@ import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-su
     AddonGuard,
     PermissionsGuard,
     UsageBasedSubscriptionGuard,
+    AllowedClientsGuard,
     SubscriptionsModule,
     TrialsModule,
     AddonsModule,

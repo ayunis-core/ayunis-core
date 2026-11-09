@@ -5,6 +5,7 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 export enum AuthorizationErrorCode {
   EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED',
   SUBSCRIPTION_REQUIRED = 'SUBSCRIPTION_REQUIRED',
+  CLIENT_NOT_ALLOWED = 'CLIENT_NOT_ALLOWED',
 }
 
 export abstract class AuthorizationError extends ApplicationError {
@@ -36,6 +37,17 @@ export class SubscriptionRequiredError extends AuthorizationError {
         ? 'This feature requires a usage-based subscription.'
         : 'This feature requires an active subscription.',
       AuthorizationErrorCode.SUBSCRIPTION_REQUIRED,
+      403,
+      metadata,
+    );
+  }
+}
+
+export class ClientNotAllowedError extends AuthorizationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'This route is not available to this client.',
+      AuthorizationErrorCode.CLIENT_NOT_ALLOWED,
       403,
       metadata,
     );

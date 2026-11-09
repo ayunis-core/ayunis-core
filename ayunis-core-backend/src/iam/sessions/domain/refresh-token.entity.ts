@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export interface RefreshTokenParams {
   id?: UUID;
@@ -10,6 +11,7 @@ export interface RefreshTokenParams {
   authenticationMethod: SessionAuthenticationMethod;
   zitadelSessionId?: string | null;
   familyExpiresAt?: Date | null;
+  client?: SessionClient | null;
   expiresAt: Date;
   usedAt?: Date | null;
   revokedAt?: Date | null;
@@ -32,6 +34,7 @@ export class RefreshToken {
   authenticationMethod: SessionAuthenticationMethod;
   zitadelSessionId: string | null;
   familyExpiresAt: Date | null;
+  client: SessionClient | null;
   expiresAt: Date;
   usedAt: Date | null;
   revokedAt: Date | null;
@@ -47,6 +50,7 @@ export class RefreshToken {
     this.authenticationMethod = params.authenticationMethod;
     this.zitadelSessionId = params.zitadelSessionId ?? null;
     this.familyExpiresAt = params.familyExpiresAt ?? null;
+    this.client = params.client ?? null;
     this.expiresAt = params.expiresAt;
     this.usedAt = params.usedAt ?? null;
     this.revokedAt = params.revokedAt ?? null;

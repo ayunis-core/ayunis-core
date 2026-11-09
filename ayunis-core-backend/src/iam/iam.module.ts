@@ -30,6 +30,7 @@ import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
 import { RolesGuard } from './authorization/application/guards/roles.guard';
+import { AllowedClientsGuard } from './authorization/application/guards/allowed-clients.guard';
 import { PermissionsGuard } from './authorization/application/guards/permissions.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
@@ -85,6 +86,9 @@ const IAM_FEATURE_MODULES = [
 // JwtAuthGuard the allowlist is silently disabled on every request.
 const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: JwtAuthGuard },
+  // Directly after authentication: a token-client session is denied on every
+  // route not marked @AllowedClients before any other gate does work for it.
+  { provide: APP_GUARD, useExisting: AllowedClientsGuard },
   { provide: APP_GUARD, useExisting: IpAllowlistGuard },
   { provide: APP_GUARD, useExisting: EmailConfirmGuard },
   { provide: APP_GUARD, useExisting: RolesGuard },

@@ -149,6 +149,63 @@ describe('RefreshTokenUseCase', () => {
     expect(mockJwtService.verify).not.toHaveBeenCalled();
   });
 
+  // A pane session must stay restricted after its first refresh.
+  it('signs the access token for the client of the rotated session', async () => {
+    mockRotateSessionUseCase.execute.mockResolvedValue({
+      userId,
+      refreshToken: 'rotated-refresh-token',
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      client: 'outlook',
+    });
+
+    await useCase.execute(new RefreshTokenCommand(opaqueToken));
+
+    expect(mockAuthRepository.generateAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({ id: userId, client: 'outlook' }),
+      0,
+    );
+  });
+
+  // A body refresh may only continue a token-client session; a browser
+  // session's token must never turn into an unrestricted bearer token.
+  describe('client-bound refresh', () => {
+    it('rotates a session that belongs to a client', async () => {
+      mockPrepareSessionRotationUseCase.execute.mockResolvedValue({
+        userId,
+        authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+        client: 'outlook',
+      });
+      mockRotateSessionUseCase.execute.mockResolvedValue({
+        userId,
+        refreshToken: 'rotated-refresh-token',
+        authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+        client: 'outlook',
+      });
+
+      const result = await useCase.execute(
+        new RefreshTokenCommand(opaqueToken, true),
+      );
+
+      expect(result.refresh_token).toBe('rotated-refresh-token');
+    });
+
+    it('rejects a session without a client before rotating it', async () => {
+      await expect(
+        useCase.execute(new RefreshTokenCommand(opaqueToken, true)),
+      ).rejects.toBeInstanceOf(InvalidTokenError);
+      expect(mockRotateSessionUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('rejects a legacy JWT refresh token', async () => {
+      mockJwtService.verify.mockReturnValue({ sub: userId, type: 'refresh' });
+
+      await expect(
+        useCase.execute(new RefreshTokenCommand(legacyJwt, true)),
+      ).rejects.toBeInstanceOf(InvalidTokenError);
+      expect(mockCreateSessionUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
   it('revokes a rotated password family when the organization requires SSO', async () => {
     mockRotateSessionUseCase.execute.mockResolvedValue({
       userId,
