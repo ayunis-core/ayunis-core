@@ -14,6 +14,8 @@ import { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/app
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 
 @Injectable()
 export class KnowledgeBaseReadAccessService {
@@ -25,6 +27,7 @@ export class KnowledgeBaseReadAccessService {
     @Inject(forwardRef(() => AssertWorkspaceExecutionAccessUseCase))
     private readonly workspaceExecution: AssertWorkspaceExecutionAccessUseCase,
     private readonly context: ContextService,
+    private readonly collectiveAccess: CollectiveKnowledgeBaseAccessService,
   ) {}
 
   async requireRead(knowledgeBase: KnowledgeBase): Promise<void> {
@@ -32,6 +35,10 @@ export class KnowledgeBaseReadAccessService {
     const userId = this.requirePrincipalInOrganization(knowledgeBase);
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.requirePersonalRead(knowledgeBase, userId);
+      return;
+    }
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      await this.collectiveAccess.requireRead(knowledgeBase);
       return;
     }
     if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
@@ -50,6 +57,10 @@ export class KnowledgeBaseReadAccessService {
     const userId = this.requirePrincipalInOrganization(knowledgeBase);
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       await this.requirePersonalRead(knowledgeBase, userId);
+      return;
+    }
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      await this.collectiveAccess.requireRead(knowledgeBase);
       return;
     }
     if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {

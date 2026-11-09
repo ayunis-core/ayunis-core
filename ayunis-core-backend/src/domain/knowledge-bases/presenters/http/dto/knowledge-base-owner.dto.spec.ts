@@ -82,4 +82,34 @@ describe('knowledge-base owner transport validation', () => {
     await expect(validate(dto)).resolves.toHaveLength(0);
     expect(dto).toMatchObject({ limit: 25, offset: 5 });
   });
+
+  it.each([
+    { ownerType: 'team', teamId: '11111111-1111-4111-8111-111111111111' },
+    { ownerType: 'org' },
+  ])('accepts creating for a team or the organization: %j', async (owner) => {
+    const errors = await errorsFor(CreateKnowledgeBaseDto, {
+      ...owner,
+      name: 'Bauordnung',
+    });
+
+    expect(errors).toHaveLength(0);
+  });
+
+  it.each([
+    { ownerType: 'team' },
+    { ownerType: 'org', teamId: '11111111-1111-4111-8111-111111111111' },
+  ])('rejects mismatched team ids on create: %j', async (owner) => {
+    const errors = await errorsFor(CreateKnowledgeBaseDto, {
+      ...owner,
+      name: 'Bauordnung',
+    });
+
+    expect(errors).not.toHaveLength(0);
+  });
+
+  it.each(['team', 'org'])('does not list by %s owner', async (ownerType) => {
+    const errors = await errorsFor(ListKnowledgeBasesQueryDto, { ownerType });
+
+    expect(errors).not.toHaveLength(0);
+  });
 });

@@ -20,6 +20,10 @@ import { CountKnowledgeBaseDocumentsUseCase } from './application/use-cases/coun
 import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { KnowledgeBasesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { KnowledgeBasesWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
+import { KnowledgeBasesTeamDeletionRequestedListener } from 'src/domain/knowledge-bases/application/listeners/team-deletion-requested.listener';
+import { KnowledgeBaseProcessingCleanupService } from 'src/domain/knowledge-bases/application/services/knowledge-base-processing-cleanup.service';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
+import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 
@@ -52,6 +56,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     IndexersModule,
     ContextModule,
     PermissionsModule,
+    TeamsApplicationModule,
     StorageModule,
     forwardRef(() => SharesModule),
     forwardRef(() => SkillsModule),
@@ -65,6 +70,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     GetAccessibleKnowledgeBaseContextsUseCase,
     CountKnowledgeBaseDocumentsUseCase,
     KnowledgeBaseWriteAccessService,
+    CollectiveKnowledgeBaseAccessService,
     KnowledgeBaseReadAccessService,
     // Use Cases
     CreateKnowledgeBaseUseCase,
@@ -84,10 +90,12 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindActiveKnowledgeBasesUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
+    KnowledgeBaseProcessingCleanupService,
     // Listeners
     KnowledgeBaseShareDeletedListener,
     KnowledgeBasesUserDeletionRequestedListener,
     KnowledgeBasesWorkspaceDeletionRequestedListener,
+    KnowledgeBasesTeamDeletionRequestedListener,
     // Strategies
     KnowledgeBaseShareAuthorizationStrategy,
     {

@@ -3219,11 +3219,14 @@ export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwner
 export const CreateKnowledgeBaseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface CreateKnowledgeBaseDto {
   ownerType: CreateKnowledgeBaseDtoOwnerType;
   workspaceId?: string;
+  teamId?: string;
   /**
      * The name of the knowledge base
      * @minLength 1
@@ -3243,6 +3246,8 @@ export type KnowledgeBaseResponseDtoOwnerType = typeof KnowledgeBaseResponseDtoO
 export const KnowledgeBaseResponseDtoOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
+  team: 'team',
+  org: 'org',
 } as const;
 
 export interface KnowledgeBaseResponseDto {
@@ -3251,6 +3256,8 @@ export interface KnowledgeBaseResponseDto {
   ownerType: KnowledgeBaseResponseDtoOwnerType;
   /** The owning workspace for workspace-owned knowledge bases */
   workspaceId?: string;
+  /** The owning team for team-owned knowledge bases */
+  teamId?: string;
   /** The name of the knowledge base */
   name: string;
   /** The description of the knowledge base */
@@ -3261,7 +3268,7 @@ export interface KnowledgeBaseResponseDto {
   updatedAt: string;
   /** Number of documents assigned to the knowledge base */
   documentCount: number;
-  /** Whether the knowledge base is active for the current user */
+  /** Whether the knowledge base is active for the current user; for team and org knowledge bases this is the same for everyone with access */
   isActive: boolean;
   /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
   isShared?: boolean;

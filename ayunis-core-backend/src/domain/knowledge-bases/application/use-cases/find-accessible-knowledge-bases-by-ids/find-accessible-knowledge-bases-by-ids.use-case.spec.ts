@@ -4,11 +4,13 @@ import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/applica
 import type { AccessibleKnowledgeBasesByIdsRepository } from 'src/domain/knowledge-bases/application/ports/accessible-knowledge-bases-by-ids.repository';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindAccessibleKnowledgeBasesByIdsUseCase } from './find-accessible-knowledge-bases-by-ids.use-case';
+import type { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 const ORG_ID = '22222222-2222-4222-8222-222222222222' as UUID;
 const FIRST_ID = '33333333-3333-4333-8333-333333333333' as UUID;
 const STALE_ID = '44444444-4444-4444-8444-444444444444' as UUID;
+const TEAM_ID = '55555555-5555-4555-8555-555555555555' as UUID;
 
 function setup() {
   const knowledgeBase = new PersonalKnowledgeBase({
@@ -27,6 +29,11 @@ function setup() {
     useCase: new FindAccessibleKnowledgeBasesByIdsUseCase(
       repository,
       contextService,
+      {
+        readableOwners: jest
+          .fn()
+          .mockResolvedValue({ orgId: ORG_ID, teamIds: [TEAM_ID] }),
+      } as unknown as CollectiveKnowledgeBaseAccessService,
     ),
     repository,
     knowledgeBase,
@@ -42,8 +49,7 @@ describe(FindAccessibleKnowledgeBasesByIdsUseCase.name, () => {
     ).resolves.toEqual([knowledgeBase]);
     expect(repository.findAccessibleByIds).toHaveBeenCalledWith(
       [FIRST_ID, STALE_ID],
-      USER_ID,
-      ORG_ID,
+      { userId: USER_ID, orgId: ORG_ID, teamIds: [TEAM_ID] },
     );
   });
 

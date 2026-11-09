@@ -13,17 +13,23 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
 import { ListKnowledgeBasesUseCase } from './list-knowledge-bases.use-case';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 const OTHER_USER_ID = '22222222-2222-2222-2222-222222222222' as UUID;
 const ORG_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 const WORKSPACE_ID = '44444444-4444-4444-4444-444444444444' as UUID;
+const TEAM_ID = '55555555-5555-5555-5555-555555555555' as UUID;
+const OWNERS = { orgId: ORG_ID, teamIds: [TEAM_ID] };
 
 async function setup() {
   const repository = {
     countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     findAllByUserId: jest.fn().mockResolvedValue([]),
     findAllByWorkspaceId: jest.fn().mockResolvedValue([]),
+    findAllCollective: jest.fn().mockResolvedValue([]),
     findByIds: jest.fn().mockResolvedValue([]),
     findPaginatedAccessible: jest.fn(),
     getActiveIds: jest.fn().mockResolvedValue(new Set()),
@@ -47,6 +53,10 @@ async function setup() {
       },
       { provide: ContextService, useValue: context },
       { provide: AssertWorkspaceReadAccessUseCase, useValue: workspaceRead },
+      {
+        provide: CollectiveKnowledgeBaseAccessService,
+        useValue: { readableOwners: jest.fn().mockResolvedValue(OWNERS) },
+      },
     ],
   }).compile();
   return {
@@ -221,5 +231,67 @@ describe(ListKnowledgeBasesUseCase.name, () => {
         new ListKnowledgeBasesQuery({ owner: { type: 'personal' } }),
       ),
     ).rejects.toBeInstanceOf(UnexpectedKnowledgeBaseError);
+  });
+
+  describe('team- and org-owned knowledge bases', () => {
+    const team = new TeamKnowledgeBase({
+      name: 'Bauordnung',
+      orgId: ORG_ID,
+      teamId: TEAM_ID,
+      isActive: true,
+    });
+    const org = new OrgKnowledgeBase({ name: 'Satzungen', orgId: ORG_ID });
+
+    it('includes readable team and org knowledge bases with their global state', async () => {
+      const { useCase, repository } = await setup();
+      repository.findAllCollective.mockResolvedValue([team, org]);
+
+      const result = await useCase.execute(
+        new ListKnowledgeBasesQuery({ owner: { type: 'personal' } }),
+      );
+
+      expect(repository.findAllCollective).toHaveBeenCalledWith(OWNERS);
+      expect(result.data).toEqual([
+        {
+          knowledgeBase: team,
+          isShared: false,
+          isActive: true,
+          documentCount: 0,
+        },
+        {
+          knowledgeBase: org,
+          isShared: false,
+          isActive: false,
+          documentCount: 0,
+        },
+      ]);
+    });
+
+    it('passes the readable owners to the paginated query', async () => {
+      const { useCase, repository } = await setup();
+      repository.findPaginatedAccessible.mockResolvedValue(
+        new Paginated({ data: [team], limit: 10, offset: 0, total: 1 }),
+      );
+
+      const result = await useCase.execute(
+        new ListKnowledgeBasesQuery({ owner: { type: 'personal' }, limit: 10 }),
+      );
+
+      expect(repository.findPaginatedAccessible).toHaveBeenCalledWith(
+        USER_ID,
+        undefined,
+        [],
+        expect.objectContaining({ limit: 10 }),
+        OWNERS,
+      );
+      expect(result.data).toEqual([
+        {
+          knowledgeBase: team,
+          isShared: false,
+          isActive: true,
+          documentCount: 0,
+        },
+      ]);
+    });
   });
 });

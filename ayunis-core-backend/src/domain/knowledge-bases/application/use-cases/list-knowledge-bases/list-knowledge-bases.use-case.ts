@@ -13,7 +13,6 @@ import {
   type KnowledgeBaseListOptions,
 } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
-import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import type { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
@@ -22,6 +21,9 @@ import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from 'src/domain
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 
 const DEFAULT_OFFSET = 0;
 
@@ -36,6 +38,7 @@ export class ListKnowledgeBasesUseCase {
     private readonly context: ContextService,
     @Inject(forwardRef(() => AssertWorkspaceReadAccessUseCase))
     private readonly workspaceRead: AssertWorkspaceReadAccessUseCase,
+    private readonly collectiveAccess: CollectiveKnowledgeBaseAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -84,11 +87,14 @@ export class ListKnowledgeBasesUseCase {
   private async findAllPersonal(
     userId: UUID,
     orgId: UUID,
-  ): Promise<Paginated<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>>> {
-    const [owned, sharedIds, activeIds] = await Promise.all([
+  ): Promise<Paginated<KnowledgeBaseWithUserContext>> {
+    const [owned, sharedIds, activeIds, collective] = await Promise.all([
       this.repository.findAllByUserId(userId),
       this.findAccessibleSharedIds(),
       this.repository.getActiveIds(userId),
+      this.collectiveAccess
+        .readableOwners()
+        .then((owners) => this.repository.findAllCollective(owners)),
     ]);
     const ownedIds = new Set(owned.map(({ id }) => id));
     const ids = sharedIds.filter((id) => !ownedIds.has(id));
@@ -106,30 +112,42 @@ export class ListKnowledgeBasesUseCase {
         isShared: true,
         isActive: activeIds.has(knowledgeBase.id),
       })),
+      ...collective.map((knowledgeBase) => ({
+        knowledgeBase,
+        isShared: false,
+        isActive: knowledgeBase.isActive,
+      })),
     ]);
   }
 
   private async findPersonalPaginated(
     userId: UUID,
     options: KnowledgeBaseListOptions,
-  ): Promise<Paginated<KnowledgeBaseWithUserContext<PersonalKnowledgeBase>>> {
-    const [sharedIds, activeIds] = await Promise.all([
+  ): Promise<Paginated<KnowledgeBaseWithUserContext>> {
+    const [sharedIds, activeIds, owners] = await Promise.all([
       this.findAccessibleSharedIds(),
       this.repository.getActiveIds(userId),
+      this.collectiveAccess.readableOwners(),
     ]);
     const page = await this.repository.findPaginatedAccessible(
       userId,
       undefined,
       sharedIds,
       options,
+      owners,
     );
     const sharedIdSet = new Set(sharedIds);
-    return this.mapPage(page, (knowledgeBase) => ({
-      knowledgeBase,
-      isShared:
-        knowledgeBase.userId !== userId && sharedIdSet.has(knowledgeBase.id),
-      isActive: activeIds.has(knowledgeBase.id),
-    }));
+    return this.mapPage(page, (knowledgeBase) =>
+      knowledgeBase instanceof AbstractCollectiveKnowledgeBase
+        ? { knowledgeBase, isShared: false, isActive: knowledgeBase.isActive }
+        : {
+            knowledgeBase,
+            isShared:
+              knowledgeBase.userId !== userId &&
+              sharedIdSet.has(knowledgeBase.id),
+            isActive: activeIds.has(knowledgeBase.id),
+          },
+    );
   }
 
   private async findAllWorkspace(
@@ -196,7 +214,7 @@ export class ListKnowledgeBasesUseCase {
     });
   }
 
-  private mapPage<T extends PersonalKnowledgeBase | WorkspaceKnowledgeBase>(
+  private mapPage<T extends KnowledgeBase>(
     page: Paginated<T>,
     map: (knowledgeBase: T) => KnowledgeBaseWithUserContext<T>,
   ): Paginated<KnowledgeBaseWithUserContext<T>> {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBaseProcessingCleanupService } from 'src/domain/knowledge-bases/application/services/knowledge-base-processing-cleanup.service';
 import type { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
@@ -26,7 +27,10 @@ describe(KnowledgeBasesWorkspaceDeletionRequestedListener.name, () => {
     };
     listener = new KnowledgeBasesWorkspaceDeletionRequestedListener(
       repository as unknown as KnowledgeBaseRepository,
-      cleanupProcessing as unknown as CleanupSourceProcessingUseCase,
+      new KnowledgeBaseProcessingCleanupService(
+        repository as unknown as KnowledgeBaseRepository,
+        cleanupProcessing as unknown as CleanupSourceProcessingUseCase,
+      ),
     );
   });
 

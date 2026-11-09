@@ -12,6 +12,7 @@ import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
 
 @Injectable()
 export class FindKnowledgeBaseUseCase {
@@ -48,6 +49,9 @@ export class FindKnowledgeBaseUseCase {
   }
 
   private async isActive(knowledgeBase: KnowledgeBase): Promise<boolean> {
+    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+      return knowledgeBase.isActive;
+    }
     if (knowledgeBase instanceof PersonalKnowledgeBase) {
       const { userId } = getRequiredUserContext(this.context);
       return this.repository.isActive(knowledgeBase.id, userId);

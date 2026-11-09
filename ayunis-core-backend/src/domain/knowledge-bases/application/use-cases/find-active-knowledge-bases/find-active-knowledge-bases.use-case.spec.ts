@@ -7,9 +7,13 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { FindActiveKnowledgeBasesQuery } from './find-active-knowledge-bases.query';
 import { FindActiveKnowledgeBasesUseCase } from './find-active-knowledge-bases.use-case';
+import { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 const ORG_ID = '22222222-2222-2222-2222-222222222222' as UUID;
+const TEAM_ID = '55555555-5555-5555-5555-555555555555' as UUID;
+const SCOPE = { userId: USER_ID, orgId: ORG_ID, teamIds: [TEAM_ID] };
 
 async function setup() {
   const repository = { findActiveAccessible: jest.fn() };
@@ -22,28 +26,40 @@ async function setup() {
       FindActiveKnowledgeBasesUseCase,
       { provide: KnowledgeBaseRepository, useValue: repository },
       { provide: ContextService, useValue: context },
+      {
+        provide: CollectiveKnowledgeBaseAccessService,
+        useValue: {
+          readableOwners: jest
+            .fn()
+            .mockResolvedValue({ orgId: ORG_ID, teamIds: [TEAM_ID] }),
+        },
+      },
     ],
   }).compile();
   return { useCase: module.get(FindActiveKnowledgeBasesUseCase), repository };
 }
 
 describe(FindActiveKnowledgeBasesUseCase.name, () => {
-  it('returns active knowledge bases accessible to the principal', async () => {
+  it('returns active knowledge bases the principal can read, including their teams', async () => {
     const active = new PersonalKnowledgeBase({
       name: 'Active regulations',
       orgId: ORG_ID,
       userId: USER_ID,
     });
+    const team = new TeamKnowledgeBase({
+      name: 'Bauordnung',
+      orgId: ORG_ID,
+      teamId: TEAM_ID,
+      isActive: true,
+    });
     const { useCase, repository } = await setup();
-    repository.findActiveAccessible.mockResolvedValue([active]);
+    repository.findActiveAccessible.mockResolvedValue([active, team]);
 
-    await expect(useCase.execute()).resolves.toEqual([active]);
-    expect(repository.findActiveAccessible).toHaveBeenCalledWith(
-      USER_ID,
-      ORG_ID,
-      undefined,
-      undefined,
-    );
+    await expect(useCase.execute()).resolves.toEqual([active, team]);
+    expect(repository.findActiveAccessible).toHaveBeenCalledWith(SCOPE, {
+      knowledgeBaseId: undefined,
+      sourceId: undefined,
+    });
   });
 
   it('limits the active lookup to a requested knowledge base source', async () => {
@@ -57,12 +73,10 @@ describe(FindActiveKnowledgeBasesUseCase.name, () => {
         new FindActiveKnowledgeBasesQuery({ knowledgeBaseId, sourceId }),
       ),
     ).resolves.toEqual([]);
-    expect(repository.findActiveAccessible).toHaveBeenCalledWith(
-      USER_ID,
-      ORG_ID,
+    expect(repository.findActiveAccessible).toHaveBeenCalledWith(SCOPE, {
       knowledgeBaseId,
       sourceId,
-    );
+    });
   });
 
   it('wraps unexpected repository errors with the knowledge-base taxonomy', async () => {

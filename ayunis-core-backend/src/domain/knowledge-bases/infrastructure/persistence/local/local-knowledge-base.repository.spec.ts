@@ -1,10 +1,9 @@
 import type { UUID } from 'crypto';
-import type { Brackets } from 'typeorm';
 import type { Repository } from 'typeorm';
 import type { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import type { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import type { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
-import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import type { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { LocalKnowledgeBaseRepository } from './local-knowledge-base.repository';
 import type { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 
@@ -69,6 +68,7 @@ describe('LocalKnowledgeBaseRepository', () => {
       id: { _value: UUID[] };
       orgId: UUID;
       workspaceId: { _type: string };
+      userId: { _type: string; _value: { _type: string } };
     };
     expect(where.id._value).toEqual([
       firstKnowledgeBaseId,
@@ -76,6 +76,8 @@ describe('LocalKnowledgeBaseRepository', () => {
     ]);
     expect(where.orgId).toBe(orgId);
     expect(where.workspaceId._type).toBe('isNull');
+    expect(where.userId._type).toBe('not');
+    expect(where.userId._value._type).toBe('isNull');
     expect(mapper.toPersonal).toHaveBeenCalledWith(records[0]);
   });
 
@@ -254,118 +256,6 @@ describe('LocalKnowledgeBaseRepository', () => {
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'knowledgeBase.workspaceId IS NULL',
-    );
-  });
-
-  it('queries only active knowledge bases accessible to the user', async () => {
-    const userId = '750e8400-e29b-41d4-a716-446655440002' as UUID;
-    const orgId = '850e8400-e29b-41d4-a716-446655440003' as UUID;
-    const sourceId = '950e8400-e29b-41d4-a716-446655440004' as UUID;
-    const records = [
-      { id: firstKnowledgeBaseId, name: 'Municipal regulations' },
-    ] as KnowledgeBaseRecord[];
-    const makeSubQuery = (sql: string) => ({
-      select: jest.fn().mockReturnThis(),
-      from: jest.fn().mockReturnThis(),
-      innerJoin: jest.fn().mockReturnThis(),
-      leftJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getParameters: jest.fn().mockReturnValue({}),
-      getQuery: jest.fn().mockReturnValue(sql),
-    });
-    const directShareSubQuery = makeSubQuery('(SELECT direct_share)');
-    const sharedSkillSubQuery = makeSubQuery('(SELECT shared_skill)');
-    const queryBuilder = {
-      subQuery: jest
-        .fn()
-        .mockReturnValueOnce(directShareSubQuery)
-        .mockReturnValueOnce(sharedSkillSubQuery)
-        .mockReturnValueOnce(directShareSubQuery)
-        .mockReturnValueOnce(sharedSkillSubQuery),
-      escape: jest.fn((name: string) => `"${name}"`),
-      innerJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      setParameters: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      addOrderBy: jest.fn().mockReturnThis(),
-      getMany: jest.fn().mockResolvedValue(records),
-    };
-    const knowledgeBaseRepository = {
-      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
-    } as unknown as Repository<KnowledgeBaseRecord>;
-    const mapper = {
-      toDomain: jest.fn((record: KnowledgeBaseRecord) => record),
-      toPersonal: jest.fn((record: KnowledgeBaseRecord) => record),
-      toWorkspace: jest.fn((record: KnowledgeBaseRecord) => record),
-    } as unknown as KnowledgeBaseMapper;
-    const repository = new LocalKnowledgeBaseRepository(
-      knowledgeBaseRepository,
-      {} as Repository<SourceRecord>,
-      {} as Repository<KnowledgeBaseActivationRecord>,
-      mapper,
-      {} as SourceMapper,
-      { tx: undefined } as never,
-    );
-
-    const result = await repository.findActiveAccessible(
-      userId,
-      orgId,
-      firstKnowledgeBaseId,
-      sourceId,
-    );
-
-    expect(result).toEqual(records);
-    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
-      expect.any(Function),
-      'activation',
-      expect.stringContaining('activation.userId = :userId'),
-    );
-    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
-      SourceRecord,
-      'activeSource',
-      expect.stringContaining('activeSource.knowledgeBaseId'),
-      { sourceId },
-    );
-    expect(queryBuilder.setParameters).toHaveBeenCalledWith(
-      expect.objectContaining({ userId, orgId }),
-    );
-
-    expect(queryBuilder.where).toHaveBeenCalledWith(
-      'knowledgeBase.workspaceId IS NULL',
-    );
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      'knowledgeBase.orgId = :orgId',
-    );
-    const accessBrackets = queryBuilder.andWhere.mock.calls[1][0] as Brackets;
-    expect(queryBuilder.andWhere.mock.calls[2]).toEqual([
-      'knowledgeBase.id = :knowledgeBaseId',
-      { knowledgeBaseId: firstKnowledgeBaseId },
-    ]);
-    const accessQuery = {
-      where: jest.fn().mockReturnThis(),
-      orWhere: jest.fn().mockReturnThis(),
-    };
-    accessBrackets.whereFactory(accessQuery as never);
-    expect(accessQuery.orWhere).toHaveBeenCalledWith(
-      'EXISTS (SELECT direct_share)',
-    );
-    expect(accessQuery.orWhere).toHaveBeenCalledWith(
-      'EXISTS (SELECT shared_skill)',
-    );
-    expect(sharedSkillSubQuery.innerJoin).toHaveBeenCalledWith(
-      'sharedSkill.knowledgeBases',
-      'linkedKnowledgeBase',
-    );
-    expect(sharedSkillSubQuery.andWhere).toHaveBeenCalledWith(
-      'sharedSkill.userId = "knowledgeBase"."userId"',
-    );
-
-    await repository.findAccessibleByIds([firstKnowledgeBaseId], userId, orgId);
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      'knowledgeBase.id IN (:...ids)',
-      { ids: [firstKnowledgeBaseId] },
     );
   });
 

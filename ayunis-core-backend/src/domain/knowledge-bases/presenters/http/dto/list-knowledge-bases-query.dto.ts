@@ -2,9 +2,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
-import { KnowledgeBaseOwnerDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-owner.dto';
+import { KnowledgeBaseListScopeDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-owner.dto';
 
-export class ListKnowledgeBasesQueryDto extends KnowledgeBaseOwnerDto {
+export class ListKnowledgeBasesQueryDto extends KnowledgeBaseListScopeDto {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
   @IsString()

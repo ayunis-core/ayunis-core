@@ -1,8 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
+import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+
+type Owner =
+  | { type: 'user'; id: UUID }
+  | { type: 'workspace'; id: UUID }
+  | { type: 'team'; id: UUID }
+  | { type: 'org' };
 
 @Injectable()
 export class KnowledgeBaseMapper {
@@ -15,19 +25,37 @@ export class KnowledgeBaseMapper {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
-    if ((record.userId === null) === (record.workspaceId === null)) {
+    const owner = this.ownerOf(record);
+    switch (owner.type) {
+      case 'user':
+        return new PersonalKnowledgeBase({ ...params, userId: owner.id });
+      case 'workspace':
+        return new WorkspaceKnowledgeBase({ ...params, workspaceId: owner.id });
+      case 'team':
+        return new TeamKnowledgeBase({
+          ...params,
+          teamId: owner.id,
+          isActive: record.isActive,
+        });
+      case 'org':
+        return new OrgKnowledgeBase({ ...params, isActive: record.isActive });
+    }
+  }
+
+  private ownerOf(record: KnowledgeBaseRecord): Owner {
+    // Records loaded before a column existed may omit it entirely.
+    const owners: Owner[] = [
+      ...(record.userId ? [{ type: 'user' as const, id: record.userId }] : []),
+      ...(record.workspaceId
+        ? [{ type: 'workspace' as const, id: record.workspaceId }]
+        : []),
+      ...(record.teamId ? [{ type: 'team' as const, id: record.teamId }] : []),
+      ...(record.isOrgOwned ? [{ type: 'org' as const }] : []),
+    ];
+    if (owners.length !== 1) {
       throw new Error(`Knowledge base ${record.id} has invalid ownership`);
     }
-    if (record.userId !== null) {
-      return new PersonalKnowledgeBase({ ...params, userId: record.userId });
-    }
-    if (record.workspaceId !== null) {
-      return new WorkspaceKnowledgeBase({
-        ...params,
-        workspaceId: record.workspaceId,
-      });
-    }
-    throw new Error(`Knowledge base ${record.id} has no owner`);
+    return owners[0];
   }
 
   toPersonal(record: KnowledgeBaseRecord): PersonalKnowledgeBase {
@@ -56,6 +84,10 @@ export class KnowledgeBaseMapper {
       entity instanceof PersonalKnowledgeBase ? entity.userId : null;
     record.workspaceId =
       entity instanceof WorkspaceKnowledgeBase ? entity.workspaceId : null;
+    record.teamId = entity instanceof TeamKnowledgeBase ? entity.teamId : null;
+    record.isOrgOwned = entity instanceof OrgKnowledgeBase;
+    record.isActive =
+      entity instanceof AbstractCollectiveKnowledgeBase && entity.isActive;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;

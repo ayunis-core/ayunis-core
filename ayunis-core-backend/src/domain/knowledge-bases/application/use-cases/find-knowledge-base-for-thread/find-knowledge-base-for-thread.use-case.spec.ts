@@ -1,3 +1,4 @@
+import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -141,5 +142,17 @@ describe(FindKnowledgeBaseForThreadUseCase.name, () => {
     await expect(useCase.execute(query)).rejects.toBeInstanceOf(
       UnexpectedKnowledgeBaseError,
     );
+  });
+
+  it('authorizes team and org knowledge bases by read access, with or without a thread', async () => {
+    const { useCase, repository, access, orgId } = fixture();
+    const knowledgeBase = new OrgKnowledgeBase({ name: 'Satzungen', orgId });
+    repository.findById.mockResolvedValue(knowledgeBase);
+
+    await expect(
+      useCase.execute({ knowledgeBaseId: knowledgeBase.id }),
+    ).resolves.toBe(knowledgeBase);
+    expect(access.requireRead).toHaveBeenCalledWith(knowledgeBase);
+    expect(access.requireExecution).not.toHaveBeenCalled();
   });
 });

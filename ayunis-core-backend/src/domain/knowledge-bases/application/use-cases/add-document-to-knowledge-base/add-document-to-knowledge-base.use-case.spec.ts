@@ -1,3 +1,4 @@
+import type { CollectiveKnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/collective-knowledge-base-access.service';
 import { randomUUID } from 'crypto';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TransactionHost } from '@nestjs-cls/transactional';
@@ -81,7 +82,11 @@ function setup(scope: 'personal' | 'workspace' = 'personal') {
   };
   const useCase = new AddDocumentToKnowledgeBaseUseCase(
     repository,
-    new KnowledgeBaseWriteAccessService(context, workspaceAccess),
+    new KnowledgeBaseWriteAccessService(
+      context,
+      workspaceAccess,
+      {} as CollectiveKnowledgeBaseAccessService,
+    ),
     processing,
     deleteSource,
     txHost as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
