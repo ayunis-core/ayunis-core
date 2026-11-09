@@ -54,8 +54,10 @@ export class CleanupStaleThreadSourcesUseCase {
     if (candidates.length === 0) return result;
 
     const candidateIds = candidates.map(({ sourceId }) => sourceId);
+    // Every candidate is thread-assigned by construction and every one of
+    // those assignments is stale, so the thread references are not counted.
     const unreferencedIds = await this.findUnreferencedSourceIdsUseCase.execute(
-      new FindUnreferencedSourceIdsQuery(candidateIds, cutoff),
+      new FindUnreferencedSourceIdsQuery(candidateIds, cutoff, true),
     );
     result.unreferencedCount = unreferencedIds.length;
     const grouped = groupSourcesByOrg(candidates, unreferencedIds);

@@ -34,6 +34,15 @@ const skillSourceSchema = new EntitySchema({
   },
 });
 
+const threadAssignmentSchema = new EntitySchema({
+  name: 'ThreadSourceAssignment',
+  tableName: 'thread_source_assignments',
+  columns: {
+    threadId: { type: 'uuid', primary: true },
+    sourceId: { type: 'uuid', primary: true },
+  },
+});
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CANDIDATE_COUNT = 2 * UNREFERENCED_LOOKUP_CHUNK_SIZE + 500;
 const EXCLUSION_STRIDE = 250;
@@ -51,10 +60,10 @@ describe('Unreferenced source lookup', () => {
     dataSource = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema: schemaName,
-      entities: [sourceSchema, skillSourceSchema],
+      entities: [sourceSchema, skillSourceSchema, threadAssignmentSchema],
       migrations: [],
       migrationsRun: false,
-      // The skill reference check is raw SQL with an unqualified table name,
+      // The reference checks are raw SQL with unqualified table names,
       // so every pooled connection must resolve it inside the throwaway schema.
       extra: { options: `-c search_path=${schemaName}` },
     });
@@ -120,6 +129,29 @@ describe('Unreferenced source lookup', () => {
     expect([...unreferenced].sort((a, b) => a.localeCompare(b))).toEqual(
       [...expected].sort((a, b) => a.localeCompare(b)),
     );
+  });
+
+  it("keeps a source that another user's thread still shows", async () => {
+    const old = new Date(Date.now() - 40 * DAY_MS);
+    const inThread = randomUUID();
+    const unused = randomUUID();
+    await dataSource.getRepository(SourceRecord).insert([
+      { id: inThread, knowledgeBaseId: null, createdAt: old },
+      { id: unused, knowledgeBaseId: null, createdAt: old },
+    ]);
+    await dataSource
+      .getRepository('ThreadSourceAssignment')
+      .insert([{ threadId: randomUUID(), sourceId: inThread }]);
+
+    const unreferenced = await repository.findUnreferencedIds(
+      [inThread, unused],
+      new Date(),
+    );
+
+    expect(unreferenced).toEqual([unused]);
+    await expect(
+      repository.findUnreferencedIds([inThread, unused], new Date(), true),
+    ).resolves.toEqual(expect.arrayContaining([inThread, unused]));
   });
 
   it('returns nothing for an empty candidate list', async () => {

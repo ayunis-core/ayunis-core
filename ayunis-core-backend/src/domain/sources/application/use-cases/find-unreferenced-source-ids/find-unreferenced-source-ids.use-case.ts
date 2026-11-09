@@ -7,7 +7,8 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 // Centralises cross-module reachability in the sources domain: callers pass
 // candidate IDs (e.g. from a threads-side stale query) and get back the subset
-// that are not attached to any skill or knowledge base. Keeps skill schema
+// that are not attached to any skill, knowledge base or (unless the caller
+// proved those stale) thread. Keeps skill schema
 // knowledge out of other modules' adapters.
 @Injectable()
 export class FindUnreferencedSourceIdsUseCase {
@@ -32,6 +33,7 @@ export class FindUnreferencedSourceIdsUseCase {
       return await this.sourceRepository.findUnreferencedIds(
         query.candidateIds,
         query.olderThan,
+        query.ignoreThreadAssignments,
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;

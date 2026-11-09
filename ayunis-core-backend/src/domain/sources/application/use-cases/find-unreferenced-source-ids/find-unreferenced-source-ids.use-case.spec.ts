@@ -30,6 +30,7 @@ describe('FindUnreferencedSourceIdsUseCase', () => {
     expect(sourceRepository.findUnreferencedIds).toHaveBeenCalledWith(
       [keep, drop],
       olderThan,
+      false,
     );
   });
 

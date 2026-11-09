@@ -125,6 +125,8 @@ export abstract class ThreadsRepository {
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
+  /** Sources uploaded into the user's threads directly, not brought in by a skill. */
+  abstract findDirectSourceIdsByUserId(userId: UUID): Promise<UUID[]>;
   abstract findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]>;
   /** Returns the subset of the given ids whose thread rows still exist. */
   abstract filterExistingIds(threadIds: UUID[]): Promise<UUID[]>;

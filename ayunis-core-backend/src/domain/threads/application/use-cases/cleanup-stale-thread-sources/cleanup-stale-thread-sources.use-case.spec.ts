@@ -97,6 +97,7 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
       expect.any(FindUnreferencedSourceIdsQuery),
     );
     const query = findUnreferencedSourceIdsUseCase.execute.mock.calls[0][0];
+    expect(query.ignoreThreadAssignments).toBe(true);
     expect(query.candidateIds).toEqual([keep, drop1, drop2]);
     expect(query.olderThan).toBeInstanceOf(Date);
     expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
