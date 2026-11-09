@@ -23,14 +23,14 @@
     "@playwright/test": "^1.64.0",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.23.1",
-    "axios": "^1.13.2",
-    "eslint": "^10.6.0",
-    "eslint-plugin-playwright": "^2.11.0",
+    "axios": "^1.21.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-playwright": "^2.12.2",
     "jiti": "^2.7.0",
-    "orval": "^8.28.1",
+    "orval": "^8.46.0",
     "pdfjs-dist": "^5.7.284",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.64.0"
+    "typescript-eslint": "^8.72.1"
   }
 }
