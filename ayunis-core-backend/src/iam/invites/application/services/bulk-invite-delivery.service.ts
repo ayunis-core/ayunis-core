@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { InviteJwtService } from 'src/iam/invites/application/services/invite-jwt.service';
-import { CreateBulkInvitesCommand } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.command';
 import { SendInvitationEmailCommand } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.command';
 import { SendInvitationEmailUseCase } from 'src/iam/invites/application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import type { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -29,40 +28,41 @@ export class BulkInviteDeliveryService {
     private readonly config: ConfigService,
   ) {}
 
+  /**
+   * With `discardUndelivered`, an invite whose email cannot be sent is deleted
+   * so it neither reserves a seat nor blocks inviting the address again.
+   */
   async deliver(
-    command: CreateBulkInvitesCommand,
     invites: Invite[],
+    options: { discardUndelivered: boolean },
   ): Promise<BulkInviteResult[]> {
     const results: BulkInviteResult[] = [];
-    for (let index = 0; index < invites.length; index++) {
-      results.push(await this.deliverOne(command, invites[index], index));
+    for (const invite of invites) {
+      results.push(await this.deliverOne(invite, options));
     }
     return results;
   }
 
   private async deliverOne(
-    command: CreateBulkInvitesCommand,
     invite: Invite,
-    index: number,
+    options: { discardUndelivered: boolean },
   ): Promise<BulkInviteResult> {
-    const input = command.invites[index];
     let url: string;
     try {
       url = this.acceptUrl(invite);
     } catch (error: unknown) {
-      return this.failedDelivery(invite, input.email, input.role, error);
+      return this.failedDelivery(invite, options, error);
     }
     if (!this.config.get<boolean>('emails.hasConfig')) {
-      return success(input.email, input.role, url);
+      return success(invite, url);
     }
     try {
       await this.sendEmail.execute(new SendInvitationEmailCommand(invite, url));
-      return success(input.email, input.role, null);
+      return success(invite, null);
     } catch (error: unknown) {
       return this.failedDelivery(
         invite,
-        input.email,
-        input.role,
+        options,
         error,
         'EMAIL_SENDING_FAILED',
       );
@@ -71,17 +71,18 @@ export class BulkInviteDeliveryService {
 
   private async failedDelivery(
     invite: Invite,
-    email: string,
-    role: UserRole,
+    options: { discardUndelivered: boolean },
     error: unknown,
     errorCode?: string,
   ): Promise<BulkInviteResult> {
     this.logger.warn(
-      { email, error: message(error) },
+      { email: invite.email, error: message(error) },
       'Failed to deliver invitation',
     );
-    await this.deleteFailedInvite(invite);
-    return failure(email, role, error, errorCode);
+    if (options.discardUndelivered) {
+      await this.deleteFailedInvite(invite);
+    }
+    return failure(invite, error, errorCode);
   }
 
   private acceptUrl(invite: Invite): string {
@@ -105,14 +106,10 @@ export class BulkInviteDeliveryService {
   }
 }
 
-function success(
-  email: string,
-  role: UserRole,
-  url: string | null,
-): BulkInviteResult {
+function success(invite: Invite, url: string | null): BulkInviteResult {
   return {
-    email,
-    role,
+    email: invite.email,
+    role: invite.role,
     success: true,
     url,
     errorCode: null,
@@ -121,14 +118,13 @@ function success(
 }
 
 function failure(
-  email: string,
-  role: UserRole,
+  invite: Invite,
   error: unknown,
   errorCode?: string,
 ): BulkInviteResult {
   return {
-    email,
-    role,
+    email: invite.email,
+    role: invite.role,
     success: false,
     url: null,
     errorCode:

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { EntityManager, Repository, IsNull } from 'typeorm';
+import { EntityManager, Repository, In, IsNull, LessThan } from 'typeorm';
 import { UUID } from 'crypto';
 import {
   InvitesRepository,
@@ -216,6 +216,15 @@ export class LocalInvitesRepository implements InvitesRepository {
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
+  async findExpiredPendingByOrg(orgId: UUID, now: Date): Promise<Invite[]> {
+    this.logger.log({ orgId }, 'findExpiredPendingByOrg');
+    const entities = await this.invites.find({
+      where: { orgId, acceptedAt: IsNull(), expiresAt: LessThan(now) },
+      relations: { inviteTeams: true },
+    });
+    return entities.map((entity) => this.inviteMapper.toDomain(entity));
+  }
+
   async accept(id: UUID): Promise<boolean> {
     this.logger.log({ id }, 'accept');
 
@@ -226,6 +235,17 @@ export class LocalInvitesRepository implements InvitesRepository {
 
     this.logger.debug({ id }, 'Invite accepted successfully');
     return result.affected === 1;
+  }
+
+  async expirePendingByIds(ids: UUID[], expiresAt: Date): Promise<void> {
+    this.logger.log({ inviteCount: ids.length }, 'expirePendingByIds');
+    if (ids.length === 0) {
+      return;
+    }
+    await this.invites.update(
+      { id: In(ids), acceptedAt: IsNull() },
+      { expiresAt },
+    );
   }
 
   async delete(id: UUID): Promise<void> {
@@ -242,6 +262,20 @@ export class LocalInvitesRepository implements InvitesRepository {
       acceptedAt: IsNull(),
     });
     return (result.affected ?? 0) > 0;
+  }
+
+  async deletePendingByIds(ids: UUID[]): Promise<UUID[]> {
+    this.logger.log({ inviteCount: ids.length }, 'deletePendingByIds');
+    if (ids.length === 0) {
+      return [];
+    }
+    const result = await this.invites
+      .createQueryBuilder()
+      .delete()
+      .where({ id: In(ids), acceptedAt: IsNull() })
+      .returning('id')
+      .execute();
+    return (result.raw as Pick<InviteRecord, 'id'>[]).map(({ id }) => id);
   }
 
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {

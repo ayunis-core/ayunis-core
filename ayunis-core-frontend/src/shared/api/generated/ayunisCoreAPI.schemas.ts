@@ -609,6 +609,17 @@ export interface DeleteAllPendingInvitesResponseDto {
   deletedCount: number;
 }
 
+export interface ResendExpiredInvitesResponseDto {
+  /** Number of expired invites that were renewed */
+  totalCount: number;
+  /** Number of renewed invites that were delivered */
+  successCount: number;
+  /** Number of renewed invites whose email could not be sent; they stay pending */
+  failureCount: number;
+  /** Individual delivery result for each renewed invite */
+  results: BulkInviteResultDto[];
+}
+
 export interface CreateOrgRequestDto {
   /** Organization display name */
   name: string;

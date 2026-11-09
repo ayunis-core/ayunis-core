@@ -1426,6 +1426,33 @@
         "tags": ["invites"]
       }
     },
+    "/invites/resend-expired": {
+      "post": {
+        "description": "Replace every expired, unaccepted invite of the caller's organization with a new one and send the invitation emails (Admin only)",
+        "operationId": "ExpiredInvitesController_resendAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The expired invites have been renewed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendExpiredInvitesResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Resend all expired invites",
+        "tags": ["invites"]
+      }
+    },
     "/super-admin/orgs/{orgId}/invites": {
       "get": {
         "operationId": "SuperAdminInvitesController_getInvites",
@@ -15263,6 +15290,34 @@
           }
         },
         "required": ["deletedCount"]
+      },
+      "ResendExpiredInvitesResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "number",
+            "description": "Number of expired invites that were renewed",
+            "example": 10
+          },
+          "successCount": {
+            "type": "number",
+            "description": "Number of renewed invites that were delivered",
+            "example": 9
+          },
+          "failureCount": {
+            "type": "number",
+            "description": "Number of renewed invites whose email could not be sent; they stay pending",
+            "example": 1
+          },
+          "results": {
+            "description": "Individual delivery result for each renewed invite",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkInviteResultDto"
+            }
+          }
+        },
+        "required": ["totalCount", "successCount", "failureCount", "results"]
       },
       "CreateOrgRequestDto": {
         "type": "object",

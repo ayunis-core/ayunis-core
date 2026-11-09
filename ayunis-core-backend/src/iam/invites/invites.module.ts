@@ -26,6 +26,7 @@ import { SendInvitationEmailUseCase } from './application/use-cases/send-invitat
 import { DeleteInviteByEmailUseCase } from './application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { DeleteAllPendingInvitesUseCase } from './application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { ResendExpiredInviteUseCase } from './application/use-cases/resend-expired-invite/resend-expired-invite.use-case';
+import { ResendExpiredInvitesUseCase } from 'src/iam/invites/application/use-cases/resend-expired-invites/resend-expired-invites.use-case';
 import { PendingInviteCountsRepository } from 'src/iam/invites/application/ports/pending-invite-counts.repository';
 import { LocalPendingInviteCountsRepository } from 'src/iam/invites/infrastructure/persistence/local/local-pending-invite-counts.repository';
 import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
@@ -41,6 +42,7 @@ import { InviteCreatedEventPublisher } from 'src/iam/invites/application/service
 import { InvitesController } from './presenters/http/invites.controller';
 import { InviteResponseMapper } from './presenters/http/mappers/invite-response.mapper';
 import { SuperAdminInvitesController } from 'src/iam/invites/presenters/http/super-admin-invites.controller';
+import { ExpiredInvitesController } from 'src/iam/invites/presenters/http/expired-invites.controller';
 
 // External modules
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
@@ -89,6 +91,7 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
     DeleteInviteUseCase,
     DeleteAllPendingInvitesUseCase,
     ResendExpiredInviteUseCase,
+    ResendExpiredInvitesUseCase,
     CountPendingInvitesByOrgIdUseCase,
     CreateInviteWithSeatReservationUseCase,
     BulkInviteDeliveryService,
@@ -102,7 +105,11 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
     SendInvitationEmailUseCase,
     DeleteInviteByEmailUseCase,
   ],
-  controllers: [InvitesController, SuperAdminInvitesController],
+  controllers: [
+    InvitesController,
+    ExpiredInvitesController,
+    SuperAdminInvitesController,
+  ],
   exports: [
     InvitesRepository, // Export repository for CLI user management
     CreateInviteUseCase,

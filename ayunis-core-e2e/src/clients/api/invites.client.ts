@@ -73,3 +73,9 @@ export function requestResendInvite(
 ): Promise<APIResponse> {
   return api.post(`${config.apiURL}/api/invites/${inviteId}/resend`);
 }
+
+export function requestResendExpiredInvites(
+  api: APIRequestContext,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/invites/resend-expired`);
+}

@@ -57,6 +57,7 @@
   "/invites/accept",
   "/invites/all",
   "/invites/bulk",
+  "/invites/resend-expired",
   "/invites/{id}",
   "/invites/{id}/resend",
   "/invites/{token}",

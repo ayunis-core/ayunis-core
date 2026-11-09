@@ -189,3 +189,21 @@ export async function findUserMessageImage(
     await client.end();
   }
 }
+
+/** Invites only expire with time, so specs backdate them directly. */
+export async function expireInvites(emails: string[]): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query(
+      `UPDATE invites SET "expiresAt" = now() - interval '1 day'
+       WHERE email = ANY($1::text[])`,
+      [emails],
+    );
+    if (result.rowCount !== emails.length) {
+      throw new Error(`Expected to expire ${emails.length} invites`);
+    }
+  } finally {
+    await client.end();
+  }
+}
