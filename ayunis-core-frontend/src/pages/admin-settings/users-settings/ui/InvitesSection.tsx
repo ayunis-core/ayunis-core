@@ -20,6 +20,7 @@ import { Table, TableHeader } from '@ayunis/ui/components/table';
 import { useInviteDelete } from '@/pages/admin-settings/users-settings/api/useInviteDelete';
 import { useDeleteAllInvites } from '@/pages/admin-settings/users-settings/api/useDeleteAllInvites';
 import { useInviteResend } from '@/pages/admin-settings/users-settings/api/useInviteResend';
+import { useResendExpiredInvites } from '@/pages/admin-settings/users-settings/api/useResendExpiredInvites';
 import type { Invite } from '@/pages/admin-settings/users-settings/model/openapi';
 import type { InviteResponseDtoRole, InvitesSortField } from '@/shared/api';
 import type { TableSort } from '@/shared/lib/table-sort';
@@ -49,6 +50,8 @@ export default function InvitesSection({
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
   const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
   const { resendInvite, isResending } = useInviteResend();
+  const { resendExpiredInvites, isResendingExpired } =
+    useResendExpiredInvites();
   const { confirm } = useConfirmation();
 
   const roleLabels: Record<InviteResponseDtoRole, string> = {
@@ -82,6 +85,16 @@ export default function InvitesSection({
     });
   };
 
+  const handleResendExpiredInvites = () => {
+    confirm({
+      title: t('confirmations.resendExpiredInvitesTitle'),
+      description: t('confirmations.resendExpiredInvitesDescription'),
+      confirmText: t('confirmations.resendText'),
+      cancelText: t('confirmations.cancelText'),
+      onConfirm: resendExpiredInvites,
+    });
+  };
+
   const handleDeleteAllInvites = () => {
     confirm({
       title: t('confirmations.deleteAllInvitesTitle'),
@@ -99,7 +112,17 @@ export default function InvitesSection({
     <Card>
       <CardHeader>
         <CardTitle>{t('users.invites')}</CardTitle>
-        <CardAction>
+        <CardAction className="flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResendExpiredInvites}
+            disabled={isResendingExpired || totalInvites === 0}
+            data-testid="admin-invites-resend-expired"
+          >
+            <RefreshCw />
+            {t('users.resendExpired')}
+          </Button>
           <Button
             variant="outline"
             size="sm"

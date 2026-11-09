@@ -6,8 +6,10 @@ import {
   inviteUser,
   requestDeleteInvite,
   requestInvite,
+  requestResendExpiredInvites,
   requestResendInvite,
 } from '../../src/clients/api/invites.client';
+import { expireInvites } from '../../src/clients/database.client';
 import { config } from '../../src/config';
 import { CreateInviteDtoRole } from '../../src/clients/generated/ayunisCoreAPI.schemas';
 import { createApiContext } from '../../src/factories/api-context.factory';
@@ -124,6 +126,59 @@ test('a tenant admin cannot resend an invite of another organization', async ({
 
     expect((await requestResendInvite(api, inviteId)).status()).toBe(404);
     expect(await pendingInviteId(foreignApi, inviteeEmail)).toBe(inviteId);
+  } finally {
+    await foreignApi.dispose();
+  }
+});
+
+test('only a tenant admin can resend all expired invites', async ({
+  api,
+  mail,
+}) => {
+  const key = Date.now();
+  const member = await createUser(api, mail, `invite-resend-all-${key}`);
+  const memberApi = await request.newContext({ baseURL: config.apiURL });
+
+  try {
+    await login(memberApi, member.email, member.password);
+    const inviteeEmail = `e2e-resend-all-${key}@e2e.local`;
+    await inviteUser(api, inviteeEmail);
+    await expireInvites([inviteeEmail]);
+    const inviteId = await pendingInviteId(api, inviteeEmail);
+
+    expect((await requestResendExpiredInvites(memberApi)).status()).toBe(403);
+    expect(await pendingInviteId(api, inviteeEmail)).toBe(inviteId);
+
+    expect((await requestResendExpiredInvites(api)).status()).toBe(200);
+    expect(await pendingInviteId(api, inviteeEmail)).not.toBe(inviteId);
+  } finally {
+    await memberApi.dispose();
+  }
+});
+
+test('resending all expired invites leaves other organizations untouched', async ({
+  api,
+}) => {
+  const key = Date.now();
+  const foreignOrg = await createOrg(
+    `foreign-invite-resend-all-${key}`,
+    test.info().outputPath('foreign-org.json'),
+  );
+  const foreignApi = await createApiContext({ cookies: [], origins: [] });
+
+  try {
+    await login(foreignApi, foreignOrg.admin.email, foreignOrg.admin.password);
+    const inviteeEmail = `e2e-foreign-resend-all-${key}@e2e.local`;
+    await inviteUser(foreignApi, inviteeEmail);
+    await expireInvites([inviteeEmail]);
+    const inviteId = await pendingInviteId(foreignApi, inviteeEmail);
+
+    expect((await requestResendExpiredInvites(api)).status()).toBe(200);
+
+    const { data } = await listPendingInvites(foreignApi, inviteeEmail);
+    expect(data).toEqual([
+      expect.objectContaining({ id: inviteId, status: 'expired' }),
+    ]);
   } finally {
     await foreignApi.dispose();
   }

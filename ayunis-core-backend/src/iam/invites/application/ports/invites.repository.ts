@@ -32,8 +32,12 @@ export abstract class InvitesRepository {
     orgId: UUID,
   ): Promise<Invite | null>;
   abstract findByEmails(emails: string[]): Promise<Invite[]>;
+  abstract findExpiredPendingByOrg(orgId: UUID, now: Date): Promise<Invite[]>;
   abstract accept(id: UUID): Promise<boolean>;
+  abstract expirePendingByIds(ids: UUID[], expiresAt: Date): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
   abstract deletePendingByIdAndOrg(id: UUID, orgId: UUID): Promise<boolean>;
+  /** Returns the ids of the invites that were still pending and got deleted. */
+  abstract deletePendingByIds(ids: UUID[]): Promise<UUID[]>;
   abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
 }

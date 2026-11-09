@@ -192,6 +192,7 @@ import type {
   ReorderFavoritesDto,
   ReplaceModelModeEntriesDto,
   ResendEmailConfirmationDto,
+  ResendExpiredInvitesResponseDto,
   ResetPasswordDto,
   ResolveSubscriptionOverlapDto,
   RetentionPolicyResponseDto,
@@ -2968,6 +2969,73 @@ export const useInvitesControllerDeleteInvite = <TError = void,
         TContext
       > => {
       return useMutation(getInvitesControllerDeleteInviteMutationOptions(options), queryClient);
+    }
+
+/**
+ * Replace every expired, unaccepted invite of the caller's organization with a new one and send the invitation emails (Admin only)
+ * @summary Resend all expired invites
+ */
+export const expiredInvitesControllerResendAll = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ResendExpiredInvitesResponseDto>(
+      {url: `/invites/resend-expired`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getExpiredInvitesControllerResendAllMutationKey = () => ['expiredInvitesControllerResendAll'] as const;
+
+export const getExpiredInvitesControllerResendAllMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>, TError,void, TContext> => {
+
+const mutationKey = getExpiredInvitesControllerResendAllMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>, void> = () => {
+
+
+          return  expiredInvitesControllerResendAll()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExpiredInvitesControllerResendAllMutationResult = NonNullable<Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>>
+
+    export type ExpiredInvitesControllerResendAllMutationError = void
+
+
+    /**
+ * @summary Resend all expired invites
+ */
+export const useExpiredInvitesControllerResendAll = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof expiredInvitesControllerResendAll>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getExpiredInvitesControllerResendAllMutationOptions(options), queryClient);
     }
 
 /**

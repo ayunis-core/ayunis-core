@@ -63,7 +63,9 @@ export class CreateBulkInvitesUseCase {
     );
 
     const invites = await this.reserveInvites(command);
-    const results = await this.delivery.deliver(command, invites);
+    const results = await this.delivery.deliver(invites, {
+      discardUndelivered: true,
+    });
     this.publishSuccessfulInvites(invites, results);
     const successCount = results.filter((result) => result.success).length;
     const failureCount = results.length - successCount;

@@ -30,6 +30,7 @@
     "manager": "Manager",
     "admin": "Administrator",
     "resend": "Einladung erneut senden",
+    "resendExpired": "Abgelaufene erneut senden",
     "sendPasswordReset": "Passwort-Reset senden",
     "noInvitesFound": "Keine Einladungen gefunden",
     "total": "{{count}} gesamt",
@@ -88,6 +89,8 @@
     "resendInviteTitle": "Einladung erneut senden",
     "resendInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} erneut senden möchten? Die abgelaufene Einladung wird gelöscht und eine neue erstellt.",
     "resendText": "Erneut senden",
+    "resendExpiredInvitesTitle": "Abgelaufene Einladungen erneut senden",
+    "resendExpiredInvitesDescription": "Alle abgelaufenen Einladungen Ihrer Organisation, auch außerhalb der aktuellen Suche oder Seite, werden durch neue Einladungen ersetzt und erneut versendet.",
     "deleteAllOrgInvitesDescription": "Möchten Sie alle ausstehenden Einladungen dieser Organisation löschen, auch außerhalb der aktuellen Suche oder Seite? Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "deleteAllInvites": {
@@ -112,6 +115,14 @@
       "inviteNotExpired": "Diese Einladung ist noch nicht abgelaufen.",
       "unexpectedError": "Fehler beim erneuten Senden der Einladung. Bitte versuchen Sie es erneut."
     }
+  },
+  "resendExpiredInvites": {
+    "success_one": "{{count}} abgelaufene Einladung erneut gesendet",
+    "success_other": "{{count}} abgelaufene Einladungen erneut gesendet",
+    "partialSuccess": "{{success}} von {{total}} abgelaufenen Einladungen erneut gesendet. Die übrigen Einladungs-E-Mails konnten nicht versendet werden.",
+    "noneExpired": "Es gibt keine abgelaufenen Einladungen zum erneuten Senden.",
+    "rateLimitExceeded": "Sie haben abgelaufene Einladungen in kurzer Zeit mehrfach erneut gesendet. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
+    "error": "Abgelaufene Einladungen konnten nicht erneut gesendet werden. Bitte versuchen Sie es erneut."
   },
   "inviteDelete": {
     "error": {

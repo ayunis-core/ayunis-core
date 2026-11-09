@@ -30,6 +30,7 @@
     "manager": "Manager",
     "admin": "Admin",
     "resend": "Resend Invite",
+    "resendExpired": "Resend Expired",
     "sendPasswordReset": "Send Password Reset",
     "noInvitesFound": "No invites found",
     "total": "{{count}} total",
@@ -87,6 +88,8 @@
     "resendInviteTitle": "Resend Invite",
     "resendInviteDescription": "Are you sure you want to resend the invite for {{email}}? The expired invite will be deleted and a new one will be created.",
     "resendText": "Resend",
+    "resendExpiredInvitesTitle": "Resend Expired Invites",
+    "resendExpiredInvitesDescription": "All expired invites of your organization, including those outside the current search or page, will be replaced with new invites and sent again.",
     "deleteAllOrgInvitesDescription": "Are you sure you want to delete all pending invites for this organization, including those outside the current search or page? This action cannot be undone."
   },
   "deleteAllInvites": {
@@ -111,6 +114,14 @@
       "inviteNotExpired": "This invite has not expired yet.",
       "unexpectedError": "Failed to resend invite. Please try again."
     }
+  },
+  "resendExpiredInvites": {
+    "success_one": "{{count}} expired invite resent",
+    "success_other": "{{count}} expired invites resent",
+    "partialSuccess": "{{success}} of {{total}} expired invites resent. The remaining invitation emails could not be sent.",
+    "noneExpired": "There are no expired invites to resend.",
+    "rateLimitExceeded": "You have resent expired invites several times in a short time. Please wait a few minutes and try again.",
+    "error": "Failed to resend expired invites. Please try again."
   },
   "inviteDelete": {
     "error": {
