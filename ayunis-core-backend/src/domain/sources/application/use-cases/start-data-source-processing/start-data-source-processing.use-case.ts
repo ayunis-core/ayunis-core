@@ -20,16 +20,12 @@ import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases
 import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import {
-  EmptyFileDataError,
-  UnexpectedSourceError,
-} from 'src/domain/sources/application/sources.errors';
+  type DataSourcePlan as SourcePlan,
+  resolveDataSourcePlans,
+} from 'src/domain/sources/application/util/data-source-plans.helper';
 import { StartDataSourceProcessingCommand } from './start-data-source-processing.command';
-
-interface SourcePlan {
-  name: string;
-  sheetName: string | null;
-}
 
 /**
  * Async ingestion entry point for CSV/spreadsheet uploads, mirroring
@@ -74,7 +70,7 @@ export class StartDataSourceProcessingUseCase {
       throw new Error('userId is required');
     }
 
-    const plans = await this.resolveSourcePlans(command);
+    const plans = await resolveDataSourcePlans(this.spreadsheetParser, command);
     // Rejecting an over-capacity workbook here costs nothing; after this
     // point sources exist, the file is uploaded, and a job is enqueued.
     command.ensureCapacityFor?.(plans.length);
@@ -96,30 +92,6 @@ export class StartDataSourceProcessingUseCase {
     );
 
     return sources;
-  }
-
-  private async resolveSourcePlans(
-    command: StartDataSourceProcessingCommand,
-  ): Promise<SourcePlan[]> {
-    if (command.kind === 'csv') {
-      return [{ name: command.fileName, sheetName: null }];
-    }
-
-    const sheetNames = await this.spreadsheetParser.listDataSheets(
-      command.fileData,
-    );
-    if (sheetNames.length === 0) {
-      throw new EmptyFileDataError(command.fileName);
-    }
-
-    const baseFileName = command.fileName.replace(/\.(xlsx|xls|ods)$/i, '');
-    return sheetNames.map((sheetName) => ({
-      sheetName,
-      name:
-        sheetNames.length === 1
-          ? `${baseFileName}.csv`
-          : `${baseFileName}_${sheetName.replace(/\s+/g, '_')}.csv`,
-    }));
   }
 
   @Transactional()

@@ -85,4 +85,10 @@ export abstract class SourceRepository {
     candidateIds: UUID[],
     olderThan: Date,
   ): Promise<UUID[]>;
+  /**
+   * The subset of `storageKeys` still referenced by any source. Deletion
+   * releases an uploaded original only once no source points at it (table
+   * uploads share one file across their sheet sources).
+   */
+  abstract findReferencedStorageKeys(storageKeys: string[]): Promise<string[]>;
 }

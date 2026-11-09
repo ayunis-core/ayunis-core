@@ -5,9 +5,11 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
-import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
@@ -30,10 +32,7 @@ import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
-import {
-  cleanupMinioProcessingFile,
-  downloadMinioFile,
-} from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 4 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -42,8 +41,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
   constructor(
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly storedFiles: StoredSourceFileService,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly helper: SourceProcessingHelper,
@@ -71,6 +71,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
   ): Promise<void> {
     const { sourceId, orgId, userId, minioPath } = job.data;
+    // Directly uploaded originals stay in storage while their source exists;
+    // only legacy staged files are the consumer's to remove.
+    const cleanupPath = job.data.retainFile ? null : minioPath;
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
@@ -78,7 +81,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       if (!(await this.isAdmitted(job))) return;
 
       try {
-        if (!(await this.loadSourceOrSkip(sourceId, minioPath))) return;
+        if (!(await this.loadSourceOrSkip(sourceId, cleanupPath))) return;
 
         const { text, chunks } = await this.heartbeat.run(sourceId, () =>
           this.downloadAndExtractText(job.data),
@@ -86,14 +89,17 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
         // Guard: re-check the source still exists and is PROCESSING
         // before writing content. Prevents resurrection of deleted sources.
-        const source = await this.reloadIfStillProcessing(sourceId, minioPath);
+        const source = await this.reloadIfStillProcessing(
+          sourceId,
+          cleanupPath,
+        );
         if (!source) return;
 
         await this.updateSourceWithContent(source, text, chunks);
         await processingStage('document.indexing', () =>
           this.helper.index(sourceId, orgId, chunks),
         );
-        await this.markSourceReady(sourceId, minioPath);
+        await this.markSourceReady(sourceId, cleanupPath);
 
         this.logger.log(
           {
@@ -115,7 +121,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (final) {
           await this.helper.markFailed(sourceId, error);
           await this.helper.cleanupIndex(sourceId);
-          await this.cleanupMinioFile(minioPath);
+          await this.cleanupMinioFile(cleanupPath);
         }
         if (rethrow) throw rethrow;
       }
@@ -153,7 +159,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async loadSourceOrSkip(
     sourceId: UUID,
-    minioPath: string,
+    cleanupPath: string | null,
   ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
@@ -161,7 +167,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         { sourceId, found: !!source },
         'Source missing or no longer processing, skipping',
       );
-      await this.cleanupMinioFile(minioPath);
+      await this.cleanupMinioFile(cleanupPath);
       return null;
     }
 
@@ -174,7 +180,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
     if (!alive) {
       this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
-      await this.cleanupMinioFile(minioPath);
+      await this.cleanupMinioFile(cleanupPath);
       return null;
     }
     source.processingStartedAt = processingStartedAt;
@@ -185,10 +191,13 @@ export class DocumentProcessingConsumer extends WorkerHost {
   private async downloadAndExtractText(
     jobData: DocumentProcessingJobData,
   ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
-    const { minioPath, fileName, fileType } = jobData;
+    const { minioPath, fileName, fileType, expectedSize, expectedETag } =
+      jobData;
 
     const fileBuffer = await processingStage('document.download', () =>
-      this.downloadFile(minioPath),
+      jobData.retainFile
+        ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
+        : this.storedFiles.read(minioPath, expectedSize, expectedETag),
     );
     const text = await processingStage('document.extraction', () =>
       this.extractText(fileBuffer, fileName, fileType),
@@ -232,6 +241,12 @@ export class DocumentProcessingConsumer extends WorkerHost {
       const sheets = await this.spreadsheetParser.parseWorkbook(fileBuffer);
       return this.requireRows(tableToText(sheets, sheets.length > 1), fileName);
     }
+    // Direct uploads reach the API only as a storage reference, so the page
+    // cap is enforced here, before OCR; legacy uploads were checked in-request
+    // and pass again cheaply.
+    await this.preflightCheckUseCase.execute(
+      new PreflightCheckCommand({ fileData: fileBuffer, fileName, fileType }),
+    );
     const result = await this.retrieveFileContentUseCase.execute(
       new RetrieveFileContentCommand({
         fileData: fileBuffer,
@@ -249,7 +264,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async reloadIfStillProcessing(
     sourceId: UUID,
-    minioPath: string,
+    cleanupPath: string | null,
   ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
@@ -260,7 +275,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         },
         'Source deleted or status changed mid-processing',
       );
-      await this.cleanupMinioFile(minioPath);
+      await this.cleanupMinioFile(cleanupPath);
       return null;
     }
     if (!(source instanceof TextSource)) {
@@ -279,7 +294,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async markSourceReady(
     sourceId: UUID,
-    minioPath: string,
+    cleanupPath: string | null,
   ): Promise<void> {
     const updated = await this.sourceRepository.updateStatusConditionally(
       sourceId,
@@ -294,18 +309,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
       );
       await this.helper.cleanupIndex(sourceId);
     }
-    await this.cleanupMinioFile(minioPath);
+    await this.cleanupMinioFile(cleanupPath);
   }
 
-  private async downloadFile(minioPath: string): Promise<Buffer> {
-    return downloadMinioFile(this.downloadObjectUseCase, minioPath);
-  }
-
-  private async cleanupMinioFile(minioPath: string): Promise<void> {
+  private async cleanupMinioFile(cleanupPath: string | null): Promise<void> {
+    if (cleanupPath === null) return;
     await cleanupMinioProcessingFile(
       this.deleteObjectUseCase,
       this.logger,
-      minioPath,
+      cleanupPath,
     );
   }
 }
