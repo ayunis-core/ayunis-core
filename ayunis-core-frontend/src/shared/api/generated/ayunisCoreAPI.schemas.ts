@@ -3180,6 +3180,13 @@ export interface GetThreadsResponseDtoItem {
   title?: string;
 }
 
+export type SessionClient = typeof SessionClient[keyof typeof SessionClient];
+
+
+export const SessionClient = {
+  outlook: 'outlook',
+} as const;
+
 export interface GetThreadsResponseDto {
   /** Array of threads for the current page */
   data: GetThreadsResponseDtoItem[];
@@ -6620,6 +6627,10 @@ type?: ThreadType;
  * Only the routine threads of this routine's runs. Another user's routine yields none.
  */
 routineId?: string;
+/**
+ * Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.
+ */
+client?: SessionClient;
 /**
  * Maximum number of threads to return (default: 50)
  */

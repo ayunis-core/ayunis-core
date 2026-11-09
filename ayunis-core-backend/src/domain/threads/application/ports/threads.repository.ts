@@ -4,6 +4,7 @@ import type { ThreadCitationContext } from 'src/domain/threads/application/model
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
@@ -17,6 +18,8 @@ export interface ThreadsFindAllFilters {
   workspaceId?: UUID;
   type?: ThreadType;
   routineId?: UUID;
+  /** Threads of this client; without it, only threads of the web app. */
+  client?: SessionClient;
 }
 
 export interface ThreadsPagination {
