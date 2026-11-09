@@ -101,7 +101,9 @@ describe('FindAllWorkspacesUseCase', () => {
 
     expect(item.skillCount).toBe(0);
     expect(item.knowledgeBaseCount).toBe(0);
-    expect(repository.getListStats).toHaveBeenCalledWith([workspace.id]);
+    expect(repository.getListStats).toHaveBeenCalledWith(TEST_USER_ID, [
+      workspace.id,
+    ]);
   });
 
   it('surfaces chat activity newer than the last edit', async () => {

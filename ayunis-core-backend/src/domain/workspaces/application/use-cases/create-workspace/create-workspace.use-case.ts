@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { assertValidWorkspaceFields } from 'src/domain/workspaces/application/util/workspace-fields';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { CreateWorkspaceCommand } from './create-workspace.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -15,6 +19,7 @@ export class CreateWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceMembersRepository: WorkspaceMembersRepository,
     private readonly contextService: ContextService,
   ) {}
 
@@ -29,9 +34,8 @@ export class CreateWorkspaceUseCase {
       color: command.color,
     });
 
-    const { userId, orgId } = this.resolveOwner();
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
     const workspace = new Workspace({
-      userId,
       orgId,
       name: command.name,
       description: command.description,
@@ -39,11 +43,22 @@ export class CreateWorkspaceUseCase {
       color: command.color,
     });
 
-    return await this.workspacesRepository.save(workspace);
+    return this.createWithAdmin(workspace, userId);
   }
 
-  private resolveOwner(): { userId: UUID; orgId: UUID } {
-    const { userId, orgId } = getRequiredUserContext(this.contextService);
-    return { userId, orgId };
+  @Transactional()
+  private async createWithAdmin(
+    workspace: Workspace,
+    creatorId: UUID,
+  ): Promise<Workspace> {
+    const created = await this.workspacesRepository.save(workspace);
+    await this.workspaceMembersRepository.create(
+      new WorkspaceMember({
+        workspaceId: created.id,
+        userId: creatorId,
+        role: UserRole.ADMIN,
+      }),
+    );
+    return created;
   }
 }

@@ -14,6 +14,7 @@ import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/worksp
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
 import { WorkspaceRecord } from './schema/workspace.record';
+import { WorkspaceMemberRecord } from './schema/workspace-member.record';
 import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base-activation.record';
@@ -94,9 +95,7 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     userId: UUID,
     query: Pick<WorkspaceListOptions, 'search'>,
   ): SelectQueryBuilder<WorkspaceRecord> {
-    const countQuery = this.repo
-      .createQueryBuilder('workspace')
-      .where('workspace.userId = :userId', { userId });
+    const countQuery = this.createMemberWorkspacesQuery(userId);
     this.applyWorkspaceSearch(countQuery, query.search);
     return countQuery;
   }
@@ -105,15 +104,31 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     userId: UUID,
     query: Pick<WorkspaceListOptions, 'search' | 'sort'>,
   ): SelectQueryBuilder<WorkspaceRecord> {
-    const listQuery = this.repo
-      .createQueryBuilder('workspace')
-      .leftJoin('threads', 'thread', 'thread."workspaceId" = workspace.id')
-      .where('workspace.userId = :userId', { userId })
+    const listQuery = this.createMemberWorkspacesQuery(userId)
+      .leftJoin(
+        'threads',
+        'thread',
+        'thread."workspaceId" = workspace.id AND thread."userId" = :userId',
+        { userId },
+      )
       .addGroupBy('workspace.id');
 
     this.applyWorkspaceSearch(listQuery, query.search);
     this.applyWorkspaceSort(listQuery, query.sort);
     return listQuery;
+  }
+
+  private createMemberWorkspacesQuery(
+    userId: UUID,
+  ): SelectQueryBuilder<WorkspaceRecord> {
+    return this.repo
+      .createQueryBuilder('workspace')
+      .innerJoin(
+        WorkspaceMemberRecord,
+        'member',
+        'member.workspaceId = workspace.id AND member.userId = :userId',
+        { userId },
+      );
   }
 
   private applyWorkspaceSearch(
@@ -155,7 +170,21 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
 
   async findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]> {
     if (ids.length === 0) return [];
-    const records = await this.repo.find({ where: { userId, id: In(ids) } });
+    const records = await this.createMemberWorkspacesQuery(userId)
+      .where('workspace.id IN (:...ids)', { ids })
+      .getMany();
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findMemberless(ids: UUID[]): Promise<Workspace[]> {
+    if (ids.length === 0) return [];
+    const records = await this.repo
+      .createQueryBuilder('workspace')
+      .where('workspace.id IN (:...ids)', { ids })
+      .andWhere(
+        'NOT EXISTS (SELECT 1 FROM workspace_members member WHERE member."workspaceId" = workspace.id)',
+      )
+      .getMany();
     return records.map((record) => this.mapper.toDomain(record));
   }
 
@@ -163,6 +192,7 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   // module here would reverse the threads → workspaces dependency and close a
   // cycle, so this aggregate query stays raw SQL instead.
   async getListStats(
+    userId: UUID,
     workspaceIds: UUID[],
   ): Promise<Map<UUID, WorkspaceListStats>> {
     if (workspaceIds.length === 0) {
@@ -172,16 +202,16 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
       await this.repo.manager.query(
         `SELECT w."id" AS "workspaceId",
                 (SELECT COUNT(*)::int FROM threads t
-                  WHERE t."workspaceId" = w."id") AS "chatCount",
+                  WHERE t."workspaceId" = w."id" AND t."userId" = $2) AS "chatCount",
                 (SELECT MAX(COALESCE(t."lastActivityAt", t."createdAt")) FROM threads t
-                  WHERE t."workspaceId" = w."id") AS "lastActivityAt",
+                  WHERE t."workspaceId" = w."id" AND t."userId" = $2) AS "lastActivityAt",
                 (SELECT COUNT(*)::int FROM skills s
                   WHERE s."workspaceId" = w."id") AS "skillCount",
                 (SELECT COUNT(*)::int FROM knowledge_bases k
                   WHERE k."workspaceId" = w."id") AS "knowledgeBaseCount"
          FROM workspaces w
          WHERE w."id" = ANY($1)`,
-        [workspaceIds],
+        [workspaceIds, userId],
       );
     return new Map(
       rows.map(({ workspaceId, ...stats }) => [workspaceId, stats]),
@@ -189,7 +219,9 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
   }
 
   async findById(userId: UUID, id: UUID): Promise<Workspace | null> {
-    const record = await this.repo.findOne({ where: { userId, id } });
+    const record = await this.createMemberWorkspacesQuery(userId)
+      .where('workspace.id = :id', { id })
+      .getOne();
     return record ? this.mapper.toDomain(record) : null;
   }
 
@@ -230,8 +262,8 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     };
   }
 
-  async delete(userId: UUID, id: UUID): Promise<void> {
-    const result = await this.repo.delete({ id, userId });
+  async delete(id: UUID): Promise<void> {
+    const result = await this.repo.delete({ id });
     if (result.affected === 0) throw new WorkspaceNotFoundError(id);
   }
 }

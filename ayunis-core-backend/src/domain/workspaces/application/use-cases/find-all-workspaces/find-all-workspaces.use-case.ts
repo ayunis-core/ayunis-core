@@ -33,11 +33,13 @@ export class FindAllWorkspacesUseCase {
   ): Promise<Paginated<WorkspaceListItem>> {
     this.logger.log('Finding all workspaces');
 
+    const userId = this.resolveUserId();
     const workspaces = await this.workspacesRepository.findAllByUserId(
-      this.resolveUserId(),
+      userId,
       query,
     );
     const stats = await this.workspacesRepository.getListStats(
+      userId,
       workspaces.data.map((workspace) => workspace.id),
     );
 
