@@ -1,4 +1,7 @@
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -25,6 +28,7 @@ import {
 describe('CreateSkillUseCase', () => {
   let useCase: CreateSkillUseCase;
   let skillRepository: jest.Mocked<SkillRepository>;
+  let authorization: { requireCreate: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -35,6 +39,7 @@ describe('CreateSkillUseCase', () => {
       create: jest.fn(),
       findByNameAndOwner: jest.fn(),
       findByNameAndWorkspace: jest.fn(),
+      findByNameAndCollectiveOwner: jest.fn(),
       activateSkill: jest.fn(),
       activateWorkspaceSkill: jest.fn(),
     };
@@ -52,13 +57,14 @@ describe('CreateSkillUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         {
           provide: SkillAuthorizationService,
-          useValue: { requireWrite: jest.fn() },
+          useValue: { requireCreate: jest.fn() },
         },
       ],
     }).compile();
 
     useCase = module.get<CreateSkillUseCase>(CreateSkillUseCase);
     skillRepository = module.get(SkillRepository);
+    authorization = module.get(SkillAuthorizationService);
   });
 
   afterEach(() => {
@@ -215,5 +221,85 @@ describe('CreateSkillUseCase', () => {
       expect.any(String),
       mockUserId,
     );
+  });
+
+  describe('team- and org-owned skills', () => {
+    const teamId = '323e4567-e89b-12d3-a456-426614174002' as UUID;
+    const params = {
+      name: 'Council minutes',
+      shortDescription: 'Drafts council meeting minutes.',
+      instructions: 'Summarise each agenda item and its resolution.',
+    };
+
+    beforeEach(() => {
+      skillRepository.create.mockImplementation((skill) =>
+        Promise.resolve(skill),
+      );
+    });
+
+    it('creates a team skill that is active for everyone by default', async () => {
+      const created = await useCase.execute(
+        new CreateSkillCommand({ ...params, owner: { type: 'team', teamId } }),
+      );
+
+      expect(created).toBeInstanceOf(TeamSkill);
+      expect(created).toMatchObject({ teamId, isActive: true });
+      expect(authorization.requireCreate).toHaveBeenCalledWith(created);
+      expect(skillRepository.findByNameAndCollectiveOwner).toHaveBeenCalledWith(
+        params.name,
+        { teamId },
+      );
+      expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+    });
+
+    it('creates an inactive org skill in the caller organization', async () => {
+      const created = await useCase.execute(
+        new CreateSkillCommand({
+          ...params,
+          owner: { type: 'org' },
+          isActive: false,
+        }),
+      );
+
+      expect(created).toBeInstanceOf(OrgSkill);
+      expect(created).toMatchObject({ orgId: mockOrgId, isActive: false });
+      expect(skillRepository.findByNameAndCollectiveOwner).toHaveBeenCalledWith(
+        params.name,
+        { orgId: mockOrgId },
+      );
+      expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+    });
+
+    it('does not create the skill when the caller may not manage the owner', async () => {
+      authorization.requireCreate.mockRejectedValueOnce(
+        new UnauthorizedAccessError(),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateSkillCommand({
+            ...params,
+            owner: { type: 'team', teamId },
+          }),
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+      expect(skillRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a name already used in the same team', async () => {
+      skillRepository.findByNameAndCollectiveOwner.mockResolvedValueOnce(
+        new TeamSkill({ ...params, teamId }),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateSkillCommand({
+            ...params,
+            owner: { type: 'team', teamId },
+          }),
+        ),
+      ).rejects.toBeInstanceOf(DuplicateSkillNameError);
+      expect(skillRepository.create).not.toHaveBeenCalled();
+    });
   });
 });

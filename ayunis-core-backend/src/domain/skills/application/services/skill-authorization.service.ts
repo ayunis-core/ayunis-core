@@ -5,6 +5,7 @@ import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
@@ -13,6 +14,7 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
 
 @Injectable()
 export class SkillAuthorizationService {
@@ -25,6 +27,7 @@ export class SkillAuthorizationService {
     @Inject(forwardRef(() => AssertWorkspaceExecutionAccessUseCase))
     private readonly workspaceExecution: AssertWorkspaceExecutionAccessUseCase,
     private readonly context: ContextService,
+    private readonly collectiveAccess: CollectiveSkillAccessService,
   ) {}
 
   async requireRead(skill: Skill): Promise<void> {
@@ -37,6 +40,9 @@ export class SkillAuthorizationService {
       );
       if (share) return;
       throw new SkillNotFoundError(skill.id);
+    }
+    if (skill instanceof AbstractCollectiveSkill) {
+      return this.collectiveAccess.requireRead(skill);
     }
     if (!(skill instanceof WorkspaceSkill)) {
       throw new SkillNotFoundError(skillId);
@@ -53,6 +59,9 @@ export class SkillAuthorizationService {
       if (skill.userId !== userId) throw new SkillNotFoundError(skill.id);
       return;
     }
+    if (skill instanceof AbstractCollectiveSkill) {
+      return this.collectiveAccess.requireWrite(skill);
+    }
     if (!(skill instanceof WorkspaceSkill)) {
       throw new SkillNotFoundError(skillId);
     }
@@ -61,10 +70,21 @@ export class SkillAuthorizationService {
     );
   }
 
+  /** Creating for a team or the organization takes the right to manage it. */
+  async requireCreate(skill: Skill): Promise<void> {
+    if (skill instanceof AbstractCollectiveSkill) {
+      return this.collectiveAccess.requireManage(skill);
+    }
+    return this.requireWrite(skill);
+  }
+
   async requireExecution(skill: Skill, threadId: UUID): Promise<void> {
     const skillId = skill.id;
     this.requirePrincipal();
-    if (skill instanceof PersonalSkill) {
+    if (
+      skill instanceof PersonalSkill ||
+      skill instanceof AbstractCollectiveSkill
+    ) {
       await this.requireRead(skill);
       return;
     }

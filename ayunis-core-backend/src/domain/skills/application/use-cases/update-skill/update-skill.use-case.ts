@@ -11,7 +11,7 @@ import {
 } from 'src/domain/skills/application/skills.errors';
 import { InvalidSkillNameError } from 'src/domain/skills/domain/abstract-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
-import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { findSkillByNameForOwner } from 'src/domain/skills/application/util/find-skill-by-name-for-owner';
 import { UpdateSkillCommand } from './update-skill.command';
 
 @Injectable()
@@ -49,10 +49,11 @@ export class UpdateSkillUseCase {
 
   private async assertUniqueName(skill: Skill, name: string): Promise<void> {
     if (name === skill.name) return;
-    const duplicate =
-      skill instanceof WorkspaceSkill
-        ? await this.repository.findByNameAndWorkspace(name, skill.workspaceId)
-        : await this.repository.findByNameAndOwner(name, skill.userId);
+    const duplicate = await findSkillByNameForOwner(
+      this.repository,
+      skill,
+      name,
+    );
     if (duplicate && duplicate.id !== skill.id) {
       throw new DuplicateSkillNameError(name);
     }

@@ -1,17 +1,24 @@
-import { SKILL_RELATIONS } from './local-skill-relations.repository-helper';
+import {
+  addSkillRelations,
+  SKILL_RELATIONS,
+} from './local-skill-relations.repository-helper';
 import { updateSkill } from './local-skill-update.repository-helper';
-import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
-import type { Skill } from 'src/domain/skills/domain/skill';
+import type { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
+import type { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
+import type { ReadableSkillOwners } from 'src/domain/skills/application/models/skill-owner';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, IsNull, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 import {
   SkillRepository,
+  type CollectiveOwnerRef,
   type SkillListOptions,
   type WorkspaceSkillState,
 } from 'src/domain/skills/application/ports/skill.repository';
@@ -21,6 +28,7 @@ import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
 import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
+import { LocalCollectiveSkillFinder } from './local-collective-skill.finder';
 import {
   activateSkill as activateSkillRecord,
   deactivateAllExceptOwner as deactivateAllSkillUsersExceptOwner,
@@ -43,6 +51,11 @@ import {
 } from './local-workspace-skill-activation.repository-helper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
+import {
+  findActivePersonalSkillRecords,
+  findSkillRecordsByIds,
+  findSourceIdsOwnedByUser,
+} from 'src/domain/skills/infrastructure/persistence/local/local-skill-record-queries.repository-helper';
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
@@ -54,6 +67,7 @@ export class LocalSkillRepository implements SkillRepository {
     private readonly skillMapper: SkillMapper,
     private readonly accessiblePageFinder: LocalSkillAccessiblePageFinder,
     private readonly knowledgeBaseIdsFinder: LocalSkillKnowledgeBaseIdsFinder,
+    private readonly collectiveFinder: LocalCollectiveSkillFinder,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
@@ -73,6 +87,8 @@ export class LocalSkillRepository implements SkillRepository {
 
   create(skill: PersonalSkill): Promise<PersonalSkill>;
   create(skill: WorkspaceSkill): Promise<WorkspaceSkill>;
+  create(skill: TeamSkill): Promise<TeamSkill>;
+  create(skill: OrgSkill): Promise<OrgSkill>;
   create(skill: Skill): Promise<Skill>;
   async create(skill: Skill): Promise<Skill> {
     this.logger.log({ name: skill.name, id: skill.id }, 'create');
@@ -81,19 +97,7 @@ export class LocalSkillRepository implements SkillRepository {
     const record = this.skillMapper.toRecord(skill);
     const saved = await repository.save(record);
 
-    for (const [relation, ids] of [
-      ['sources', skill.sourceIds],
-      ['mcpIntegrations', skill.mcpIntegrationIds],
-      ['knowledgeBases', skill.knowledgeBaseIds],
-    ] as const) {
-      if (ids.length > 0) {
-        await repository
-          .createQueryBuilder()
-          .relation(SkillRecord, relation)
-          .of(saved.id)
-          .add(ids);
-      }
-    }
+    await addSkillRelations(repository, saved.id, skill);
 
     const withRelations = await repository.findOne({
       where: { id: saved.id },
@@ -104,9 +108,7 @@ export class LocalSkillRepository implements SkillRepository {
       throw new Error('Failed to load created skill');
     }
 
-    return skill instanceof PersonalSkill
-      ? this.skillMapper.toPersonal(withRelations)
-      : this.skillMapper.toWorkspace(withRelations);
+    return this.skillMapper.toDomain(withRelations);
   }
 
   update(skill: PersonalSkill, previous: PersonalSkill): Promise<PersonalSkill>;
@@ -114,6 +116,8 @@ export class LocalSkillRepository implements SkillRepository {
     skill: WorkspaceSkill,
     previous: WorkspaceSkill,
   ): Promise<WorkspaceSkill>;
+  update(skill: TeamSkill, previous: TeamSkill): Promise<TeamSkill>;
+  update(skill: OrgSkill, previous: OrgSkill): Promise<OrgSkill>;
   update(skill: Skill, previous: Skill): Promise<Skill>;
   async update(skill: Skill, previous: Skill): Promise<Skill> {
     return updateSkill(this.getManager(), this.skillMapper, skill, previous);
@@ -188,7 +192,8 @@ export class LocalSkillRepository implements SkillRepository {
     workspaceId: undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
-  ): Promise<Paginated<PersonalSkill>>;
+    collectiveOwners?: ReadableSkillOwners,
+  ): Promise<Paginated<PersonalSkill | CollectiveSkill>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
@@ -200,12 +205,14 @@ export class LocalSkillRepository implements SkillRepository {
     workspaceId: UUID | undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
+    collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<Skill>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
     sharedSkillIds: UUID[],
     options: SkillListOptions,
+    collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<Skill>> {
     this.logger.log(
       { userId, workspaceId, ...options },
@@ -213,7 +220,13 @@ export class LocalSkillRepository implements SkillRepository {
     );
 
     const [records, total] = await this.accessiblePageFinder
-      .buildQuery(userId, workspaceId, sharedSkillIds, options)
+      .buildQuery(
+        userId,
+        workspaceId,
+        sharedSkillIds,
+        options,
+        workspaceId === undefined ? collectiveOwners : undefined,
+      )
       .addOrderBy('skill_name_sort', 'ASC')
       .addOrderBy('skill.id', 'ASC')
       .skip(options.offset)
@@ -223,7 +236,7 @@ export class LocalSkillRepository implements SkillRepository {
     return new Paginated({
       data: records.map((record) =>
         workspaceId === undefined
-          ? this.skillMapper.toPersonal(record)
+          ? this.skillMapper.toDomain(record)
           : this.skillMapper.toWorkspace(record),
       ),
       limit: options.limit,
@@ -234,20 +247,11 @@ export class LocalSkillRepository implements SkillRepository {
 
   async findActiveByOwner(userId: UUID): Promise<PersonalSkill[]> {
     this.logger.log({ userId }, 'findActiveByOwner');
-
-    const activations = await this.skillActivationRepository.find({
-      where: { userId },
-      select: ['skillId'],
-    });
-
-    if (activations.length === 0) return [];
-
-    const activeSkillIds = activations.map((a) => a.skillId);
-    const records = await this.skillRepository.find({
-      where: { id: In(activeSkillIds), userId, workspaceId: IsNull() },
-      relations: [...SKILL_RELATIONS],
-    });
-
+    const records = await findActivePersonalSkillRecords(
+      this.skillRepository,
+      this.skillActivationRepository,
+      userId,
+    );
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
@@ -275,6 +279,34 @@ export class LocalSkillRepository implements SkillRepository {
       relations: [...SKILL_RELATIONS],
     });
     return record ? this.skillMapper.toWorkspace(record) : null;
+  }
+
+  findAllCollective(owners: ReadableSkillOwners): Promise<CollectiveSkill[]> {
+    return this.collectiveFinder.findAll(this.getManager(), owners);
+  }
+
+  findActiveCollective(
+    owners: ReadableSkillOwners,
+    name?: string,
+  ): Promise<CollectiveSkill[]> {
+    return this.collectiveFinder.findAll(this.getManager(), owners, {
+      onlyActive: true,
+      name,
+    });
+  }
+
+  async findAllByTeamId(teamId: UUID): Promise<TeamSkill[]> {
+    const skills = await this.collectiveFinder.findAll(this.getManager(), {
+      teamIds: [teamId],
+    });
+    return skills.filter((skill): skill is TeamSkill => 'teamId' in skill);
+  }
+
+  findByNameAndCollectiveOwner(
+    name: string,
+    owner: CollectiveOwnerRef,
+  ): Promise<CollectiveSkill | null> {
+    return this.collectiveFinder.findByName(this.getManager(), name, owner);
   }
 
   async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
@@ -327,15 +359,11 @@ export class LocalSkillRepository implements SkillRepository {
 
     if (ids.length === 0) return [];
 
-    const records = await this.skillRepository.find({
-      where: {
-        id: In([...new Set(ids)]),
-        ...(workspaceId !== undefined
-          ? { workspaceId: workspaceId ?? IsNull() }
-          : {}),
-      },
-      relations: [...SKILL_RELATIONS],
-    });
+    const records = await findSkillRecordsByIds(
+      this.skillRepository,
+      ids,
+      workspaceId,
+    );
 
     if (workspaceId === null)
       return records.map((r) => this.skillMapper.toPersonal(r));
@@ -424,43 +452,20 @@ export class LocalSkillRepository implements SkillRepository {
     ownerIds: UUID[],
   ): Promise<PersonalSkill[]> {
     this.logger.log(
-      {
-        knowledgeBaseId,
-        ownerCount: ownerIds.length,
-      },
+      { knowledgeBaseId, ownerCount: ownerIds.length },
       'findSkillsByKnowledgeBaseAndOwners',
     );
-
-    if (ownerIds.length === 0) return [];
-
-    const records = await this.skillRepository
-      .createQueryBuilder('skill')
-      .innerJoin(
-        'skill_knowledge_bases',
-        'skb',
-        'skb."skillsId" = skill.id AND skb."knowledgeBasesId" = :kbId',
-        { kbId: knowledgeBaseId },
-      )
-      .leftJoinAndSelect('skill.sources', 'sources')
-      .leftJoinAndSelect('skill.mcpIntegrations', 'mcpIntegrations')
-      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases')
-      .where('skill.userId IN (:...ownerIds)', { ownerIds })
-      .getMany();
-
+    const records = await this.knowledgeBaseIdsFinder.findSkillsByKnowledgeBase(
+      this.getManager(),
+      knowledgeBaseId,
+      ownerIds,
+    );
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
   async findSourceIdsByOwnerUserId(userId: UUID): Promise<UUID[]> {
     this.logger.log({ userId }, 'findSourceIdsByOwnerUserId');
-    const rows = await this.skillRepository
-      .createQueryBuilder('skill')
-      .innerJoin('skill.sources', 'source')
-      .leftJoin('skill.workspace', 'workspace')
-      .select('DISTINCT source.id', 'sourceId')
-      .where('skill.userId = :userId', { userId })
-      .orWhere('workspace.userId = :userId', { userId })
-      .getRawMany<{ sourceId: UUID }>();
-    return rows.map((row) => row.sourceId);
+    return findSourceIdsOwnedByUser(this.skillRepository, userId);
   }
 
   async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {
@@ -479,22 +484,13 @@ export class LocalSkillRepository implements SkillRepository {
     skillIds: UUID[],
   ): Promise<void> {
     this.logger.log(
-      {
-        knowledgeBaseId,
-        skillCount: skillIds.length,
-      },
+      { knowledgeBaseId, skillCount: skillIds.length },
       'removeKnowledgeBaseFromSkills',
     );
-
-    if (skillIds.length === 0) return;
-
-    const manager = this.getManager();
-    await manager
-      .createQueryBuilder()
-      .delete()
-      .from('skill_knowledge_bases')
-      .where('"knowledgeBasesId" = :kbId', { kbId: knowledgeBaseId })
-      .andWhere('"skillsId" IN (:...skillIds)', { skillIds })
-      .execute();
+    await this.knowledgeBaseIdsFinder.removeKnowledgeBaseFromSkills(
+      this.getManager(),
+      knowledgeBaseId,
+      skillIds,
+    );
   }
 }

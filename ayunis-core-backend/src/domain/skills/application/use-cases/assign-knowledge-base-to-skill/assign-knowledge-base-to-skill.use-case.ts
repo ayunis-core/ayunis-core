@@ -18,6 +18,7 @@ import {
 } from 'src/domain/skills/application/skills.errors';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 
 @Injectable()
@@ -54,12 +55,22 @@ export class AssignKnowledgeBaseToSkillUseCase {
   ): Promise<void> {
     const knowledgeBase =
       await this.findAccessibleKnowledgeBase(knowledgeBaseId);
-    const compatible =
-      skill instanceof WorkspaceSkill
-        ? knowledgeBase instanceof WorkspaceKnowledgeBase &&
-          knowledgeBase.workspaceId === skill.workspaceId
-        : knowledgeBase instanceof PersonalKnowledgeBase;
-    if (!compatible) throw new SkillKnowledgeBaseNotFoundError(knowledgeBaseId);
+    if (!this.isCompatible(skill, knowledgeBase)) {
+      throw new SkillKnowledgeBaseNotFoundError(knowledgeBaseId);
+    }
+  }
+
+  private isCompatible(skill: Skill, knowledgeBase: KnowledgeBase): boolean {
+    if (skill instanceof WorkspaceSkill) {
+      return (
+        knowledgeBase instanceof WorkspaceKnowledgeBase &&
+        knowledgeBase.workspaceId === skill.workspaceId
+      );
+    }
+    if (skill instanceof PersonalSkill) {
+      return knowledgeBase instanceof PersonalKnowledgeBase;
+    }
+    return false;
   }
 
   private async findAccessibleKnowledgeBase(
