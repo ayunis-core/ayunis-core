@@ -18,10 +18,15 @@ import {
   useUnassignKnowledgeBase,
 } from '@/pages/skill/api';
 import { mergeSkillKnowledgeBases } from '@/pages/skill/lib/merge-skill-knowledge-bases';
+import {
+  canLinkKnowledgeBase,
+  type OwnedResource,
+} from '@/features/resource-ownership';
 
 export default function SkillKnowledgeBasesCard({
+  skill,
   disabled = false,
-}: Readonly<{ disabled?: boolean }>) {
+}: Readonly<{ skill: OwnedResource; disabled?: boolean }>) {
   const { t } = useTranslation('skill');
   const { id: skillId } = useParams({ from: '/_authenticated/skills/$id' });
   const data = useSkillKnowledgeBasesQueries(skillId);
@@ -62,7 +67,9 @@ export default function SkillKnowledgeBasesCard({
 
   const assignedIds = (data.assignedKnowledgeBases ?? []).map(({ id }) => id);
   const knowledgeBases = mergeSkillKnowledgeBases(
-    data.availableKnowledgeBases ?? [],
+    (data.availableKnowledgeBases ?? []).filter((knowledgeBase) =>
+      canLinkKnowledgeBase(skill, knowledgeBase),
+    ),
     data.assignedKnowledgeBases ?? [],
   );
 

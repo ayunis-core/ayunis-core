@@ -14,11 +14,28 @@ import {
   NameField,
   ShortDescriptionField,
 } from '@/widgets/entity-form-fields';
+import type {
+  OwnerOption,
+  OwnerSelection,
+} from '@/features/resource-ownership';
+import { OwnerChoice, PERSONAL_OWNER_KEY } from './OwnerChoice';
 
 export interface CreateSkillFormData {
   name: string;
   shortDescription: string;
   instructions: string;
+}
+
+/** What `onCreate` receives: the form fields plus the chosen owner, if any. */
+export type CreateSkillSubmission = CreateSkillFormData & {
+  owner?: OwnerSelection;
+};
+
+function selectedOwner(
+  options: OwnerOption[] | undefined,
+  key: string,
+): OwnerSelection | undefined {
+  return options?.find((option) => option.key === key)?.selection;
 }
 
 export function SkillCreateDialog({
@@ -30,8 +47,14 @@ export function SkillCreateDialog({
   footerHint,
   open,
   onOpenChange,
+  ownerOptions,
+  isOwnerChoiceLoading = false,
 }: Readonly<{
-  onCreate: (data: CreateSkillFormData) => Promise<unknown>;
+  onCreate: (data: CreateSkillSubmission) => Promise<unknown>;
+  /** Offered as an owner choice when there is more than one. */
+  ownerOptions?: OwnerOption[];
+  /** Blocks creating until the owner choice is known. */
+  isOwnerChoiceLoading?: boolean;
   buttonText?: string;
   buttonTestId?: string;
   buttonClassName?: string;
@@ -50,6 +73,7 @@ export function SkillCreateDialog({
     else setIsOwnOpen(next);
   };
   const [isLoading, setIsLoading] = useState(false);
+  const [ownerKey, setOwnerKey] = useState(PERSONAL_OWNER_KEY);
   const form = useForm<CreateSkillFormData>({
     resolver: zodResolver(
       z.object({
@@ -77,12 +101,13 @@ export function SkillCreateDialog({
 
   const close = () => {
     assist.reset();
+    setOwnerKey(PERSONAL_OWNER_KEY);
     setIsOpen(false);
   };
   const submit = async (data: CreateSkillFormData) => {
     setIsLoading(true);
     try {
-      await onCreate(data);
+      await onCreate({ ...data, owner: selectedOwner(ownerOptions, ownerKey) });
       close();
     } catch {
       // Scope-specific mutation handlers surface the error.
@@ -95,7 +120,10 @@ export function SkillCreateDialog({
     <CreateEntityDialog
       isOpen={isOpen}
       onOpenChange={(next) => {
-        if (!next) assist.discardPending();
+        if (!next) {
+          assist.discardPending();
+          setOwnerKey(PERSONAL_OWNER_KEY);
+        }
         setIsOpen(next);
       }}
       onCancel={close}
@@ -108,11 +136,17 @@ export function SkillCreateDialog({
       buttonTestId={buttonTestId}
       footerHint={footerHint}
       hideTrigger={isControlled}
-      isSubmitDisabled={assist.isBusy}
+      isSubmitDisabled={assist.isBusy || isOwnerChoiceLoading}
     >
       <Form {...form}>
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
+            <OwnerChoice
+              options={ownerOptions}
+              value={ownerKey}
+              onValueChange={setOwnerKey}
+              testId="skill-create-owner"
+            />
             <NameField
               control={form.control}
               name="name"
@@ -143,14 +177,24 @@ export interface CreateKnowledgeBaseFormData {
   description?: string;
 }
 
+export type CreateKnowledgeBaseSubmission = CreateKnowledgeBaseFormData & {
+  owner?: OwnerSelection;
+};
+
 export function KnowledgeBaseCreateDialog({
   onCreate,
   buttonText,
   buttonTestId,
   buttonClassName,
   showIcon = false,
+  ownerOptions,
+  isOwnerChoiceLoading = false,
 }: Readonly<{
-  onCreate: (data: CreateKnowledgeBaseFormData) => Promise<unknown>;
+  onCreate: (data: CreateKnowledgeBaseSubmission) => Promise<unknown>;
+  /** Offered as an owner choice when there is more than one. */
+  ownerOptions?: OwnerOption[];
+  /** Blocks creating until the owner choice is known. */
+  isOwnerChoiceLoading?: boolean;
   buttonText?: string;
   buttonTestId?: string;
   buttonClassName?: string;
@@ -160,6 +204,7 @@ export function KnowledgeBaseCreateDialog({
   const translations = useCreateDialogTranslations('knowledge-bases');
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [ownerKey, setOwnerKey] = useState(PERSONAL_OWNER_KEY);
   const form = useForm<CreateKnowledgeBaseFormData>({
     resolver: zodResolver(
       z.object({
@@ -175,12 +220,13 @@ export function KnowledgeBaseCreateDialog({
 
   const close = () => {
     setIsOpen(false);
+    setOwnerKey(PERSONAL_OWNER_KEY);
     form.reset();
   };
   const submit = async (data: CreateKnowledgeBaseFormData) => {
     setIsLoading(true);
     try {
-      await onCreate(data);
+      await onCreate({ ...data, owner: selectedOwner(ownerOptions, ownerKey) });
       form.clearErrors();
       close();
     } catch {
@@ -193,7 +239,10 @@ export function KnowledgeBaseCreateDialog({
   return (
     <CreateEntityDialog
       isOpen={isOpen}
-      onOpenChange={setIsOpen}
+      onOpenChange={(next) => {
+        if (!next) setOwnerKey(PERSONAL_OWNER_KEY);
+        setIsOpen(next);
+      }}
       onCancel={close}
       onSubmit={(event) => void form.handleSubmit(submit)(event)}
       isLoading={isLoading}
@@ -202,9 +251,16 @@ export function KnowledgeBaseCreateDialog({
       showIcon={showIcon}
       buttonClassName={buttonClassName}
       buttonTestId={buttonTestId}
+      isSubmitDisabled={isOwnerChoiceLoading}
     >
       <Form {...form}>
         <div className="space-y-6">
+          <OwnerChoice
+            options={ownerOptions}
+            value={ownerKey}
+            onValueChange={setOwnerKey}
+            testId="knowledge-base-create-owner"
+          />
           <NameField
             control={form.control}
             name="name"

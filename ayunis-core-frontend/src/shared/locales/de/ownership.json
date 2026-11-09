@@ -1,0 +1,38 @@
+{
+  "owner": {
+    "label": "Besitzer",
+    "personal": "Nur ich",
+    "org": "Organisation",
+    "unknownTeam": "Team"
+  },
+  "badge": {
+    "team": "Team {{name}}"
+  },
+  "card": {
+    "title": "Besitzer",
+    "skillDescription": "Wem diese Fähigkeit gehört. Team- und Organisations-Fähigkeiten können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen.",
+    "knowledgeBaseDescription": "Wem diese Wissenssammlung gehört. Team- und Organisations-Wissenssammlungen können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen."
+  },
+  "change": {
+    "title": "Besitzer ändern",
+    "toPersonal": "{{name}} gehört dann nur Ihnen. Alle anderen verlieren den Zugriff.",
+    "toTeam": "{{name}} wechselt in das Team {{team}}. Nur dessen Mitglieder behalten den Zugriff.",
+    "toOrg": "{{name}} wechselt in die Organisation. Alle Mitglieder erhalten Zugriff.",
+    "sharesRemoved": "Bestehende Freigaben werden entfernt.",
+    "skillLinksWarning_one": "Die Verknüpfung mit {{count}} Wissenssammlung eines anderen Besitzers wird entfernt.",
+    "skillLinksWarning_other": "Die Verknüpfungen mit {{count}} Wissenssammlungen anderer Besitzer werden entfernt.",
+    "knowledgeBaseLinksWarning_one": "Die Verknüpfung mit {{count}} Fähigkeit eines anderen Besitzers wird entfernt.",
+    "knowledgeBaseLinksWarning_other": "Die Verknüpfungen mit {{count}} Fähigkeiten anderer Besitzer werden entfernt.",
+    "confirm": "Besitzer ändern",
+    "cancel": "Abbrechen",
+    "success": "Besitzer geändert",
+    "error": "Der Besitzer konnte nicht geändert werden",
+    "duplicateName": "Der neue Besitzer hat bereits eine Fähigkeit mit diesem Namen",
+    "notAllowed": "Elemente eines Arbeitsbereichs können den Besitzer nicht wechseln",
+    "noPermission": "Sie dürfen es nicht zu diesem Besitzer verschieben",
+    "notFound": "Es existiert nicht mehr oder Sie haben keinen Zugriff mehr"
+  },
+  "activation": {
+    "managedByOwner": "Schaltet sie für alle mit Zugriff um"
+  }
+}

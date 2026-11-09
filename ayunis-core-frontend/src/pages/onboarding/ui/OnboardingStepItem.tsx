@@ -89,7 +89,10 @@ export default function OnboardingStepItem({
     personalKnowledgeBaseListParams,
     { query: { enabled: isAddDocumentsStep && !locked } },
   );
-  const firstKnowledgeBase = kbResponse?.data[0];
+  const firstKnowledgeBase = kbResponse?.data.find(
+    (knowledgeBase) =>
+      knowledgeBase.ownerType === 'personal' && !knowledgeBase.isShared,
+  );
 
   const isPinSkillStep = step.id === 'useSkillInChat';
   const { data: skillsResponse } = useSkillsControllerFindAll(
@@ -97,7 +100,9 @@ export default function OnboardingStepItem({
     { query: { enabled: isPinSkillStep && !locked } },
   );
   const hasPersonalSkill =
-    skillsResponse?.data.some((skill) => !skill.isShared) ?? false;
+    skillsResponse?.data.some(
+      (skill) => skill.ownerType === 'personal' && !skill.isShared,
+    ) ?? false;
 
   const needsWorkspace = WORKSPACE_STEP_IDS.has(step.id);
   const {

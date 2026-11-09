@@ -29,12 +29,16 @@ export default function KnowledgeBasesPage({
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
 
+  const isOwnPersonal = (kb: KnowledgeBase) =>
+    kb.ownerType === 'personal' && !kb.isShared;
+
   const personalKnowledgeBases = knowledgeBases
-    .filter((kb) => !kb.isShared)
+    .filter(isOwnPersonal)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Team and organization knowledge bases are available like shared ones.
   const sharedKnowledgeBases = knowledgeBases
-    .filter((kb) => kb.isShared)
+    .filter((kb) => !isOwnPersonal(kb))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const headerAction = (

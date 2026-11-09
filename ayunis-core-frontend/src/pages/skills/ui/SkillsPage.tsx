@@ -28,12 +28,16 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const canCreate = isLoadingPermissions || can('manage_skills');
 
+  const isOwnPersonal = (skill: Skill) =>
+    skill.ownerType === 'personal' && !skill.isShared;
+
   const personalSkills = skills
-    .filter((skill) => !skill.isShared)
+    .filter(isOwnPersonal)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Team and organization skills are available to the user like shared ones.
   const sharedSkills = skills
-    .filter((skill) => skill.isShared)
+    .filter((skill) => !isOwnPersonal(skill))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   // The "pin a skill" tour step anchors on the first active personal skill.
@@ -91,8 +95,12 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
         contentArea={
           <Tabs defaultValue="personal" className="w-full">
             <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              <TabsTrigger value="personal" data-testid="skills-tab-personal">
+                {t('tabs.personal')}
+              </TabsTrigger>
+              <TabsTrigger value="shared" data-testid="skills-tab-shared">
+                {t('tabs.shared')}
+              </TabsTrigger>
             </TabsList>
             <MarketplacePromoCard />
             <TabsContent value="personal" className="mt-4">

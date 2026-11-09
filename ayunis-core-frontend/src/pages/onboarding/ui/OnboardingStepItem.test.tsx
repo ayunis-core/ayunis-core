@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   threads: [] as { id: string }[],
   threadsError: null as Error | null,
   showInfo: vi.fn(),
+  knowledgeBases: undefined as
+    { id: string; ownerType: string; isShared: boolean }[] | undefined,
 }));
 
 vi.mock('@/widgets/app-sidebar/api', () => ({
@@ -68,7 +70,9 @@ vi.mock('@/widgets/onboarding', async (importOriginal) => {
 });
 
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
-  useKnowledgeBasesControllerFindAll: () => ({ data: undefined }),
+  useKnowledgeBasesControllerFindAll: () => ({
+    data: mocks.knowledgeBases && { data: mocks.knowledgeBases },
+  }),
   useSkillsControllerFindAll: () => ({ data: undefined }),
 }));
 
@@ -84,8 +88,14 @@ const workspaceCategory = ONBOARDING_CATEGORIES.find(
   (category) => category.id === 'workspaces',
 );
 
+const knowledgeCategory = ONBOARDING_CATEGORIES.find(
+  (category) => category.id === 'knowledgeManagement',
+);
+
 function stepById(id: string) {
-  const step = workspaceCategory?.steps.find((entry) => entry.id === id);
+  const step =
+    workspaceCategory?.steps.find((entry) => entry.id === id) ??
+    knowledgeCategory?.steps.find((entry) => entry.id === id);
   if (!step) throw new Error(`missing step ${id}`);
   return step;
 }
@@ -136,12 +146,28 @@ describe('OnboardingStepItem workspace steps', () => {
     mocks.areThreadsLoading = false;
     mocks.threads = [{ id: 'thread-1' }];
     mocks.threadsError = null;
+    mocks.knowledgeBases = undefined;
   });
 
   afterEach(() => {
     document
       .querySelectorAll('[data-tour]')
       .forEach((element) => element.remove());
+  });
+
+  it('adds documents to the first own knowledge base, not one of a team or the organization', async () => {
+    mocks.knowledgeBases = [
+      { id: 'org-kb', ownerType: 'org', isShared: false },
+      { id: 'shared-kb', ownerType: 'personal', isShared: true },
+      { id: 'own-kb', ownerType: 'personal', isShared: false },
+    ];
+
+    await clickAction('addDocuments');
+
+    expect(mocks.navigate).toHaveBeenCalledWith({
+      to: '/knowledge-bases/$id',
+      params: { id: 'own-kb' },
+    });
   });
 
   it('deep-links a workspace context step to its tab', async () => {

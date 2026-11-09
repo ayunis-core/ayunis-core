@@ -76,7 +76,8 @@
     "success": "Skill created successfully!",
     "error": "Failed to create skill. Please try again.",
     "duplicateName": "A skill with this name already exists in this workspace.",
-    "duplicateNamePersonal": "You already have a skill with this name. Please choose a different name."
+    "duplicateNamePersonal": "You already have a skill with this name. Please choose a different name.",
+    "duplicateNameOwner": "This owner already has a skill with this name. Please choose a different name."
   },
   "toggleActive": {
     "success": "Skill status updated successfully!",

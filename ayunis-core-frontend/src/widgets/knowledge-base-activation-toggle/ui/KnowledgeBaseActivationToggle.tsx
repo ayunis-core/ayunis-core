@@ -14,6 +14,7 @@ interface KnowledgeBaseActivationToggleProps {
   onToggle?: (isActive: boolean) => void;
   isPending?: boolean;
   tooltip?: string;
+  disabled?: boolean;
 }
 
 export function KnowledgeBaseActivationToggle({
@@ -23,6 +24,7 @@ export function KnowledgeBaseActivationToggle({
   onToggle,
   isPending = false,
   tooltip,
+  disabled = false,
 }: Readonly<KnowledgeBaseActivationToggleProps>) {
   const { t } = useTranslation('knowledge-bases');
   const setActivation = useSetKnowledgeBaseActivation();
@@ -49,7 +51,7 @@ export function KnowledgeBaseActivationToggle({
                 }
               }}
               onClick={(event) => event.stopPropagation()}
-              disabled={isPending || setActivation.isPending}
+              disabled={disabled || isPending || setActivation.isPending}
               aria-label={statusLabel}
               data-testid={testId}
             />

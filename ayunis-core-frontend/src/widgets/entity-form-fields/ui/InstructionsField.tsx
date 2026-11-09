@@ -52,6 +52,7 @@ export default function InstructionsField<TFieldValues extends FieldValues>({
           <ProcessingGlow isActive={isBusy}>
             <FormControl>
               <Textarea
+                data-testid="entity-form-instructions"
                 placeholder={t(
                   `${translationPrefix}.form.instructionsPlaceholder`,
                 )}
