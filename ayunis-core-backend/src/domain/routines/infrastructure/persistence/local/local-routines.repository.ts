@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
 import type { EntityManager, QueryDeepPartialEntity } from 'typeorm';
 import { Repository } from 'typeorm';
+import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
+import { RoutineAlreadyCreatedError } from 'src/domain/routines/application/routines.errors';
 import {
   RoutinesRepository,
   type DueRoutine,
@@ -36,8 +38,15 @@ export class LocalRoutinesRepository extends RoutinesRepository {
   }
 
   async create(routine: Routine): Promise<Routine> {
-    const saved = await this.repo.save(this.mapper.toRecord(routine));
-    return this.mapper.toDomain(saved);
+    try {
+      const saved = await this.repo.save(this.mapper.toRecord(routine));
+      return this.mapper.toDomain(saved);
+    } catch (error) {
+      if (routine.sourceToolCallId && isUniqueConstraintViolation(error)) {
+        throw new RoutineAlreadyCreatedError(routine.sourceToolCallId);
+      }
+      throw error;
+    }
   }
 
   async findById(userId: UUID, id: UUID): Promise<Routine | null> {

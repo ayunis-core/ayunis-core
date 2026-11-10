@@ -37,6 +37,12 @@ export function useCreateRoutine(
               if (errors) setValidationErrors(form, errors, t, 'validation');
               else showError(t('toast.createError'));
               break;
+            case 'ROUTINE_ALREADY_CREATED':
+              showError(t('toast.alreadyCreated'));
+              void queryClient.invalidateQueries({
+                queryKey: getRoutinesControllerFindAllQueryKey(),
+              });
+              break;
             case 'UNAUTHORIZED_ACCESS':
             case 'MODEL_NOT_FOUND':
               showError(t('toast.modelUnavailable'));

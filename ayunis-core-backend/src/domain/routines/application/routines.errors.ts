@@ -5,6 +5,7 @@ export enum RoutineErrorCode {
   ROUTINE_NOT_FOUND = 'ROUTINE_NOT_FOUND',
   ROUTINE_SUBSCRIPTION_REQUIRED = 'ROUTINE_SUBSCRIPTION_REQUIRED',
   ROUTINE_OWNER_LOCKED = 'ROUTINE_OWNER_LOCKED',
+  ROUTINE_ALREADY_CREATED = 'ROUTINE_ALREADY_CREATED',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -50,6 +51,17 @@ export class RoutineOwnerLockedError extends RoutineError {
       RoutineErrorCode.ROUTINE_OWNER_LOCKED,
       403,
       metadata,
+    );
+  }
+}
+
+export class RoutineAlreadyCreatedError extends RoutineError {
+  constructor(sourceToolCallId: string, metadata?: ErrorMetadata) {
+    super(
+      'A routine was already created from this chat proposal',
+      RoutineErrorCode.ROUTINE_ALREADY_CREATED,
+      409,
+      { sourceToolCallId, ...metadata },
     );
   }
 }

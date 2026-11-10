@@ -7,6 +7,7 @@ import type { EntityManager } from 'typeorm';
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { aRoutine } from 'src/domain/routines/application/testing/routine.fixtures';
+import { RoutineAlreadyCreatedError } from 'src/domain/routines/application/routines.errors';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { LocalRoutinesRepository } from './local-routines.repository';
 import { RoutineMapper } from './mappers/routine.mapper';
@@ -37,7 +38,9 @@ const routineSchema = new EntitySchema<RoutineRecord>({
     lastRunStartedAt: { type: 'timestamptz', nullable: true },
     recentExecutionKeys: { type: String, array: true, default: () => "'{}'" },
     pausedAt: { type: 'timestamptz', nullable: true },
+    sourceToolCallId: { type: String, nullable: true },
   },
+  uniques: [{ columns: ['userId', 'sourceToolCallId'] }],
 });
 
 describe('LocalRoutinesRepository (PostgreSQL)', () => {
@@ -173,6 +176,44 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
         nextRunAt,
         pausedAt: null,
       });
+    });
+  });
+
+  describe('create from a chat proposal', () => {
+    it('creates one routine per proposal and rejects the second', async () => {
+      await stored({ sourceToolCallId: 'toolu_1' });
+
+      await expect(stored({ sourceToolCallId: 'toolu_1' })).rejects.toThrow(
+        RoutineAlreadyCreatedError,
+      );
+      expect(await db.getRepository(RoutineRecord).count()).toBe(1);
+    });
+
+    it('lets another user create from a proposal with the same call ID', async () => {
+      await stored({ sourceToolCallId: 'toolu_1' });
+
+      await expect(
+        stored({ sourceToolCallId: 'toolu_1', userId: randomUUID() }),
+      ).resolves.toMatchObject({ sourceToolCallId: 'toolu_1' });
+    });
+
+    it('creates any number of routines without a proposal', async () => {
+      await stored();
+      await stored();
+
+      expect(await db.getRepository(RoutineRecord).count()).toBe(2);
+    });
+
+    it('keeps the proposal link when the definition is updated', async () => {
+      const routine = await stored({ sourceToolCallId: 'toolu_1' });
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { name: 'Neu' },
+      );
+
+      expect(updated?.sourceToolCallId).toBe('toolu_1');
     });
   });
 

@@ -24,6 +24,8 @@ export class Routine {
   readonly lastRunStartedAt: Date | null;
   /** Set when repeated failures disabled the routine; cleared by re-enabling it. */
   readonly pausedAt: Date | null;
+  /** The chat `create_routine` call the routine was created from, so the proposal is not saved twice. */
+  readonly sourceToolCallId: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 
@@ -44,6 +46,7 @@ export class Routine {
     nextRunAt?: Date | null;
     lastRunStartedAt?: Date | null;
     pausedAt?: Date | null;
+    sourceToolCallId?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -63,6 +66,7 @@ export class Routine {
     this.nextRunAt = params.nextRunAt ?? null;
     this.lastRunStartedAt = params.lastRunStartedAt ?? null;
     this.pausedAt = params.pausedAt ?? null;
+    this.sourceToolCallId = params.sourceToolCallId ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

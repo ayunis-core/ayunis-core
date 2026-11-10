@@ -96,6 +96,7 @@
   "toast": {
     "createSuccess": "Routine erstellt",
     "createError": "Die Routine konnte nicht erstellt werden.",
+    "alreadyCreated": "Aus diesem Vorschlag wurde bereits eine Routine erstellt.",
     "updateSuccess": "Routine gespeichert",
     "updateError": "Die Routine konnte nicht gespeichert werden.",
     "deleteSuccess": "Routine gelöscht",

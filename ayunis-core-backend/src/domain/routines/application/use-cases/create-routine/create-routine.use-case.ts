@@ -39,6 +39,7 @@ export class CreateRoutineUseCase {
         dailyTime: command.dailyTime,
         internetEnabled: command.internetEnabled,
         enabled: command.enabled,
+        sourceToolCallId: command.sourceToolCallId,
         nextRunAt: command.enabled
           ? nextRoutineRunAt({ id, dailyTime: command.dailyTime }, new Date())
           : null,

@@ -59,6 +59,20 @@ describe('CreateRoutineUseCase', () => {
     expect(repository.create).toHaveBeenCalledWith(routine);
   });
 
+  it('remembers the chat proposal it was created from', async () => {
+    const routine = await useCase.execute(
+      command({ sourceToolCallId: 'toolu_1' }),
+    );
+
+    expect(routine.sourceToolCallId).toBe('toolu_1');
+  });
+
+  it('stores no proposal for a routine created elsewhere', async () => {
+    const routine = await useCase.execute(command());
+
+    expect(routine.sourceToolCallId).toBeNull();
+  });
+
   describe('schedule', () => {
     // 06:00 in Berlin
     beforeEach(() =>

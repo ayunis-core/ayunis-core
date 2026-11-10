@@ -13,6 +13,7 @@ import {
   ROUTINE_DAILY_TIME_PATTERN,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
+  ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
 } from 'src/domain/routines/domain/routines.constants';
 
 const NOT_BLANK = /\S/;
@@ -63,4 +64,14 @@ export class CreateRoutineDto {
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH)
+  sourceToolCallId?: string;
 }

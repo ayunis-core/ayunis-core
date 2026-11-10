@@ -19,6 +19,7 @@ export class RoutineDtoMapper {
       consecutiveFailureCount: routine.consecutiveFailureCount,
       nextRunAt: routine.nextRunAt?.toISOString() ?? null,
       pausedAt: routine.pausedAt?.toISOString() ?? null,
+      sourceToolCallId: routine.sourceToolCallId,
       createdAt: routine.createdAt.toISOString(),
       updatedAt: routine.updatedAt.toISOString(),
     };

@@ -5688,6 +5688,11 @@ export interface RoutineResponseDto {
      * @nullable
      */
   pausedAt: string | null;
+  /**
+     * The chat `create_routine` tool call the routine was created from; null when it was created elsewhere
+     * @nullable
+     */
+  sourceToolCallId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -5705,6 +5710,8 @@ export interface CreateRoutineDto {
   internetEnabled: boolean;
   /** Whether the routine runs on its schedule */
   enabled?: boolean;
+  /** The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user. */
+  sourceToolCallId?: string;
 }
 
 export interface UpdateRoutineDto {

@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
@@ -10,10 +10,12 @@ import {
   ROUTINE_FAILURE_REASON_MAX_LENGTH,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
+  ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
 } from 'src/domain/routines/domain/routines.constants';
 
 @Entity({ name: 'routines' })
 @Index(['lastRunStatus', 'lastRunStartedAt'])
+@Unique(['userId', 'sourceToolCallId'])
 export class RoutineRecord extends BaseRecord {
   @Column({ type: 'varchar', length: ROUTINE_NAME_MAX_LENGTH })
   name: string;
@@ -91,4 +93,11 @@ export class RoutineRecord extends BaseRecord {
 
   @Column({ type: 'timestamptz', nullable: true })
   pausedAt: Date | null;
+
+  @Column({
+    type: 'varchar',
+    length: ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
+    nullable: true,
+  })
+  sourceToolCallId: string | null;
 }

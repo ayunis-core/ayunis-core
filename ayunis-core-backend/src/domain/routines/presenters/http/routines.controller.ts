@@ -76,6 +76,10 @@ export class RoutinesController {
   @Post()
   @ApiOperation({ summary: 'Create a routine' })
   @ApiResponse({ status: 201, type: RoutineResponseDto })
+  @ApiResponse({
+    status: 409,
+    description: 'A routine was already created from this chat proposal',
+  })
   async create(@Body() dto: CreateRoutineDto): Promise<RoutineResponseDto> {
     this.logger.log('create');
     const routine = await this.createRoutineUseCase.execute(
