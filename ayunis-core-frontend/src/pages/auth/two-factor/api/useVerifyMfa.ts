@@ -5,6 +5,7 @@ import { useMfaLoginControllerVerify } from '@/shared/api/generated/ayunisCoreAP
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
+import { loginRestartSearch } from '@/pages/auth/two-factor/model/login-restart';
 import { rememberSuccessfulSsoLogin } from '@/features/sso';
 
 export function useVerifyMfa({ redirect }: { redirect?: string }) {
@@ -33,11 +34,17 @@ export function useVerifyMfa({ redirect }: { redirect?: string }) {
               // The lock (15 min) outlives the pending token (5 min), so this
               // session can never succeed — send the user back to login.
               showError(t('twoFactor.error.locked'));
-              void navigate({ to: '/login' });
+              void navigate({
+                to: '/login',
+                search: loginRestartSearch(redirect),
+              });
             } else if (errorCode === 'MFA_PENDING_TOKEN_INVALID') {
               // The 5-minute login window expired — start over.
               showError(t('twoFactor.error.expired'));
-              void navigate({ to: '/login' });
+              void navigate({
+                to: '/login',
+                search: loginRestartSearch(redirect),
+              });
             } else if (errorCode === 'SERVICE_UNAVAILABLE') {
               showError(t('serviceUnavailable'));
             } else {

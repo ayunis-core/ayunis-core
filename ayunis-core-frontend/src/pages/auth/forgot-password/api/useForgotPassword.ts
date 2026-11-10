@@ -7,7 +7,7 @@ import { useUserPasswordResetControllerForgotPassword } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import * as z from 'zod';
 
-export function useForgotPassword() {
+export function useForgotPassword({ redirect }: { redirect?: string } = {}) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
 
@@ -30,7 +30,7 @@ export function useForgotPassword() {
         retry: false,
         onSuccess: () => {
           showSuccess(t('forgotPassword.success'));
-          void navigate({ to: '/login' });
+          void navigate({ to: '/login', search: { redirect } });
         },
         onError: (error) => {
           try {

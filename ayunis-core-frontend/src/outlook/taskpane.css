@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@import '@ayunis/ui/styles.css';
+
+html,
+body,
+#app {
+  @apply m-0 h-full;
+  font-family:
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Roboto',
+    'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

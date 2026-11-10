@@ -4,8 +4,9 @@ import { outlookAddinId } from './outlook-addin-id';
 // whose version is higher than the installed one: bump on every change.
 export const OUTLOOK_MANIFEST_VERSION = '1.0.0';
 
-// Served from ayunis-core-frontend/public/outlook. Outlook on the web shows the
-// task pane in an iframe, so these static files must stay frameable by it.
+// Served by the frontend build (ayunis-core-frontend/outlook and
+// public/outlook). Outlook on the web shows the task pane in an iframe, so
+// these files must stay frameable by it.
 const OUTLOOK_ADDIN_PATH = '/outlook';
 
 // Each button gets its own task pane URL so the pane can serve read and

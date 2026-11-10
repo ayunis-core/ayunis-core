@@ -705,6 +705,9 @@ importers:
       '@types/geojson':
         specifier: ^7946.0.16
         version: 7946.0.16
+      '@types/office-js':
+        specifier: ^1.0.616
+        version: 1.0.616
       '@types/papaparse':
         specifier: ^5.5.2
         version: 5.5.2
@@ -7097,6 +7100,9 @@ packages:
 
   '@types/node@25.9.1':
     resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
+
+  '@types/office-js@1.0.616':
+    resolution: {integrity: sha512-cN/beGXZYMLbDQRsJ9ggJpySyitNDr3MdVXAx/8cI/Hi9+qD+GU+PnMN6ouwz9tpkdKjMvyBvU+v4vRJVw7FGA==}
 
   '@types/papaparse@5.5.2':
     resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
@@ -20615,6 +20621,8 @@ snapshots:
   '@types/node@25.9.1':
     dependencies:
       undici-types: 7.24.6
+
+  '@types/office-js@1.0.616': {}
 
   '@types/papaparse@5.5.2':
     dependencies:

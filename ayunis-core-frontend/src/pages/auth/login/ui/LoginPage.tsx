@@ -292,7 +292,7 @@ function LoginMethods({
       )}
       {localPasswordLoginEnabled && (
         <>
-          <PasswordField form={form} />
+          <PasswordField form={form} redirect={redirect} />
           <Button
             type="submit"
             className="w-full"
@@ -309,7 +309,8 @@ function LoginMethods({
 
 function PasswordField({
   form,
-}: Readonly<{ form: UseFormReturn<LoginFormFields> }>) {
+  redirect,
+}: Readonly<{ form: UseFormReturn<LoginFormFields>; redirect?: string }>) {
   const { t } = useTranslation('auth');
   return (
     <FormField
@@ -329,7 +330,9 @@ function PasswordField({
           <FormDescription>
             <Link
               to="/password/forgot"
+              search={{ redirect }}
               className="text-sm text-muted-foreground"
+              data-testid="login-forgot-password"
             >
               {t('login.forgotPassword')}
             </Link>

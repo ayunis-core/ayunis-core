@@ -9,12 +9,14 @@ import {
 } from '@ayunis/ui/components/form';
 import { Input } from '@ayunis/ui/components/input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { useForgotPassword } from '../api/useForgotPassword';
+import { useForgotPassword } from '@/pages/auth/forgot-password/api/useForgotPassword';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 
-export function ForgotPasswordPage() {
-  const { form, onSubmit, isLoading } = useForgotPassword();
+export function ForgotPasswordPage({
+  redirect,
+}: Readonly<{ redirect?: string }>) {
+  const { form, onSubmit, isLoading } = useForgotPassword({ redirect });
   const { t } = useTranslation('auth');
 
   return (
@@ -26,6 +28,7 @@ export function ForgotPasswordPage() {
           {t('forgotPassword.backToLogin')}{' '}
           <Link
             to="/login"
+            search={{ redirect }}
             className="font-medium text-primary hover:underline"
           >
             {t('forgotPassword.signIn')}

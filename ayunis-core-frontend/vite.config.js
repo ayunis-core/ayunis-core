@@ -20,6 +20,16 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
+    // The Outlook add-in pages are separate entries: the manifest deployed by
+    // tenant admins points at /outlook/taskpane.html, and neither page may
+    // load the SPA shell.
+    rolldownOptions: {
+      input: {
+        main: resolve(import.meta.dirname, "index.html"),
+        outlookTaskpane: resolve(import.meta.dirname, "outlook/taskpane.html"),
+        outlookDialog: resolve(import.meta.dirname, "outlook/dialog.html"),
+      },
+    },
     // Emit sourcemaps without referencing them from the bundles. The maps
     // never ship (the Dockerfile deletes them); CI uploads them to AppSignal
     // keyed by revision (see the sourcemaps job in build-images.yml).
