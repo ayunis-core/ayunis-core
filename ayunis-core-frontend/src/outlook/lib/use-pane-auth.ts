@@ -51,9 +51,7 @@ export function usePaneAuth(session: PaneSession, officeAvailable: boolean) {
     }
     closeDialog.current?.();
     setState({ status: 'signingIn' });
-    closeDialog.current = openSignInDialog(
-      (result) => void handleDialogResult(result),
-    );
+    closeDialog.current = openSignInDialog(handleDialogResultSafely);
   }
 
   // After `closed` the dialog keeps listening: an SSO round trip may still
@@ -74,6 +72,14 @@ export function usePaneAuth(session: PaneSession, officeAvailable: boolean) {
     } catch {
       setState({ status: 'signedOut', error: 'signInFailed' });
     }
+  }
+
+  // Whatever fails while a result is handled, the pane must not stay on
+  // "Signing in" with its button disabled.
+  function handleDialogResultSafely(result: SignInResult): void {
+    handleDialogResult(result).catch(() =>
+      setState({ status: 'signedOut', error: 'signInFailed' }),
+    );
   }
 
   async function signOut(): Promise<void> {
