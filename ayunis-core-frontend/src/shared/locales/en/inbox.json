@@ -6,7 +6,7 @@
   "filter": {
     "type": {
       "routine": "Routine notifications",
-      "routine_error": "Routine errors",
+      "routine_error": "Needs attention",
       "release_note": "Release notes"
     },
     "clear": "Clear filter"
@@ -17,7 +17,7 @@
   },
   "item": {
     "unread": "Unread",
-    "error": "Error",
+    "error": "Needs attention",
     "markRead": "Mark as read"
   },
   "detail": {

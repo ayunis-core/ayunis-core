@@ -36,7 +36,7 @@ import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalizat
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
-import { UnreadNotificationButtons } from './UnreadNotificationButtons';
+import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -284,9 +284,7 @@ export default function NewChatPage({
             {greeting}
           </h1>
 
-          <UnreadNotificationButtons isCollapsed={isCreating} />
-
-          <div className="new-chat-input-stack relative w-full">
+          <div className="new-chat-input-stack relative z-20 w-full">
             <p
               className={cn(
                 'new-chat-disclaimer absolute bottom-full left-0 right-0 mb-2 text-center text-xs text-muted-foreground',
@@ -296,6 +294,15 @@ export default function NewChatPage({
             >
               {t('chat.inputDisclaimer')}
             </p>
+
+            {!isCreating && (
+              <div className="mb-1.5 flex justify-start">
+                <WorkspacePicker
+                  workspaceId={workspaceId}
+                  onWorkspaceChange={handleWorkspaceChange}
+                />
+              </div>
+            )}
 
             <AcademyGateNotice className="mb-2" />
 
@@ -339,16 +346,9 @@ export default function NewChatPage({
               selectedSkillName={selectedSkillName}
               onSkillRemove={handleSkillRemove}
             />
-
-            {!isCreating && (
-              <div className="mt-1.5 flex justify-start">
-                <WorkspacePicker
-                  workspaceId={workspaceId}
-                  onWorkspaceChange={handleWorkspaceChange}
-                />
-              </div>
-            )}
           </div>
+
+          <UnreadNotificationsPanel isCollapsed={isCreating} />
 
           <div
             className={cn(

@@ -77,7 +77,7 @@ function NotificationHeading({ notification }: Readonly<NotificationProps>) {
         >
           {notification.headline}
           {notification.type === NotificationType.routine_error && (
-            <Badge variant="destructive">{t('item.error')}</Badge>
+            <Badge variant="outline">{t('item.error')}</Badge>
           )}
         </h1>
         {notification.subheadline && (
