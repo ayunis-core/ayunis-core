@@ -25,8 +25,20 @@ export function openSignInDialog(
   url.searchParams.set('client', OUTLOOK_CLIENT);
   let dialog: Office.Dialog | undefined;
   let open = true;
+  let closed = false;
   const report = (result: SignInResult) => {
     if (open) onResult(result);
+  };
+  // Office closes the window on the first call; a second close of the same
+  // dialog throws on Outlook on the web and must not swallow the result.
+  const close = () => {
+    if (closed || !dialog) return;
+    closed = true;
+    try {
+      dialog.close();
+    } catch {
+      // already gone
+    }
   };
 
   Office.context.ui.displayDialogAsync(
@@ -39,11 +51,11 @@ export function openSignInDialog(
       }
       dialog = result.value;
       if (!open) {
-        dialog.close();
+        close();
         return;
       }
       dialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
-        dialog?.close();
+        close();
         report(toSignInResult(arg));
         open = false;
       });
@@ -60,7 +72,7 @@ export function openSignInDialog(
 
   return () => {
     open = false;
-    dialog?.close();
+    close();
   };
 }
 
