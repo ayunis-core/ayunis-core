@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import type { AccessibleWorkspace } from 'src/domain/workspaces/application/models/workspace-access.model';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
 } from 'src/domain/workspaces/application/workspaces.errors';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -16,18 +18,23 @@ export class UpdateWorkspaceInstructionUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceAccess: WorkspaceAccessService,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(
     command: UpdateWorkspaceInstructionCommand,
-  ): Promise<Workspace> {
+  ): Promise<AccessibleWorkspace> {
     this.logger.log(
       {
         workspaceId: command.workspaceId,
       },
       'updateWorkspaceInstruction',
+    );
+    const access = await this.workspaceAccess.requirePermission(
+      command.workspaceId,
+      Permission.MANAGE_WORKSPACE,
     );
     const { userId } = getRequiredUserContext(this.contextService);
 
@@ -38,6 +45,9 @@ export class UpdateWorkspaceInstructionUseCase {
     if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
 
     workspace.instruct(command.instruction?.trim() || null);
-    return this.workspacesRepository.save(workspace);
+    return {
+      workspace: await this.workspacesRepository.save(workspace),
+      access,
+    };
   }
 }

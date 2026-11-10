@@ -13,6 +13,8 @@ import {
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { KnowledgeBaseWriteAccessService } from './knowledge-base-write-access.service';
 
 function setup() {
@@ -34,8 +36,10 @@ function setup() {
     requireWrite: jest.fn().mockResolvedValue(undefined),
     requireManage: jest.fn().mockResolvedValue(undefined),
   };
+  const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
   return {
     context,
+    hasPermission,
     workspaceAccess,
     personal,
     workspace,
@@ -44,6 +48,7 @@ function setup() {
       context,
       workspaceAccess,
       collectiveAccess as unknown as CollectiveKnowledgeBaseAccessService,
+      hasPermission as unknown as HasPermissionUseCase,
     ),
   };
 }
@@ -53,6 +58,21 @@ describe(KnowledgeBaseWriteAccessService.name, () => {
     const { policy, personal, workspaceAccess } = setup();
     await expect(policy.requireWrite(personal)).resolves.toBeUndefined();
     expect(workspaceAccess.execute).not.toHaveBeenCalled();
+  });
+  it('lets a personal owner write only with manage_knowledge_bases', async () => {
+    const { policy, personal, hasPermission } = setup();
+    hasPermission.execute.mockResolvedValue(false);
+    await expect(policy.requireWrite(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+    await expect(policy.requireCreate(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+    expect(hasPermission.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        permission: Permission.MANAGE_KNOWLEDGE_BASES,
+      }),
+    );
   });
   it('does not treat another owner or shared read access as write access', async () => {
     const { policy, workspaceAccess } = setup();
@@ -73,12 +93,21 @@ describe(KnowledgeBaseWriteAccessService.name, () => {
     );
     expect(workspaceAccess.execute).not.toHaveBeenCalled();
   });
-  it('delegates workspace permission to its exported use case', async () => {
-    const { policy, workspace, workspaceAccess } = setup();
+  it('gates workspace writes on the workspace, not on manage_knowledge_bases', async () => {
+    const { policy, workspace, workspaceAccess, hasPermission } = setup();
+    hasPermission.execute.mockResolvedValue(false);
     await expect(policy.requireWrite(workspace)).resolves.toBeUndefined();
     expect(workspaceAccess.execute).toHaveBeenCalledWith({
       workspaceId: workspace.workspaceId,
     });
+    expect(hasPermission.execute).not.toHaveBeenCalled();
+  });
+  it('passes on a workspace member’s missing manage_workspace', async () => {
+    const { policy, workspace, workspaceAccess } = setup();
+    workspaceAccess.execute.mockRejectedValue(new UnauthorizedAccessError());
+    await expect(policy.requireWrite(workspace)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
   });
   it('hides workspace access denial behind resource not found', async () => {
     const { policy, workspace, workspaceAccess } = setup();

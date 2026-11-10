@@ -1,11 +1,14 @@
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { aWorkspace } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceAccess } from 'src/domain/workspaces/application/models/workspace-access.model';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { WorkspaceDtoMapper } from './workspace-dto.mapper';
 
 describe('WorkspaceDtoMapper', () => {
   const mapper = new WorkspaceDtoMapper();
 
-  it('maps a paginated workspace list with chat activity metadata', () => {
+  it("maps a paginated workspace list with chat activity and the caller's workspace-scoped permissions", () => {
     const workspace = aWorkspace({
       name: 'Council Documents',
       description: 'Municipal documents',
@@ -17,6 +20,10 @@ describe('WorkspaceDtoMapper', () => {
         data: [
           {
             workspace,
+            access: new WorkspaceAccess(UserRole.MANAGER, [
+              Permission.MANAGE_SKILLS,
+              Permission.MANAGE_WORKSPACE,
+            ]),
             chatCount: 4,
             skillCount: 2,
             knowledgeBaseCount: 3,
@@ -40,6 +47,8 @@ describe('WorkspaceDtoMapper', () => {
           color: workspace.color,
           createdAt: workspace.createdAt.toISOString(),
           updatedAt: workspace.updatedAt.toISOString(),
+          role: UserRole.MANAGER,
+          permissions: [Permission.MANAGE_WORKSPACE],
           chatCount: 4,
           skillCount: 2,
           knowledgeBaseCount: 3,

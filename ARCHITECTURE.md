@@ -203,7 +203,8 @@ load-bearing):
   `assign_users_to_teams`, `manage_skills`, `share_skills_with_teams`,
   `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`) that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
+  `manage_routines`, `manage_workspace`, `manage_workspace_members`) that org
+  admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
   `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the
   share's scope, so the shares use cases check them via
   `SharePermissionService`. **ADMIN implicitly holds every permission**;
@@ -217,6 +218,16 @@ load-bearing):
   of the matrix). Routes on `/teams/:id/…` use `@RequireTeamPermission(...)` +
   `TeamPermissionsGuard`, and team shares accept the team-scoped share
   permission. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
+- **Workspace role** — each workspace membership carries a `UserRole`, and
+  only that role counts inside the workspace: workspace `ADMIN` ⇒ every
+  workspace permission plus deleting the workspace, workspace
+  `MANAGER`/`USER` ⇒ the workspace permissions (`manage_workspace`,
+  `manage_workspace_members`) of that row of the matrix. The org role grants
+  nothing there, and non-members, org admins included, get 404. Workspace
+  skills and knowledge bases are gated by `manage_workspace` instead of
+  `manage_skills` / `manage_knowledge_bases`, so those write routes check the
+  owner's permission in the authorization services rather than on the route.
+  See [workspaces/SUMMARY.md](ayunis-core-backend/src/domain/workspaces/SUMMARY.md).
 
 **Reads stay open** — only manage/share (write) endpoints are permission-gated;
 per-entity visibility (ownership + shares) is enforced separately inside the use

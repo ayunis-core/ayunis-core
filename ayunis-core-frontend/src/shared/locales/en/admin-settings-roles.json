@@ -16,7 +16,8 @@
     "teams": "Teams",
     "skills": "Skills",
     "knowledge_bases": "Knowledge bases",
-    "routines": "Routines"
+    "routines": "Routines",
+    "workspace": "In a workspace (by role in the workspace)"
   },
   "permissionHints": {
     "manage_teams": "Create, rename and delete teams.",
@@ -27,7 +28,9 @@
     "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
     "share_knowledge_bases_with_teams": "Make a knowledge base available to teams the member belongs to.",
     "share_knowledge_bases_with_org": "Make a knowledge base available to the whole organisation.",
-    "manage_routines": "Create, edit, delete and run routines."
+    "manage_routines": "Create, edit, delete and run routines.",
+    "manage_workspace": "Applies in workspaces where the member holds this role: edit the name, description, icon, colour and instruction, and create, edit, delete and switch on and off the workspace’s skills and knowledge bases, including pinning skills.",
+    "manage_workspace_members": "Applies in workspaces where the member holds this role: add members and remove members who are not admins."
   },
   "permissions": {
     "manage_teams": "Manage teams",
@@ -38,7 +41,9 @@
     "manage_knowledge_bases": "Manage knowledge bases",
     "share_knowledge_bases_with_teams": "Share knowledge bases with own teams",
     "share_knowledge_bases_with_org": "Share knowledge bases with the organisation",
-    "manage_routines": "Manage routines"
+    "manage_routines": "Manage routines",
+    "manage_workspace": "Manage workspace",
+    "manage_workspace_members": "Manage workspace members"
   },
   "adminHint": "Admins always have every permission and cannot be restricted.",
   "save": "Save changes",

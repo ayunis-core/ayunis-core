@@ -74,8 +74,6 @@ import {
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
@@ -122,7 +120,6 @@ export class KnowledgeBasesController {
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post()
   @ApiOperation({ summary: 'Create a new knowledge base' })
   @ApiBody({ type: CreateKnowledgeBaseDto })
@@ -208,7 +205,6 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, context);
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Patch(':id')
   @ApiOperation({ summary: 'Update a knowledge base' })
   @ApiParam({
@@ -260,7 +256,6 @@ export class KnowledgeBasesController {
     return this.findOne(id);
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a knowledge base' })
   @ApiParam({
@@ -312,7 +307,6 @@ export class KnowledgeBasesController {
     };
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/documents')
   @ApiOperation({ summary: 'Add a document to a knowledge base' })
   @ApiParam(KB_ID_PARAM)
@@ -379,7 +373,6 @@ export class KnowledgeBasesController {
     });
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/urls')
   @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
   @ApiParam({
@@ -420,7 +413,6 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Delete(':id/documents/:documentId')
   @ApiOperation({ summary: 'Remove a document from a knowledge base' })
   @ApiParam({

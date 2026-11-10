@@ -20,10 +20,11 @@ import {
 } from 'src/domain/workspaces/domain/workspaces.constants';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
-import type { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import {
   createMockContextService,
+  createMockWorkspaceMembersRepository,
   createMockWorkspacesRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
@@ -39,15 +40,7 @@ describe('CreateWorkspaceUseCase', () => {
 
   async function setup(contextService = createMockContextService()) {
     repository = createMockWorkspacesRepository();
-    membersRepository = {
-      create: jest
-        .fn()
-        .mockImplementation((member: WorkspaceMember) =>
-          Promise.resolve(member),
-        ),
-      findWorkspaceIdsByUserId: jest.fn().mockResolvedValue([]),
-      promoteSuccessors: jest.fn().mockResolvedValue(undefined),
-    };
+    membersRepository = createMockWorkspaceMembersRepository();
     addFavoriteUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
     const module = await Test.createTestingModule({
       providers: [
@@ -70,7 +63,7 @@ describe('CreateWorkspaceUseCase', () => {
   });
 
   it('makes the caller the admin of the workspace they create', async () => {
-    const workspace = await useCase.execute(
+    const { workspace, access } = await useCase.execute(
       new CreateWorkspaceCommand({ name: 'Bürgeranfragen' }),
     );
 
@@ -82,10 +75,17 @@ describe('CreateWorkspaceUseCase', () => {
       userId: TEST_USER_ID,
       role: UserRole.ADMIN,
     });
+    expect(access).toMatchObject({
+      role: UserRole.ADMIN,
+      permissions: [
+        Permission.MANAGE_WORKSPACE,
+        Permission.MANAGE_WORKSPACE_MEMBERS,
+      ],
+    });
   });
 
   it('creates a workspace without adding it to favorites', async () => {
-    const workspace = await useCase.execute(
+    const { workspace } = await useCase.execute(
       new CreateWorkspaceCommand({ name: 'Gebühren' }),
     );
 
@@ -94,7 +94,7 @@ describe('CreateWorkspaceUseCase', () => {
   });
 
   it('applies the requested appearance', async () => {
-    const workspace = await useCase.execute(
+    const { workspace } = await useCase.execute(
       new CreateWorkspaceCommand({
         name: 'Feuerwehr',
         description: 'Einsätze und Fahrzeuge',
@@ -115,7 +115,7 @@ describe('CreateWorkspaceUseCase', () => {
   });
 
   it('accepts a name at the maximum length', async () => {
-    const workspace = await useCase.execute(
+    const { workspace } = await useCase.execute(
       new CreateWorkspaceCommand({
         name: 'a'.repeat(WORKSPACE_NAME_MAX_LENGTH),
       }),

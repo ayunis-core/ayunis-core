@@ -26,8 +26,6 @@ import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
 @Controller('skills')
@@ -43,7 +41,6 @@ export class SkillMcpIntegrationsController {
     private readonly findOneSkill: FindOneSkillUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':skillId/mcp-integrations/:integrationId')
   @ApiOperation({ summary: 'Assign MCP integration to skill' })
   @ApiParam({
@@ -78,7 +75,6 @@ export class SkillMcpIntegrationsController {
     return this.findSkillDto(skillId);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':skillId/mcp-integrations/:integrationId')
   @ApiOperation({ summary: 'Unassign MCP integration from skill' })
   @ApiParam({

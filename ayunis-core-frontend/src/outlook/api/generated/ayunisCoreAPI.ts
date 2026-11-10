@@ -328,6 +328,7 @@ import type {
   WorkspaceFavoriteResponseDto,
   WorkspaceListResponseDto,
   WorkspaceResponseDto,
+  WorkspaceRolePermissionsResponseDto,
   WorkspacesControllerFindAllParams
 } from './ayunisCoreAPI.schemas.ts';
 
@@ -11361,6 +11362,11 @@ export type workspacesControllerUpdateResponse200 = {
   status: 200
 }
 
+export type workspacesControllerUpdateResponse403 = {
+  data: void
+  status: 403
+}
+
 export type workspacesControllerUpdateResponse404 = {
   data: void
   status: 404
@@ -11369,7 +11375,7 @@ export type workspacesControllerUpdateResponse404 = {
 export type workspacesControllerUpdateResponseSuccess = (workspacesControllerUpdateResponse200) & {
   headers: Headers;
 };
-export type workspacesControllerUpdateResponseError = (workspacesControllerUpdateResponse404) & {
+export type workspacesControllerUpdateResponseError = (workspacesControllerUpdateResponse403 | workspacesControllerUpdateResponse404) & {
   headers: Headers;
 };
 
@@ -11411,6 +11417,11 @@ export type workspacesControllerRemoveResponse204 = {
   status: 204
 }
 
+export type workspacesControllerRemoveResponse403 = {
+  data: void
+  status: 403
+}
+
 export type workspacesControllerRemoveResponse404 = {
   data: void
   status: 404
@@ -11419,7 +11430,7 @@ export type workspacesControllerRemoveResponse404 = {
 export type workspacesControllerRemoveResponseSuccess = (workspacesControllerRemoveResponse204) & {
   headers: Headers;
 };
-export type workspacesControllerRemoveResponseError = (workspacesControllerRemoveResponse404) & {
+export type workspacesControllerRemoveResponseError = (workspacesControllerRemoveResponse403 | workspacesControllerRemoveResponse404) & {
   headers: Headers;
 };
 
@@ -11442,6 +11453,49 @@ export const workspacesControllerRemove = async (id: string, options?: Parameter
   {
     ...options,
     method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type workspacesControllerGetRolePermissionsResponse200 = {
+  data: WorkspaceRolePermissionsResponseDto
+  status: 200
+}
+
+export type workspacesControllerGetRolePermissionsResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspacesControllerGetRolePermissionsResponseSuccess = (workspacesControllerGetRolePermissionsResponse200) & {
+  headers: Headers;
+};
+export type workspacesControllerGetRolePermissionsResponseError = (workspacesControllerGetRolePermissionsResponse404) & {
+  headers: Headers;
+};
+
+export type workspacesControllerGetRolePermissionsResponse = (workspacesControllerGetRolePermissionsResponseSuccess | workspacesControllerGetRolePermissionsResponseError)
+
+export const getWorkspacesControllerGetRolePermissionsUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${id}/role-permissions`
+}
+
+/**
+ * @summary What each workspace role grants within a workspace
+ */
+export const workspacesControllerGetRolePermissions = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<workspacesControllerGetRolePermissionsResponse> => {
+
+  return paneFetch<workspacesControllerGetRolePermissionsResponse>(getWorkspacesControllerGetRolePermissionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
 
 
   }
@@ -11490,12 +11544,19 @@ export type workspaceContextControllerUpdateInstructionResponse200 = {
   status: 200
 }
 
+export type workspaceContextControllerUpdateInstructionResponse403 = {
+  data: void
+  status: 403
+}
+
 export type workspaceContextControllerUpdateInstructionResponseSuccess = (workspaceContextControllerUpdateInstructionResponse200) & {
   headers: Headers;
 };
-;
+export type workspaceContextControllerUpdateInstructionResponseError = (workspaceContextControllerUpdateInstructionResponse403) & {
+  headers: Headers;
+};
 
-export type workspaceContextControllerUpdateInstructionResponse = (workspaceContextControllerUpdateInstructionResponseSuccess)
+export type workspaceContextControllerUpdateInstructionResponse = (workspaceContextControllerUpdateInstructionResponseSuccess | workspaceContextControllerUpdateInstructionResponseError)
 
 export const getWorkspaceContextControllerUpdateInstructionUrl = (id: string,) => {
 
