@@ -1,6 +1,8 @@
 import type { TFunction } from 'i18next';
 import { showError } from '@/shared/lib/toast';
 
+const AUDIO_EXTENSIONS = ['.mp3', '.m4a', '.wav', '.webm'];
+
 // Non-image extensions accepted by the chat input. Mirrors the backend's
 // FILE_EXTENSIONS in src/common/util/file-type.ts; images are routed by MIME
 // type instead of extension.
@@ -17,17 +19,12 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.md',
   '.eml',
   '.msg',
-  '.mp3',
-  '.m4a',
-  '.wav',
-  '.webm',
+  ...AUDIO_EXTENSIONS,
 ];
 
 // Mirrors the backend's MAX_SOURCE_FILE_SIZE_BYTES in
 // src/common/util/source-file-upload.ts.
 export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
-
-const AUDIO_EXTENSIONS = ['.mp3', '.m4a', '.wav', '.webm'];
 
 // Recordings have a server-configured cap (AUDIO_MAX_UPLOAD_BYTES); the API
 // answers an oversized one with FILE_TOO_LARGE, so they skip the local check.
@@ -62,6 +59,8 @@ export const ACCEPTED_FILE_PICKER_TYPES = [
   'image/*',
   ...ACCEPTED_DOCUMENT_EXTENSIONS,
 ].join(',');
+
+export const ACCEPTED_AUDIO_PICKER_TYPES = AUDIO_EXTENSIONS.join(',');
 
 export function separateFilesByType(files: FileList): {
   images: File[];
