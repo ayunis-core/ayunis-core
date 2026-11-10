@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
 
 const CREATE_ROUTINE_PROMPT = 'E2E create routine: ';
@@ -47,7 +48,8 @@ async function* toolCallResponse(
     toolCallDeltas: [
       {
         index: 0,
-        id: `mock-${name}`,
+        // Unique like a provider's, since a routine remembers the call it was created from.
+        id: `mock-${name}-${randomUUID()}`,
         name,
         argumentsDelta: JSON.stringify(args),
       },

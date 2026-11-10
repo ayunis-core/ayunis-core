@@ -22,6 +22,7 @@ function routine(overrides: Partial<Routine>): Routine {
     consecutiveFailureCount: 0,
     nextRunAt: '2026-11-08T06:34:00.000Z',
     pausedAt: null,
+    sourceToolCallId: null,
     createdAt: '2026-11-01T08:00:00.000Z',
     updatedAt: '2026-11-01T08:00:00.000Z',
     ...overrides,

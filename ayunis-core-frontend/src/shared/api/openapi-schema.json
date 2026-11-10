@@ -12338,6 +12338,9 @@
           },
           "403": {
             "description": "The manage routines permission is required"
+          },
+          "409": {
+            "description": "A routine was already created from this chat proposal"
           }
         },
         "summary": "Create a routine",
@@ -23743,6 +23746,11 @@
             "nullable": true,
             "description": "When repeated failed runs paused (disabled) the routine; null once it is enabled again"
           },
+          "sourceToolCallId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The chat `create_routine` tool call the routine was created from; null when it was created elsewhere"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -23764,6 +23772,7 @@
           "consecutiveFailureCount",
           "nextRunAt",
           "pausedAt",
+          "sourceToolCallId",
           "createdAt",
           "updatedAt"
         ]
@@ -23798,6 +23807,10 @@
             "type": "boolean",
             "description": "Whether the routine runs on its schedule",
             "default": true
+          },
+          "sourceToolCallId": {
+            "type": "string",
+            "description": "The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user."
           }
         },
         "required": ["name", "prompt", "dailyTime", "internetEnabled"]

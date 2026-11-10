@@ -73,6 +73,14 @@ export class RoutineResponseDto {
   })
   pausedAt: string | null;
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'The chat `create_routine` tool call the routine was created from; null when it was created elsewhere',
+  })
+  sourceToolCallId: string | null;
+
   @ApiProperty()
   createdAt: string;
 

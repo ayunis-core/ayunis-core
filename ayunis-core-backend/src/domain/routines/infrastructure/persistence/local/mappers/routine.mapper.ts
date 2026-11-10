@@ -22,6 +22,7 @@ export class RoutineMapper {
       nextRunAt: record.nextRunAt,
       lastRunStartedAt: record.lastRunStartedAt,
       pausedAt: record.pausedAt,
+      sourceToolCallId: record.sourceToolCallId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -45,6 +46,7 @@ export class RoutineMapper {
     record.nextRunAt = domain.nextRunAt;
     record.lastRunStartedAt = domain.lastRunStartedAt;
     record.pausedAt = domain.pausedAt;
+    record.sourceToolCallId = domain.sourceToolCallId;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

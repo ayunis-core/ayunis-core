@@ -96,6 +96,7 @@
   "toast": {
     "createSuccess": "Routine created",
     "createError": "The routine could not be created.",
+    "alreadyCreated": "A routine was already created from this suggestion.",
     "updateSuccess": "Routine saved",
     "updateError": "The routine could not be saved.",
     "deleteSuccess": "Routine deleted",

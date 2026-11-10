@@ -8,6 +8,7 @@ export class CreateRoutineCommand {
   readonly dailyTime: string;
   readonly internetEnabled: boolean;
   readonly enabled: boolean;
+  readonly sourceToolCallId?: string;
 
   constructor(params: {
     name: string;
@@ -16,6 +17,7 @@ export class CreateRoutineCommand {
     dailyTime: string;
     internetEnabled: boolean;
     enabled?: boolean;
+    sourceToolCallId?: string;
   }) {
     this.name = params.name;
     this.prompt = params.prompt;
@@ -23,5 +25,6 @@ export class CreateRoutineCommand {
     this.dailyTime = params.dailyTime;
     this.internetEnabled = params.internetEnabled;
     this.enabled = params.enabled ?? true;
+    this.sourceToolCallId = params.sourceToolCallId;
   }
 }

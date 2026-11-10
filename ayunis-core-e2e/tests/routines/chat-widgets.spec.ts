@@ -29,26 +29,40 @@ async function defaultModelOf(api: APIRequestContext) {
   return model;
 }
 
-test("creates the routine the assistant proposes in the chat", async ({
+test("creates the routine the assistant proposes in the chat, once", async ({
   api,
   page,
 }) => {
   const name = `Amtsblatt ${randomUUID().slice(0, 8)}`;
+  const reviewedName = `${name} geprüft`;
   await page.goto("/chat");
   await sendMessage(page, `E2E create routine: ${name}`);
 
   const widget = page.getByTestId("create-routine-widget");
   await expect(widget.getByTestId("routine-form-name")).toHaveValue(name);
+  await widget.getByTestId("routine-form-name").fill(reviewedName);
   await widget.getByTestId("create-routine-widget-submit").click();
 
   await expect
-    .poll(async () => (await listRoutines(api)).find((r) => r.name === name))
+    .poll(async () =>
+      (await listRoutines(api)).find((r) => r.name === reviewedName),
+    )
     .toMatchObject({
       dailyTime: "06:45",
       internetEnabled: true,
       modelId: null,
       enabled: true,
     });
+
+  // Only the saved routine, not the proposal, carries the reviewed name.
+  await page.reload();
+  await expect(widget.getByTestId("routine-form-name")).toHaveValue(
+    reviewedName,
+  );
+  await expect(widget.getByTestId("create-routine-widget-submit")).toBeDisabled();
+  expect(
+    (await listRoutines(api)).filter((r) => r.name.startsWith(name)),
+  ).toHaveLength(1);
 });
 
 test("edits a routine from the chat and keeps what the edit leaves unchanged", async ({
