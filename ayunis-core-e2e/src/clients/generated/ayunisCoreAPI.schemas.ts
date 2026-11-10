@@ -3566,6 +3566,8 @@ export interface ImproveSkillTextDto {
   trigger: string;
   /** The instructions as they currently stand in the form */
   instructions: string;
+  /** The workspace whose skill is being edited; the rewrite then needs manage_workspace there instead of manage_skills */
+  workspaceId?: string;
 }
 
 export interface ImprovedSkillTextResponseDto {
@@ -4342,6 +4344,76 @@ export interface UpdateWorkspaceDto {
   icon?: string;
   /** Palette key or #rrggbb literal for the workspace colour */
   color?: string;
+}
+
+/**
+ * The role of the member within the workspace
+ */
+export type WorkspaceMemberResponseDtoRole = typeof WorkspaceMemberResponseDtoRole[keyof typeof WorkspaceMemberResponseDtoRole];
+
+
+export const WorkspaceMemberResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface WorkspaceMemberResponseDto {
+  /** The user ID of the member */
+  userId: string;
+  /** The name of the member */
+  name: string;
+  /** The email of the member */
+  email: string;
+  /** The role of the member within the workspace */
+  role: WorkspaceMemberResponseDtoRole;
+  /** When the user was added to the workspace */
+  joinedAt: string;
+}
+
+export interface WorkspaceMemberCandidateResponseDto {
+  /** The user ID of the colleague */
+  userId: string;
+  /** The name of the colleague */
+  name: string;
+  /** The email of the colleague */
+  email: string;
+}
+
+/**
+ * Workspace role for every added user; only workspace admins may assign admin
+ */
+export type AddWorkspaceMembersDtoRole = typeof AddWorkspaceMembersDtoRole[keyof typeof AddWorkspaceMembersDtoRole];
+
+
+export const AddWorkspaceMembersDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface AddWorkspaceMembersDto {
+  /** Users of the same organization to add */
+  userIds: string[];
+  /** Workspace role for every added user; only workspace admins may assign admin */
+  role?: AddWorkspaceMembersDtoRole;
+}
+
+/**
+ * The role of the member within the workspace
+ */
+export type UpdateWorkspaceMemberRoleDtoRole = typeof UpdateWorkspaceMemberRoleDtoRole[keyof typeof UpdateWorkspaceMemberRoleDtoRole];
+
+
+export const UpdateWorkspaceMemberRoleDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface UpdateWorkspaceMemberRoleDto {
+  /** The role of the member within the workspace */
+  role: UpdateWorkspaceMemberRoleDtoRole;
 }
 
 export interface WorkspaceSkillResponseDto {
@@ -6746,6 +6818,10 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
+
+export type WorkspaceMembersControllerListCandidatesParams = {
+search?: string;
+};
 
 export type NotificationsControllerFindAllParams = {
 /**

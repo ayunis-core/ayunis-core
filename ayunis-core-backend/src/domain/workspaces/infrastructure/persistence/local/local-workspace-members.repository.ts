@@ -7,7 +7,7 @@ import type { UUID } from 'crypto';
 import { In, Repository } from 'typeorm';
 import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
 import type { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
-import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { WorkspaceMemberMapper } from './mappers/workspace-member.mapper';
 import { WorkspaceMemberRecord } from './schema/workspace-member.record';
 import { WorkspaceRecord } from './schema/workspace.record';
@@ -31,6 +31,61 @@ export class LocalWorkspaceMembersRepository extends WorkspaceMembersRepository 
   async create(member: WorkspaceMember): Promise<WorkspaceMember> {
     await this.repo.insert(this.mapper.toRecord(member));
     return member;
+  }
+
+  async addMany(members: WorkspaceMember[]): Promise<WorkspaceMember[]> {
+    if (members.length === 0) return [];
+    const result = await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(WorkspaceMemberRecord)
+      .values(members.map((member) => this.mapper.toRecord(member)))
+      .orIgnore()
+      .returning(['id'])
+      .execute();
+    const added = new Set(
+      (result.raw as { id: UUID }[]).map((record) => record.id),
+    );
+    return members.filter((member) => added.has(member.id));
+  }
+
+  async findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceMember[]> {
+    const records = await this.repo.find({
+      where: { workspaceId },
+      order: { createdAt: 'ASC', id: 'ASC' },
+    });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findOne(
+    workspaceId: UUID,
+    userId: UUID,
+  ): Promise<WorkspaceMember | null> {
+    const record = await this.repo.findOne({ where: { workspaceId, userId } });
+    return record ? this.mapper.toDomain(record) : null;
+  }
+
+  countAdmins(workspaceId: UUID): Promise<number> {
+    return this.repo.count({ where: { workspaceId, role: UserRole.ADMIN } });
+  }
+
+  async updateRole(
+    workspaceId: UUID,
+    userId: UUID,
+    role: UserRole,
+  ): Promise<void> {
+    await this.repo.update({ workspaceId, userId }, { role });
+  }
+
+  async lockWorkspace(workspaceId: UUID, orgId: UUID): Promise<void> {
+    const manager = this.repo.manager;
+    if (!manager.queryRunner?.isTransactionActive) {
+      throw new Error('Locking a workspace requires a transaction');
+    }
+    await manager.query(
+      `SELECT "id" FROM "workspaces" WHERE "id" = $1 AND "orgId" = $2 FOR UPDATE`,
+      [workspaceId, orgId],
+    );
   }
 
   async findWorkspaceIdsByUserId(userId: UUID): Promise<UUID[]> {

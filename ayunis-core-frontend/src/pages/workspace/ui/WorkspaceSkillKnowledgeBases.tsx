@@ -9,11 +9,13 @@ export function WorkspaceSkillKnowledgeBases({
   workspaceId,
   assignedIds,
   isPending,
+  disabled,
   onToggle,
 }: Readonly<{
   workspaceId: string;
   assignedIds: string[];
   isPending: boolean;
+  disabled: boolean;
   onToggle: (id: string) => void;
 }>) {
   const { t } = useTranslation('skill');
@@ -30,6 +32,7 @@ export function WorkspaceSkillKnowledgeBases({
         knowledgeBases={knowledgeBases}
         assignedIds={assignedIds}
         isPending={isPending}
+        disabled={disabled}
         onToggle={onToggle}
       />
       <WorkspaceContextPagination

@@ -102,5 +102,55 @@
       "saveSuccess": "Anweisungen wurden gespeichert.",
       "saveError": "Anweisungen konnten nicht gespeichert werden."
     }
+  },
+  "members": {
+    "open": "Mitglieder",
+    "title": "Mitglieder",
+    "description": "Mitglieder teilen die Anweisungen, Fähigkeiten und das Wissen dieses Arbeitsbereichs. Chats bleiben privat.",
+    "loading": "Mitglieder werden geladen…",
+    "loadError": "Mitglieder konnten nicht geladen werden.",
+    "name": "Name",
+    "email": "E-Mail",
+    "role": {
+      "label": "Rolle",
+      "roles": {
+        "user": "Benutzer",
+        "manager": "Manager",
+        "admin": "Administrator"
+      },
+      "card": {
+        "intro": "In diesem Arbeitsbereich dürfen sie:",
+        "none": "Im Arbeitsbereich mit seinen Fähigkeiten und seinem Wissen chatten.",
+        "footer": "Gemäß Rollen & Berechtigungen. Die Rolle in der Organisation zählt im Arbeitsbereich nicht.",
+        "adminFooter": "Administratoren eines Arbeitsbereichs haben dort immer alle Berechtigungen.",
+        "items": {
+          "manage_workspace": "Den Arbeitsbereich, seine Anweisungen, Fähigkeiten und sein Wissen bearbeiten",
+          "manage_workspace_members": "Mitglieder hinzufügen",
+          "manage_roles": "Rollen ändern und den Arbeitsbereich löschen"
+        }
+      },
+      "success": "Rolle aktualisiert",
+      "error": "Rolle konnte nicht aktualisiert werden",
+      "notFound": "Mitglied nicht gefunden",
+      "notAllowed": "Nur Administratoren des Arbeitsbereichs können Rollen ändern",
+      "lastAdmin": "Ein Arbeitsbereich braucht mindestens einen Administrator"
+    },
+    "add": {
+      "open": "Mitglieder hinzufügen",
+      "title": "Mitglieder hinzufügen",
+      "description": "Wählen Sie Kolleginnen und Kollegen aus Ihrer Organisation und die Rolle, die sie in diesem Arbeitsbereich erhalten.",
+      "searchPlaceholder": "Benutzer suchen…",
+      "noUsersFound": "Keine Benutzer gefunden.",
+      "role": "Rolle",
+      "cancel": "Abbrechen",
+      "submit": "Hinzufügen",
+      "adding": "Wird hinzugefügt…",
+      "success_one": "{{count}} Mitglied hinzugefügt",
+      "success_other": "{{count}} Mitglieder hinzugefügt",
+      "noneAdded": "Keine neuen Mitglieder hinzugefügt",
+      "notInOrg": "Nur Benutzer Ihrer Organisation können hinzugefügt werden",
+      "notAllowed": "Sie dürfen keine Mitglieder mit dieser Rolle hinzufügen",
+      "error": "Mitglieder konnten nicht hinzugefügt werden"
+    }
   }
 }

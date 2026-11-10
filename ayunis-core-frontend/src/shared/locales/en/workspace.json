@@ -102,5 +102,55 @@
       "saveSuccess": "Instructions were saved.",
       "saveError": "Instructions could not be saved."
     }
+  },
+  "members": {
+    "open": "Members",
+    "title": "Members",
+    "description": "Members share the instructions, skills and knowledge of this workspace. Chats stay private.",
+    "loading": "Loading members…",
+    "loadError": "Members could not be loaded.",
+    "name": "Name",
+    "email": "Email",
+    "role": {
+      "label": "Role",
+      "roles": {
+        "user": "User",
+        "manager": "Manager",
+        "admin": "Admin"
+      },
+      "card": {
+        "intro": "In this workspace, they can:",
+        "none": "Chat in the workspace with its skills and knowledge.",
+        "footer": "Based on Roles & Permissions. The organisation role does not count in a workspace.",
+        "adminFooter": "Workspace admins always have every permission in their workspace.",
+        "items": {
+          "manage_workspace": "Edit the workspace, its instructions, skills and knowledge",
+          "manage_workspace_members": "Add members",
+          "manage_roles": "Change roles and delete the workspace"
+        }
+      },
+      "success": "Role updated",
+      "error": "Role could not be updated",
+      "notFound": "Member not found",
+      "notAllowed": "Only workspace admins can change roles",
+      "lastAdmin": "A workspace needs at least one admin"
+    },
+    "add": {
+      "open": "Add members",
+      "title": "Add members",
+      "description": "Choose colleagues from your organisation and the role they get in this workspace.",
+      "searchPlaceholder": "Search users…",
+      "noUsersFound": "No users found.",
+      "role": "Role",
+      "cancel": "Cancel",
+      "submit": "Add",
+      "adding": "Adding…",
+      "success_one": "{{count}} member added",
+      "success_other": "{{count}} members added",
+      "noneAdded": "No new members added",
+      "notInOrg": "Only users of your organisation can be added",
+      "notAllowed": "You are not allowed to add members with this role",
+      "error": "Members could not be added"
+    }
   }
 }

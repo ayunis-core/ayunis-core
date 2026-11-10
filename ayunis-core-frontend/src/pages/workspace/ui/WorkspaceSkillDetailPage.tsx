@@ -20,6 +20,7 @@ import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import { useWorkspaceSkillSources } from '@/pages/workspace/api/useWorkspaceSkillSources';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
+import { getWorkspaceAccess } from '@/features/workspaces';
 import type {
   WorkspaceResponseDto,
   SkillResponseDto,
@@ -51,6 +52,7 @@ export function WorkspaceSkillDetailPage({
   const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
     useWorkspaceContextActions(workspace.id);
   const sourcesHook = useWorkspaceSkillSources({ skillId: skill.id });
+  const { canManage } = getWorkspaceAccess(workspace);
 
   const toggleKnowledgeBase = async (knowledgeBaseId: string) => {
     setIsAssigning(true);
@@ -96,94 +98,100 @@ export function WorkspaceSkillDetailPage({
               { label: skill.name },
             ]}
             action={
-              <>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {skill.isActive
-                      ? tSkills('card.activeLabel')
-                      : tSkills('card.inactiveLabel')}
-                  </span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex">
-                        <Switch
-                          checked={skill.isActive}
+              canManage ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {skill.isActive
+                        ? tSkills('card.activeLabel')
+                        : tSkills('card.inactiveLabel')}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <Switch
+                            checked={skill.isActive}
+                            disabled={isChangingSkillState}
+                            onCheckedChange={(isActive) =>
+                              setSkillActive({ skillId: skill.id, isActive })
+                            }
+                          />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        {t('context.skills.activeTooltip')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  {skill.isActive ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           disabled={isChangingSkillState}
-                          onCheckedChange={(isActive) =>
-                            setSkillActive({ skillId: skill.id, isActive })
+                          aria-label={
+                            skill.isPinned
+                              ? t('context.skills.unpin')
+                              : t('context.skills.pin')
                           }
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      {t('context.skills.activeTooltip')}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                {skill.isActive ? (
+                          onClick={() =>
+                            setSkillPinned({
+                              skillId: skill.id,
+                              isPinned: !skill.isPinned,
+                            })
+                          }
+                        >
+                          <Pin
+                            className={skill.isPinned ? 'fill-current' : ''}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {skill.isPinned
+                          ? t('context.skills.unpin')
+                          : t('context.skills.pin')}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        disabled={isChangingSkillState}
-                        aria-label={
-                          skill.isPinned
-                            ? t('context.skills.unpin')
-                            : t('context.skills.pin')
-                        }
+                        className="text-destructive hover:text-destructive"
+                        aria-label={tSkills('card.deleteLabel')}
                         onClick={() =>
-                          setSkillPinned({
-                            skillId: skill.id,
-                            isPinned: !skill.isPinned,
+                          confirm({
+                            title: tSkill('delete.confirmTitle'),
+                            description: tSkill('delete.confirmDescription', {
+                              name: skill.name,
+                            }),
+                            confirmText: tSkill('delete.confirmText'),
+                            cancelText: tSkill('delete.cancelText'),
+                            variant: 'destructive',
+                            onConfirm: () => {
+                              deleteSkill(skill.id, {
+                                onSuccess: () => {
+                                  void navigate({
+                                    to: '/workspaces/$workspaceId',
+                                    params: { workspaceId: workspace.id },
+                                  });
+                                },
+                              });
+                            },
                           })
                         }
                       >
-                        <Pin className={skill.isPinned ? 'fill-current' : ''} />
+                        <Trash2 />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {skill.isPinned
-                        ? t('context.skills.unpin')
-                        : t('context.skills.pin')}
+                      {tSkills('card.deleteLabel')}
                     </TooltipContent>
                   </Tooltip>
-                ) : null}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      aria-label={tSkills('card.deleteLabel')}
-                      onClick={() =>
-                        confirm({
-                          title: tSkill('delete.confirmTitle'),
-                          description: tSkill('delete.confirmDescription', {
-                            name: skill.name,
-                          }),
-                          confirmText: tSkill('delete.confirmText'),
-                          cancelText: tSkill('delete.cancelText'),
-                          variant: 'destructive',
-                          onConfirm: () => {
-                            deleteSkill(skill.id, {
-                              onSuccess: () => {
-                                void navigate({
-                                  to: '/workspaces/$workspaceId',
-                                  params: { workspaceId: workspace.id },
-                                });
-                              },
-                            });
-                          },
-                        })
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{tSkills('card.deleteLabel')}</TooltipContent>
-                </Tooltip>
-              </>
+                </>
+              ) : undefined
             }
           />
         }
@@ -192,6 +200,8 @@ export function WorkspaceSkillDetailPage({
             <SkillPropertiesCard
               key={skill.id}
               skill={skill}
+              disabled={!canManage}
+              workspaceId={workspace.id}
               onUpdate={async (data) => {
                 await skillsControllerUpdate(skill.id, data);
                 await invalidateResources();
@@ -202,6 +212,7 @@ export function WorkspaceSkillDetailPage({
               workspaceId={workspace.id}
               assignedIds={assignedKnowledgeBaseIds}
               isPending={isAssigning}
+              disabled={!canManage}
               onToggle={(knowledgeBaseId) =>
                 void toggleKnowledgeBase(knowledgeBaseId)
               }
@@ -209,6 +220,7 @@ export function WorkspaceSkillDetailPage({
             <KnowledgeBaseCard
               entity={skill}
               isEnabled={isEmbeddingModelEnabled}
+              disabled={!canManage}
               translationNamespace="skill"
               sourcesHook={sourcesHook}
             />

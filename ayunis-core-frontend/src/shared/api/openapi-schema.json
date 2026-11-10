@@ -7051,7 +7051,10 @@
             }
           },
           "403": {
-            "description": "Subscription required"
+            "description": "Subscription required, or missing manage_skills (manage_workspace for a workspace skill)"
+          },
+          "404": {
+            "description": "Workspace not found"
           },
           "422": {
             "description": "NO_DEFAULT_MODEL_FOUND when the caller may use no model at all; SKILL_TEXT_IMPROVEMENT_UNAVAILABLE when every permitted model is anonymous-only"
@@ -8783,6 +8786,203 @@
           }
         },
         "summary": "What each workspace role grants within a workspace",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/members": {
+      "get": {
+        "operationId": "WorkspaceMembersController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceMemberResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "List the members of a workspace",
+        "tags": ["workspaces"]
+      },
+      "post": {
+        "description": "Adds every listed user with one role. Users who already are members are skipped and keep their role; the response holds only the members added. Unknown users and users of another organization reject the whole request.",
+        "operationId": "WorkspaceMembersController_add",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWorkspaceMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceMemberResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A user is not part of the organization"
+          },
+          "403": {
+            "description": "Not allowed to add members, or to assign admin as a non-admin"
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Add users of the organization to a workspace",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/member-candidates": {
+      "get": {
+        "description": "Returns up to 25 users of the organization who are not members yet, matching the search by name or email.",
+        "operationId": "WorkspaceMembersController_listCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceMemberCandidateResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed to add members"
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Search colleagues who can be added to a workspace",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/members/{userId}": {
+      "patch": {
+        "operationId": "WorkspaceMembersController_updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceMemberRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMemberResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a workspace admin"
+          },
+          "404": {
+            "description": "Workspace not found or user is not a member"
+          },
+          "409": {
+            "description": "The change would leave the workspace without an admin"
+          }
+        },
+        "summary": "Change a member's role in a workspace",
         "tags": ["workspaces"]
       }
     },
@@ -19950,6 +20150,11 @@
           "instructions": {
             "type": "string",
             "description": "The instructions as they currently stand in the form"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The workspace whose skill is being edited; the rewrite then needs manage_workspace there instead of manage_skills"
           }
         },
         "required": ["field", "trigger", "instructions"]
@@ -21212,6 +21417,91 @@
             "example": "#6b5bd6"
           }
         }
+      },
+      "WorkspaceMemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID of the member",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the member",
+            "example": "Anna Huber"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email of the member",
+            "example": "anna.huber@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "The role of the member within the workspace",
+            "enum": ["admin", "manager", "user"],
+            "example": "user"
+          },
+          "joinedAt": {
+            "type": "string",
+            "description": "When the user was added to the workspace",
+            "example": "2026-11-10T10:30:00.000Z"
+          }
+        },
+        "required": ["userId", "name", "email", "role", "joinedAt"]
+      },
+      "WorkspaceMemberCandidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID of the colleague",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the colleague",
+            "example": "Ben Maier"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email of the colleague",
+            "example": "ben.maier@example.com"
+          }
+        },
+        "required": ["userId", "name", "email"]
+      },
+      "AddWorkspaceMembersDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "description": "Users of the same organization to add",
+            "example": ["550e8400-e29b-41d4-a716-446655440001"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "role": {
+            "type": "string",
+            "description": "Workspace role for every added user; only workspace admins may assign admin",
+            "enum": ["admin", "manager", "user"],
+            "default": "user"
+          }
+        },
+        "required": ["userIds"]
+      },
+      "UpdateWorkspaceMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "The role of the member within the workspace",
+            "enum": ["admin", "manager", "user"],
+            "example": "manager"
+          }
+        },
+        "required": ["role"]
       },
       "WorkspaceSkillResponseDto": {
         "type": "object",

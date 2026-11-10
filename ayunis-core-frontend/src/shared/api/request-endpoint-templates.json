@@ -300,5 +300,8 @@
   "/workspaces/{id}",
   "/workspaces/{id}/context",
   "/workspaces/{id}/context/instruction",
+  "/workspaces/{id}/member-candidates",
+  "/workspaces/{id}/members",
+  "/workspaces/{id}/members/{userId}",
   "/workspaces/{id}/role-permissions"
 ]

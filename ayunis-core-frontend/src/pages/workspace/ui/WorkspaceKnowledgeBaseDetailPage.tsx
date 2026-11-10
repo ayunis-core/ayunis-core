@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useWorkspaceKnowledgeBaseActions } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseActions';
 import { useWorkspaceKnowledgeBaseDocuments } from '@/pages/workspace/api/useWorkspaceKnowledgeBaseDocuments';
+import { getWorkspaceAccess } from '@/features/workspaces';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -46,6 +47,7 @@ export function WorkspaceKnowledgeBaseDetailPage({
     isChangingKnowledgeBaseState,
     updateKnowledgeBase,
   } = useWorkspaceKnowledgeBaseActions(workspace.id);
+  const { canManage } = getWorkspaceAccess(workspace);
 
   return (
     <AppLayout>
@@ -63,62 +65,64 @@ export function WorkspaceKnowledgeBaseDetailPage({
               { label: knowledgeBase.name },
             ]}
             action={
-              <>
-                <KnowledgeBaseActivationToggle
-                  knowledgeBaseId={knowledgeBase.id}
-                  isActive={knowledgeBase.isActive}
-                  testId="workspace-knowledge-base-detail-active-toggle"
-                  isPending={isChangingKnowledgeBaseState}
-                  tooltip={t('context.knowledge.activeTooltip')}
-                  onToggle={(isActive) =>
-                    setKnowledgeBaseActive({
-                      knowledgeBaseId: knowledgeBase.id,
-                      isActive,
-                    })
-                  }
-                />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      aria-label={tKnowledge('detail.deleteLabel')}
-                      onClick={() =>
-                        confirm({
-                          title: tKnowledge('detail.confirmDelete.title'),
-                          description: tKnowledge(
-                            'detail.confirmDelete.description',
-                            { title: knowledgeBase.name },
-                          ),
-                          confirmText: tKnowledge(
-                            'detail.confirmDelete.confirmText',
-                          ),
-                          cancelText: tKnowledge(
-                            'detail.confirmDelete.cancelText',
-                          ),
-                          variant: 'destructive',
-                          onConfirm: () => {
-                            deleteKnowledgeBase(knowledgeBase.id, {
-                              onSuccess: () => {
-                                void navigate({
-                                  to: '/workspaces/$workspaceId',
-                                  params: { workspaceId: workspace.id },
-                                });
-                              },
-                            });
-                          },
-                        })
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {tKnowledge('detail.deleteLabel')}
-                  </TooltipContent>
-                </Tooltip>
-              </>
+              canManage ? (
+                <>
+                  <KnowledgeBaseActivationToggle
+                    knowledgeBaseId={knowledgeBase.id}
+                    isActive={knowledgeBase.isActive}
+                    testId="workspace-knowledge-base-detail-active-toggle"
+                    isPending={isChangingKnowledgeBaseState}
+                    tooltip={t('context.knowledge.activeTooltip')}
+                    onToggle={(isActive) =>
+                      setKnowledgeBaseActive({
+                        knowledgeBaseId: knowledgeBase.id,
+                        isActive,
+                      })
+                    }
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={tKnowledge('detail.deleteLabel')}
+                        onClick={() =>
+                          confirm({
+                            title: tKnowledge('detail.confirmDelete.title'),
+                            description: tKnowledge(
+                              'detail.confirmDelete.description',
+                              { title: knowledgeBase.name },
+                            ),
+                            confirmText: tKnowledge(
+                              'detail.confirmDelete.confirmText',
+                            ),
+                            cancelText: tKnowledge(
+                              'detail.confirmDelete.cancelText',
+                            ),
+                            variant: 'destructive',
+                            onConfirm: () => {
+                              deleteKnowledgeBase(knowledgeBase.id, {
+                                onSuccess: () => {
+                                  void navigate({
+                                    to: '/workspaces/$workspaceId',
+                                    params: { workspaceId: workspace.id },
+                                  });
+                                },
+                              });
+                            },
+                          })
+                        }
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {tKnowledge('detail.deleteLabel')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              ) : undefined
             }
           />
         }
@@ -130,9 +134,13 @@ export function WorkspaceKnowledgeBaseDetailPage({
                 name: knowledgeBase.name,
                 description: knowledgeBase.description,
               }}
+              disabled={!canManage}
               onUpdate={(data) => updateKnowledgeBase(knowledgeBase.id, data)}
             />
-            <KnowledgeBaseDocumentsCard controller={documentsController} />
+            <KnowledgeBaseDocumentsCard
+              controller={documentsController}
+              disabled={!canManage}
+            />
           </div>
         }
       />

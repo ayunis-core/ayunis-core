@@ -4,6 +4,26 @@ import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 export abstract class WorkspaceMembersRepository {
   abstract create(member: WorkspaceMember): Promise<WorkspaceMember>;
+  /** Skips users who are already members; returns only the added members. */
+  abstract addMany(members: WorkspaceMember[]): Promise<WorkspaceMember[]>;
+  /** Ordered by the date they joined, earliest first. */
+  abstract findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceMember[]>;
+  abstract findOne(
+    workspaceId: UUID,
+    userId: UUID,
+  ): Promise<WorkspaceMember | null>;
+  abstract countAdmins(workspaceId: UUID): Promise<number>;
+  abstract updateRole(
+    workspaceId: UUID,
+    userId: UUID,
+    role: UserRole,
+  ): Promise<void>;
+  /**
+   * Locks the workspace row until the surrounding transaction ends, so
+   * membership changes that must keep an admin cannot interleave. Must run
+   * inside a transaction.
+   */
+  abstract lockWorkspace(workspaceId: UUID, orgId: UUID): Promise<void>;
   abstract findWorkspaceIdsByUserId(userId: UUID): Promise<UUID[]>;
   /** `null` unless the user is a member of the workspace in that org. */
   abstract findRole(
