@@ -1,7 +1,7 @@
 import { BatchedPdfOcrHandler } from './application/services/batched-pdf-ocr.handler';
 import { PdfOcrRequestPort } from './application/ports/file-retriever.handler';
 import { PdfBatcherPort } from './application/ports/pdf-batcher.port';
-import { PdfLibBatcherAdapter } from './infrastructure/adapters/pdf-lib-batcher.adapter';
+import { QpdfPdfBatcherAdapter } from './infrastructure/adapters/qpdf-pdf-batcher.adapter';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './infrastructure/adapters/mistral-file-retriever.handler';
@@ -29,7 +29,7 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
     MistralFileRetrieverHandler,
     BatchedPdfOcrHandler,
     { provide: PdfOcrRequestPort, useExisting: MistralFileRetrieverHandler },
-    { provide: PdfBatcherPort, useClass: PdfLibBatcherAdapter },
+    { provide: PdfBatcherPort, useClass: QpdfPdfBatcherAdapter },
     NpmPdfParseFileRetrieverHandler,
     GotenbergConverterService,
     RetrieveFileContentUseCase,

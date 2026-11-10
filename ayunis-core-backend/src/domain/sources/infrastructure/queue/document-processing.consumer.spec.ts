@@ -210,7 +210,9 @@ describe('DocumentProcessingConsumer', () => {
   it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
     sourceRepository.findById.mockResolvedValue(source);
-    storedFiles.read.mockRejectedValueOnce(new Error('MinIO object not found'));
+    storedFiles.readToFile.mockRejectedValueOnce(
+      new Error('MinIO object not found'),
+    );
 
     await expect(consumer.process(makeJob())).rejects.toMatchObject({
       name: 'JobRetryScheduledError',
@@ -222,7 +224,9 @@ describe('DocumentProcessingConsumer', () => {
   it('rethrows the original error on the final attempt', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
     sourceRepository.findById.mockResolvedValue(source);
-    storedFiles.read.mockRejectedValueOnce(new Error('MinIO object not found'));
+    storedFiles.readToFile.mockRejectedValueOnce(
+      new Error('MinIO object not found'),
+    );
 
     await expect(
       consumer.process(makeJob({ attemptsMade: 2 } as never)),
@@ -277,12 +281,60 @@ describe('DocumentProcessingConsumer', () => {
       } as never),
     );
 
-    expect(storedFiles.readRetained).toHaveBeenCalledWith(
+    expect(storedFiles.readRetainedToFile).toHaveBeenCalledWith(
       MINIO_PATH,
+      expect.stringContaining('ayunis-documents'),
       1234,
       'verified',
     );
+    expect(storedFiles.readRetained).not.toHaveBeenCalled();
+    expect(storedFiles.readToFile).not.toHaveBeenCalled();
+  });
+
+  it('hands a PDF to the page check and the retriever as a file on disk, never as bytes', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    const localFile = expect.objectContaining({
+      path: expect.stringContaining('ayunis-documents'),
+      size: 1234,
+      sha256: 'abc',
+    }) as unknown;
     expect(storedFiles.read).not.toHaveBeenCalled();
+    expect(preflightCheckUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ localFile, fileData: Buffer.alloc(0) }),
+    );
+    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ localFile, fileData: Buffer.alloc(0) }),
+    );
+  });
+
+  it('stages an office document on disk like a PDF', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          fileName: 'Beschlussvorlage.docx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }),
+      } as never),
+    );
+
+    expect(storedFiles.readToFile).toHaveBeenCalled();
+    expect(storedFiles.read).not.toHaveBeenCalled();
+    expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileName: 'Beschlussvorlage.docx',
+        localFile: expect.objectContaining({ size: 1234 }) as unknown,
+      }),
+    );
   });
 
   it('streams a recording to disk and transcribes it from that path', async () => {
@@ -311,7 +363,7 @@ describe('DocumentProcessingConsumer', () => {
     expect(storedFiles.readRetained).not.toHaveBeenCalled();
     expect(retrieveFileContentUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        recording: expect.objectContaining({ size: 1234, sha256: 'abc' }),
+        localFile: expect.objectContaining({ size: 1234, sha256: 'abc' }),
         fileName: 'sitzung.mp3',
       }),
     );
@@ -320,7 +372,7 @@ describe('DocumentProcessingConsumer', () => {
   it('fails the source without OCR when the stored file no longer matches', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
     sourceRepository.findById.mockResolvedValue(source);
-    storedFiles.readRetained.mockRejectedValueOnce(
+    storedFiles.readRetainedToFile.mockRejectedValueOnce(
       new StoredFileMismatchError(MINIO_PATH),
     );
 

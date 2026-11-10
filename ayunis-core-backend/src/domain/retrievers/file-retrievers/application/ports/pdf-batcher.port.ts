@@ -10,6 +10,18 @@ export interface PdfBatch {
   pageCount: number;
 }
 
+/** A PDF on local disk; its bytes are never loaded as a whole. */
+export interface PdfFileRef {
+  path: string;
+  size: number;
+}
+
+export type PdfSource = Buffer | PdfFileRef;
+
 export abstract class PdfBatcherPort {
-  abstract split(data: Buffer, limits: PdfBatchLimits): AsyncIterable<PdfBatch>;
+  abstract split(
+    source: PdfSource,
+    limits: PdfBatchLimits,
+  ): AsyncIterable<PdfBatch>;
+  abstract pageCount(source: PdfSource): Promise<number>;
 }

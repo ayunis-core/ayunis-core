@@ -1,15 +1,10 @@
 import type { ProcessingContext } from 'src/common/types/processing-context';
-
-/** A recording already on local disk; `fileData` is then empty. */
-export interface RecordingFileRef {
-  path: string;
-  size: number;
-  sha256: string;
-}
+import type { LocalFile } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 
 export class RetrieveFileContentCommand {
   public readonly fileData: Buffer;
-  public readonly recording?: RecordingFileRef;
+  /** A PDF, office document or recording already on local disk; `fileData` is then empty. */
+  public readonly localFile?: LocalFile;
   public readonly fileName: string;
   public readonly fileType: string;
   public readonly allowLocalPdfParsing: boolean;
@@ -19,7 +14,7 @@ export class RetrieveFileContentCommand {
 
   constructor(params: {
     fileData: Buffer;
-    recording?: RecordingFileRef;
+    localFile?: LocalFile;
     fileName: string;
     fileType: string;
     allowLocalPdfParsing?: boolean;
@@ -28,7 +23,7 @@ export class RetrieveFileContentCommand {
     cacheIdentity?: string;
   }) {
     this.fileData = params.fileData;
-    this.recording = params.recording;
+    this.localFile = params.localFile;
     this.fileName = params.fileName;
     this.fileType = params.fileType;
     this.allowLocalPdfParsing = params.allowLocalPdfParsing ?? true;

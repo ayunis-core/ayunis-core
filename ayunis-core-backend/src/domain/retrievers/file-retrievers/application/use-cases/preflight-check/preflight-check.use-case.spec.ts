@@ -4,6 +4,7 @@ import { PreflightCheckUseCase } from './preflight-check.use-case';
 import { PreflightCheckCommand } from './preflight-check.command';
 import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import retrievalConfig from 'src/config/retrieval.config';
+import { PdfBatcherPort } from 'src/domain/retrievers/file-retrievers/application/ports/pdf-batcher.port';
 
 // Mock pdf-parse to control page count without needing real PDFs
 jest.mock('pdf-parse', () => {
@@ -16,6 +17,7 @@ const mockedPdfParse = PdfParse as jest.MockedFunction<typeof PdfParse>;
 
 describe('PreflightCheckUseCase', () => {
   let useCase: PreflightCheckUseCase;
+  const batcher = { pageCount: jest.fn(), split: jest.fn() };
 
   const defaultConfig = {
     mistral: { apiKey: undefined },
@@ -30,6 +32,7 @@ describe('PreflightCheckUseCase', () => {
           provide: retrievalConfig.KEY,
           useValue: defaultConfig,
         },
+        { provide: PdfBatcherPort, useValue: batcher },
       ],
     }).compile();
 
@@ -41,6 +44,42 @@ describe('PreflightCheckUseCase', () => {
   });
 
   describe('PDF page cap', () => {
+    it('counts the pages of a PDF on disk without loading it', async () => {
+      const localFile = { path: '/staging/download-1/file', size: 500_000_000 };
+      batcher.pageCount.mockResolvedValueOnce(1001);
+
+      await expect(
+        useCase.execute(
+          new PreflightCheckCommand({
+            fileData: Buffer.alloc(0),
+            localFile,
+            fileName: 'grosser-haushalt.pdf',
+            fileType: 'application/pdf',
+          }),
+        ),
+      ).rejects.toMatchObject({
+        code: 'TOO_MANY_PAGES',
+        metadata: { pageCount: 1001, maxPages: 1000 },
+      });
+      expect(batcher.pageCount).toHaveBeenCalledWith(localFile);
+      expect(mockedPdfParse).not.toHaveBeenCalled();
+    });
+
+    it('lets a PDF on disk through when its page count cannot be read', async () => {
+      batcher.pageCount.mockRejectedValueOnce(new Error('unreadable'));
+
+      await expect(
+        useCase.execute(
+          new PreflightCheckCommand({
+            fileData: Buffer.alloc(0),
+            localFile: { path: '/staging/download-1/file', size: 10 },
+            fileName: 'kaputt.pdf',
+            fileType: 'application/pdf',
+          }),
+        ),
+      ).resolves.toBeUndefined();
+    });
+
     it('should allow a PDF within the page cap', async () => {
       mockedPdfParse.mockResolvedValueOnce({
         numpages: 999,

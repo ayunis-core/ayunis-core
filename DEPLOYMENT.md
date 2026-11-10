@@ -225,6 +225,9 @@ Optional: `AUDIO_MAX_UPLOAD_BYTES` raises the recording cap (default 25 MiB);
 recordings up to three hours are transcribed whole with speaker labels.
 `ffmpeg` is part of the image. Migrations run automatically.
 
+From the release that processes documents from disk (AYC-1729), the image
+also ships `qpdf`. Nothing to configure; a custom image needs both binaries.
+
 ## Environment Configuration
 
 ### Critical Variables (Required)

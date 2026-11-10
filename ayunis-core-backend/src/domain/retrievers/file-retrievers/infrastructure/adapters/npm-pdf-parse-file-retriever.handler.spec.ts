@@ -1,4 +1,7 @@
 import PdfParse from 'pdf-parse';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { UnprocessableDocumentError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { NpmPdfParseFileRetrieverHandler } from './npm-pdf-parse-file-retriever.handler';
@@ -66,5 +69,28 @@ describe('NpmPdfParseFileRetrieverHandler', () => {
     mockedPdfParse.mockRejectedValue(parserError);
 
     await expect(handler.processFile(document)).rejects.toBe(parserError);
+  });
+
+  it('reads a PDF kept on disk when it has to parse it locally', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'pdf-parse-spec-'));
+    try {
+      const path = join(directory, 'file');
+      const bytes = Buffer.from('%PDF-1.7 staged document');
+      writeFileSync(path, bytes);
+      mockedPdfParse.mockResolvedValue({ text: 'Ratsprotokoll' } as never);
+
+      const result = await handler.processFile(
+        new File(Buffer.alloc(0), 'protokoll.pdf', 'application/pdf', {
+          path,
+          size: bytes.length,
+          sha256: 'staged',
+        }),
+      );
+
+      expect(result.pages[0].text).toBe('Ratsprotokoll');
+      expect(mockedPdfParse).toHaveBeenCalledWith(new Uint8Array(bytes));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

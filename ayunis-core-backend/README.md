@@ -27,6 +27,8 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 - pnpm
 - Docker and Docker Compose
 - PostgreSQL with pgvector extension
+- `ffmpeg` (recordings) and `qpdf` (PDF OCR batches) on the `PATH`;
+  `brew install ffmpeg qpdf` on macOS. Both ship in the Docker image.
 
 ## Setup and Installation
 

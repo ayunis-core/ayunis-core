@@ -1,7 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { PDFDocument } from 'pdf-lib';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { BatchedPdfOcrHandler } from './batched-pdf-ocr.handler';
-import { PdfLibBatcherAdapter } from 'src/domain/retrievers/file-retrievers/infrastructure/adapters/pdf-lib-batcher.adapter';
+import { QpdfPdfBatcherAdapter } from 'src/domain/retrievers/file-retrievers/infrastructure/adapters/qpdf-pdf-batcher.adapter';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { UnprocessableDocumentError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
@@ -55,7 +58,7 @@ describe('batched PDF OCR', () => {
       retrieval: { ocrBatchPages: 2, processingMaxPdfPages },
     });
     return new BatchedPdfOcrHandler(
-      new PdfLibBatcherAdapter(config),
+      new QpdfPdfBatcherAdapter(config),
       ocr,
       config,
     );
@@ -134,5 +137,44 @@ describe('batched PDF OCR', () => {
     ).rejects.toThrow('no longer active');
     expect(requests).toBe(0);
     expect(cache.size).toBe(0);
+  });
+
+  it('reads a PDF kept on disk and keys its checkpoints by the staged hash, not the path', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'batched-ocr-spec-'));
+    try {
+      const { fileData } = await recordingPdf();
+      const staged = (name: string) => {
+        const path = join(directory, name);
+        writeFileSync(path, fileData);
+        return new File(
+          Buffer.alloc(0),
+          'council-report.pdf',
+          'application/pdf',
+          {
+            path,
+            size: fileData.length,
+            sha256: 'hash-taken-while-staging',
+          },
+        );
+      };
+
+      const first = await handler().processFile(staged('first'), { context });
+
+      expect(first.pages.map((page) => page.number)).toEqual([1, 2, 3, 4, 5]);
+      expect(first.pages.map((page) => page.text)).toEqual([
+        'Page width 300',
+        'Page width 301',
+        'Page width 302',
+        'Page width 303',
+        'Page width 304',
+      ]);
+      expect(requests).toBe(3);
+
+      // A retry stages the same bytes under another path and reuses every batch.
+      await handler().processFile(staged('retry'), { context });
+      expect(requests).toBe(3);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

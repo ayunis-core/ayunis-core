@@ -6,8 +6,8 @@ import {
 import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { mkdir, mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
+import { withStagingDirectory } from './staging-directory';
 import { join } from 'path';
 import transcriptionConfig from 'src/config/transcription.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -37,14 +37,21 @@ import {
   detectFileType,
   isAudioFile,
   isCSVFile,
+  isOfficeDocumentFile,
   isSpreadsheetFile,
+  type DetectedFileType,
 } from 'src/common/util/file-type';
+import type { LocalFile } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure, documentRetryDelayMs } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
+
+function isProcessedFromDisk(fileType: DetectedFileType): boolean {
+  return fileType === 'pdf' || isOfficeDocumentFile(fileType);
+}
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, {
   concurrency: ingestionConcurrency('document'),
@@ -267,6 +274,33 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
     context?: ProcessingContext,
   ): Promise<string> {
+    const { fileName, fileType } = job.data;
+    if (!isProcessedFromDisk(detectFileType(fileType, fileName))) {
+      return this.extractBuffered(job, context);
+    }
+    return this.withStagedFile(
+      job,
+      join(tmpdir(), 'ayunis-documents'),
+      async (localFile) => {
+        // Direct uploads reach the API only as a storage reference, so the
+        // page cap is enforced here, before OCR.
+        await this.preflightCheckUseCase.execute(
+          new PreflightCheckCommand({
+            fileData: Buffer.alloc(0),
+            localFile,
+            fileName,
+            fileType,
+          }),
+        );
+        return this.retrieveText(job, localFile, context);
+      },
+    );
+  }
+
+  private async extractBuffered(
+    job: Job<DocumentProcessingJobData>,
+    context?: ProcessingContext,
+  ): Promise<string> {
     const { minioPath, fileName, fileType, expectedSize, expectedETag } =
       job.data;
     const fileBuffer = await processingStage('document.download', () =>
@@ -279,20 +313,28 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
   }
 
-  // A recording is streamed to disk and transcribed from there: the process
-  // never holds the file, the segmenter and the provider upload read the path.
-  private async transcribeRecording(
+  private transcribeRecording(
     job: Job<DocumentProcessingJobData>,
     context?: ProcessingContext,
   ): Promise<string> {
-    const { minioPath, fileName, fileType, expectedSize, expectedETag } =
-      job.data;
     const root =
       this.transcription.tempDirectory ?? join(tmpdir(), 'ayunis-audio');
-    await mkdir(root, { recursive: true, mode: 0o700 });
-    const directory = await mkdtemp(join(root, 'download-'));
-    try {
-      const path = join(directory, 'recording');
+    return this.withStagedFile(job, root, (localFile) =>
+      this.retrieveText(job, localFile, context),
+    );
+  }
+
+  // PDFs, office documents and recordings are streamed to disk and processed
+  // from there: the process never holds the file, and splitting, conversion,
+  // segmenting and the provider upload all read the path.
+  private async withStagedFile<T>(
+    job: Job<DocumentProcessingJobData>,
+    root: string,
+    use: (localFile: LocalFile) => Promise<T>,
+  ): Promise<T> {
+    const { minioPath, expectedSize, expectedETag } = job.data;
+    return withStagingDirectory(root, async (directory) => {
+      const path = join(directory, 'file');
       const stored = await processingStage('document.download', () =>
         job.data.retainFile
           ? this.storedFiles.readRetainedToFile(
@@ -308,21 +350,27 @@ export class DocumentProcessingConsumer extends WorkerHost {
               expectedETag,
             ),
       );
-      const result = await processingStage('document.extraction', () =>
-        this.retrieveFileContentUseCase.execute(
-          new RetrieveFileContentCommand({
-            fileData: Buffer.alloc(0),
-            recording: { path, ...stored },
-            fileName,
-            fileType,
-            processingContext: context,
-          }),
-        ),
+      return processingStage('document.extraction', () =>
+        use({ path, ...stored }),
       );
-      return result.pages.map((page) => page.text).join('\n');
-    } finally {
-      await rm(directory, { recursive: true, force: true });
-    }
+    });
+  }
+
+  private async retrieveText(
+    job: Job<DocumentProcessingJobData>,
+    localFile: LocalFile,
+    processingContext?: ProcessingContext,
+  ): Promise<string> {
+    const result = await this.retrieveFileContentUseCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.alloc(0),
+        localFile,
+        fileName: job.data.fileName,
+        fileType: job.data.fileType,
+        processingContext,
+      }),
+    );
+    return result.pages.map((page) => page.text).join('\n');
   }
 
   private async extractText(
@@ -345,12 +393,6 @@ export class DocumentProcessingConsumer extends WorkerHost {
       const sheets = await this.spreadsheetParser.parseWorkbook(fileBuffer);
       return this.requireRows(tableToText(sheets, sheets.length > 1), fileName);
     }
-    // Direct uploads reach the API only as a storage reference, so the page
-    // cap is enforced here, before OCR; legacy uploads were checked in-request
-    // and pass again cheaply.
-    await this.preflightCheckUseCase.execute(
-      new PreflightCheckCommand({ fileData: fileBuffer, fileName, fileType }),
-    );
     const result = await this.retrieveFileContentUseCase.execute(
       new RetrieveFileContentCommand({
         fileData: fileBuffer,
