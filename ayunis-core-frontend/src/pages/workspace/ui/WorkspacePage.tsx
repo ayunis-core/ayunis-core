@@ -16,7 +16,7 @@ import {
   WorkspaceDeleteDialog,
   WorkspaceSettingsDialog,
 } from '@/widgets/workspace-settings-dialog';
-import type { Workspace } from '@/features/workspaces';
+import { getWorkspaceAccess, type Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -26,6 +26,7 @@ import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
+import { WorkspaceMembersDialog } from './WorkspaceMembersDialog';
 import {
   WorkspaceInstructionsTab,
   WorkspaceKnowledgeTab,
@@ -60,9 +61,11 @@ export default function WorkspacePage({
 }: Readonly<WorkspacePageProps>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { deleteChat } = useDeleteChat();
+  const { canManage } = getWorkspaceAccess(workspace);
   const countParams = { limit: 1, offset: 0 };
   const { pagination: skillsPagination } = useWorkspaceSkills(
     workspace.id,
@@ -92,6 +95,7 @@ export default function WorkspacePage({
             action={
               <WorkspaceHeaderActions
                 workspace={workspace}
+                onOpenMembers={() => setIsMembersOpen(true)}
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 onOpenDelete={() => setIsDeleteOpen(true)}
               />
@@ -164,19 +168,33 @@ export default function WorkspacePage({
                 <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="skills" className="pt-4">
-                <WorkspaceSkillsTab workspaceId={workspace.id} />
+                <WorkspaceSkillsTab
+                  workspaceId={workspace.id}
+                  canManage={canManage}
+                />
               </TabsContent>
               <TabsContent value="knowledge" className="pt-4">
-                <WorkspaceKnowledgeTab workspaceId={workspace.id} />
+                <WorkspaceKnowledgeTab
+                  workspaceId={workspace.id}
+                  canManage={canManage}
+                />
               </TabsContent>
               <TabsContent value="instructions" className="pt-4">
-                <WorkspaceInstructionsTab workspaceId={workspace.id} />
+                <WorkspaceInstructionsTab
+                  workspaceId={workspace.id}
+                  canManage={canManage}
+                />
               </TabsContent>
             </Tabs>
           </div>
         }
       />
 
+      <WorkspaceMembersDialog
+        workspace={workspace}
+        open={isMembersOpen}
+        onOpenChange={setIsMembersOpen}
+      />
       <WorkspaceSettingsDialog
         workspace={workspace}
         open={isSettingsOpen}

@@ -41,6 +41,7 @@ export function WorkspacePicker({
             variant="ghost"
             size="sm"
             data-tour={TOUR_TARGET.selectWorkspaceInChat}
+            data-testid="new-chat-workspace-picker"
             data-tour-settle={NEW_CHAT_ENTRANCE_MS}
           >
             {selected ? (

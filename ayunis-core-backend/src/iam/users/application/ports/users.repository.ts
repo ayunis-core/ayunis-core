@@ -16,6 +16,10 @@ export interface UsersFilters {
   search?: string;
 }
 
+export interface OrgUsersFilters extends UsersFilters {
+  excludeIds?: UUID[];
+}
+
 export interface EmailVerificationResult {
   user: User;
   changed: boolean;
@@ -40,7 +44,7 @@ export abstract class UsersRepository {
   abstract findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,
-    filters: UsersFilters,
+    filters: OrgUsersFilters,
     sort: Sort<OrgUsersSortField>,
   ): Promise<Paginated<User>>;
   abstract findAllForSuperAdmin(

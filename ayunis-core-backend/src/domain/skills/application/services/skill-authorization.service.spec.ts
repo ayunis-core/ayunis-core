@@ -245,4 +245,49 @@ describe(SkillAuthorizationService.name, () => {
       );
     });
   });
+
+  describe('requireTextImprovement', () => {
+    it('lets a workspace editor without manage_skills improve a workspace skill', async () => {
+      const { service, workspace, workspaceWrite, hasPermission } = setup();
+      hasPermission.execute.mockResolvedValue(false);
+
+      await expect(
+        service.requireTextImprovement(workspace.workspaceId),
+      ).resolves.toBeUndefined();
+      expect(workspaceWrite.execute).toHaveBeenCalledWith({
+        workspaceId: workspace.workspaceId,
+      });
+    });
+
+    it('denies a workspace member who may not manage the workspace, even with manage_skills', async () => {
+      const { service, workspace, workspaceWrite } = setup();
+      workspaceWrite.execute.mockRejectedValue(new UnauthorizedAccessError());
+
+      await expect(
+        service.requireTextImprovement(workspace.workspaceId),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    });
+
+    it('hides a workspace from a non-member', async () => {
+      const { service, workspace, workspaceWrite } = setup();
+      workspaceWrite.execute.mockRejectedValue(
+        new WorkspaceNotFoundError(workspace.workspaceId),
+      );
+
+      await expect(
+        service.requireTextImprovement(workspace.workspaceId),
+      ).rejects.toBeInstanceOf(WorkspaceNotFoundError);
+    });
+
+    it('keeps manage_skills as the gate outside workspaces', async () => {
+      const { service, hasPermission, workspaceWrite } = setup();
+      await expect(service.requireTextImprovement()).resolves.toBeUndefined();
+
+      hasPermission.execute.mockResolvedValue(false);
+      await expect(service.requireTextImprovement()).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+      expect(workspaceWrite.execute).not.toHaveBeenCalled();
+    });
+  });
 });

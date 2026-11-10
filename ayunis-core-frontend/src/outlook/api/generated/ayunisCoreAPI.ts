@@ -20,6 +20,7 @@ import type {
   AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
+  AddWorkspaceMembersDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
   ApiKeyCreditLimitItemDto,
@@ -302,6 +303,7 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
+  UpdateWorkspaceMemberRoleDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -327,6 +329,9 @@ import type {
   WorkspaceContextResponseDto,
   WorkspaceFavoriteResponseDto,
   WorkspaceListResponseDto,
+  WorkspaceMemberCandidateResponseDto,
+  WorkspaceMemberResponseDto,
+  WorkspaceMembersControllerListCandidatesParams,
   WorkspaceResponseDto,
   WorkspaceRolePermissionsResponseDto,
   WorkspacesControllerFindAllParams
@@ -9222,6 +9227,11 @@ export type skillsControllerImproveTextResponse403 = {
   status: 403
 }
 
+export type skillsControllerImproveTextResponse404 = {
+  data: void
+  status: 404
+}
+
 export type skillsControllerImproveTextResponse422 = {
   data: void
   status: 422
@@ -9235,7 +9245,7 @@ export type skillsControllerImproveTextResponse502 = {
 export type skillsControllerImproveTextResponseSuccess = (skillsControllerImproveTextResponse200) & {
   headers: Headers;
 };
-export type skillsControllerImproveTextResponseError = (skillsControllerImproveTextResponse403 | skillsControllerImproveTextResponse422 | skillsControllerImproveTextResponse502) & {
+export type skillsControllerImproveTextResponseError = (skillsControllerImproveTextResponse403 | skillsControllerImproveTextResponse404 | skillsControllerImproveTextResponse422 | skillsControllerImproveTextResponse502) & {
   headers: Headers;
 };
 
@@ -11498,6 +11508,230 @@ export const workspacesControllerGetRolePermissions = async (id: string, options
     method: 'GET'
 
 
+  }
+);}
+
+
+
+export type workspaceMembersControllerListResponse200 = {
+  data: WorkspaceMemberResponseDto[]
+  status: 200
+}
+
+export type workspaceMembersControllerListResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerListResponseSuccess = (workspaceMembersControllerListResponse200) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerListResponseError = (workspaceMembersControllerListResponse404) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerListResponse = (workspaceMembersControllerListResponseSuccess | workspaceMembersControllerListResponseError)
+
+export const getWorkspaceMembersControllerListUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${id}/members`
+}
+
+/**
+ * @summary List the members of a workspace
+ */
+export const workspaceMembersControllerList = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerListResponse> => {
+
+  return paneFetch<workspaceMembersControllerListResponse>(getWorkspaceMembersControllerListUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type workspaceMembersControllerAddResponse201 = {
+  data: WorkspaceMemberResponseDto[]
+  status: 201
+}
+
+export type workspaceMembersControllerAddResponse400 = {
+  data: void
+  status: 400
+}
+
+export type workspaceMembersControllerAddResponse403 = {
+  data: void
+  status: 403
+}
+
+export type workspaceMembersControllerAddResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerAddResponseSuccess = (workspaceMembersControllerAddResponse201) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerAddResponseError = (workspaceMembersControllerAddResponse400 | workspaceMembersControllerAddResponse403 | workspaceMembersControllerAddResponse404) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerAddResponse = (workspaceMembersControllerAddResponseSuccess | workspaceMembersControllerAddResponseError)
+
+export const getWorkspaceMembersControllerAddUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${id}/members`
+}
+
+/**
+ * Adds every listed user with one role. Users who already are members are skipped and keep their role; the response holds only the members added. Unknown users and users of another organization reject the whole request.
+ * @summary Add users of the organization to a workspace
+ */
+export const workspaceMembersControllerAdd = async (id: string,
+    addWorkspaceMembersDto: AddWorkspaceMembersDto, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerAddResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<workspaceMembersControllerAddResponse>(getWorkspaceMembersControllerAddUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(addWorkspaceMembersDto)
+  }
+);}
+
+
+
+export type workspaceMembersControllerListCandidatesResponse200 = {
+  data: WorkspaceMemberCandidateResponseDto[]
+  status: 200
+}
+
+export type workspaceMembersControllerListCandidatesResponse403 = {
+  data: void
+  status: 403
+}
+
+export type workspaceMembersControllerListCandidatesResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerListCandidatesResponseSuccess = (workspaceMembersControllerListCandidatesResponse200) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerListCandidatesResponseError = (workspaceMembersControllerListCandidatesResponse403 | workspaceMembersControllerListCandidatesResponse404) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerListCandidatesResponse = (workspaceMembersControllerListCandidatesResponseSuccess | workspaceMembersControllerListCandidatesResponseError)
+
+export const getWorkspaceMembersControllerListCandidatesUrl = (id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/workspaces/${id}/member-candidates?${stringifiedParams}` : `/workspaces/${id}/member-candidates`
+}
+
+/**
+ * Returns up to 25 users of the organization who are not members yet, matching the search by name or email.
+ * @summary Search colleagues who can be added to a workspace
+ */
+export const workspaceMembersControllerListCandidates = async (id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerListCandidatesResponse> => {
+
+  return paneFetch<workspaceMembersControllerListCandidatesResponse>(getWorkspaceMembersControllerListCandidatesUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type workspaceMembersControllerUpdateRoleResponse200 = {
+  data: WorkspaceMemberResponseDto
+  status: 200
+}
+
+export type workspaceMembersControllerUpdateRoleResponse403 = {
+  data: void
+  status: 403
+}
+
+export type workspaceMembersControllerUpdateRoleResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerUpdateRoleResponse409 = {
+  data: void
+  status: 409
+}
+
+export type workspaceMembersControllerUpdateRoleResponseSuccess = (workspaceMembersControllerUpdateRoleResponse200) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerUpdateRoleResponseError = (workspaceMembersControllerUpdateRoleResponse403 | workspaceMembersControllerUpdateRoleResponse404 | workspaceMembersControllerUpdateRoleResponse409) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerUpdateRoleResponse = (workspaceMembersControllerUpdateRoleResponseSuccess | workspaceMembersControllerUpdateRoleResponseError)
+
+export const getWorkspaceMembersControllerUpdateRoleUrl = (id: string,
+    userId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/members/${userId}`
+}
+
+/**
+ * @summary Change a member's role in a workspace
+ */
+export const workspaceMembersControllerUpdateRole = async (id: string,
+    userId: string,
+    updateWorkspaceMemberRoleDto: UpdateWorkspaceMemberRoleDto, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerUpdateRoleResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<workspaceMembersControllerUpdateRoleResponse>(getWorkspaceMembersControllerUpdateRoleUrl(id,userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateWorkspaceMemberRoleDto)
   }
 );}
 

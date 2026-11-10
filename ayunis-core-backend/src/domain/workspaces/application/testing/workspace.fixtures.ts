@@ -69,6 +69,16 @@ export function createMockWorkspaceMembersRepository(): jest.Mocked<WorkspaceMem
     create: jest
       .fn()
       .mockImplementation((member: WorkspaceMember) => Promise.resolve(member)),
+    addMany: jest
+      .fn()
+      .mockImplementation((members: WorkspaceMember[]) =>
+        Promise.resolve(members),
+      ),
+    findAllByWorkspaceId: jest.fn().mockResolvedValue([]),
+    findOne: jest.fn().mockResolvedValue(null),
+    countAdmins: jest.fn().mockResolvedValue(0),
+    updateRole: jest.fn().mockResolvedValue(undefined),
+    lockWorkspace: jest.fn().mockResolvedValue(undefined),
     findWorkspaceIdsByUserId: jest.fn().mockResolvedValue([]),
     findRole: jest.fn().mockResolvedValue(null),
     findRolesByUserId: jest.fn().mockResolvedValue(new Map()),

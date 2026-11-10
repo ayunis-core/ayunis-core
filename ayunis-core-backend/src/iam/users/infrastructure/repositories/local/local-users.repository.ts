@@ -3,13 +3,20 @@ import {
   UsersRepository,
   UsersPagination,
   UsersFilters,
+  OrgUsersFilters,
   EmailVerificationResult,
 } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
-import { EntityManager, Repository, In, IsNull } from 'typeorm';
+import {
+  EntityManager,
+  Repository,
+  In,
+  IsNull,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 import {
@@ -188,7 +195,7 @@ export class LocalUsersRepository extends UsersRepository {
   async findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,
-    filters: UsersFilters,
+    filters: OrgUsersFilters,
     sort: Sort<OrgUsersSortField>,
   ): Promise<Paginated<User>> {
     // The search term is free text over member names and emails, so it is
@@ -214,12 +221,7 @@ export class LocalUsersRepository extends UsersRepository {
       'user.id',
     );
 
-    if (filters.search) {
-      queryBuilder.andWhere(
-        '(user.name ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${filters.search}%` },
-      );
-    }
+    this.applyOrgUsersFilters(queryBuilder, filters);
 
     const total = await queryBuilder.getCount();
 
@@ -234,6 +236,23 @@ export class LocalUsersRepository extends UsersRepository {
       offset: pagination.offset,
       total,
     });
+  }
+
+  private applyOrgUsersFilters(
+    queryBuilder: SelectQueryBuilder<UserRecord>,
+    filters: OrgUsersFilters,
+  ): void {
+    if (filters.search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
+    if (filters.excludeIds?.length) {
+      queryBuilder.andWhere('user.id NOT IN (:...excludeIds)', {
+        excludeIds: filters.excludeIds,
+      });
+    }
   }
 
   async findAllForSuperAdmin(

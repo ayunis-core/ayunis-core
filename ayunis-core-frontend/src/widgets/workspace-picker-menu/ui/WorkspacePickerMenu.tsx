@@ -36,6 +36,7 @@ export function WorkspacePickerMenu({
         <DropdownMenuItem
           key={workspace.id}
           onClick={() => onSelect(workspace)}
+          data-testid={`workspace-picker-item-${workspace.id}`}
         >
           <WorkspaceIcon
             icon={workspace.icon}

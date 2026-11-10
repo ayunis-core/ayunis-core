@@ -14,6 +14,7 @@ import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inf
 import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { SkillTextModelResolver } from 'src/domain/skills/application/services/skill-text-model-resolver.service';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   SkillTextImprovementFailedError,
   UnexpectedSkillError,
@@ -38,6 +39,7 @@ export class ImproveSkillTextUseCase {
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly contextService: ContextService,
+    private readonly authorization: SkillAuthorizationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
@@ -45,6 +47,7 @@ export class ImproveSkillTextUseCase {
     this.logger.log({ field: command.field }, 'improveSkillText');
 
     const { userId, orgId } = getRequiredUserContext(this.contextService);
+    await this.authorization.requireTextImprovement(command.workspaceId);
     const { model } = await this.modelResolver.resolve(orgId, userId);
     const principal = { userId, orgId };
     await this.inferenceAdmissionGuard.preflight(principal, model);

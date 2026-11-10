@@ -41,10 +41,13 @@ export function SkillPropertiesCard({
   skill,
   onUpdate,
   disabled = false,
+  workspaceId,
 }: Readonly<{
   skill: SkillPropertiesData;
   onUpdate: (data: SkillPropertiesData) => Promise<unknown>;
   disabled?: boolean;
+  /** Set for a workspace skill, so improving its text checks the workspace. */
+  workspaceId?: string;
 }>) {
   const { t } = useTranslation('skill');
   const [isSaving, setIsSaving] = useState(false);
@@ -72,6 +75,7 @@ export function SkillPropertiesCard({
       instructions: t('properties.form.instructionsLabel'),
     },
     canImprove: !disabled,
+    workspaceId,
   });
 
   const submit = async (data: SkillPropertiesData) => {

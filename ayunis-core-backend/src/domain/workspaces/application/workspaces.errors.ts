@@ -6,6 +6,9 @@ export enum WorkspaceErrorCode {
   WORKSPACE_INVALID_NAME = 'WORKSPACE_INVALID_NAME',
   WORKSPACE_INVALID_DESCRIPTION = 'WORKSPACE_INVALID_DESCRIPTION',
   WORKSPACE_INVALID_APPEARANCE = 'WORKSPACE_INVALID_APPEARANCE',
+  WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
+  WORKSPACE_MEMBER_NOT_IN_ORG = 'WORKSPACE_MEMBER_NOT_IN_ORG',
+  WORKSPACE_LAST_ADMIN = 'WORKSPACE_LAST_ADMIN',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -63,6 +66,40 @@ export class InvalidWorkspaceAppearanceError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INVALID_APPEARANCE,
       400,
       { field, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceMemberNotFoundError extends WorkspaceError {
+  constructor(workspaceId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      `User '${userId}' is not a member of workspace '${workspaceId}'`,
+      WorkspaceErrorCode.WORKSPACE_MEMBER_NOT_FOUND,
+      404,
+      { workspaceId, userId, ...metadata },
+    );
+  }
+}
+
+/** Unknown users and users of another organization are indistinguishable. */
+export class WorkspaceMemberNotInOrgError extends WorkspaceError {
+  constructor(userIds: string[], metadata?: ErrorMetadata) {
+    super(
+      'Only users of the same organization can be added to a workspace',
+      WorkspaceErrorCode.WORKSPACE_MEMBER_NOT_IN_ORG,
+      400,
+      { userIds, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceLastAdminError extends WorkspaceError {
+  constructor(workspaceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Workspace '${workspaceId}' must keep at least one admin`,
+      WorkspaceErrorCode.WORKSPACE_LAST_ADMIN,
+      409,
+      { workspaceId, ...metadata },
     );
   }
 }
