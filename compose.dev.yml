@@ -152,6 +152,12 @@ services:
     environment:
       # Match the backend converter timeout so large Office files can finish.
       API_TIMEOUT: 10m
+      # The backend retries a conversion that hit the time limit once, after
+      # 30 s, and then fails the document. Blaming the document is only right
+      # when no request waits behind another and a timed-out document does
+      # not keep LibreOffice busy for the next one (AYC-1741).
+      LIBREOFFICE_MAX_QUEUE_SIZE: 1
+      LIBREOFFICE_RESTART_AFTER: 1
     ports:
       - '${GOTENBERG_HOST_PORT:-3100}:3000'
     healthcheck:

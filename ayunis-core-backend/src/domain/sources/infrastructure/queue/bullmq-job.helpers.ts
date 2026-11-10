@@ -4,6 +4,10 @@ import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { reportProviderUnavailableMetric } from 'src/common/errors/report-provider-unavailable-metric.helper';
+import {
+  DocumentConversionTimeoutError,
+  DocumentConverterBusyError,
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { isFinalAttempt, recordJobFailure } from './job-telemetry';
 
 /**
@@ -12,15 +16,50 @@ import { isFinalAttempt, recordJobFailure } from './job-telemetry';
  * Failed jobs also expire after 7 days; a count cap alone keeps rare
  * failures in Bull Board indefinitely.
  */
+const STANDARD_RETRY_DELAY_MS = 5000;
+
 export const STANDARD_JOB_OPTIONS: JobsOptions = {
   attempts: 3,
   backoff: {
     type: 'exponential',
-    delay: 5000,
+    delay: STANDARD_RETRY_DELAY_MS,
   },
   removeOnComplete: 100,
   removeOnFail: { age: 7 * 24 * 60 * 60, count: 200 },
 };
+
+const CONVERTER_BUSY_RETRY_DELAY_MS = 60_000;
+const CONVERSION_TIMEOUT_RETRY_DELAY_MS = 30_000;
+
+/**
+ * BullMQ consults a worker's backoffStrategy only for a backoff type that is
+ * not built in, so document jobs carry their own type and
+ * {@link documentRetryDelayMs} reproduces the standard spacing for them.
+ */
+export const DOCUMENT_JOB_OPTIONS: JobsOptions = {
+  ...STANDARD_JOB_OPTIONS,
+  backoff: { type: 'document-processing' },
+};
+
+/**
+ * Every converter replica was occupied, which lasts as long as the documents
+ * ahead take: up to the converter's time limit each. The standard 5 s and
+ * 10 s would spend both retries inside that same busy period (AYC-1741).
+ */
+export function documentRetryDelayMs(
+  attemptsMade: number,
+  error?: Error,
+): number {
+  const cause = error instanceof JobRetryScheduledError ? error.cause : error;
+  if (cause instanceof DocumentConversionTimeoutError) {
+    return CONVERSION_TIMEOUT_RETRY_DELAY_MS;
+  }
+  const firstDelayMs =
+    cause instanceof DocumentConverterBusyError
+      ? CONVERTER_BUSY_RETRY_DELAY_MS
+      : STANDARD_RETRY_DELAY_MS;
+  return firstDelayMs * 2 ** (attemptsMade - 1);
+}
 
 /**
  * Failure of a job attempt that BullMQ will retry. The AppSignal agent is
@@ -107,6 +146,19 @@ class JobUnrecoverableError extends Error {
   }
 }
 
+/**
+ * A conversion can also run out of time because the converter was loaded or
+ * slow to start, which the queue cannot see, so one timeout is not yet held
+ * against the document. BullMQ carries the previous attempt's message in
+ * failedReason; a second timeout in a row settles the document (AYC-1741).
+ */
+function isFirstConversionTimeout(job: Job, error: unknown): boolean {
+  return (
+    error instanceof DocumentConversionTimeoutError &&
+    job.failedReason !== error.message
+  );
+}
+
 export interface JobFailureOutcome {
   /** No further attempt will run, so the source must be settled as FAILED. */
   final: boolean;
@@ -160,7 +212,8 @@ function shouldScheduleRetry(
   }
   const retryIsPointless =
     expected &&
-    !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode);
+    !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode) &&
+    !isFirstConversionTimeout(job, error);
   return !retryIsPointless && !isDeterministicProviderRejection(error);
 }
 

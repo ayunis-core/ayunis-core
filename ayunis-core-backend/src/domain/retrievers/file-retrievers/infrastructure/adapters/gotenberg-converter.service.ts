@@ -4,10 +4,12 @@ import type { AxiosError } from 'axios';
 import FormData from 'form-data';
 import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
 import { ConversionGate } from './conversion-gate';
+import { sendToFreeReplica } from './gotenberg-replicas';
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import {
   DocumentConversionTimeoutError,
   DocumentConversionUnavailableError,
+  DocumentConverterBusyError,
   FileRetrievalFailedError,
   FileRetrieverError,
   FileTooLargeError,
@@ -40,13 +42,19 @@ export class GotenbergConverterService extends DocumentConverterPort {
     this.logger.debug({ fileName }, 'Converting document to PDF via Gotenberg');
 
     try {
-      const formData = new FormData();
-      formData.append('files', fileData, { filename: fileName });
       const response = await this.gate.run(() =>
-        axios.post(`${this.config.url}/forms/libreoffice/convert`, formData, {
-          headers: formData.getHeaders(),
-          responseType: 'arraybuffer',
-          timeout: this.TIMEOUT_MS,
+        sendToFreeReplica(this.config.url, (replicaUrl) => {
+          const formData = new FormData();
+          formData.append('files', fileData, { filename: fileName });
+          return axios.post(
+            `${replicaUrl}/forms/libreoffice/convert`,
+            formData,
+            {
+              headers: formData.getHeaders(),
+              responseType: 'arraybuffer',
+              timeout: this.TIMEOUT_MS,
+            },
+          );
         }),
       );
 
@@ -86,6 +94,10 @@ export class GotenbergConverterService extends DocumentConverterPort {
       return new FileTooLargeError();
     }
 
+    if (status === 429) {
+      return new DocumentConverterBusyError(fileName);
+    }
+
     if (status === 503) {
       return isConversionTimeout(error)
         ? new DocumentConversionTimeoutError(fileName)
@@ -120,19 +132,15 @@ export class GotenbergConverterService extends DocumentConverterPort {
 }
 
 /**
- * Gotenberg answers 503 both when LibreOffice ran out of time on this very
- * document ("supervisor run task: context deadline exceeded") and when the
- * request merely waited for the LibreOffice lock or found the queue full.
- * Only the first is the document's fault; retrying it would hold the
- * converter for another full time limit and starve everything queued behind
- * it (AYC-1641).
+ * Gotenberg's time-limit 503 is the document's own fault only while every
+ * replica runs with --libreoffice-max-queue-size=1, so no request spends its
+ * time limit waiting behind another, and --libreoffice-restart-after=1, so a
+ * timed-out document does not leave LibreOffice busy for the next one. The
+ * sentence is the 8.38+ body; the "context deadline exceeded" cause appears
+ * only in Gotenberg's own log (AYC-1741).
  */
 function isConversionTimeout(error: AxiosError): boolean {
-  const body = decodeBody(error.response?.data);
-  return (
-    /context deadline exceeded/i.test(body) &&
-    !/acquire process lock/i.test(body)
-  );
+  return /exceeded the time limit/i.test(decodeBody(error.response?.data));
 }
 
 function decodeBody(data: unknown): string {

@@ -73,10 +73,11 @@ export class UnprocessableDocumentError extends FileRetrieverError {
 }
 
 /**
- * LibreOffice ran out of time on this document itself. A subclass of
- * UnprocessableDocumentError so the queue settles it without retrying; the
- * processing-error classifier tells it apart to show a timeout, not an
- * unreadable file (AYC-1641).
+ * LibreOffice ran out of time on this document. A subclass of
+ * UnprocessableDocumentError so it settles as the document's own failure;
+ * the document queue retries it once first, because a loaded converter looks
+ * the same (AYC-1741). The processing-error classifier tells it apart to show
+ * a timeout, not an unreadable file (AYC-1641).
  */
 export class DocumentConversionTimeoutError extends UnprocessableDocumentError {
   constructor(fileName: string) {
@@ -95,13 +96,24 @@ export class EmptyOcrResultError extends UnprocessableDocumentError {
 }
 
 export class DocumentConversionUnavailableError extends FileRetrieverError {
-  constructor(fileName: string) {
+  constructor(fileName: string, upstreamStatus: 429 | 503 = 503) {
     super(
       'Document conversion is temporarily unavailable. Please try again later.',
       FileRetrieverErrorCode.DOCUMENT_CONVERSION_UNAVAILABLE,
       503,
-      { converter: 'gotenberg', upstreamStatus: 503, fileName },
+      { converter: 'gotenberg', upstreamStatus, fileName },
     );
+  }
+}
+
+/**
+ * Every converter replica was converting another document. Its own class
+ * because that lasts minutes, unlike a short outage, and the document queue
+ * spaces its retries accordingly (AYC-1741).
+ */
+export class DocumentConverterBusyError extends DocumentConversionUnavailableError {
+  constructor(fileName: string) {
+    super(fileName, 429);
   }
 }
 

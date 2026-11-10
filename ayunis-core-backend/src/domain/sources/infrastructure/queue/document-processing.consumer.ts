@@ -40,12 +40,18 @@ import {
 } from 'src/common/util/file-type';
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
-import { classifyJobFailure } from './bullmq-job.helpers';
+import { classifyJobFailure, documentRetryDelayMs } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 
-@Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 4 })
+@Processor(DOCUMENT_PROCESSING_QUEUE, {
+  concurrency: 4,
+  settings: {
+    backoffStrategy: (attemptsMade, _type, error) =>
+      documentRetryDelayMs(attemptsMade, error),
+  },
+})
 export class DocumentProcessingConsumer extends WorkerHost {
   private readonly logger = new Logger(DocumentProcessingConsumer.name);
 
