@@ -2,7 +2,9 @@ import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.e
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
@@ -30,6 +32,8 @@ describe('runtime tool policy', () => {
       ['create_skill', new CreateSkillTool()],
       ['edit_skill', new EditSkillTool()],
       ['install_marketplace_skill', new InstallMarketplaceSkillTool()],
+      ['create_routine', new CreateRoutineTool()],
+      ['edit_routine', new EditRoutineTool()],
     ])('ends the run with the %s call for the client to handle', (_, tool) => {
       expect(isExternallyHandledTool(tool)).toBe(true);
     });

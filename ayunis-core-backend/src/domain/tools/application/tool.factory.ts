@@ -43,6 +43,8 @@ import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
+import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
+import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
 import {
   SendNotificationOrigin,
   SendNotificationTool,
@@ -73,6 +75,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
   [ToolType.FINISH_ROUTINE]: () => new FinishRoutineTool(),
+  [ToolType.CREATE_ROUTINE]: () => new CreateRoutineTool(),
 };
 
 @Injectable()
@@ -101,6 +104,10 @@ export class ToolFactory {
         ),
       [ToolType.EDIT_SKILL]: (p) =>
         new EditSkillTool(requireMapContext(p.context, ToolType.EDIT_SKILL)),
+      [ToolType.EDIT_ROUTINE]: (p) =>
+        new EditRoutineTool(
+          requireMapContext(p.context, ToolType.EDIT_ROUTINE),
+        ),
       [ToolType.KNOWLEDGE_QUERY]: (p) =>
         new KnowledgeQueryTool(
           requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_QUERY),

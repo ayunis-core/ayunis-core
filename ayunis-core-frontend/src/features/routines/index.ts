@@ -1,3 +1,4 @@
+export { useCreateRoutine } from './api/useCreateRoutine';
 export { useUpdateRoutine } from './api/useUpdateRoutine';
 export {
   EMPTY_ROUTINE_FORM,

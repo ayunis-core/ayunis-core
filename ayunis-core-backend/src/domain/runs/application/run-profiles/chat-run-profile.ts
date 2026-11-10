@@ -16,6 +16,7 @@ import { LegalReferencesCapability } from 'src/domain/runs/application/run-capab
 import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -53,6 +54,7 @@ export class ChatRunProfile implements RunProfile {
     filesChartsMap: FilesChartsMapCapability,
     artifacts: ArtifactsCapability,
     skills: SkillsCapability,
+    routines: RoutinesCapability,
     internet: InternetCapability,
     marketplace: MarketplaceCapability,
     imageGeneration: ImageGenerationCapability,
@@ -74,6 +76,7 @@ export class ChatRunProfile implements RunProfile {
       filesChartsMap,
       artifacts,
       skills,
+      routines,
       internet,
       marketplace,
       imageGeneration,

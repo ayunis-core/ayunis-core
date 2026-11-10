@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -12,9 +13,9 @@ import { Button } from '@ayunis/ui/components/button';
 import {
   formFieldsToCreateDto,
   RoutineFormFieldset,
+  useCreateRoutine,
   type RoutineFormFields,
 } from '@/features/routines';
-import { useCreateRoutine } from '@/pages/routines/api/useCreateRoutine';
 
 interface CreateRoutineDialogProps {
   /** The fields to start from: empty, or a premade routine. */
@@ -27,8 +28,15 @@ export function CreateRoutineDialog({
   onClose,
 }: Readonly<CreateRoutineDialogProps>) {
   const { t } = useTranslation('routines');
+  const navigate = useNavigate();
   const form = useForm<RoutineFormFields>({ defaultValues: initialValues });
-  const { createRoutine, isCreating } = useCreateRoutine(form, onClose);
+  const { createRoutine, isCreating } = useCreateRoutine(form, (routine) => {
+    onClose();
+    void navigate({
+      to: '/routines/$routineId',
+      params: { routineId: routine.id },
+    });
+  });
 
   return (
     <Dialog

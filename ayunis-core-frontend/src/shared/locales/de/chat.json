@@ -122,6 +122,8 @@
         "create_skill": "Fähigkeit erstellt",
         "edit_skill": "Fähigkeit bearbeitet",
         "install_marketplace_skill": "Fähigkeit zur Installation angeboten",
+        "create_routine": "Routine erstellt",
+        "edit_routine": "Routine bearbeitet",
         "activate_skill": "Fähigkeit aktiviert",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
@@ -213,6 +215,16 @@
         "entryUnavailable": "Diese Fähigkeit ist im Marketplace derzeit nicht verfügbar und kann hier nicht installiert werden.",
         "alreadyInstalled": "Bereits installiert",
         "openSkill": "Fähigkeit öffnen"
+      },
+      "create_routine": {
+        "create": "Routine erstellen",
+        "created": "Routine erstellt"
+      },
+      "edit_routine": {
+        "changeSummary": "Änderungen",
+        "update": "Routine aktualisieren",
+        "updated": "Routine aktualisiert",
+        "routineNotFound": "Routine konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
       },
       "create_document": {
         "title": "Dokument",

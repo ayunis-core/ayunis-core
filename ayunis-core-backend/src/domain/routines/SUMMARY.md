@@ -21,4 +21,6 @@ All routines endpoints (`/routines`) sit behind the `routines` feature flag (`FE
 
 The routine profile offers `send_notification` (tools module), so a run can post up to 3 notifications of its own per execution (nudges included); the premade Verkündungsplattform prompt tells the model to send one notification with a summary and links to the original documents when something relevant was published, and to finish without one otherwise.
 
-The module imports threads, runs, models, users, subscriptions, trials, academy access, permissions and notifications and calls only their exported use cases.
+**Chat widgets**: the runs module's chat profile offers `create_routine` and `edit_routine` widgets (see the runs module). `FindManageableRoutinesUseCase`, the module's only export, lists the current user's routines for them and returns null where the routines endpoints would refuse the user (flag off, no user context, no `manage_routines`), so the chat offers no routine widgets. The widgets save through `POST /routines` and `PATCH /routines/:id` like the routines page.
+
+The module imports threads, runs (through `forwardRef`, as runs imports routines for the chat widgets), models, users, subscriptions, trials, academy access, permissions and notifications and calls only their exported use cases.

@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { RunsModule } from 'src/domain/runs/runs.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
@@ -19,6 +19,7 @@ import { CreateRoutineUseCase } from './application/use-cases/create-routine/cre
 import { DeleteRoutineUseCase } from './application/use-cases/delete-routine/delete-routine.use-case';
 import { ExecuteRoutineUseCase } from './application/use-cases/execute-routine/execute-routine.use-case';
 import { FindAllRoutinesUseCase } from './application/use-cases/find-all-routines/find-all-routines.use-case';
+import { FindManageableRoutinesUseCase } from './application/use-cases/find-manageable-routines/find-manageable-routines.use-case';
 import { FindRoutineUseCase } from './application/use-cases/find-routine/find-routine.use-case';
 import { RunRoutineNowUseCase } from './application/use-cases/run-routine-now/run-routine-now.use-case';
 import { SweepDueRoutinesUseCase } from './application/use-cases/sweep-due-routines/sweep-due-routines.use-case';
@@ -42,7 +43,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     LocalRoutinesRepositoryModule,
     ModelsModule,
     ThreadsModule,
-    RunsModule,
+    forwardRef(() => RunsModule), // Runs → Routines → Runs (circular)
     UsersModule,
     SubscriptionsModule,
     TrialsModule,
@@ -63,6 +64,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     RoutineFailureNotifier,
     CreateRoutineUseCase,
     FindAllRoutinesUseCase,
+    FindManageableRoutinesUseCase,
     FindRoutineUseCase,
     UpdateRoutineUseCase,
     DeleteRoutineUseCase,
@@ -71,5 +73,6 @@ import { RoutinesController } from './presenters/http/routines.controller';
     SweepDueRoutinesUseCase,
     RoutineDtoMapper,
   ],
+  exports: [FindManageableRoutinesUseCase],
 })
 export class RoutinesModule {}
