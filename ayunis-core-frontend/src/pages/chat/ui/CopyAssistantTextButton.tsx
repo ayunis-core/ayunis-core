@@ -1,13 +1,6 @@
-import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { copyableMessageContent } from '@/pages/chat/lib/copyable-message-content';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
+import CopyMessageButton from './CopyMessageButton';
+import type { CopyableContent } from './CopyMessageButton';
 
 interface CopyAssistantTextButtonProps {
   readonly contentRef: React.RefObject<HTMLDivElement | null>;
@@ -16,15 +9,12 @@ interface CopyAssistantTextButtonProps {
 export default function CopyAssistantTextButton({
   contentRef,
 }: CopyAssistantTextButtonProps) {
-  const [copied, setCopied] = useState(false);
-  const { t } = useTranslation('chat');
-
-  const handleCopy = async () => {
+  const getContent = (): CopyableContent | null => {
     const el = contentRef.current;
-    if (!el) return;
+    if (!el) return null;
 
     const copyableElements = el.querySelectorAll('[data-copyable="true"]');
-    if (copyableElements.length === 0) return;
+    if (copyableElements.length === 0) return null;
 
     const htmlParts: string[] = [];
     const textParts: string[] = [];
@@ -34,48 +24,8 @@ export default function CopyAssistantTextButton({
       textParts.push(content.text);
     });
 
-    const html = htmlParts.join('<br><br>');
-    const plainText = textParts.join('\n\n');
-    if (!plainText.trim()) return;
-
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': new Blob([html], { type: 'text/html' }),
-          'text/plain': new Blob([plainText], { type: 'text/plain' }),
-        }),
-      ]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      try {
-        await navigator.clipboard.writeText(plainText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy message:', error);
-      }
-    }
+    return { html: htmlParts.join('<br><br>'), text: textParts.join('\n\n') };
   };
 
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 mt-1"
-          onClick={() => void handleCopy()}
-          aria-label={t('chat.copyToClipboard')}
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{t('chat.copyToClipboard')}</TooltipContent>
-    </Tooltip>
-  );
+  return <CopyMessageButton getContent={getContent} />;
 }
