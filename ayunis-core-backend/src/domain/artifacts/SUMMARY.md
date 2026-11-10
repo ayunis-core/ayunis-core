@@ -99,6 +99,7 @@ artifacts/
 - Diagram content is stored without document HTML or spreadsheet normalization
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts
+- Artifact lookups by id or by thread (detail, update, edits, revert, export, thread list) require, for an artifact in a workspace chat, that its creator is still a member of the workspace; they reuse the threads module's membership condition. Workspace listings check membership through `AssertWorkspaceReadAccessUseCase` before filtering by user
 - Workspace artifact listings ignore unsupported legacy discriminator values
 - Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)
 

@@ -20,6 +20,8 @@ import { FindThreadCitationContextUseCase } from './application/use-cases/find-t
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
 import { FindThreadsByIdsUseCase } from './application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
+import { DeleteExpiredThreadUseCase } from './application/use-cases/delete-expired-thread/delete-expired-thread.use-case';
+import { ThreadDeletionService } from './application/services/thread-deletion.service';
 import { AddMessageToThreadUseCase } from './application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddFileSourceToThreadUseCase } from './application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
@@ -109,6 +111,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
+    DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     AddFileSourceToThreadUseCase,
@@ -141,6 +144,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     ThreadsUserDeletionRequestedListener,
     ThreadsWorkspaceDeletionRequestedListener,
     // Services
+    ThreadDeletionService,
     // Tasks
     StaleThreadSourcesCleanupTask,
     // Mappers
@@ -158,6 +162,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
     DeleteThreadUseCase,
+    DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     RemoveSourceFromThreadUseCase,

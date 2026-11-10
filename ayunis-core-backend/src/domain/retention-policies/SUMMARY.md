@@ -15,7 +15,7 @@ Org-level data retention. Lets an org admin opt in to automatic deletion of conv
 
 - **`GetOrgRetentionPolicyUseCase`** — Retrieves an org's policy (returns `null` if never configured).
 - **`UpsertOrgRetentionPolicyUseCase`** — Creates or replaces an org's policy; validates the window against the allowlist.
-- **`EnforceRetentionUseCase`** — Core enforcement. For each enabled org it pages through expired threads (via the threads module's `FindExpiredThreadRefsByOrgUseCase`) in batches of 100 and deletes each one through `DeleteThreadUseCase` (which purges storage objects and cascades messages/artifacts/images) under a per-thread CLS context. Failures are isolated per thread so one bad thread can't abort the run; the paging offset advances only past failed deletes. A `dryRun` config flag counts candidates without deleting. A per-org safety cap (`MAX_BATCHES_PER_ORG`) guards against a pathological loop; reaching it sets `capReached` on the result and logs a warning so silent truncation is observable. Returns per-org and aggregate `scanned`/`deleted`/`failed` counts. After an org's threads it deletes the org's inbox notifications created before the same cutoff through the notifications module's `DeleteExpiredNotificationsUseCase` (counted only in a dry run; `notificationsDeleted` per org, `totalNotificationsDeleted` overall); a failure there is logged and leaves the other orgs to run.
+- **`EnforceRetentionUseCase`** — Core enforcement. For each enabled org it pages through expired threads (via the threads module's `FindExpiredThreadRefsByOrgUseCase`) in batches of 100 and deletes each one through the threads module's `DeleteExpiredThreadUseCase` (which purges storage objects and cascades messages/artifacts/images, and also deletes workspace chats whose creator is no longer a member of the workspace). Failures are isolated per thread so one bad thread can't abort the run; the paging offset advances only past failed deletes. A `dryRun` config flag counts candidates without deleting. A per-org safety cap (`MAX_BATCHES_PER_ORG`) guards against a pathological loop; reaching it sets `capReached` on the result and logs a warning so silent truncation is observable. Returns per-org and aggregate `scanned`/`deleted`/`failed` counts. After an org's threads it deletes the org's inbox notifications created before the same cutoff through the notifications module's `DeleteExpiredNotificationsUseCase` (counted only in a dry run; `notificationsDeleted` per org, `totalNotificationsDeleted` overall); a failure there is logged and leaves the other orgs to run.
 
 ## Infrastructure
 
@@ -39,6 +39,6 @@ Org-level data retention. Lets an org admin opt in to automatic deletion of conv
 
 ## Dependencies
 
-- **threads** — `FindExpiredThreadRefsByOrgUseCase` to locate expired threads and `DeleteThreadUseCase` to delete them (imports `ThreadsModule`).
+- **threads** — `FindExpiredThreadRefsByOrgUseCase` to locate expired threads and `DeleteExpiredThreadUseCase` to delete them (imports `ThreadsModule`).
 - **notifications** — `DeleteExpiredNotificationsUseCase` to delete expired notifications (imports `NotificationsModule`).
 - **IAM** — org/user scoping via the request context and admin role guard.

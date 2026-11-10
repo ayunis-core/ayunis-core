@@ -13,6 +13,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
+import { ThreadDeletionService } from 'src/domain/threads/application/services/thread-deletion.service';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
@@ -52,6 +53,7 @@ describe('DeleteThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteThreadUseCase,
+        ThreadDeletionService,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
         {
