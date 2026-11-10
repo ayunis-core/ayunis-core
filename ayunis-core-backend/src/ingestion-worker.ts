@@ -1,17 +1,23 @@
-import './config/ingestion-worker-env';
+import './config/env';
 import './common/process/process-crash-handlers';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { Logger, type INestApplicationContext } from '@nestjs/common';
 import { installNestLogger } from 'src/common/logger/install-nest-logger';
-import { IngestionWorkerModule } from 'src/app/ingestion-worker.module';
-import { IngestionRuntimeService } from 'src/app/infrastructure/ingestion-runtime.service';
+import { ingestionTopology } from 'src/common/process/ingestion-topology';
 import { ingestionWorkerHealthPort } from 'src/config/ingestion.config';
 import { checkIn } from '@appsignal/nodejs';
 
 async function start(): Promise<void> {
   let app: INestApplicationContext | undefined;
   try {
+    // Queue modules pick their consumers while they are imported, so the
+    // module graph is loaded only after this process declared itself.
+    ingestionTopology.declareWorker();
+    const { IngestionWorkerModule } =
+      await import('./app/ingestion-worker.module.js');
+    const { IngestionRuntimeService } =
+      await import('./app/infrastructure/ingestion-runtime.service.js');
     app = await NestFactory.createApplicationContext(IngestionWorkerModule, {
       bufferLogs: true,
     });
