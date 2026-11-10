@@ -12,6 +12,7 @@ import {
 import {
   EmptyFileDataError,
   SpreadsheetParseTimeoutError,
+  SpreadsheetTooLargeError,
 } from 'src/domain/sources/application/sources.errors';
 import {
   ProviderServerError,
@@ -40,6 +41,7 @@ describe('classifySourceProcessingError', () => {
       ),
       Code.RECORDING_TOO_LONG,
     ],
+    [new SpreadsheetTooLargeError(5_000_000), Code.SPREADSHEET_TOO_LARGE],
     [
       new ProviderTimeoutError({ provider: 'mistral' }),
       Code.PROCESSING_TIMEOUT,

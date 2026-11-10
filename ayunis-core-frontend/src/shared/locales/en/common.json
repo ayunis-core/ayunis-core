@@ -170,6 +170,7 @@
       "timeout": "Document processing timed out. Remove the file and upload it again in this chat. Splitting large documents may help.",
       "tooManyPages": "The document has too many pages. Split it into smaller files and upload them in this chat.",
       "recordingTooLong": "The recording is too long to transcribe. Split it into shorter parts and upload them separately in this chat.",
+      "spreadsheetTooLarge": "The spreadsheet is too large. Remove unused rows and columns or split it into smaller files, then upload it again in this chat.",
       "unavailable": "The document processing service is temporarily unavailable. Remove the file and upload it again in this chat later."
     },
     "failedToAdd": "Error uploading file",
