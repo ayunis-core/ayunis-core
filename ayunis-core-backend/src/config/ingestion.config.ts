@@ -1,9 +1,13 @@
 import { registerAs } from '@nestjs/config';
 
-type ProcessingQueue = 'document' | 'dataSource' | 'urlCrawl';
+type ProcessingQueue = 'document' | 'largeDocument' | 'dataSource' | 'urlCrawl';
 
 const CONCURRENCY = {
   document: { variable: 'INGESTION_DOCUMENT_CONCURRENCY', fallback: 4 },
+  largeDocument: {
+    variable: 'INGESTION_LARGE_DOCUMENT_CONCURRENCY',
+    fallback: 2,
+  },
   dataSource: { variable: 'INGESTION_DATA_SOURCE_CONCURRENCY', fallback: 2 },
   urlCrawl: { variable: 'INGESTION_URL_CRAWL_CONCURRENCY', fallback: 2 },
 } as const;
@@ -22,6 +26,20 @@ export function ingestionConcurrency(queue: ProcessingQueue): number {
   const value = Number(process.env[variable] ?? fallback);
   if (!Number.isSafeInteger(value) || value < 1)
     throw new Error(`${variable} must be a positive integer`);
+  return value;
+}
+
+const DEFAULT_LARGE_FILE_BYTES = 20 * 1024 * 1024;
+
+/** Documents from this size on take the lane for long-running jobs. */
+export function ingestionLargeFileBytes(
+  env: NodeJS.ProcessEnv = process.env,
+): number {
+  const value = Number(
+    env.INGESTION_LARGE_FILE_BYTES || DEFAULT_LARGE_FILE_BYTES,
+  );
+  if (!Number.isSafeInteger(value) || value < 1)
+    throw new Error('INGESTION_LARGE_FILE_BYTES must be a positive integer');
   return value;
 }
 
@@ -46,6 +64,8 @@ export function ingestionWorkerHealthPort(
 export default registerAs('ingestion', () => ({
   inApi: ingestionInApi(),
   documentConcurrency: ingestionConcurrency('document'),
+  largeDocumentConcurrency: ingestionConcurrency('largeDocument'),
+  largeFileBytes: ingestionLargeFileBytes(),
   dataSourceConcurrency: ingestionConcurrency('dataSource'),
   urlCrawlConcurrency: ingestionConcurrency('urlCrawl'),
 }));

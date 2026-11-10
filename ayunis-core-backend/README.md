@@ -247,9 +247,18 @@ this port. It checks consumers, PostgreSQL and Redis. The worker starts no API
 listener or application scheduler. Scheduled cleanup and queue telemetry stay on
 the API.
 
-Concurrency per worker defaults to 4 document jobs, 2 spreadsheet jobs and 2 crawls.
-Override with `INGESTION_DOCUMENT_CONCURRENCY`,
-`INGESTION_DATA_SOURCE_CONCURRENCY` and `INGESTION_URL_CRAWL_CONCURRENCY`.
+Concurrency per worker defaults to 4 document jobs, 2 long-running jobs,
+2 spreadsheet jobs and 2 crawls. Override with `INGESTION_DOCUMENT_CONCURRENCY`,
+`INGESTION_LARGE_DOCUMENT_CONCURRENCY`, `INGESTION_DATA_SOURCE_CONCURRENCY` and
+`INGESTION_URL_CRAWL_CONCURRENCY`.
+
+Recordings and documents of at least `INGESTION_LARGE_FILE_BYTES` (default
+20 MiB) are queued on `large-document-processing` instead of
+`document-processing`. Both queues run the same processing; the split only
+keeps jobs that take minutes from occupying the slots of jobs that take
+seconds. Jobs already queued when this is deployed finish on the queue they
+are on. Before rolling back to a release without the second queue, let
+`large-document-processing` drain, since the older release does not consume it.
 `POSTGRES_POOL_SIZE` controls each process's database pool. Adding replicas
 multiplies concurrency, provider calls and connections, including document/audio
 part concurrency. Start with one worker and measure provider throttling, queue

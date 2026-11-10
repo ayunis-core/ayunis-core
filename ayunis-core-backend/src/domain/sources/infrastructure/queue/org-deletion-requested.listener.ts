@@ -5,7 +5,10 @@ import { Queue } from 'bullmq';
 import type { Job } from 'bullmq';
 import { OrgDeletionRequestedEvent } from 'src/iam/orgs/application/events/org-deletion-requested.event';
 import { OrgProcessingActiveError } from 'src/iam/orgs/application/orgs.errors';
-import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
+import {
+  DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
+} from './document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 
@@ -21,6 +24,8 @@ export class OrgProcessingDeletionListener {
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
+    @InjectQueue(LARGE_DOCUMENT_PROCESSING_QUEUE)
+    private readonly largeDocuments: Queue,
   ) {}
 
   @OnEvent(OrgDeletionRequestedEvent.EVENT_NAME, { suppressErrors: false })
@@ -129,6 +134,6 @@ export class OrgProcessingDeletionListener {
   }
 
   private get queues(): Queue[] {
-    return [this.documents, this.dataSources, this.urls];
+    return [this.documents, this.largeDocuments, this.dataSources, this.urls];
   }
 }

@@ -9,11 +9,13 @@ import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queu
 import { DataSourceProcessingModule } from 'src/domain/sources/infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-crawl.module';
 import { DocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/document-processing.consumer';
+import { LargeDocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/large-document-processing.consumer';
 import { DataSourceProcessingConsumer } from 'src/domain/sources/infrastructure/queue/data-source-processing.consumer';
 import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-crawl.consumer';
 
 const CONSUMERS = [
   DocumentProcessingConsumer,
+  LargeDocumentProcessingConsumer,
   DataSourceProcessingConsumer,
   UrlCrawlConsumer,
 ];

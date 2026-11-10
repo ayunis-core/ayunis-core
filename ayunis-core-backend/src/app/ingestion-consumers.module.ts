@@ -19,15 +19,20 @@ import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queu
 import { DataSourceProcessingModule } from 'src/domain/sources/infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-crawl.module';
 import { DocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/document-processing.consumer';
+import { LargeDocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/large-document-processing.consumer';
 import { DataSourceProcessingConsumer } from 'src/domain/sources/infrastructure/queue/data-source-processing.consumer';
 import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-crawl.consumer';
-import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
+import {
+  DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
+} from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 
 /** The queues this module's consumers serve; a worker's health check requires them all. */
 export const INGESTION_QUEUES = [
   DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
   DATA_SOURCE_PROCESSING_QUEUE,
   URL_CRAWL_QUEUE,
 ] as const;
@@ -61,6 +66,7 @@ export const INGESTION_QUEUES = [
     CrawledPdfSourcesService,
     MarkSourceFailedUseCase,
     DocumentProcessingConsumer,
+    LargeDocumentProcessingConsumer,
     DataSourceProcessingConsumer,
     UrlCrawlConsumer,
   ],

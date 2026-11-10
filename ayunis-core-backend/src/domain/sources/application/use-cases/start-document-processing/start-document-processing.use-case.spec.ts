@@ -156,6 +156,22 @@ describe('StartDocumentProcessingUseCase', () => {
     );
   });
 
+  it('queues the job with the file size, so a large multipart upload takes the long-running lane too', async () => {
+    const fileData = Buffer.alloc(4_096, 'a');
+
+    await useCase.execute(
+      new StartDocumentProcessingCommand({
+        fileData,
+        fileName: 'haushalt.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+
+    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedSize: 4_096 }),
+    );
+  });
+
   it('should mark source as FAILED when MinIO upload fails', async () => {
     mockUploadObjectUseCase.execute.mockRejectedValue(new UploadFailedError());
 

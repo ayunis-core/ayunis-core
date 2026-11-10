@@ -1,6 +1,7 @@
 import {
   ingestionConcurrency,
   ingestionInApi,
+  ingestionLargeFileBytes,
   ingestionWorkerHealthPort,
 } from './ingestion.config';
 
@@ -38,5 +39,27 @@ describe('ingestion configuration', () => {
     expect(() => ingestionConcurrency('document')).toThrow(
       'INGESTION_DOCUMENT_CONCURRENCY',
     );
+  });
+  it('runs two long-running jobs at once unless configured', () => {
+    delete process.env.INGESTION_LARGE_DOCUMENT_CONCURRENCY;
+    expect(ingestionConcurrency('largeDocument')).toBe(2);
+    process.env.INGESTION_LARGE_DOCUMENT_CONCURRENCY = '1';
+    expect(ingestionConcurrency('largeDocument')).toBe(1);
+    process.env.INGESTION_LARGE_DOCUMENT_CONCURRENCY = 'many';
+    expect(() => ingestionConcurrency('largeDocument')).toThrow(
+      'INGESTION_LARGE_DOCUMENT_CONCURRENCY',
+    );
+  });
+  it('treats files from 20 MiB on as large unless configured', () => {
+    expect(ingestionLargeFileBytes({})).toBe(20 * 1024 * 1024);
+    expect(ingestionLargeFileBytes({ INGESTION_LARGE_FILE_BYTES: '' })).toBe(
+      20 * 1024 * 1024,
+    );
+    expect(
+      ingestionLargeFileBytes({ INGESTION_LARGE_FILE_BYTES: '1048576' }),
+    ).toBe(1_048_576);
+    expect(() =>
+      ingestionLargeFileBytes({ INGESTION_LARGE_FILE_BYTES: '-1' }),
+    ).toThrow('INGESTION_LARGE_FILE_BYTES');
   });
 });

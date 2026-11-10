@@ -75,6 +75,7 @@ it('scans stable key pages and removes only retained target payloads', async () 
     queue,
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   );
   const event = new OrgDeletionRequestedEvent(orgId);
   await listener.handle(event);
@@ -102,9 +103,12 @@ it('finds an active job after other jobs change state between scan batches', asy
   );
   const event = new OrgDeletionRequestedEvent(orgId);
   await expect(
-    new OrgProcessingDeletionListener(queue, emptyQueue(), emptyQueue()).handle(
-      event,
-    ),
+    new OrgProcessingDeletionListener(
+      queue,
+      emptyQueue(),
+      emptyQueue(),
+      emptyQueue(),
+    ).handle(event),
   ).rejects.toMatchObject({ code: 'ORG_PROCESSING_ACTIVE' });
   expect(owned.remove).not.toHaveBeenCalled();
   expect(scan).toHaveBeenCalledWith('1', expect.any(Object));
@@ -127,6 +131,7 @@ it('waits for each removal batch before starting the next one', async () => {
   const event = new OrgDeletionRequestedEvent(orgId);
   await new OrgProcessingDeletionListener(
     queue,
+    emptyQueue(),
     emptyQueue(),
     emptyQueue(),
   ).handle(event);
@@ -156,6 +161,7 @@ it('retries removal when a job became active after the deletion preflight', asyn
     queue,
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   ).handle(event);
 
   await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
@@ -178,6 +184,7 @@ it('retries removal when the job completes before its active-state check', async
     queue,
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   ).handle(event);
 
   await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
@@ -188,7 +195,10 @@ it('retries removal when the job completes before its active-state check', async
 import { Test } from '@nestjs/testing';
 import { EventEmitterModule, EventEmitter2 } from '@nestjs/event-emitter';
 import { getQueueToken } from '@nestjs/bullmq';
-import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
+import {
+  DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
+} from './document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { DeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.use-case';
@@ -206,6 +216,7 @@ it('rejects active processing through Nest event dispatch before deleting any ro
       OrgProcessingDeletionListener,
       ...[
         DOCUMENT_PROCESSING_QUEUE,
+        LARGE_DOCUMENT_PROCESSING_QUEUE,
         DATA_SOURCE_PROCESSING_QUEUE,
         URL_CRAWL_QUEUE,
       ].map((name) => ({ provide: getQueueToken(name), useValue: queue })),
@@ -228,4 +239,22 @@ it('rejects active processing through Nest event dispatch before deleting any ro
   } finally {
     await module.close();
   }
+});
+
+it('refuses deletion while the org has an active job in the lane for long-running jobs', async () => {
+  const active = createJob('recording', orgId, true);
+  const { queue } = scannedQueue(
+    [[jobKey(active)]],
+    new Map([[active.id, active]]),
+  );
+
+  await expect(
+    new OrgProcessingDeletionListener(
+      emptyQueue(),
+      emptyQueue(),
+      emptyQueue(),
+      queue,
+    ).handle(new OrgDeletionRequestedEvent(orgId)),
+  ).rejects.toMatchObject({ code: 'ORG_PROCESSING_ACTIVE' });
+  expect(active.remove).not.toHaveBeenCalled();
 });

@@ -399,7 +399,7 @@ jobs:
           node <<'JS'
           const { Queue } = require('bullmq');
           (async () => {
-            for (const name of ['document-processing', 'data-source-processing', 'url-crawl']) {
+            for (const name of ['document-processing', 'large-document-processing', 'data-source-processing', 'url-crawl']) {
               const queue = new Queue(name, { connection: { host: 'localhost', port: 6379 } });
               const workers = await queue.getWorkers();
               await queue.close();
