@@ -42,6 +42,13 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
   ),
 }));
 vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
+vi.mock('@/shared/lib/prototype-settings', () => ({
+  useInboxVariant: () => ['list'],
+}));
+vi.mock('@/widgets/prototype-switcher', () => ({
+  PrototypeSwitcher: () => null,
+}));
+vi.mock('./InboxSplitView', () => ({ InboxSplitView: () => null }));
 vi.mock('@/features/notifications', () => ({
   NotificationListItem: () => <div data-testid="notification-item" />,
   NotificationTypeIcon: () => null,

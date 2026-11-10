@@ -7,15 +7,24 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { getFeatureToggles } from './-routines-enabled-query';
+import {
+  defaultModelSelectionQueryOptions,
+  toComposerValue,
+} from './-default-model-selection-query';
+import {
+  getModelsControllerIsEmbeddingModelEnabledQueryKey,
+  modelsControllerIsEmbeddingModelEnabled,
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),
   type: z.enum(NotificationType).optional().catch(undefined),
+  selected: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/inbox/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => search,
+  loaderDeps: ({ search: { page, type } }) => ({ page, type }),
   component: RouteComponent,
   loader: async ({ deps: { page = 1, type }, context: { queryClient } }) => {
     const toggles = await getFeatureToggles(queryClient);
@@ -29,15 +38,39 @@ export const Route = createFileRoute('/_authenticated/inbox/')({
       throw redirect({ to: '/inbox' });
     }
     const params = notificationsPageParams(page, type);
-    await queryClient.query({
-      queryKey: getNotificationsControllerFindAllQueryKey(params),
-      queryFn: () => notificationsControllerFindAll(params),
-    });
-    return { page, type };
+    const [, defaultSelection, embedding] = await Promise.all([
+      queryClient.query({
+        queryKey: getNotificationsControllerFindAllQueryKey(params),
+        queryFn: () => notificationsControllerFindAll(params),
+      }),
+      queryClient.query(defaultModelSelectionQueryOptions()).catch(() => null),
+      queryClient
+        .query({
+          queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+          queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+        })
+        .catch(() => null),
+    ]);
+    return {
+      page,
+      type,
+      selectedModelId: toComposerValue(defaultSelection),
+      isEmbeddingModelEnabled: embedding?.isEmbeddingModelEnabled ?? false,
+    };
   },
 });
 
 function RouteComponent() {
-  const { page, type } = Route.useLoaderData();
-  return <InboxPage page={page} type={type} />;
+  const { page, type, selectedModelId, isEmbeddingModelEnabled } =
+    Route.useLoaderData();
+  const { selected } = Route.useSearch();
+  return (
+    <InboxPage
+      page={page}
+      type={type}
+      selectedId={selected}
+      selectedModelId={selectedModelId}
+      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+    />
+  );
 }

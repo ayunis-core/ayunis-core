@@ -103,6 +103,7 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -157,6 +158,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      onSkillSelect,
       initialMessage,
       placeholder,
       draftChatId,
@@ -411,6 +413,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     isAnonymousChangeDisabled={isAnonymousChangeDisabled}
                     isAnonymousEnforced={isAnonymousEnforced}
                     selectedSkillId={selectedSkillId}
+                    onSkillSelect={onSkillSelect}
                     selectedSkillName={selectedSkillName}
                     onSkillRemove={onSkillRemove}
                     isModelChangeDisabled={isModelChangeDisabled}

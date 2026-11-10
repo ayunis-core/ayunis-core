@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, FolderOpen } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +20,13 @@ const NEW_CHAT_ENTRANCE_MS = 900;
 interface WorkspacePickerProps {
   workspaceId: string | null;
   onWorkspaceChange: (workspaceId: string | null) => void;
+  isCompact?: boolean;
 }
 
 export function WorkspacePicker({
   workspaceId,
   onWorkspaceChange,
+  isCompact = false,
 }: Readonly<WorkspacePickerProps>) {
   const { t } = useTranslation('workspaces');
   const { workspaces } = useWorkspaces();
@@ -40,6 +43,10 @@ export function WorkspacePicker({
           <Button
             variant="ghost"
             size="sm"
+            className={cn(
+              isCompact &&
+                'h-7 gap-1.5 px-2 text-[13px] font-normal text-muted-foreground hover:text-foreground has-[>svg]:px-2 [&_svg:not([class*=size-])]:size-3.5',
+            )}
             data-tour={TOUR_TARGET.selectWorkspaceInChat}
             data-tour-settle={NEW_CHAT_ENTRANCE_MS}
           >

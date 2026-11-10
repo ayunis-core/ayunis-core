@@ -33,6 +33,7 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
+import { SkillsSubmenu } from './SkillsSubmenu';
 
 interface PlusButtonProps {
   onFileUpload: (files: File[]) => void;
@@ -43,6 +44,8 @@ interface PlusButtonProps {
   attachedKnowledgeBaseIds?: string[];
   onIntegrationSelect?: (integration: IntegrationSummary) => void;
   attachedIntegrationIds?: string[];
+  onSkillSelect?: (skillId: string, skillName: string) => void;
+  selectedSkillId?: string;
 }
 
 export default function PlusButton({
@@ -54,6 +57,8 @@ export default function PlusButton({
   attachedKnowledgeBaseIds = [],
   onIntegrationSelect,
   attachedIntegrationIds = [],
+  onSkillSelect,
+  selectedSkillId,
 }: Readonly<PlusButtonProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -186,6 +191,12 @@ export default function PlusButton({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </DropdownMenuGroup>
+          )}
+          {onSkillSelect && (
+            <SkillsSubmenu
+              selectedSkillId={selectedSkillId}
+              onSkillSelect={onSkillSelect}
+            />
           )}
           {onIntegrationSelect && (
             <IntegrationsSubmenu

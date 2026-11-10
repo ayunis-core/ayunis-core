@@ -32,6 +32,7 @@ interface ChatInputActionBarProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isModelChangeDisabled?: boolean;
   modelId: string | undefined;
   onModelChange: (modelId: string) => void;
@@ -86,6 +87,7 @@ export function ChatInputActionBar({
   selectedSkillId,
   selectedSkillName,
   onSkillRemove,
+  onSkillSelect,
   isModelChangeDisabled,
   modelId,
   onModelChange,
@@ -115,6 +117,8 @@ export function ChatInputActionBar({
               attachedIntegrationIds={mcpIntegrations?.map(
                 (integration) => integration.id,
               )}
+              onSkillSelect={onSkillSelect}
+              selectedSkillId={selectedSkillId}
             />
           </OnboardingTourTarget>
           <OnboardingTourTarget name={TOUR_TARGET.anonymousMode} settleMs={900}>

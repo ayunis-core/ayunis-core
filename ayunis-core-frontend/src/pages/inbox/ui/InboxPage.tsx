@@ -16,13 +16,42 @@ import { useNotifications } from '@/pages/inbox/api/useNotifications';
 import { useMarkAllNotificationsRead } from '@/pages/inbox/api/useMarkAllNotificationsRead';
 import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
 import { InboxTypeFilter } from './InboxTypeFilter';
+import { InboxSplitView } from './InboxSplitView';
+import { useInboxVariant } from '@/shared/lib/prototype-settings';
+import { PrototypeSwitcher } from '@/widgets/prototype-switcher';
 
 interface InboxPageProps {
   page: number;
   type?: NotificationType;
+  selectedId?: string;
+  selectedModelId?: string;
+  isEmbeddingModelEnabled?: boolean;
 }
 
-export default function InboxPage({ page, type }: Readonly<InboxPageProps>) {
+export default function InboxPage(props: Readonly<InboxPageProps>) {
+  const [variant] = useInboxVariant();
+  return (
+    <>
+      <PrototypeSwitcher />
+      {variant === 'split' ? (
+        <InboxSplitView
+          page={props.page}
+          type={props.type}
+          selectedId={props.selectedId}
+          selectedModelId={props.selectedModelId}
+          isEmbeddingModelEnabled={props.isEmbeddingModelEnabled ?? false}
+        />
+      ) : (
+        <InboxListView page={props.page} type={props.type} />
+      )}
+    </>
+  );
+}
+
+function InboxListView({
+  page,
+  type,
+}: Readonly<{ page: number; type?: NotificationType }>) {
   const { t } = useTranslation('inbox');
   const { notifications, total, isLoading } = useNotifications(page, type);
   const { unreadCount } = useUnreadNotificationCount();

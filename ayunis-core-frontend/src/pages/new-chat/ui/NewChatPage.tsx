@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -29,7 +28,6 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
 import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
@@ -37,6 +35,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import { UnreadNotificationButtons } from './UnreadNotificationButtons';
+import { useHomeVariant } from '@/pages/new-chat/model/useHomeVariant';
+import { useHomeFeed } from '@/features/home-feed';
+import {
+  PrototypeSwitcher,
+  PrototypeSwitcherToggle,
+} from '@/widgets/prototype-switcher';
+import { HomeTab } from './home/HomeTab';
+import { Badge } from '@ayunis/ui/components/badge';
+import { HomeList } from './home/HomeList';
+import { HomePlinth } from './home/HomePlinth';
+import './home/home-variants.css';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -65,6 +74,10 @@ export default function NewChatPage({
     isError: isSystemPromptError,
   } = useUserSystemPromptStatus();
   const { skip, isSkipping } = useSkipPersonalization();
+  const { variant, useSampleData } = useHomeVariant();
+  const feed = useHomeFeed(useSampleData);
+  const isPlinth = variant === 'plinth' || variant === 'plinth-brand';
+  const isWorkspaceOnTop = isPlinth || ['tab-bottom', 'list'].includes(variant);
 
   useEffect(() => {
     if (isSystemPromptError) {
@@ -169,18 +182,6 @@ export default function NewChatPage({
     setModelId(modelId);
   }
 
-  function handleSkillSelect(
-    id: string,
-    name: string,
-    skillWorkspaceId?: string,
-  ) {
-    setSelectedSkill(
-      selectedSkillId === id
-        ? undefined
-        : { id, name, workspaceId: skillWorkspaceId },
-    );
-  }
-
   function handleSkillRemove() {
     setSelectedSkill(undefined);
   }
@@ -255,6 +256,13 @@ export default function NewChatPage({
     );
   }
 
+  const workspacePicker = (
+    <WorkspacePicker
+      workspaceId={workspaceId}
+      onWorkspaceChange={handleWorkspaceChange}
+    />
+  );
+
   return (
     <NewChatPageLayout
       isSettling={isCreating}
@@ -263,22 +271,39 @@ export default function NewChatPage({
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
-          action={<HelpLink path="" />}
+          badge={
+            <Badge
+              variant="outline"
+              className="ml-1 font-normal text-muted-foreground"
+            >
+              <Lock />
+              {t('newChat.privacyHint')}
+            </Badge>
+          }
+          action={
+            <>
+              <PrototypeSwitcherToggle />
+              <HelpLink path="" />
+            </>
+          }
         />
       }
       compose={
         <>
-          <h1
+          <PrototypeSwitcher />
+          <div
             className={cn(
-              'new-chat-greeting text-center text-2xl font-bold',
+              'new-chat-greeting flex flex-col items-center gap-3 text-center',
               isCreating && 'new-chat-greeting--exit',
             )}
             aria-hidden={isCreating}
           >
-            {greeting}
-          </h1>
+            <h1 className="text-2xl font-bold">{greeting}</h1>
+          </div>
 
-          <UnreadNotificationButtons isCollapsed={isCreating} />
+          {variant === 'current' && (
+            <UnreadNotificationButtons isCollapsed={isCreating} />
+          )}
 
           <div className="new-chat-input-stack relative w-full">
             <p
@@ -293,54 +318,90 @@ export default function NewChatPage({
 
             <AcademyGateNotice className="mb-2" />
 
-            <ChatInput
-              ref={chatInputRef}
-              modelId={modelId}
-              sources={sources}
-              knowledgeBases={selectedKnowledgeBases}
-              mcpIntegrations={selectedIntegrations}
-              submissionState={isCreating ? 'submitting' : 'idle'}
-              isSendDisabled={isAcademyGated || !resolvedModelId}
-              onModelChange={handleModelChange}
-              onSend={handleSend}
-              onCancel={handleCancel}
-              onFileUpload={handleFileUpload}
-              onRemoveSource={handleRemoveSource}
-              onAddKnowledgeBase={(kb) => {
-                setSelectedKnowledgeBases((prev) => [...prev, kb]);
-              }}
-              onRemoveKnowledgeBase={(kbId) => {
-                setSelectedKnowledgeBases((prev) =>
-                  prev.filter((kb) => kb.id !== kbId),
-                );
-              }}
-              onAddIntegration={(integration) => {
-                setSelectedIntegrations((prev) => [...prev, integration]);
-              }}
-              onRemoveIntegration={(integrationId) => {
-                setSelectedIntegrations((prev) =>
-                  prev.filter(
-                    (integration) => integration.id !== integrationId,
-                  ),
-                );
-              }}
-              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-              isAnonymous={isAnonymous}
-              onAnonymousChange={setIsAnonymous}
-              isAnonymousEnforced={isAnonymousEnforced}
-              isVisionEnabled={isVisionEnabled}
-              selectedSkillId={selectedSkillId}
-              selectedSkillName={selectedSkillName}
-              onSkillRemove={handleSkillRemove}
-            />
-
-            {!isCreating && (
-              <div className="mt-1.5 flex justify-start">
+            {!isCreating && variant === 'tab' && <HomeTab feed={feed} />}
+            {!isCreating && variant === 'tab-2' && (
+              <HomeTab feed={feed} isFresh />
+            )}
+            {!isCreating && isWorkspaceOnTop && (
+              <div className="mb-2.5 flex justify-start pl-1.5">
                 <WorkspacePicker
                   workspaceId={workspaceId}
                   onWorkspaceChange={handleWorkspaceChange}
+                  isCompact
                 />
               </div>
+            )}
+
+            <div
+              className={cn(
+                'relative z-10',
+                !isCreating && isPlinth && 'home-plinth-host',
+              )}
+            >
+              <ChatInput
+                ref={chatInputRef}
+                modelId={modelId}
+                sources={sources}
+                knowledgeBases={selectedKnowledgeBases}
+                mcpIntegrations={selectedIntegrations}
+                submissionState={isCreating ? 'submitting' : 'idle'}
+                isSendDisabled={isAcademyGated || !resolvedModelId}
+                onModelChange={handleModelChange}
+                onSend={handleSend}
+                onCancel={handleCancel}
+                onFileUpload={handleFileUpload}
+                onRemoveSource={handleRemoveSource}
+                onAddKnowledgeBase={(kb) => {
+                  setSelectedKnowledgeBases((prev) => [...prev, kb]);
+                }}
+                onRemoveKnowledgeBase={(kbId) => {
+                  setSelectedKnowledgeBases((prev) =>
+                    prev.filter((kb) => kb.id !== kbId),
+                  );
+                }}
+                onAddIntegration={(integration) => {
+                  setSelectedIntegrations((prev) => [...prev, integration]);
+                }}
+                onRemoveIntegration={(integrationId) => {
+                  setSelectedIntegrations((prev) =>
+                    prev.filter(
+                      (integration) => integration.id !== integrationId,
+                    ),
+                  );
+                }}
+                isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                isAnonymous={isAnonymous}
+                onAnonymousChange={setIsAnonymous}
+                isAnonymousEnforced={isAnonymousEnforced}
+                isVisionEnabled={isVisionEnabled}
+                selectedSkillId={selectedSkillId}
+                selectedSkillName={selectedSkillName}
+                onSkillRemove={handleSkillRemove}
+                onSkillSelect={(id, name) => setSelectedSkill({ id, name })}
+              />
+            </div>
+
+            {!isCreating && isPlinth && (
+              <HomePlinth
+                feed={feed}
+                isBrand={variant === 'plinth-brand'}
+                workspaceId={workspaceId}
+                isSample={useSampleData}
+                onPromptSelect={(text) =>
+                  chatInputRef.current?.setMessage(text)
+                }
+                onPromptSend={(text) => chatInputRef.current?.sendMessage(text)}
+              />
+            )}
+            {!isCreating && variant === 'tab-bottom' && (
+              <div className="relative h-9">
+                <div className="absolute inset-x-0 top-0">
+                  <HomeTab feed={feed} placement="bottom" />
+                </div>
+              </div>
+            )}
+            {!isCreating && !isWorkspaceOnTop && (
+              <div className="mt-1.5 flex justify-start">{workspacePicker}</div>
             )}
           </div>
 
@@ -351,20 +412,7 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                workspaceId={workspaceId}
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
-            <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3 shrink-0" />
-              <span>{t('newChat.privacyHint')}</span>
-            </div>
+            {variant === 'list' && <HomeList feed={feed} />}
           </div>
         </>
       }
