@@ -18,7 +18,7 @@ export function ChatInputToolbar({
     >
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">{leading}</div>
       <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-2">
-        <div className="min-w-0 flex-1 sm:flex-initial">{modelSelector}</div>
+        <div className="min-w-0">{modelSelector}</div>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {trailing}
         </div>

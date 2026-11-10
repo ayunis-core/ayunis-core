@@ -76,6 +76,11 @@
       "placeholder": "Standardmodell auswählen",
       "loading": "Freigeschaltete Modelle werden geladen...",
       "empty": "Aktivieren Sie mindestens ein Modell, um ein Organisations-Standard festzulegen.",
+      "modesUnavailable": {
+        "auto": "Der Auto-Modus ist mit den freigeschalteten Modellen Ihrer Organisation nicht verfügbar. Schalten Sie weitere Modelle frei, um den Auto-Modus zu nutzen.",
+        "max": "Der Max-Modus ist mit den freigeschalteten Modellen Ihrer Organisation nicht verfügbar. Schalten Sie weitere Modelle frei, um den Max-Modus zu nutzen.",
+        "both": "Der Auto- und der Max-Modus sind mit den freigeschalteten Modellen Ihrer Organisation nicht verfügbar. Schalten Sie weitere Modelle frei, um sie zu nutzen."
+      },
       "success": "Standardmodell der Organisation aktualisiert.",
       "error": "Standardmodell der Organisation konnte nicht aktualisiert werden."
     }
