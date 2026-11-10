@@ -1,18 +1,10 @@
 import { SettingsLayout } from '@/pages/settings/settings-layout';
 import { ProfileInformationCard } from '@/pages/settings/account-settings/ui/ProfileInformationCard';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@ayunis/ui/components/card';
-import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from '@/pages/settings/account-settings/ui/PasswordSettingsPage';
 import { TwoFactorCard } from '@/pages/settings/account-settings/ui/TwoFactorCard';
 import { AcademyCertificateCard } from '@/pages/settings/account-settings/ui/AcademyCertificateCard';
-import { SettingsFieldRow } from '@/pages/settings/settings-layout/ui/SettingsFieldRow';
 import { SsoAccountLinkCard } from './SsoAccountLinkCard';
 
 export default function AccountSettingsPage({
@@ -43,25 +35,6 @@ export default function AccountSettingsPage({
           </>
         )}
         <AcademyCertificateCard />
-        {/* Account Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('account.accountActions')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <SettingsFieldRow className="rounded-lg border border-destructive/20 p-4">
-              <div className="min-w-0">
-                <div className="font-medium">{t('account.deleteAccount')}</div>
-                <div className="text-sm text-muted-foreground">
-                  {t('account.deleteAccountDescription')}
-                </div>
-              </div>
-              <Button variant="destructive" className="w-full sm:w-auto">
-                {t('account.deleteAccount')}
-              </Button>
-            </SettingsFieldRow>
-          </CardContent>
-        </Card>
       </div>
     </SettingsLayout>
   );

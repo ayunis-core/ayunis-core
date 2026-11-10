@@ -65,9 +65,6 @@
     "changingPassword": "Changing Password...",
     "passwordUpdatedSuccessfully": "Password updated successfully",
     "passwordsDontMatch": "Passwords don't match",
-    "accountActions": "Account Actions",
-    "deleteAccount": "Delete Account",
-    "deleteAccountDescription": "Permanently delete your account and all associated data.",
     "error": {
       "invalidName": "Invalid name provided",
       "updateFailed": "Failed to update. Please try again.",
