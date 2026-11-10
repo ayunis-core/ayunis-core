@@ -4,6 +4,23 @@ import type { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity'
 export abstract class RefreshTokensRepository {
   abstract insert(token: RefreshToken): Promise<void>;
 
+  /**
+   * Inserts a fork only if its source is still valid after session revocation
+   * has been serialized for the user.
+   */
+  abstract insertForkIfSourceValid(
+    sourceId: UUID,
+    token: RefreshToken,
+    graceSeconds: number,
+  ): Promise<boolean>;
+
+  /** Inserts a grace-window sibling while serialized with revocation. */
+  abstract insertSuccessorWithinGrace(
+    sourceId: UUID,
+    token: RefreshToken,
+    graceSeconds: number,
+  ): Promise<boolean>;
+
   abstract findByTokenHash(tokenHash: string): Promise<RefreshToken | null>;
 
   /**

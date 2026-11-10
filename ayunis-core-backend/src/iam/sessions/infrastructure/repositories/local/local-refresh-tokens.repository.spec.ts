@@ -48,17 +48,75 @@ describe(LocalRefreshTokensRepository.name, () => {
     expect(records.save).toHaveBeenCalledTimes(1);
   });
 
+  it('namespaces direct user locks away from other modules', async () => {
+    const query = chain({ getExists: jest.fn().mockResolvedValue(false) });
+    const records = {
+      createQueryBuilder: jest.fn().mockReturnValue(query),
+    } as unknown as Repository<RefreshTokenRecord>;
+    const manager = {
+      getRepository: jest.fn().mockReturnValue(records),
+      query: jest.fn().mockResolvedValue(undefined),
+    };
+    const txHost = {
+      tx: {
+        transaction: jest.fn().mockImplementation((action) => action(manager)),
+      },
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
+    const repository = new LocalRefreshTokensRepository(
+      {} as Repository<RefreshTokenRecord>,
+      txHost,
+    );
+    const token = new RefreshToken({
+      userId: '22222222-2222-2222-2222-222222222222',
+      familyId: '33333333-3333-3333-3333-333333333333',
+      tokenHash: 'hash',
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      expiresAt: new Date('2026-09-01T00:00:00.000Z'),
+    });
+
+    await repository.insertForkIfSourceValid(TEST_ORG_ID, token, 60);
+
+    expect(manager.query).toHaveBeenCalledWith(
+      expect.stringContaining(`'session-user:' || "userId"::text`),
+      [[token.userId]],
+    );
+  });
+
   it('revokes organization password sessions with one set-based update', async () => {
     const userQuery = chain({
-      getQuery: jest.fn().mockReturnValue('SELECT user.id FROM users user'),
+      getQuery: jest.fn().mockReturnValue('(SELECT user.id FROM users user)'),
     });
+    const clone = jest.fn();
+    const tokenQuery = chain({
+      getQuery: jest
+        .fn()
+        .mockReturnValue('SELECT token.id FROM refresh_tokens token'),
+      getParameters: jest.fn().mockReturnValue({
+        orgId: TEST_ORG_ID,
+        method: SessionAuthenticationMethod.PASSWORD,
+      }),
+      getQueryAndParameters: jest
+        .fn()
+        .mockReturnValue(['SELECT DISTINCT token.userId', []]),
+      clone,
+      subQuery: jest.fn().mockReturnValue(userQuery),
+    });
+    clone.mockReturnValue(tokenQuery);
     const updateQuery = chain({ execute: jest.fn().mockResolvedValue({}) });
     const records = {
-      manager: { createQueryBuilder: jest.fn().mockReturnValue(userQuery) },
-      createQueryBuilder: jest.fn().mockReturnValue(updateQuery),
+      createQueryBuilder: jest
+        .fn()
+        .mockReturnValueOnce(tokenQuery)
+        .mockReturnValueOnce(updateQuery),
     } as unknown as Repository<RefreshTokenRecord>;
+    const manager = {
+      getRepository: jest.fn().mockReturnValue(records),
+      query: jest.fn().mockResolvedValue(undefined),
+    };
     const txHost = {
-      tx: { getRepository: jest.fn().mockReturnValue(records) },
+      tx: {
+        transaction: jest.fn().mockImplementation((action) => action(manager)),
+      },
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
     const repository = new LocalRefreshTokensRepository(
       {} as Repository<RefreshTokenRecord>,
@@ -67,13 +125,17 @@ describe(LocalRefreshTokensRepository.name, () => {
 
     await repository.revokePasswordSessionsForOrg(TEST_ORG_ID);
 
-    expect(updateQuery.where).toHaveBeenCalledWith(
-      '"userId" IN (SELECT user.id FROM users user)',
+    expect(tokenQuery.where).toHaveBeenCalledWith(
+      'token.userId IN (SELECT user.id FROM users user)',
       { orgId: TEST_ORG_ID },
     );
-    expect(updateQuery.andWhere).toHaveBeenCalledWith(
-      'authenticationMethod = :authenticationMethod',
-      { authenticationMethod: SessionAuthenticationMethod.PASSWORD },
+    expect(tokenQuery.andWhere).toHaveBeenCalledWith(
+      'token.authenticationMethod = :method',
+      { method: SessionAuthenticationMethod.PASSWORD },
+    );
+    expect(manager.query).toHaveBeenCalledWith(
+      expect.stringContaining(`'session-user:' || scoped."userId"::text`),
+      [],
     );
     expect(updateQuery.andWhere).toHaveBeenCalledWith('revokedAt IS NULL');
     expect(updateQuery.execute).toHaveBeenCalledTimes(1);
@@ -88,9 +150,21 @@ function chain(overrides: Record<string, jest.Mock> = {}) {
     set: jest.fn(),
     andWhere: jest.fn(),
     execute: jest.fn(),
+    from: jest.fn(),
+    getParameters: jest.fn(),
+    getQueryAndParameters: jest.fn(),
+    getRawMany: jest.fn(),
+    getQuery: jest.fn(),
     ...overrides,
   };
-  for (const method of ['select', 'where', 'update', 'set', 'andWhere']) {
+  for (const method of [
+    'select',
+    'from',
+    'where',
+    'update',
+    'set',
+    'andWhere',
+  ]) {
     query[method as keyof typeof query].mockReturnValue(query);
   }
   return query;

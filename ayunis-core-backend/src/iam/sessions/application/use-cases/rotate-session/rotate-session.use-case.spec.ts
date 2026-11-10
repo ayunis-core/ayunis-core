@@ -115,21 +115,25 @@ describe('RotateSessionUseCase', () => {
 
   it('should issue a sibling on a benign race (lost rotation, within grace)', async () => {
     repository.markUsedAndInsertSuccessor.mockResolvedValue(false);
-    repository.wasUsedWithinGrace.mockResolvedValue(true);
+    repository.insertSuccessorWithinGrace.mockResolvedValue(true);
 
     const result = await rotate();
 
     expect(result.refreshToken).toBe('new-plaintext');
-    expect(repository.insert).toHaveBeenCalledTimes(1);
+    expect(repository.insertSuccessorWithinGrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: 'successor-id' }),
+      60,
+    );
     expect(repository.revokeFamily).not.toHaveBeenCalled();
   });
 
   it('reports post-grace replay for post-transaction family revocation', async () => {
     repository.markUsedAndInsertSuccessor.mockResolvedValue(false);
-    repository.wasUsedWithinGrace.mockResolvedValue(false);
+    repository.insertSuccessorWithinGrace.mockResolvedValue(false);
 
     await expect(rotate()).rejects.toThrow(RefreshTokenReuseError);
     expect(repository.revokeFamily).not.toHaveBeenCalled();
-    expect(repository.insert).not.toHaveBeenCalled();
+    expect(repository.insertSuccessorWithinGrace).toHaveBeenCalledTimes(1);
   });
 });
