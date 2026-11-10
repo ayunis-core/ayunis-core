@@ -10,10 +10,13 @@ hold whatever an org admin grants them.
   `manage_teams`, `assign_users_to_teams`, `manage_skills`,
   `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`. Sharing
+  `manage_routines`, `manage_workspace`, `manage_workspace_members`. Sharing
   is split by audience: `*_with_teams` covers teams the member belongs to,
   `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
   migration granted both wherever the former `share_*` permission was held).
+  `manage_workspace` and `manage_workspace_members` are workspace-scoped:
+  they are read for the role a member holds inside a workspace, never for
+  their org role (see the workspaces module).
   This is the source of truth
   for what a role can be granted.
   How the settings UI labels, groups and orders these is purely a display
@@ -26,9 +29,11 @@ hold whatever an org admin grants them.
   configured. `ADMIN` is intentionally excluded (implicit-all, never persisted).
 - `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation. Chosen to
   preserve pre-RBAC behaviour (all skill + knowledge-base permissions and
-  `manage_routines` for both MANAGER and USER; teams stay admin-only). **Kept
-  in sync with the backfill VALUES lists in the `CreateRolePermissions` and
-  `GrantManageRoutines` migrations.**
+  `manage_routines` for both MANAGER and USER; teams stay admin-only). In a
+  workspace, MANAGER gets `manage_workspace` and `manage_workspace_members`,
+  USER neither. **Kept in sync with the backfill VALUES lists in the
+  `CreateRolePermissions`, `GrantManageRoutines` and
+  `GrantWorkspacePermissions` migrations.**
 
 ## Enforcement
 
@@ -57,7 +62,9 @@ team or org share permission from the share's scope).
 - Existing orgs: backfilled by the `CreateRolePermissions` migration so no
   member silently loses skill/knowledge-base access, and by the
   `GrantManageRoutines` migration, which grants `manage_routines` to MANAGER
-  and USER in every org that existed before the permission.
+  and USER in every org that existed before the permission, and by the
+  `GrantWorkspacePermissions` migration, which grants both workspace
+  permissions to MANAGER.
 
 ## Management
 
@@ -83,5 +90,5 @@ Standard hexagonal: `domain/` (`RolePermission` entity, `Permission` enum,
 `RolePermissionsController`, non-admin `MyPermissionsController`, and DTOs).
 Three use cases are exported: `HasPermissionUseCase` for the
 `PermissionsGuard`, `SeedDefaultRolePermissionsUseCase` for org creation, and
-`GetMyPermissionsUseCase`, which the teams module uses to resolve what a team
-role grants (team roles reuse the org matrix rows).
+`GetMyPermissionsUseCase`, which the teams and workspaces modules use to
+resolve what a team or workspace role grants (both reuse the org matrix rows).

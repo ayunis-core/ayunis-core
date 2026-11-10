@@ -20,6 +20,8 @@ import { FindWorkspacesByIdsUseCase } from './application/use-cases/find-workspa
 import { GetWorkspaceAiContextUseCase } from './application/use-cases/get-workspace-ai-context/get-workspace-ai-context.use-case';
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { UpdateWorkspaceUseCase } from './application/use-cases/update-workspace/update-workspace.use-case';
+import { GetWorkspaceRolePermissionsUseCase } from './application/use-cases/get-workspace-role-permissions/get-workspace-role-permissions.use-case';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
 import { LocalWorkspacesRepository } from './infrastructure/persistence/local/local-workspaces.repository';
 import { LocalWorkspaceMembersRepository } from './infrastructure/persistence/local/local-workspace-members.repository';
@@ -31,6 +33,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
+    PermissionsModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -53,6 +56,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
+    GetWorkspaceRolePermissionsUseCase,
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
     WorkspaceAccessService,

@@ -8713,6 +8713,9 @@
               }
             }
           },
+          "403": {
+            "description": "Not allowed to manage the workspace"
+          },
           "404": {
             "description": "Workspace not found"
           }
@@ -8738,11 +8741,48 @@
           "204": {
             "description": "The workspace was deleted"
           },
+          "403": {
+            "description": "Not a workspace admin"
+          },
           "404": {
             "description": "Workspace not found"
           }
         },
         "summary": "Delete a workspace and every chat inside it",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/role-permissions": {
+      "get": {
+        "operationId": "WorkspacesController_getRolePermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRolePermissionsResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "What each workspace role grants within a workspace",
         "tags": ["workspaces"]
       }
     },
@@ -8808,6 +8848,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Not allowed to manage the workspace"
           }
         },
         "tags": ["workspaces"]
@@ -15844,7 +15887,9 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
               ]
             }
           }
@@ -15881,7 +15926,9 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
               ]
             }
           }
@@ -15905,7 +15952,9 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
               ]
             }
           }
@@ -17984,7 +18033,9 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
               ]
             }
           }
@@ -18021,7 +18072,9 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
               ]
             }
           }
@@ -21017,6 +21070,32 @@
             "description": "When the workspace was last updated",
             "example": "2026-08-11T10:30:00.000Z"
           },
+          "role": {
+            "type": "string",
+            "description": "The current user's role in the workspace",
+            "enum": ["admin", "manager", "user"],
+            "example": "admin"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "The current user's effective permissions in the workspace, resolved from their workspace role only",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
+                "manage_knowledge_bases",
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org",
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
+              ]
+            }
+          },
           "chatCount": {
             "type": "number",
             "description": "Number of chats filed under the workspace (list responses only)",
@@ -21046,7 +21125,9 @@
           "icon",
           "color",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "role",
+          "permissions"
         ]
       },
       "WorkspaceListResponseDto": {
@@ -21063,6 +21144,48 @@
           }
         },
         "required": ["data", "pagination"]
+      },
+      "WorkspaceRolePermissionSetDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["admin", "manager", "user"]
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Workspace-scoped permissions this role grants within the workspace",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills_with_teams",
+                "share_skills_with_org",
+                "manage_knowledge_bases",
+                "share_knowledge_bases_with_teams",
+                "share_knowledge_bases_with_org",
+                "manage_routines",
+                "manage_workspace",
+                "manage_workspace_members"
+              ]
+            }
+          }
+        },
+        "required": ["role", "permissions"]
+      },
+      "WorkspaceRolePermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceRolePermissionSetDto"
+            }
+          }
+        },
+        "required": ["roles"]
       },
       "UpdateWorkspaceDto": {
         "type": "object",

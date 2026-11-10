@@ -1,5 +1,6 @@
 import {
   createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
   aWorkspace,
@@ -13,10 +14,11 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
     repository.findById.mockResolvedValue(aWorkspace());
     const useCase = new UpdateWorkspaceInstructionUseCase(
       repository,
+      createMockWorkspaceAccessService() as never,
       createMockContextService(),
     );
 
-    const result = await useCase.execute(
+    const { workspace: result } = await useCase.execute(
       new UpdateWorkspaceInstructionCommand(
         TEST_WORKSPACE_ID,
         '  Use building department wording.  ',
@@ -38,10 +40,11 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
     );
     const useCase = new UpdateWorkspaceInstructionUseCase(
       repository,
+      createMockWorkspaceAccessService() as never,
       createMockContextService(),
     );
 
-    const result = await useCase.execute(
+    const { workspace: result } = await useCase.execute(
       new UpdateWorkspaceInstructionCommand(TEST_WORKSPACE_ID, '   '),
     );
 

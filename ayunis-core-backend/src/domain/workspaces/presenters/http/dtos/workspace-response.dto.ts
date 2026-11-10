@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 export class WorkspaceResponseDto {
   @ApiProperty({
@@ -52,6 +54,21 @@ export class WorkspaceResponseDto {
     example: '2026-08-11T10:30:00.000Z',
   })
   updatedAt: string;
+
+  @ApiProperty({
+    description: "The current user's role in the workspace",
+    enum: UserRole,
+    example: UserRole.ADMIN,
+  })
+  role: UserRole;
+
+  @ApiProperty({
+    description:
+      "The current user's effective permissions in the workspace, resolved from their workspace role only",
+    enum: Permission,
+    isArray: true,
+  })
+  permissions: Permission[];
 
   @ApiPropertyOptional({
     description:

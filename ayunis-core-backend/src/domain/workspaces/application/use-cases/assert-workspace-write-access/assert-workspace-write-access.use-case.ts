@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @Injectable()
 export class AssertWorkspaceWriteAccessUseCase {
@@ -15,6 +16,9 @@ export class AssertWorkspaceWriteAccessUseCase {
       { workspaceId: query.workspaceId },
       'Checking workspace write access',
     );
-    await this.access.requireMember(query.workspaceId);
+    await this.access.requirePermission(
+      query.workspaceId,
+      Permission.MANAGE_WORKSPACE,
+    );
   }
 }

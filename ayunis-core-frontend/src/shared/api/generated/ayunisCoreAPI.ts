@@ -346,6 +346,7 @@ import type {
   WorkspaceFavoriteResponseDto,
   WorkspaceListResponseDto,
   WorkspaceResponseDto,
+  WorkspaceRolePermissionsResponseDto,
   WorkspacesControllerFindAllParams
 } from './ayunisCoreAPI.schemas.ts';
 
@@ -17458,6 +17459,99 @@ export const useWorkspacesControllerRemove = <TError = void,
     }
 
 /**
+ * @summary What each workspace role grants within a workspace
+ */
+export const workspacesControllerGetRolePermissions = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceRolePermissionsResponseDto>(
+      {url: `/workspaces/${id}/role-permissions`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspacesControllerGetRolePermissionsQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/role-permissions`
+    ] as const;
+    }
+
+
+export const getWorkspacesControllerGetRolePermissionsQueryOptions = <TData = Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspacesControllerGetRolePermissionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>> = ({ signal }) => workspacesControllerGetRolePermissions(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspacesControllerGetRolePermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>>
+export type WorkspacesControllerGetRolePermissionsQueryError = void
+
+
+export function useWorkspacesControllerGetRolePermissions<TData = Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>,
+          TError,
+          Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspacesControllerGetRolePermissions<TData = Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>,
+          TError,
+          Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspacesControllerGetRolePermissions<TData = Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary What each workspace role grants within a workspace
+ */
+
+export function useWorkspacesControllerGetRolePermissions<TData = Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetRolePermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspacesControllerGetRolePermissionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get workspace context
  */
 export const workspaceContextControllerFindContext = (
@@ -17570,7 +17664,7 @@ export const workspaceContextControllerUpdateInstruction = (
 
 export const getWorkspaceContextControllerUpdateInstructionMutationKey = () => ['workspaceContextControllerUpdateInstruction'] as const;
 
-export const getWorkspaceContextControllerUpdateInstructionMutationOptions = <TError = unknown,
+export const getWorkspaceContextControllerUpdateInstructionMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,WorkspaceContextControllerUpdateInstructionMutationVariables, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,WorkspaceContextControllerUpdateInstructionMutationVariables, TContext> => {
 
@@ -17599,10 +17693,10 @@ const {mutation: mutationOptions} = options ?
 
     export type WorkspaceContextControllerUpdateInstructionMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>>
     export type WorkspaceContextControllerUpdateInstructionMutationBody = UpdateWorkspaceInstructionDto
-    export type WorkspaceContextControllerUpdateInstructionMutationError = unknown
+    export type WorkspaceContextControllerUpdateInstructionMutationError = void
     export type WorkspaceContextControllerUpdateInstructionMutationVariables = {id: string;data: UpdateWorkspaceInstructionDto}
 
-    export const useWorkspaceContextControllerUpdateInstruction = <TError = unknown,
+    export const useWorkspaceContextControllerUpdateInstruction = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,WorkspaceContextControllerUpdateInstructionMutationVariables, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>,

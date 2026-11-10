@@ -8,4 +8,6 @@ export enum Permission {
   SHARE_KNOWLEDGE_BASES_WITH_TEAMS = 'share_knowledge_bases_with_teams',
   SHARE_KNOWLEDGE_BASES_WITH_ORG = 'share_knowledge_bases_with_org',
   MANAGE_ROUTINES = 'manage_routines',
+  MANAGE_WORKSPACE = 'manage_workspace',
+  MANAGE_WORKSPACE_MEMBERS = 'manage_workspace_members',
 }

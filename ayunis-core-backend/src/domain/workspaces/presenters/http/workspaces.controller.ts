@@ -36,6 +36,9 @@ import { WorkspaceDtoMapper } from './mappers/workspace-dto.mapper';
 import { FindAllWorkspacesQuery } from 'src/domain/workspaces/application/use-cases/find-all-workspaces/find-all-workspaces.query';
 import { FindAllWorkspacesQueryParamsDto } from './dtos/find-all-workspaces-query-params.dto';
 import { WorkspaceListResponseDto } from './dtos/workspace-list-response.dto';
+import { WorkspaceRolePermissionsResponseDto } from './dtos/workspace-role-permissions-response.dto';
+import { GetWorkspaceRolePermissionsUseCase } from 'src/domain/workspaces/application/use-cases/get-workspace-role-permissions/get-workspace-role-permissions.use-case';
+import { GetWorkspaceRolePermissionsQuery } from 'src/domain/workspaces/application/use-cases/get-workspace-role-permissions/get-workspace-role-permissions.query';
 
 @ApiTags('workspaces')
 @Controller('workspaces')
@@ -48,6 +51,7 @@ export class WorkspacesController {
     private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
     private readonly updateWorkspaceUseCase: UpdateWorkspaceUseCase,
     private readonly deleteWorkspaceUseCase: DeleteWorkspaceUseCase,
+    private readonly getWorkspaceRolePermissionsUseCase: GetWorkspaceRolePermissionsUseCase,
     private readonly workspaceDtoMapper: WorkspaceDtoMapper,
   ) {}
 
@@ -120,6 +124,28 @@ export class WorkspacesController {
     return this.workspaceDtoMapper.toDto(workspace);
   }
 
+  @Get(':id/role-permissions')
+  @ApiOperation({
+    summary: 'What each workspace role grants within a workspace',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the workspace',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 200, type: WorkspaceRolePermissionsResponseDto })
+  @ApiResponse({ status: 404, description: 'Workspace not found' })
+  async getRolePermissions(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<WorkspaceRolePermissionsResponseDto> {
+    this.logger.log({ id }, 'getRolePermissions');
+    const roles = await this.getWorkspaceRolePermissionsUseCase.execute(
+      new GetWorkspaceRolePermissionsQuery(id),
+    );
+    return this.workspaceDtoMapper.toRolePermissionsDto(roles);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a workspace' })
   @ApiParam({
@@ -132,6 +158,10 @@ export class WorkspacesController {
     status: 200,
     description: 'The updated workspace',
     type: WorkspaceResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Not allowed to manage the workspace',
   })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async update(
@@ -163,6 +193,7 @@ export class WorkspacesController {
     format: 'uuid',
   })
   @ApiResponse({ status: 204, description: 'The workspace was deleted' })
+  @ApiResponse({ status: 403, description: 'Not a workspace admin' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
     this.logger.log({ id }, 'remove');

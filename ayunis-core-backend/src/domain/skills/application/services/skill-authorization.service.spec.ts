@@ -13,6 +13,8 @@ import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspace
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import type { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { SkillAuthorizationService } from './skill-authorization.service';
 
 function setup() {
@@ -45,8 +47,10 @@ function setup() {
     requireWrite: jest.fn().mockResolvedValue(undefined),
     requireManage: jest.fn().mockResolvedValue(undefined),
   };
+  const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
   return {
     collectiveAccess,
+    hasPermission,
     userId,
     orgId,
     personal,
@@ -63,6 +67,7 @@ function setup() {
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
       collectiveAccess as unknown as CollectiveSkillAccessService,
+      hasPermission as unknown as HasPermissionUseCase,
     ),
   };
 }
@@ -97,12 +102,39 @@ describe(SkillAuthorizationService.name, () => {
     });
   });
 
-  it('delegates workspace writes to the workspace capability', async () => {
-    const { service, workspace, workspaceWrite } = setup();
+  it('lets a personal skill owner write only with manage_skills', async () => {
+    const { service, personal, hasPermission } = setup();
+    await expect(service.requireWrite(personal)).resolves.toBeUndefined();
+    expect(hasPermission.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: Permission.MANAGE_SKILLS }),
+    );
+
+    hasPermission.execute.mockResolvedValue(false);
+    await expect(service.requireWrite(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+    await expect(service.requireCreate(personal)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
+  });
+
+  it('gates workspace writes on the workspace, not on manage_skills', async () => {
+    const { service, workspace, workspaceWrite, hasPermission } = setup();
+    hasPermission.execute.mockResolvedValue(false);
     await expect(service.requireWrite(workspace)).resolves.toBeUndefined();
+    await expect(service.requireCreate(workspace)).resolves.toBeUndefined();
     expect(workspaceWrite.execute).toHaveBeenCalledWith({
       workspaceId: workspace.workspaceId,
     });
+    expect(hasPermission.execute).not.toHaveBeenCalled();
+  });
+
+  it('passes on a workspace member’s missing manage_workspace', async () => {
+    const { service, workspace, workspaceWrite } = setup();
+    workspaceWrite.execute.mockRejectedValue(new UnauthorizedAccessError());
+    await expect(service.requireWrite(workspace)).rejects.toBeInstanceOf(
+      UnauthorizedAccessError,
+    );
   });
 
   it('delegates workspace execution to the authenticated thread capability', async () => {

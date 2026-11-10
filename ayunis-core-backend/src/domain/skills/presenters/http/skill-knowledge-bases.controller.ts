@@ -26,8 +26,6 @@ import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 import { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/http/dto/knowledge-base-response.dto';
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
 @Controller('skills')
@@ -43,7 +41,6 @@ export class SkillKnowledgeBasesController {
     private readonly findSkill: FindOneSkillUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Assign knowledge base to skill' })
   @ApiParam({
@@ -82,7 +79,6 @@ export class SkillKnowledgeBasesController {
     return this.toSkillDto(skillId);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Unassign knowledge base from skill' })
   @ApiParam({

@@ -772,6 +772,8 @@ export const RolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
 } as const;
 
 export interface RolePermissionSetDto {
@@ -797,6 +799,8 @@ export const UpdateRolePermissionsDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
 } as const;
 
 export interface UpdateRolePermissionsDto {
@@ -817,6 +821,8 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
 } as const;
 
 export interface MyPermissionsResponseDto {
@@ -2207,6 +2213,8 @@ export const MyTeamResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
 } as const;
 
 export interface MyTeamResponseDto {
@@ -2252,6 +2260,8 @@ export const TeamRolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
 } as const;
 
 export interface TeamRolePermissionSetDto {
@@ -4213,6 +4223,35 @@ export interface CreateWorkspaceDto {
   color?: string;
 }
 
+/**
+ * The current user's role in the workspace
+ */
+export type WorkspaceResponseDtoRole = typeof WorkspaceResponseDtoRole[keyof typeof WorkspaceResponseDtoRole];
+
+
+export const WorkspaceResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type WorkspaceResponseDtoPermissionsItem = typeof WorkspaceResponseDtoPermissionsItem[keyof typeof WorkspaceResponseDtoPermissionsItem];
+
+
+export const WorkspaceResponseDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
+} as const;
+
 export interface WorkspaceResponseDto {
   /** Unique identifier of the workspace */
   id: string;
@@ -4236,6 +4275,10 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** The current user's role in the workspace */
+  role: WorkspaceResponseDtoRole;
+  /** The current user's effective permissions in the workspace, resolved from their workspace role only */
+  permissions: WorkspaceResponseDtoPermissionsItem[];
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
   /** Number of skills owned by the workspace (list responses only) */
@@ -4249,6 +4292,42 @@ export interface WorkspaceResponseDto {
 export interface WorkspaceListResponseDto {
   data: WorkspaceResponseDto[];
   pagination: PaginationDto;
+}
+
+export type WorkspaceRolePermissionSetDtoRole = typeof WorkspaceRolePermissionSetDtoRole[keyof typeof WorkspaceRolePermissionSetDtoRole];
+
+
+export const WorkspaceRolePermissionSetDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type WorkspaceRolePermissionSetDtoPermissionsItem = typeof WorkspaceRolePermissionSetDtoPermissionsItem[keyof typeof WorkspaceRolePermissionSetDtoPermissionsItem];
+
+
+export const WorkspaceRolePermissionSetDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills_with_teams: 'share_skills_with_teams',
+  share_skills_with_org: 'share_skills_with_org',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
+  share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
+  manage_routines: 'manage_routines',
+  manage_workspace: 'manage_workspace',
+  manage_workspace_members: 'manage_workspace_members',
+} as const;
+
+export interface WorkspaceRolePermissionSetDto {
+  role: WorkspaceRolePermissionSetDtoRole;
+  /** Workspace-scoped permissions this role grants within the workspace */
+  permissions: WorkspaceRolePermissionSetDtoPermissionsItem[];
+}
+
+export interface WorkspaceRolePermissionsResponseDto {
+  roles: WorkspaceRolePermissionSetDto[];
 }
 
 export interface UpdateWorkspaceDto {
