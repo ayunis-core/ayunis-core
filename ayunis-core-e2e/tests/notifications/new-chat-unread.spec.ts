@@ -15,7 +15,8 @@ import { createMemberSession } from "../../src/factories/user.factory";
 import {
   inboxItem,
   sidebarInbox,
-  unreadNotificationsButton,
+  unreadNotificationItem,
+  unreadNotificationsTab,
 } from "../../src/flows/notifications.flow";
 import { test, expect } from "../../src/fixtures/test";
 
@@ -56,7 +57,7 @@ async function sendRoutineErrors(
 }
 
 // A new member, so no other spec's notifications change the counts.
-test("unread notifications show per type on the new chat page, open the filtered inbox and disappear once read", async ({
+test("unread notifications show in tabs per type under the new chat input, open from there and disappear once read", async ({
   api,
   browser,
   mail,
@@ -73,78 +74,65 @@ test("unread notifications show per type on the new chat page, open the filtered
     const page = await context.newPage();
 
     await page.goto("/chat");
-    const buttons = page.getByTestId("new-chat-unread-notifications-button");
-    await expect(buttons).toHaveCount(2);
-    const routineButton = unreadNotificationsButton(page, "routine");
-    const errorButton = unreadNotificationsButton(page, "routine_error");
+    const tabs = page.getByTestId("new-chat-unread-notifications-tab");
+    await expect(tabs).toHaveCount(2);
+    const routineTab = unreadNotificationsTab(page, "routine");
+    const errorTab = unreadNotificationsTab(page, "routine_error");
+    await expect(tabs.first()).toHaveAttribute("data-type", "routine_error");
+    await expect(errorTab).toHaveAttribute("aria-expanded", "false");
     await expect(
-      routineButton.getByTestId("new-chat-unread-notifications-count"),
+      routineTab.getByTestId("new-chat-unread-notifications-count"),
     ).toHaveText("1");
     await expect(
-      errorButton.getByTestId("new-chat-unread-notifications-count"),
+      errorTab.getByTestId("new-chat-unread-notifications-count"),
     ).toHaveText("2");
     await expect(page.getByTestId("sidebar-inbox-unread-count")).toHaveText(
       "3",
     );
-    // The row starts where the composer's text starts, on desktop and mobile.
-    for (const viewport of [
-      { width: 1280, height: 800 },
-      { width: 375, height: 812 },
-    ]) {
-      await page.setViewportSize(viewport);
-      await expect
-        .poll(async () => {
-          const button = await buttons.first().boundingBox();
-          const text = await page.getByTestId("input").boundingBox();
-          return Math.round((button?.x ?? 0) - (text?.x ?? 0));
-        })
-        .toBe(0);
+    const items = page.getByTestId("new-chat-unread-notification");
+    await expect(items).toHaveCount(0);
+    await errorTab.click();
+    await expect(errorTab).toHaveAttribute("aria-expanded", "true");
+    await expect(items).toHaveCount(2);
+    for (const item of await items.all()) {
+      await expect(item).toHaveAttribute("data-type", "routine_error");
     }
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await errorButton.hover();
-    await expect(page.getByRole("tooltip")).toBeVisible();
 
-    await errorButton.click();
+    await page.getByTestId("new-chat-unread-notifications-inbox-link").click();
     await expect(page).toHaveURL(/\/inbox\?type=routine_error$/);
     await expect(page.getByTestId("inbox-type-filter")).toHaveAttribute(
       "data-type",
       "routine_error",
     );
-    const items = page.getByTestId("notification-item");
-    await expect(items).toHaveCount(2);
-    for (const item of await items.all()) {
-      await expect(item).toHaveAttribute("data-type", "routine_error");
-    }
-    await items.first().getByTestId("notification-mark-read").click();
-    await expect(items.first()).toHaveAttribute("data-unread", "false");
+    const inboxItems = page.getByTestId("notification-item");
+    await expect(inboxItems).toHaveCount(2);
+    await inboxItems.first().getByTestId("notification-mark-read").click();
+    await expect(inboxItems.first()).toHaveAttribute("data-unread", "false");
 
-    await page.getByTestId("inbox-type-filter-clear").click();
-    await expect(page).toHaveURL(/\/inbox$/);
-    await expect(page.getByTestId("inbox-type-filter")).toHaveCount(0);
-    await expect(items).toHaveCount(3);
-
+    // Read notifications leave the panel's list, not only its count.
     await page.getByTestId("sidebar-navigation-new-chat").click();
     await expect(
-      errorButton.getByTestId("new-chat-unread-notifications-count"),
+      errorTab.getByTestId("new-chat-unread-notifications-count"),
     ).toHaveText("1");
+    await errorTab.click();
+    await expect(items).toHaveCount(1);
     await expect(page.getByTestId("sidebar-inbox-unread-count")).toHaveText(
       "2",
     );
 
-    await routineButton.click();
-    await expect(page).toHaveURL(/\/inbox\?type=routine$/);
+    await routineTab.click();
+    await expect(routineTab).toHaveAttribute("aria-expanded", "true");
+    await expect(errorTab).toHaveAttribute("aria-expanded", "false");
     await expect(items).toHaveCount(1);
-    await inboxItem(page, headline).click();
+    await unreadNotificationItem(page, headline).click();
+    await expect(page).toHaveURL(/\/inbox\/[0-9a-f-]{36}$/);
     await expect(page.getByTestId("notification-detail-headline")).toContainText(
       headline,
     );
-    // Opening a notification keeps the filtered list beside it.
-    await expect(page).toHaveURL(/\/inbox\/[0-9a-f-]+\?type=routine$/);
-    await expect(items).toHaveCount(1);
 
     await page.getByTestId("sidebar-navigation-new-chat").click();
-    await expect(errorButton).toBeVisible();
-    await expect(routineButton).toHaveCount(0);
+    await expect(errorTab).toBeVisible();
+    await expect(routineTab).toHaveCount(0);
     await expect(page.getByTestId("sidebar-inbox-unread-count")).toHaveText(
       "1",
     );
@@ -164,7 +152,7 @@ test("unread notifications show per type on the new chat page, open the filtered
   }
 });
 
-test("another user's unread notifications never show in a user's buttons, counts or filtered inbox", async ({
+test("another user's unread notifications never show in a user's tabs, counts, list or filtered inbox", async ({
   api,
   browser,
   mail,
@@ -208,16 +196,22 @@ test("another user's unread notifications never show in a user's buttons, counts
 
     await page.reload();
     await expect(
-      page.getByTestId("new-chat-unread-notifications-button"),
+      page.getByTestId("new-chat-unread-notifications-tab"),
     ).toHaveCount(1);
-    const routineButton = unreadNotificationsButton(page, "routine");
+    const routineTab = unreadNotificationsTab(page, "routine");
     await expect(
-      routineButton.getByTestId("new-chat-unread-notifications-count"),
+      routineTab.getByTestId("new-chat-unread-notifications-count"),
     ).toHaveText("1");
     await expect(page.getByTestId("sidebar-inbox-unread-count")).toHaveText(
       "1",
     );
-    await routineButton.click();
+    await routineTab.click();
+    await expect(unreadNotificationItem(page, headline)).toBeVisible();
+    await expect(page.getByTestId("new-chat-unread-notification")).toHaveCount(
+      1,
+    );
+    await expect(unreadNotificationItem(page, otherHeadline)).toHaveCount(0);
+    await page.getByTestId("new-chat-unread-notifications-inbox-link").click();
     await expect(page).toHaveURL(/\/inbox\?type=routine$/);
     await expect(inboxItem(page, headline)).toBeVisible();
     await expect(page.getByTestId("notification-item")).toHaveCount(1);

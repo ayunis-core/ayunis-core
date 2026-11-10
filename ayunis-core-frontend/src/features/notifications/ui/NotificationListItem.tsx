@@ -61,7 +61,7 @@ export function NotificationListItem({
               {notification.headline}
             </span>
           </Link>
-          {isError && <Badge variant="destructive">{t('item.error')}</Badge>}
+          {isError && <Badge variant="outline">{t('item.error')}</Badge>}
         </ItemTitle>
         {notification.subheadline && (
           <ItemDescription data-testid="notification-item-subheadline">

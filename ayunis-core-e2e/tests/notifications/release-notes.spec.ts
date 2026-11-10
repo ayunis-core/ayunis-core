@@ -9,7 +9,7 @@ import {
 import { createMemberSession } from "../../src/factories/user.factory";
 import {
   inboxItem,
-  unreadNotificationsButton,
+  unreadNotificationsTab,
 } from "../../src/flows/notifications.flow";
 import { test, expect } from "../../src/fixtures/test";
 
@@ -39,7 +39,7 @@ test("release notes are on, and the first sync records Announcable's notes witho
 });
 
 // A new member, so no other spec's notifications change the counts.
-test("release notes get their own button and inbox filter, show without subheadline and with their image or Loom video", async ({
+test("release notes get their own tab and inbox filter, show without subheadline and with their image or Loom video", async ({
   api,
   browser,
   mail,
@@ -74,11 +74,15 @@ test("release notes get their own button and inbox filter, show without subheadl
     });
 
     await page.goto("/chat");
-    const button = unreadNotificationsButton(page, "release_note");
+    const tab = unreadNotificationsTab(page, "release_note");
     await expect(
-      button.getByTestId("new-chat-unread-notifications-count"),
+      tab.getByTestId("new-chat-unread-notifications-count"),
     ).toHaveText("2");
-    await button.click();
+    await tab.click();
+    await expect(page.getByTestId("new-chat-unread-notification")).toHaveCount(
+      2,
+    );
+    await page.getByTestId("new-chat-unread-notifications-inbox-link").click();
     await expect(page).toHaveURL(/\/inbox\?type=release_note$/);
     await expect(page.getByTestId("inbox-type-filter")).toHaveAttribute(
       "data-type",
