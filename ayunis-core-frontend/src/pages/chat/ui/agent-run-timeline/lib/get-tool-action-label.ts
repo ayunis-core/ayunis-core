@@ -124,6 +124,16 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.edit_skill'),
         target: asString(params.name),
       };
+    case 'create_routine':
+      return {
+        verb: t('chat.timeline.actions.create_routine'),
+        target: asString(params.name),
+      };
+    case 'edit_routine':
+      return {
+        verb: t('chat.timeline.actions.edit_routine'),
+        target: asString(params.name),
+      };
     case 'install_marketplace_skill':
       return {
         verb: t('chat.timeline.actions.install_marketplace_skill'),

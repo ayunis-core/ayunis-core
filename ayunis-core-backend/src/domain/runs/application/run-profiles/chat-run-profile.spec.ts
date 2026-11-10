@@ -24,6 +24,7 @@ import { LegalReferencesCapability } from 'src/domain/runs/application/run-capab
 import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -87,6 +88,7 @@ function buildChatProfile(): ChatRunProfile {
     new FilesChartsMapCapability(assembleTool),
     new ArtifactsCapability(artifactTools),
     new SkillsCapability(assembleTool),
+    new RoutinesCapability(assembleTool, resolved([]) as never),
     new InternetCapability(
       resolved({ internetSearchEnabled: true }) as never,
       { get: () => true } as never,
@@ -165,6 +167,7 @@ describe('ChatRunProfile', () => {
         ToolType.MAP,
         ToolType.CREATE_DOCUMENT,
         ToolType.CREATE_SKILL,
+        ToolType.CREATE_ROUTINE,
         ToolType.WEBSITE_CONTENT,
         ToolType.INTERNET_SEARCH,
         ToolType.GENERATE_IMAGE,

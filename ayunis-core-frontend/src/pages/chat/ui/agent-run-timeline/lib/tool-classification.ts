@@ -20,6 +20,8 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'create_skill',
   'edit_skill',
   'install_marketplace_skill',
+  'create_routine',
+  'edit_routine',
 ]);
 
 export function isRichTool(toolName: string): boolean {

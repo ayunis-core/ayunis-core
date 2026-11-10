@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { ToolsModule } from 'src/domain/tools/tools.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
@@ -52,6 +52,7 @@ import { LegalReferencesCapability } from './application/run-capabilities/capabi
 import { MarketplaceCapability } from './application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from './application/run-capabilities/capabilities/skills.capability';
+import { RoutinesCapability } from './application/run-capabilities/capabilities/routines.capability';
 import { ThreadSourcesCapability } from './application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from './application/run-capabilities/capabilities/workspace-instructions.capability';
 import { RunCapabilityContextFactory } from './application/run-capabilities/run-capability-context.factory';
@@ -81,6 +82,7 @@ import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { RoutinesModule } from 'src/domain/routines/routines.module';
 import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
 import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
 
@@ -105,6 +107,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     WorkspacesModule,
     KnowledgeBasesModule,
     NotificationsModule,
+    forwardRef(() => RoutinesModule), // Runs → Routines → Runs (circular)
   ],
   controllers: [
     RunsController,
@@ -165,6 +168,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     MarketplaceCapability,
     McpCapability,
     SkillsCapability,
+    RoutinesCapability,
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
     NotificationContextCapability,

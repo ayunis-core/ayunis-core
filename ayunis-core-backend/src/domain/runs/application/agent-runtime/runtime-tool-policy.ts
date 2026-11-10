@@ -5,9 +5,11 @@ import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entit
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
@@ -36,6 +38,8 @@ export function isExternallyHandledTool(tool: Tool): boolean {
     tool instanceof CreateSkillTool ||
     tool instanceof EditSkillTool ||
     tool instanceof InstallMarketplaceSkillTool ||
+    tool instanceof CreateRoutineTool ||
+    tool instanceof EditRoutineTool ||
     tool instanceof FinishRoutineTool
   );
 }

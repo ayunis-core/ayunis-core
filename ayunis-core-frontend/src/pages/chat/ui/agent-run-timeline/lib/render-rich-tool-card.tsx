@@ -6,6 +6,8 @@ import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
+import CreateRoutineWidget from '@/pages/chat/ui/chat-widgets/CreateRoutineWidget';
+import EditRoutineWidget from '@/pages/chat/ui/chat-widgets/EditRoutineWidget';
 import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallMarketplaceSkillWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
@@ -63,6 +65,12 @@ export function renderRichToolCard({
           threadId={threadId}
         />
       );
+    case 'create_routine':
+      return (
+        <CreateRoutineWidget content={toolUse} isStreaming={isStreaming} />
+      );
+    case 'edit_routine':
+      return <EditRoutineWidget content={toolUse} isStreaming={isStreaming} />;
     case 'install_marketplace_skill':
       return (
         <InstallMarketplaceSkillWidget

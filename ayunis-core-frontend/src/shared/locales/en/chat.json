@@ -122,6 +122,8 @@
         "create_skill": "Created skill",
         "edit_skill": "Edited skill",
         "install_marketplace_skill": "Offered skill install",
+        "create_routine": "Created routine",
+        "edit_routine": "Edited routine",
         "activate_skill": "Activated skill",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
@@ -213,6 +215,16 @@
         "entryUnavailable": "This skill is not available in the marketplace right now, so it cannot be installed from here.",
         "alreadyInstalled": "Already installed",
         "openSkill": "Open skill"
+      },
+      "create_routine": {
+        "create": "Create routine",
+        "created": "Routine created"
+      },
+      "edit_routine": {
+        "changeSummary": "Changes",
+        "update": "Update routine",
+        "updated": "Routine updated",
+        "routineNotFound": "Could not find this routine. It may have been deleted."
       },
       "create_document": {
         "title": "Document",
