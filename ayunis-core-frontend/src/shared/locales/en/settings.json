@@ -128,6 +128,11 @@
     "defaultModelDescription": "Choose the default AI model for new conversations",
     "selectDefaultModel": "Select default model",
     "none": "No model selected",
+    "modesUnavailable": {
+      "auto": "Auto mode is not available with the models enabled for you. Ask an administrator to enable a suitable model.",
+      "max": "Max mode is not available with the models enabled for you. Ask an administrator to enable a suitable model.",
+      "both": "Auto mode and Max mode are not available with the models enabled for you. Ask an administrator to enable suitable models."
+    },
     "systemPromptTitle": "Personalization",
     "systemPromptLabel": "Personal Instruction",
     "systemPromptDescription": "Define a personal system prompt that gets injected into every AI conversation. Use this to customize AI behavior to your preferences.",
