@@ -25,6 +25,7 @@ vi.mock('@/widgets/markdown', () => ({
     );
     return <p>{children}</p>;
   },
+  usePiiMasks: () => new Map(),
 }));
 
 vi.mock('@/pages/chat/ui/CopyAssistantTextButton', () => ({

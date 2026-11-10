@@ -6,14 +6,18 @@ interface PiiMask {
   value: string;
 }
 
-function promptText(message: Message): string {
-  return message.content
+export function resolvedPromptText(
+  message: Message,
+  masks: ReadonlyMap<string, { value: string }>,
+): string {
+  const prompt = message.content
     .flatMap((content) =>
       'text' in content && !content.isSkillInstruction && !content.isNudge
         ? [content.text]
         : [],
     )
     .join('\n\n');
+  return resolvePiiTokens(prompt, masks);
 }
 
 export function sentPrompts(
@@ -24,8 +28,8 @@ export function sentPrompts(
   const masks = new Map(piiMasks.map((mask) => [mask.token, mask]));
   const prompts = messages.flatMap((message) => {
     if (message.role !== 'user') return [];
-    const prompt = promptText(message);
-    return prompt.trim() ? [resolvePiiTokens(prompt, masks)] : [];
+    const prompt = resolvedPromptText(message, masks);
+    return prompt.trim() ? [prompt] : [];
   });
   // The thread already shows a just-sent prompt before the server echoes it.
   if (pendingPrompt?.trim() && prompts.at(-1) !== pendingPrompt) {
