@@ -36,19 +36,25 @@ export function ChatSettingsCard() {
     useUserDefaultModel({ allModels: permittedModels });
   const {
     mode: defaultMode,
+    availableModes,
     setMode,
     isLoading: modeLoading,
   } = useModelModeDefault({ level: 'user' });
   const { resolutions } = useModelModes();
 
-  // Offer a mode only while it resolves, but keep a saved one visible.
   const modes: ModeOption[] = MODEL_MODES.map((mode) => ({
     mode,
     resolvedModel: resolveModeModel(mode, permittedModels, resolutions),
-  })).filter(
-    ({ mode, resolvedModel }) =>
-      resolvedModel !== undefined || mode === defaultMode,
-  );
+    disabled: !availableModes.includes(mode),
+  }));
+  const unavailableModes = modes.filter(({ disabled }) => disabled);
+  const unavailableModesHint =
+    unavailableModes.length > 1
+      ? 'both'
+      : (unavailableModes.at(0)?.mode ?? null);
+  const modesHint = unavailableModesHint
+    ? t(`chat.modesUnavailable.${unavailableModesHint}`)
+    : undefined;
 
   // Until the mode default is known, a leftover model default would flash.
   let selectedValue: string | undefined;
@@ -61,6 +67,7 @@ export function ChatSettingsCard() {
   const handleDefaultSettingChange = (value: string) => {
     const mode = getModeFromValue(value);
     if (mode) {
+      if (!availableModes.includes(mode)) return;
       setMode(mode);
     } else if (value === 'null') {
       deleteUserDefaultModel();
@@ -106,6 +113,7 @@ export function ChatSettingsCard() {
                 showFlag
                 showHeading={false}
                 modes={modes}
+                modesHint={modesHint}
               />
             </SelectContent>
           </Select>
