@@ -9,8 +9,7 @@ import {
 } from './enforce-retention.use-case';
 import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
 import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
-import { ContextService } from 'src/common/context/services/context.service';
-import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
+import { DeleteExpiredThreadUseCase } from 'src/domain/threads/application/use-cases/delete-expired-thread/delete-expired-thread.use-case';
 import {
   FindExpiredThreadRefsByOrgUseCase,
   type ExpiredThreadRef,
@@ -23,7 +22,6 @@ describe('EnforceRetentionUseCase', () => {
   let findExpired: { execute: jest.Mock };
   let deleteThread: { execute: jest.Mock };
   let deleteNotifications: { execute: jest.Mock };
-  let contextService: { run: jest.Mock; set: jest.Mock };
   let dryRun: boolean;
 
   const ref = (): ExpiredThreadRef => ({
@@ -37,22 +35,17 @@ describe('EnforceRetentionUseCase', () => {
     findExpired = { execute: jest.fn().mockResolvedValue([]) };
     deleteThread = { execute: jest.fn().mockResolvedValue(undefined) };
     deleteNotifications = { execute: jest.fn().mockResolvedValue(0) };
-    contextService = {
-      run: jest.fn((cb: () => Promise<void>) => cb()),
-      set: jest.fn(),
-    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnforceRetentionUseCase,
         { provide: RetentionPoliciesRepository, useValue: retentionRepo },
         { provide: FindExpiredThreadRefsByOrgUseCase, useValue: findExpired },
-        { provide: DeleteThreadUseCase, useValue: deleteThread },
+        { provide: DeleteExpiredThreadUseCase, useValue: deleteThread },
         {
           provide: DeleteExpiredNotificationsUseCase,
           useValue: deleteNotifications,
         },
-        { provide: ContextService, useValue: contextService },
         {
           provide: ConfigService,
           useValue: { get: jest.fn(() => dryRun) },
@@ -89,10 +82,11 @@ describe('EnforceRetentionUseCase', () => {
     expect(Math.round(ageDays)).toBe(90);
 
     expect(deleteThread.execute).toHaveBeenCalledTimes(2);
-    expect(contextService.set).toHaveBeenCalledWith(
-      'userId',
-      threads[0].userId,
-    );
+    expect(deleteThread.execute).toHaveBeenCalledWith({
+      orgId,
+      threadId: threads[0].id,
+      userId: threads[0].userId,
+    });
     expect(result.totalDeleted).toBe(2);
     expect(result.perOrg[0].deleted).toBe(2);
   });

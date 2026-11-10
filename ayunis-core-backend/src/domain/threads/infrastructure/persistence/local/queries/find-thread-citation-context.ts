@@ -2,6 +2,7 @@ import type { UUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import { personalOrMemberWorkspaceSql } from './personal-or-member-workspace';
 
 export async function findThreadCitationContext(
   threadRepository: Repository<ThreadRecord>,
@@ -29,7 +30,8 @@ export async function findThreadCitationContext(
          WHERE assignment."threadId" = thread.id
        ), '[]'::jsonb) AS "knowledgeBaseAssignments"
      FROM threads thread
-     WHERE thread.id = $1 AND thread."userId" = $2`,
+     WHERE thread.id = $1 AND thread."userId" = $2
+       AND ${personalOrMemberWorkspaceSql('thread."workspaceId"', '$2')}`,
     [id, userId],
   );
   return contexts[0] ?? null;

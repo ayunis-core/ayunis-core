@@ -37,7 +37,7 @@ describe('LocalThreadsRepository', () => {
     await repository.findOne(threadId, userId);
 
     expect(threadRepository.findOne).toHaveBeenCalledWith({
-      where: { id: threadId, userId },
+      where: expect.objectContaining({ id: threadId, userId }),
       relationLoadStrategy: 'query',
       relations: [
         'messages',

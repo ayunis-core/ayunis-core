@@ -19,7 +19,11 @@ const threadSchema = new EntitySchema<ThreadRecord>({
   name: 'ThreadRecord',
   target: ThreadRecord,
   tableName: 'threads',
-  columns: { id: { type: 'uuid', primary: true }, userId: { type: 'uuid' } },
+  columns: {
+    id: { type: 'uuid', primary: true },
+    userId: { type: 'uuid' },
+    workspaceId: { type: 'uuid', nullable: true },
+  },
 });
 const assignmentSchema = new EntitySchema<ThreadKnowledgeBaseAssignmentRecord>({
   name: 'ThreadKnowledgeBaseAssignmentRecord',
@@ -62,12 +66,17 @@ describe('Thread assignment transaction', () => {
       migrations: [],
       migrationsRun: false,
       logging: false,
+      // The workspace membership condition names workspace_members unqualified.
+      extra: { options: `-c search_path=${schema}` },
     });
     await db.initialize();
     const runner = db.createQueryRunner();
     await runner.createSchema(schema, true);
     await runner.release();
     await db.synchronize();
+    await db.query(
+      `CREATE TABLE workspace_members ("workspaceId" uuid, "userId" uuid)`,
+    );
     configureRepository();
   }, 30_000);
 
