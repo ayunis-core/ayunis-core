@@ -65,9 +65,6 @@
     "changingPassword": "Passwort wird geändert...",
     "passwordUpdatedSuccessfully": "Passwort erfolgreich aktualisiert",
     "passwordsDontMatch": "Passwörter stimmen nicht überein",
-    "accountActions": "Kontoaktionen",
-    "deleteAccount": "Konto löschen",
-    "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft.",
     "error": {
       "invalidName": "Ungültiger Name angegeben",
       "updateFailed": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
