@@ -1,0 +1,55 @@
+# Preview overlay — runs one Core stack per pull request side by side on the
+# preview host. Layered on the release overlay, one Compose project per PR:
+#
+#   PR=123 CORE_TAG=sha-<head commit> docker compose -p pr-123 \
+#     -f docker-compose.yml -f compose.release.yml -f compose.preview.yml \
+#     up -d --no-build
+#
+# The preview controller in ayunis-infra (servers/hetzner-08/preview-controller)
+# runs this for every open PR labelled `preview`; build-images.yml publishes
+# the sha-<head commit> images it pulls.
+#
+# Fixed container names and host ports would collide between projects, so both
+# are reset. The proxy reaches a preview through the project's own network
+# under PR-scoped aliases: the proxy joins each preview's network, never the
+# other way round. A preview's services stay off any network shared with other
+# previews, where their service names (minio, redis, …) would resolve to
+# another preview's containers.
+
+services:
+  postgres:
+    container_name: !reset null
+
+  minio:
+    container_name: !reset null
+    ports: !reset []
+    networks:
+      ayunis-network:
+        aliases:
+          - pr-${PR:?Set PR to the pull request number}-minio
+
+  docker-socket-proxy:
+    container_name: !reset null
+
+  code-execution:
+    container_name: !reset null
+
+  anonymize:
+    container_name: !reset null
+
+  minio-init:
+    container_name: !reset null
+
+  app:
+    container_name: !reset null
+    ports: !reset []
+    networks:
+      ayunis-network:
+        aliases:
+          - pr-${PR:?Set PR to the pull request number}-app
+
+  redis:
+    container_name: !reset null
+
+  gotenberg:
+    container_name: !reset null

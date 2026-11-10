@@ -7,7 +7,10 @@ name: Build & Publish Images
 #   ayunis-core-python-sandbox  — image user code executes in (DOCKER_IMAGE)
 #
 # Pushes to main produce sha-<commit> + latest tags (what staging pulls,
-# AYC-589); release tags produce vX.Y.Z.
+# AYC-589); release tags produce vX.Y.Z. Pull requests labelled `preview`
+# produce sha-<head commit> tags, which the preview controller on hetzner-08
+# (ayunis-infra, servers/hetzner-08/preview-controller) deploys as
+# https://pr-<number>.preview.ayunis.de.
 #
 # release-please calls this workflow instead of pushing a tag that would
 # trigger it: GITHUB_TOKEN-created tags don't fire push-tag workflows, and
@@ -27,6 +30,9 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+  # No branch filter: the top PR of a stack is based on another PR's branch.
+  pull_request:
+    types: [labeled, synchronize, reopened]
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -46,7 +52,8 @@ concurrency:
   # triggered by the very push that created the release — where a third
   # queued run would cancel it.
   group: build-images-${{ inputs.release_tag || github.ref }}
-  cancel-in-progress: false
+  # A newer push to a preview PR supersedes the running build.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Builds one architecture of one image and pushes it by digest — no tags.
@@ -54,6 +61,12 @@ jobs:
   # single manifest list. Tagging here instead would leave the two
   # architectures fighting over the same tag.
   build:
+    # Pull requests build only while labelled `preview`, and adding some other
+    # label doesn't rebuild one.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'preview') &&
+       (github.event.action != 'labeled' || github.event.label.name == 'preview'))
     strategy:
       fail-fast: false
       matrix:
@@ -88,7 +101,7 @@ jobs:
       # have moved past the commit whose sha- tag we're about to publish.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.release_tag || github.sha }}
+          ref: ${{ inputs.release_tag || github.event.pull_request.head.sha || github.sha }}
 
       - name: Log in to GHCR
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
@@ -127,7 +140,7 @@ jobs:
           # both ends report the built commit to AppSignal and the
           # `sourcemaps` job below uploads maps under the same revision.
           build-args: |
-            APP_REVISION=${{ github.sha }}
+            APP_REVISION=${{ github.event.pull_request.head.sha || github.sha }}
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           # Registry cache rather than type=gha: four images across two
           # platforms export eight mode=max scopes, and the two anonymize layer
@@ -144,7 +157,8 @@ jobs:
           # cache blobs do go untagged and are collected — which is what keeps
           # this from growing without bound.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-${{ matrix.platform }}
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-${{ matrix.platform }},mode=max
+          # Pull requests read main's cache but don't overwrite it.
+          cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref=ghcr.io/{0}/{1}:buildcache-{2},mode=max', github.repository_owner, matrix.image, matrix.platform) || '' }}
 
       # The filename is the digest; the file itself is empty. `merge` only needs
       # the names.
@@ -168,6 +182,10 @@ jobs:
   merge:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      # On pull requests, type=sha tags the PR's head commit instead of the
+      # merge commit GitHub runs the workflow on.
+      DOCKER_METADATA_PR_HEAD_SHA: 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -301,6 +319,8 @@ jobs:
   #                                     (default: staging production)
   # Skips with a notice instead of failing while the secret is not set up.
   sourcemaps:
+    # Preview builds report to no AppSignal environment.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
       APPSIGNAL_PUSH_API_KEY: ${{ secrets.APPSIGNAL_PUSH_API_KEY }}
