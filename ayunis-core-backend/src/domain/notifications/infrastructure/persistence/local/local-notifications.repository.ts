@@ -117,10 +117,15 @@ export class LocalNotificationsRepository extends NotificationsRepository {
   async findPageByUserId(
     userId: UUID,
     { limit, offset }: PaginatedQueryParams,
-    { routineId, type }: NotificationsFilter = {},
+    { routineId, type, unread }: NotificationsFilter = {},
   ): Promise<Paginated<Notification>> {
     const [records, total] = await this.repo.findAndCount({
-      where: { userId, ...(routineId && { routineId }), ...(type && { type }) },
+      where: {
+        userId,
+        ...(routineId && { routineId }),
+        ...(type && { type }),
+        ...(unread && { readAt: IsNull() }),
+      },
       order: { createdAt: 'DESC', id: 'DESC' },
       take: limit,
       skip: offset,

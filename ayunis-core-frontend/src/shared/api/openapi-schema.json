@@ -9076,6 +9076,15 @@
             "schema": {
               "$ref": "#/components/schemas/NotificationType"
             }
+          },
+          {
+            "name": "unread",
+            "required": false,
+            "in": "query",
+            "description": "Only the unread notifications when true",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
