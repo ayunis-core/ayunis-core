@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.72.0](https://github.com/ayunis-core/ayunis-core/compare/v2.71.0...v2.72.0) (2026-11-10)
+
+
+### Features
+
+* **chat:** add audio recording upload option to chat input menu (AYC-1724) ([#2273](https://github.com/ayunis-core/ayunis-core/issues/2273)) ([8e58991](https://github.com/ayunis-core/ayunis-core/commit/8e589916bc0191dfb5a0135326621bd18d9a6e63))
+* **chat:** create and edit routines from the chat (AYC-1726) ([#2274](https://github.com/ayunis-core/ayunis-core/issues/2274)) ([57a47ec](https://github.com/ayunis-core/ayunis-core/commit/57a47ec5491deb9931afba43ea45f05d299e6109))
+* **invites:** resend all expired invites at once (AYC-1625) ([#2251](https://github.com/ayunis-core/ayunis-core/issues/2251)) ([651ac97](https://github.com/ayunis-core/ayunis-core/commit/651ac979e651410a75489d411d3e92226a3164eb))
+* **models:** grey out unavailable modes and unify mode names (AYC-1716) ([#2204](https://github.com/ayunis-core/ayunis-core/issues/2204)) ([e6cd57e](https://github.com/ayunis-core/ayunis-core/commit/e6cd57e3affab9c75fea8704519a2dbd04a401c6))
+* **outlook:** sign in to ayunis from the outlook task pane (AYC-1589) ([#2268](https://github.com/ayunis-core/ayunis-core/issues/2268)) ([61c9093](https://github.com/ayunis-core/ayunis-core/commit/61c909383039a08ab6a18282206fe1e1bd5b4b3d))
+* **ownership:** group skill and knowledge-base lists by owner (AYC-1713) ([#2257](https://github.com/ayunis-core/ayunis-core/issues/2257)) ([1d54f17](https://github.com/ayunis-core/ayunis-core/commit/1d54f174f8a64b2f307a5016ffcc6b6d636bc882))
+* **ownership:** let teams and the organization own skills and knowledge bases (AYC-1642) ([#2212](https://github.com/ayunis-core/ayunis-core/issues/2212)) ([ba4144e](https://github.com/ayunis-core/ayunis-core/commit/ba4144e01b9cde9aa11701086af76534b24a6eaa))
+* **shares:** stop creating shares from the share tab (AYC-1712) ([#2255](https://github.com/ayunis-core/ayunis-core/issues/2255)) ([ec327b6](https://github.com/ayunis-core/ayunis-core/commit/ec327b664eedb81bc42cb4c1c80a29a3d1b120a4))
+
+
+### Bug Fixes
+
+* **chat:** create a routine only once per chat proposal (AYC-1726) ([#2282](https://github.com/ayunis-core/ayunis-core/issues/2282)) ([fc23caf](https://github.com/ayunis-core/ayunis-core/commit/fc23caf94ce7b8caac9857c1d6d26dc5c904f2e5))
+* **settings:** remove non-functional delete account button (AYC-1512) ([#2271](https://github.com/ayunis-core/ayunis-core/issues/2271)) ([93be0f1](https://github.com/ayunis-core/ayunis-core/commit/93be0f116b062d504d60f9430e2796b815448cc8))
+* **settings:** show unavailable personal model modes (AYC-1721) ([#2270](https://github.com/ayunis-core/ayunis-core/issues/2270)) ([71d398d](https://github.com/ayunis-core/ayunis-core/commit/71d398d9ae59f8b937133849d718e2b585ca9038))
+
+
+### Code Refactoring
+
+* **shares:** remove leftover prompt references (AYC-1644) ([#2208](https://github.com/ayunis-core/ayunis-core/issues/2208)) ([0c4b780](https://github.com/ayunis-core/ayunis-core/commit/0c4b78024dd3bbbcd4ed8b18d5f2d05df45d61f4))
+
+
+### Documentation
+
+* **deploy:** add upgrade notes for the 2.71.0 direct-upload prerequisites (AYC-1616) ([#2260](https://github.com/ayunis-core/ayunis-core/issues/2260)) ([dd5d210](https://github.com/ayunis-core/ayunis-core/commit/dd5d210d079dd59f7e42f8703a1ba490c763fcc4))
+
+
+### CI/CD
+
+* **previews:** build and describe PR preview deployments (AYC-000) ([#2259](https://github.com/ayunis-core/ayunis-core/issues/2259)) ([3a749d4](https://github.com/ayunis-core/ayunis-core/commit/3a749d40e5593304d0b854168fad6d6d41c091f3))
+
 ## [2.71.0](https://github.com/ayunis-core/ayunis-core/compare/v2.70.0...v2.71.0) (2026-11-09)
 
 
