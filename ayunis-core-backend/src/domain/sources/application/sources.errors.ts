@@ -10,6 +10,7 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
+  SPREADSHEET_TOO_LARGE = 'SPREADSHEET_TOO_LARGE',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   SOURCE_UPLOAD_NOT_FOUND = 'SOURCE_UPLOAD_NOT_FOUND',
   SOURCE_UPLOAD_EXPIRED = 'SOURCE_UPLOAD_EXPIRED',
@@ -103,6 +104,17 @@ export class SpreadsheetParseTimeoutError extends SourceError {
     super(
       `Spreadsheet could not be parsed within ${timeoutMs / 1000} seconds`,
       SourceErrorCode.SPREADSHEET_PARSE_TIMEOUT,
+      422,
+      metadata,
+    );
+  }
+}
+
+export class SpreadsheetTooLargeError extends SourceError {
+  constructor(maxCells: number, metadata?: ErrorMetadata) {
+    super(
+      `The spreadsheet's data spans more than ${maxCells.toLocaleString('en-US')} cells. Remove unused rows and columns or split it into smaller files.`,
+      SourceErrorCode.SPREADSHEET_TOO_LARGE,
       422,
       metadata,
     );

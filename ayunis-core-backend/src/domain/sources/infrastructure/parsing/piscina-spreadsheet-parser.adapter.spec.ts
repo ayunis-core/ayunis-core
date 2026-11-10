@@ -1,5 +1,9 @@
 import Piscina from 'piscina';
-import { SpreadsheetParseTimeoutError } from 'src/domain/sources/application/sources.errors';
+import {
+  SpreadsheetParseTimeoutError,
+  SpreadsheetTooLargeError,
+} from 'src/domain/sources/application/sources.errors';
+import { WorkbookCellLimitError } from './excel-parser';
 import { PiscinaSpreadsheetParserAdapter } from './piscina-spreadsheet-parser.adapter';
 
 const runMock = jest.fn();
@@ -57,6 +61,16 @@ describe('PiscinaSpreadsheetParserAdapter', () => {
     await expect(
       adapter.parseWorkbook(Buffer.from('xlsx')),
     ).rejects.toBeInstanceOf(SpreadsheetParseTimeoutError);
+  });
+
+  it('maps a worker cell-limit failure to SpreadsheetTooLargeError', async () => {
+    // Piscina hands back a structured clone: the message survives, the class does not.
+    const cloned = new Error(new WorkbookCellLimitError(27_262_976).message);
+    runMock.mockRejectedValue(cloned);
+
+    await expect(
+      adapter.parseWorkbook(Buffer.from('xlsx')),
+    ).rejects.toBeInstanceOf(SpreadsheetTooLargeError);
   });
 
   it('caps the worker heap so a decompression bomb cannot OOM the process', async () => {
