@@ -13613,16 +13613,33 @@
     },
     "/auth/refresh": {
       "post": {
-        "description": "Refresh expired access tokens using the refresh token stored in cookies. Returns new authentication cookies.",
+        "description": "Refresh expired access tokens using the refresh token stored in cookies and set new authentication cookies. Without a refresh cookie, a token client sends its refresh token in the body and receives the new tokens in the body; no cookies are written on that path.",
         "operationId": "AuthenticationController_refresh",
         "parameters": [],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequestDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Token refresh successful. New authentication cookies are set.",
+            "description": "Token refresh successful. Cookie requests get new authentication cookies, body requests the new tokens.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponseDto"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionTokensResponseDto"
+                    }
+                  ]
                 }
               }
             }
@@ -13778,6 +13795,62 @@
           }
         },
         "summary": "Confirm forced enrollment and complete the login",
+        "tags": ["Authentication"]
+      }
+    },
+    "/auth/session/handoff": {
+      "post": {
+        "description": "Authenticates the refresh cookie, starts a separate session bound to the given client and returns its tokens in the body. The cookie session and its cookies stay as they are. Used by the Office add-in dialog after a regular login.",
+        "operationId": "SessionHandoffController_handoff",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionHandoffRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTokensResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No refresh cookie, or the refresh token is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "refreshToken": []
+          }
+        ],
+        "summary": "Start a token client session from the cookie session",
         "tags": ["Authentication"]
       }
     },
@@ -14479,8 +14552,19 @@
     },
     "/auth/logout": {
       "post": {
+        "description": "Revokes the session of the refresh cookie and clears the cookies. Without a refresh cookie, a token client sends its refresh token in the body and no cookies are written.",
         "operationId": "LogoutController_logout",
         "parameters": [],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequestDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -24398,6 +24482,34 @@
         },
         "required": ["success"]
       },
+      "SessionTokensResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access JWT for the Authorization header"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque refresh token, rotated on every use"
+          },
+          "expiresIn": {
+            "type": "number",
+            "description": "Access token lifetime in seconds",
+            "example": 3600
+          }
+        },
+        "required": ["accessToken", "refreshToken", "expiresIn"]
+      },
+      "RefreshTokenRequestDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token of a token client. Read only when no refresh cookie is present; the new tokens are then returned in the body."
+          }
+        }
+      },
       "MeResponseDto": {
         "type": "object",
         "properties": {
@@ -24482,6 +24594,18 @@
           }
         },
         "required": ["success", "recoveryCodes"]
+      },
+      "SessionHandoffRequestDto": {
+        "type": "object",
+        "properties": {
+          "client": {
+            "type": "string",
+            "description": "Token client that takes over the session",
+            "enum": ["outlook"],
+            "example": "outlook"
+          }
+        },
+        "required": ["client"]
       },
       "OnboardingResponseDto": {
         "type": "object",
@@ -24852,6 +24976,15 @@
           }
         },
         "required": ["canLink", "isLinked"]
+      },
+      "LogoutRequestDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token of a token client. Read only when no refresh cookie is present; no cookies are written on that path."
+          }
+        }
       },
       "LogoutResponseDto": {
         "type": "object",

@@ -26,6 +26,7 @@ import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-
 import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
 import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
 import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 interface RefreshTokenPayload {
   sub?: string;
@@ -55,7 +56,7 @@ export class RefreshTokenUseCase {
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
     this.logger.log('refreshToken');
     try {
-      return await this.refreshTransactionally(command.refreshToken);
+      return await this.refreshTransactionally(command);
     } catch (error) {
       if (error instanceof RefreshTokenReuseError) {
         await this.revokeSessionFamilyUseCase.execute(
@@ -67,20 +68,33 @@ export class RefreshTokenUseCase {
   }
 
   @Transactional()
-  private async refreshTransactionally(refreshToken: string) {
-    return this.isJwt(refreshToken)
-      ? this.refreshLegacy(refreshToken)
-      : this.refreshOpaque(refreshToken);
+  private async refreshTransactionally(command: RefreshTokenCommand) {
+    const { refreshToken, clientBound } = command;
+    if (!this.isJwt(refreshToken)) {
+      return this.refreshOpaque(refreshToken, clientBound);
+    }
+    if (clientBound) {
+      throw new InvalidTokenError('Refresh token is not bound to a client');
+    }
+    return this.refreshLegacy(refreshToken);
   }
 
   private isJwt(token: string): boolean {
     return token.split('.').length === 3;
   }
 
-  private async refreshOpaque(token: string): Promise<AuthTokens> {
+  private async refreshOpaque(
+    token: string,
+    clientBound: boolean,
+  ): Promise<AuthTokens> {
     const current = await this.prepareSessionRotation.execute(
       new PrepareSessionRotationCommand(token),
     );
+    // A browser session's token must never turn into an unrestricted
+    // bearer token through the body path.
+    if (clientBound && !current.client) {
+      throw new InvalidTokenError('Refresh token is not bound to a client');
+    }
     const user = await this.findUser(current.userId);
     const sessionVersion =
       await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
@@ -90,7 +104,12 @@ export class RefreshTokenUseCase {
     const rotated = await this.rotateSessionUseCase.execute(
       new RotateSessionCommand(current),
     );
-    return this.issueTokens(user, rotated.refreshToken, sessionVersion);
+    return this.issueTokens(
+      user,
+      rotated.refreshToken,
+      sessionVersion,
+      rotated.client,
+    );
   }
 
   /**
@@ -119,7 +138,7 @@ export class RefreshTokenUseCase {
     const session = await this.createSessionUseCase.execute(
       new CreateSessionCommand(userId, SessionAuthenticationMethod.PASSWORD),
     );
-    return this.issueTokens(user, session.refreshToken, sessionVersion);
+    return this.issueTokens(user, session.refreshToken, sessionVersion, null);
   }
 
   // A tampered or expired legacy JWT is invalid credentials (401), not an
@@ -152,9 +171,10 @@ export class RefreshTokenUseCase {
     user: ActiveUser,
     refreshToken: string,
     sessionVersion: number,
+    client: SessionClient | null,
   ): Promise<AuthTokens> {
     const accessToken = await this.authRepository.generateAccessToken(
-      user,
+      new ActiveUser({ ...user, client }),
       sessionVersion,
     );
     return new AuthTokens(accessToken, refreshToken);

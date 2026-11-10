@@ -58,6 +58,20 @@ describe('LocalAuthenticationRepository', () => {
     expect(accessToken).toBe('signed-access-token');
   });
 
+  it('signs the session client of a handed-off session into the access token', async () => {
+    configService.get.mockReturnValue({ expiresIn: '1h' });
+
+    await repository.generateAccessToken(
+      new ActiveUser({ ...user, client: 'outlook' }),
+    );
+    await repository.generateAccessToken(user);
+
+    expect(jwtService.sign.mock.calls[0][0]).toMatchObject({
+      client: 'outlook',
+    });
+    expect(jwtService.sign.mock.calls[1][0]).not.toHaveProperty('client');
+  });
+
   it('should throw when the JWT configuration is missing', async () => {
     configService.get.mockReturnValue(undefined);
 

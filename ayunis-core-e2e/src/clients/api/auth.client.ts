@@ -67,7 +67,7 @@ export function getCurrentUser(api: APIRequestContext): Promise<MeResponseDto> {
 }
 
 export async function refreshSession(api: APIRequestContext): Promise<void> {
-  await generatedApi.authenticationControllerRefresh({ api });
+  await generatedApi.authenticationControllerRefresh({}, { api });
 }
 
 export async function markWelcomeVideoSeen(

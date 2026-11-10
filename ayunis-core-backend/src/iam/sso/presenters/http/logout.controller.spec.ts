@@ -37,7 +37,7 @@ describe(LogoutController.name, () => {
       cookies: { refresh_token: 'refresh-token' },
     } as unknown as Request;
 
-    await expect(controller.logout(request, response)).resolves.toEqual({
+    await expect(controller.logout(request, response, {})).resolves.toEqual({
       success: true,
       brokerLogoutUrl: 'https://sso.ayunis.de/oidc/v1/end_session',
     });
@@ -56,8 +56,41 @@ describe(LogoutController.name, () => {
       cookies: { refresh_token: 'refresh-token' },
     } as unknown as Request;
 
-    await expect(controller.logout(request, response)).rejects.toThrow(
+    await expect(controller.logout(request, response, {})).rejects.toThrow(
       'broker unavailable',
+    );
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'refresh_token',
+      expect.any(Object),
+    );
+  });
+
+  it('revokes a token client session from the body without cookie writes', async () => {
+    completeLogout.execute.mockResolvedValue({ brokerLogoutUrl: null });
+    const request = { cookies: {} } as unknown as Request;
+
+    await controller.logout(request, response, {
+      refreshToken: 'pane-refresh-token',
+    });
+
+    expect(completeLogout.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ refreshToken: 'pane-refresh-token' }),
+    );
+    expect(response.clearCookie).not.toHaveBeenCalled();
+  });
+
+  it('prefers the refresh cookie over a body token', async () => {
+    completeLogout.execute.mockResolvedValue({ brokerLogoutUrl: null });
+    const request = {
+      cookies: { refresh_token: 'web-refresh-token' },
+    } as unknown as Request;
+
+    await controller.logout(request, response, {
+      refreshToken: 'pane-refresh-token',
+    });
+
+    expect(completeLogout.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ refreshToken: 'web-refresh-token' }),
     );
     expect(response.clearCookie).toHaveBeenCalledWith(
       'refresh_token',

@@ -19,31 +19,34 @@ export function useLogout() {
   }
 
   const logout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: ({ brokerLogoutUrl }) => {
-        clearLocalState();
-        if (brokerLogoutUrl) {
-          navigateToExternalUrl(brokerLogoutUrl);
-          return;
-        }
-        void navigate({ to: '/login' });
-      },
-      onError: (error) => {
-        clearLocalState();
-        try {
-          const { code } = extractErrorData(error);
-          // Every logout failure has the same safe recovery: clear local state and require sign-in.
-          // eslint-disable-next-line sonarjs/no-small-switch
-          switch (code) {
-            default:
-              showError(t('sidebar.logout.error'));
+    logoutMutation.mutate(
+      {},
+      {
+        onSuccess: ({ brokerLogoutUrl }) => {
+          clearLocalState();
+          if (brokerLogoutUrl) {
+            navigateToExternalUrl(brokerLogoutUrl);
+            return;
           }
-        } catch {
-          showError(t('sidebar.logout.error'));
-        }
-        void navigate({ to: '/login' });
+          void navigate({ to: '/login' });
+        },
+        onError: (error) => {
+          clearLocalState();
+          try {
+            const { code } = extractErrorData(error);
+            // Every logout failure has the same safe recovery: clear local state and require sign-in.
+            // eslint-disable-next-line sonarjs/no-small-switch
+            switch (code) {
+              default:
+                showError(t('sidebar.logout.error'));
+            }
+          } catch {
+            showError(t('sidebar.logout.error'));
+          }
+          void navigate({ to: '/login' });
+        },
       },
-    });
+    );
   };
 
   return {

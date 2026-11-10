@@ -15,6 +15,7 @@ import { RevokeSessionsByZitadelSessionUseCase } from 'src/iam/sessions/applicat
 import { RevokeSsoSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-sso-sessions-for-user/revoke-sso-sessions-for-user.use-case';
 import { RevokePasswordSessionsForOrgUseCase } from 'src/iam/sessions/application/use-cases/revoke-password-sessions-for-org/revoke-password-sessions-for-org.use-case';
 import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.use-case';
+import { ForkSessionUseCase } from 'src/iam/sessions/application/use-cases/fork-session/fork-session.use-case';
 
 /**
  * Owns server-side refresh-token session state. Imports nothing from the users
@@ -33,6 +34,7 @@ import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-
     CreateSessionUseCase,
     PrepareSessionRotationUseCase,
     RotateSessionUseCase,
+    ForkSessionUseCase,
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,
@@ -46,6 +48,7 @@ import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-
     CreateSessionUseCase,
     PrepareSessionRotationUseCase,
     RotateSessionUseCase,
+    ForkSessionUseCase,
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,

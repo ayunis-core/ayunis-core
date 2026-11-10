@@ -29,6 +29,7 @@
   "/auth/mfa/verify",
   "/auth/refresh",
   "/auth/register",
+  "/auth/session/handoff",
   "/auth/sso/discover",
   "/auth/sso/link/start",
   "/auth/sso/link/status",

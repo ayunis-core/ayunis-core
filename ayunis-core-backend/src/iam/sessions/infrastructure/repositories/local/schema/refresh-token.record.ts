@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 @Entity({ name: 'refresh_tokens' })
 export class RefreshTokenRecord extends BaseRecord {
@@ -35,6 +36,11 @@ export class RefreshTokenRecord extends BaseRecord {
 
   @Column({ type: 'timestamptz', nullable: true })
   familyExpiresAt: Date | null;
+
+  // varchar rather than enum: the client registry is data, so adding a client
+  // must not need a migration.
+  @Column({ type: 'varchar', nullable: true })
+  client: SessionClient | null;
 
   @Index()
   @Column({ type: 'timestamptz' })

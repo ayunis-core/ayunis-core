@@ -28,6 +28,7 @@ export class CreateSessionUseCase {
       familyId: this.refreshTokenFactory.newFamilyId(),
       authenticationMethod: command.authenticationMethod,
       zitadelSessionId: command.zitadelSessionId,
+      client: command.client,
     });
 
     await this.refreshTokensRepository.insert(token);

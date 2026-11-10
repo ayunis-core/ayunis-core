@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import type { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 
 export const TEST_USER_ID = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -20,6 +21,7 @@ export function aRefreshToken(
     authenticationMethod: SessionAuthenticationMethod;
     zitadelSessionId: string | null;
     familyExpiresAt: Date | null;
+    client: SessionClient | null;
     expiresAt: Date;
     usedAt: Date | null;
     revokedAt: Date | null;
@@ -34,6 +36,7 @@ export function aRefreshToken(
       overrides.authenticationMethod ?? SessionAuthenticationMethod.PASSWORD,
     zitadelSessionId: nullable(overrides.zitadelSessionId),
     familyExpiresAt: nullable(overrides.familyExpiresAt),
+    client: nullable(overrides.client),
     expiresAt:
       overrides.expiresAt ?? new Date(Date.now() + 7 * 24 * 3600 * 1000),
     usedAt: overrides.usedAt ?? null,

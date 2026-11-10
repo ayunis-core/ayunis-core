@@ -14,6 +14,7 @@ export enum AuthenticationErrorCode {
   REGISTRATION_DISABLED = 'REGISTRATION_DISABLED',
   PENDING_LOGIN_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
   LOCAL_PASSWORD_LOGIN_DISABLED = 'LOCAL_PASSWORD_LOGIN_DISABLED',
+  HANDOFF_ORIGIN_NOT_ALLOWED = 'HANDOFF_ORIGIN_NOT_ALLOWED',
 }
 
 /**
@@ -144,6 +145,17 @@ export class InvalidMfaPendingTokenError extends AuthenticationError {
     super(
       'The login attempt has expired. Please sign in again.',
       AuthenticationErrorCode.PENDING_LOGIN_TOKEN_INVALID,
+      403,
+      metadata,
+    );
+  }
+}
+
+export class HandoffOriginNotAllowedError extends AuthenticationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Session handoff is only available to the sign-in dialog.',
+      AuthenticationErrorCode.HANDOFF_ORIGIN_NOT_ALLOWED,
       403,
       metadata,
     );

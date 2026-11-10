@@ -18,9 +18,11 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 // Import use cases
 import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { HandOffSessionUseCase } from 'src/iam/authentication/application/use-cases/hand-off-session/hand-off-session.use-case';
 import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
 import { MeResponseDtoMapper } from 'src/iam/authentication/presenters/http/mappers/me-response-dto.mapper';
+import { SessionTokensResponseDtoMapper } from 'src/iam/authentication/presenters/http/mappers/session-tokens-response-dto.mapper';
 import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
@@ -33,6 +35,7 @@ import { SessionsModule } from 'src/iam/sessions/sessions.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from 'src/iam/authentication/application/interceptors/user-context.interceptor';
 import { MfaLoginController } from 'src/iam/authentication/presenters/http/mfa-login.controller';
+import { SessionHandoffController } from 'src/iam/authentication/presenters/http/session-handoff.controller';
 import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 import { MfaPendingJwtService } from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
 import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
@@ -88,6 +91,7 @@ const AUTHENTICATION_PROVIDERS: Provider[] = [
   // Use Cases
   LoginUseCase,
   RefreshTokenUseCase,
+  HandOffSessionUseCase,
   RegisterUserUseCase,
   GetCurrentUserUseCase,
   StartAuthenticatedSessionUseCase,
@@ -106,6 +110,7 @@ const AUTHENTICATION_PROVIDERS: Provider[] = [
     useClass: UserContextInterceptor,
   },
   MeResponseDtoMapper,
+  SessionTokensResponseDtoMapper,
 ];
 
 const AUTHENTICATION_EXPORTS = [
@@ -127,7 +132,11 @@ export class AuthenticationModule {
         createAuthenticationRepositoryProvider(options),
         ...AUTHENTICATION_PROVIDERS,
       ],
-      controllers: [AuthenticationController, MfaLoginController],
+      controllers: [
+        AuthenticationController,
+        MfaLoginController,
+        SessionHandoffController,
+      ],
       exports: AUTHENTICATION_EXPORTS,
     };
   }

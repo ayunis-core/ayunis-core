@@ -7,6 +7,7 @@ import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refr
 import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import {
   RefreshTokenReuseError,
   UnexpectedSessionsError,
@@ -16,6 +17,7 @@ export interface RotateSessionResult {
   userId: UUID;
   refreshToken: string;
   authenticationMethod: SessionAuthenticationMethod;
+  client: SessionClient | null;
 }
 
 @Injectable()
@@ -34,6 +36,7 @@ export class RotateSessionUseCase {
   }
 
   private async rotate(current: RefreshToken): Promise<RotateSessionResult> {
+    const { client } = current;
     const { token: successor, plaintext } = this.refreshTokenFactory.create({
       userId: current.userId,
       familyId: current.familyId,
@@ -43,6 +46,7 @@ export class RotateSessionUseCase {
         current.authenticationMethod === SessionAuthenticationMethod.SSO
           ? (current.familyExpiresAt ?? current.expiresAt)
           : undefined,
+      client,
     });
 
     const won = await this.refreshTokensRepository.markUsedAndInsertSuccessor(
@@ -54,6 +58,7 @@ export class RotateSessionUseCase {
         userId: current.userId,
         refreshToken: plaintext,
         authenticationMethod: current.authenticationMethod,
+        client,
       };
     }
 
@@ -70,6 +75,7 @@ export class RotateSessionUseCase {
         userId: current.userId,
         refreshToken: plaintext,
         authenticationMethod: current.authenticationMethod,
+        client,
       };
     }
 

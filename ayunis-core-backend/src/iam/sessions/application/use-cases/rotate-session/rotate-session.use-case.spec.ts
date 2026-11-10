@@ -66,6 +66,7 @@ describe('RotateSessionUseCase', () => {
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
       familyExpiresAt,
+      client: null,
     });
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
 
@@ -77,6 +78,7 @@ describe('RotateSessionUseCase', () => {
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
       familyExpiresAt,
+      client: null,
     });
   });
 
@@ -94,7 +96,21 @@ describe('RotateSessionUseCase', () => {
       authenticationMethod: SessionAuthenticationMethod.PASSWORD,
       zitadelSessionId: null,
       familyExpiresAt: undefined,
+      client: null,
     });
+  });
+
+  // Losing the client on rotation would turn a restricted add-in session into
+  // an unrestricted one on its first refresh.
+  it('keeps the client of a client session across rotation', async () => {
+    repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
+
+    const result = await rotate(aRefreshToken({ client: 'outlook' }));
+
+    expect(factory.create).toHaveBeenCalledWith(
+      expect.objectContaining({ client: 'outlook' }),
+    );
+    expect(result.client).toBe('outlook');
   });
 
   it('should issue a sibling on a benign race (lost rotation, within grace)', async () => {
