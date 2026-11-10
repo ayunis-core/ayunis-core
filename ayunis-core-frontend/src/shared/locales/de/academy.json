@@ -12,7 +12,6 @@
     "cta": "Academy entdecken"
   },
   "detail": {
-    "letsGo": "Los geht's!",
     "previous": "Zurück",
     "next": "Weiter",
     "openConfirmation": "Kapitel abschließen",
@@ -27,7 +26,6 @@
     "description": "Bestätigen Sie, dass Sie alle Videos dieses Kapitels angesehen haben.",
     "watchedVideos": "Ich habe die Videos angesehen",
     "completeChapter": "Kapitel abschließen",
-    "minimumTime": "Jede Videoseite dieses Kapitels muss mindestens {{seconds}} Sekunden geöffnet sein. Noch nicht erreicht:",
     "errors": {
       "chapterNotFound": "Das Kapitel wurde nicht gefunden.",
       "submitFailed": "Das Kapitel konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
@@ -76,5 +74,11 @@
     "action": "Zur Academy",
     "emptyTitle": "Noch keine Academy-Inhalte",
     "emptyDescription": "Der Chat ist gesperrt, bis Sie die KI-Schulung abgeschlossen haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."
+  },
+  "moduleProgress": {
+    "count": "{{completed}} / {{total}}",
+    "complete": "Fertig",
+    "start": "Starten",
+    "continue": "Fortsetzen"
   }
 }

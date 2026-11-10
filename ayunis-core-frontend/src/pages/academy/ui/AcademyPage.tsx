@@ -11,12 +11,11 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
-import { CheckCircle2, Download, RotateCcw, Trophy } from 'lucide-react';
+import { Download, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from '@tanstack/react-router';
 import {
+  getChapterModuleProgress,
   useAcademyAccessStatus,
   useAcademyProgress,
   useDownloadParticipationConfirmation,
@@ -24,6 +23,7 @@ import {
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AcademyChapterItem } from './AcademyChapterItem';
 
 interface AcademyPageProps {
   chapters: AcademyChapterResponseDto[];
@@ -68,6 +68,11 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
     (!renewalRequired || status.allowed);
 
   const sortedChapters = [...chapters].sort((a, b) => a.position - b.position);
+  const chapterRows = sortedChapters.map((chapter) => ({
+    chapter,
+    moduleProgress: getChapterModuleProgress(chapter, progress),
+    confirmed: confirmedChapterIds.has(chapter.id),
+  }));
 
   const header = (
     <ContentAreaHeader breadcrumbs={[{ label: t('page.title') }]} />
@@ -117,38 +122,14 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
                 </ItemActions>
               </Item>
             )}
-            {sortedChapters.map((chapter) => (
-              <Item key={chapter.id} variant="outline">
-                <Link
-                  to="/academy/$chapterId"
-                  params={{ chapterId: chapter.id }}
-                  className="flex-1"
-                  data-testid={`academy-chapter-${chapter.id}`}
-                >
-                  <ItemContent>
-                    <ItemTitle className="flex items-center gap-2">
-                      {chapter.title}
-                      {confirmedChapterIds.has(chapter.id) && (
-                        <Badge
-                          variant="secondary"
-                          className="gap-1"
-                          data-testid={`academy-chapter-confirmed-${chapter.id}`}
-                        >
-                          <CheckCircle2 className="h-3 w-3 text-green-600" />
-                          {t('progress.confirmed')}
-                        </Badge>
-                      )}
-                      {expiredChapterIds.has(chapter.id) && (
-                        <Badge variant="outline" className="gap-1">
-                          <RotateCcw className="h-3 w-3" />
-                          {t('progress.renewalDue')}
-                        </Badge>
-                      )}
-                    </ItemTitle>
-                    <ItemDescription>{chapter.description}</ItemDescription>
-                  </ItemContent>
-                </Link>
-              </Item>
+            {chapterRows.map(({ chapter, moduleProgress, confirmed }) => (
+              <AcademyChapterItem
+                key={chapter.id}
+                chapter={chapter}
+                moduleProgress={moduleProgress}
+                confirmed={confirmed}
+                renewalDue={expiredChapterIds.has(chapter.id)}
+              />
             ))}
           </div>
         }

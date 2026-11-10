@@ -79,14 +79,13 @@ describe('ChapterConfirmationPage', () => {
     expect(submitAfterChecking().hasAttribute('disabled')).toBe(true);
   });
 
-  it('blocks completion and names modules below the minimum', () => {
+  it('blocks completion while a module is below the minimum', () => {
     useAcademyProgress.mockReturnValue({
       progress: progressWith(10),
       isLoading: false,
     });
 
     expect(submitAfterChecking().hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('listitem').textContent).toBe('Video 1');
   });
 
   it('allows completion once every module reached the minimum', () => {

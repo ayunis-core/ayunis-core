@@ -44,17 +44,16 @@ test('blocks confirmation until every video page was open for the minimum time',
 
   const chapter = await getAcademyChapterWithModules(api);
 
-  // The confirmation page can be opened directly; the server must refuse too.
+  // Opening the confirmation page early lands on the first missing video; the
+  // server must refuse too.
   await page.goto(`/academy/${chapter.id}/complete`);
-  const shortModules = page.getByTestId('academy-confirmation-short-modules');
-  const watchedVideos = page.getByTestId('academy-confirmation-watched');
-  const submit = page.getByTestId('academy-confirmation-submit');
-  await expect(shortModules).toBeVisible();
-  await expect(shortModules.getByRole('listitem')).toHaveCount(
-    chapter.courseModules.length,
+  await expect(page).toHaveURL(
+    new RegExp(`/academy/${chapter.id}\\?module=0$`),
   );
-  await watchedVideos.check();
-  await expect(submit).toBeDisabled();
+  await expect(page.getByTestId('academy-confirmation-page')).toHaveCount(0);
+  await expect(page.getByTestId('academy-chapter-complete-action')).toHaveCount(
+    0,
+  );
   await expect(confirmAcademyChapter(api, chapter.id)).rejects.toThrow(
     /HTTP 409/,
   );
@@ -71,10 +70,18 @@ test('blocks confirmation until every video page was open for the minimum time',
       page.getByTestId('academy-module-next').click(),
     );
   }
-  await page.getByTestId('academy-chapter-complete-action').click();
+  for (let index = chapter.courseModules.length - 1; index >= 0; index--) {
+    await page.getByTestId('academy-module-previous').click();
+    await expect(page).toHaveURL(
+      index === 0 ? /\/academy$/ : new RegExp(`module=${index - 1}$`),
+    );
+  }
+
+  await page.getByTestId(`academy-chapter-complete-${chapter.id}`).click();
+  const watchedVideos = page.getByTestId('academy-confirmation-watched');
+  const submit = page.getByTestId('academy-confirmation-submit');
   await watchedVideos.check();
   await expect(submit).toBeEnabled();
-  await expect(shortModules).toHaveCount(0);
 
   await submit.click();
   await expect(page).toHaveURL(/\/academy$/);
@@ -100,7 +107,14 @@ test('confirms every academy chapter and unlocks gated chat', async ({
   await page.getByTestId('input').fill('Blocked before Academy completion');
   await expect(page.getByTestId('send')).toBeDisabled();
 
-  for (const chapter of chapters) {
+  const { chapters: chapterProgress } = await getAcademyProgress(api);
+  const openChapters = chapters.filter(
+    (chapter) =>
+      !chapterProgress.some(
+        ({ chapterId, confirmed }) => chapterId === chapter.id && confirmed,
+      ),
+  );
+  for (const chapter of openChapters) {
     const lastModuleIndex = Math.max(chapter.courseModules.length - 1, 0);
     await page.goto(`/academy/${chapter.id}?module=${lastModuleIndex}`);
     await expect(page.getByTestId('academy-confirmation-page')).toHaveCount(0);

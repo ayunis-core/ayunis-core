@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { useAcademyProgress } from '@/features/academy';
 import { useConfirmChapter } from '@/pages/academy-chapter-confirmation/api/useConfirmChapter';
 import { findModulesBlockingConfirmation } from '@/pages/academy-chapter-confirmation/lib/findModulesBlockingConfirmation';
@@ -52,22 +51,6 @@ export default function ChapterConfirmationPage({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {progress && shortModules.length > 0 && (
-                  <Alert data-testid="academy-confirmation-short-modules">
-                    <AlertDescription>
-                      <p>
-                        {t('confirmation.minimumTime', {
-                          seconds: progress.minimumModuleSeconds,
-                        })}
-                      </p>
-                      <ul className="list-disc pl-5">
-                        {shortModules.map((courseModule) => (
-                          <li key={courseModule.id}>{courseModule.title}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )}
                 <ChapterConfirmationForm
                   isSubmitting={isSubmitting}
                   // The server enforces the minimum too, so a failed progress request
