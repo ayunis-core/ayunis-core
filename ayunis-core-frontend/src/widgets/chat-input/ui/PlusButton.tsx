@@ -15,9 +15,9 @@ import {
   TooltipContent,
 } from '@ayunis/ui/components/tooltip';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
+import { AudioLines, Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
-import { useRef } from 'react';
+import { useRef, type ChangeEvent } from 'react';
 import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
@@ -27,6 +27,7 @@ import {
   createFileListFromFiles,
   keepFilesWithinSizeLimit,
   ACCEPTED_FILE_PICKER_TYPES,
+  ACCEPTED_AUDIO_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
   IntegrationSummary,
@@ -56,6 +57,7 @@ export default function PlusButton({
   attachedIntegrationIds = [],
 }: Readonly<PlusButtonProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const {
@@ -69,7 +71,8 @@ export default function PlusButton({
   // Single entry point for all uploads. Splits the selection by type and routes
   // each category through its existing callback, skipping (and toasting for) any
   // category whose upload is disabled — mirroring the drag-drop UX in useFileDrop.
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
     if (!files || files.length === 0) return;
 
     const { images, regularFiles } = separateFilesByType(files);
@@ -97,9 +100,7 @@ export default function PlusButton({
     }
 
     // Reset input to allow selecting the same file(s) again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    event.target.value = '';
   };
 
   // Filter out already-attached knowledge bases
@@ -128,6 +129,10 @@ export default function PlusButton({
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="h-4 w-4" />
               <span>{t('chatInput.uploadFile')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => audioInputRef.current?.click()}>
+              <AudioLines className="h-4 w-4" />
+              <span>{t('chatInput.uploadAudio')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           {onKnowledgeBaseSelect && (
@@ -200,8 +205,16 @@ export default function PlusButton({
         hidden
         multiple
         accept={ACCEPTED_FILE_PICKER_TYPES}
-        onChange={(e) => handleFileChange(e.target.files)}
+        onChange={handleFileChange}
         ref={fileInputRef}
+      />
+      <Input
+        type="file"
+        hidden
+        multiple
+        accept={ACCEPTED_AUDIO_PICKER_TYPES}
+        onChange={handleFileChange}
+        ref={audioInputRef}
       />
     </Tooltip>
   );
