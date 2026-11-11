@@ -169,6 +169,26 @@ jobs:
         env:
           NODE_ENV: test
 
+      # Production's image and flags, with a short time limit: the converter's
+      # 503 and 429 handling is only right against them (AYC-1741).
+      - name: Start Gotenberg
+        if: matrix.shard == 1
+        run: |
+          docker run -d \
+            --name gotenberg \
+            -p 3010:3000 \
+            gotenberg/gotenberg:8.39.0@sha256:13672f317b443c793e972b1bd2155ec62a3e7b6891b411e8196442cc053ee5f5 \
+            gotenberg --api-timeout=5s --libreoffice-max-queue-size=1 --libreoffice-restart-after=1
+          timeout 60 bash -c 'until curl -sf http://localhost:3010/health; do sleep 2; done'
+
+      - name: Test the document converter against real Gotenberg
+        if: matrix.shard == 1
+        run: pnpm exec jest src/domain/retrievers/file-retrievers/infrastructure/adapters/gotenberg-converter.service.gotenberg.integration.spec.ts
+        env:
+          NODE_ENV: test
+          NODE_OPTIONS: --experimental-vm-modules
+          GOTENBERG_CONTRACT_URL: http://127.0.0.1:3010
+
       - name: Run unit tests (shard ${{ matrix.shard }}/3)
         run: pnpm exec jest --shard=${{ matrix.shard }}/3
         env:

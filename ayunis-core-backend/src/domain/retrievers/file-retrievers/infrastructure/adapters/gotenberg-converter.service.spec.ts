@@ -2,19 +2,40 @@ import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import axios from 'axios';
+import { resolve4 } from 'dns/promises';
 import { GotenbergConverterService } from './gotenberg-converter.service';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import {
   DocumentConversionTimeoutError,
   DocumentConversionUnavailableError,
+  DocumentConverterBusyError,
   FileRetrievalFailedError,
   FileTooLargeError,
   UnprocessableDocumentError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 jest.mock('axios');
+jest.mock('dns/promises');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedResolve4 = resolve4 as unknown as jest.MockedFunction<
+  (hostname: string) => Promise<string[]>
+>;
+
+// The bodies Gotenberg 8.39 really sends (pkg/modules/api/middlewares.go).
+const TIME_LIMIT_BODY =
+  'The request exceeded the time limit. Increase it with --api-timeout, or reduce the workload.';
+const QUEUE_FULL_BODY =
+  'The request queue is full. Retry shortly, or raise the limit with --chromium-max-queue-size or --libreoffice-max-queue-size.';
+
+const SERVICE_URL = 'http://localhost:3000';
+const REPLICAS = ['192.0.2.1', '192.0.2.2', '192.0.2.3'];
+
+function convertUrlOn(host: string): string {
+  const url = new URL('/forms/libreoffice/convert', SERVICE_URL);
+  url.hostname = host;
+  return url.toString();
+}
 
 function axiosErrorWithStatus(status: number, body?: string) {
   return {
@@ -31,14 +52,14 @@ describe('GotenbergConverterService', () => {
   let service: GotenbergConverterService;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GotenbergConverterService,
         {
           provide: gotenbergConfig.KEY,
           useValue: {
-            url: 'https://gotenberg:3000',
+            url: SERVICE_URL,
             maxConcurrentConversions: 1,
           },
         },
@@ -46,6 +67,7 @@ describe('GotenbergConverterService', () => {
     }).compile();
 
     service = module.get(GotenbergConverterService);
+    mockedResolve4.mockResolvedValue(REPLICAS.slice(0, 1));
     mockedAxios.isAxiosError.mockImplementation(
       (error: unknown) =>
         typeof error === 'object' &&
@@ -82,7 +104,7 @@ describe('GotenbergConverterService', () => {
     await expect(convert()).rejects.toBeInstanceOf(FileTooLargeError);
   });
 
-  it('classifies a 503 as an actionable transient conversion failure for the queue to retry', async () => {
+  it('keeps a 503 that is not the time limit an actionable transient failure for the queue to retry', async () => {
     mockedAxios.post.mockRejectedValue(axiosErrorWithStatus(503));
 
     const result = convert();
@@ -98,15 +120,11 @@ describe('GotenbergConverterService', () => {
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
   });
 
-  // LibreOffice ran out of time on this document itself: retrying would hold
-  // the converter for another full time limit, so it settles as the document's
-  // fault without an incident (AYC-1641).
-  it("classifies a 503 whose body reports the conversion timing out as the document's fault", async () => {
+  // Retrying would hold a replica for another full time limit, so the
+  // conversion settles as the document's fault without an incident (AYC-1741).
+  it("reports a conversion that hit Gotenberg's time limit as a timeout of that document", async () => {
     mockedAxios.post.mockRejectedValue(
-      axiosErrorWithStatus(
-        503,
-        '{"error":"convert to PDF: supervisor run task: context deadline exceeded"}',
-      ),
+      axiosErrorWithStatus(503, TIME_LIMIT_BODY),
     );
 
     const result = convert();
@@ -117,21 +135,43 @@ describe('GotenbergConverterService', () => {
       message: expect.stringMatching(/time limit/i),
       metadata: { converter: 'gotenberg', upstreamStatus: 503 },
     });
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
   });
 
-  // The request only waited for the LibreOffice lock behind another document
-  // and never got its turn, so a spaced retry can still succeed.
-  it('keeps a 503 that timed out waiting for the LibreOffice lock retryable', async () => {
+  it('converts on another replica when the first one is occupied', async () => {
+    mockedResolve4.mockResolvedValue(REPLICAS.slice(0, 2));
+    mockedAxios.post
+      .mockRejectedValueOnce(axiosErrorWithStatus(429, QUEUE_FULL_BODY))
+      .mockResolvedValueOnce({ data: new Uint8Array([7]).buffer });
+
+    await expect(convert()).resolves.toEqual(Buffer.from([7]));
+    expect(new Set(mockedAxios.post.mock.calls.map(([url]) => url))).toEqual(
+      new Set(REPLICAS.slice(0, 2).map(convertUrlOn)),
+    );
+  });
+
+  it('reports the converter as busy, for the queue to retry later, when every replica is occupied', async () => {
+    mockedResolve4.mockResolvedValue(REPLICAS);
     mockedAxios.post.mockRejectedValue(
-      axiosErrorWithStatus(
-        503,
-        'convert to PDF: supervisor run task: acquire process lock: context deadline exceeded',
-      ),
+      axiosErrorWithStatus(429, QUEUE_FULL_BODY),
     );
 
-    await expect(convert()).rejects.toBeInstanceOf(
-      DocumentConversionUnavailableError,
-    );
+    const result = convert();
+    await expect(result).rejects.toBeInstanceOf(DocumentConverterBusyError);
+    await expect(result).rejects.toMatchObject({
+      code: 'DOCUMENT_CONVERSION_UNAVAILABLE',
+      statusCode: 503,
+      metadata: { converter: 'gotenberg', upstreamStatus: 429 },
+    });
+    expect(mockedAxios.post).toHaveBeenCalledTimes(3);
+  });
+
+  it('uses the configured URL when its host is not a service name with replica addresses', async () => {
+    mockedResolve4.mockRejectedValue(new Error('queryA ENOTFOUND localhost'));
+    mockedAxios.post.mockResolvedValue({ data: new Uint8Array([1]).buffer });
+
+    await convert();
+    expect(mockedAxios.post.mock.calls[0][0]).toBe(convertUrlOn('localhost'));
   });
 
   it('sends the next conversion only after the one in flight has finished', async () => {
@@ -147,7 +187,7 @@ describe('GotenbergConverterService', () => {
 
     const first = convert();
     const second = convert();
-    await Promise.resolve();
+    await new Promise(setImmediate);
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
 
     finishFirst({ data: new Uint8Array([1]).buffer });

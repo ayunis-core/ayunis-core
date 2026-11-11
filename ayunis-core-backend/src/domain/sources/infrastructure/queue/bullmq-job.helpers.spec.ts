@@ -4,8 +4,14 @@ import { isFinalAttempt } from './job-telemetry';
 import {
   isExpectedFailure,
   classifyJobFailure,
+  documentRetryDelayMs,
   JobRetryScheduledError,
 } from './bullmq-job.helpers';
+import {
+  DocumentConversionTimeoutError,
+  DocumentConversionUnavailableError,
+  DocumentConverterBusyError,
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   ProviderRequestRejectedError,
@@ -25,8 +31,12 @@ jest.mock('@appsignal/nodejs', () => ({
 const incrementCounter = Appsignal.client.metrics()
   .incrementCounter as jest.Mock;
 
-function jobWith(attemptsMade: number, attempts?: number): Job {
-  return { attemptsMade, opts: { attempts } } as Job;
+function jobWith(
+  attemptsMade: number,
+  attempts?: number,
+  failedReason?: string,
+): Job {
+  return { attemptsMade, opts: { attempts }, failedReason } as Job;
 }
 
 class FakeRetrieverError extends ApplicationError {
@@ -69,6 +79,47 @@ describe('isExpectedFailure', () => {
 
   it('is false for a plain Error, which carries no status', () => {
     expect(isExpectedFailure(new Error('socket hang up'))).toBe(false);
+  });
+});
+
+describe('documentRetryDelayMs', () => {
+  // Every replica was occupied; retrying within seconds lands in the same
+  // busy period and spends the remaining attempts on it (AYC-1741).
+  it('spaces retries of a busy converter over minutes', () => {
+    const busy = new JobRetryScheduledError(
+      new DocumentConverterBusyError('report.docx'),
+    );
+
+    expect(documentRetryDelayMs(1, busy)).toBe(60_000);
+    expect(documentRetryDelayMs(2, busy)).toBe(120_000);
+  });
+
+  it('retries a conversion timeout after half a minute', () => {
+    const timeout = new JobRetryScheduledError(
+      new DocumentConversionTimeoutError('report.docx'),
+    );
+
+    expect(documentRetryDelayMs(1, timeout)).toBe(30_000);
+    expect(documentRetryDelayMs(2, timeout)).toBe(30_000);
+  });
+
+  it('keeps the standard spacing for every other failure', () => {
+    const transient = new JobRetryScheduledError(new Error('socket hang up'));
+
+    expect(documentRetryDelayMs(1, transient)).toBe(5_000);
+    expect(documentRetryDelayMs(2, transient)).toBe(10_000);
+    expect(documentRetryDelayMs(1)).toBe(5_000);
+  });
+
+  // A 503 that is neither the time limit nor a full queue (a proxy while the
+  // converter restarts) says nothing about minutes of load.
+  it('keeps the standard spacing for a converter outage that is not a full queue', () => {
+    const outage = new JobRetryScheduledError(
+      new DocumentConversionUnavailableError('report.docx'),
+    );
+
+    expect(documentRetryDelayMs(1, outage)).toBe(5_000);
+    expect(documentRetryDelayMs(2, outage)).toBe(10_000);
   });
 });
 
@@ -171,6 +222,46 @@ describe('classifyJobFailure', () => {
 
       expect(final).toBe(true);
       expect(rethrow).toBeNull();
+    });
+  });
+
+  // The queue cannot see whether the converter was loaded, so one timeout is
+  // not yet proof against the document; two in a row are (AYC-1741).
+  describe('conversion timeouts', () => {
+    const timeout = new DocumentConversionTimeoutError('report.docx');
+
+    it('retries the first timeout', () => {
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), timeout);
+
+      expect(final).toBe(false);
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+    });
+
+    it('settles the document when the retry times out too', () => {
+      expect(
+        classifyJobFailure(jobWith(1, 3, timeout.message), timeout),
+      ).toEqual({ final: true, rethrow: null });
+    });
+
+    it('retries a first timeout that follows a busy converter', () => {
+      const busy = new DocumentConverterBusyError('report.docx');
+
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(1, 3, busy.message),
+        timeout,
+      );
+
+      expect(final).toBe(false);
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+    });
+
+    it('settles a timeout on the last attempt', () => {
+      const busy = new DocumentConverterBusyError('report.docx');
+
+      expect(classifyJobFailure(jobWith(2, 3, busy.message), timeout)).toEqual({
+        final: true,
+        rethrow: null,
+      });
     });
   });
 
