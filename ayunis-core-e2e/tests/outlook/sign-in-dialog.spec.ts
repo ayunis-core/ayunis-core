@@ -134,3 +134,28 @@ test('hands an SSO login over from the SSO success page', async ({
     email,
   );
 });
+
+// Desktop Outlook keeps the dialog's cookie session after the pane signed
+// out, so the next dialog would hand the old account over without a form.
+test('shows the login form for a different account despite a kept session', async ({
+  page,
+  api,
+  mail,
+  publicApi,
+}) => {
+  const first = await createUser(api, mail, `outlook-first-${Date.now()}`);
+  const second = await createUser(api, mail, `outlook-second-${Date.now()}`);
+  await login(publicApi, first.email, first.password);
+  await page.context().addCookies((await publicApi.storageState()).cookies);
+
+  await page.goto(OUTLOOK_DIALOG_PATH);
+  expect((await dialogTokens(page)).accessToken).toBeTruthy();
+
+  await page.goto(`${OUTLOOK_DIALOG_PATH}&prompt=login`);
+  await submitDialogPasswordLogin(page, second.email, second.password);
+  const tokens = await dialogTokens(page);
+
+  expect((await currentUserForAccessToken(tokens.accessToken)).email).toBe(
+    second.email,
+  );
+});

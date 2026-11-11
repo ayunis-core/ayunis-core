@@ -5,6 +5,7 @@
     "signIn": "Sign in",
     "signingIn": "Signing in …",
     "signOut": "Sign out",
+    "switchAccount": "Use a different account",
     "dialogClosed": "If you finished signing in in the sign-in window, select Sign in again to connect.",
     "error": {
       "signInFailed": "Sign-in failed. Please try again.",

@@ -111,3 +111,11 @@ test('drops a stored session that can no longer be refreshed', async ({
   await expect(page.getByTestId('outlook-pane-signed-out')).toBeVisible();
   expect(await storedRefreshToken(page)).toBeNull();
 });
+
+test('asks for a fresh login when switching account', async ({ page }) => {
+  await page.getByTestId('outlook-pane-switch-account').click();
+  const dialogUrl = new URL(await requestedDialogUrl(page));
+
+  expect(dialogUrl.pathname).toBe('/outlook/login');
+  expect(dialogUrl.searchParams.get('prompt')).toBe('login');
+});

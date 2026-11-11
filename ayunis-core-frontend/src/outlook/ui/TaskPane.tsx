@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
 import type { PaneSession } from '@/outlook/api/pane-session';
+import type { SignInOptions } from '@/outlook/lib/sign-in-dialog';
 import { usePaneAuth, type PaneError } from '@/outlook/lib/use-pane-auth';
 
 export function TaskPane({
@@ -61,7 +62,7 @@ function SignedOut({
   signingIn: boolean;
   error?: PaneError;
   dialogClosed?: boolean;
-  onSignIn: () => void;
+  onSignIn: (options?: SignInOptions) => void;
 }>) {
   const { t } = useTranslation();
   return (
@@ -90,10 +91,19 @@ function SignedOut({
       <Button
         className="w-full"
         disabled={signingIn}
-        onClick={onSignIn}
+        onClick={() => onSignIn()}
         data-testid="outlook-pane-sign-in"
       >
         {signingIn ? t('pane.signingIn') : t('pane.signIn')}
+      </Button>
+      <Button
+        variant="link"
+        size="sm"
+        disabled={signingIn}
+        onClick={() => onSignIn({ promptLogin: true })}
+        data-testid="outlook-pane-switch-account"
+      >
+        {t('pane.switchAccount')}
       </Button>
     </div>
   );
