@@ -23,6 +23,7 @@ import { METRICS_PATH } from './integrations/metrics/metrics.constants';
 import { parsePositiveIntWithDefault } from './common/util/number.util';
 import { startBackendProcessHeartbeat } from './common/process/backend-process-heartbeat';
 import { installNestLogger } from './common/logger/install-nest-logger';
+import { installHttp1GlobalDispatcher } from './common/http/http1-global-dispatcher';
 import { jsonBodyParser } from 'src/common/middleware/json-body-parser.middleware';
 
 // bufferLogs replays boot logs with the flush time, so durations are measured
@@ -34,6 +35,7 @@ class Bootstrap {
   private static readonly DEFAULT_BODY_LIMIT = '5mb';
 
   public static async start() {
+    installHttp1GlobalDispatcher();
     const createStartedMs = performance.now();
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       bufferLogs: true,

@@ -28,6 +28,7 @@ export class McpOAuthFetchService
     'OAuth DNS lookup failed',
   );
   private readonly dispatcher = new Agent({
+    allowH2: false,
     connect: { lookup: this.connectionLookup },
   });
 

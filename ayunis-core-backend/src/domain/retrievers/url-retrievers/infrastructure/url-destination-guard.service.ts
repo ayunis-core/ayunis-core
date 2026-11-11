@@ -18,6 +18,7 @@ export class UrlDestinationGuardService implements OnModuleDestroy {
   private readonly blockedAddresses = buildDiscoveredPdfBlockedAddresses();
   // This pool can never inherit an approved intranet connection from native fetch.
   private readonly publicDispatcher = new Agent({
+    allowH2: false,
     connect: {
       lookup: createConnectionLookup((host, options) =>
         this.connectionAddresses(host, options),
