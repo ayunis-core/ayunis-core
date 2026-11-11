@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import sourceUploadConfig from 'src/config/source-upload.config';
 import transcriptionConfig from 'src/config/transcription.config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
@@ -57,6 +58,8 @@ export class CreateSourceUploadSessionUseCase {
     private readonly contextService: ContextService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
+    @Inject(sourceUploadConfig.KEY)
+    private readonly sourceUpload: ConfigType<typeof sourceUploadConfig>,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSourceError)
@@ -119,19 +122,25 @@ export class CreateSourceUploadSessionUseCase {
     return canonical;
   }
 
-  // Recordings have their own cap (AUDIO_MAX_UPLOAD_BYTES): they are sent to
-  // the transcription provider whole, so the cap follows what one request may
-  // carry, not the document limit the target passes in.
   private assertFileSize(command: CreateSourceUploadSessionCommand): void {
     if (!Number.isInteger(command.fileSize) || command.fileSize <= 0) {
       throw new EmptyFileDataError(command.fileName);
     }
-    const detected = detectFileType(command.mimeType, command.fileName);
-    const maxBytes = isAudioFile(detected)
-      ? this.transcription.maxUploadBytes
-      : command.maxFileSizeBytes;
+    const maxBytes = this.maxBytesFor(command);
     if (command.fileSize > maxBytes) {
       throw new FileTooLargeError(maxBytes);
     }
+  }
+
+  // Two types do not follow the document limit the target passes in.
+  // Recordings (AUDIO_MAX_UPLOAD_BYTES) are sent to the transcription provider
+  // whole, so their cap follows what one request may carry. PDFs
+  // (PDF_MAX_UPLOAD_BYTES) are processed from disk, so their size no longer
+  // drives memory use (AYC-1729).
+  private maxBytesFor(command: CreateSourceUploadSessionCommand): number {
+    const detected = detectFileType(command.mimeType, command.fileName);
+    if (isAudioFile(detected)) return this.transcription.maxUploadBytes;
+    if (detected === 'pdf') return this.sourceUpload.pdfMaxBytes;
+    return command.maxFileSizeBytes;
   }
 }

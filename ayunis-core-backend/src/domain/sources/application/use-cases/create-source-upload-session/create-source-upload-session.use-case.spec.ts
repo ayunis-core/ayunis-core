@@ -24,12 +24,14 @@ describe('CreateSourceUploadSessionUseCase', () => {
     execute: jest.fn().mockResolvedValue({}),
   };
   const AUDIO_MAX = 200 * 1024 * 1024;
+  const PDF_MAX = 100 * 1024 * 1024;
   const useCase = new CreateSourceUploadSessionUseCase(
     sessions,
     assertOrgActive as never,
     getPermittedEmbeddingModel as never,
     createOwnerContext() as unknown as ContextService,
     { maxUploadBytes: AUDIO_MAX } as ConfigType<typeof transcriptionConfig>,
+    { pdfMaxBytes: PDF_MAX },
   );
   const MAX = 25 * 1024 * 1024;
 
@@ -107,8 +109,37 @@ describe('CreateSourceUploadSessionUseCase', () => {
 
   it('rejects files above the caller-supplied limit with FILE_TOO_LARGE', async () => {
     await expect(
-      useCase.execute(command({ fileSize: MAX + 1 })),
-    ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE', statusCode: 413 });
+      useCase.execute(
+        command({
+          fileName: 'Bericht.docx',
+          mimeType:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          fileSize: MAX + 1,
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: 'FILE_TOO_LARGE',
+      statusCode: 413,
+      metadata: expect.objectContaining({ maxFileSizeBytes: MAX }),
+    });
+  });
+
+  it('applies the configured PDF cap to PDFs instead of the document limit', async () => {
+    await expect(
+      useCase.execute(command({ fileSize: PDF_MAX })),
+    ).resolves.toMatchObject({ session: { fileSize: PDF_MAX } });
+    await expect(
+      useCase.execute(command({ fileSize: PDF_MAX + 1 })),
+    ).rejects.toMatchObject({
+      code: 'FILE_TOO_LARGE',
+      metadata: expect.objectContaining({ maxFileSizeBytes: PDF_MAX }),
+    });
+  });
+
+  it('recognises a PDF by its name when the browser sends no type', async () => {
+    await expect(
+      useCase.execute(command({ mimeType: '', fileSize: MAX + 1 })),
+    ).resolves.toMatchObject({ session: { fileSize: MAX + 1 } });
   });
 
   it('applies the configured recording cap to audio instead of the document limit', async () => {

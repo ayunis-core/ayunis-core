@@ -26,11 +26,22 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
 // src/common/util/source-file-upload.ts.
 export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
+// Mirrors the default of the backend's PDF_MAX_UPLOAD_BYTES in
+// src/config/source-upload.config.ts. A deployment that lowers it answers a
+// larger PDF with FILE_TOO_LARGE.
+export const MAX_PDF_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+
 // Recordings have a server-configured cap (AUDIO_MAX_UPLOAD_BYTES); the API
 // answers an oversized one with FILE_TOO_LARGE, so they skip the local check.
 function isAudioFileName(name: string): boolean {
   const lower = name.toLowerCase();
   return AUDIO_EXTENSIONS.some((extension) => lower.endsWith(extension));
+}
+
+function sizeLimitFor(file: File): number {
+  return file.name.toLowerCase().endsWith('.pdf')
+    ? MAX_PDF_FILE_SIZE_BYTES
+    : MAX_SOURCE_FILE_SIZE_BYTES;
 }
 
 const BYTES_PER_MB = 1024 * 1024;
@@ -41,12 +52,13 @@ const BYTES_PER_MB = 1024 * 1024;
 export function keepFilesWithinSizeLimit(files: File[], t: TFunction): File[] {
   return files.filter((file) => {
     if (isAudioFileName(file.name)) return true;
-    if (file.size <= MAX_SOURCE_FILE_SIZE_BYTES) return true;
+    const limit = sizeLimitFor(file);
+    if (file.size <= limit) return true;
     showError(
       t('chatInput.fileTooLarge', {
         name: file.name,
         size: Math.ceil(file.size / BYTES_PER_MB),
-        limit: MAX_SOURCE_FILE_SIZE_BYTES / BYTES_PER_MB,
+        limit: limit / BYTES_PER_MB,
       }),
     );
     return false;

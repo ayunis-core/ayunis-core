@@ -199,6 +199,11 @@ export class EnvironmentVariables {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  PDF_MAX_UPLOAD_BYTES?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   EMBEDDINGS_MAX_CONCURRENCY?: number;
   @IsOptional()
   @Type(() => Number)
