@@ -12,7 +12,6 @@
     "cta": "Discover the Academy"
   },
   "detail": {
-    "letsGo": "Let's go!",
     "previous": "Previous",
     "next": "Next",
     "openConfirmation": "Complete chapter",
@@ -27,7 +26,6 @@
     "description": "Confirm that you have watched all videos in this chapter.",
     "watchedVideos": "I've watched the videos",
     "completeChapter": "Complete chapter",
-    "minimumTime": "Every video page in this chapter must be open for at least {{seconds}} seconds. Not reached yet:",
     "errors": {
       "chapterNotFound": "The chapter could not be found.",
       "submitFailed": "The chapter could not be completed. Please try again.",
@@ -76,5 +74,11 @@
     "action": "Go to the academy",
     "emptyTitle": "No academy content yet",
     "emptyDescription": "Chat is locked until you complete the EU AI Act training, but no chapters have been published yet. Please contact your administrator."
+  },
+  "moduleProgress": {
+    "count": "{{completed}} / {{total}}",
+    "complete": "Complete",
+    "start": "Start",
+    "continue": "Continue"
   }
 }

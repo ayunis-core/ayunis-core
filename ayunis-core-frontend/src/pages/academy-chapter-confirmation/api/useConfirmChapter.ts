@@ -8,6 +8,7 @@ import {
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { celebrateChapterCompletion } from '@/pages/academy-chapter-confirmation/lib/celebrateChapterCompletion';
 
 export function useConfirmChapter(chapterId: string) {
   const { t } = useTranslation('academy');
@@ -28,6 +29,7 @@ export function useConfirmChapter(chapterId: string) {
       ]);
       await router.invalidate();
       await navigate({ to: '/academy' });
+      celebrateChapterCompletion();
     },
     onError: (error: unknown) => {
       try {

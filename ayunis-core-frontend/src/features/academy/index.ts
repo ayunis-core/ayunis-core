@@ -6,3 +6,9 @@ export { useAcademyProgress } from './useAcademyProgress';
 export { resolveCertificateExpiryNotice } from './lib/resolve-certificate-expiry-notice';
 export type { CertificateExpiryNoticeLevel } from './lib/resolve-certificate-expiry-notice';
 export { ACADEMY_LANDING_PAGE_URL } from './constants';
+export { getChapterModuleProgress } from './lib/module-progress';
+export type {
+  ChapterModuleProgress,
+  ModuleProgress,
+  ModuleProgressState,
+} from './lib/module-progress';

@@ -4,7 +4,6 @@ import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { EmptyState } from '@/widgets/empty-state';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
@@ -13,8 +12,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
+import { EmptyState } from '@/widgets/empty-state';
+import {
+  getChapterModuleProgress,
+  useAcademyAccessStatus,
+  useAcademyProgress,
+} from '@/features/academy';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ModuleVideo } from './ModuleVideo';
+import { ChapterModuleList } from './ChapterModuleList';
+import { useProgressWhileWatching } from '@/pages/academy-chapter/lib/useProgressWhileWatching';
 
 interface ChapterDetailPageProps {
   chapter: AcademyChapterResponseDto;
@@ -27,17 +35,39 @@ export default function ChapterDetailPage({
 }: Readonly<ChapterDetailPageProps>) {
   const { t } = useTranslation('academy');
   const navigate = useNavigate();
-
-  const modules = [...chapter.courseModules].sort(
-    (a, b) => a.position - b.position,
+  const { progress } = useAcademyProgress();
+  const { status } = useAcademyAccessStatus();
+  const chapterProgress = progress?.chapters.find(
+    ({ chapterId }) => chapterId === chapter.id,
+  );
+  const confirmed =
+    status?.mode === AcademyAccessMode.required_annually
+      ? Boolean(chapterProgress?.confirmationValid)
+      : Boolean(chapterProgress?.confirmed);
+  const liveModuleProgress = getChapterModuleProgress(
+    chapter,
+    progress,
+    confirmed,
+  );
+  const modules = liveModuleProgress.modules.map(
+    ({ courseModule }) => courseModule,
+  );
+  const moduleProgress = useProgressWhileWatching(
+    liveModuleProgress,
+    activeModule === undefined ? undefined : modules.at(activeModule)?.id,
+    progress !== undefined,
   );
 
-  const goToModule = (index?: number) => {
+  const goToModule = (index: number) => {
     void navigate({
       to: '/academy/$chapterId',
       params: { chapterId: chapter.id },
-      search: index === undefined ? {} : { module: index },
+      search: { module: index },
     });
+  };
+
+  const goToOverview = () => {
+    void navigate({ to: '/academy' });
   };
 
   const openConfirmation = () => {
@@ -56,13 +86,10 @@ export default function ChapterDetailPage({
     />
   );
 
-  // Intro screen: shown when there is no active module or the index is out of range.
-  const showIntro =
-    activeModule === undefined ||
-    activeModule < 0 ||
-    activeModule >= modules.length;
+  const currentModule =
+    activeModule === undefined ? undefined : modules.at(activeModule);
 
-  if (showIntro) {
+  if (activeModule === undefined || !currentModule) {
     return (
       <AppLayout>
         <ContentAreaLayout
@@ -75,25 +102,17 @@ export default function ChapterDetailPage({
                   {chapter.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {modules.length === 0 ? (
-                  <div className="space-y-3">
-                    <EmptyState
-                      title={t('detail.noModules.title')}
-                      description={t('detail.noModules.description')}
-                    />
-                    <Button
-                      onClick={openConfirmation}
-                      data-testid="academy-chapter-complete-action"
-                    >
-                      {t('detail.openConfirmation')}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button onClick={() => goToModule(0)}>
-                    {t('detail.letsGo')}
-                  </Button>
-                )}
+              <CardContent className="space-y-3">
+                <EmptyState
+                  title={t('detail.noModules.title')}
+                  description={t('detail.noModules.description')}
+                />
+                <Button
+                  onClick={openConfirmation}
+                  data-testid="academy-chapter-complete-action"
+                >
+                  {t('detail.openConfirmation')}
+                </Button>
               </CardContent>
             </Card>
           }
@@ -103,32 +122,15 @@ export default function ChapterDetailPage({
   }
 
   const currentIndex = activeModule;
-  const currentModule = modules[currentIndex];
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === modules.length - 1;
 
   const moduleList = (
-    <nav>
-      <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">
-        {t('detail.modulesTitle')}
-      </p>
-      <ul className="space-y-1">
-        {modules.map((module, index) => (
-          <li key={module.id}>
-            <Button
-              variant={index === currentIndex ? 'secondary' : 'ghost'}
-              onClick={() => goToModule(index)}
-              className="w-full justify-start gap-2 text-left"
-            >
-              <span className="text-muted-foreground tabular-nums">
-                {index + 1}
-              </span>
-              <span className="truncate">{module.title}</span>
-            </Button>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <ChapterModuleList
+      moduleProgress={moduleProgress}
+      currentIndex={currentIndex}
+      onSelectModule={goToModule}
+    />
   );
 
   const moduleView = (
@@ -149,12 +151,15 @@ export default function ChapterDetailPage({
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={() => goToModule(isFirst ? undefined : currentIndex - 1)}
+            onClick={() =>
+              isFirst ? goToOverview() : goToModule(currentIndex - 1)
+            }
+            data-testid="academy-module-previous"
           >
             <ChevronLeft className="h-4 w-4" />
             {t('detail.previous')}
           </Button>
-          {isLast ? (
+          {isLast && !confirmed && moduleProgress.allComplete && (
             <Button
               onClick={openConfirmation}
               data-testid="academy-chapter-complete-action"
@@ -162,7 +167,8 @@ export default function ChapterDetailPage({
               {t('detail.openConfirmation')}
               <Check className="h-4 w-4" />
             </Button>
-          ) : (
+          )}
+          {!isLast && (
             <Button
               onClick={() => goToModule(currentIndex + 1)}
               data-testid="academy-module-next"
