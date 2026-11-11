@@ -78,6 +78,7 @@ none of these packages implements the Agent Plugins standard.
 | [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema and CSV/text downloads                                                 |
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                              |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and org document collections                                             |
+| [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | Ownership      | Shared owner types, team/org access checks and owner constraints for skills and knowledge bases                |
 | [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
 | [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
