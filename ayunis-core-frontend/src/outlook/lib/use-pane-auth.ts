@@ -24,7 +24,13 @@ function toPaneError(error: unknown): PaneError {
     : 'unreachable';
 }
 
-export function usePaneAuth(session: PaneSession, officeAvailable: boolean) {
+// `officeAvailable` is asked on every sign-in: on a cold desktop start
+// Office.js is often not ready when the pane loads, and a verdict taken
+// then would refuse every later attempt.
+export function usePaneAuth(
+  session: PaneSession,
+  officeAvailable: () => Promise<boolean>,
+) {
   const [state, setState] = useState<PaneAuthState>({ status: 'loading' });
   const restored = useRef(false);
   const closeDialog = useRef<(() => void) | null>(null);
@@ -45,13 +51,19 @@ export function usePaneAuth(session: PaneSession, officeAvailable: boolean) {
   }, [session]);
 
   function signIn(): void {
-    if (!officeAvailable) {
-      setState({ status: 'signedOut', error: 'outlookRequired' });
-      return;
-    }
     closeDialog.current?.();
+    closeDialog.current = null;
     setState({ status: 'signingIn' });
-    closeDialog.current = openSignInDialog(handleDialogResultSafely);
+    officeAvailable()
+      .then((available) => {
+        if (!available) {
+          setState({ status: 'signedOut', error: 'outlookRequired' });
+          return;
+        }
+        closeDialog.current = openSignInDialog(handleDialogResultSafely);
+      })
+      // Whatever fails before the dialog opened, the button must come back.
+      .catch(() => setState({ status: 'signedOut', error: 'outlookRequired' }));
   }
 
   // After `closed` the dialog keeps listening: an SSO round trip may still

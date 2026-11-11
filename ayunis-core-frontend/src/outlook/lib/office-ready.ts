@@ -20,10 +20,15 @@ export function officeReady(): Promise<void> {
 }
 
 // Outside an Office client office.js still loads, but leaves the context
-// empty, which its types don't express.
+// empty, which its types don't express. Before Office is ready the context
+// may also be missing or refuse to be read.
 function officeContext(): Partial<Office.Context> | undefined {
   if (typeof Office === 'undefined') return undefined;
-  return Office.context;
+  try {
+    return Office.context;
+  } catch {
+    return undefined;
+  }
 }
 
 export function officeUi(): Partial<Office.UI> | undefined {
@@ -34,7 +39,10 @@ export function officeDisplayLanguage(): string {
   return officeContext()?.displayLanguage ?? navigator.language;
 }
 
-/** True inside an Office client that can open the sign-in dialog. */
-export function canOpenOfficeDialog(): boolean {
-  return typeof officeUi()?.displayDialogAsync === 'function';
+/** Waits for Office; true inside a client that can open the sign-in dialog. */
+export function officeDialogAvailable(): Promise<boolean> {
+  return officeReady().then(
+    () => typeof officeUi()?.displayDialogAsync === 'function',
+    () => false,
+  );
 }

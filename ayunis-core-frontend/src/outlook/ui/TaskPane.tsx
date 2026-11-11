@@ -7,7 +7,10 @@ import { usePaneAuth, type PaneError } from '@/outlook/lib/use-pane-auth';
 export function TaskPane({
   session,
   officeAvailable,
-}: Readonly<{ session: PaneSession; officeAvailable: boolean }>) {
+}: Readonly<{
+  session: PaneSession;
+  officeAvailable: () => Promise<boolean>;
+}>) {
   const { t } = useTranslation();
   const { state, signIn, signOut } = usePaneAuth(session, officeAvailable);
 
