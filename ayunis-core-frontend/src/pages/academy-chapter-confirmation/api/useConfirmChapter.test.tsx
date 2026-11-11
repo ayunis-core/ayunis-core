@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { showError } from '@/shared/lib/toast';
+import { celebrateChapterCompletion } from '@/pages/academy-chapter-confirmation/lib/celebrateChapterCompletion';
 import { useConfirmChapter } from './useConfirmChapter';
 
 const { confirmChapter, navigate, routerInvalidate } = vi.hoisted(() => ({
@@ -28,6 +29,12 @@ vi.mock('@/shared/api', () => ({
 }));
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
+
+// canvas-confetti has no 2D context in jsdom and throws from a later animation frame.
+vi.mock(
+  '@/pages/academy-chapter-confirmation/lib/celebrateChapterCompletion',
+  () => ({ celebrateChapterCompletion: vi.fn() }),
+);
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -71,6 +78,7 @@ describe('useConfirmChapter', () => {
     });
     expect(routerInvalidate).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith({ to: '/academy' });
+    expect(celebrateChapterCompletion).toHaveBeenCalledOnce();
   });
 
   it('explains and refreshes progress when video pages are still short', async () => {
@@ -102,5 +110,6 @@ describe('useConfirmChapter', () => {
       queryKey: ['/academy/progress'],
     });
     expect(navigate).not.toHaveBeenCalled();
+    expect(celebrateChapterCompletion).not.toHaveBeenCalled();
   });
 });
