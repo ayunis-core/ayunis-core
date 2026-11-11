@@ -264,7 +264,7 @@ importers:
         version: 0.6.3
       openai:
         specifier: 'catalog:'
-        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4)
+        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@8.12.4)(ws@8.21.3)(zod@4.5.4)
       openid-client:
         specifier: ^6.8.7
         version: 6.8.7
@@ -341,8 +341,8 @@ importers:
         specifier: ^0.3.25
         version: 0.3.30(ioredis@5.11.1)(pg@8.23.0)(ts-node@10.9.2(@swc/core@1.16.1)(@types/node@24.19.2)(typescript@6.0.3))
       undici:
-        specifier: ^7.29.0
-        version: 7.29.0
+        specifier: ^8.12.2
+        version: 8.12.4
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
@@ -1245,7 +1245,7 @@ importers:
         version: link:../inference
       openai:
         specifier: 'catalog:'
-        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4)
+        version: 7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@8.12.4)(ws@8.21.3)(zod@4.5.4)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -14093,6 +14093,10 @@ packages:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
     engines: {node: '>=20.18.1'}
 
+  undici@8.12.4:
+    resolution: {integrity: sha512-8Mx+uNKKER2bA4AdtedkqRbwUCIJFr2nJckXRe5yrDqzePqwLP7VNcctN8/XdmDSbF7mS+jJKIszlL+vbam1VA==}
+    engines: {node: '>=22.19.0'}
+
   unicode-emoji-modifier-base@1.0.0:
     resolution: {integrity: sha512-yLSH4py7oFH3oG/9K+XWrz1pSi3dfUrWEnInbxMfArOfc1+33BlGPQtLsOYwvdMy11AwUBetYuaRxSPqgkq+8g==}
     engines: {node: '>=4'}
@@ -26695,11 +26699,11 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  openai@7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@7.29.0)(ws@8.21.3)(zod@4.5.4):
+  openai@7.12.1(@aws-sdk/credential-provider-node@3.972.46)(@smithy/signature-v4@5.4.5)(undici@8.12.4)(ws@8.21.3)(zod@4.5.4):
     optionalDependencies:
       '@aws-sdk/credential-provider-node': 3.972.46
       '@smithy/signature-v4': 5.4.5
-      undici: 7.29.0
+      undici: 8.12.4
       ws: 8.21.3
       zod: 4.5.4
 
@@ -29449,6 +29453,8 @@ snapshots:
   undici@6.29.0: {}
 
   undici@7.29.0: {}
+
+  undici@8.12.4: {}
 
   unicode-emoji-modifier-base@1.0.0: {}
 

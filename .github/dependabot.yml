@@ -15,9 +15,9 @@ updates:
       - "dependencies"
     open-pull-requests-limit: 10
     ignore:
-      # Every undici Agent we create (MCP OAuth, discovered-PDF crawl) goes
-      # through fetchWithUndiciDispatcher, so the major no longer has to match
-      # the one Node embeds. Held on 7 until undici 8 is validated — AYC-1009.
+      # main.ts installs an undici Agent as the global dispatcher for Node's
+      # built-in fetch, so the major must match the undici that the Node image
+      # embeds (AYC-1774). Bump it together with the Node major.
       - dependency-name: "undici"
         update-types: ["version-update:semver-major"]
     groups:
