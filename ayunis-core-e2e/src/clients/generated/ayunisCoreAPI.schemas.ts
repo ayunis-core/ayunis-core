@@ -4062,6 +4062,19 @@ export interface McpOAuthClientMetadataDto {
   application_type: McpOAuthClientMetadataDtoApplicationType;
 }
 
+export interface McpToolAllowanceResponseDto {
+  id: string;
+  integrationId: string;
+  integrationName: string;
+  /**
+     * Logo URL for marketplace integrations
+     * @nullable
+     */
+  integrationLogoUrl: string | null;
+  /** Tool name as reported by the MCP server */
+  toolName: string;
+}
+
 export interface MarketplaceConfigResponseDto {
   /** Whether the marketplace feature is enabled */
   enabled: boolean;

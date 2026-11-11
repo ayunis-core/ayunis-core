@@ -7,6 +7,7 @@ export { McpIntegrationUserConfig } from './mcp-integration-user-config.entity';
 export { McpOAuthClientRegistration } from './mcp-oauth-client-registration.entity';
 export { McpOAuthUserToken } from './mcp-oauth-user-token.entity';
 export { McpOAuthPendingSession } from './mcp-oauth-pending-session.entity';
+export { McpToolAllowance } from './mcp-tool-allowance.entity';
 
 export { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
 export { NoAuthMcpIntegrationAuth } from './auth/no-auth-mcp-integration-auth.entity';

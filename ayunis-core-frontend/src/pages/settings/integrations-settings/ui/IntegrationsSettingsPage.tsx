@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Plug } from 'lucide-react';
-import { SettingsLayout } from '../../settings-layout';
+import { SettingsLayout } from '@/pages/settings/settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
@@ -13,16 +13,17 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { UserConfigDialog } from '@/widgets/mcp-user-config';
+import { AlwaysAllowedToolsCard } from './AlwaysAllowedToolsCard';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useUserIntegrations } from '../api/useUserIntegrations';
+import { useUserIntegrations } from '@/pages/settings/integrations-settings/api/useUserIntegrations';
 import {
   useAuthorizeMcpOAuth,
   useDisconnectMcpOAuth,
-} from '../api/useMcpOAuth';
+} from '@/pages/settings/integrations-settings/api/useMcpOAuth';
 import {
   canDisconnectOAuth,
   resolveIntegrationOAuthAction,
-} from '../lib/resolve-integration-oauth-action';
+} from '@/pages/settings/integrations-settings/lib/resolve-integration-oauth-action';
 
 export default function IntegrationsSettingsPage() {
   const { t } = useTranslation('settings');
@@ -63,6 +64,7 @@ export default function IntegrationsSettingsPage() {
           onDisconnect={(integration) => disconnectOAuth.mutate(integration.id)}
           isOAuthPending={authorizeOAuth.isPending || disconnectOAuth.isPending}
         />
+        <AlwaysAllowedToolsCard />
       </div>
 
       <UserConfigDialog

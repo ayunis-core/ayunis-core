@@ -148,6 +148,7 @@ import type {
   McpOAuthAuthorizationUrlDto,
   McpOAuthClientMetadataDto,
   McpOAuthCompleteResponseDto,
+  McpToolAllowanceResponseDto,
   MeResponseDto,
   MfaCodeRequestDto,
   MfaLoginConfirmResponseDto,
@@ -16787,6 +16788,165 @@ export function useMcpOAuthMetadataControllerGetClientMetadata<TData = Awaited<R
 
 
 
+
+/**
+ * @summary List the current user's always-allowed MCP tools
+ */
+export const mcpToolAllowancesControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<McpToolAllowanceResponseDto[]>(
+      {url: `/mcp-tool-allowances`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMcpToolAllowancesControllerListQueryKey = () => {
+    return [
+    `/mcp-tool-allowances`
+    ] as const;
+    }
+
+
+export const getMcpToolAllowancesControllerListQueryOptions = <TData = Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpToolAllowancesControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>> = ({ signal }) => mcpToolAllowancesControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpToolAllowancesControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>>
+export type McpToolAllowancesControllerListQueryError = unknown
+
+
+export function useMcpToolAllowancesControllerList<TData = Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpToolAllowancesControllerList<TData = Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpToolAllowancesControllerList<TData = Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the current user's always-allowed MCP tools
+ */
+
+export function useMcpToolAllowancesControllerList<TData = Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpToolAllowancesControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Remove one of the current user's always-allowed MCP tools
+ */
+export const mcpToolAllowancesControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/mcp-tool-allowances/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getMcpToolAllowancesControllerRemoveMutationKey = () => ['mcpToolAllowancesControllerRemove'] as const;
+
+export const getMcpToolAllowancesControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>, TError,McpToolAllowancesControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>, TError,McpToolAllowancesControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getMcpToolAllowancesControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>, McpToolAllowancesControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpToolAllowancesControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpToolAllowancesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>>
+
+    export type McpToolAllowancesControllerRemoveMutationError = void
+    export type McpToolAllowancesControllerRemoveMutationVariables = {id: string}
+
+    /**
+ * @summary Remove one of the current user's always-allowed MCP tools
+ */
+export const useMcpToolAllowancesControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>, TError,McpToolAllowancesControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpToolAllowancesControllerRemove>>,
+        TError,
+        McpToolAllowancesControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMcpToolAllowancesControllerRemoveMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary Get marketplace availability and URL

@@ -95,6 +95,8 @@
   "/mcp-integrations/{id}/oauth/authorize",
   "/mcp-integrations/{id}/user-config",
   "/mcp-integrations/{id}/validate",
+  "/mcp-tool-allowances",
+  "/mcp-tool-allowances/{id}",
   "/mfa/disable",
   "/mfa/org",
   "/mfa/setup",

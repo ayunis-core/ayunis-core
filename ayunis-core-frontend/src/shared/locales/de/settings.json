@@ -40,6 +40,16 @@
         "errorDescription": "Die sichere Verbindung konnte nicht abgeschlossen werden. Kehren Sie zu den Integrationen zurück und versuchen Sie es erneut.",
         "back": "Zurück zu Integrationen"
       }
+    },
+    "alwaysAllowed": {
+      "title": "Immer erlaubte Tools",
+      "description": "Diese Tools werden im Chat ohne Rückfrage ausgeführt. Entfernen Sie ein Tool, um vor der Ausführung wieder gefragt zu werden.",
+      "empty": "Keine immer erlaubten Tools. Wenn Sie ein Tool im Chat bestätigen, können Sie es immer erlauben.",
+      "failedToLoad": "Immer erlaubte Tools konnten nicht geladen werden.",
+      "remove": "Entfernen",
+      "removeSuccess": "Vor der Ausführung dieses Tools werden Sie wieder gefragt.",
+      "removeError": "Das Tool konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "notFound": "Dieses Tool ist nicht mehr immer erlaubt."
     }
   },
   "account": {
