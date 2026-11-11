@@ -223,6 +223,8 @@ PDF uploaded in a chat becomes ready.
 
 Optional: `AUDIO_MAX_UPLOAD_BYTES` raises the recording cap (default 25 MiB);
 recordings up to three hours are transcribed whole with speaker labels.
+`PDF_MAX_UPLOAD_BYTES` sets the largest PDF accepted through the browser
+(default 100 MiB); the other document types stay at 25 MiB.
 `ffmpeg` is part of the image. Migrations run automatically.
 
 From the release that processes documents from disk (AYC-1729), the image

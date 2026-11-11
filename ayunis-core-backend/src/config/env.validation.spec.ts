@@ -141,6 +141,9 @@ describe('validateEnv', () => {
       ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '0x10'],
       ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', '0'],
       ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', 'not-a-number'],
+      ['PDF_MAX_UPLOAD_BYTES', '0'],
+      ['PDF_MAX_UPLOAD_BYTES', '100MB'],
+      ['PDF_MAX_UPLOAD_BYTES', '1.5'],
     ])('rejects invalid %s values', (key, value) => {
       expect(() => validateEnv(baseEnv({ [key]: value }))).toThrow(key);
     });

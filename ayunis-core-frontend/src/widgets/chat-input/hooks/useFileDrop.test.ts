@@ -117,26 +117,26 @@ describe('useFileDrop', () => {
 
   it('rejects a document above the size limit and attaches the rest', () => {
     renderFileDrop();
-    const small = fileOfSize('notes.pdf', MAX_SOURCE_FILE_SIZE_BYTES);
-    const large = fileOfSize('sitzung.pdf', 164 * 1024 * 1024);
+    const small = fileOfSize('notes.docx', MAX_SOURCE_FILE_SIZE_BYTES);
+    const large = fileOfSize('sitzung.docx', 164 * 1024 * 1024);
 
     dropFiles(small, large);
 
     expect(onDocumentDrop).toHaveBeenCalledWith([small]);
     expect(mocks.showError).toHaveBeenCalledTimes(1);
     expect(mocks.showError).toHaveBeenCalledWith(
-      'chatInput.fileTooLarge {"name":"sitzung.pdf","size":164,"limit":25}',
+      'chatInput.fileTooLarge {"name":"sitzung.docx","size":164,"limit":25}',
     );
   });
 
   it('does not attach anything when every document is too large', () => {
     renderFileDrop();
 
-    dropFiles(fileOfSize('a.pdf', MAX_SOURCE_FILE_SIZE_BYTES + 1));
+    dropFiles(fileOfSize('a.docx', MAX_SOURCE_FILE_SIZE_BYTES + 1));
 
     expect(onDocumentDrop).not.toHaveBeenCalled();
     expect(mocks.showError).toHaveBeenCalledWith(
-      'chatInput.fileTooLarge {"name":"a.pdf","size":26,"limit":25}',
+      'chatInput.fileTooLarge {"name":"a.docx","size":26,"limit":25}',
     );
   });
 });
