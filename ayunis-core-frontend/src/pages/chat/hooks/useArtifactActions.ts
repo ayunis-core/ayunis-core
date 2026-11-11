@@ -27,6 +27,7 @@ export function useArtifactActions(
     artifactId: openArtifactId ?? '',
     threadId,
     workspaceId,
+    artifactType: openArtifact?.type,
     onSuccess: () => showSuccess(t('chat.artifactSaved')),
   });
 
@@ -38,6 +39,7 @@ export function useArtifactActions(
 
   const { exportArtifact, isExporting } = useExportArtifact({
     artifactId: openArtifactId ?? '',
+    threadId,
     title: openArtifact?.title ?? 'document',
   });
 

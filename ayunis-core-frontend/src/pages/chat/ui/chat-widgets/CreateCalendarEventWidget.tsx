@@ -6,6 +6,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 // Utils
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 
@@ -49,6 +50,7 @@ export default function CreateCalendarEventWidget({
 }>) {
   const { t } = useTranslation('chat');
   const { generate } = useGenerateIcs();
+  const trackOutcome = useTrackProductiveOutcome();
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as Partial<CalendarEventInput>;
@@ -148,6 +150,11 @@ export default function CreateCalendarEventWidget({
       type: 'text/calendar; charset=utf-8',
     });
     saveBlobAs(blob, `${title || 'event'}.ics`);
+    trackOutcome({
+      outcome_type: 'calendar_event_downloaded',
+      output_type: 'calendar_event',
+      format: 'ics',
+    });
   }
 
   return (

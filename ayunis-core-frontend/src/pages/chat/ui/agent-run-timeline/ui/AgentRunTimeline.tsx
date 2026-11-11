@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, CircleCheck } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
@@ -18,6 +18,7 @@ import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import { getArtifactToolTarget } from '@/pages/chat/ui/agent-run-timeline/lib/tool-classification';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 
 interface AgentRunTimelineProps {
   unit: AgentRunUnit;
@@ -101,6 +102,18 @@ const RunBlock = memo(function RunBlock({
       />
     );
   }
+  return <AnswerText text={block.content.text} isStreaming={isStreaming} />;
+});
+
+function AnswerText({
+  text,
+  isStreaming,
+}: Readonly<{ text: string; isStreaming: boolean }>) {
+  const trackOutcome = useTrackProductiveOutcome();
+  const trackCodeCopied = useCallback(
+    () => trackOutcome({ outcome_type: 'code_copied', output_type: 'code' }),
+    [trackOutcome],
+  );
   return (
     <div data-copyable="true">
       <Markdown
@@ -108,12 +121,13 @@ const RunBlock = memo(function RunBlock({
         renderLegalReferences
         renderSourceCitations
         renderUrlReferences
+        onCodeCopied={trackCodeCopied}
       >
-        {block.content.text}
+        {text}
       </Markdown>
     </div>
   );
-});
+}
 
 function RoutineFinishedMarker() {
   const { t } = useTranslation('chat');

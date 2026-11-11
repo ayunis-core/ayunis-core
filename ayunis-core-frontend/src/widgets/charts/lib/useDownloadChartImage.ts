@@ -6,9 +6,10 @@ export function useDownloadChartImage(title?: string) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const download = useCallback(async () => {
+  /** Resolves `true` once the image download started. */
+  const download = useCallback(async (): Promise<boolean> => {
     const node = chartRef.current;
-    if (!node) return;
+    if (!node) return false;
 
     setIsDownloading(true);
     try {
@@ -27,6 +28,7 @@ export function useDownloadChartImage(title?: string) {
       link.download = `${slugifyForCssVar(title ?? 'chart')}.png`;
       link.href = dataUrl;
       link.click();
+      return true;
     } finally {
       setIsDownloading(false);
     }

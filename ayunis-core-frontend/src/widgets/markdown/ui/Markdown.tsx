@@ -32,6 +32,8 @@ interface MarkdownProps {
   renderSourceCitations?: boolean;
   renderUrlReferences?: boolean;
   renderImages?: boolean;
+  /** Called once a code block's copy reached the clipboard. */
+  onCodeCopied?: () => void;
 }
 
 interface SpanComponentProps {
@@ -69,6 +71,7 @@ interface AnchorComponentProps {
 }
 
 const RenderImagesContext = createContext(true);
+const CodeCopiedContext = createContext<(() => void) | undefined>(undefined);
 
 function MarkdownSpan(props: Readonly<SpanComponentProps>) {
   const token = props['data-pii-token'];
@@ -94,6 +97,7 @@ function MarkdownCode({
   children,
   'data-fence-open': fenceOpen,
 }: Readonly<CodeComponentProps>) {
+  const onCodeCopied = useContext(CodeCopiedContext);
   // Convert children to string safely
   const childrenStr =
     typeof children === 'string' || typeof children === 'number'
@@ -132,6 +136,7 @@ function MarkdownCode({
       inline={false}
       className={className ?? ''}
       highlight={fenceOpen !== 'true'}
+      onCopied={onCodeCopied}
     >
       {childrenStr}
     </CodeBlock>
@@ -222,6 +227,7 @@ function Markdown({
   renderSourceCitations = false,
   renderUrlReferences = false,
   renderImages = true,
+  onCodeCopied,
 }: Readonly<MarkdownProps>) {
   const urls = protectUrlReferences(renderUrlReferences ? children : '');
   const markdown = renderUrlReferences ? urls.markdown : children;
@@ -233,20 +239,22 @@ function Markdown({
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
     >
       <RenderImagesContext.Provider value={renderImages}>
-        <ReactMarkdown
-          remarkPlugins={
-            isStreaming ? STREAMING_REMARK_PLUGINS : REMARK_PLUGINS
-          }
-          rehypePlugins={resolveRehypePlugins(
-            renderLegalReferences,
-            renderSourceCitations,
-            prepared.separator,
-            urls.references,
-          )}
-          components={COMPONENTS}
-        >
-          {prepared.markdown}
-        </ReactMarkdown>
+        <CodeCopiedContext.Provider value={onCodeCopied}>
+          <ReactMarkdown
+            remarkPlugins={
+              isStreaming ? STREAMING_REMARK_PLUGINS : REMARK_PLUGINS
+            }
+            rehypePlugins={resolveRehypePlugins(
+              renderLegalReferences,
+              renderSourceCitations,
+              prepared.separator,
+              urls.references,
+            )}
+            components={COMPONENTS}
+          >
+            {prepared.markdown}
+          </ReactMarkdown>
+        </CodeCopiedContext.Provider>
       </RenderImagesContext.Provider>
     </div>
   );

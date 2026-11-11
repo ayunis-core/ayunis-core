@@ -57,6 +57,7 @@ import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
 import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
+import { ProductiveOutcomeProvider } from '@/shared/lib/openpanel-outcomes';
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -461,17 +462,19 @@ export default function ChatPage({
   ) : undefined;
   return (
     <AppLayout>
-      <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
-        <SourceCitationController key={thread.id} threadId={thread.id}>
-          <ChatInterfaceLayout
-            chatHeader={chatHeader}
-            chatContent={chatContent}
-            chatInput={chatInput}
-            resetKey={thread.id}
-            sidePanel={sidePanel}
-          />
-        </SourceCitationController>
-      </PiiMaskProvider>
+      <ProductiveOutcomeProvider threadId={thread.id}>
+        <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
+          <SourceCitationController key={thread.id} threadId={thread.id}>
+            <ChatInterfaceLayout
+              chatHeader={chatHeader}
+              chatContent={chatContent}
+              chatInput={chatInput}
+              resetKey={thread.id}
+              sidePanel={sidePanel}
+            />
+          </SourceCitationController>
+        </PiiMaskProvider>
+      </ProductiveOutcomeProvider>
       <RenameThreadDialog
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@ayunis/ui/components/label';
 import { Input } from '@ayunis/ui/components/input';
@@ -8,6 +8,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Mail } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 
 export default function SendEmailWidget({
   content,
@@ -36,6 +37,7 @@ export default function SendEmailWidget({
   // Mask dictionary so egress (clipboard, mailto) emits original values while
   // the on-screen fields keep showing `{{pii:...}}` tokens.
   const masks = usePiiMasks();
+  const trackOutcome = useTrackProductiveOutcome();
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -122,7 +124,18 @@ export default function SendEmailWidget({
       </div>
       <div className="w-full flex gap-2">
         <Button asChild className={cn(isStreaming && 'animate-pulse')}>
-          <a href={mailtoHref} target="_blank" rel="noopener noreferrer">
+          <a
+            href={mailtoHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackOutcome({
+                outcome_type: 'email_handed_off',
+                output_type: 'email',
+                format: 'mailto',
+              })
+            }
+          >
             <Mail className="h-4 w-4" /> {t('chat.tools.send_email.open')}
           </a>
         </Button>
@@ -138,6 +151,11 @@ export default function SendEmailWidget({
                 );
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1200);
+                trackOutcome({
+                  outcome_type: 'email_handed_off',
+                  output_type: 'email',
+                  format: 'clipboard',
+                });
               } catch {
                 // noop
               }

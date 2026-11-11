@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
 
 vi.mock('react-i18next', () => ({
@@ -15,6 +15,11 @@ vi.mock('@ayunis/ui/components/tooltip', () => ({
   TooltipContent: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
   ),
+}));
+
+const trackOutcome = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/lib/openpanel-outcomes', () => ({
+  useTrackProductiveOutcome: () => trackOutcome,
 }));
 
 function CopyHarness() {
@@ -45,6 +50,10 @@ class ClipboardItemStub {
 }
 
 describe('CopyAssistantTextButton', () => {
+  beforeEach(() => {
+    trackOutcome.mockReset();
+  });
+
   it('copies the answer without code-block line numbers', async () => {
     Object.defineProperty(HTMLElement.prototype, 'innerText', {
       configurable: true,
@@ -79,5 +88,49 @@ describe('CopyAssistantTextButton', () => {
     expect(captured.plain).not.toContain('10');
     expect(captured.html).not.toContain('react-syntax-highlighter-line-number');
     expect(captured.html).toContain('alpha');
+  });
+
+  it('sends answer_copied once the plain-text fallback reached the clipboard', async () => {
+    vi.stubGlobal('ClipboardItem', ClipboardItemStub);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        write: vi.fn().mockRejectedValue(new Error('no html')),
+        writeText,
+      },
+    });
+
+    render(<CopyHarness />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'chat.copyToClipboard' }),
+    );
+
+    await waitFor(() => {
+      expect(trackOutcome.mock.calls).toEqual([
+        [{ outcome_type: 'answer_copied', output_type: 'answer' }],
+      ]);
+    });
+  });
+
+  it('sends nothing when the clipboard rejected the copy', async () => {
+    vi.stubGlobal('ClipboardItem', ClipboardItemStub);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        write: vi.fn().mockRejectedValue(new Error('denied')),
+        writeText,
+      },
+    });
+
+    render(<CopyHarness />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'chat.copyToClipboard' }),
+    );
+
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(trackOutcome).not.toHaveBeenCalled();
   });
 });

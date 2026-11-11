@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { copyableMessageContent } from '@/pages/chat/lib/copyable-message-content';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -18,6 +19,13 @@ export default function CopyAssistantTextButton({
 }: CopyAssistantTextButtonProps) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation('chat');
+  const trackOutcome = useTrackProductiveOutcome();
+
+  const markCopied = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    trackOutcome({ outcome_type: 'answer_copied', output_type: 'answer' });
+  };
 
   const handleCopy = async () => {
     const el = contentRef.current;
@@ -45,13 +53,11 @@ export default function CopyAssistantTextButton({
           'text/plain': new Blob([plainText], { type: 'text/plain' }),
         }),
       ]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      markCopied();
     } catch {
       try {
         await navigator.clipboard.writeText(plainText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        markCopied();
       } catch (error) {
         console.error('Failed to copy message:', error);
       }
