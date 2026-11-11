@@ -4,21 +4,26 @@ import {
   onboardingControllerUpdateOnboarding,
   getOnboardingControllerGetOnboardingQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateOnboardingDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  OnboardingResponseDto,
+  UpdateOnboardingDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showError } from '@/shared/lib/toast';
+import { trackOnboardingChanges } from '@/widgets/onboarding';
 
 export function useUpdateOnboarding() {
   const { t } = useTranslation('getting-started');
   const queryClient = useQueryClient();
+  const queryKey = getOnboardingControllerGetOnboardingQueryKey();
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateOnboardingDto) => {
       return await onboardingControllerUpdateOnboarding(data);
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: getOnboardingControllerGetOnboardingQueryKey(),
-      });
+    onMutate: () => queryClient.getQueryData<OnboardingResponseDto>(queryKey),
+    onSuccess: (saved, _data, previous) => {
+      if (previous) trackOnboardingChanges(previous, saved);
+      void queryClient.invalidateQueries({ queryKey });
     },
     onError: () => {
       showError(t('saveError'));
