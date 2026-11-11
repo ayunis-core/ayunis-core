@@ -69,15 +69,29 @@ export default [
       await seedInbox(context);
       return openInbox(context.page, '/inbox');
     },
+  },
+  {
+    name: 'inbox-switch-notifications',
+    path: '/inbox',
+    viewports: ['desktop'],
+    waitFor: async (context) => {
+      await seedInbox(context);
+      return openInbox(context.page, '/inbox');
+    },
     demos: [
       {
         name: 'open-notifications',
-        action: async ({ page, expect, viewport }) => {
-          if (viewport !== 'desktop') return;
+        action: async ({ page, expect }) => {
           const items = page.getByTestId('notification-item');
           for (const index of [0, 1, 2]) {
-            await items.nth(index).getByTestId('notification-item-headline').click();
-            await expect(items.nth(index)).toHaveAttribute('data-selected', 'true');
+            await items
+              .nth(index)
+              .getByTestId('notification-item-headline')
+              .click();
+            await expect(items.nth(index)).toHaveAttribute(
+              'data-selected',
+              'true',
+            );
           }
         },
       },
