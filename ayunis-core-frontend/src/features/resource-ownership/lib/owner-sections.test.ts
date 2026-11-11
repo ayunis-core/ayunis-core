@@ -9,14 +9,9 @@ const teams = [
   { id: 'archive', name: 'Archive' },
 ];
 
-const item = (
-  id: string,
-  owner: Omit<OwnedResource, 'isShared'>,
-  isShared = false,
-): Item => ({
+const item = (id: string, owner: OwnedResource): Item => ({
   id,
   name: id,
-  isShared,
   ...owner,
 });
 
@@ -27,10 +22,9 @@ const sectionsOf = (items: Item[]) =>
   }));
 
 describe('groupByOwner', () => {
-  it('orders personal, organisation, teams by name, then items shared with the user', () => {
+  it('orders personal, organisation, then teams by name', () => {
     expect(
       sectionsOf([
-        item('shared', { ownerType: 'personal' }, true),
         item('zoning-skill', { ownerType: 'team', teamId: 'zoning' }),
         item('org-skill', { ownerType: 'org' }),
         item('archive-skill', { ownerType: 'team', teamId: 'archive' }),
@@ -41,7 +35,6 @@ describe('groupByOwner', () => {
       { key: 'org', ids: ['org-skill'] },
       { key: 'team:archive', ids: ['archive-skill'] },
       { key: 'team:zoning', ids: ['zoning-skill'] },
-      { key: 'shared', ids: ['shared'] },
     ]);
   });
 

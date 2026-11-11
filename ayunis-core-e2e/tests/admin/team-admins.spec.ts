@@ -1,12 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
-import { generatedApi } from "../../src/clients/api/generated-api";
+import { requestSkillCreation } from "../../src/clients/api/ownership.client";
 import {
   setManagerRolePermissions,
   setUserRolePermissions,
 } from "../../src/clients/api/role-permissions.client";
-import { requestSkillShare } from "../../src/clients/api/shares.client";
 import {
   addTeamMember,
   createTeam,
@@ -244,47 +243,43 @@ test("a team manager holds the manager permissions in their team", async ({
   }
 });
 
-test("a team admin shares with their team even when the role matrix forbids it", async ({
+test("a team admin creates team skills even when the role matrix forbids it", async ({
   mail,
 }) => {
   test.setTimeout(120_000);
   const key = randomUUID().slice(0, 8);
   const org = await createTeamAdminOrg(mail, key);
   const { adminApi, lead, colleague, teamId, otherTeamId } = org;
+  const team = { ownerType: "team" as const, teamId };
   try {
     await setUserRolePermissions(adminApi, ["manage_skills"]);
-    const createSkill = (api: APIRequestContext, name: string) =>
-      generatedApi.skillsControllerCreate(
-        {
-          ownerType: "personal",
-          name: `${name} ${key}`,
-          shortDescription: "Answers building permit questions",
-          instructions: "Answer building permit questions.",
-          isActive: true,
-        },
-        { api },
-      );
-    const leadSkill = await createSkill(lead.api, "Bauantrag");
-    const colleagueSkill = await createSkill(colleague.api, "Baulast");
 
     expect(
-      (await requestSkillShare(lead.api, leadSkill.id, teamId)).status(),
+      (await requestSkillCreation(lead.api, team, `Bauantrag ${key}`)).status(),
     ).toBe(403);
 
     await setTeamMemberRole(adminApi, teamId, lead.user.id, "admin");
 
     expect(
-      (await requestSkillShare(lead.api, leadSkill.id, teamId)).status(),
+      (await requestSkillCreation(lead.api, team, `Bauantrag ${key}`)).status(),
     ).toBe(201);
-    expect((await requestSkillShare(lead.api, leadSkill.id)).status()).toBe(
-      403,
-    );
     expect(
-      (await requestSkillShare(lead.api, leadSkill.id, otherTeamId)).status(),
+      (
+        await requestSkillCreation(lead.api, { ownerType: "org" }, `Org ${key}`)
+      ).status(),
     ).toBe(403);
     expect(
       (
-        await requestSkillShare(colleague.api, colleagueSkill.id, teamId)
+        await requestSkillCreation(
+          lead.api,
+          { ownerType: "team", teamId: otherTeamId },
+          `Kämmerei ${key}`,
+        )
+      ).status(),
+    ).toBe(403);
+    expect(
+      (
+        await requestSkillCreation(colleague.api, team, `Baulast ${key}`)
       ).status(),
     ).toBe(403);
   } finally {

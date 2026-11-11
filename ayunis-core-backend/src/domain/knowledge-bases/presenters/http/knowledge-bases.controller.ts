@@ -145,7 +145,6 @@ export class KnowledgeBasesController {
     );
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
       isActive: true,
-      isShared: false,
       documentCount: 0,
     });
   }

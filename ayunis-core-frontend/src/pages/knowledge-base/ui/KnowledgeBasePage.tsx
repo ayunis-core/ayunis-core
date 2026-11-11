@@ -1,15 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
-import type {
-  KnowledgeBaseResponseDto,
-  ShareResponseDto,
-  MyTeamResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import { ConfigurationTabs } from '@/widgets/shares-tab';
 import { useMyPermissions } from '@/features/permissions';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -20,7 +14,7 @@ import { Trash2 } from 'lucide-react';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
-import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
@@ -41,39 +35,19 @@ import { useChangeKnowledgeBaseOwner } from '@/pages/knowledge-base/api';
 
 export function KnowledgeBasePage({
   knowledgeBase,
-  shares,
-  userTeams,
-  initialTab = 'config',
 }: Readonly<{
   knowledgeBase: KnowledgeBaseResponseDto;
-  shares: ShareResponseDto[];
-  userTeams: MyTeamResponseDto[];
-  initialTab?: 'config' | 'share';
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const { t: tOwnership } = useTranslation('ownership');
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { id } = useParams({
-    from: '/_authenticated/knowledge-bases/$id',
-  });
   const navigateToList = useCallback(() => {
     void navigate({ to: '/knowledge-bases' });
   }, [navigate]);
   const deleteKnowledgeBase = useDeleteKnowledgeBase(navigateToList);
   const { confirm } = useConfirmation();
-
-  const handleTabChange = useCallback(
-    (value: string) => {
-      void navigate({
-        to: '/knowledge-bases/$id',
-        params: { id },
-        search: value === 'config' ? {} : { tab: value as 'share' },
-      });
-    },
-    [navigate, id],
-  );
 
   function handleDelete() {
     confirm({
@@ -97,10 +71,7 @@ export function KnowledgeBasePage({
   const isCollective =
     knowledgeBase.ownerType === 'team' || knowledgeBase.ownerType === 'org';
   const isManageable = canManage(knowledgeBase);
-  const isReadOnly =
-    Boolean(knowledgeBase.isShared) || (isCollective && !isManageable);
-  // Team and organization knowledge bases cannot be shared.
-  const canShare = knowledgeBase.ownerType === 'personal';
+  const isReadOnly = isCollective && !isManageable;
 
   const configContent = (
     <div className="grid gap-4">
@@ -151,14 +122,10 @@ export function KnowledgeBasePage({
               { label: knowledgeBase.name },
             ]}
             badge={
-              knowledgeBase.isShared ? (
-                <Badge variant="secondary">{t('shared.badge')}</Badge>
-              ) : (
-                <OwnerBadge
-                  resource={knowledgeBase}
-                  testId="knowledge-base-detail-owner-badge"
-                />
-              )
+              <OwnerBadge
+                resource={knowledgeBase}
+                testId="knowledge-base-detail-owner-badge"
+              />
             }
             action={
               <>
@@ -194,25 +161,7 @@ export function KnowledgeBasePage({
             }
           />
         }
-        contentArea={
-          isReadOnly || !canShare ? (
-            configContent
-          ) : (
-            <ConfigurationTabs
-              value={initialTab}
-              onValueChange={handleTabChange}
-              labels={{
-                configuration: t('tabs.configuration'),
-                shares: t('tabs.shares'),
-              }}
-              configuration={configContent}
-              entityType="knowledge_base"
-              entityId={knowledgeBase.id}
-              shares={shares}
-              userTeams={userTeams}
-            />
-          )
-        }
+        contentArea={configContent}
       />
     </AppLayout>
   );

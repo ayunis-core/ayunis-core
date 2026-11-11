@@ -3270,8 +3270,6 @@ export interface KnowledgeBaseResponseDto {
   documentCount: number;
   /** Whether the knowledge base is active for the current user; for team and org knowledge bases this is the same for everyone with access */
   isActive: boolean;
-  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
-  isShared?: boolean;
 }
 
 export interface KnowledgeBaseListResponseDto {
@@ -3405,89 +3403,6 @@ export interface KnowledgeBaseOwnerChangePreviewResponseDto {
   unlinkedSkillCount: number;
 }
 
-/**
- * Type of entity being shared
- */
-export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
-
-
-export const CreateSkillShareDtoEntityType = {
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateSkillShareDto {
-  /** Type of entity being shared */
-  entityType: CreateSkillShareDtoEntityType;
-  /** ID of the skill to share */
-  skillId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
-
-
-export const ShareResponseDtoEntityType = {
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-/**
- * Type of share scope (organization, user, or team)
- */
-export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
-
-
-export const ShareResponseDtoScopeType = {
-  org: 'org',
-  team: 'team',
-} as const;
-
-export interface ShareResponseDto {
-  /** Unique identifier of the share */
-  id: string;
-  /** Type of entity being shared */
-  entityType: ShareResponseDtoEntityType;
-  /** ID of the entity being shared */
-  entityId: string;
-  /** Type of share scope (organization, user, or team) */
-  scopeType: ShareResponseDtoScopeType;
-  /** ID of the user who created the share */
-  ownerId: string;
-  /** ID of the team (only present for team-scoped shares) */
-  teamId?: string;
-  /** Name of the team (only present for team-scoped shares) */
-  teamName?: string;
-  /** When the share was created */
-  createdAt: string;
-  /** When the share was last updated */
-  updatedAt: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
-
-
-export const CreateKnowledgeBaseShareDtoEntityType = {
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateKnowledgeBaseShareDto {
-  /** Type of entity being shared */
-  entityType: CreateKnowledgeBaseShareDtoEntityType;
-  /** ID of the knowledge base to share */
-  knowledgeBaseId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
 export interface InstallSkillFromMarketplaceDto {
   /** The unique identifier (slug) of the marketplace skill */
   identifier: string;
@@ -3517,10 +3432,7 @@ export interface SkillResponseDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  isShared: boolean;
   isPinned: boolean;
-  /** @nullable */
-  creatorName: string | null;
 }
 
 /**
@@ -6589,25 +6501,6 @@ export const KnowledgeBaseOwnerControllerPreviewOwnerChangeOwnerType = {
   personal: 'personal',
   team: 'team',
   org: 'org',
-} as const;
-
-export type SharesControllerGetSharesParams = {
-/**
- * ID of the entity to get shares for
- */
-entityId: string;
-/**
- * Type of the entity
- */
-entityType: SharesControllerGetSharesEntityType;
-};
-
-export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
-
-
-export const SharesControllerGetSharesEntityType = {
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
 } as const;
 
 export type SkillsControllerFindAllParams = {

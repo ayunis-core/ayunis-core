@@ -52,7 +52,6 @@ Enrolled in this change:
 | Source create/delete, skill and collection source removal | parent-child index |
 | Thread source attachment, permitted-model replacement | threads, thread assignments |
 | Artifact creation and version updates | artifacts, versions, document artifacts; letterhead lookup |
-| Share deletion and access checks | shares, share scopes |
 | Permitted-model deletion and dependent defaults | permitted models, permitted-model finder, default model selections |
 | Skill and collection authorization/assignment | workspace records and subtype lookups, skill page finder, MCP integration subtype lookups |
 | Password reset | password-set tokens |

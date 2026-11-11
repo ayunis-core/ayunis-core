@@ -127,37 +127,6 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     ).rejects.toThrow(KnowledgeBaseNotFoundError);
   });
 
-  it('should allow access to a shared knowledge base document', async () => {
-    const otherUserId = randomUUID();
-    const sharedKb = new PersonalKnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Shared Municipal Policies',
-      orgId,
-      userId: otherUserId,
-    });
-
-    const source = new FileSource({
-      id: documentId,
-      name: 'shared-building-codes.pdf',
-      type: TextType.FILE,
-      fileType: FileType.PDF,
-    });
-
-    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(sharedKb);
-    mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(source);
-
-    const result = await useCase.execute(
-      new GetKnowledgeBaseDocumentTextQuery({
-        knowledgeBaseId,
-        documentId,
-        orgId,
-        userId,
-      }),
-    );
-
-    expect(result).toBe(source);
-  });
-
   it('should throw KnowledgeBaseNotFoundError when orgId does not match', async () => {
     const otherOrgId = randomUUID();
     const knowledgeBase = new PersonalKnowledgeBase({

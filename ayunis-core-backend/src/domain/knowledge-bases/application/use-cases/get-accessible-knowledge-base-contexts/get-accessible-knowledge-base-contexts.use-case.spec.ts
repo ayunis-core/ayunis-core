@@ -86,12 +86,10 @@ describe(GetAccessibleKnowledgeBaseContextsUseCase.name, () => {
       expect.objectContaining({
         knowledgeBase: team,
         isActive: true,
-        isShared: false,
       }),
       expect.objectContaining({
         knowledgeBase: org,
         isActive: false,
-        isShared: false,
       }),
     ]);
     expect(repository.getActiveIds).not.toHaveBeenCalled();

@@ -38,6 +38,7 @@ import { GetTeamRolePermissionsUseCase } from 'src/iam/teams/application/use-cas
 
 import { GetCollectiveOwnerAccessUseCase } from 'src/iam/teams/application/use-cases/get-collective-owner-access/get-collective-owner-access.use-case';
 import { ListReadableCollectiveOwnersUseCase } from 'src/iam/teams/application/use-cases/list-readable-collective-owners/list-readable-collective-owners.use-case';
+import { FindUserIdsOutsideAudienceUseCase } from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.use-case';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { ListReadableCollectiveOwnersUseCase } from 'src/iam/teams/application/u
     GetTeamAccessUseCase,
     GetCollectiveOwnerAccessUseCase,
     ListReadableCollectiveOwnersUseCase,
+    FindUserIdsOutsideAudienceUseCase,
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,
@@ -102,6 +104,7 @@ import { ListReadableCollectiveOwnersUseCase } from 'src/iam/teams/application/u
     GetTeamAccessUseCase,
     GetCollectiveOwnerAccessUseCase,
     ListReadableCollectiveOwnersUseCase,
+    FindUserIdsOutsideAudienceUseCase,
     ListManageableTeamsUseCase,
     ListMyTeamAccessUseCase,
     UpdateTeamMemberRoleUseCase,

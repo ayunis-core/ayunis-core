@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import type { SkillUserContext } from 'src/domain/skills/application/models/skill-context';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
@@ -13,11 +12,7 @@ import {
 
 @Injectable()
 export class SkillDtoMapper {
-  toDto(
-    skill: Skill,
-    context: SkillUserContext,
-    creatorName?: string | null,
-  ): SkillResponseDto {
+  toDto(skill: Skill, context: SkillUserContext): SkillResponseDto {
     return {
       id: skill.id,
       ...this.toOwner(skill),
@@ -26,11 +21,9 @@ export class SkillDtoMapper {
       instructions: skill.instructions,
       marketplaceIdentifier: skill.marketplaceIdentifier,
       isActive: context.isActive,
-      isShared: context.isShared,
       isPinned: context.isPinned,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
-      creatorName: context.isShared ? (creatorName ?? null) : null,
     };
   }
 
@@ -47,27 +40,6 @@ export class SkillDtoMapper {
       return { ownerType: 'team', teamId: skill.teamId };
     }
     return { ownerType: 'org' };
-  }
-
-  toDtoArray(
-    skills: PersonalSkill[],
-    activeSkillIds: Set<string>,
-    sharedSkillIds: Set<string> = new Set(),
-    pinnedSkillIds: Set<string> = new Set(),
-    creatorNamesByUserId: Map<UUID, string> = new Map(),
-  ): SkillResponseDto[] {
-    return skills.map((skill) => {
-      const isShared = sharedSkillIds.has(skill.id);
-      return this.toDto(
-        skill,
-        {
-          isActive: activeSkillIds.has(skill.id),
-          isShared,
-          isPinned: pinnedSkillIds.has(skill.id),
-        },
-        isShared ? creatorNamesByUserId.get(skill.userId) : null,
-      );
-    });
   }
 
   sourceToDto(source: Source): SkillSourceResponseDto {

@@ -44,18 +44,10 @@ describe('manageableOwners', () => {
 describe('canManageResource', () => {
   const managers = authorization(['manage_skills', 'share_skills_with_org']);
 
-  it('lets owners manage their personal skills but not shared ones', () => {
+  it('lets owners manage their personal skills', () => {
     expect(
       canManageResource('skill', { ownerType: 'personal' }, managers, teams),
     ).toBe(true);
-    expect(
-      canManageResource(
-        'skill',
-        { ownerType: 'personal', isShared: true },
-        managers,
-        teams,
-      ),
-    ).toBe(false);
   });
 
   it('follows the team permission for team skills', () => {
@@ -112,14 +104,12 @@ describe('canManageResource', () => {
 
 describe('canLinkKnowledgeBase', () => {
   const personal = { ownerType: 'personal' as const };
-  const sharedPersonal = { ownerType: 'personal' as const, isShared: true };
   const marketing = { ownerType: 'team' as const, teamId: 'marketing' };
   const engineering = { ownerType: 'team' as const, teamId: 'engineering' };
   const org = { ownerType: 'org' as const };
 
-  it('lets personal skills link personal knowledge bases, shared ones included', () => {
+  it('lets personal skills link only personal knowledge bases', () => {
     expect(canLinkKnowledgeBase(personal, personal)).toBe(true);
-    expect(canLinkKnowledgeBase(personal, sharedPersonal)).toBe(true);
     expect(canLinkKnowledgeBase(personal, marketing)).toBe(false);
     expect(canLinkKnowledgeBase(personal, org)).toBe(false);
   });

@@ -26,8 +26,6 @@ export function OwnerSections<T extends OwnedResource & { name: string }>({
         return t('section.personal');
       case 'org':
         return t('section.org');
-      case 'shared':
-        return t('section.shared');
       case 'team': {
         const team = teams.find(({ id }) => id === owner.teamId);
         return team

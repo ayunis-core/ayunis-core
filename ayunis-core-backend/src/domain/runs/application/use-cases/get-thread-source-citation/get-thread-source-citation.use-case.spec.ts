@@ -364,7 +364,7 @@ describe('GetThreadSourceCitationUseCase', () => {
     ).rejects.toThrow(SourceCitationNotFoundError);
   });
 
-  it('uses thread execution access for an assigned shared knowledge base', async () => {
+  it('uses thread execution access for an assigned knowledge base', async () => {
     const knowledgeBaseId = randomUUID();
     const citationTarget = target({ knowledgeBaseId });
     getKnowledgeBaseDocumentTextUseCase.execute.mockImplementation((query) => {

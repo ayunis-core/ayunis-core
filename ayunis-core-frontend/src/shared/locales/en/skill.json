@@ -2,59 +2,6 @@
   "breadcrumb": {
     "skills": "Skills"
   },
-  "shared": {
-    "badge": "Shared",
-    "by": "Shared by {{name}}"
-  },
-  "tabs": {
-    "configuration": "Configuration",
-    "shares": "Share"
-  },
-  "shares": {
-    "deprecation": {
-      "notice": {
-        "title": "Sharing is being discontinued",
-        "description": "To make this skill available to a team or the organisation, change its owner instead."
-      },
-      "blocked": {
-        "title": "Sharing is no longer possible",
-        "description": "Create skills directly in the team or the organisation instead, or change the owner of this skill.",
-        "close": "Close"
-      }
-    },
-    "org": {
-      "title": "Share with organisation",
-      "descriptionOn": "This skill is shared with all users of your organisation",
-      "descriptionOff": "This skill is not shared with all users of your organisation"
-    },
-    "teams": {
-      "title": "Teams",
-      "description": "Share with team members",
-      "delete": {
-        "title": "Remove Team Share",
-        "description": "This will remove access to the skill for all members of {{teamName}}",
-        "confirm": "Remove",
-        "cancel": "Cancel"
-      }
-    },
-    "delete": {
-      "tooltip": "Remove share",
-      "title": "Remove Share",
-      "description": "This will remove access to the skill for all members of your organization",
-      "confirm": "Remove",
-      "cancel": "Cancel"
-    },
-    "scope": {
-      "org": "Organization"
-    },
-    "sharedOn": "Shared on",
-    "success": {
-      "deleted": "Share removed successfully"
-    },
-    "error": {
-      "delete": "Failed to remove share"
-    }
-  },
   "properties": {
     "title": "Edit skill",
     "description": "Make changes to your skill here. Click save when you're done.",
@@ -92,7 +39,6 @@
     "title": "Knowledge Bases",
     "description": "Connect shared knowledge bases to this skill",
     "toggleAriaLabel": "Toggle {{name}} knowledge base",
-    "sharedBadge": "Shared",
     "retryButton": "Retry",
     "success": {
       "assigned": "Knowledge base connected",

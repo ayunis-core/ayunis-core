@@ -9,11 +9,8 @@ import type {
   AccessibleKnowledgeBaseScope,
   KnowledgeBaseListOptions,
 } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base-activation.record';
 import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
-import { buildKnowledgeBaseAccessSubqueries } from './knowledge-base-access.db-query';
 
 /** Omitting `orgId` leaves org-owned rows out. */
 export interface CollectiveOwnerFilter {
@@ -44,7 +41,7 @@ export function whereCollectiveKnowledgeBaseOwner(
 
 /**
  * Non-workspace knowledge bases of the scope's organization the user may read:
- * owned or shared personal ones, and those of the user's teams and the
+ * their own personal ones, and those of the user's teams and the
  * organization. The optional conditions narrow either branch (e.g. to active
  * rows) without touching the other.
  */
@@ -53,9 +50,8 @@ export function buildAccessibleKnowledgeBaseQuery(
   scope: AccessibleKnowledgeBaseScope,
   options: { personalCondition?: string; collectiveCondition?: string } = {},
 ): SelectQueryBuilder<KnowledgeBaseRecord> {
-  const query = repository.createQueryBuilder('knowledgeBase');
-  const access = buildKnowledgeBaseAccessSubqueries(query);
-  return query
+  return repository
+    .createQueryBuilder('knowledgeBase')
     .where('knowledgeBase.workspaceId IS NULL')
     .andWhere('knowledgeBase.orgId = :orgId')
     .andWhere(
@@ -63,17 +59,7 @@ export function buildAccessibleKnowledgeBaseQuery(
         accessQuery
           .where(
             new Brackets((personal) => {
-              personal.where(
-                new Brackets((owner) => {
-                  owner
-                    .where('knowledgeBase.userId = :userId')
-                    .orWhere(`EXISTS ${access.directShare}`)
-                    .orWhere(`EXISTS ${access.sharedSkill}`);
-                }),
-              );
-              // Only personal knowledge bases can be shared; a share row left
-              // on one that has since moved to a team must not widen access.
-              personal.andWhere('knowledgeBase.userId IS NOT NULL');
+              personal.where('knowledgeBase.userId = :userId');
               if (options.personalCondition) {
                 personal.andWhere(options.personalCondition);
               }
@@ -93,13 +79,7 @@ export function buildAccessibleKnowledgeBaseQuery(
           );
       }),
     )
-    .setParameters({
-      userId: scope.userId,
-      orgId: scope.orgId,
-      skillEntityType: SharedEntityType.SKILL,
-      orgScopeType: ShareScopeType.ORG,
-      teamScopeType: ShareScopeType.TEAM,
-    });
+    .setParameters({ userId: scope.userId, orgId: scope.orgId });
 }
 
 /** Personal rows need the user's activation; team and org rows their own state. */
@@ -123,7 +103,6 @@ export function buildListKnowledgeBasesQuery(
   scope: {
     userId: UUID;
     workspaceId?: UUID;
-    sharedKnowledgeBaseIds: UUID[];
     collectiveOwners?: CollectiveOwnerFilter;
   },
   options: KnowledgeBaseListOptions,
@@ -141,12 +120,6 @@ export function buildListKnowledgeBasesQuery(
           accessQuery.where('knowledgeBase.userId = :userId', {
             userId: scope.userId,
           });
-          if (scope.sharedKnowledgeBaseIds.length > 0) {
-            accessQuery.orWhere(
-              'knowledgeBase.id IN (:...sharedKnowledgeBaseIds) AND knowledgeBase.userId IS NOT NULL',
-              { sharedKnowledgeBaseIds: scope.sharedKnowledgeBaseIds },
-            );
-          }
           const collectiveOwners = scope.collectiveOwners;
           if (collectiveOwners) {
             accessQuery.orWhere(

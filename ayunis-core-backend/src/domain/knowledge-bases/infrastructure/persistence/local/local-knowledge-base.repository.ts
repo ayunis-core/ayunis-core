@@ -318,27 +318,23 @@ export class LocalKnowledgeBaseRepository
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
     collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<NonWorkspaceKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<WorkspaceKnowledgeBase>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
     collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
     collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>> {
@@ -358,7 +354,6 @@ export class LocalKnowledgeBaseRepository
       {
         userId,
         workspaceId,
-        sharedKnowledgeBaseIds,
         collectiveOwners: workspaceId ? undefined : collectiveOwners,
       },
       options,

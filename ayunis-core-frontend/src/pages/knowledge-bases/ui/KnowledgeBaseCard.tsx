@@ -1,5 +1,4 @@
 import { Button } from '@ayunis/ui/components/button';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
 import { PermissionGate } from '@/features/permissions';
@@ -39,7 +38,6 @@ export default function KnowledgeBaseCard({
     });
   }
 
-  const isShared = knowledgeBase.isShared;
   const { canManage } = useResourceOwnership('knowledge-base');
   const isCollective =
     knowledgeBase.ownerType === 'team' || knowledgeBase.ownerType === 'org';
@@ -47,20 +45,7 @@ export default function KnowledgeBaseCard({
   return (
     <KnowledgeBaseListItem
       testId={`knowledge-base-card-${knowledgeBase.id}`}
-      title={
-        <>
-          <span>{knowledgeBase.name}</span>
-          {isShared && (
-            <Badge
-              variant="secondary"
-              className="ml-2 text-xs"
-              data-testid={`knowledge-base-shared-badge-${knowledgeBase.id}`}
-            >
-              {t('shared.badge')}
-            </Badge>
-          )}
-        </>
-      }
+      title={knowledgeBase.name}
       description={knowledgeBase.description}
       onClick={() =>
         void router.navigate({
@@ -79,7 +64,7 @@ export default function KnowledgeBaseCard({
               isCollective ? tOwnership('activation.managedByOwner') : undefined
             }
           />
-          {(isCollective ? canManage(knowledgeBase) : !isShared) && (
+          {(!isCollective || canManage(knowledgeBase)) && (
             <PermissionGate permission="manage_knowledge_bases">
               <Button
                 variant="ghost"

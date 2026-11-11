@@ -10,8 +10,7 @@
   },
   "section": {
     "personal": "Persönlich",
-    "org": "Organisation",
-    "shared": "Mit mir geteilt"
+    "org": "Organisation"
   },
   "card": {
     "title": "Besitzer",
@@ -23,7 +22,6 @@
     "toPersonal": "{{name}} gehört dann nur Ihnen. Alle anderen verlieren den Zugriff.",
     "toTeam": "{{name}} wechselt in das Team {{team}}. Nur dessen Mitglieder behalten den Zugriff.",
     "toOrg": "{{name}} wechselt in die Organisation. Alle Mitglieder erhalten Zugriff.",
-    "sharesRemoved": "Bestehende Freigaben werden entfernt.",
     "skillLinksWarning_one": "Die Verknüpfung mit {{count}} Wissenssammlung eines anderen Besitzers wird entfernt.",
     "skillLinksWarning_other": "Die Verknüpfungen mit {{count}} Wissenssammlungen anderer Besitzer werden entfernt.",
     "knowledgeBaseLinksWarning_one": "Die Verknüpfung mit {{count}} Fähigkeit eines anderen Besitzers wird entfernt.",

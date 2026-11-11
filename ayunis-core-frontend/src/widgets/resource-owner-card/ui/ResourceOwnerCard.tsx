@@ -70,8 +70,6 @@ export function ResourceOwnerCard({
         title: t('change.title'),
         description: [
           moveDescription(owner),
-          // Only personal items can have shares.
-          current.ownerType === 'personal' ? t('change.sharesRemoved') : '',
           unlinkedCount > 0 ? t(warningKey, { count: unlinkedCount }) : '',
         ]
           .filter(Boolean)

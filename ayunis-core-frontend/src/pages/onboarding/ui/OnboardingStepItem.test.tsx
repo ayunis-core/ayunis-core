@@ -19,8 +19,7 @@ const mocks = vi.hoisted(() => ({
   threads: [] as { id: string }[],
   threadsError: null as Error | null,
   showInfo: vi.fn(),
-  knowledgeBases: undefined as
-    { id: string; ownerType: string; isShared: boolean }[] | undefined,
+  knowledgeBases: undefined as { id: string; ownerType: string }[] | undefined,
 }));
 
 vi.mock('@/widgets/app-sidebar/api', () => ({
@@ -157,9 +156,8 @@ describe('OnboardingStepItem workspace steps', () => {
 
   it('adds documents to the first own knowledge base, not one of a team or the organization', async () => {
     mocks.knowledgeBases = [
-      { id: 'org-kb', ownerType: 'org', isShared: false },
-      { id: 'shared-kb', ownerType: 'personal', isShared: true },
-      { id: 'own-kb', ownerType: 'personal', isShared: false },
+      { id: 'org-kb', ownerType: 'org' },
+      { id: 'own-kb', ownerType: 'personal' },
     ];
 
     await clickAction('addDocuments');

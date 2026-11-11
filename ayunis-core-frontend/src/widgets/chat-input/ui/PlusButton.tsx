@@ -14,7 +14,6 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@ayunis/ui/components/tooltip';
-import { Badge } from '@ayunis/ui/components/badge';
 import { AudioLines, Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
 import { useRef, type ChangeEvent } from 'react';
@@ -175,11 +174,6 @@ export default function PlusButton({
                           }
                         >
                           {kb.name}
-                          {kb.isShared && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                              {t('chatInput.shared')}
-                            </Badge>
-                          )}
                         </DropdownMenuItem>
                       ))
                     : null}

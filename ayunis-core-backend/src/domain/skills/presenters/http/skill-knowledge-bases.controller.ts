@@ -120,10 +120,10 @@ export class SkillKnowledgeBasesController {
   }
 
   private async toSkillDto(skillId: UUID): Promise<SkillResponseDto> {
-    const { skill, creatorName, ...context } = await this.findSkill.execute(
+    const { skill, ...context } = await this.findSkill.execute(
       new FindOneSkillQuery(skillId),
     );
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.skillDtoMapper.toDto(skill, context);
   }
 
   @Get(':skillId/knowledge-bases')
@@ -149,13 +149,11 @@ export class SkillKnowledgeBasesController {
       new ListSkillKnowledgeBasesQuery(skillId),
     );
 
-    return contexts.map(
-      ({ knowledgeBase, isActive, isShared, documentCount }) =>
-        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
-          isActive,
-          isShared,
-          documentCount,
-        }),
+    return contexts.map(({ knowledgeBase, isActive, documentCount }) =>
+      this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+        isActive,
+        documentCount,
+      }),
     );
   }
 }

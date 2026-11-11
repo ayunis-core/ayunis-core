@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
-import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import type { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
 import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
@@ -31,7 +30,6 @@ describe(FindActiveSkillsUseCase.name, () => {
     });
     const repository = {
       findActiveByOwner: jest.fn().mockResolvedValue([owned]),
-      getActiveSkillIds: jest.fn().mockResolvedValue(new Set([owned.id])),
       findActiveCollective: jest.fn().mockResolvedValue([team, org]),
     };
     const collectiveAccess = {
@@ -39,7 +37,6 @@ describe(FindActiveSkillsUseCase.name, () => {
     };
     const useCase = new FindActiveSkillsUseCase(
       repository as unknown as SkillRepository,
-      { execute: jest.fn() } as unknown as FindSharesByScopeUseCase,
       {
         get: jest.fn(getFromUserContext({ userId })),
       } as unknown as ContextService,

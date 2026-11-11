@@ -2,59 +2,6 @@
   "breadcrumb": {
     "skills": "Fähigkeiten"
   },
-  "shared": {
-    "badge": "Freigegeben",
-    "by": "Geteilt von {{name}}"
-  },
-  "tabs": {
-    "configuration": "Konfiguration",
-    "shares": "Freigaben"
-  },
-  "shares": {
-    "deprecation": {
-      "notice": {
-        "title": "Das Teilen wird eingestellt",
-        "description": "Um diese Fähigkeit einem Team oder der Organisation bereitzustellen, ändern Sie stattdessen ihren Besitzer."
-      },
-      "blocked": {
-        "title": "Teilen ist nicht mehr möglich",
-        "description": "Erstellen Sie Fähigkeiten stattdessen direkt im Team oder in der Organisation oder ändern Sie den Besitzer dieser Fähigkeit.",
-        "close": "Schließen"
-      }
-    },
-    "org": {
-      "title": "Freigabe für Organisation",
-      "descriptionOn": "Diese Fähigkeit ist für alle Nutzer Ihrer Organisation freigegeben",
-      "descriptionOff": "Diese Fähigkeit ist aktuell nicht für Nutzer Ihrer Organisation freigegeben"
-    },
-    "teams": {
-      "title": "Teams",
-      "description": "Mit Teammitgliedern teilen",
-      "delete": {
-        "title": "Team-Freigabe entfernen",
-        "description": "Der Zugriff für alle Mitglieder von {{teamName}} wird entfernt",
-        "confirm": "Entfernen",
-        "cancel": "Abbrechen"
-      }
-    },
-    "delete": {
-      "tooltip": "Freigabe entfernen",
-      "title": "Freigabe entfernen",
-      "description": "Der Zugriff für alle Mitglieder Ihrer Organisation wird entfernt",
-      "confirm": "Entfernen",
-      "cancel": "Abbrechen"
-    },
-    "scope": {
-      "org": "Organisation"
-    },
-    "sharedOn": "Geteilt am",
-    "success": {
-      "deleted": "Freigabe erfolgreich entfernt"
-    },
-    "error": {
-      "delete": "Fehler beim Entfernen der Freigabe"
-    }
-  },
   "properties": {
     "title": "Fähigkeit bearbeiten",
     "description": "Nehmen Sie hier Änderungen an Ihrer Fähigkeit vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
@@ -92,7 +39,6 @@
     "title": "Wissenssammlungen",
     "description": "Gemeinsame Wissenssammlungen mit dieser Fähigkeit verbinden",
     "toggleAriaLabel": "{{name}} Wissenssammlung umschalten",
-    "sharedBadge": "Freigegeben",
     "retryButton": "Erneut versuchen",
     "success": {
       "assigned": "Wissenssammlung verbunden",

@@ -16,7 +16,6 @@ import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import { FindKnowledgeBaseUseCase } from './find-knowledge-base.use-case';
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
-const OTHER_USER_ID = '22222222-2222-2222-2222-222222222222' as UUID;
 const ORG_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 const WORKSPACE_ID = '44444444-4444-4444-4444-444444444444' as UUID;
 
@@ -67,30 +66,10 @@ describe(FindKnowledgeBaseUseCase.name, () => {
 
     await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
       knowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 2,
     });
     expect(readAccess.requireRead).toHaveBeenCalledWith(knowledgeBase);
-  });
-
-  it('preserves read access to a personal knowledge base shared by another user', async () => {
-    const sharedKnowledgeBase = new PersonalKnowledgeBase({
-      name: 'Regional planning guidance',
-      userId: OTHER_USER_ID,
-      orgId: ORG_ID,
-    });
-    const { useCase, readAccess } = await setup(sharedKnowledgeBase);
-
-    await expect(
-      useCase.execute(query(sharedKnowledgeBase.id)),
-    ).resolves.toEqual({
-      knowledgeBase: sharedKnowledgeBase,
-      isShared: true,
-      isActive: true,
-      documentCount: 2,
-    });
-    expect(readAccess.requireRead).toHaveBeenCalledWith(sharedKnowledgeBase);
   });
 
   it('returns an authorized workspace knowledge base without a caller-supplied workspace id', async () => {
@@ -105,7 +84,6 @@ describe(FindKnowledgeBaseUseCase.name, () => {
       useCase.execute(query(workspaceKnowledgeBase.id)),
     ).resolves.toEqual({
       knowledgeBase: workspaceKnowledgeBase,
-      isShared: false,
       isActive: true,
       documentCount: 2,
     });
@@ -170,7 +148,6 @@ describe(FindKnowledgeBaseUseCase.name, () => {
 
       await expect(useCase.execute(query(knowledgeBase.id))).resolves.toEqual({
         knowledgeBase,
-        isShared: false,
         isActive,
         documentCount: 2,
       });

@@ -6,9 +6,6 @@ import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { RemoveEntitySharesUseCase } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.use-case';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import type { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import type { SkillOwnerChangeService } from 'src/domain/skills/application/services/skill-owner-change.service';
@@ -22,6 +19,8 @@ import type { Skill } from 'src/domain/skills/domain/skill';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
+import type { RemoveSkillSourcesFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import type { FindUserIdsOutsideAudienceUseCase } from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.use-case';
 import { ChangeSkillOwnerCommand } from './change-skill-owner.command';
 import { ChangeSkillOwnerUseCase } from './change-skill-owner.use-case';
 
@@ -29,6 +28,7 @@ describe(ChangeSkillOwnerUseCase.name, () => {
   const userId = randomUUID();
   const orgId = randomUUID();
   const teamId = randomUUID();
+  const formerMemberId = randomUUID();
   const params = {
     name: 'Council minutes',
     shortDescription: 'Drafts minutes.',
@@ -67,14 +67,18 @@ describe(ChangeSkillOwnerUseCase.name, () => {
         unlinkedKnowledgeBaseIds,
       }),
     };
-    const removeShares = { execute: jest.fn() };
     const removeThreadAssignments = { execute: jest.fn() };
+    const removeThreadSources = { execute: jest.fn() };
+    const findUsersOutside = {
+      execute: jest.fn().mockResolvedValue([formerMemberId]),
+    };
     const useCase = new ChangeSkillOwnerUseCase(
       repository as unknown as SkillRepository,
       authorization as unknown as SkillAuthorizationService,
       planner as unknown as SkillOwnerChangeService,
-      removeShares as unknown as RemoveEntitySharesUseCase,
       removeThreadAssignments as unknown as RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
+      removeThreadSources as unknown as RemoveSkillSourcesFromThreadsUseCase,
+      findUsersOutside as unknown as FindUserIdsOutsideAudienceUseCase,
       {
         get: jest.fn(getFromUserContext({ userId, orgId })),
       } as unknown as ContextService,
@@ -83,14 +87,15 @@ describe(ChangeSkillOwnerUseCase.name, () => {
       repository,
       authorization,
       planner,
-      removeShares,
       removeThreadAssignments,
+      removeThreadSources,
+      findUsersOutside,
       useCase,
     };
   }
 
-  it('moves a personal skill into a team and narrows access to that team', async () => {
-    const { useCase, repository, authorization, removeShares } = setup(
+  it('moves a personal skill into a team', async () => {
+    const { useCase, repository, authorization, removeThreadSources } = setup(
       personal,
       team,
     );
@@ -109,19 +114,12 @@ describe(ChangeSkillOwnerUseCase.name, () => {
       { teamId },
     );
     expect(repository.update).toHaveBeenCalledWith(team, personal);
-    expect(removeShares.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        entityType: SharedEntityType.SKILL,
-        entityId: personal.id,
-        ownerId: userId,
-        remainingScopes: [{ scopeType: ShareScopeType.TEAM, scopeId: teamId }],
-      }),
-    );
+    expect(removeThreadSources.execute).not.toHaveBeenCalled();
     expect(result).toBe(team);
   });
 
   it('gives the mover the global state when a team skill becomes personal', async () => {
-    const { useCase, repository, removeShares } = setup(team, personal);
+    const { useCase, repository } = setup(team, personal);
 
     await useCase.execute(
       new ChangeSkillOwnerCommand(team.id, { type: 'personal' }),
@@ -137,8 +135,28 @@ describe(ChangeSkillOwnerUseCase.name, () => {
       userId,
       true,
     );
-    expect(removeShares.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ remainingScopes: [] }),
+  });
+
+  it('removes what it added to the threads of former team members when it becomes personal', async () => {
+    const {
+      useCase,
+      findUsersOutside,
+      removeThreadSources,
+      removeThreadAssignments,
+    } = setup(team, personal);
+
+    await useCase.execute(
+      new ChangeSkillOwnerCommand(team.id, { type: 'personal' }),
+    );
+
+    expect(findUsersOutside.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId, audience: { type: 'user', userId } }),
+    );
+    expect(removeThreadSources.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ skillId: team.id, userIds: [formerMemberId] }),
+    );
+    expect(removeThreadAssignments.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ skillId: team.id, userIds: [formerMemberId] }),
     );
   });
 
@@ -195,7 +213,7 @@ describe(ChangeSkillOwnerUseCase.name, () => {
   });
 
   it('changes nothing when the owner stays the same', async () => {
-    const { useCase, repository, authorization, removeShares } = setup(
+    const { useCase, repository, authorization, removeThreadSources } = setup(
       team,
       team,
       false,
@@ -208,14 +226,11 @@ describe(ChangeSkillOwnerUseCase.name, () => {
     ).resolves.toBe(team);
     expect(authorization.requireCreate).not.toHaveBeenCalled();
     expect(repository.update).not.toHaveBeenCalled();
-    expect(removeShares.execute).not.toHaveBeenCalled();
+    expect(removeThreadSources.execute).not.toHaveBeenCalled();
   });
 
   it('does not move the skill when the caller cannot manage the target', async () => {
-    const { useCase, repository, authorization, removeShares } = setup(
-      personal,
-      team,
-    );
+    const { useCase, repository, authorization } = setup(personal, team);
     authorization.requireCreate.mockRejectedValue(
       new UnauthorizedAccessError(),
     );
@@ -226,7 +241,6 @@ describe(ChangeSkillOwnerUseCase.name, () => {
       ),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
     expect(repository.update).not.toHaveBeenCalled();
-    expect(removeShares.execute).not.toHaveBeenCalled();
   });
 
   it('rejects a name the target owner already uses', async () => {

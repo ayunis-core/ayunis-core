@@ -83,15 +83,15 @@ export function canManageResource(
   if (!authorization.can(permissions.manage)) return false;
   const owner = ownerOf(resource);
   if (!owner) return false;
-  if (owner.ownerType === 'personal') return !resource.isShared;
+  if (owner.ownerType === 'personal') return true;
   return manageableOwners(kind, authorization, teams).some(
     (candidate) => ownerKey(candidate) === ownerKey(owner),
   );
 }
 
 /**
- * Mirrors the backend: personal skills link personal knowledge bases, shared
- * ones included; every other skill only knowledge bases of the same owner.
+ * Mirrors the backend: personal skills link personal knowledge bases; every
+ * other skill only knowledge bases of the same owner.
  */
 export function canLinkKnowledgeBase(
   skill: OwnedResource,

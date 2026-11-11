@@ -1,5 +1,4 @@
 import { Button } from '@ayunis/ui/components/button';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Switch } from '@ayunis/ui/components/switch';
 import {
   Tooltip,
@@ -98,21 +97,7 @@ export default function SkillCard({
   return (
     <SkillListItem
       testId={`skill-card-${skill.id}`}
-      title={
-        <>
-          <span>{skill.name}</span>
-          {skill.isShared && (
-            <Badge variant="secondary" className="ml-2 text-xs">
-              {t('shared.badge')}
-            </Badge>
-          )}
-          {skill.isShared && skill.creatorName && (
-            <span className="text-xs text-muted-foreground">
-              {t('shared.by', { name: skill.creatorName })}
-            </span>
-          )}
-        </>
-      }
+      title={skill.name}
       description={skill.shortDescription}
       onClick={handleNavigateToDetail}
       actions={
@@ -152,7 +137,7 @@ export default function SkillCard({
             ) : (
               pinButton
             ))}
-          {(isCollective ? canManage(skill) : !skill.isShared) && (
+          {(!isCollective || canManage(skill)) && (
             <PermissionGate permission="manage_skills">
               <Tooltip>
                 <TooltipTrigger asChild>

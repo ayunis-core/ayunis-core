@@ -17,16 +17,16 @@ import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-
 import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import type { RemoveEntitySharesUseCase } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.use-case';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import type { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/application/use-cases/unlink-knowledge-base-from-other-owners/unlink-knowledge-base-from-other-owners.use-case';
+import type { RemoveDirectKnowledgeBaseFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
+import type { FindUserIdsOutsideAudienceUseCase } from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.use-case';
 import { ChangeKnowledgeBaseOwnerCommand } from './change-knowledge-base-owner.command';
 import { ChangeKnowledgeBaseOwnerUseCase } from './change-knowledge-base-owner.use-case';
 
 describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
   const userId = randomUUID();
   const orgId = randomUUID();
+  const formerMemberId = randomUUID();
   const personal = new PersonalKnowledgeBase({
     name: 'Bauordnung',
     orgId,
@@ -55,13 +55,17 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
     const unlinkSkills = {
       execute: jest.fn().mockResolvedValue({ unlinkedSkillCount: 1 }),
     };
-    const removeShares = { execute: jest.fn() };
+    const removeFromThreads = { execute: jest.fn() };
+    const findUsersOutside = {
+      execute: jest.fn().mockResolvedValue([formerMemberId]),
+    };
     const useCase = new ChangeKnowledgeBaseOwnerUseCase(
       repository as unknown as KnowledgeBaseRepository,
       writeAccess as unknown as KnowledgeBaseWriteAccessService,
       planner as unknown as KnowledgeBaseOwnerChangeService,
       unlinkSkills as unknown as UnlinkKnowledgeBaseFromOtherOwnersUseCase,
-      removeShares as unknown as RemoveEntitySharesUseCase,
+      removeFromThreads as unknown as RemoveDirectKnowledgeBaseFromThreadsUseCase,
+      findUsersOutside as unknown as FindUserIdsOutsideAudienceUseCase,
       {
         get: jest.fn(getFromUserContext({ userId, orgId })),
       } as unknown as ContextService,
@@ -71,14 +75,20 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
       writeAccess,
       planner,
       unlinkSkills,
-      removeShares,
+      removeFromThreads,
+      findUsersOutside,
       useCase,
     };
   }
 
   it('moves a personal knowledge base to the organization', async () => {
-    const { useCase, repository, writeAccess, unlinkSkills, removeShares } =
-      setup(personal, org);
+    const {
+      useCase,
+      repository,
+      writeAccess,
+      unlinkSkills,
+      removeFromThreads,
+    } = setup(personal, org);
 
     const result = await useCase.execute(
       new ChangeKnowledgeBaseOwnerCommand(personal.id, { type: 'org' }),
@@ -95,19 +105,12 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
     expect(unlinkSkills.execute).toHaveBeenCalledWith(
       expect.objectContaining({ knowledgeBase: org, dryRun: false }),
     );
-    expect(removeShares.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        entityType: SharedEntityType.KNOWLEDGE_BASE,
-        entityId: personal.id,
-        ownerId: userId,
-        remainingScopes: [{ scopeType: ShareScopeType.ORG, scopeId: orgId }],
-      }),
-    );
+    expect(removeFromThreads.execute).not.toHaveBeenCalled();
     expect(result).toBe(org);
   });
 
   it('gives the mover the global activation when it becomes personal', async () => {
-    const { useCase, repository, removeShares } = setup(org, personal);
+    const { useCase, repository } = setup(org, personal);
 
     await useCase.execute(
       new ChangeKnowledgeBaseOwnerCommand(org.id, { type: 'personal' }),
@@ -118,8 +121,26 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
     expect(
       repository.deactivateAllUsers.mock.invocationCallOrder[0],
     ).toBeLessThan(repository.activate.mock.invocationCallOrder[0]);
-    expect(removeShares.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ remainingScopes: [] }),
+  });
+
+  it('removes it from the threads of everyone else in the organization when it becomes personal', async () => {
+    const { useCase, findUsersOutside, removeFromThreads } = setup(
+      org,
+      personal,
+    );
+
+    await useCase.execute(
+      new ChangeKnowledgeBaseOwnerCommand(org.id, { type: 'personal' }),
+    );
+
+    expect(findUsersOutside.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId, audience: { type: 'user', userId } }),
+    );
+    expect(removeFromThreads.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: org.id,
+        userIds: [formerMemberId],
+      }),
     );
   });
 
@@ -156,7 +177,7 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
   });
 
   it('does not move it when the caller cannot manage the target', async () => {
-    const { useCase, repository, writeAccess, removeShares } = setup(
+    const { useCase, repository, writeAccess, removeFromThreads } = setup(
       personal,
       org,
     );
@@ -168,7 +189,7 @@ describe(ChangeKnowledgeBaseOwnerUseCase.name, () => {
       ),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
     expect(repository.save).not.toHaveBeenCalled();
-    expect(removeShares.execute).not.toHaveBeenCalled();
+    expect(removeFromThreads.execute).not.toHaveBeenCalled();
   });
 
   it('keeps workspace knowledge bases in their workspace', async () => {

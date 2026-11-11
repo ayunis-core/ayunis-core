@@ -271,33 +271,6 @@ describe('QueryKnowledgeBaseUseCase', () => {
     );
   });
 
-  it('should allow querying a shared knowledge base', async () => {
-    const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
-    const sharedKb = new PersonalKnowledgeBase({
-      id: kbId,
-      name: 'Geteilte Wissenssammlung',
-      orgId,
-      userId: otherUserId,
-    });
-
-    mockFindKnowledgeBaseForThread.execute.mockResolvedValue(sharedKb);
-    mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([]);
-
-    const query = new QueryKnowledgeBaseQuery({
-      knowledgeBaseIds: [kbId],
-      queries: ['Grundsteuer'],
-      userId,
-    });
-
-    const results = await useCase.execute(query);
-
-    expect(results).toEqual([]);
-    expect(mockFindKnowledgeBaseForThread.execute).toHaveBeenCalledWith({
-      knowledgeBaseId: kbId,
-      threadId: undefined,
-    });
-  });
-
   it('should throw KnowledgeBaseNotFoundError when KB belongs to another org', async () => {
     const otherOrgId = '77777777-7777-7777-7777-777777777777' as UUID;
     const kb = new PersonalKnowledgeBase({

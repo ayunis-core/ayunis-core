@@ -1,10 +1,9 @@
 import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 /**
- * Merges the viewer's accessible knowledge bases with the ones assigned to the
- * skill, so assigned collections render even when the viewer cannot access
- * them directly (e.g. on a shared skill). Available entries win on duplicate
- * ids because they carry the isShared flag.
+ * Merges the knowledge bases the viewer may link with the ones assigned to the
+ * skill, so assigned collections render even when they are not in the
+ * linkable list.
  */
 export function mergeSkillKnowledgeBases(
   available: KnowledgeBaseResponseDto[],

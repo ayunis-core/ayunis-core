@@ -4,11 +4,6 @@ import type { UUID } from 'crypto';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import type { RemainingShareScope } from 'src/domain/shares/application/events/share-deleted.event';
-import { RemoveEntitySharesCommand } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.command';
-import { RemoveEntitySharesUseCase } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.use-case';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import { SkillOwnerChangeService } from 'src/domain/skills/application/services/skill-owner-change.service';
@@ -21,18 +16,25 @@ import {
 import { findSkillByNameForOwner } from 'src/domain/skills/application/util/find-skill-by-name-for-owner';
 import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import { OrgSkill } from 'src/domain/skills/domain/org-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
+import { RemoveSkillSourcesFromThreadsCommand } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.command';
+import { RemoveSkillSourcesFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import {
+  FindUserIdsOutsideAudienceQuery,
+  type ResourceAudience,
+} from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.query';
+import { FindUserIdsOutsideAudienceUseCase } from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.use-case';
 import { ChangeSkillOwnerCommand } from './change-skill-owner.command';
 
 /**
  * Moves a skill between the caller, a team and the organization. Requires the
- * right to manage both the current and the new owner. Shares are removed and
- * everyone outside the new owner's audience is reconciled through the share
- * listeners, as if their share had been deleted.
+ * right to manage both the current and the new owner. Threads of everyone
+ * outside the new owner's audience lose what the skill added to them.
  */
 @Injectable()
 export class ChangeSkillOwnerUseCase {
@@ -42,8 +44,9 @@ export class ChangeSkillOwnerUseCase {
     private readonly repository: SkillRepository,
     private readonly authorization: SkillAuthorizationService,
     private readonly ownerChange: SkillOwnerChangeService,
-    private readonly removeShares: RemoveEntitySharesUseCase,
     private readonly removeThreadAssignments: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
+    private readonly removeThreadSources: RemoveSkillSourcesFromThreadsUseCase,
+    private readonly findUsersOutside: FindUserIdsOutsideAudienceUseCase,
     private readonly context: ContextService,
   ) {}
 
@@ -70,7 +73,7 @@ export class ChangeSkillOwnerUseCase {
     await this.assertUniqueName(plan.target);
 
     const moved = await this.repository.update(plan.target, skill);
-    const { userId } = getRequiredUserContext(this.context);
+    const { userId, orgId } = getRequiredUserContext(this.context);
     await this.transferStateToMover(skill, moved, userId);
     for (const knowledgeBaseId of plan.unlinkedKnowledgeBaseIds) {
       await this.removeThreadAssignments.execute(
@@ -81,14 +84,7 @@ export class ChangeSkillOwnerUseCase {
         ),
       );
     }
-    await this.removeShares.execute(
-      new RemoveEntitySharesCommand(
-        SharedEntityType.SKILL,
-        skill.id,
-        userId,
-        this.audienceOf(moved),
-      ),
-    );
+    await this.removeFromThreadsOutsideAudience(skill, moved, orgId);
     return moved;
   }
 
@@ -126,13 +122,34 @@ export class ChangeSkillOwnerUseCase {
     await this.repository.setSkillPinned(moved.id, userId, previous.isPinned);
   }
 
-  private audienceOf(skill: Skill): RemainingShareScope[] {
+  /** Only a team or organization skill had users besides the mover. */
+  private async removeFromThreadsOutsideAudience(
+    previous: Skill,
+    moved: Skill,
+    orgId: UUID,
+  ): Promise<void> {
+    if (!(previous instanceof AbstractCollectiveSkill)) return;
+    const userIds = await this.findUsersOutside.execute(
+      new FindUserIdsOutsideAudienceQuery(orgId, this.audienceOf(moved)),
+    );
+    await this.removeThreadSources.execute(
+      new RemoveSkillSourcesFromThreadsCommand(moved.id, userIds),
+    );
+    await this.removeThreadAssignments.execute(
+      new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(moved.id, userIds),
+    );
+  }
+
+  private audienceOf(skill: Skill): ResourceAudience {
     if (skill instanceof TeamSkill) {
-      return [{ scopeType: ShareScopeType.TEAM, scopeId: skill.teamId }];
+      return { type: 'team', teamId: skill.teamId };
     }
     if (skill instanceof OrgSkill) {
-      return [{ scopeType: ShareScopeType.ORG, scopeId: skill.orgId }];
+      return { type: 'org', orgId: skill.orgId };
     }
-    return [];
+    if (skill instanceof PersonalSkill) {
+      return { type: 'user', userId: skill.userId };
+    }
+    throw new SkillOwnerChangeNotAllowedError(skill.id);
   }
 }

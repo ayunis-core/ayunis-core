@@ -73,7 +73,7 @@ function setup() {
 }
 
 describe(SetSkillActivationUseCase.name, () => {
-  it('sets personal activation for the authenticated user, including shared skills', async () => {
+  it('sets personal activation for the owner', async () => {
     const { useCase, personal, repository, authorization, userId } = setup();
     repository.findById.mockResolvedValue(personal);
 

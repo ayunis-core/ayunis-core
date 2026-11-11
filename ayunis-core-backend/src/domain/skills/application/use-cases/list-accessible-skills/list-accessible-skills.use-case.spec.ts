@@ -1,8 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import type { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import type { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
@@ -35,8 +33,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
     const workspaceRead = { execute: jest.fn() };
     const useCase = new ListAccessibleSkillsUseCase(
       repository as unknown as SkillRepository,
-      { execute: jest.fn() } as unknown as FindSharesByScopeUseCase,
-      { resolveMany: jest.fn() } as unknown as SkillCreatorNameService,
       { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       {} as CollectiveSkillAccessService,
@@ -54,8 +50,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
         skill,
         isActive: true,
         isPinned: true,
-        isShared: false,
-        creatorName: null,
       },
     ]);
   });
@@ -82,7 +76,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
       const repository = {
         findAllByOwner: jest.fn().mockResolvedValue([owned]),
         findAllCollective: jest.fn().mockResolvedValue([org, team]),
-        findByIds: jest.fn().mockResolvedValue([]),
         findPaginatedAccessible: jest
           .fn()
           .mockResolvedValue(
@@ -96,12 +89,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
       };
       const useCase = new ListAccessibleSkillsUseCase(
         repository as unknown as SkillRepository,
-        {
-          execute: jest.fn().mockResolvedValue([]),
-        } as unknown as FindSharesByScopeUseCase,
-        {
-          resolveMany: jest.fn().mockResolvedValue(new Map()),
-        } as unknown as SkillCreatorNameService,
         { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
         {} as AssertWorkspaceReadAccessUseCase,
         collectiveAccess as unknown as CollectiveSkillAccessService,
@@ -128,14 +115,11 @@ describe(ListAccessibleSkillsUseCase.name, () => {
           skill: team,
           isActive: true,
           isPinned: true,
-          isShared: false,
-          creatorName: null,
         }),
         expect.objectContaining({
           skill: org,
           isActive: false,
           isPinned: false,
-          isShared: false,
         }),
       ]);
     });
@@ -153,7 +137,6 @@ describe(ListAccessibleSkillsUseCase.name, () => {
       expect(repository.findPaginatedAccessible).toHaveBeenCalledWith(
         userId,
         undefined,
-        [],
         expect.objectContaining({ limit: 10 }),
         owners,
       );

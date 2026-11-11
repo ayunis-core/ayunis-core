@@ -171,22 +171,6 @@ test("discovers independent PDF files at depth zero and cites their original URL
           )
         ).status(),
       ).toBe(404);
-      await generatedApi.sharesControllerCreateKnowledgeBaseShare(
-        { entityType: "knowledge_base", knowledgeBaseId: kb.id },
-        { api },
-      );
-      await generatedApi.knowledgeBasesControllerSetActivation(
-        kb.id,
-        { isActive: true },
-        { api: memberApi },
-      );
-      const allowed = await getThreadSourceCitationResponse(
-        memberApi,
-        memberThread.id,
-        chunkId,
-      );
-      expect(allowed.status()).toBe(200);
-      expect((await allowed.json()).source.url).toBe(pdfUrl);
     } finally {
       await memberApi.dispose();
     }

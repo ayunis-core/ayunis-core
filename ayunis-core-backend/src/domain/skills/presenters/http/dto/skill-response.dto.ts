@@ -41,13 +41,7 @@ export class SkillResponseDto {
   updatedAt: Date;
 
   @ApiProperty()
-  isShared: boolean;
-
-  @ApiProperty()
   isPinned: boolean;
-
-  @ApiProperty({ type: 'string', nullable: true })
-  creatorName: string | null;
 }
 
 export class SkillListResponseDto {
