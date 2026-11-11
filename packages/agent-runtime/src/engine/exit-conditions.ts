@@ -12,23 +12,37 @@ export const getToolUseContents = (
 export const hasExternallyHandledToolCall = (
   message: AssistantMessage,
   tools: readonly Tool[],
+): boolean =>
+  isValidTurnCalling(message, tools, (tool) => tool.execute === undefined);
+
+export const hasToolCallNeedingApproval = (
+  message: AssistantMessage,
+  tools: readonly Tool[],
+): boolean =>
+  isValidTurnCalling(message, tools, (tool) => tool.needsApproval === true);
+
+const isValidTurnCalling = (
+  message: AssistantMessage,
+  tools: readonly Tool[],
+  matches: (tool: Tool) => boolean,
 ): boolean => {
   const calls = getToolUseContents(message).map((call) => ({
     call,
     tool: tools.find((candidate) => candidate.name === call.name),
   }));
-  const hasExternalCall = calls.some(
-    ({ tool }) => tool !== undefined && tool.execute === undefined,
+  const hasMatchingCall = calls.some(
+    ({ tool }) => tool !== undefined && matches(tool),
   );
   const allCallsValid = calls.every(
     ({ call, tool }) =>
       tool !== undefined && passesInputValidation(tool, call.input),
   );
-  return hasExternalCall && allCallsValid;
+  return hasMatchingCall && allCallsValid;
 };
 
-// An invalid externally handled call must not end the loop: its error result has to
-// reach the model in this run so it can retry with corrected input (AYC-675).
+// An invalid call must not end the loop, whether by external handling or by an
+// approval pause: its error result has to reach the model in this run so it
+// can retry with corrected input (AYC-675).
 export const passesInputValidation = (
   tool: Tool,
   input: Record<string, unknown>,

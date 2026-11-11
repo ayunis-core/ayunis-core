@@ -47,6 +47,17 @@ export interface Tool extends ToolSchema {
    * effects sibling calls may observe or race with.
    */
   readonly exclusive?: boolean;
+  /**
+   * The runtime never runs a call to this tool. When every call of a model
+   * turn passes input validation and one of them needs approval, the run
+   * completes after that turn without a tool phase: no call of the turn runs,
+   * no tool hooks fire and no results exist, so the host can ask for approval
+   * and settle the calls in a later run. If a call fails validation instead,
+   * the turn's tool phase runs as usual and this call gets an error result
+   * asking the model to repeat it. Give such tools a `validateInput` so that
+   * invalid input reaches the model rather than the approval request.
+   */
+  readonly needsApproval?: boolean;
   execute?(
     input: Record<string, unknown>,
     ctx: ToolExecutionContext,
