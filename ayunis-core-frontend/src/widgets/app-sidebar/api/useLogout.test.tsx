@@ -6,12 +6,14 @@ import { useLogout } from '@/widgets/app-sidebar/api/useLogout';
 
 const {
   clearAppsignalTags,
+  clearOpenPanelIdentity,
   mutate,
   navigate,
   navigateToExternalUrl,
   showError,
 } = vi.hoisted(() => ({
   clearAppsignalTags: vi.fn(),
+  clearOpenPanelIdentity: vi.fn(),
   mutate: vi.fn(),
   navigate: vi.fn(),
   navigateToExternalUrl: vi.fn(),
@@ -23,6 +25,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
 }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
 vi.mock('@/shared/lib/appsignal', () => ({ clearAppsignalTags }));
+vi.mock('@/shared/lib/openpanel-identity', () => ({ clearOpenPanelIdentity }));
 vi.mock('@/features/sso', () => ({
   navigateToExternalUrl,
 }));
@@ -50,6 +53,7 @@ describe(useLogout.name, () => {
 
     expect(queryClient.getQueryData(['private'])).toBeUndefined();
     expect(clearAppsignalTags).toHaveBeenCalledOnce();
+    expect(clearOpenPanelIdentity).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith({ to: '/login' });
   });
 
@@ -60,6 +64,7 @@ describe(useLogout.name, () => {
       brokerLogoutUrl: 'https://sso.ayunis.de/end-session',
     });
 
+    expect(clearOpenPanelIdentity).toHaveBeenCalledOnce();
     expect(navigateToExternalUrl).toHaveBeenCalledWith(
       'https://sso.ayunis.de/end-session',
     );
@@ -72,6 +77,7 @@ describe(useLogout.name, () => {
     mutate.mock.calls[0]?.[1].onError(new Error('network unavailable'));
 
     expect(queryClient.getQueryData(['private'])).toBeUndefined();
+    expect(clearOpenPanelIdentity).toHaveBeenCalledOnce();
     expect(showError).toHaveBeenCalledWith('sidebar.logout.error');
     expect(navigate).toHaveBeenCalledWith({ to: '/login' });
   });

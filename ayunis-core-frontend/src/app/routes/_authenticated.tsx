@@ -8,13 +8,18 @@ import { meQueryOptions } from '@/shared/api/me-query-options';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
 import { setAppsignalTags, clearAppsignalTags } from '@/shared/lib/appsignal';
+import {
+  clearOpenPanelIdentity,
+  identifyOpenPanelUser,
+} from '@/shared/lib/openpanel-identity';
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
-  beforeLoad: async ({ context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient }, preload }) => {
     try {
       const user = await queryClient.query(meQueryOptions());
       setAppsignalTags({ userId: user.id, orgId: user.orgId });
+      identifyOpenPanelUser(user);
       await queryClient.query({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
@@ -22,6 +27,9 @@ export const Route = createFileRoute('/_authenticated')({
       return { user };
     } catch (error) {
       clearAppsignalTags();
+      // A failed hover preload leaves the user on the current page; only a
+      // real navigation that fails ends the analytics session.
+      if (!preload) clearOpenPanelIdentity();
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {
