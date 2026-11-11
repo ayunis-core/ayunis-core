@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   handleError: vi.fn(),
   findThread: vi.fn(),
   cancelRun: vi.fn(() => Promise.resolve()),
+  track: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -54,6 +55,9 @@ vi.mock('@/shared/lib/source-upload/transfer-source-file', () => ({
 }));
 vi.mock('@/shared/lib/handle-source-upload-error', () => ({
   default: mocks.handleError,
+}));
+vi.mock('@/shared/lib/openpanel', () => ({
+  openPanel: { track: mocks.track },
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -196,6 +200,104 @@ describe(useInitiateChat.name, () => {
 
     expect(mocks.findThread).toHaveBeenCalledWith(threadId);
     expect(sentRunRequests()).toHaveLength(1);
+  });
+});
+
+describe('chat_started tracking', () => {
+  const createdThread = {
+    id: threadId,
+    workspaceId: null,
+    isAnonymous: false,
+    mode: null,
+    knowledgeBases: [],
+    sources: [],
+    mcpIntegrations: [],
+  };
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('')));
+    mocks.createThread.mockResolvedValue(createdThread);
+    mocks.track.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    takeStartedThreadRun(threadId);
+    abortActiveThreadRun(threadId);
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  async function startChat(
+    params: Parameters<ReturnType<typeof useInitiateChat>['initiateChat']>[0],
+  ) {
+    const { result } = renderHook(
+      () => useInitiateChat({ settleAnimation: false }),
+      { wrapper },
+    );
+    await act(() => result.current.initiateChat(params));
+  }
+
+  it('sends one chat_started with the context of a workspace chat started with a knowledge base in Auto', async () => {
+    mocks.createThread.mockResolvedValue({
+      ...createdThread,
+      workspaceId: 'workspace-1',
+      mode: 'auto',
+    });
+
+    await startChat({
+      ...chatParams,
+      modelId: undefined,
+      mode: 'auto',
+      workspaceId: 'workspace-1',
+      knowledgeBases: [{ id: 'kb-1', name: 'Haushaltsplan 2026' }],
+      skillId: undefined,
+    });
+
+    expect(mocks.track.mock.calls).toEqual([
+      [
+        'chat_started',
+        {
+          workspace_context: true,
+          anonymous_mode: false,
+          has_knowledge_base: true,
+          has_source: false,
+          has_integration: false,
+          mode: 'auto',
+          has_skill: false,
+        },
+      ],
+    ]);
+  });
+
+  it('reports a chat started from a skill with a picked model', async () => {
+    await startChat(chatParams);
+
+    expect(mocks.track).toHaveBeenCalledExactlyOnceWith(
+      'chat_started',
+      expect.objectContaining({ mode: 'model', has_skill: true }),
+    );
+  });
+
+  it('sends no chat_started when the thread cannot be created', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.createThread.mockRejectedValue(new Error('server down'));
+
+    await startChat(chatParams);
+
+    expect(mocks.track).not.toHaveBeenCalled();
+  });
+
+  it('still opens the new chat when sending chat_started fails', async () => {
+    mocks.track.mockImplementation(() => {
+      throw new Error('analytics down');
+    });
+
+    await startChat(chatParams);
+
+    expect(mocks.navigate).toHaveBeenCalledWith({
+      to: '/chats/$threadId',
+      params: { threadId },
+    });
   });
 });
 

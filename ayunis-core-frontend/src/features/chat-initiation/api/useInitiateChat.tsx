@@ -14,6 +14,10 @@ import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.sc
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { uploadSourceFile } from '@/shared/lib/source-upload';
 import { showError } from '@/shared/lib/toast';
+import {
+  threadInteractionContext,
+  trackOpenPanelEvent,
+} from '@/shared/lib/openpanel-events';
 import { cancelStartedThreadRun, startThreadRun } from '@/features/thread-run';
 import type {
   IntegrationSummary,
@@ -25,6 +29,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
   CreateThreadDto,
+  GetThreadResponseDto,
   ModelMode,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -285,20 +290,18 @@ export const useInitiateChat = (options?: {
     return true;
   }
 
-  async function initiateChat({
-    message,
-    images,
-    modelId,
-    mode,
-    sources,
-    knowledgeBases,
-    mcpIntegrations,
-    isAnonymous,
-    workspaceId,
-    sourceNotificationId,
-    skillId,
-    onSourceStatus,
-  }: InitiateChatParams): Promise<void> {
+  async function initiateChat(params: InitiateChatParams): Promise<void> {
+    const {
+      modelId,
+      mode,
+      sources,
+      knowledgeBases,
+      mcpIntegrations,
+      isAnonymous,
+      workspaceId,
+      sourceNotificationId,
+      onSourceStatus,
+    } = params;
     if (isInitiatingChatRef.current) return;
     isInitiatingChatRef.current = true;
     setIsInitiatingChat(true);
@@ -335,12 +338,7 @@ export const useInitiateChat = (options?: {
       knowledgeBases.length === 0 &&
       mcpIntegrations.length === 0
     ) {
-      await finalizeAndNavigate(thread.id, {
-        message,
-        images,
-        skillId,
-        workspaceId,
-      });
+      await finalizeAndNavigate(thread, params);
       return;
     }
 
@@ -387,29 +385,18 @@ export const useInitiateChat = (options?: {
         return;
       }
 
-      await finalizeAndNavigate(thread.id, {
-        message,
-        images,
-        skillId,
-        workspaceId,
-      });
+      await finalizeAndNavigate(thread, params);
     } finally {
       setIsAttachingResources(false);
     }
   }
 
   async function finalizeAndNavigate(
-    threadId: string,
-    {
-      message,
-      images,
-      skillId,
-      workspaceId,
-    }: Pick<
-      InitiateChatParams,
-      'message' | 'images' | 'skillId' | 'workspaceId'
-    >,
+    thread: GetThreadResponseDto,
+    params: InitiateChatParams,
   ): Promise<void> {
+    const { message, images, skillId, workspaceId } = params;
+    const threadId = thread.id;
     if (cancelledRef.current) {
       stopInitiatingChat();
       return;
@@ -442,6 +429,7 @@ export const useInitiateChat = (options?: {
         queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
       });
     }
+    trackChatStarted(thread, params);
     options?.onSuccess?.();
 
     // Keep settling state until unmount — avoids snapping back to --idle transform.
@@ -470,6 +458,21 @@ export const useInitiateChat = (options?: {
     error: createThreadMutation.error,
   };
 };
+
+function trackChatStarted(
+  thread: GetThreadResponseDto,
+  { sources, knowledgeBases, mcpIntegrations, skillId }: InitiateChatParams,
+): void {
+  trackOpenPanelEvent('chat_started', {
+    ...threadInteractionContext({
+      ...thread,
+      sources,
+      knowledgeBases,
+      mcpIntegrations,
+    }),
+    has_skill: Boolean(skillId),
+  });
+}
 
 function threadCreationErrorKey(error: unknown): string {
   try {
