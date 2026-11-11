@@ -236,4 +236,12 @@ export default tseslint.config(
       'max-params': 'off',
     },
   },
+  // Orval emits relative imports for the mutator; generated code cannot be
+  // edited to follow the absolute-import convention.
+  {
+    files: ['src/common/clients/*/generated/**'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': 'off',
+    },
+  },
 );

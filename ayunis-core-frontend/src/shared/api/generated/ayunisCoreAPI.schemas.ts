@@ -3719,7 +3719,7 @@ export interface McpIntegrationResponseDto {
   type: McpIntegrationResponseDtoType;
   /** Predefined integration slug (only for predefined integrations) */
   slug?: string;
-  /** Custom server URL (only for custom integrations) */
+  /** Server URL (custom integrations, and marketplace integrations whose URL the customer provides) */
   serverUrl?: string;
   /** Whether the integration is enabled */
   enabled: boolean;
@@ -3762,6 +3762,13 @@ export interface McpIntegrationResponseDto {
      * @nullable
      */
   logoUrl?: string | null;
+  /** Whether the organization provides the server URL of this marketplace integration (only for marketplace integrations) */
+  customerProvidesServerUrl?: boolean;
+  /**
+     * Tells the organization which server URL to enter (only for marketplace integrations)
+     * @nullable
+     */
+  serverUrlHint?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
 }
@@ -3974,6 +3981,8 @@ export interface InstallMarketplaceIntegrationDto {
   orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii?: boolean;
+  /** URL of the customer's own MCP server. Required when the marketplace entry lets the customer provide the server URL; rejected otherwise. */
+  serverUrl?: string;
   oauthClient?: McpOAuthClientDto;
 }
 
@@ -4082,10 +4091,10 @@ export interface MarketplaceSkillResponseDto {
      */
   skillCategoryId?: string | null;
   /**
-     * Icon URL
+     * Lucide icon name (kebab-case)
      * @nullable
      */
-  iconUrl?: string | null;
+  iconName?: string | null;
   /** Whether the skill is featured */
   featured: boolean;
   /** Whether the skill is published */
@@ -4176,8 +4185,18 @@ export interface MarketplaceIntegrationResponseDto {
      * @nullable
      */
   integrationCategoryId?: string | null;
-  /** MCP server URL */
-  serverUrl: string;
+  /**
+     * MCP server URL. Null when the customer provides the server URL at install time.
+     * @nullable
+     */
+  serverUrl: string | null;
+  /** Whether the customer enters the URL of their own MCP server at install time */
+  customerProvidesServerUrl: boolean;
+  /**
+     * Tells the customer which server URL to enter
+     * @nullable
+     */
+  serverUrlHint: string | null;
   /** Configuration schema (authType, orgFields, userFields, oauth) */
   configSchema: MarketplaceIntegrationConfigSchemaDto;
   /** Whether the integration is featured */

@@ -17,6 +17,8 @@ import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-inte
 import {
   McpMissingRequiredConfigError,
   DuplicateMarketplaceMcpIntegrationError,
+  InvalidServerUrlError,
+  McpValidationFailedError,
 } from 'src/domain/mcp/application/mcp.errors';
 import {
   MarketplaceIntegrationNotFoundError,
@@ -55,6 +57,9 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     logoUrl: 'https://marketplace.ayunis.de/logos/oparl.png',
     integrationCategoryId: null,
     serverUrl: 'https://mcp.ayunis.de/oparl',
+    customerProvidesServerUrl: false,
+    serverUrlHint: null,
+    benefits: [],
     featured: false,
     preInstalled: false,
     legalTextUrl: null,
@@ -67,10 +72,8 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
           type: 'url' as const,
           label: 'OParl Endpoint URL',
           headerName: 'X-Oparl-Endpoint-Url',
-          prefix: null,
           required: true,
           help: "Your municipality's OParl endpoint",
-          value: null,
         },
       ],
       userFields: [],
@@ -95,7 +98,6 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
           headerName: 'Authorization',
           prefix: 'Bearer ',
           required: true,
-          help: null,
           value: 'sk-fixed-token-we-control',
         },
       ],
@@ -244,8 +246,6 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
             headerName: 'Authorization',
             prefix: 'Bearer ',
             required: true,
-            help: null,
-            value: null,
           },
         ],
         userFields: [],
@@ -325,6 +325,95 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     const saved = repository.save.mock.calls[0][0];
     expect(repository.delete).toHaveBeenCalledWith(saved.id);
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+
+  describe('customer-provided server URL', () => {
+    const openProjectResponse: IntegrationResponseDto = {
+      ...oparlMarketplaceResponse,
+      identifier: 'openproject',
+      name: 'OpenProject',
+      serverUrl: null,
+      customerProvidesServerUrl: true,
+      serverUrlHint: 'Your OpenProject MCP address',
+      configSchema: { authType: 'NO_AUTH', orgFields: [], userFields: [] },
+    };
+
+    function install(serverUrl?: string) {
+      return useCase.execute(
+        new InstallMarketplaceIntegrationCommand(
+          'openproject',
+          {},
+          undefined,
+          undefined,
+          serverUrl,
+        ),
+      );
+    }
+
+    beforeEach(() => {
+      getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+        openProjectResponse,
+      );
+    });
+
+    it('connects to the URL entered by the customer', async () => {
+      const result = await install('  https://projekte.stadt.de/mcp  ');
+
+      expect(result.serverUrl).toBe('https://projekte.stadt.de/mcp');
+      expect(result.customerProvidesServerUrl).toBe(true);
+      expect(result.serverUrlHint).toBe('Your OpenProject MCP address');
+      expect(validateUseCase.execute).toHaveBeenCalled();
+    });
+
+    it('requires the customer to enter a URL', async () => {
+      await expect(install()).rejects.toThrow(McpMissingRequiredConfigError);
+      await expect(install('   ')).rejects.toThrow(
+        McpMissingRequiredConfigError,
+      );
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it('rejects URLs that are not http or https', async () => {
+      await expect(install('file:///etc/mcp')).rejects.toThrow(
+        InvalidServerUrlError,
+      );
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it('rejects a URL for an entry whose URL is fixed by the marketplace', async () => {
+      getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+        oparlMarketplaceResponse,
+      );
+
+      await expect(
+        useCase.execute(
+          new InstallMarketplaceIntegrationCommand(
+            'oparl-council-data',
+            { oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1' },
+            undefined,
+            undefined,
+            'https://evil.example.com/mcp',
+          ),
+        ),
+      ).rejects.toThrow(McpValidationFailedError);
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  it('keeps the marketplace URL and no customer flag for fixed entries', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oparlMarketplaceResponse,
+    );
+
+    const result = await useCase.execute(
+      new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      }),
+    );
+
+    expect(result.serverUrl).toBe('https://mcp.ayunis.de/oparl');
+    expect(result.customerProvidesServerUrl).toBe(false);
+    expect(result.serverUrlHint).toBeNull();
   });
 
   it('should throw when required org fields are missing', async () => {

@@ -29,8 +29,8 @@ The marketplace module provides integration with the external Ayunis Marketplace
 **DTOs:**
 
 - `MarketplaceConfigResponseDto` — Response DTO containing `{ enabled, url }` for the `/config` endpoint
-- `MarketplaceSkillResponseDto` — Response DTO containing skill details (name, shortDescription, aiDescription, instructions, etc.)
-- `MarketplaceIntegrationResponseDto` — Response DTO containing integration details (name, shortDescription, description, serverUrl, configSchema with orgFields/userFields, etc.)
+- `MarketplaceSkillResponseDto` — Response DTO containing skill details (name, shortDescription, aiDescription, instructions, Lucide `iconName`, etc.)
+- `MarketplaceIntegrationResponseDto` — Response DTO containing integration details (name, shortDescription, description, configSchema with orgFields/userFields, etc.). `serverUrl` is the vendor's fixed MCP server, or `null` when `customerProvidesServerUrl` is set; then the installing organization enters its own instance's URL, guided by `serverUrlHint`
 
 **Errors:**
 

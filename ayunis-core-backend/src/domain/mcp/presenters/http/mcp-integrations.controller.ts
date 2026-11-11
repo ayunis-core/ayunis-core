@@ -397,6 +397,7 @@ export class McpIntegrationsController {
       dto.orgConfigValues,
       dto.returnsPii,
       dto.oauthClient,
+      dto.serverUrl,
     );
 
     const integration =

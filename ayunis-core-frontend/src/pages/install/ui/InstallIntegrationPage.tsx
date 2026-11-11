@@ -21,29 +21,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@ayunis/ui/components/form';
+import { Form } from '@ayunis/ui/components/form';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
-import { Input } from '@ayunis/ui/components/input';
-import { PasswordInput } from '@ayunis/ui/components/password-input';
 import {
   hasOAuthConfiguration,
   type McpOAuthConfig,
   type McpSchemaWithOAuth,
 } from '@/shared/lib/mcp-oauth';
-import { useMcpOAuthClientMetadata } from '@/features/mcp-oauth';
 import { AcceptanceCheckboxField } from './AcceptanceCheckboxField';
 import type { InstallIntegrationFormFields } from '@/pages/install/model/types';
 import { buildMarketplaceIntegrationPayload } from '@/pages/install/lib/build-marketplace-integration-payload';
-import { CopyButton } from '@/shared/ui/copy-button';
+import { MarketplaceOAuthFields } from './MarketplaceOAuthFields';
+import { MarketplaceServerUrlField } from './MarketplaceServerUrlField';
 
 interface InstallIntegrationPageProps {
   readonly integrationIdentifier: string | undefined;
@@ -91,7 +81,6 @@ function InstallIntegrationContent({
     isLoading,
     isError,
   } = useMarketplaceControllerGetIntegration(integrationIdentifier);
-  const installMutation = useInstallIntegrationFromMarketplace();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const form = useForm<InstallIntegrationFormFields>({
     defaultValues: {
@@ -99,8 +88,10 @@ function InstallIntegrationContent({
       termsAccepted: false,
       oauthClientId: '',
       oauthClientSecret: '',
+      serverUrl: '',
     },
   });
+  const installMutation = useInstallIntegrationFromMarketplace(form);
 
   if (isLoading) {
     return <InstallLoadingSkeleton />;
@@ -128,6 +119,7 @@ function InstallIntegrationContent({
           clientId: values.oauthClientId,
           clientSecret: values.oauthClientSecret,
         },
+        integration.customerProvidesServerUrl ? values.serverUrl : undefined,
       ),
     });
   };
@@ -165,11 +157,13 @@ function InstallIntegrationCard({
   const marketplace = useMarketplaceConfig();
 
   const editableFields = getEditableOrgFields(integration);
-  const isZeroConfig = editableFields.length === 0;
-  const allRequiredFilled = checkRequiredFieldsFilled(
-    editableFields,
-    formValues,
-  );
+  const isZeroConfig =
+    editableFields.length === 0 && !integration.customerProvidesServerUrl;
+  const serverUrlFilled =
+    !integration.customerProvidesServerUrl ||
+    form.watch('serverUrl').trim().length > 0;
+  const allRequiredFilled =
+    serverUrlFilled && checkRequiredFieldsFilled(editableFields, formValues);
   const schema = integration.configSchema as McpSchemaWithOAuth;
   const oauth = hasOAuthConfiguration(schema) ? schema.oauth : undefined;
   const staticClientReady =
@@ -283,6 +277,14 @@ function InstallIntegrationCardView({
               </p>
             </div>
 
+            {integration.customerProvidesServerUrl && (
+              <MarketplaceServerUrlField
+                form={form}
+                hint={integration.serverUrlHint}
+                disabled={isInstalling}
+              />
+            )}
+
             {editableFields.map((field) => (
               <ConfigFieldInput
                 key={field.key}
@@ -374,98 +376,5 @@ function InstallIntegrationCardView({
         </Card>
       </form>
     </Form>
-  );
-}
-
-function MarketplaceOAuthFields({
-  oauth,
-  form,
-  disabled,
-  t,
-}: Readonly<{
-  oauth: McpOAuthConfig;
-  form: UseFormReturn<InstallIntegrationFormFields>;
-  disabled: boolean;
-  t: TFunction;
-}>) {
-  const { callbackUri } = useMcpOAuthClientMetadata();
-  return (
-    <div className="space-y-4 rounded-md border p-4">
-      <div>
-        <p className="font-medium">{t('oauth.title')}</p>
-        <p className="text-sm text-muted-foreground">
-          {t(`oauth.registration.${oauth.clientRegistration}`)}
-        </p>
-      </div>
-      {oauth.scopes && oauth.scopes.length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {t('oauth.scopes', { scopes: oauth.scopes.join(' ') })}
-        </p>
-      )}
-      <div>
-        <p className="text-sm font-medium">{t('oauth.callbackUri')}</p>
-        <div className="mt-1 flex items-center gap-2">
-          <code className="rounded bg-muted px-1.5 py-0.5 break-all text-xs">
-            {callbackUri}
-          </code>
-          <CopyButton
-            value={callbackUri}
-            label={t('oauth.callbackUri')}
-            testId="install-callback-uri-copy"
-          />
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('oauth.callbackUriDescription')}
-        </p>
-      </div>
-      {oauth.clientRegistration === 'static' && (
-        <StaticOAuthClientFields form={form} disabled={disabled} t={t} />
-      )}
-    </div>
-  );
-}
-
-function StaticOAuthClientFields({
-  form,
-  disabled,
-  t,
-}: Readonly<{
-  form: UseFormReturn<InstallIntegrationFormFields>;
-  disabled: boolean;
-  t: TFunction;
-}>) {
-  return (
-    <>
-      <FormField
-        control={form.control}
-        name="oauthClientId"
-        rules={{ required: true }}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('oauth.clientId')}</FormLabel>
-            <FormControl>
-              <Input {...field} disabled={disabled} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="oauthClientSecret"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('oauth.clientSecret')}</FormLabel>
-            <FormControl>
-              <PasswordInput {...field} disabled={disabled} />
-            </FormControl>
-            <FormDescription>
-              {t('oauth.clientSecretDescription')}
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
   );
 }

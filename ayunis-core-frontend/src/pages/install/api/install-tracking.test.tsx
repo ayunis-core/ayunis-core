@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useInstallFromMarketplace } from './useInstallFromMarketplace';
 import { useInstallIntegrationFromMarketplace } from './useInstallIntegrationFromMarketplace';
+import type { InstallIntegrationFormFields } from '@/pages/install/model/types';
 
 const { request, client } = vi.hoisted(() => ({
   request: vi.fn(),
@@ -42,9 +44,13 @@ async function installSkill(identifier: string) {
 }
 
 async function installIntegration(identifier: string) {
-  const { result } = renderHook(() => useInstallIntegrationFromMarketplace(), {
-    wrapper,
-  });
+  const form = {
+    setError: vi.fn(),
+  } as unknown as UseFormReturn<InstallIntegrationFormFields>;
+  const { result } = renderHook(
+    () => useInstallIntegrationFromMarketplace(form),
+    { wrapper },
+  );
   await act(() =>
     result.current
       .mutateAsync({ data: { identifier, orgConfigValues: {} } })

@@ -175,6 +175,41 @@ describe('McpIntegrationDtoMapper', () => {
     expect(dto.orgConfigValues).toEqual({ apiToken: SECRET_MASK });
   });
 
+  it('exposes the server URL and hint of customer-provided marketplace integrations', () => {
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      serverUrl: 'https://projekte.stadt.de/mcp',
+      marketplaceIdentifier: 'openproject',
+      configSchema: { authType: 'NO_AUTH', orgFields: [], userFields: [] },
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      customerProvidesServerUrl: true,
+      serverUrlHint: 'Your OpenProject MCP address',
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.serverUrl).toBe('https://projekte.stadt.de/mcp');
+    expect(dto.customerProvidesServerUrl).toBe(true);
+    expect(dto.serverUrlHint).toBe('Your OpenProject MCP address');
+  });
+
+  it('hides the server URL of marketplace integrations with a fixed URL', () => {
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'oparl-council-data',
+      configSchema: { authType: 'NO_AUTH', orgFields: [], userFields: [] },
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.serverUrl).toBeUndefined();
+    expect(dto.customerProvidesServerUrl).toBe(false);
+    expect(dto.serverUrlHint).toBeNull();
+  });
+
   it('maps marketplace integration logoUrl to DTO', () => {
     const configSchema: IntegrationConfigSchema = {
       authType: 'NO_AUTH',
