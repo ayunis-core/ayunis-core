@@ -73,6 +73,8 @@ async function interruptedDelivery(
     {
       read: async () => Buffer.from('PDF fixture'),
       readRetained: async () => Buffer.from('PDF fixture'),
+      readToFile: async () => ({ size: 11, sha256: 'fixture' }),
+      readRetainedToFile: async () => ({ size: 11, sha256: 'fixture' }),
     } as never,
     {
       execute: async () => {

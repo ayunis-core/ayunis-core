@@ -47,8 +47,10 @@ High-Risk: concurrency-sensitive processing, provider requests and source deleti
 | Unsupported image-only text | PDF → existing image annotations         | Preserve baseline output; no selective OCR change                 |
 | Resource pressure           | Consumer → preparation/provider/storage  | Current input limits, bounded parts and one output file at a time |
 
-The original capped input is still downloaded into memory; `pdf-lib` also holds its
-parsed representation. This implementation does not establish 500 MB support.
+Since AYC-1729 PDFs and office documents are staged on disk and split by `qpdf`, so
+memory per job is bounded by the batch size; before, the input was downloaded into
+memory and `pdf-lib` held its parsed representation as well. Larger limits still need
+the load test (AYC-1545).
 Provider semaphores are per process. Account-wide budgets must be enforced or divided
 between replicas before scaling the deployment. A provider success followed by a
 checkpoint-write failure is unconfirmed and can be sent again on retry.

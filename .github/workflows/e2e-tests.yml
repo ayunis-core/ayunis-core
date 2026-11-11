@@ -369,6 +369,13 @@ jobs:
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3198/health; do sleep 1; done' \
             || { cat announcable-mock.log; exit 1; }
 
+      # The backend and worker run on the runner, not in the image, and
+      # split PDFs with qpdf.
+      - name: Install qpdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qpdf
+
       - name: Run migrations
         working-directory: ayunis-core-backend
         run: pnpm run migration:run:dev

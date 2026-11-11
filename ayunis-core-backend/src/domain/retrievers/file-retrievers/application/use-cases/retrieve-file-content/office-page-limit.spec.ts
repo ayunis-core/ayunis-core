@@ -7,6 +7,7 @@ import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/applica
 import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import { MsgParserPort } from 'src/domain/retrievers/file-retrievers/application/ports/msg-parser.port';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PdfBatcherPort } from 'src/domain/retrievers/file-retrievers/application/ports/pdf-batcher.port';
 import {
   FileRetrieverPage,
   FileRetrieverResult,
@@ -30,6 +31,7 @@ describe('Office document page limit after conversion', () => {
         RetrieveFileContentUseCase,
         PreflightCheckUseCase,
         { provide: retrievalConfig.KEY, useValue: config },
+        { provide: PdfBatcherPort, useValue: { pageCount: jest.fn() } },
         { provide: DocumentConverterPort, useValue: converter },
         {
           provide: FileRetrieverRegistry,

@@ -3,6 +3,10 @@ import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import axios from 'axios';
 import { resolve4 } from 'dns/promises';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { Readable } from 'stream';
 import { GotenbergConverterService } from './gotenberg-converter.service';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import {
@@ -235,5 +239,157 @@ describe('GotenbergConverterService', () => {
     mockedAxios.post.mockRejectedValue(new TypeError('boom'));
 
     await expect(convert()).rejects.toBeInstanceOf(TypeError);
+  });
+
+  describe('conversion from and to disk', () => {
+    let directory: string;
+    let input: string;
+    let output: string;
+
+    beforeEach(() => {
+      directory = mkdtempSync(join(tmpdir(), 'gotenberg-spec-'));
+      input = join(directory, 'file');
+      output = join(directory, 'file.pdf');
+      writeFileSync(input, 'docx bytes');
+    });
+    afterEach(() => {
+      rmSync(directory, { recursive: true, force: true });
+    });
+
+    it('streams the upload and writes the converted PDF to the given path', async () => {
+      mockedAxios.post.mockResolvedValue({
+        data: Readable.from([Buffer.from('%PDF-'), Buffer.from('1.7')]),
+      });
+
+      await expect(
+        service.convertFileToPdf(input, 'report.docx', output),
+      ).resolves.toEqual({ size: 8 });
+
+      expect(readFileSync(output, 'utf8')).toBe('%PDF-1.7');
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        convertUrlOn(REPLICAS[0]),
+        expect.anything(),
+        expect.objectContaining({ responseType: 'stream' }),
+      );
+    });
+
+    const occupiedReplica = (body: Readable) => ({
+      isAxiosError: true,
+      response: { status: 429, headers: {}, data: body },
+    });
+
+    it('converts on another replica when the first one is occupied, after reading the refusal to release its connection', async () => {
+      mockedResolve4.mockResolvedValue(REPLICAS.slice(0, 2));
+      const refusal = Readable.from([Buffer.from(QUEUE_FULL_BODY)]);
+      mockedAxios.post
+        .mockRejectedValueOnce(occupiedReplica(refusal))
+        .mockResolvedValueOnce({ data: Readable.from([Buffer.from('%PDF')]) });
+
+      await expect(
+        service.convertFileToPdf(input, 'report.docx', output),
+      ).resolves.toEqual({ size: 4 });
+
+      expect(new Set(mockedAxios.post.mock.calls.map(([url]) => url))).toEqual(
+        new Set(REPLICAS.slice(0, 2).map(convertUrlOn)),
+      );
+      expect(refusal.readableEnded).toBe(true);
+    });
+
+    it('reports the converter as busy, for the queue to retry later, when every replica is occupied', async () => {
+      mockedResolve4.mockResolvedValue(REPLICAS);
+      REPLICAS.forEach(() =>
+        mockedAxios.post.mockRejectedValueOnce(
+          occupiedReplica(Readable.from([Buffer.from(QUEUE_FULL_BODY)])),
+        ),
+      );
+
+      await expect(
+        service.convertFileToPdf(input, 'report.docx', output),
+      ).rejects.toBeInstanceOf(DocumentConverterBusyError);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(3);
+    });
+
+    it('still tells a document that ran out of conversion time from a busy converter when the error body is a stream', async () => {
+      mockedAxios.post.mockRejectedValue({
+        isAxiosError: true,
+        response: {
+          status: 503,
+          headers: {},
+          data: Readable.from([Buffer.from(TIME_LIMIT_BODY)]),
+        },
+      });
+
+      await expect(
+        service.convertFileToPdf(input, 'report.docx', output),
+      ).rejects.toBeInstanceOf(DocumentConversionTimeoutError);
+    });
+
+    it('reports a rejected document as unprocessable', async () => {
+      mockedAxios.post.mockRejectedValue(axiosErrorWithStatus(400));
+
+      await expect(
+        service.convertFileToPdf(input, 'report.docx', output),
+      ).rejects.toBeInstanceOf(UnprocessableDocumentError);
+    });
+
+    it('stops waiting for an error body that never finishes and frees the conversion slot', async () => {
+      jest.useFakeTimers({
+        doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
+      });
+      try {
+        const stalled = new Readable({ read: () => undefined });
+        stalled.push(Buffer.from('The request'));
+        mockedAxios.post
+          .mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 503, headers: {}, data: stalled },
+          })
+          .mockResolvedValueOnce({ data: Readable.from([Buffer.from('ok')]) });
+
+        const stuck = service.convertFileToPdf(input, 'report.docx', output);
+        const outcome = expect(stuck).rejects.toBeInstanceOf(
+          DocumentConversionUnavailableError,
+        );
+        await new Promise((resolve) => setImmediate(resolve));
+        await jest.advanceTimersByTimeAsync(10_000);
+        await outcome;
+
+        expect(stalled.destroyed).toBe(true);
+        await expect(
+          service.convertFileToPdf(input, 'next.docx', output),
+        ).resolves.toEqual({ size: 2 });
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('gives up on a PDF body that stops arriving and frees the conversion slot', async () => {
+      jest.useFakeTimers({
+        doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
+      });
+      try {
+        const stalled = new Readable({ read: () => undefined });
+        stalled.push(Buffer.from('%PDF-'));
+        mockedAxios.post
+          .mockResolvedValueOnce({ data: stalled })
+          .mockResolvedValueOnce({ data: Readable.from([Buffer.from('ok')]) });
+
+        const stuck = service.convertFileToPdf(input, 'report.docx', output);
+        const outcome = expect(stuck).rejects.toMatchObject({
+          constructor: FileRetrievalFailedError,
+          message: 'Gotenberg conversion timed out for report.docx',
+        });
+        await new Promise((resolve) => setImmediate(resolve));
+        await jest.advanceTimersByTimeAsync(10 * 60 * 1000);
+        await outcome;
+
+        expect(stalled.destroyed).toBe(true);
+        await expect(
+          service.convertFileToPdf(input, 'next.docx', output),
+        ).resolves.toEqual({ size: 2 });
+      } finally {
+        jest.useRealTimers();
+      }
+    });
   });
 });

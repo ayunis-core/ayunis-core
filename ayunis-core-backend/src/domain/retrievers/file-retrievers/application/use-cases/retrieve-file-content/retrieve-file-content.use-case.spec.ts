@@ -57,6 +57,7 @@ describe('RetrieveFileContentUseCase', () => {
     };
     mockDocumentConverter = {
       convertToPdf: jest.fn(),
+      convertFileToPdf: jest.fn(),
     };
     mockTranscribeRecordingUseCase = {
       execute: jest.fn(),
@@ -867,4 +868,104 @@ describe('RetrieveFileContentUseCase', () => {
       expect(result).toBe(expectedResult);
     },
   );
+
+  describe('files staged on local disk', () => {
+    const localFile = {
+      path: '/staging/download-1/file',
+      size: 500_000_000,
+      sha256: 'staged-hash',
+    };
+    const extracted = new FileRetrieverResult([
+      new FileRetrieverPage('processed content', 1),
+    ]);
+
+    it('hands a PDF to OCR as a file reference without reading it', async () => {
+      jest
+        .spyOn(mockMistralHandler, 'processFile')
+        .mockResolvedValue(extracted);
+
+      const result = await useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.alloc(0),
+          localFile,
+          fileName: 'grosser-haushalt.pdf',
+          fileType: 'application/pdf',
+        }),
+      );
+
+      expect(result).toBe(extracted);
+      expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filename: 'grosser-haushalt.pdf',
+          local: localFile,
+          fileData: Buffer.alloc(0),
+        }),
+      );
+    });
+
+    it('converts an office document on disk and reads the resulting PDF from disk', async () => {
+      const context = {
+        read: jest.fn(),
+        write: jest.fn(),
+        isActive: jest.fn().mockResolvedValue(true),
+        progress: jest.fn(),
+      };
+      jest
+        .spyOn(mockDocumentConverter, 'convertFileToPdf')
+        .mockResolvedValue({ size: 4242 });
+      jest
+        .spyOn(mockMistralHandler, 'processFile')
+        .mockResolvedValue(extracted);
+      const pdf = {
+        path: `${localFile.path}.pdf`,
+        size: 4242,
+        sha256: 'staged-hash',
+      };
+
+      await useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.alloc(0),
+          localFile,
+          fileName: 'Beschlussvorlage.docx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          processingContext: context,
+        }),
+      );
+
+      expect(mockDocumentConverter.convertToPdf).not.toHaveBeenCalled();
+      expect(mockDocumentConverter.convertFileToPdf).toHaveBeenCalledWith(
+        localFile.path,
+        'Beschlussvorlage.docx',
+        pdf.path,
+      );
+      expect(mockPreflightCheck.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          localFile: pdf,
+          fileType: 'application/pdf',
+        }),
+      );
+      expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filename: 'Beschlussvorlage.pdf',
+          local: pdf,
+        }),
+        expect.objectContaining({ cacheIdentity: 'staged-hash', context }),
+      );
+    });
+
+    it('refuses a file type that is only ever read whole', async () => {
+      await expect(
+        useCase.execute(
+          new RetrieveFileContentCommand({
+            fileData: Buffer.alloc(0),
+            localFile,
+            fileName: 'notiz.txt',
+            fileType: 'text/plain',
+          }),
+        ),
+      ).rejects.toMatchObject({ code: expect.any(String) as unknown });
+      expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
+    });
+  });
 });

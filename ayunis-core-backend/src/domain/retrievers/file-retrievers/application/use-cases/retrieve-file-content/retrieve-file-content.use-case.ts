@@ -10,12 +10,12 @@ import {
   FileRetrieverPage,
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
-import {
-  RetrieveFileContentCommand,
-  type RecordingFileRef,
-} from './retrieve-file-content.command';
+import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/application/file-retriever-handler.registry';
-import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
+import {
+  File,
+  type LocalFile,
+} from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
   UnprocessableDocumentError,
@@ -43,6 +43,19 @@ import { TranscribeRecordingUseCase } from 'src/domain/transcriptions/applicatio
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
+
+// Only these are processed from disk; everything else is small and read whole.
+function readsFromDisk(fileType: DetectedFileType): boolean {
+  return (
+    fileType === 'pdf' ||
+    isOfficeDocumentFile(fileType) ||
+    isAudioFile(fileType)
+  );
+}
+
+function pdfNameOf(fileName: string): string {
+  return fileName.replace(/\.\w+$/, '.pdf');
+}
 
 // Attached emails are extracted, but their own attachments stay listed by name.
 const MAX_EML_ATTACHMENT_DEPTH = 1;
@@ -119,6 +132,9 @@ export class RetrieveFileContentUseCase {
     emlDepth: number,
   ): Promise<FileRetrieverResult> {
     const fileType = detectFileType(command.fileType, command.fileName);
+    if (command.localFile && !readsFromDisk(fileType)) {
+      throw new Error(`A ${fileType} file cannot be read from disk`);
+    }
 
     if (fileType === 'txt') {
       const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
@@ -136,9 +152,12 @@ export class RetrieveFileContentUseCase {
 
     if (fileType === 'pdf') {
       return await this.processPdf(
-        command.fileData,
-        command.fileName,
-        command.fileType,
+        new File(
+          command.fileData,
+          command.fileName,
+          command.fileType,
+          command.localFile,
+        ),
         {
           allowLocalParsing: command.allowLocalPdfParsing,
           pageLimit: command.pdfPageLimit,
@@ -149,17 +168,13 @@ export class RetrieveFileContentUseCase {
     }
 
     if (isOfficeDocumentFile(fileType)) {
-      return await this.processOfficeDocument(
-        command.fileData,
-        command.fileName,
-        command.processingContext,
-      );
+      return await this.processOfficeDocument(command);
     }
 
     if (isAudioFile(fileType)) {
       return await this.processAudio(
         command.fileData,
-        command.recording,
+        command.localFile,
         command.fileName,
         command.fileType,
         command.processingContext,
@@ -269,9 +284,7 @@ export class RetrieveFileContentUseCase {
    * PDF: Prefer Mistral OCR, fallback to pdf-parse.
    */
   private async processPdf(
-    fileData: Buffer,
-    fileName: string,
-    mimeType: string,
+    file: File,
     options: FileRetrieverProcessOptions & { allowLocalParsing?: boolean } = {},
   ): Promise<FileRetrieverResult> {
     const {
@@ -280,7 +293,6 @@ export class RetrieveFileContentUseCase {
       context,
       cacheIdentity,
     } = options;
-    const file = new File(fileData, fileName, mimeType);
     if (!this.config.mistral.apiKey) {
       if (!allowLocalParsing) {
         throw new FileRetrieverProviderNotAvailableError('Mistral OCR');
@@ -346,15 +358,16 @@ export class RetrieveFileContentUseCase {
    * DOCX/PPTX/ODT/ODP: Convert to PDF via Gotenberg, then process as PDF.
    */
   private async processOfficeDocument(
-    fileData: Buffer,
-    fileName: string,
-    context?: ProcessingContext,
+    command: RetrieveFileContentCommand,
   ): Promise<FileRetrieverResult> {
+    const { fileData, fileName, processingContext: context } = command;
+    if (command.localFile) {
+      return this.processOfficeFile(command.localFile, fileName, context);
+    }
     const pdfBuffer = await this.documentConverter.convertToPdf(
       fileData,
       fileName,
     );
-    const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
     await this.preflightCheckUseCase.execute(
       new PreflightCheckCommand({
         fileData: pdfBuffer,
@@ -362,12 +375,44 @@ export class RetrieveFileContentUseCase {
         fileType: MIME_TYPES.PDF,
       }),
     );
-    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF, {
-      context,
-      cacheIdentity: context
-        ? createHash('sha256').update(fileData).digest('hex')
-        : undefined,
-    });
+    return this.processPdf(
+      new File(pdfBuffer, pdfNameOf(fileName), MIME_TYPES.PDF),
+      {
+        context,
+        cacheIdentity: context
+          ? createHash('sha256').update(fileData).digest('hex')
+          : undefined,
+      },
+    );
+  }
+
+  // The converted PDF is written next to the original, in the directory the
+  // caller staged it in and removes afterwards. Its checkpoints are keyed by
+  // the original's hash, as on the in-memory path.
+  private async processOfficeFile(
+    original: LocalFile,
+    fileName: string,
+    context?: ProcessingContext,
+  ): Promise<FileRetrieverResult> {
+    const path = `${original.path}.pdf`;
+    const { size } = await this.documentConverter.convertFileToPdf(
+      original.path,
+      fileName,
+      path,
+    );
+    const pdf: LocalFile = { path, size, sha256: original.sha256 };
+    await this.preflightCheckUseCase.execute(
+      new PreflightCheckCommand({
+        fileData: Buffer.alloc(0),
+        localFile: pdf,
+        fileName,
+        fileType: MIME_TYPES.PDF,
+      }),
+    );
+    return this.processPdf(
+      new File(Buffer.alloc(0), pdfNameOf(fileName), MIME_TYPES.PDF, pdf),
+      { context, cacheIdentity: context ? original.sha256 : undefined },
+    );
   }
 
   /**
@@ -377,7 +422,7 @@ export class RetrieveFileContentUseCase {
    */
   private async processAudio(
     fileData: Buffer,
-    recording: RecordingFileRef | undefined,
+    recording: LocalFile | undefined,
     fileName: string,
     mimeType: string,
     processingContext?: ProcessingContext,

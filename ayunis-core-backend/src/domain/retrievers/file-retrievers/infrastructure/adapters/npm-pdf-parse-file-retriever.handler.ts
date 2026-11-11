@@ -1,4 +1,5 @@
 import PdfParse from 'pdf-parse';
+import { readFile } from 'fs/promises';
 import { UnprocessableDocumentError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { FileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
 import { FileRetrieverPage } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
@@ -33,7 +34,10 @@ export class NpmPdfParseFileRetrieverHandler extends FileRetrieverHandler {
       // PDF.js expects copying Uint8Array.slice(), not Buffer.slice() views.
       // pdf-parse forwards typed arrays, but its declarations only allow Buffer.
       const parse = PdfParse as (data: Uint8Array) => Promise<PdfParse.Result>;
-      const pdf = await parse(new Uint8Array(file.fileData));
+      // The local parser needs the whole document; a file kept on disk is
+      // read only here, when OCR is unavailable or could not use it.
+      const data = file.local ? await readFile(file.local.path) : file.fileData;
+      const pdf = await parse(new Uint8Array(data));
       return new FileRetrieverResult([new FileRetrieverPage(pdf.text, 1)]);
     } catch (error) {
       const failure = classifyMalformedPdfError(error);

@@ -45,6 +45,7 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
   ): Promise<FileRetrieverResult> {
     const identity =
       options.cacheIdentity ??
+      file.local?.sha256 ??
       createHash('sha256').update(file.fileData).digest('hex');
     const pages: FileRetrieverPage[] = [];
     const limits = {
@@ -52,7 +53,8 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
       maxBytes: this.maxBytes,
       pageLimit: options.pageLimit,
     };
-    for await (const batch of this.batcher.split(file.fileData, limits)) {
+    const source = file.local ?? file.fileData;
+    for await (const batch of this.batcher.split(source, limits)) {
       const result = await this.processBatch(file, batch, identity, options);
       pages.push(
         ...result.pages.map(
