@@ -115,6 +115,15 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     return record ? this.mapper.toDomain(record) : null;
   }
 
+  async findZitadelOrgIds(): Promise<string[]> {
+    const rows = await this.records
+      .createQueryBuilder('connection')
+      .select('connection.zitadelOrgId', 'zitadelOrgId')
+      .where('connection.zitadelOrgId IS NOT NULL')
+      .getRawMany<{ zitadelOrgId: string }>();
+    return rows.map((row) => row.zitadelOrgId);
+  }
+
   async findOwnerOrgIdsByEmailDomains(emailDomains: string[]): Promise<UUID[]> {
     if (emailDomains.length === 0) return [];
     const records = await this.records

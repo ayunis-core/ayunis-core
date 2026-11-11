@@ -50,6 +50,13 @@ import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
 import { SsoAccountLinkPolicyService } from 'src/iam/sso/application/services/sso-account-link-policy.service';
 import { GetSsoAccountLinkStatusUseCase } from 'src/iam/sso/application/use-cases/get-sso-account-link-status/get-sso-account-link-status.use-case';
 import { SsoAccountController } from 'src/iam/sso/presenters/http/sso-account.controller';
+import { BrokerIdentityAdminClient } from 'src/iam/sso/application/ports/broker-identity-admin.client';
+import { ZitadelIdentityAdminClient } from 'src/iam/sso/infrastructure/zitadel/zitadel-identity-admin.client';
+import { BrokerIdentityCleanupService } from 'src/iam/sso/application/services/broker-identity-cleanup.service';
+import { SsoUserDeletionRequestedListener } from 'src/iam/sso/application/listeners/user-deletion-requested.listener';
+import { SsoOrgDeletionRequestedListener } from 'src/iam/sso/application/listeners/org-deletion-requested.listener';
+import { SweepUnlinkedBrokerIdentitiesUseCase } from 'src/iam/sso/application/use-cases/sweep-unlinked-broker-identities/sweep-unlinked-broker-identities.use-case';
+import { UnlinkedBrokerIdentitySweepTask } from 'src/iam/sso/infrastructure/tasks/unlinked-broker-identity-sweep.task';
 
 @Module({
   imports: [
@@ -82,6 +89,10 @@ import { SsoAccountController } from 'src/iam/sso/presenters/http/sso-account.co
     ZitadelOidcBrokerClient,
     { provide: OidcBrokerClient, useExisting: ZitadelOidcBrokerClient },
     { provide: OidcBrokerLogoutClient, useExisting: ZitadelOidcBrokerClient },
+    {
+      provide: BrokerIdentityAdminClient,
+      useClass: ZitadelIdentityAdminClient,
+    },
     {
       provide: SsoLoginTransactionsRepository,
       useClass: PostgresSsoLoginTransactionsRepository,
@@ -119,6 +130,11 @@ import { SsoAccountController } from 'src/iam/sso/presenters/http/sso-account.co
     HandleSsoBackchannelLogoutUseCase,
     SsoLoginTransactionCleanupTask,
     SsoBrokerSessionCleanupTask,
+    BrokerIdentityCleanupService,
+    SsoUserDeletionRequestedListener,
+    SsoOrgDeletionRequestedListener,
+    SweepUnlinkedBrokerIdentitiesUseCase,
+    UnlinkedBrokerIdentitySweepTask,
   ],
   exports: [
     ConfigureOrgSsoConnectionUseCase,

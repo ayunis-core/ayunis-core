@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import type { Repository } from 'typeorm';
+import { In, type Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import {
   FederatedIdentitiesRepository,
@@ -34,6 +34,37 @@ export class PostgresFederatedIdentitiesRepository extends FederatedIdentitiesRe
 
   existsByUserIdAndIssuer(userId: UUID, issuer: string): Promise<boolean> {
     return this.records.existsBy({ userId, issuer });
+  }
+
+  async findSubjectsByUserId(userId: UUID, issuer: string): Promise<string[]> {
+    const records = await this.records.find({
+      select: { subject: true },
+      where: { userId, issuer },
+    });
+    return records.map((record) => record.subject);
+  }
+
+  async findSubjectsByOrgId(orgId: UUID, issuer: string): Promise<string[]> {
+    const rows = await this.records
+      .createQueryBuilder('identity')
+      .innerJoin('identity.user', 'user')
+      .select('identity.subject', 'subject')
+      .where('identity.issuer = :issuer', { issuer })
+      .andWhere('user.orgId = :orgId', { orgId })
+      .getRawMany<{ subject: string }>();
+    return rows.map((row) => row.subject);
+  }
+
+  async findLinkedSubjects(
+    issuer: string,
+    subjects: string[],
+  ): Promise<string[]> {
+    if (subjects.length === 0) return [];
+    const records = await this.records.find({
+      select: { subject: true },
+      where: { issuer, subject: In(subjects) },
+    });
+    return records.map((record) => record.subject);
   }
 
   async create(identity: FederatedIdentity): Promise<FederatedIdentity> {

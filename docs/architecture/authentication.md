@@ -476,7 +476,8 @@ Zitadel; Core and its database never receive them.
 | Initial password | The explicit path that may add a first password to a passwordless user, but it is unavailable while the organization is SSO-only. |
 | Authenticated password change | Requires the current password and revokes other Core session families; the actor's current family survives when identifiable. |
 | Account unlock | Organization admin or platform superadmin clears persistent password-failure state; neither may unlock itself. |
-| User or organization deletion | Cascades to federated identities, refresh sessions, SSO transactions, broker-session hints, and MFA state. |
+| User or organization deletion | Cascades to federated identities, refresh sessions, SSO transactions, broker-session hints, and MFA state. After the rows are deleted, Core deletes the user's ZITADEL broker identities, or the organization's ZITADEL organization and its users' broker identities. Failures are logged; organization deletion by a superadmin reports them as incomplete cleanup. |
+| Unlinked broker identities | A nightly job deletes human ZITADEL users with an IdP link in a connection's ZITADEL organization that no federated identity references 24 hours after creation. This covers rejected admissions and failed user-deletion cleanups. |
 
 ## Persistence map
 

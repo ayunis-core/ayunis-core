@@ -121,6 +121,7 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   SSO_REAUTH_MAX_AGE_SECONDS?: number;
+  @IsOptional() @IsNotEmpty() SSO_ZITADEL_IDENTITY_CLEANUP_TOKEN?: string;
 
   // Database
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) POSTGRES_PORT?: number;
