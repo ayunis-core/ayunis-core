@@ -13,9 +13,3 @@ export function getFeatureToggles(
     queryFn: () => appControllerFeatureToggles(),
   });
 }
-
-export async function isRoutinesEnabled(
-  queryClient: QueryClient,
-): Promise<boolean> {
-  return (await getFeatureToggles(queryClient)).routinesEnabled;
-}

@@ -19,6 +19,7 @@ import { Route as onboardingLoginRouteImport } from './routes/(onboarding)/login
 import { Route as onboardingRegisterRouteImport } from './routes/(onboarding)/register'
 import { Route as onboardingTwoFactorRouteImport } from './routes/(onboarding)/two-factor'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin-settings'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
 import { Route as AuthenticatedSuperAdminSettingsRouteImport } from './routes/_authenticated/super-admin-settings'
 import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
@@ -134,6 +135,11 @@ const AuthenticatedAdminSettingsRoute =
     path: '/admin-settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedInstallRoute = AuthenticatedInstallRouteImport.update({
   id: '/install',
   path: '/install',
@@ -289,15 +295,15 @@ const AuthenticatedGettingStartedIndexRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedInboxIndexRoute = AuthenticatedInboxIndexRouteImport.update({
-  id: '/inbox/',
-  path: '/inbox/',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedInboxRoute,
 } as any)
 const AuthenticatedInboxNotificationIdRoute =
   AuthenticatedInboxNotificationIdRouteImport.update({
-    id: '/inbox/$notificationId',
-    path: '/inbox/$notificationId',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/$notificationId',
+    path: '/$notificationId',
+    getParentRoute: () => AuthenticatedInboxRoute,
   } as any)
 const AuthenticatedKnowledgeBasesIndexRoute =
   AuthenticatedKnowledgeBasesIndexRouteImport.update({
@@ -521,6 +527,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof onboardingRegisterRoute
   '/two-factor': typeof onboardingTwoFactorRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
+  '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/install': typeof AuthenticatedInstallRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   '/account/activate': typeof onboardingAccountActivateRoute
@@ -671,6 +678,7 @@ export interface FileRoutesById {
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/(onboarding)/two-factor': typeof onboardingTwoFactorRoute
   '/_authenticated/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
+  '/_authenticated/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/_authenticated/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
@@ -748,6 +756,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/two-factor'
     | '/admin-settings'
+    | '/inbox'
     | '/install'
     | '/super-admin-settings'
     | '/account/activate'
@@ -897,6 +906,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/register'
     | '/(onboarding)/two-factor'
     | '/_authenticated/admin-settings'
+    | '/_authenticated/inbox'
     | '/_authenticated/install'
     | '/_authenticated/super-admin-settings'
     | '/(onboarding)/account/activate'
@@ -1053,6 +1063,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-settings'
       fullPath: '/admin-settings'
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/install': {
@@ -1246,17 +1263,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/inbox/': {
       id: '/_authenticated/inbox/'
-      path: '/inbox'
+      path: '/'
       fullPath: '/inbox/'
       preLoaderRoute: typeof AuthenticatedInboxIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedInboxRoute
     }
     '/_authenticated/inbox/$notificationId': {
       id: '/_authenticated/inbox/$notificationId'
-      path: '/inbox/$notificationId'
+      path: '/$notificationId'
       fullPath: '/inbox/$notificationId'
       preLoaderRoute: typeof AuthenticatedInboxNotificationIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedInboxRoute
     }
     '/_authenticated/knowledge-bases/': {
       id: '/_authenticated/knowledge-bases/'
@@ -1568,6 +1585,19 @@ const AuthenticatedAdminSettingsRouteWithChildren =
     AuthenticatedAdminSettingsRouteChildren,
   )
 
+interface AuthenticatedInboxRouteChildren {
+  AuthenticatedInboxNotificationIdRoute: typeof AuthenticatedInboxNotificationIdRoute
+  AuthenticatedInboxIndexRoute: typeof AuthenticatedInboxIndexRoute
+}
+
+const AuthenticatedInboxRouteChildren: AuthenticatedInboxRouteChildren = {
+  AuthenticatedInboxNotificationIdRoute: AuthenticatedInboxNotificationIdRoute,
+  AuthenticatedInboxIndexRoute: AuthenticatedInboxIndexRoute,
+}
+
+const AuthenticatedInboxRouteWithChildren =
+  AuthenticatedInboxRoute._addFileChildren(AuthenticatedInboxRouteChildren)
+
 interface AuthenticatedSuperAdminSettingsRouteChildren {
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -1615,11 +1645,11 @@ const AuthenticatedSuperAdminSettingsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRouteWithChildren
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRouteWithChildren
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedSuperAdminSettingsRoute: typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
-  AuthenticatedInboxNotificationIdRoute: typeof AuthenticatedInboxNotificationIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
   AuthenticatedRoutinesRoutineIdRoute: typeof AuthenticatedRoutinesRoutineIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -1632,7 +1662,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
-  AuthenticatedInboxIndexRoute: typeof AuthenticatedInboxIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
   AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -1646,12 +1675,12 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRouteWithChildren,
+  AuthenticatedInboxRoute: AuthenticatedInboxRouteWithChildren,
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
   AuthenticatedSuperAdminSettingsRoute:
     AuthenticatedSuperAdminSettingsRouteWithChildren,
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
-  AuthenticatedInboxNotificationIdRoute: AuthenticatedInboxNotificationIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
   AuthenticatedRoutinesRoutineIdRoute: AuthenticatedRoutinesRoutineIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
@@ -1666,7 +1695,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
-  AuthenticatedInboxIndexRoute: AuthenticatedInboxIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
   AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,

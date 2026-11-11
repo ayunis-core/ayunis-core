@@ -11,7 +11,6 @@ import {
   Store,
   GraduationCap,
   CalendarClock,
-  Inbox,
 } from 'lucide-react';
 
 import {
@@ -21,7 +20,6 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
@@ -44,6 +42,7 @@ import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
+import { InboxButton } from './InboxButton';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
@@ -57,10 +56,6 @@ import {
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/useMobileSidebarNavigationHandler';
-import {
-  formatUnreadCount,
-  useUnreadNotificationCount,
-} from '@/features/notifications';
 
 const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
@@ -82,8 +77,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
   const canManageRoutines =
     routinesEnabled && authorization.can('manage_routines');
-  const { unreadCount } = useUnreadNotificationCount();
-  const unreadBadge = formatUnreadCount(unreadCount);
   const academyAddonActive = useIsAcademyAddonActive();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
@@ -151,6 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               </Link>
               <ReleaseNotesButton />
+              <InboxButton />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -230,25 +224,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter data-testid="sidebar-footer">
         <OnboardingCard />
         <SidebarMenu>
-          {/* Not tied to manage_routines: notifications stay readable without it. */}
-          {routinesEnabled && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname.startsWith('/inbox')}
-              >
-                <Link to="/inbox" data-testid="sidebar-footer-inbox">
-                  <Inbox />
-                  <span>{t('sidebar.inbox')}</span>
-                </Link>
-              </SidebarMenuButton>
-              {unreadBadge && (
-                <SidebarMenuBadge data-testid="sidebar-inbox-unread-count">
-                  {unreadBadge}
-                </SidebarMenuBadge>
-              )}
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

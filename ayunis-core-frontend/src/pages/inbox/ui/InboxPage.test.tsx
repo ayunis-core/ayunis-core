@@ -14,19 +14,28 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/layouts/app-layout', () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock('@/layouts/content-area-layout/ui/ContentAreaLayout', () => ({
-  default: ({
-    contentHeader,
-    contentArea,
-  }: {
-    contentHeader: ReactNode;
-    contentArea: ReactNode;
-  }) => (
-    <>
-      {contentHeader}
-      {contentArea}
-    </>
-  ),
+vi.mock(
+  '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout',
+  () => ({
+    default: ({
+      header,
+      children,
+    }: {
+      header: ReactNode;
+      children: ReactNode;
+    }) => (
+      <>
+        {header}
+        {children}
+      </>
+    ),
+  }),
+);
+vi.mock('@/widgets/empty-state', () => ({
+  EmptyState: () => <div data-testid="inbox-empty-state" />,
+}));
+vi.mock('@/pages/inbox/ui/InboxList', () => ({
+  InboxList: () => <div data-testid="inbox-list" />,
 }));
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, ...props }: { children: ReactNode }) => (
@@ -41,9 +50,7 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
     </header>
   ),
 }));
-vi.mock('@/widgets/pagination', () => ({ PaginationWidget: () => null }));
 vi.mock('@/features/notifications', () => ({
-  NotificationListItem: () => <div data-testid="notification-item" />,
   NotificationTypeIcon: () => null,
   useUnreadNotificationCount: () => ({ unreadCount: mocks.unreadCount }),
 }));
@@ -72,7 +79,7 @@ describe('InboxPage', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
     mocks.unreadCount = 0;
 
-    render(<InboxPage page={1} />);
+    render(<InboxPage page={1}>{null}</InboxPage>);
 
     expect(markAllRead().disabled).toBe(false);
   });
@@ -81,7 +88,7 @@ describe('InboxPage', () => {
     mocks.notifications = [{ id: 'n1', readAt: '2026-11-07T08:00:00.000Z' }];
     mocks.unreadCount = 0;
 
-    render(<InboxPage page={1} />);
+    render(<InboxPage page={1}>{null}</InboxPage>);
 
     expect(markAllRead().disabled).toBe(true);
   });
@@ -89,7 +96,7 @@ describe('InboxPage', () => {
   it('lists all types without a filter', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
 
-    render(<InboxPage page={1} />);
+    render(<InboxPage page={1}>{null}</InboxPage>);
 
     expect(mocks.useNotifications).toHaveBeenLastCalledWith(1, undefined);
     expect(screen.queryByTestId('inbox-type-filter')).toBeNull();
@@ -98,7 +105,11 @@ describe('InboxPage', () => {
   it('lists only the filtered type, names the filter and offers to clear it', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
 
-    render(<InboxPage page={2} type="routine_error" />);
+    render(
+      <InboxPage page={2} type="routine_error">
+        {null}
+      </InboxPage>,
+    );
 
     expect(mocks.useNotifications).toHaveBeenLastCalledWith(2, 'routine_error');
     expect(screen.getByTestId('inbox-type-filter').textContent).toContain(
@@ -110,9 +121,36 @@ describe('InboxPage', () => {
   it('keeps the filter visible when the filtered type has no notifications', () => {
     mocks.notifications = [];
 
-    render(<InboxPage page={1} type="routine" />);
+    render(
+      <InboxPage page={1} type="routine">
+        {null}
+      </InboxPage>,
+    );
 
     expect(screen.getByTestId('inbox-type-filter')).toBeTruthy();
     expect(screen.getByTestId('inbox-type-filter-clear')).toBeTruthy();
+  });
+
+  it('shows the empty inbox instead of an empty list while nothing is open', () => {
+    mocks.notifications = [];
+
+    render(<InboxPage page={1}>{null}</InboxPage>);
+
+    expect(screen.getByTestId('inbox-empty-state')).toBeTruthy();
+    expect(screen.queryByTestId('inbox-list')).toBeNull();
+  });
+
+  it('keeps an opened notification on screen when its filter lists nothing', () => {
+    mocks.notifications = [];
+
+    render(
+      <InboxPage page={1} type="routine" selectedId="n1">
+        <article data-testid="notification-detail" />
+      </InboxPage>,
+    );
+
+    expect(screen.getByTestId('notification-detail')).toBeTruthy();
+    expect(screen.getByTestId('inbox-list')).toBeTruthy();
+    expect(screen.queryByTestId('inbox-empty-state')).toBeNull();
   });
 });

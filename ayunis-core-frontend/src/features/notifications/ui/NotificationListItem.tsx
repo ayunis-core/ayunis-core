@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Check } from 'lucide-react';
 import {
   Item,
   ItemActions,
@@ -10,18 +9,12 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
 import { cn } from '@ayunis/ui/lib/cn';
 import { NotificationTypeIcon } from './NotificationTypeIcon';
+import { NotificationMarkReadButton } from './NotificationMarkReadButton';
 import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { Notification } from '@/features/notifications/model/openapi';
 import { formatNotificationTime } from '@/features/notifications/lib/format-notification-time';
-import { useMarkNotificationRead } from '@/features/notifications/api/useMarkNotificationRead';
 
 interface NotificationListItemProps {
   notification: Notification;
@@ -79,34 +72,11 @@ export function NotificationListItem({
       <span className="shrink-0 text-xs text-muted-foreground">
         {formatNotificationTime(notification.createdAt)}
       </span>
-      {isUnread && <MarkReadAction notificationId={notification.id} />}
+      {isUnread && (
+        <ItemActions className="relative z-10">
+          <NotificationMarkReadButton notificationId={notification.id} />
+        </ItemActions>
+      )}
     </Item>
-  );
-}
-
-function MarkReadAction({
-  notificationId,
-}: Readonly<{ notificationId: string }>) {
-  const { t } = useTranslation('inbox');
-  const { mutate: markRead, isPending } = useMarkNotificationRead();
-
-  return (
-    <ItemActions className="relative z-10">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={isPending}
-            onClick={() => markRead(notificationId)}
-            aria-label={t('item.markRead')}
-            data-testid="notification-mark-read"
-          >
-            <Check />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('item.markRead')}</TooltipContent>
-      </Tooltip>
-    </ItemActions>
   );
 }

@@ -16,7 +16,7 @@ import { sendMessage } from "../../src/flows/chat.flow";
 import { inboxItem } from "../../src/flows/notifications.flow";
 import { test, expect } from "../../src/fixtures/test";
 
-test("a routine's notification lands in the inbox, links to its routine chat and can be discussed in a chat started from its page", async ({
+test("a routine's notification lands in the inbox, opens next to the list, links to its routine chat and can be discussed in a chat started from its page", async ({
   api,
   page,
 }) => {
@@ -37,14 +37,18 @@ test("a routine's notification lands in the inbox, links to its routine chat and
 
   await page.goto("/chat");
   await expect(page.getByTestId("sidebar-inbox-unread-count")).toBeVisible();
-  await page.getByTestId("sidebar-footer-inbox").click();
+  await page.getByTestId("sidebar-inbox").click();
   const item = inboxItem(page, headline);
   await expect(item).toHaveAttribute("data-unread", "true");
   await item.click();
 
+  // The notification opens next to the list, which stays and shows it read.
+  await expect(page).toHaveURL(new RegExp(`/inbox/${notification.id}$`));
   await expect(page.getByTestId("notification-detail-headline")).toContainText(
     headline,
   );
+  await expect(item).toHaveAttribute("data-selected", "true");
+  await expect(item).toHaveAttribute("data-unread", "false");
   const sourceLink = page
     .getByTestId("notification-detail")
     .getByRole("link", { name: "Verordnung zur Änderung der Grundsteuer" });

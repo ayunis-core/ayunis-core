@@ -25,7 +25,8 @@ export function InboxTypeFilter({ type }: Readonly<InboxTypeFilterProps>) {
       </Badge>
       <Button variant="ghost" size="icon-xs" asChild>
         <Link
-          to="/inbox"
+          to="."
+          search={(prev) => ({ ...prev, type: undefined, page: undefined })}
           aria-label={t('filter.clear')}
           title={t('filter.clear')}
           data-testid="inbox-type-filter-clear"

@@ -23,7 +23,9 @@
   "detail": {
     "chatPlaceholder": "Was möchten Sie zu dieser Benachrichtigung wissen?",
     "openRoutineChat": "Routine-Chat öffnen",
-    "openRoutine": "Routine öffnen"
+    "openRoutine": "Routine öffnen",
+    "noSelection": "Wählen Sie eine Benachrichtigung aus.",
+    "back": "Posteingang"
   },
   "toast": {
     "notFound": "Die Benachrichtigung wurde nicht gefunden.",

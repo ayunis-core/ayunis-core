@@ -23,7 +23,9 @@
   "detail": {
     "chatPlaceholder": "What would you like to know about this notification?",
     "openRoutineChat": "Open routine chat",
-    "openRoutine": "Open routine"
+    "openRoutine": "Open routine",
+    "noSelection": "Select a notification to read it.",
+    "back": "Inbox"
   },
   "toast": {
     "notFound": "The notification was not found.",

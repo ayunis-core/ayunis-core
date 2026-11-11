@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/pages/inbox', () => ({
   InboxPage: () => null,
+  InboxNoSelection: () => null,
   notificationsPageParams: (page: number, type?: string) => ({ page, type }),
 }));
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
@@ -21,17 +22,22 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   ],
 }));
 
-const { Route } = await import('./inbox.index');
+const { Route } = await import('./inbox');
 
-async function runLoader(type?: string): Promise<unknown> {
+// The toggle checks guard the opened notification too, so they run in
+// beforeLoad, before any child route loads.
+async function runRoute(type?: string): Promise<unknown> {
+  const queryClient = new QueryClient();
+  const beforeLoad = Route.options.beforeLoad as (args: {
+    search: { type?: string };
+    context: { queryClient: QueryClient };
+  }) => Promise<unknown>;
   const loader = Route.options.loader as (args: {
     deps: { page?: number; type?: string };
     context: { queryClient: QueryClient };
   }) => Promise<unknown>;
-  return loader({
-    deps: { type },
-    context: { queryClient: new QueryClient() },
-  });
+  await beforeLoad({ search: { type }, context: { queryClient } });
+  return loader({ deps: { type }, context: { queryClient } });
 }
 
 async function redirectOf(promise: Promise<unknown>) {
@@ -56,7 +62,7 @@ describe('inbox route', () => {
       releaseNotesEnabled: true,
     });
 
-    await expect(runLoader('release_note')).resolves.toEqual({
+    await expect(runRoute('release_note')).resolves.toEqual({
       page: 1,
       type: 'release_note',
     });
@@ -68,7 +74,7 @@ describe('inbox route', () => {
       releaseNotesEnabled: false,
     });
 
-    await expect(redirectOf(runLoader('release_note'))).resolves.toMatchObject({
+    await expect(redirectOf(runRoute('release_note'))).resolves.toMatchObject({
       to: '/inbox',
     });
   });
@@ -79,7 +85,7 @@ describe('inbox route', () => {
       releaseNotesEnabled: false,
     });
 
-    await expect(runLoader('routine_error')).resolves.toEqual({
+    await expect(runRoute('routine_error')).resolves.toEqual({
       page: 1,
       type: 'routine_error',
     });
@@ -91,7 +97,7 @@ describe('inbox route', () => {
       releaseNotesEnabled: false,
     });
 
-    await expect(redirectOf(runLoader())).resolves.toMatchObject({
+    await expect(redirectOf(runRoute())).resolves.toMatchObject({
       to: '/chat',
     });
   });

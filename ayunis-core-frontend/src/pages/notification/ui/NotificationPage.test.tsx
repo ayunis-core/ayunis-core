@@ -23,15 +23,6 @@ vi.mock('@tanstack/react-router', () => ({
     search?: unknown;
   }) => <a {...props}>{children}</a>,
 }));
-vi.mock('@/layouts/app-layout', () => ({
-  default: ({ children }: { children: ReactNode }) => children,
-}));
-vi.mock('@/layouts/content-area-layout/ui/ContentAreaLayout', () => ({
-  default: ({ contentArea }: { contentArea: ReactNode }) => contentArea,
-}));
-vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
-  default: () => null,
-}));
 vi.mock('@/widgets/markdown', () => ({
   Markdown: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
