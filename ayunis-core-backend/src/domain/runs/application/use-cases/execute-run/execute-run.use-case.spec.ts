@@ -19,6 +19,7 @@ import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
@@ -154,6 +155,7 @@ interface HarnessOptions {
   contextWindowSize?: number;
   modelName?: string;
   modelConsumesCredits?: boolean;
+  mode?: ModelMode | null;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -172,6 +174,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const thread = {
     id: threadId,
     model: permitted,
+    mode: overrides.mode ?? null,
     messages: [],
     isAnonymous: overrides.anonymous ?? false,
     workspaceId: overrides.workspaceId,
@@ -704,9 +707,28 @@ describe('ExecuteRunUseCase', () => {
       expect.any(Number),
       expect.any(String),
       'agent_runtime',
+      null,
     );
     expect(collectUsage).toHaveBeenCalledTimes(1);
   });
+
+  it.each([ModelMode.AUTO, ModelMode.MAX, null])(
+    'meters model calls with the thread mode %p so usage can be split by mode',
+    async (mode) => {
+      const { useCase, collectUsage } = buildHarness({ mode });
+
+      await drain(await useCase.execute(userCommand()));
+
+      expect(collectUsage).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(String),
+        'agent_runtime',
+        mode,
+      );
+    },
+  );
 
   it('runs critical usage before best-effort observability and turn persistence', async () => {
     const { useCase, collectUsage, emitAsync, save } = buildHarness({
@@ -1181,6 +1203,7 @@ describe('ExecuteRunUseCase', () => {
       2,
       expect.any(String),
       'agent_runtime',
+      null,
     );
     expect(ensureModelCallAllowed).toHaveBeenCalledWith(
       { userId, orgId },
@@ -1298,6 +1321,7 @@ describe('ExecuteRunUseCase', () => {
       0,
       expect.any(String),
       'agent_runtime',
+      null,
     );
     expect(cleanup).toHaveBeenCalledWith(threadId, expect.any(Set));
   });
@@ -1321,6 +1345,7 @@ describe('ExecuteRunUseCase', () => {
       5,
       expect.any(String),
       'agent_runtime',
+      null,
     );
   });
 

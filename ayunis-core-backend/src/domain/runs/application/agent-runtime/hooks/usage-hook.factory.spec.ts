@@ -103,7 +103,7 @@ describe('UsageHookFactory', () => {
               outcomes.push(ctx.outcome.type);
             },
           },
-          factory.create({ resolveModel }),
+          factory.create({ mode: null, resolveModel }),
         ],
         retry: { maxRetries: 1 },
       }),
@@ -120,6 +120,7 @@ describe('UsageHookFactory', () => {
       0,
       expect.any(String),
       'agent_runtime',
+      null,
     );
     expect(collectCritical).toHaveBeenNthCalledWith(
       2,
@@ -128,6 +129,7 @@ describe('UsageHookFactory', () => {
       6,
       expect.any(String),
       'agent_runtime',
+      null,
     );
     expect(collectCritical.mock.calls.map((call) => call[3])).toEqual(
       modelCallIds,
@@ -148,7 +150,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
       }),
     );
 
@@ -158,6 +162,7 @@ describe('UsageHookFactory', () => {
       0,
       expect.any(String),
       'agent_runtime',
+      null,
     );
   });
 
@@ -173,7 +178,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 2 },
       }),
     );
@@ -213,7 +220,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 2 },
       }),
     );
@@ -248,7 +257,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         signal: controller.signal,
       }),
     );
@@ -306,7 +317,7 @@ describe('UsageHookFactory', () => {
               outcomes.push(ctx.outcome.type);
             },
           },
-          factory.create({ resolveModel: () => catalogModel }),
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
         ],
       })) {
         if (event.type === 'text_delta') break;
@@ -351,7 +362,7 @@ describe('UsageHookFactory', () => {
       instructions: 'Answer municipal service questions.',
       model: provider,
       messages,
-      hooks: [factory.create({ resolveModel: () => catalogModel })],
+      hooks: [factory.create({ mode: null, resolveModel: () => catalogModel })],
     })) {
       if (event.type === 'text_delta') break;
     }
@@ -362,6 +373,7 @@ describe('UsageHookFactory', () => {
       0,
       expect.any(String),
       'agent_runtime',
+      null,
     );
   });
 
@@ -393,7 +405,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 2 },
       }),
     );
@@ -434,7 +448,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 1 },
       }),
     );
@@ -451,6 +467,7 @@ describe('UsageHookFactory', () => {
       6,
       expect.any(String),
       'agent_runtime',
+      null,
     );
   });
 
@@ -472,7 +489,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 0 },
       }),
     );
@@ -509,7 +528,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 2 },
       }),
     );
@@ -537,7 +558,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => freeCatalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => freeCatalogModel }),
+        ],
       }),
     );
 
@@ -570,7 +593,9 @@ describe('UsageHookFactory', () => {
         instructions: 'Answer municipal service questions.',
         model: provider,
         messages,
-        hooks: [factory.create({ resolveModel: () => catalogModel })],
+        hooks: [
+          factory.create({ mode: null, resolveModel: () => catalogModel }),
+        ],
         retry: { maxRetries: 1 },
       }),
     );
