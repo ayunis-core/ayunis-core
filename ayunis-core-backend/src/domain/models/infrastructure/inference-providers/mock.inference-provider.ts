@@ -5,6 +5,7 @@ import { mockCodeExecutionResponse } from './mock-code-execution-response';
 import { mockToolPreparationResponse } from './mock-tool-preparation-response';
 import { mockFinishRoutineResponse } from './mock-finish-routine-response';
 import { mockRoutineWidgetResponse } from './mock-routine-widget-response';
+import { mockMcpToolResponse } from './mock-mcp-tool-response';
 import {
   mockNotifyRoutineResponse,
   mockQuoteNotificationResponse,
@@ -27,8 +28,9 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * message select scripted responses (chat naming, malformed tool calls,
  * slow tool preparation, paginated research, source citations,
  * inline-document echo, the headline of the notification a chat is
- * about, routine widget proposals); a routine task's trigger ends the
- * routine run, optionally after sending a notification.
+ * about, routine widget proposals, a call to the E2E MCP server's tool);
+ * a routine task's trigger ends the routine run, optionally after sending
+ * a notification.
  *
  * The text is emitted as several delta chunks with a small delay between
  * them. An instant single-chunk response completes faster than any real
@@ -96,7 +98,8 @@ function mockToolResponse(
     mockNotifyRoutineResponse(request) ??
     mockFinishRoutineResponse(request) ??
     mockQuoteNotificationResponse(request, userText) ??
-    mockRoutineWidgetResponse(request, userText)
+    mockRoutineWidgetResponse(request, userText) ??
+    mockMcpToolResponse(request, userText)
   );
 }
 

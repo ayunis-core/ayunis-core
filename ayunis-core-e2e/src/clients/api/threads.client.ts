@@ -20,6 +20,18 @@ export function getThread(
   return generatedApi.threadsControllerFindOne(threadId, { api });
 }
 
+export async function attachMcpIntegration(
+  api: APIRequestContext,
+  threadId: string,
+  integrationId: string,
+): Promise<void> {
+  await generatedApi.threadMcpIntegrationsControllerAddMcpIntegration(
+    threadId,
+    integrationId,
+    { api },
+  );
+}
+
 export function sendThreadMessage(
   api: APIRequestContext,
   threadId: string,
