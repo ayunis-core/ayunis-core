@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-import { InboxPage, notificationsPageParams } from '@/pages/inbox';
+import { InboxCasesView, notificationsPageParams } from '@/pages/inbox';
 import {
   getNotificationsControllerFindAllQueryKey,
   notificationsControllerFindAll,
@@ -38,6 +38,5 @@ export const Route = createFileRoute('/_authenticated/inbox/')({
 });
 
 function RouteComponent() {
-  const { page, type } = Route.useLoaderData();
-  return <InboxPage page={page} type={type} />;
+  return <InboxCasesView />;
 }
