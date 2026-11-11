@@ -47,6 +47,8 @@ export function aRefreshToken(
 export function createMockRefreshTokensRepository(): jest.Mocked<RefreshTokensRepository> {
   return {
     insert: jest.fn().mockResolvedValue(undefined),
+    insertForkIfSourceValid: jest.fn().mockResolvedValue(true),
+    insertSuccessorWithinGrace: jest.fn().mockResolvedValue(true),
     findByTokenHash: jest.fn().mockResolvedValue(null),
     markUsedAndInsertSuccessor: jest.fn().mockResolvedValue(true),
     wasUsedWithinGrace: jest.fn().mockResolvedValue(false),

@@ -42,7 +42,18 @@ export class ForkSessionUseCase {
           : undefined,
       client,
     });
-    await this.refreshTokensRepository.insert(token);
+    const inserted = await this.refreshTokensRepository.insertForkIfSourceValid(
+      current.id,
+      token,
+      this.graceSeconds(),
+    );
+    if (!inserted) {
+      this.logger.warn(
+        { userId: current.userId, familyId: current.familyId },
+        'Refresh token reuse detected (fork raced session revocation)',
+      );
+      throw new RefreshTokenReuseError();
+    }
 
     return {
       userId: current.userId,
@@ -58,10 +69,7 @@ export class ForkSessionUseCase {
     if (!current.usedAt) return;
     const withinGrace = await this.refreshTokensRepository.wasUsedWithinGrace(
       current.id,
-      this.configService.get<number>(
-        'auth.session.refreshTokenGraceSeconds',
-        60,
-      ),
+      this.graceSeconds(),
     );
     if (withinGrace) return;
     this.logger.warn(
@@ -69,5 +77,12 @@ export class ForkSessionUseCase {
       'Refresh token reuse detected (fork of a rotated token)',
     );
     throw new RefreshTokenReuseError();
+  }
+
+  private graceSeconds(): number {
+    return this.configService.get<number>(
+      'auth.session.refreshTokenGraceSeconds',
+      60,
+    );
   }
 }

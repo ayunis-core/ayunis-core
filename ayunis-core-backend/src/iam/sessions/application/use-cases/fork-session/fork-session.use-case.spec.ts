@@ -60,8 +60,10 @@ describe(ForkSessionUseCase.name, () => {
     expect(factory.create).toHaveBeenCalledWith(
       expect.objectContaining({ familyId: forkFamilyId, client: 'outlook' }),
     );
-    expect(repository.insert).toHaveBeenCalledWith(
+    expect(repository.insertForkIfSourceValid).toHaveBeenCalledWith(
+      current.id,
       expect.objectContaining({ id: 'fork-id' }),
+      60,
     );
     expect(repository.markUsedAndInsertSuccessor).not.toHaveBeenCalled();
     expect(repository.revokeFamily).not.toHaveBeenCalled();
@@ -98,7 +100,7 @@ describe(ForkSessionUseCase.name, () => {
         ),
       ),
     ).resolves.toBeDefined();
-    expect(repository.insert).toHaveBeenCalledTimes(1);
+    expect(repository.insertForkIfSourceValid).toHaveBeenCalledTimes(1);
   });
 
   it('reports a token rotated before the grace window as reuse', async () => {
@@ -112,6 +114,16 @@ describe(ForkSessionUseCase.name, () => {
         ),
       ),
     ).rejects.toBeInstanceOf(RefreshTokenReuseError);
-    expect(repository.insert).not.toHaveBeenCalled();
+    expect(repository.insertForkIfSourceValid).not.toHaveBeenCalled();
+  });
+
+  it('reports revocation that wins the fork race as reuse', async () => {
+    repository.insertForkIfSourceValid.mockResolvedValue(false);
+
+    await expect(
+      useCase.execute(
+        new ForkSessionCommand(aRefreshToken({ usedAt: null }), 'outlook'),
+      ),
+    ).rejects.toBeInstanceOf(RefreshTokenReuseError);
   });
 });

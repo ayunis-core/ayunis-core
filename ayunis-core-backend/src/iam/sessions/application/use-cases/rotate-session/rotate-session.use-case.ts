@@ -65,12 +65,13 @@ export class RotateSessionUseCase {
     // Lost the atomic rotation: either a concurrent request already rotated
     // this token (benign race, within grace) or it is a post-grace replay
     // (theft).
-    const withinGrace = await this.refreshTokensRepository.wasUsedWithinGrace(
-      current.id,
-      this.graceSeconds(),
-    );
-    if (withinGrace) {
-      await this.refreshTokensRepository.insert(successor);
+    const insertedWithinGrace =
+      await this.refreshTokensRepository.insertSuccessorWithinGrace(
+        current.id,
+        successor,
+        this.graceSeconds(),
+      );
+    if (insertedWithinGrace) {
       return {
         userId: current.userId,
         refreshToken: plaintext,
