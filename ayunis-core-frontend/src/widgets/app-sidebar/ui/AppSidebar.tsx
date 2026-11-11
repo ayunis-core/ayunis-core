@@ -65,6 +65,7 @@ import {
 const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
   '/routines': 'sidebar-navigation-routines',
+  '/inbox': 'sidebar-footer-inbox',
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -105,6 +106,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       // certificate. Existing chats stay reachable.
       disabled: isAcademyGated,
     },
+    // Not tied to manage_routines: notifications stay readable without it.
+    ...(routinesEnabled
+      ? [
+          {
+            title: t('sidebar.inbox'),
+            url: '/inbox',
+            icon: Inbox,
+            badge: unreadBadge,
+          },
+        ]
+      : []),
     {
       title: t('sidebar.workspaces'),
       url: '/workspaces',
@@ -180,6 +192,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
+                {'badge' in item && item.badge && (
+                  <SidebarMenuBadge data-testid="sidebar-inbox-unread-count">
+                    {item.badge}
+                  </SidebarMenuBadge>
+                )}
               </SidebarMenuItem>
             ))}
             {marketplace.enabled && marketplace.url && (
@@ -230,25 +247,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter data-testid="sidebar-footer">
         <OnboardingCard />
         <SidebarMenu>
-          {/* Not tied to manage_routines: notifications stay readable without it. */}
-          {routinesEnabled && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname.startsWith('/inbox')}
-              >
-                <Link to="/inbox" data-testid="sidebar-footer-inbox">
-                  <Inbox />
-                  <span>{t('sidebar.inbox')}</span>
-                </Link>
-              </SidebarMenuButton>
-              {unreadBadge && (
-                <SidebarMenuBadge data-testid="sidebar-inbox-unread-count">
-                  {unreadBadge}
-                </SidebarMenuBadge>
-              )}
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
