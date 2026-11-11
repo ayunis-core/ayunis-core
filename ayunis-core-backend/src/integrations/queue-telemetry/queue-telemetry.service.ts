@@ -3,7 +3,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { Queue } from 'bullmq';
-import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
+import {
+  DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
+} from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
@@ -20,6 +23,8 @@ export class QueueTelemetryService {
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
     @InjectQueue(ROUTINE_EXECUTION_QUEUE) private readonly routines: Queue,
+    @InjectQueue(LARGE_DOCUMENT_PROCESSING_QUEUE)
+    private readonly largeDocuments: Queue,
   ) {}
 
   @Interval(30_000)
@@ -30,6 +35,7 @@ export class QueueTelemetryService {
     try {
       for (const queue of [
         this.documents,
+        this.largeDocuments,
         this.dataSources,
         this.urls,
         this.routines,

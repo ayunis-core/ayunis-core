@@ -69,15 +69,16 @@ test('queue inspection requires authentication and is available to a super admin
 
     expect(dashboardPage.url()).toBe(queueDashboardUrl);
     await expect(dashboardPage).toHaveTitle('Ayunis Core Queues');
-    await expect(
-      dashboardPage.getByRole('link', { name: 'document-processing' }),
-    ).toBeVisible();
-    await expect(
-      dashboardPage.getByRole('link', { name: 'data-source-processing' }),
-    ).toBeVisible();
-    await expect(
-      dashboardPage.getByRole('link', { name: 'url-crawl' }),
-    ).toBeVisible();
+    for (const queue of [
+      'document-processing',
+      'large-document-processing',
+      'data-source-processing',
+      'url-crawl',
+    ]) {
+      await expect(
+        dashboardPage.getByRole('link', { name: queue, exact: true }),
+      ).toBeVisible();
+    }
   } finally {
     await Promise.all([
       publicContext.close(),

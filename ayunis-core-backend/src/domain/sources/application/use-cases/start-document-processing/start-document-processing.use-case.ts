@@ -134,6 +134,7 @@ export class StartDocumentProcessingUseCase {
           minioPath,
           fileName: command.fileName,
           fileType: command.fileType,
+          expectedSize: command.fileData.length,
         }),
       );
     } catch (error) {

@@ -1,6 +1,9 @@
 import { BullModule } from '@nestjs/bullmq';
 import { OrgProcessingDeletionListener } from 'src/domain/sources/infrastructure/queue/org-deletion-requested.listener';
-import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
+import {
+  DOCUMENT_PROCESSING_QUEUE,
+  LARGE_DOCUMENT_PROCESSING_QUEUE,
+} from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { forwardRef, Module } from '@nestjs/common';
@@ -73,6 +76,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     BullModule.registerQueue(
       ...[
         DOCUMENT_PROCESSING_QUEUE,
+        LARGE_DOCUMENT_PROCESSING_QUEUE,
         DATA_SOURCE_PROCESSING_QUEUE,
         URL_CRAWL_QUEUE,
       ].map((name) => ({ name })),
