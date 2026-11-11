@@ -23,6 +23,7 @@ import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { WebhookEventType } from 'src/integrations/webhooks/domain/value-objects/webhook-event-type.enum';
 import { User } from 'src/iam/users/domain/user.entity';
 import { Org } from 'src/iam/orgs/domain/org.entity';
@@ -669,6 +670,32 @@ describe('WebhookDispatchListener', () => {
       expect(
         (command.event.data as UsageCollectedWebhookPayload).apiKeyId,
       ).toBeUndefined();
+    });
+
+    it.each([
+      [ModelMode.AUTO, 'auto'],
+      [ModelMode.MAX, 'max'],
+      [null, null],
+    ])(
+      'should send the run mode %p so Connect can tell auto, max and user-picked models apart',
+      async (mode, expected) => {
+        await listener.handleUsageCollected(
+          new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini', mode),
+        );
+
+        const command = sendWebhookUseCase.execute.mock.calls[0][0];
+        const data = command.event.data as UsageCollectedWebhookPayload;
+        expect(data).toHaveProperty('mode', expected);
+      },
+    );
+
+    it('should omit mode when no chat model was selected', async () => {
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-image-1'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.data).not.toHaveProperty('mode');
     });
 
     it('should enrich the payload with user email and name', async () => {

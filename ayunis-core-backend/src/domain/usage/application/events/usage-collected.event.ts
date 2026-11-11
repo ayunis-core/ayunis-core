@@ -1,4 +1,5 @@
-import type { Usage } from '../../domain/usage.entity';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import type { Usage } from 'src/domain/usage/domain/usage.entity';
 
 /**
  * Domain event emitted by {@link CollectUsageUseCase} after a {@link Usage}
@@ -13,5 +14,6 @@ export class UsageCollectedEvent {
   constructor(
     public readonly usage: Usage,
     public readonly modelName: string,
+    public readonly mode?: ModelMode | null,
   ) {}
 }

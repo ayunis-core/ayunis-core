@@ -10,6 +10,7 @@ import {
   UnexpectedUsageError,
 } from 'src/domain/usage/application/usage.errors';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
@@ -592,6 +593,7 @@ describe('CollectUsageUseCase', () => {
         inputTokens: 100,
         outputTokens: 50,
         requestId,
+        mode: ModelMode.MAX,
       });
 
       await useCase.execute(command);
@@ -601,6 +603,7 @@ describe('CollectUsageUseCase', () => {
       expect(eventName).toBe(UsageCollectedEvent.EVENT_NAME);
       expect(payload).toBeInstanceOf(UsageCollectedEvent);
       expect((payload as UsageCollectedEvent).modelName).toBe('gpt-4o-mini');
+      expect((payload as UsageCollectedEvent).mode).toBe(ModelMode.MAX);
       expect((payload as UsageCollectedEvent).usage.userId).toBe(userId);
       expect((payload as UsageCollectedEvent).usage.organizationId).toBe(orgId);
       expect((payload as UsageCollectedEvent).usage.totalTokens).toBe(150);
