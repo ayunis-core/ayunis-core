@@ -8,6 +8,7 @@ import {
   knowledgeBasesControllerUpdate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
@@ -45,7 +46,12 @@ function useCreateKnowledgeBase(workspaceId: string) {
         description: data.description ?? '',
       }),
     retry: 0,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      trackOpenPanelEvent('knowledge_base_created', {
+        workspace_context: true,
+      });
+      return invalidate();
+    },
     onError: (error) => showMutationError(error, 'create.error'),
   });
 }

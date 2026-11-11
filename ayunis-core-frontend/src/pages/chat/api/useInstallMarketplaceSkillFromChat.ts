@@ -5,6 +5,7 @@ import {
   skillsControllerInstallFromMarketplace,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { invalidateChatSkillQueries } from './invalidateChatSkillQueries';
 
@@ -25,6 +26,7 @@ export function useInstallMarketplaceSkillFromChat({
     mutationFn: ({ identifier }: InstallMarketplaceSkillFromChatInput) =>
       skillsControllerInstallFromMarketplace({ identifier }),
     onSuccess: (_skill, { identifier }) => {
+      trackOpenPanelEvent('skill_installed', { marketplace_slug: identifier });
       onInstalled();
       showSuccess(t('chat.tools.install_marketplace_skill.success'));
       invalidateChatSkillQueries(queryClient, { threadId });

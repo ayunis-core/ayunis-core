@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreatePredefinedIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 
 export function useCreatePredefinedIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -14,7 +15,8 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
 
   const mutation = useMcpIntegrationsControllerCreatePredefined({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (integration) => {
+        trackProbedIntegrationConnection(integration);
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });

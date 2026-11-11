@@ -9,6 +9,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { WorkspaceResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { WorkspaceFormData } from '@/widgets/workspace-form-dialog';
@@ -24,6 +25,7 @@ export function useCreateWorkspace(
   const mutation = useWorkspacesControllerCreate({
     mutation: {
       onSuccess: (workspace) => {
+        trackOpenPanelEvent('workspace_created');
         showSuccess(t('toast.createSuccess'));
         onSuccess?.(workspace);
       },

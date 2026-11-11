@@ -6,6 +6,7 @@ import {
   getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
@@ -16,7 +17,10 @@ export function useInstallFromMarketplace() {
 
   return useSkillsControllerInstallFromMarketplace({
     mutation: {
-      onSuccess: (skill) => {
+      onSuccess: (skill, { data }) => {
+        trackOpenPanelEvent('skill_installed', {
+          marketplace_slug: data.identifier,
+        });
         showSuccess(t('success'));
         void queryClient.invalidateQueries({
           queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),

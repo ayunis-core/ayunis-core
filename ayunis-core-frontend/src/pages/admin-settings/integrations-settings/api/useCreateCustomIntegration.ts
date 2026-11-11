@@ -5,9 +5,10 @@ import {
   useMcpIntegrationsControllerCreateCustom,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateCustomIntegrationFormData } from '../model/types';
+import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
 import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 import type { UseFormReturn } from 'react-hook-form';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 
@@ -20,7 +21,8 @@ export function useCreateCustomIntegration(
 
   const mutation = useMcpIntegrationsControllerCreateCustom({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (integration) => {
+        trackProbedIntegrationConnection(integration);
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });

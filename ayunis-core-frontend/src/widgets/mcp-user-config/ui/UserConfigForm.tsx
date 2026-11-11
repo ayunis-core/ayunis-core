@@ -4,13 +4,17 @@ import { DialogFooter } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
-import { useGetUserConfig, useSetUserConfig } from '../api/useUserConfig';
+import {
+  useGetUserConfig,
+  useSetUserConfig,
+} from '@/widgets/mcp-user-config/api/useUserConfig';
 import type {
   McpIntegrationResponseDto,
   MarketplaceIntegrationConfigFieldDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 import { isUserEditableField } from '@/shared/lib/config-field';
+import { trackUserCredentialsConnection } from '@/shared/lib/openpanel-integrations';
 
 /**
  * Per-user credential form for a schema-configured MCP integration. Renders the
@@ -29,6 +33,7 @@ export function UserConfigForm({
   const { t } = useTranslation('mcp-user-config');
   const { userConfig, isLoadingUserConfig } = useGetUserConfig(integration.id);
   const { setUserConfig, isSaving } = useSetUserConfig(integration.id, () => {
+    trackUserCredentialsConnection(integration);
     onClose();
     onSaved?.();
   });

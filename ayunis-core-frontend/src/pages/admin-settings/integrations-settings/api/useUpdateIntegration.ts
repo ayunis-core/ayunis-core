@@ -8,6 +8,7 @@ import {
 import type { UpdateIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
+import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 
 export function useUpdateIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -22,12 +23,12 @@ export function useUpdateIntegration(onSuccess?: () => void) {
         const configSchema = integration.configSchema as Parameters<
           typeof hasOAuthConfiguration
         >[0];
-        if (
+        const probedConnection =
           hasConnectionChanges(variables.data) &&
           !hasOAuthConfiguration(configSchema) &&
-          integration.userAuthorizationRequired !== true &&
-          integration.connectionStatus === 'error'
-        ) {
+          integration.userAuthorizationRequired !== true;
+        if (probedConnection) trackProbedIntegrationConnection(integration);
+        if (probedConnection && integration.connectionStatus === 'error') {
           showError(
             integration.lastConnectionError
               ? t('integrations.updateIntegration.connectionFailed', {
