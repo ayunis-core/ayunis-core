@@ -128,6 +128,31 @@ describe('language model mutation validation', () => {
     expect(mocks.showError).toHaveBeenCalledWith('models.alreadyExists');
   });
 
+  it.each([
+    ['create', useCreateLanguageModel, () => mocks.createMutationOptions],
+    ['update', useUpdateLanguageModel, () => mocks.updateMutationOptions],
+  ])(
+    'shows a taken alias on the alias field on %s instead of a toast',
+    (_, useMutationHook, mutationOptions) => {
+      const { form, setError } = formWithSetError();
+      renderHook(() => useMutationHook(form));
+
+      const error = new AxiosError('failed', undefined, undefined, undefined, {
+        status: 409,
+        statusText: 'Conflict',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+        data: { code: 'MODEL_ALIAS_ALREADY_EXISTS' },
+      });
+      act(() => mutationOptions()?.onError(error));
+
+      expect(setError).toHaveBeenCalledWith('alias', {
+        message: 'models.catalog.validation.alias.taken',
+      });
+      expect(mocks.showError).not.toHaveBeenCalled();
+    },
+  );
+
   it('uses the generic validation toast when field errors are absent', () => {
     const { form, setError } = formWithSetError();
     renderHook(() => useUpdateLanguageModel(form));

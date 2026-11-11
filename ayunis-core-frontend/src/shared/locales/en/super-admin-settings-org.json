@@ -635,6 +635,8 @@
         "createImageGenerationTitle": "Create image generation model",
         "editImageGenerationTitle": "Edit image generation model",
         "name": "Name",
+        "alias": "Alias",
+        "aliasPlaceholder": "e.g. gpt-4",
         "provider": "Provider",
         "providerPlaceholder": "Select a provider",
         "displayName": "Display name",
@@ -666,6 +668,11 @@
         "imageGenerationDisplayNamePlaceholder": "e.g. GPT Image 1"
       },
       "validation": {
+        "alias": {
+          "isNotEmpty": "Alias is required",
+          "taken": "This alias is already used by another model",
+          "invalid": "Enter a valid alias"
+        },
         "contextWindowSize": {
           "required": "Context window size is required",
           "isInt": "Context window size must be a whole number",

@@ -71,6 +71,7 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
       model: new LanguageModel({
         id: '123e4567-e89b-12d3-a456-426614174002',
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         displayName: 'GPT-4o',
         provider: ModelProvider.OPENAI,
         canStream: true,
@@ -144,6 +145,7 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
           : null,
       model: new LanguageModel({
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         displayName: 'GPT-4o',
         provider: ModelProvider.OPENAI,
         canStream: true,

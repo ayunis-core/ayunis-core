@@ -4186,7 +4186,7 @@
             "description": "User not authenticated or not authorized as super admin"
           },
           "409": {
-            "description": "Model already exists"
+            "description": "Model or alias already exists"
           },
           "500": {
             "description": "Internal server error"
@@ -4242,6 +4242,9 @@
           },
           "404": {
             "description": "Model not found"
+          },
+          "409": {
+            "description": "Model or alias already exists"
           },
           "500": {
             "description": "Internal server error"
@@ -16589,6 +16592,10 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
           },
+          "alias": {
+            "type": "string",
+            "description": "Model ID for the OpenAI-compatible API. Undefined for non-language models."
+          },
           "contextWindowSize": {
             "type": "integer",
             "description": "Maximum context window size in tokens. Undefined for non-language models.",
@@ -17040,6 +17047,11 @@
             "description": "The name of the model",
             "example": "gpt-4"
           },
+          "alias": {
+            "type": "string",
+            "description": "Stable public model ID for the OpenAI-compatible API, unique across the catalog",
+            "example": "gpt-4"
+          },
           "provider": {
             "type": "string",
             "enum": [
@@ -17141,6 +17153,7 @@
         "required": [
           "id",
           "name",
+          "alias",
           "provider",
           "displayName",
           "type",
@@ -17436,6 +17449,11 @@
             "description": "The name of the model",
             "example": "gpt-4"
           },
+          "alias": {
+            "type": "string",
+            "description": "Stable public model ID for the OpenAI-compatible API, unique across the catalog. Keep it when swapping the provider model for a newer version; changing it breaks API clients that use the old alias.",
+            "example": "gpt-4"
+          },
           "provider": {
             "type": "string",
             "description": "The provider of the model",
@@ -17525,6 +17543,7 @@
         },
         "required": [
           "name",
+          "alias",
           "provider",
           "displayName",
           "canStream",
@@ -17541,6 +17560,11 @@
           "name": {
             "type": "string",
             "description": "The name of the model",
+            "example": "gpt-4"
+          },
+          "alias": {
+            "type": "string",
+            "description": "Stable public model ID for the OpenAI-compatible API, unique across the catalog. Keep it when swapping the provider model for a newer version; changing it breaks API clients that use the old alias.",
             "example": "gpt-4"
           },
           "provider": {
@@ -17631,6 +17655,7 @@
         },
         "required": [
           "name",
+          "alias",
           "provider",
           "displayName",
           "canStream",

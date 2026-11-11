@@ -51,6 +51,10 @@ export function useUpdateLanguageModel(
             const { code, errors } = extractErrorData(error);
             if (code === 'VALIDATION_ERROR' && errors?.length) {
               setValidationErrors(form, errors, t, 'models.catalog.validation');
+            } else if (code === 'MODEL_ALIAS_ALREADY_EXISTS') {
+              form.setError('alias', {
+                message: t('models.catalog.validation.alias.taken'),
+              });
             } else {
               showError(
                 t(resolveModelErrorToastKey(code, 'models.updateError')),

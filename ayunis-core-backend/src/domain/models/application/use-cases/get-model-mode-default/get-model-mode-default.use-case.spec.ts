@@ -17,6 +17,7 @@ import { GetModelModeDefaultUseCase } from './get-model-mode-default.use-case';
 const orgId = randomUUID();
 const large = new LanguageModel({
   name: 'mistral-large',
+  alias: 'mistral-large',
   provider: ModelProvider.MISTRAL,
   displayName: 'Mistral Large',
   canStream: true,

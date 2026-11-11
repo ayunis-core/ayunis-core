@@ -150,6 +150,7 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
     const nonEmbedding = new PermittedLanguageModel({
       model: new LanguageModel({
         name: 'gpt-4',
+        alias: 'gpt-4',
         provider: ModelProvider.OPENAI,
         displayName: 'GPT-4',
         canStream: true,

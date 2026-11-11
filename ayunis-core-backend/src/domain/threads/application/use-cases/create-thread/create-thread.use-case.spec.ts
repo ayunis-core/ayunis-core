@@ -109,6 +109,7 @@ describe('CreateThreadUseCase', () => {
       const now = new Date();
       const languageModel = new LanguageModel({
         name: 'Test Model',
+        alias: 'Test Model',
         provider: ModelProvider.OPENAI,
         displayName: 'Test Model',
         canStream: true,
@@ -202,6 +203,7 @@ describe('CreateThreadUseCase', () => {
       const now = new Date();
       const languageModel = new LanguageModel({
         name: 'Test Model',
+        alias: 'Test Model',
         provider: ModelProvider.OPENAI,
         displayName: 'Test Model',
         canStream: true,
@@ -255,6 +257,7 @@ describe('CreateThreadUseCase', () => {
       const now = new Date();
       const languageModel = new LanguageModel({
         name: 'Test Model',
+        alias: 'Test Model',
         provider: ModelProvider.OPENAI,
         displayName: 'Test Model',
         canStream: true,
@@ -302,6 +305,7 @@ describe('CreateThreadUseCase', () => {
       new PermittedLanguageModel({
         model: new LanguageModel({
           name: 'mistral-large',
+          alias: 'mistral-large',
           provider: ModelProvider.MISTRAL,
           displayName: 'Mistral Large',
           canStream: true,
@@ -390,6 +394,7 @@ describe('CreateThreadUseCase', () => {
       id: mockModelId,
       model: new LanguageModel({
         name: 'mistral-large',
+        alias: 'mistral-large',
         provider: ModelProvider.MISTRAL,
         displayName: 'Mistral Large',
         canStream: true,

@@ -7,8 +7,8 @@ import {
 import { LANGUAGE_MODEL_KEYS } from 'src/db/fixtures/minimal.fixture';
 import { GlobalSeeder } from './base-seeder';
 import { log } from 'src/db/scripts/utils/seed-log';
-import type { SeedState } from '../seed-state';
-import type { LanguageModelKey } from '../seed-types';
+import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
+import type { LanguageModelKey } from 'src/db/scripts/seed-minimal/seed-types';
 
 type LanguageModelFixture = SeedState['fixture'][LanguageModelKey];
 
@@ -48,6 +48,7 @@ export class ModelSeeder extends GlobalSeeder {
       () => ({
         id: randomUUID(),
         name,
+        alias: name,
         displayName,
         provider,
         ...capabilities,

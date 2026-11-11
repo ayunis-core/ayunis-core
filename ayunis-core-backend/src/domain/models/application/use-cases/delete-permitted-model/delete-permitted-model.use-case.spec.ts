@@ -52,6 +52,7 @@ describe('DeletePermittedModelUseCase', () => {
   const mockLanguageModel = new LanguageModel({
     id: mockCatalogModelId,
     name: 'gpt-4',
+    alias: 'gpt-4',
     displayName: 'GPT-4',
     provider: ModelProvider.OPENAI,
     canStream: true,
@@ -65,6 +66,7 @@ describe('DeletePermittedModelUseCase', () => {
   const mockLanguageModel2 = new LanguageModel({
     id: mockModelId,
     name: 'claude-3',
+    alias: 'claude-3',
     displayName: 'Claude 3',
     provider: ModelProvider.ANTHROPIC,
     canStream: true,

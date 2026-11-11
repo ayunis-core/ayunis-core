@@ -25,6 +25,7 @@ const permit = (name: string) =>
     model: new LanguageModel({
       id: randomUUID(),
       name,
+      alias: name,
       provider: ModelProvider.MISTRAL,
       displayName: name,
       canStream: true,

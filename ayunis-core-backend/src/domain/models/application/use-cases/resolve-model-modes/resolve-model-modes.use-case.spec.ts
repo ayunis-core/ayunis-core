@@ -19,6 +19,7 @@ describe('ResolveModelModesUseCase', () => {
   const orgId = randomUUID();
   const mistralLarge = new LanguageModel({
     name: 'mistral-large',
+    alias: 'mistral-large',
     provider: ModelProvider.MISTRAL,
     displayName: 'Mistral Large',
     canStream: true,

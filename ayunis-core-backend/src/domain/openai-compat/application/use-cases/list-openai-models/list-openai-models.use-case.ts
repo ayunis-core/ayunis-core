@@ -27,17 +27,15 @@ export class ListOpenAIModelsUseCase {
         new GetPermittedLanguageModelsQuery(query.orgId),
       );
 
-      // Dedupe by name, first occurrence wins — chat/completions resolves the
-      // "model" field with `find()` over the same list, so this keeps the
-      // advertised ids exactly the set of names a completion request accepts.
-      const byName = new Map<string, LanguageModel>();
+      // An org can hold several grants (org and team) for one catalog model.
+      const byAlias = new Map<string, LanguageModel>();
       for (const { model } of permitted) {
-        if (!byName.has(model.name)) {
-          byName.set(model.name, model);
+        if (!byAlias.has(model.alias)) {
+          byAlias.set(model.alias, model);
         }
       }
 
-      return this.modelMapper.toListResponse([...byName.values()]);
+      return this.modelMapper.toListResponse([...byAlias.values()]);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(

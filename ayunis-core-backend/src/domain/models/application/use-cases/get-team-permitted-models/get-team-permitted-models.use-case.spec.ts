@@ -77,6 +77,7 @@ describe('GetTeamPermittedModelsUseCase', () => {
     const languageModel = new LanguageModel({
       id: randomUUID(),
       name: 'gpt-4o',
+      alias: 'gpt-4o',
       provider: ModelProvider.OPENAI,
       displayName: 'GPT-4o',
       canStream: true,

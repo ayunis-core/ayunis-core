@@ -7,6 +7,7 @@ import { mockRoutineNotification } from './mock-notification-responses';
 
 const model = new LanguageModel({
   name: 'claude-sonnet-4-6',
+  alias: 'claude-sonnet-4-6',
   provider: ModelProvider.BEDROCK,
   displayName: 'Claude Sonnet 4.6',
   canStream: true,

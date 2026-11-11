@@ -30,6 +30,7 @@ const tokenCostColumnOptions = {
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 @Index(['name', 'provider'], { unique: true })
 @Check(`"type" <> 'language' OR "contextWindowSize" IS NOT NULL`)
+@Check(`"type" <> 'language' OR "alias" IS NOT NULL`)
 export abstract class ModelRecord extends BaseRecord {
   @Column()
   name: string;
@@ -52,6 +53,16 @@ export abstract class ModelRecord extends BaseRecord {
 
 @ChildEntity(ModelType.LANGUAGE)
 export class LanguageModelRecord extends ModelRecord {
+  // Nullable because the table is shared with embedding and image-generation
+  // models; the class-level check requires it for language models. Archived
+  // models keep their alias reserved.
+  @Index({ unique: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  alias: string;
+
   @Column({
     type: 'boolean',
     default: true,

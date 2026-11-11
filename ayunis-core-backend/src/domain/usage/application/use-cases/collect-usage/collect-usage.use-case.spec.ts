@@ -41,6 +41,7 @@ describe('CollectUsageUseCase', () => {
     return new LanguageModel({
       id: modelId,
       name: 'test-model',
+      alias: 'test-model',
       provider: ModelProvider.OPENAI,
       displayName: 'Test Model',
       canStream: true,

@@ -19,6 +19,7 @@ import { ModelMapper } from './mappers/model.mapper';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelAliasAlreadyExistsError } from 'src/domain/models/application/model-alias.errors';
 import {
   ModelAlreadyExistsError,
   ModelReferencedByUsageError,
@@ -27,6 +28,7 @@ import {
 const PG_UNIQUE_VIOLATION = '23505';
 const PG_FOREIGN_KEY_VIOLATION = '23503';
 const MODEL_KEY_UNIQUE_CONSTRAINT = 'IDX_7c11834d93fa8eaf208a48d66a';
+const MODEL_ALIAS_UNIQUE_CONSTRAINT = 'IDX_6018092adfdf6e9be8dc78df49';
 const USAGE_MODEL_FOREIGN_KEY = 'FK_523206731b52aa6170a99d10bbf';
 
 function isConstraintViolation(
@@ -50,6 +52,14 @@ function isModelKeyUniqueConstraintViolation(error: unknown): boolean {
     error,
     PG_UNIQUE_VIOLATION,
     MODEL_KEY_UNIQUE_CONSTRAINT,
+  );
+}
+
+function isModelAliasUniqueConstraintViolation(error: unknown): boolean {
+  return isConstraintViolation(
+    error,
+    PG_UNIQUE_VIOLATION,
+    MODEL_ALIAS_UNIQUE_CONSTRAINT,
   );
 }
 
@@ -161,6 +171,12 @@ export class LocalModelsRepository extends ModelsRepository {
     } catch (error) {
       if (isModelKeyUniqueConstraintViolation(error)) {
         throw new ModelAlreadyExistsError(model.name, model.provider);
+      }
+      if (
+        model instanceof LanguageModel &&
+        isModelAliasUniqueConstraintViolation(error)
+      ) {
+        throw new ModelAliasAlreadyExistsError(model.alias);
       }
       throw error;
     }

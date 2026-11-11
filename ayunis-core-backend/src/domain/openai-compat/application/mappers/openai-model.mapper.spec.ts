@@ -9,7 +9,8 @@ describe('OpenAIModelMapper', () => {
     overrides?: Partial<ConstructorParameters<typeof LanguageModel>[0]>,
   ): LanguageModel =>
     new LanguageModel({
-      name: 'gpt-4o',
+      name: 'gpt-4o-2024-11-20',
+      alias: 'gpt-4o',
       provider: ModelProvider.OPENAI,
       displayName: 'GPT-4o',
       canStream: true,
@@ -22,7 +23,7 @@ describe('OpenAIModelMapper', () => {
     });
 
   describe('toModelObject', () => {
-    it('maps name, provider, and createdAt to the OpenAI model shape', () => {
+    it('uses the alias, not the provider name, as the model id', () => {
       const createdAt = new Date('2025-06-01T12:00:00.500Z');
       const result = mapper.toModelObject(buildModel({ createdAt }));
 
@@ -40,7 +41,8 @@ describe('OpenAIModelMapper', () => {
       const result = mapper.toListResponse([
         buildModel(),
         buildModel({
-          name: 'claude-sonnet',
+          name: 'claude-sonnet-4-5',
+          alias: 'claude-sonnet',
           provider: ModelProvider.ANTHROPIC,
         }),
       ]);

@@ -268,7 +268,9 @@ export default function ModelTypeCard({
                       <ModelTitleWithInfo model={model} />
                     </ItemTitle>
                     {model.displayName && (
-                      <ItemDescription>{model.name}</ItemDescription>
+                      <ItemDescription>
+                        {model.alias ?? model.name}
+                      </ItemDescription>
                     )}
                   </ItemContent>
                   <ItemActions>

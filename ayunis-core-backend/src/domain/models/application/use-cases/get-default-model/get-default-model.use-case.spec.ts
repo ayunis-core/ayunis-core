@@ -39,6 +39,7 @@ describe('GetDefaultModelUseCase', () => {
     return new LanguageModel({
       id: id ?? `${name}-0000-0000-0000-000000000000`,
       name,
+      alias: name,
       displayName: name,
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -534,6 +535,7 @@ describe('GetDefaultModelUseCase with real effective model resolution', () => {
       model: new LanguageModel({
         id: randomUUID(),
         name: 'gpt-4',
+        alias: 'gpt-4',
         displayName: 'gpt-4',
         provider: ModelProvider.OPENAI,
         canStream: true,
