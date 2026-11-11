@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.73.0](https://github.com/ayunis-core/ayunis-core/compare/v2.72.0...v2.73.0) (2026-11-11)
+
+
+### Features
+
+* **academy:** show video completion status in the academy (AYC-1093) ([#2285](https://github.com/ayunis-core/ayunis-core/issues/2285)) ([f7b348f](https://github.com/ayunis-core/ayunis-core/commit/f7b348f5e33f977529007e22b70c112112ed7f70))
+* **analytics:** send product analytics events to openpanel (AYC-1750) ([#2306](https://github.com/ayunis-core/ayunis-core/issues/2306)) ([c0b6053](https://github.com/ayunis-core/ayunis-core/commit/c0b6053766a2ac12687a862c61b8e719b41dbd2c))
+* **inbox:** open notifications next to the list in a split view (AYC-1767) ([#2314](https://github.com/ayunis-core/ayunis-core/issues/2314)) ([b469174](https://github.com/ayunis-core/ayunis-core/commit/b469174603b81a894b73385ccd3a4bed57209093))
+* **mcp:** let customers set the server url of marketplace integrations (AYC-1572) ([#2155](https://github.com/ayunis-core/ayunis-core/issues/2155)) ([b21bf53](https://github.com/ayunis-core/ayunis-core/commit/b21bf533b0209e028fbabebe6dd6418e2b29f874))
+* **skills:** group personal and organisation/team owners in the skill owner select (AYC-1758) ([#2305](https://github.com/ayunis-core/ayunis-core/issues/2305)) ([c55bd93](https://github.com/ayunis-core/ayunis-core/commit/c55bd939958f59a0cdbb7ef8b0f0bbb18fed7f90))
+* **sources:** accept PDFs up to 100 MB (AYC-1783) ([#2326](https://github.com/ayunis-core/ayunis-core/issues/2326)) ([38dfb1a](https://github.com/ayunis-core/ayunis-core/commit/38dfb1a7a78454e62459e42216008df5dac61d4e))
+* **sources:** count direct upload session outcomes in appsignal (AYC-1772) ([#2311](https://github.com/ayunis-core/ayunis-core/issues/2311)) ([d1e0672](https://github.com/ayunis-core/ayunis-core/commit/d1e0672ae943eb7c8471d11c8c43a1abc67e750a))
+* **sources:** process large documents from disk instead of memory (AYC-1729) ([#2280](https://github.com/ayunis-core/ayunis-core/issues/2280)) ([95c6388](https://github.com/ayunis-core/ayunis-core/commit/95c63883c27521c20ccfeb500bb0ea87fac731d5))
+* **sources:** run ingestion in a separate worker process (AYC-1546) ([#2194](https://github.com/ayunis-core/ayunis-core/issues/2194)) ([6dcb123](https://github.com/ayunis-core/ayunis-core/commit/6dcb123132eb44d39bb631c672204d3e7934b527))
+
+
+### Bug Fixes
+
+* **auth:** serialize session issuance with revocation (AYC-1733) ([#2283](https://github.com/ayunis-core/ayunis-core/issues/2283)) ([1e4e178](https://github.com/ayunis-core/ayunis-core/commit/1e4e17882e82c42d683bb9c0b69ce7d01f285b57))
+* **providers:** send provider fetch over http/1.1 (AYC-1774) ([#2315](https://github.com/ayunis-core/ayunis-core/issues/2315)) ([98e6edd](https://github.com/ayunis-core/ayunis-core/commit/98e6edda5764e473a9d932aaa8b9863fe1ed4e30))
+* **sources:** retry gotenberg timeouts once and send a full queue elsewhere (AYC-1741) ([#2286](https://github.com/ayunis-core/ayunis-core/issues/2286)) ([a95fc14](https://github.com/ayunis-core/ayunis-core/commit/a95fc14c3f1e24acfb50cc25cba80c43dd73bebb))
+
+
+### Tests
+
+* **academy:** mock the confetti celebration in the confirm chapter test (AYC-000) ([#2310](https://github.com/ayunis-core/ayunis-core/issues/2310)) ([f5692b1](https://github.com/ayunis-core/ayunis-core/commit/f5692b1d0888d7b18408475f446495fe47c3b52d))
+
 ## [2.72.0](https://github.com/ayunis-core/ayunis-core/compare/v2.71.0...v2.72.0) (2026-11-10)
 
 
