@@ -5,38 +5,11 @@ import { SkillRecord } from './schema/skill.record';
 
 @Injectable()
 export class LocalSkillKnowledgeBaseIdsFinder {
-  async findKnowledgeBaseIdsBySkillIds(
-    skillIds: UUID[],
-    manager: EntityManager,
-  ): Promise<UUID[]> {
-    if (skillIds.length === 0) return [];
-
-    const rows = await manager
-      .createQueryBuilder()
-      .select('skb."knowledgeBasesId"', 'knowledgeBaseId')
-      .from('skill_knowledge_bases', 'skb')
-      .innerJoin('skills', 'skill', 'skill.id = skb."skillsId"')
-      .innerJoin(
-        'knowledge_bases',
-        'knowledgeBase',
-        '"knowledgeBase".id = skb."knowledgeBasesId"',
-      )
-      .where('skill.id IN (:...skillIds)', { skillIds })
-      .andWhere('"knowledgeBase"."userId" = skill."userId"')
-      .distinct(true)
-      .getRawMany<{ knowledgeBaseId: UUID }>();
-
-    return rows.map((row) => row.knowledgeBaseId);
-  }
-
-  /** Without `ownerIds`, returns the skills of every owner. */
   async findSkillsByKnowledgeBase(
     manager: EntityManager,
     knowledgeBaseId: UUID,
-    ownerIds?: UUID[],
   ): Promise<SkillRecord[]> {
-    if (ownerIds?.length === 0) return [];
-    const query = manager
+    return manager
       .getRepository(SkillRecord)
       .createQueryBuilder('skill')
       .innerJoin(
@@ -47,11 +20,8 @@ export class LocalSkillKnowledgeBaseIdsFinder {
       )
       .leftJoinAndSelect('skill.sources', 'sources')
       .leftJoinAndSelect('skill.mcpIntegrations', 'mcpIntegrations')
-      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases');
-    if (ownerIds) {
-      query.where('skill.userId IN (:...ownerIds)', { ownerIds });
-    }
-    return query.getMany();
+      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases')
+      .getMany();
   }
 
   async removeKnowledgeBaseFromSkills(

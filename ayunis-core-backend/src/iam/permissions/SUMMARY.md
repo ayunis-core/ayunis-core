@@ -10,9 +10,10 @@ hold whatever an org admin grants them.
   `manage_teams`, `assign_users_to_teams`, `manage_skills`,
   `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`. Sharing
-  is split by audience: `*_with_teams` covers teams the member belongs to,
-  `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
+  `manage_routines`. The `share_*` permissions (named after the removed
+  sharing feature) decide who may create and manage team-owned
+  (`*_with_teams`, for teams the member belongs to) and org-owned
+  (`*_with_org`) skills and knowledge bases (the `SplitSharePermissionsByScope`
   migration granted both wherever the former `share_*` permission was held).
   This is the source of truth
   for what a role can be granted.
@@ -42,8 +43,8 @@ permissions, used for reads a holder of either permission needs (e.g. the team
 reads, reachable with `MANAGE_TEAMS` or `ASSIGN_USERS_TO_TEAMS`).
 When the required permission depends on request data, the route declares the
 any-of set and the use case checks the exact one with `HasPermissionUseCase`
-(e.g. the shares module's `SharePermissionService`, which picks the
-team or org share permission from the share's scope).
+(e.g. the teams module's `GetCollectiveOwnerAccessUseCase`, which picks the
+team or org permission from the resource's owner).
 
 ## Seeding
 

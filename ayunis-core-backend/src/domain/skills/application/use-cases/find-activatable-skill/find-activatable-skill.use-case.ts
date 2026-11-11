@@ -3,9 +3,6 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
-import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
@@ -13,7 +10,7 @@ import {
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
 import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
-import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
+import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -24,7 +21,6 @@ export class FindActivatableSkillUseCase {
 
   constructor(
     private readonly repository: SkillRepository,
-    private readonly findShare: FindShareByEntityUseCase,
     private readonly context: ContextService,
     private readonly authorization: SkillAuthorizationService,
   ) {}
@@ -49,7 +45,7 @@ export class FindActivatableSkillUseCase {
       if (!skill.isActive) throw new SkillNotFoundError(query.skillId);
       return skill;
     }
-    if (skill && (await this.isAccessiblePersonalSkill(skill, userId))) {
+    if (skill instanceof PersonalSkill && skill.userId === userId) {
       return skill;
     }
     throw new SkillNotFoundError(query.skillId);
@@ -69,16 +65,5 @@ export class FindActivatableSkillUseCase {
     );
     if (!states.get(skill.id)?.isActive) throw new SkillNotFoundError(skill.id);
     return skill;
-  }
-
-  private async isAccessiblePersonalSkill(
-    skill: PersonalSkill,
-    userId: UUID,
-  ): Promise<boolean> {
-    if (skill.userId === userId) return true;
-    const share = await this.findShare.execute(
-      new FindShareByEntityQuery(SharedEntityType.SKILL, skill.id),
-    );
-    return share !== null;
   }
 }

@@ -10,7 +10,6 @@ export type OwnerSelection =
 export interface OwnedResource {
   ownerType: 'personal' | 'workspace' | 'team' | 'org';
   teamId?: string;
-  isShared?: boolean;
 }
 
 export interface OwnerOption {

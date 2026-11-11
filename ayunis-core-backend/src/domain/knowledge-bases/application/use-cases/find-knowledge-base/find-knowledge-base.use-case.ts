@@ -36,16 +36,9 @@ export class FindKnowledgeBaseUseCase {
     ]);
     return {
       knowledgeBase,
-      isShared: this.isShared(knowledgeBase),
       isActive,
       documentCount: counts.get(knowledgeBase.id) ?? 0,
     };
-  }
-
-  private isShared(knowledgeBase: KnowledgeBase): boolean {
-    if (!(knowledgeBase instanceof PersonalKnowledgeBase)) return false;
-    const { userId } = getRequiredUserContext(this.context);
-    return knowledgeBase.userId !== userId;
   }
 
   private async isActive(knowledgeBase: KnowledgeBase): Promise<boolean> {

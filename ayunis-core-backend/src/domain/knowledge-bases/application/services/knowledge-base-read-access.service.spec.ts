@@ -7,8 +7,6 @@ import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/persona
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import type { CollectiveKnowledgeBaseAccessService } from './collective-knowledge-base-access.service';
-import type { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
-import type { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import type { AssertWorkspaceExecutionAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-execution-access/assert-workspace-execution-access.use-case';
 import type { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
@@ -28,10 +26,6 @@ function setup() {
     workspaceId,
     orgId,
   });
-  const findShare = { execute: jest.fn().mockResolvedValue(null) };
-  const checkSkillShareAccess = {
-    execute: jest.fn().mockResolvedValue(false),
-  };
   const workspaceRead = { execute: jest.fn().mockResolvedValue(undefined) };
   const workspaceExecution = {
     execute: jest.fn().mockResolvedValue(undefined),
@@ -48,14 +42,10 @@ function setup() {
     orgId,
     personal,
     workspace,
-    findShare,
-    checkSkillShareAccess,
     workspaceRead,
     workspaceExecution,
     context,
     service: new KnowledgeBaseReadAccessService(
-      findShare as unknown as FindShareByEntityUseCase,
-      checkSkillShareAccess as unknown as CheckKnowledgeBaseSkillShareAccessUseCase,
       workspaceRead as unknown as AssertWorkspaceReadAccessUseCase,
       workspaceExecution as unknown as AssertWorkspaceExecutionAccessUseCase,
       context as unknown as ContextService,
@@ -65,42 +55,23 @@ function setup() {
 }
 
 describe(KnowledgeBaseReadAccessService.name, () => {
-  it('allows personal owners without checking shares', async () => {
-    const { service, personal, findShare, checkSkillShareAccess } = setup();
+  it('allows the owner of a personal knowledge base', async () => {
+    const { service, personal } = setup();
     await expect(service.requireRead(personal)).resolves.toBeUndefined();
-    expect(findShare.execute).not.toHaveBeenCalled();
-    expect(checkSkillShareAccess.execute).not.toHaveBeenCalled();
   });
 
-  it.each(['direct', 'skill'] as const)(
-    'allows personal knowledge bases shared through a %s share',
-    async (shareType) => {
-      const setupResult = setup();
-      const shared = new PersonalKnowledgeBase({
-        name: 'Shared regulations',
-        userId: randomUUID(),
-        orgId: setupResult.orgId,
-      });
-      if (shareType === 'direct') {
-        setupResult.findShare.execute.mockResolvedValue({ id: randomUUID() });
-      } else {
-        setupResult.checkSkillShareAccess.execute.mockResolvedValue(true);
-      }
-      await expect(
-        setupResult.service.requireRead(shared),
-      ).resolves.toBeUndefined();
-    },
-  );
-
-  it('rejects inaccessible personal knowledge bases', async () => {
+  it("hides another member's personal knowledge base from reads and tool execution", async () => {
     const setupResult = setup();
-    const inaccessible = new PersonalKnowledgeBase({
+    const colleagues = new PersonalKnowledgeBase({
       name: 'Private regulations',
       userId: randomUUID(),
       orgId: setupResult.orgId,
     });
     await expect(
-      setupResult.service.requireRead(inaccessible),
+      setupResult.service.requireRead(colleagues),
+    ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
+    await expect(
+      setupResult.service.requireExecution(colleagues, randomUUID()),
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
   });
 
@@ -124,7 +95,7 @@ describe(KnowledgeBaseReadAccessService.name, () => {
     });
   });
 
-  it('preserves personal sharing access during trusted execution', async () => {
+  it('lets the owner execute a personal knowledge base', async () => {
     const { service, personal, workspaceExecution } = setup();
     await expect(
       service.requireExecution(personal, randomUUID()),
@@ -169,13 +140,7 @@ describe(KnowledgeBaseReadAccessService.name, () => {
 
   describe('team-owned knowledge bases', () => {
     it('delegates reads and tool execution to the collective policy', async () => {
-      const {
-        service,
-        collectiveAccess,
-        orgId,
-        findShare,
-        workspaceExecution,
-      } = setup();
+      const { service, collectiveAccess, orgId, workspaceExecution } = setup();
       const team = new TeamKnowledgeBase({
         name: 'Bauordnung',
         orgId,
@@ -186,7 +151,6 @@ describe(KnowledgeBaseReadAccessService.name, () => {
       await service.requireExecution(team, randomUUID());
 
       expect(collectiveAccess.requireRead).toHaveBeenCalledTimes(2);
-      expect(findShare.execute).not.toHaveBeenCalled();
       expect(workspaceExecution.execute).not.toHaveBeenCalled();
     });
 

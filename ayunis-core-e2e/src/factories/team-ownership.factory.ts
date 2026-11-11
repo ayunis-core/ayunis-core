@@ -25,6 +25,7 @@ export interface TeamOwnershipFixture {
   /** Organization member outside the team. */
   outsider: Principal;
   addToTeam: (principal: Principal) => Promise<void>;
+  removeFromTeam: (principal: Principal) => Promise<void>;
   cleanup: () => Promise<void>;
 }
 
@@ -66,6 +67,10 @@ export async function createTeamOwnershipFixture(
     member,
     outsider,
     addToTeam: (principal) => addTeamMember(adminApi, team.id, principal.id),
+    removeFromTeam: (principal) =>
+      generatedApi.teamMembersControllerRemoveTeamMember(team.id, principal.id, {
+        api: adminApi,
+      }),
     cleanup: async () => {
       try {
         await deleteTeam(adminApi, team.id);

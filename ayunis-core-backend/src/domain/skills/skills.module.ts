@@ -40,8 +40,6 @@ import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-ski
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
-import { CheckKnowledgeBaseSkillShareAccessUseCase } from './application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
-import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from './application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
 import { GetSkillsByIdsUseCase } from './application/use-cases/get-skills-by-ids/get-skills-by-ids.use-case';
 
 // Services
@@ -50,7 +48,6 @@ import { FindActivatableSkillUseCase } from './application/use-cases/find-activa
 import { SkillAuthorizationService } from './application/services/skill-authorization.service';
 import { GetWorkspaceSkillsUseCase } from './application/use-cases/get-workspace-skills/get-workspace-skills.use-case';
 import { SkillActivationService } from './application/services/skill-activation.service';
-import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
 import { SkillTextModelResolver } from './application/services/skill-text-model-resolver.service';
 import { ImproveSkillTextUseCase } from './application/use-cases/improve-skill-text/improve-skill-text.use-case';
 import { UsageModule } from 'src/domain/usage/usage.module';
@@ -59,18 +56,9 @@ import { TrialsModule } from 'src/iam/trials/trials.module';
 import { ModelsModule } from 'src/domain/models/models.module';
 
 // Listeners
-import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { UserCreatedListener } from './application/listeners/user-created.listener';
 import { SkillsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
 import { SkillsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
-
-// Strategies
-import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
-import { getShareAuthStrategyToken } from 'src/domain/shares/application/factories/share-authorization.factory';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-
-// Shares
-import { SharesModule } from 'src/domain/shares/shares.module';
 
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { UsersModule } from 'src/iam/users/users.module';
@@ -108,7 +96,6 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     forwardRef(() => KnowledgeBasesModule),
     MarketplaceModule,
     UsersModule,
-    forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
@@ -136,7 +123,6 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     FindActiveCollectiveSkillByNameUseCase,
     FindActivatableSkillUseCase,
     SkillActivationService,
-    SkillCreatorNameService,
     SkillTextModelResolver,
     ImproveSkillTextUseCase,
 
@@ -165,26 +151,16 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
     CreateSkillWithUniqueNameUseCase,
-    CheckKnowledgeBaseSkillShareAccessUseCase,
-    FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
     GetSkillsByIdsUseCase,
 
     // Services
     MarketplaceSkillInstallationService,
 
     // Listeners
-    ShareDeletedListener,
     UserCreatedListener,
     SkillsWorkspaceDeletionRequestedListener,
     SkillsUserDeletionRequestedListener,
     SkillsTeamDeletionRequestedListener,
-
-    // Strategies
-    SkillShareAuthorizationStrategy,
-    {
-      provide: getShareAuthStrategyToken(SharedEntityType.SKILL),
-      useExisting: SkillShareAuthorizationStrategy,
-    },
 
     // Presenters
     SkillDtoMapper,
@@ -207,11 +183,7 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     FindSkillByNameUseCase,
     FindActiveCollectiveSkillByNameUseCase,
     SkillActivationService,
-    SkillShareAuthorizationStrategy,
-    getShareAuthStrategyToken(SharedEntityType.SKILL),
     CreateSkillWithUniqueNameUseCase,
-    CheckKnowledgeBaseSkillShareAccessUseCase,
-    FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
   ],
 })
 export class SkillsModule {}

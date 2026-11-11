@@ -2,54 +2,6 @@
   "page": {
     "title": "Knowledge"
   },
-  "shared": {
-    "badge": "Shared"
-  },
-  "tabs": {
-    "configuration": "Configuration",
-    "shares": "Share"
-  },
-  "shares": {
-    "deprecation": {
-      "notice": {
-        "title": "Sharing is being discontinued",
-        "description": "To make this knowledge base available to a team or the organisation, change its owner instead."
-      },
-      "blocked": {
-        "title": "Sharing is no longer possible",
-        "description": "Create knowledge bases directly in the team or the organisation instead, or change the owner of this knowledge base.",
-        "close": "Close"
-      }
-    },
-    "org": {
-      "title": "Share with organisation",
-      "descriptionOn": "This knowledge base is shared with all users of your organisation",
-      "descriptionOff": "This knowledge base is not shared with all users of your organisation"
-    },
-    "teams": {
-      "title": "Teams",
-      "description": "Share with team members",
-      "delete": {
-        "title": "Remove Team Share",
-        "description": "This will remove access to the knowledge base for all members of {{teamName}}",
-        "confirm": "Remove",
-        "cancel": "Cancel"
-      }
-    },
-    "delete": {
-      "tooltip": "Remove share",
-      "title": "Remove Share",
-      "description": "This will remove access to the knowledge base for all members of your organization",
-      "confirm": "Remove",
-      "cancel": "Cancel"
-    },
-    "success": {
-      "deleted": "Share removed successfully"
-    },
-    "error": {
-      "delete": "Failed to remove share"
-    }
-  },
   "emptyState": {
     "title": "No knowledge bases yet",
     "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",

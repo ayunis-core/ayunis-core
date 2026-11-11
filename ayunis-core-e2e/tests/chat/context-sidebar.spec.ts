@@ -5,7 +5,7 @@ import { getThreadAiContextResponse } from '../../src/clients/api/threads.client
 import { config } from '../../src/config';
 import { createUser } from '../../src/factories/user.factory';
 import { generatedApi } from '../../src/clients/api/generated-api';
-import { createSharedSkillAccessFixture } from '../../src/factories/shared-skill-access.factory';
+import { createTeamOwnershipFixture } from '../../src/factories/team-ownership.factory';
 import {
   createPersonalThread,
   createProjectContextFixture,
@@ -113,76 +113,84 @@ async function expectWorkspaceContext(
   ).toBeVisible();
 }
 
-test('filters an attached knowledge base until a distinct user receives access', async ({
+test('filters an attached team knowledge base by team membership', async ({
   api,
   browser,
   mail,
 }) => {
-  const fixture = await createSharedSkillAccessFixture(
+  const fixture = await createTeamOwnershipFixture(
     api,
     mail,
     `chat-context-access-${Date.now()}`,
   );
-
-  const memberContext = await browser.newContext({
-    storageState: await fixture.memberApi.storageState(),
+  const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+    {
+      ownerType: 'team',
+      teamId: fixture.team.id,
+      name: `Team civic knowledge base ${Date.now()}`,
+    },
+    { api },
+  );
+  const { outsider } = fixture;
+  const outsiderContext = await browser.newContext({
+    storageState: outsider.storageState,
   });
-  const memberPage = await memberContext.newPage();
+  const outsiderPage = await outsiderContext.newPage();
 
   try {
-    const thread = await createPersonalThread(fixture.memberApi);
-    const deniedResponse = await fixture.memberApi.post(
-      `/api/threads/${thread.id}/knowledge-bases/${fixture.knowledgeBase.id}`,
+    const thread = await createPersonalThread(outsider.api);
+    const deniedResponse = await outsider.api.post(
+      `/api/threads/${thread.id}/knowledge-bases/${knowledgeBase.id}`,
     );
     expect(deniedResponse.status()).toBe(404);
     const contextBeforeGrant =
       await generatedApi.threadAiContextControllerGetAiContext(thread.id, {
-        api: fixture.memberApi,
+        api: outsider.api,
       });
     expect(contextBeforeGrant.knowledgeBases).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: fixture.knowledgeBase.id }),
+        expect.objectContaining({ id: knowledgeBase.id }),
       ]),
     );
 
-    const share = await fixture.shareSkill();
+    await fixture.addToTeam(outsider);
     await generatedApi.threadKnowledgeBasesControllerAddKnowledgeBase(
       thread.id,
-      fixture.knowledgeBase.id,
-      { api: fixture.memberApi },
+      knowledgeBase.id,
+      { api: outsider.api },
     );
     const context = await generatedApi.threadAiContextControllerGetAiContext(
       thread.id,
-      { api: fixture.memberApi },
+      { api: outsider.api },
     );
     expect(context.knowledgeBases).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: fixture.knowledgeBase.id }),
+        expect.objectContaining({ id: knowledgeBase.id }),
       ]),
     );
-    await openChatContext(memberPage, thread.id);
+    await openChatContext(outsiderPage, thread.id);
     await expect(
-      memberPage.getByTestId(
-        `chat-context-knowledge-base-${fixture.knowledgeBase.id}`,
+      outsiderPage.getByTestId(
+        `chat-context-knowledge-base-${knowledgeBase.id}`,
       ),
     ).toBeVisible();
 
-    await generatedApi.sharesControllerDeleteShare(share.id, { api });
+    await fixture.removeFromTeam(outsider);
     await expect
       .poll(async () => {
         const contextAfterRevoke =
           await generatedApi.threadAiContextControllerGetAiContext(thread.id, {
-            api: fixture.memberApi,
+            api: outsider.api,
           });
         return contextAfterRevoke.knowledgeBases.some(
-          ({ id }) => id === fixture.knowledgeBase.id,
+          ({ id }) => id === knowledgeBase.id,
         );
       })
       .toBe(false);
   } finally {
-    await memberPage.close();
-    await memberContext.close();
-    await fixture.memberApi.dispose();
+    await outsiderPage.close();
+    await outsiderContext.close();
+    await fixture.cleanup();
   }
 });
 

@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   findKnowledgeBase: vi.fn(),
-  getShares: vi.fn(),
   listTeams: vi.fn(),
   getPermissions: vi.fn(),
 }));
@@ -15,18 +14,11 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getKnowledgeBasesControllerFindOneQueryKey: (id: string) => [
     `/knowledge-bases/${id}`,
   ],
-  getSharesControllerGetSharesQueryKey: () => ['shares'],
   getTeamsControllerListMyTeamsQueryKey: () => ['teams'],
   getMyPermissionsControllerGetMineQueryKey: () => ['permissions'],
   myPermissionsControllerGetMine: mocks.getPermissions,
   knowledgeBasesControllerFindOne: mocks.findKnowledgeBase,
-  sharesControllerGetShares: mocks.getShares,
   teamsControllerListMyTeams: mocks.listTeams,
-}));
-vi.mock('@/shared/api/generated/ayunisCoreAPI.schemas', () => ({
-  CreateKnowledgeBaseShareDtoEntityType: {
-    knowledge_base: 'knowledge_base',
-  },
 }));
 
 const { Route } = await import('./knowledge-bases.$id');
@@ -45,66 +37,33 @@ function runLoader() {
 describe('personal knowledge-base detail route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.findKnowledgeBase.mockResolvedValue({
-      id: 'knowledge-base',
-      ownerType: 'personal',
-      isShared: false,
-    });
-    mocks.getShares.mockResolvedValue([]);
     mocks.listTeams.mockResolvedValue([]);
     mocks.getPermissions.mockResolvedValue({ permissions: [] });
   });
 
-  it('loads sharing context for a personal knowledge base', async () => {
-    await expect(runLoader()).resolves.toMatchObject({
-      knowledgeBase: { ownerType: 'personal' },
-      shares: [],
-      userTeams: [],
-    });
-    expect(mocks.getShares).toHaveBeenCalled();
-    expect(mocks.listTeams).toHaveBeenCalled();
-  });
-
-  it('redirects workspace knowledge bases before loading personal sharing context', async () => {
+  it('redirects workspace knowledge bases before loading ownership context', async () => {
     mocks.findKnowledgeBase.mockResolvedValue({
       id: 'knowledge-base',
       ownerType: 'workspace',
       workspaceId: 'workspace',
-      isShared: false,
     });
 
     await expect(runLoader()).rejects.toBeDefined();
-    expect(mocks.getShares).not.toHaveBeenCalled();
     expect(mocks.listTeams).not.toHaveBeenCalled();
   });
 
-  it.each(['team', 'org'])(
-    'does not load sharing context for a %s knowledge base, which cannot be shared',
-    async (ownerType) => {
-      mocks.findKnowledgeBase.mockResolvedValue({
-        id: 'knowledge-base',
-        ownerType,
-        teamId: ownerType === 'team' ? 'team' : undefined,
-        isShared: false,
-      });
-
-      await expect(runLoader()).resolves.toMatchObject({ shares: [] });
-      expect(mocks.getShares).not.toHaveBeenCalled();
-    },
-  );
-
-  it.each(['team', 'org'])(
+  it.each(['personal', 'team', 'org'])(
     'loads teams and permissions for a %s knowledge base so managers never see it read-only',
     async (ownerType) => {
       mocks.findKnowledgeBase.mockResolvedValue({
         id: 'knowledge-base',
         ownerType,
         teamId: ownerType === 'team' ? 'team' : undefined,
-        isShared: false,
       });
 
-      await runLoader();
-
+      await expect(runLoader()).resolves.toMatchObject({
+        knowledgeBase: { ownerType },
+      });
       expect(mocks.listTeams).toHaveBeenCalled();
       expect(mocks.getPermissions).toHaveBeenCalled();
     },

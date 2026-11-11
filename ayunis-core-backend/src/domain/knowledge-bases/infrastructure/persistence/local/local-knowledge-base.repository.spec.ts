@@ -206,7 +206,6 @@ describe('LocalKnowledgeBaseRepository', () => {
     const result = await repository.findPaginatedAccessible(
       userId,
       workspaceId,
-      [secondKnowledgeBaseId],
       {
         search: 'citizen',
         limit: 2,
@@ -249,7 +248,7 @@ describe('LocalKnowledgeBaseRepository', () => {
       { tx: undefined } as never,
     );
 
-    await repository.findPaginatedAccessible(userId, undefined, [], {
+    await repository.findPaginatedAccessible(userId, undefined, {
       limit: 20,
       offset: 0,
     });

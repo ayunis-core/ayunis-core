@@ -6,7 +6,6 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { SkillContext } from 'src/domain/skills/application/models/skill-context';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { SkillCreatorNameService } from 'src/domain/skills/application/services/skill-creator-name.service';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
 import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { CollectiveSkill, Skill } from 'src/domain/skills/domain/skill';
@@ -14,9 +13,6 @@ import type { ReadableSkillOwners } from 'src/domain/skills/application/models/s
 import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
 import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
-import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { ListAccessibleSkillsQuery } from './list-accessible-skills.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
@@ -27,8 +23,6 @@ export class ListAccessibleSkillsUseCase {
 
   constructor(
     private readonly repository: SkillRepository,
-    private readonly findShares: FindSharesByScopeUseCase,
-    private readonly creatorNames: SkillCreatorNameService,
     private readonly context: ContextService,
     @Inject(forwardRef(() => AssertWorkspaceReadAccessUseCase))
     private readonly workspaceRead: AssertWorkspaceReadAccessUseCase,
@@ -58,7 +52,6 @@ export class ListAccessibleSkillsUseCase {
       ? await this.repository.findPaginatedAccessible(
           userId,
           workspaceId,
-          [],
           this.pagination(query),
         )
       : await this.unpaginatedWorkspace(workspaceId);
@@ -69,8 +62,6 @@ export class ListAccessibleSkillsUseCase {
     return this.mapPage(page, (skill) => ({
       skill,
       ...(states.get(skill.id) ?? { isActive: false, isPinned: false }),
-      isShared: false,
-      creatorName: null,
     }));
   }
 
@@ -78,20 +69,15 @@ export class ListAccessibleSkillsUseCase {
     query: ListAccessibleSkillsQuery,
     userId: UUID,
   ): Promise<Paginated<SkillContext>> {
-    const shares = await this.findShares.execute(
-      new FindSharesByScopeQuery(SharedEntityType.SKILL),
-    );
-    const sharedIds = shares.map(({ entityId }) => entityId);
     const owners = await this.collectiveAccess.readableOwners();
     const page = this.hasPaging(query)
       ? await this.repository.findPaginatedAccessible(
           userId,
           undefined,
-          sharedIds,
           this.pagination(query),
           owners,
         )
-      : await this.unpaginatedPersonal(userId, sharedIds, owners);
+      : await this.unpaginatedPersonal(userId, owners);
     return this.withPersonalContext(page, userId);
   }
 
@@ -111,17 +97,13 @@ export class ListAccessibleSkillsUseCase {
 
   private async unpaginatedPersonal(
     userId: UUID,
-    sharedIds: UUID[],
     owners: ReadableSkillOwners,
   ): Promise<Paginated<PersonalSkill | CollectiveSkill>> {
     const [owned, collective] = await Promise.all([
       this.repository.findAllByOwner(userId),
       this.repository.findAllCollective(owners),
     ]);
-    const ownedIds = new Set(owned.map(({ id }) => id));
-    const ids = [...new Set(sharedIds)].filter((id) => !ownedIds.has(id));
-    const shared = ids.length ? await this.repository.findByIds(ids, null) : [];
-    const data = this.sortByNameAndId([...owned, ...shared, ...collective]);
+    const data = this.sortByNameAndId([...owned, ...collective]);
     return new Paginated({
       data,
       limit: data.length,
@@ -134,34 +116,19 @@ export class ListAccessibleSkillsUseCase {
     page: Paginated<PersonalSkill | CollectiveSkill>,
     userId: UUID,
   ): Promise<Paginated<SkillContext>> {
-    const sharedCreatorIds = page.data
-      .filter((skill) => skill instanceof PersonalSkill)
-      .filter(({ userId: ownerId }) => ownerId !== userId)
-      .map(({ userId: ownerId }) => ownerId);
-    const [activeIds, pinnedIds, names] = await Promise.all([
+    const [activeIds, pinnedIds] = await Promise.all([
       this.repository.getActiveSkillIds(userId),
       this.repository.getPinnedSkillIds(userId),
-      this.creatorNames.resolveMany(sharedCreatorIds),
     ]);
-    return this.mapPage(page, (skill) => {
-      if (!(skill instanceof PersonalSkill)) {
-        return {
-          skill,
-          isActive: skill.isActive,
-          isPinned: skill.isPinned,
-          isShared: false,
-          creatorName: null,
-        };
-      }
-      const isShared = skill.userId !== userId;
-      return {
-        skill,
-        isActive: activeIds.has(skill.id),
-        isPinned: pinnedIds.has(skill.id),
-        isShared,
-        creatorName: isShared ? (names.get(skill.userId) ?? null) : null,
-      };
-    });
+    return this.mapPage(page, (skill) =>
+      skill instanceof PersonalSkill
+        ? {
+            skill,
+            isActive: activeIds.has(skill.id),
+            isPinned: pinnedIds.has(skill.id),
+          }
+        : { skill, isActive: skill.isActive, isPinned: skill.isPinned },
+    );
   }
 
   private pagination(query: ListAccessibleSkillsQuery) {

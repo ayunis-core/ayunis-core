@@ -96,7 +96,7 @@ function setup() {
 }
 
 describe(GetThreadAiContextUseCase.name, () => {
-  it('returns active personal/shared resources and accessible thread attachments for a regular chat', async () => {
+  it('returns active personal resources and accessible thread attachments for a regular chat', async () => {
     const {
       useCase,
       activeSkill,

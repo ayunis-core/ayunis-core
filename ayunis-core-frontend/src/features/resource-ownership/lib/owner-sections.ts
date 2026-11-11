@@ -3,11 +3,10 @@ import type { OwnedResource } from '@/features/resource-ownership/model/types';
 export type OwnerSectionOwner =
   | { ownerType: 'personal' }
   | { ownerType: 'org' }
-  | { ownerType: 'team'; teamId: string }
-  | { ownerType: 'shared' };
+  | { ownerType: 'team'; teamId: string };
 
 export interface OwnerSection<T> {
-  /** Stable key: `personal`, `org`, `team:<id>` or `shared`. */
+  /** Stable key: `personal`, `org`, or `team:<id>`. */
   key: string;
   owner: OwnerSectionOwner;
   items: T[];
@@ -21,7 +20,7 @@ interface NamedTeam {
 function ownerOfListItem(resource: OwnedResource): OwnerSectionOwner | null {
   switch (resource.ownerType) {
     case 'personal':
-      return { ownerType: resource.isShared ? 'shared' : 'personal' };
+      return { ownerType: 'personal' };
     case 'org':
       return { ownerType: 'org' };
     case 'team':
@@ -37,11 +36,11 @@ function sectionKey(owner: OwnerSectionOwner): string {
   return owner.ownerType === 'team' ? `team:${owner.teamId}` : owner.ownerType;
 }
 
-const OWNER_TYPE_ORDER = ['personal', 'org', 'team', 'shared'] as const;
+const OWNER_TYPE_ORDER = ['personal', 'org', 'team'] as const;
 
 /**
- * Groups a list into its owners' sections: personal, organisation, each team
- * by name, then items other users shared. Owners without items get no section.
+ * Groups a list into its owners' sections: personal, organisation, then each
+ * team by name. Owners without items get no section.
  */
 export function groupByOwner<T extends OwnedResource & { name: string }>(
   items: readonly T[],

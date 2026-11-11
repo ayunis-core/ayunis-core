@@ -18,22 +18,25 @@ import type {
   NonWorkspaceKnowledgeBase,
 } from 'src/domain/knowledge-bases/domain/knowledge-base';
 import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
+import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import type { RemainingShareScope } from 'src/domain/shares/application/events/share-deleted.event';
-import { RemoveEntitySharesCommand } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.command';
-import { RemoveEntitySharesUseCase } from 'src/domain/shares/application/use-cases/remove-entity-shares/remove-entity-shares.use-case';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { UnlinkKnowledgeBaseFromOtherOwnersCommand } from 'src/domain/skills/application/use-cases/unlink-knowledge-base-from-other-owners/unlink-knowledge-base-from-other-owners.command';
 import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/application/use-cases/unlink-knowledge-base-from-other-owners/unlink-knowledge-base-from-other-owners.use-case';
+import { RemoveDirectKnowledgeBaseFromThreadsCommand } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.command';
+import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from 'src/domain/threads/application/use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
+import {
+  FindUserIdsOutsideAudienceQuery,
+  type ResourceAudience,
+} from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.query';
+import { FindUserIdsOutsideAudienceUseCase } from 'src/iam/teams/application/use-cases/find-user-ids-outside-audience/find-user-ids-outside-audience.use-case';
 import { ChangeKnowledgeBaseOwnerCommand } from './change-knowledge-base-owner.command';
 
 /**
  * Moves a knowledge base between the caller, a team and the organization.
  * Requires the right to manage both the current and the new owner. Links from
- * skills of other owners are removed, shares are removed, and everyone outside
- * the new owner's audience is reconciled through the share listeners.
+ * skills of other owners are removed, and threads of everyone outside the new
+ * owner's audience lose the knowledge base.
  */
 @Injectable()
 export class ChangeKnowledgeBaseOwnerUseCase {
@@ -44,7 +47,8 @@ export class ChangeKnowledgeBaseOwnerUseCase {
     private readonly writeAccess: KnowledgeBaseWriteAccessService,
     private readonly ownerChange: KnowledgeBaseOwnerChangeService,
     private readonly unlinkSkills: UnlinkKnowledgeBaseFromOtherOwnersUseCase,
-    private readonly removeShares: RemoveEntitySharesUseCase,
+    private readonly removeFromThreads: RemoveDirectKnowledgeBaseFromThreadsUseCase,
+    private readonly findUsersOutside: FindUserIdsOutsideAudienceUseCase,
     private readonly context: ContextService,
   ) {}
 
@@ -66,19 +70,12 @@ export class ChangeKnowledgeBaseOwnerUseCase {
     await this.writeAccess.requireCreate(plan.target);
 
     const moved = await this.repository.save(plan.target);
-    const { userId } = getRequiredUserContext(this.context);
+    const { userId, orgId } = getRequiredUserContext(this.context);
     await this.transferStateToMover(knowledgeBase, moved, userId);
     await this.unlinkSkills.execute(
       new UnlinkKnowledgeBaseFromOtherOwnersCommand(moved),
     );
-    await this.removeShares.execute(
-      new RemoveEntitySharesCommand(
-        SharedEntityType.KNOWLEDGE_BASE,
-        moved.id,
-        userId,
-        this.audienceOf(moved),
-      ),
-    );
+    await this.removeFromThreadsOutsideAudience(knowledgeBase, moved, orgId);
     return moved;
   }
 
@@ -94,9 +91,8 @@ export class ChangeKnowledgeBaseOwnerUseCase {
   }
 
   /**
-   * A moved knowledge base has no shares left, so the only per-user activation
-   * that can still count is the mover's, and only when it became personal;
-   * it then takes over the former global state.
+   * The only per-user activation that can still count is the mover's, and
+   * only when it became personal; it then takes over the former global state.
    */
   private async transferStateToMover(
     previous: KnowledgeBase,
@@ -113,15 +109,31 @@ export class ChangeKnowledgeBaseOwnerUseCase {
     }
   }
 
-  private audienceOf(knowledgeBase: KnowledgeBase): RemainingShareScope[] {
+  /** Only a team or organization knowledge base had users besides the mover. */
+  private async removeFromThreadsOutsideAudience(
+    previous: KnowledgeBase,
+    moved: KnowledgeBase,
+    orgId: UUID,
+  ): Promise<void> {
+    if (!(previous instanceof AbstractCollectiveKnowledgeBase)) return;
+    const userIds = await this.findUsersOutside.execute(
+      new FindUserIdsOutsideAudienceQuery(orgId, this.audienceOf(moved)),
+    );
+    await this.removeFromThreads.execute(
+      new RemoveDirectKnowledgeBaseFromThreadsCommand(moved.id, userIds),
+    );
+  }
+
+  private audienceOf(knowledgeBase: KnowledgeBase): ResourceAudience {
     if (knowledgeBase instanceof TeamKnowledgeBase) {
-      return [
-        { scopeType: ShareScopeType.TEAM, scopeId: knowledgeBase.teamId },
-      ];
+      return { type: 'team', teamId: knowledgeBase.teamId };
     }
     if (knowledgeBase instanceof OrgKnowledgeBase) {
-      return [{ scopeType: ShareScopeType.ORG, scopeId: knowledgeBase.orgId }];
+      return { type: 'org', orgId: knowledgeBase.orgId };
     }
-    return [];
+    if (knowledgeBase instanceof PersonalKnowledgeBase) {
+      return { type: 'user', userId: knowledgeBase.userId };
+    }
+    throw new KnowledgeBaseOwnerChangeNotAllowedError(knowledgeBase.id);
   }
 }

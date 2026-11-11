@@ -88,20 +88,17 @@ export abstract class KnowledgeBaseRepository {
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
     collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<NonWorkspaceKnowledgeBase>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): Promise<Paginated<WorkspaceKnowledgeBase>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
     collectiveOwners?: ReadableCollectiveOwners,
   ): Promise<Paginated<KnowledgeBase>>;

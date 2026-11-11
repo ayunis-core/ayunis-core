@@ -83,7 +83,6 @@ none of these packages implements the Agent Plugins standard.
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
 | [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md)                    | Files          | MinIO-based file storage                                                                                       |
 | [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                            | Integrations   | Model Context Protocol server connections                                                                      |
-| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                      | Sharing        | Organization-wide resource sharing                                                                             |
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
 | [speech](ayunis-core-backend/src/domain/speech/SUMMARY.md)                      | Voice          | Streams assistant messages as speech in a voice matching their language                                        |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
@@ -204,9 +203,9 @@ load-bearing):
   `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
   `manage_routines`) that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
-  `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the
-  share's scope, so the shares use cases check them via
-  `SharePermissionService`. **ADMIN implicitly holds every permission**;
+  `PermissionsGuard` → `HasPermissionUseCase`; the `share_*_with_teams`/`_with_org` permissions
+  decide who may create and manage team- and org-owned skills and knowledge
+  bases. **ADMIN implicitly holds every permission**;
   MANAGER/USER hold what the org's matrix grants (each must keep ≥1). Grants
   live in the per-org `role_permissions` table; new orgs are seeded and existing
   orgs backfilled to preserve pre-RBAC access. See
@@ -215,18 +214,19 @@ load-bearing):
   team, a member holds the permissions of their org role plus those of their
   team role (team `ADMIN` ⇒ every permission, team `MANAGER`/`USER` ⇒ that row
   of the matrix). Routes on `/teams/:id/…` use `@RequireTeamPermission(...)` +
-  `TeamPermissionsGuard`, and team shares accept the team-scoped share
-  permission. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
+  `TeamPermissionsGuard`, and team-owned skills and knowledge bases accept the
+  team-scoped `share_*_with_teams` permission. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
 
-**Reads stay open** — only manage/share (write) endpoints are permission-gated;
-per-entity visibility (ownership + shares) is enforced separately inside the use
-cases, so a member without `manage_*` can still read what's shared with them.
+**Reads stay open** — only manage (write) endpoints are permission-gated;
+per-entity visibility (ownership, team/org membership) is enforced separately
+inside the use cases, so a member without `manage_*` can still read team and
+org resources they belong to.
 
 **Frontend enforcement mirrors, never replaces, the backend.** Any authenticated
 user reads their effective permissions from `GET /permissions/me`; the
 [`permissions` feature](ayunis-core-frontend/src/features/permissions) exposes
 `useMyPermissions()` and `<PermissionGate>` to hide controls a member can't use
-(create/edit/delete/share buttons, empty-state CTAs) and to permission-filter
+(create/edit/delete buttons, empty-state CTAs) and to permission-filter
 the admin-settings sidebar + route guard. The backend still 403s regardless.
 
 **Adding a new permission:**

@@ -49,7 +49,6 @@ import { GeneratedImagesController } from './presenters/http/generated-images.co
 import { DownloadMessageImageUseCase } from './application/use-cases/download-message-image/download-message-image.use-case';
 import { DownloadReferenceImagesUseCase } from './application/use-cases/download-reference-images/download-reference-images.use-case';
 import { MessageImagesController } from './presenters/http/message-images.controller';
-import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { ThreadsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { ThreadsWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
@@ -62,7 +61,6 @@ import { StorageModule } from 'src/domain/storage/storage.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
-import { SharesModule } from 'src/domain/shares/shares.module';
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
@@ -79,7 +77,6 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     // note in favorites.module.ts.
     forwardRef(() => WorkspacesModule),
     forwardRef(() => FavoritesModule),
-    SharesModule,
     ThreadPiiMasksModule,
     McpModule,
     NotificationsModule,
@@ -136,7 +133,6 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     RecordThreadActivityUseCase,
     FindExpiredThreadRefsByOrgUseCase,
     // Listeners
-    ShareDeletedListener,
     ThreadActivityListener,
     ThreadsUserDeletionRequestedListener,
     ThreadsWorkspaceDeletionRequestedListener,

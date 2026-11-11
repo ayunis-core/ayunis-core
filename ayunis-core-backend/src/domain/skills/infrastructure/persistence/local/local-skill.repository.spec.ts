@@ -299,7 +299,6 @@ describe('LocalSkillRepository', () => {
   });
 
   it('paginates workspace skills alphabetically without activation or pinning affecting order', async () => {
-    const sharedSkillId = randomUUID();
     const workspaceId = randomUUID();
     const records = [
       { id: randomUUID(), name: 'Citizen requests' } as SkillRecord,
@@ -339,7 +338,6 @@ describe('LocalSkillRepository', () => {
     const result = await repository.findPaginatedAccessible(
       userId,
       workspaceId,
-      [sharedSkillId],
       {
         search: 'citizen',
         limit: 2,
@@ -383,40 +381,10 @@ describe('LocalSkillRepository', () => {
       tx: undefined,
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>);
 
-    finder.buildQuery(userId, undefined, [], { limit: 20, offset: 0 });
+    finder.buildQuery(userId, undefined, { limit: 20, offset: 0 });
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'skill.workspaceId IS NULL',
-    );
-  });
-
-  it('returns knowledge-base IDs linked to the supplied skills', async () => {
-    const linkedKnowledgeBaseIds = [randomUUID(), randomUUID()];
-    const queryBuilder = {
-      select: jest.fn().mockReturnThis(),
-      from: jest.fn().mockReturnThis(),
-      innerJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      distinct: jest.fn().mockReturnThis(),
-      getRawMany: jest.fn().mockResolvedValue(
-        linkedKnowledgeBaseIds.map((knowledgeBaseId) => ({
-          knowledgeBaseId,
-        })),
-      ),
-    };
-    mockManager.createQueryBuilder.mockReturnValue(queryBuilder);
-
-    await expect(
-      repository.findKnowledgeBaseIdsBySkillIds([skillId]),
-    ).resolves.toEqual(linkedKnowledgeBaseIds);
-    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
-      'knowledge_bases',
-      'knowledgeBase',
-      '"knowledgeBase".id = skb."knowledgeBasesId"',
-    );
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      '"knowledgeBase"."userId" = skill."userId"',
     );
   });
 

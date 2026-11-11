@@ -7,8 +7,6 @@ import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/applica
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from 'src/domain/skills/application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
@@ -18,7 +16,6 @@ import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowle
 import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 
 const USER_ID = '11111111-1111-1111-1111-111111111111' as UUID;
-const OTHER_USER_ID = '22222222-2222-2222-2222-222222222222' as UUID;
 const ORG_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 const WORKSPACE_ID = '44444444-4444-4444-4444-444444444444' as UUID;
 const TEAM_ID = '55555555-5555-5555-5555-555555555555' as UUID;
@@ -30,13 +27,10 @@ async function setup() {
     findAllByUserId: jest.fn().mockResolvedValue([]),
     findAllByWorkspaceId: jest.fn().mockResolvedValue([]),
     findAllCollective: jest.fn().mockResolvedValue([]),
-    findByIds: jest.fn().mockResolvedValue([]),
     findPaginatedAccessible: jest.fn(),
     getActiveIds: jest.fn().mockResolvedValue(new Set()),
     getWorkspaceStates: jest.fn().mockResolvedValue(new Map()),
   };
-  const findShares = { execute: jest.fn().mockResolvedValue([]) };
-  const findSkillSharedIds = { execute: jest.fn().mockResolvedValue([]) };
   const principal = aUserContext({ userId: USER_ID, orgId: ORG_ID });
   const context = {
     get: jest.fn((key: keyof typeof principal) => principal[key]),
@@ -46,11 +40,6 @@ async function setup() {
     providers: [
       ListKnowledgeBasesUseCase,
       { provide: KnowledgeBaseRepository, useValue: repository },
-      { provide: FindSharesByScopeUseCase, useValue: findShares },
-      {
-        provide: FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
-        useValue: findSkillSharedIds,
-      },
       { provide: ContextService, useValue: context },
       { provide: AssertWorkspaceReadAccessUseCase, useValue: workspaceRead },
       {
@@ -62,32 +51,29 @@ async function setup() {
   return {
     useCase: module.get(ListKnowledgeBasesUseCase),
     repository,
-    findShares,
     workspaceRead,
   };
 }
 
 describe(ListKnowledgeBasesUseCase.name, () => {
-  it('returns every owned and shared personal knowledge base by default', async () => {
-    const { useCase, repository, findShares, workspaceRead } = await setup();
+  it('returns every owned personal knowledge base by default', async () => {
+    const { useCase, repository, workspaceRead } = await setup();
     const owned = new PersonalKnowledgeBase({
       name: 'Permit guidance',
       userId: USER_ID,
       orgId: ORG_ID,
     });
-    const shared = new PersonalKnowledgeBase({
+    const inactive = new PersonalKnowledgeBase({
       name: 'Regional planning guidance',
-      userId: OTHER_USER_ID,
+      userId: USER_ID,
       orgId: ORG_ID,
     });
-    repository.findAllByUserId.mockResolvedValue([owned]);
-    repository.findByIds.mockResolvedValue([shared]);
+    repository.findAllByUserId.mockResolvedValue([owned, inactive]);
     repository.getActiveIds.mockResolvedValue(new Set([owned.id]));
-    findShares.execute.mockResolvedValue([{ entityId: shared.id }]);
     repository.countSourcesByKnowledgeBaseIds.mockResolvedValue(
       new Map([
         [owned.id, 2],
-        [shared.id, 1],
+        [inactive.id, 1],
       ]),
     );
 
@@ -98,13 +84,11 @@ describe(ListKnowledgeBasesUseCase.name, () => {
     expect(result.data).toEqual([
       {
         knowledgeBase: owned,
-        isShared: false,
         isActive: true,
         documentCount: 2,
       },
       {
-        knowledgeBase: shared,
-        isShared: true,
+        knowledgeBase: inactive,
         isActive: false,
         documentCount: 1,
       },
@@ -134,7 +118,6 @@ describe(ListKnowledgeBasesUseCase.name, () => {
     expect(result.data).toEqual([
       {
         knowledgeBase,
-        isShared: false,
         isActive: true,
         documentCount: 0,
       },
@@ -172,34 +155,8 @@ describe(ListKnowledgeBasesUseCase.name, () => {
     expect(repository.findPaginatedAccessible).toHaveBeenCalledWith(
       USER_ID,
       WORKSPACE_ID,
-      [],
       { search: 'regulations', limit: 10, offset: 5 },
     );
-  });
-
-  it('marks shared personal resources on the paginated path', async () => {
-    const { useCase, repository, findShares } = await setup();
-    const shared = new PersonalKnowledgeBase({
-      name: 'Shared regulations',
-      userId: OTHER_USER_ID,
-      orgId: ORG_ID,
-    });
-    findShares.execute.mockResolvedValue([{ entityId: shared.id }]);
-    repository.findPaginatedAccessible.mockResolvedValue(
-      new Paginated({ data: [shared], limit: 20, offset: 0, total: 1 }),
-    );
-
-    const result = await useCase.execute(
-      new ListKnowledgeBasesQuery({
-        owner: { type: 'personal' },
-        limit: 20,
-      }),
-    );
-
-    expect(result.data[0]).toMatchObject({
-      knowledgeBase: shared,
-      isShared: true,
-    });
   });
 
   it('does not query resources when workspace access is denied', async () => {
@@ -254,13 +211,11 @@ describe(ListKnowledgeBasesUseCase.name, () => {
       expect(result.data).toEqual([
         {
           knowledgeBase: team,
-          isShared: false,
           isActive: true,
           documentCount: 0,
         },
         {
           knowledgeBase: org,
-          isShared: false,
           isActive: false,
           documentCount: 0,
         },
@@ -280,14 +235,12 @@ describe(ListKnowledgeBasesUseCase.name, () => {
       expect(repository.findPaginatedAccessible).toHaveBeenCalledWith(
         USER_ID,
         undefined,
-        [],
         expect.objectContaining({ limit: 10 }),
         OWNERS,
       );
       expect(result.data).toEqual([
         {
           knowledgeBase: team,
-          isShared: false,
           isActive: true,
           documentCount: 0,
         },

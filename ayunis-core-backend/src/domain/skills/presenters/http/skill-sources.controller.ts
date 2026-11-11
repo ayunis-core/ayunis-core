@@ -111,7 +111,7 @@ export class SkillSourcesController {
         new AddFileSourceToSkillCommand({ skillId, file }),
       );
 
-      return await this.toSkillDtoWithCreator(skillId);
+      return await this.toSkillDto(skillId);
     } catch (error: unknown) {
       this.logger.error({ err: error as Error }, 'addFileSource');
       throw error;
@@ -120,13 +120,11 @@ export class SkillSourcesController {
     }
   }
 
-  private async toSkillDtoWithCreator(
-    skillId: UUID,
-  ): Promise<SkillResponseDto> {
-    const { skill, creatorName, ...context } = await this.findSkill.execute(
+  private async toSkillDto(skillId: UUID): Promise<SkillResponseDto> {
+    const { skill, ...context } = await this.findSkill.execute(
       new FindOneSkillQuery(skillId),
     );
-    return this.skillDtoMapper.toDto(skill, context, creatorName);
+    return this.skillDtoMapper.toDto(skill, context);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)
@@ -202,7 +200,7 @@ export class SkillSourcesController {
     await this.completeSourceUploadUseCase.execute(
       new CompleteSkillSourceUploadCommand(skillId, uploadId),
     );
-    return this.toSkillDtoWithCreator(skillId);
+    return this.toSkillDto(skillId);
   }
 
   @RequirePermission(Permission.MANAGE_SKILLS)

@@ -9,10 +9,6 @@ import {
   SkillNotFoundError,
   UnexpectedSkillError,
 } from 'src/domain/skills/application/skills.errors';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
@@ -21,7 +17,6 @@ export class FindSkillByNameUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
-    private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -31,34 +26,11 @@ export class FindSkillByNameUseCase {
 
     const { userId } = getRequiredUserContext(this.contextService);
 
-    // Owned skills take priority
-    const ownedSkill = await this.skillRepository.findByNameAndOwner(
+    const skill = await this.skillRepository.findByNameAndOwner(
       query.name,
       userId,
     );
-
-    if (ownedSkill) {
-      return ownedSkill;
-    }
-
-    // Check shared skills
-    const shares = await this.findSharesByScopeUseCase.execute(
-      new FindSharesByScopeQuery(SharedEntityType.SKILL),
-    );
-
-    if (shares.length > 0) {
-      const sharedSkillIds = shares.map((s) => (s as SkillShare).skillId);
-      const sharedSkills = await this.skillRepository.findByIds(
-        sharedSkillIds,
-        null,
-      );
-      const matchingSkill = sharedSkills.find((s) => s.name === query.name);
-
-      if (matchingSkill) {
-        return matchingSkill;
-      }
-    }
-
-    throw new SkillNotFoundError(query.name);
+    if (!skill) throw new SkillNotFoundError(query.name);
+    return skill;
   }
 }

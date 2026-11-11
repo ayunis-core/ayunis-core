@@ -29,7 +29,6 @@ export class LocalSkillAccessiblePageFinder {
   buildQuery(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): SelectQueryBuilder<SkillRecord> {
@@ -42,14 +41,6 @@ export class LocalSkillAccessiblePageFinder {
         .where(
           new Brackets((accessQuery) => {
             accessQuery.where('skill.userId = :userId', { userId });
-            if (sharedSkillIds.length > 0) {
-              // Only personal skills can be shared; a share row left on a
-              // skill that has since moved to a team must not widen access.
-              accessQuery.orWhere(
-                'skill.id IN (:...sharedSkillIds) AND skill.userId IS NOT NULL',
-                { sharedSkillIds },
-              );
-            }
             if (collectiveOwners) {
               accessQuery.orWhere(
                 new Brackets((owner) =>
@@ -77,7 +68,6 @@ export class LocalSkillAccessiblePageFinder {
     scope: {
       userId: UUID;
       workspaceId: UUID | undefined;
-      sharedSkillIds: UUID[];
       collectiveOwners?: ReadableSkillOwners;
     },
     options: SkillListOptions,
@@ -87,7 +77,6 @@ export class LocalSkillAccessiblePageFinder {
     const [records, total] = await this.buildQuery(
       scope.userId,
       workspaceId,
-      scope.sharedSkillIds,
       options,
       workspaceId === undefined ? scope.collectiveOwners : undefined,
     )

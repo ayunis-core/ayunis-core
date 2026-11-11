@@ -1,44 +1,8 @@
 [
   {
     "type": "dependency",
-    "from": "src/domain/agents/application/strategies/agent-share-authorization.strategy.ts",
-    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domain/agents/application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case.ts",
     "to": "src/domain/mcp/application/ports/mcp-integrations.repository.port.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/knowledge-bases/application/listeners/share-deleted.listener.ts",
-    "to": "src/domain/shares/application/ports/shares-repository.port.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/knowledge-bases/application/listeners/share-deleted.listener.ts",
-    "to": "src/domain/skills/application/ports/skill.repository.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/knowledge-bases/application/strategies/knowledge-base-share-authorization.strategy.ts",
-    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-module-port-imports"
@@ -57,15 +21,6 @@
     "type": "dependency",
     "from": "src/domain/skills/application/services/marketplace-skill-installation.service.ts",
     "to": "src/domain/marketplace/application/ports/marketplace-client.port.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/skills/application/strategies/skill-share-authorization.strategy.ts",
-    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
     "rule": {
       "severity": "error",
       "name": "no-cross-module-port-imports"

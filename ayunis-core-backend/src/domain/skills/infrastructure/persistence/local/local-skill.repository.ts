@@ -36,7 +36,6 @@ import {
   activateSkill as activateSkillRecord,
   deactivateAllExceptOwner as deactivateAllSkillUsersExceptOwner,
   deactivateSkill as deactivateSkillRecord,
-  deactivateUsersNotInSet as deactivateSkillUsersNotInSet,
   getActiveSkillIds as loadActiveSkillIds,
   isSkillActive as loadIsSkillActive,
 } from './local-skill-activation.repository-helper';
@@ -199,27 +198,23 @@ export class LocalSkillRepository implements SkillRepository {
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<PersonalSkill | CollectiveSkill>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): Promise<Paginated<WorkspaceSkill>>;
   findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<Skill>>;
   async findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<Skill>> {
@@ -228,7 +223,7 @@ export class LocalSkillRepository implements SkillRepository {
       'findPaginatedAccessible',
     );
     return this.accessiblePageFinder.findPage(
-      { userId, workspaceId, sharedSkillIds, collectiveOwners },
+      { userId, workspaceId, collectiveOwners },
       options,
       this.skillMapper,
     );
@@ -316,23 +311,6 @@ export class LocalSkillRepository implements SkillRepository {
       this.skillActivationRepository,
       skillId,
       ownerId,
-    );
-  }
-
-  async deactivateUsersNotInSet(
-    skillId: UUID,
-    ownerId: UUID,
-    retainUserIds: Set<UUID>,
-  ): Promise<void> {
-    this.logger.log(
-      { skillId, ownerId, retainCount: retainUserIds.size },
-      'deactivateUsersNotInSet',
-    );
-    return deactivateSkillUsersNotInSet(
-      this.skillActivationRepository,
-      skillId,
-      ownerId,
-      retainUserIds,
     );
   }
 
@@ -436,22 +414,6 @@ export class LocalSkillRepository implements SkillRepository {
     return getPinnedSkillIds(this.skillActivationRepository, userId);
   }
 
-  async findSkillsByKnowledgeBaseAndOwners(
-    knowledgeBaseId: UUID,
-    ownerIds: UUID[],
-  ): Promise<PersonalSkill[]> {
-    this.logger.log(
-      { knowledgeBaseId, ownerCount: ownerIds.length },
-      'findSkillsByKnowledgeBaseAndOwners',
-    );
-    const records = await this.knowledgeBaseIdsFinder.findSkillsByKnowledgeBase(
-      this.getManager(),
-      knowledgeBaseId,
-      ownerIds,
-    );
-    return records.map((r) => this.skillMapper.toPersonal(r));
-  }
-
   async findSourceIdsByOwnerUserId(userId: UUID): Promise<UUID[]> {
     this.logger.log({ userId }, 'findSourceIdsByOwnerUserId');
     return findSourceIdsOwnedByUser(this.skillRepository, userId);
@@ -463,17 +425,6 @@ export class LocalSkillRepository implements SkillRepository {
       knowledgeBaseId,
     );
     return records.map((record) => this.skillMapper.toDomain(record));
-  }
-
-  async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {
-    this.logger.log(
-      { skillCount: skillIds.length },
-      'findKnowledgeBaseIdsBySkillIds',
-    );
-    return this.knowledgeBaseIdsFinder.findKnowledgeBaseIdsBySkillIds(
-      skillIds,
-      this.getManager(),
-    );
   }
 
   async removeKnowledgeBaseFromSkills(

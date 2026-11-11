@@ -53,20 +53,17 @@ export abstract class SkillRepository {
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<PersonalSkill | CollectiveSkill>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): Promise<Paginated<WorkspaceSkill>>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,
-    sharedSkillIds: UUID[],
     options: SkillListOptions,
     collectiveOwners?: ReadableSkillOwners,
   ): Promise<Paginated<Skill>>;
@@ -116,11 +113,6 @@ export abstract class SkillRepository {
     skillId: UUID,
     ownerId: UUID,
   ): Promise<void>;
-  abstract deactivateUsersNotInSet(
-    skillId: UUID,
-    ownerId: UUID,
-    retainUserIds: Set<UUID>,
-  ): Promise<void>;
   abstract findByIds(ids: UUID[], workspaceId: null): Promise<PersonalSkill[]>;
   abstract findByIds(ids: UUID[], workspaceId: UUID): Promise<WorkspaceSkill[]>;
   abstract findByIds(ids: UUID[], workspaceId?: UUID | null): Promise<Skill[]>;
@@ -132,12 +124,7 @@ export abstract class SkillRepository {
   ): Promise<void>;
   abstract isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract getPinnedSkillIds(userId: UUID): Promise<Set<UUID>>;
-  abstract findSkillsByKnowledgeBaseAndOwners(
-    knowledgeBaseId: UUID,
-    ownerIds: UUID[],
-  ): Promise<PersonalSkill[]>;
   abstract findAllByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Skill[]>;
-  abstract findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]>;
   /** Sources of the user's personal skills; workspace skills carry no `userId`. */
   abstract findSourceIdsByOwnerUserId(userId: UUID): Promise<UUID[]>;
   abstract removeKnowledgeBaseFromSkills(

@@ -10,12 +10,6 @@ import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { AddTeamAndOrgKnowledgeBaseOwnership1793979275771 } from 'src/db/migrations/1793979275771-AddTeamAndOrgKnowledgeBaseOwnership';
 import type { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
-import {
-  KnowledgeBaseShareRecord,
-  SkillShareRecord,
-} from 'src/domain/shares/infrastructure/postgres/schema/share.record';
-import { ShareScopeRecord } from 'src/domain/shares/infrastructure/postgres/schema/share-scope.record';
-import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
 import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 import { LocalKnowledgeBaseRepository } from './local-knowledge-base.repository';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
@@ -53,76 +47,6 @@ const activationSchema = new EntitySchema<KnowledgeBaseActivationRecord>({
     workspaceId: { type: String, nullable: true },
   },
 });
-const shareScopeSchema = new EntitySchema({
-  name: 'ShareScopeRecord',
-  target: ShareScopeRecord,
-  tableName: 'share_scopes',
-  columns: {
-    id: { type: String, primary: true },
-    scope_type: { type: String },
-    orgId: { type: String, nullable: true },
-    teamId: { type: String, name: 'team_id', nullable: true },
-  },
-});
-const shareColumns = {
-  id: { type: String, primary: true },
-  entity_type: { type: String },
-} as const;
-const shareScopeRelation = {
-  scope: {
-    type: 'many-to-one' as const,
-    target: 'ShareScopeRecord',
-    joinColumn: { name: 'scope_id' },
-  },
-};
-interface ShareRow {
-  id: string;
-  entity_type: string;
-  scope: unknown;
-}
-const knowledgeBaseShareSchema = new EntitySchema<
-  ShareRow & { knowledgeBaseId: string }
->({
-  name: 'KnowledgeBaseShareRecord',
-  target: KnowledgeBaseShareRecord,
-  tableName: 'shares',
-  columns: {
-    ...shareColumns,
-    knowledgeBaseId: { type: String, name: 'knowledge_base_id' },
-  },
-  relations: shareScopeRelation,
-});
-const skillShareSchema = new EntitySchema<ShareRow & { skillId: string }>({
-  name: 'SkillShareRecord',
-  target: SkillShareRecord,
-  tableName: 'shares',
-  columns: { ...shareColumns, skillId: { type: String, name: 'skill_id' } },
-  relations: shareScopeRelation,
-});
-const skillSchema = new EntitySchema<{
-  id: string;
-  userId: string | null;
-  knowledgeBases: unknown[];
-}>({
-  name: 'SkillRecord',
-  target: SkillRecord,
-  tableName: 'skills',
-  columns: {
-    id: { type: String, primary: true },
-    userId: { type: String, nullable: true },
-  },
-  relations: {
-    knowledgeBases: {
-      type: 'many-to-many',
-      target: 'KnowledgeBaseRecord',
-      joinTable: {
-        name: 'skill_knowledge_bases',
-        joinColumn: { name: 'skillsId' },
-        inverseJoinColumn: { name: 'knowledgeBasesId' },
-      },
-    },
-  },
-});
 const teamMemberSchema = new EntitySchema({
   name: 'TeamMemberRecord',
   target: TeamMemberRecord,
@@ -147,10 +71,6 @@ const PRE_MIGRATION_TABLES = [
     CONSTRAINT "CHK_knowledge_bases_exactly_one_owner" CHECK ((("userId" IS NOT NULL) AND ("workspaceId" IS NULL)) OR (("userId" IS NULL) AND ("workspaceId" IS NOT NULL)))
   )`,
   `CREATE TABLE "knowledge_base_activations" ("id" uuid PRIMARY KEY, "knowledgeBaseId" varchar NOT NULL, "userId" varchar, "workspaceId" varchar)`,
-  `CREATE TABLE "share_scopes" ("id" varchar PRIMARY KEY, "scope_type" varchar NOT NULL, "orgId" varchar, "team_id" varchar)`,
-  `CREATE TABLE "shares" ("id" varchar PRIMARY KEY, "owner_id" varchar NOT NULL, "entity_type" varchar NOT NULL, "scope_id" varchar, "skill_id" varchar, "knowledge_base_id" varchar)`,
-  `CREATE TABLE "skills" ("id" varchar PRIMARY KEY, "userId" varchar)`,
-  `CREATE TABLE "skill_knowledge_bases" ("skillsId" varchar NOT NULL, "knowledgeBasesId" varchar NOT NULL)`,
 ];
 
 /**
@@ -180,15 +100,7 @@ describe('Knowledge-base access for team- and org-owned knowledge bases', () => 
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [
-        knowledgeBaseSchema,
-        activationSchema,
-        shareScopeSchema,
-        knowledgeBaseShareSchema,
-        skillShareSchema,
-        skillSchema,
-        teamMemberSchema,
-      ],
+      entities: [knowledgeBaseSchema, activationSchema, teamMemberSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -357,7 +269,6 @@ describe('Knowledge-base access for team- and org-owned knowledge bases', () => 
     const page = await repository.findPaginatedAccessible(
       userId,
       undefined,
-      [],
       { limit: 50, offset: 0 },
       { orgId, teamIds: [ownTeamId] },
     );
@@ -386,47 +297,6 @@ describe('Knowledge-base access for team- and org-owned knowledge bases', () => 
       repository.findAllByTeamId(ownTeamId).then(names),
     ).resolves.toEqual(['teamActive', 'teamInactive']);
   });
-
-  it('ignores org shares left on a knowledge base another team owns', async () => {
-    await shareWithOrg(runner.manager, ids.otherTeamActive, colleagueId);
-    await shareWithOrg(runner.manager, ids.colleagueActive, colleagueId);
-    const sharedIds = [ids.otherTeamActive, ids.colleagueActive];
-
-    await expect(
-      repository.findAccessibleByIds(sharedIds, scope).then(names),
-    ).resolves.toEqual(['colleagueActive']);
-    await expect(
-      repository.findActiveAccessible(scope).then(names),
-    ).resolves.not.toContain('otherTeamActive');
-    const page = await repository.findPaginatedAccessible(
-      userId,
-      undefined,
-      sharedIds,
-      { limit: 50, offset: 0 },
-      { orgId, teamIds: [ownTeamId] },
-    );
-    expect(names(page.data)).toContain('colleagueActive');
-    expect(names(page.data)).not.toContain('otherTeamActive');
-    await expect(
-      repository.findByIds(sharedIds, { orgId, workspaceId: null }).then(names),
-    ).resolves.toEqual(['colleagueActive']);
-  });
-
-  async function shareWithOrg(
-    manager: EntityManager,
-    knowledgeBaseId: UUID,
-    ownerId: UUID,
-  ): Promise<void> {
-    const scopeId = randomUUID();
-    await manager.query(
-      `INSERT INTO "share_scopes" ("id", "scope_type", "orgId") VALUES ($1, 'org', $2)`,
-      [scopeId, orgId],
-    );
-    await manager.query(
-      `INSERT INTO "shares" ("id", "owner_id", "entity_type", "scope_id", "knowledge_base_id") VALUES ($1, $2, 'knowledge_base', $3, $4)`,
-      [randomUUID(), ownerId, scopeId, knowledgeBaseId],
-    );
-  }
 
   it.each([
     ['no owner', { isOrgOwned: false }],

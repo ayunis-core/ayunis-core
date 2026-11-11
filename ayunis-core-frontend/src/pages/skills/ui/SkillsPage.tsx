@@ -19,7 +19,7 @@ interface SkillsPageProps {
 export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
   const personalSkills = skills
-    .filter((skill) => skill.ownerType === 'personal' && !skill.isShared)
+    .filter((skill) => skill.ownerType === 'personal')
     .sort((a, b) => a.name.localeCompare(b.name));
 
   // The "pin a skill" tour step anchors on the first active personal skill.

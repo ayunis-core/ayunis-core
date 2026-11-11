@@ -1,17 +1,14 @@
-import { request, type APIRequestContext } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
+import { createTeamOwnershipFixture } from '../../src/factories/team-ownership.factory';
 import { createUser } from '../../src/factories/user.factory';
 import { test, expect } from '../../src/fixtures/test';
 import { sendMessage, startThread } from '../../src/flows/chat.flow';
 import { login } from '../../src/clients/api/auth.client';
-import { skipChatPersonalization } from '../../src/clients/api/chat-settings.client';
-import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
 import { getThreadSourceCitationResponse } from '../../src/clients/api/threads.client';
 import {
   CreateKnowledgeBaseDtoOwnerType,
-  CreateKnowledgeBaseShareDtoEntityType,
   CreateSkillDtoOwnerType,
-  CreateSkillShareDtoEntityType,
 } from '../../src/clients/generated/ayunisCoreAPI.schemas';
 import { config } from '../../src/config';
 
@@ -65,7 +62,7 @@ test('opens an accessible source citation without exposing it to another user', 
   }
 });
 
-test('opens citations from active knowledge bases and reauthorizes sharing', async ({
+test('opens citations from active team knowledge bases and reauthorizes membership', async ({
   api,
   browser,
   mail,
@@ -73,9 +70,15 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
 }) => {
   const suffix = `${Date.now()}`;
   await permitFirstEmbeddingModel(api);
+  const fixture = await createTeamOwnershipFixture(
+    api,
+    mail,
+    `team-citation-${suffix}`,
+  );
   const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
     {
-      ownerType: CreateKnowledgeBaseDtoOwnerType.personal,
+      ownerType: CreateKnowledgeBaseDtoOwnerType.team,
+      teamId: fixture.team.id,
       name: `Citation knowledge base ${suffix}`,
       description: 'Provides source citation evidence.',
     },
@@ -84,11 +87,11 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
   await uploadKnowledgeBaseSource(
     api,
     knowledgeBase.id,
-    `shared-mobility-${suffix}.txt`,
+    `team-mobility-${suffix}.txt`,
   );
   await waitForKnowledgeBaseSourceReady(api, knowledgeBase.id);
 
-  const ownerThreadId = await startThread(page, 'Find shared source evidence');
+  const ownerThreadId = await startThread(page, 'Find team source evidence');
   await page.goto(`/chats/${ownerThreadId}`);
   await sendMessage(page, 'E2E cite first source');
   const ownerCitation = page.getByTestId('source-citation').last();
@@ -98,24 +101,20 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   );
 
-  const member = await createUser(api, mail, `shared-citation-${suffix}`);
-  const memberApi = await request.newContext({ baseURL: config.apiURL });
-  await login(memberApi, member.email, member.password);
-  await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
-  const memberContext = await browser.newContext({
+  const { outsider } = fixture;
+  const outsiderContext = await browser.newContext({
     baseURL: config.baseURL,
-    storageState: await memberApi.storageState(),
+    storageState: outsider.storageState,
   });
   try {
-    const memberPage = await memberContext.newPage();
-    const memberThreadId = await startThread(
-      memberPage,
-      'Check shared source evidence',
+    const outsiderPage = await outsiderContext.newPage();
+    const outsiderThreadId = await startThread(
+      outsiderPage,
+      'Check team source evidence',
     );
     const beforeGrant = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
     expect(beforeGrant.status()).toBe(404);
@@ -124,37 +123,24 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
       message: string;
     };
 
-    const share =
-      await generatedApi.sharesControllerCreateKnowledgeBaseShare(
-        {
-          entityType:
-            CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
-          knowledgeBaseId: knowledgeBase.id,
-        },
-        { api },
-      );
-    await generatedApi.knowledgeBasesControllerSetActivation(
-      knowledgeBase.id,
-      { isActive: true },
-      { api: memberApi },
-    );
-    await memberPage.goto(`/chats/${memberThreadId}`);
-    await sendMessage(memberPage, 'E2E cite first source');
-    const memberCitation = memberPage.getByTestId('source-citation').last();
-    await expect(memberCitation).toBeVisible();
-    await memberCitation.click();
+    await fixture.addToTeam(outsider);
+    await outsiderPage.goto(`/chats/${outsiderThreadId}`);
+    await sendMessage(outsiderPage, 'E2E cite first source');
+    const outsiderCitation = outsiderPage.getByTestId('source-citation').last();
+    await expect(outsiderCitation).toBeVisible();
+    await outsiderCitation.click();
     await expect(
-      memberPage.getByTestId('source-citation-excerpt'),
+      outsiderPage.getByTestId('source-citation-excerpt'),
     ).toContainText('The council approved the mobility plan');
 
     await generatedApi.knowledgeBasesControllerSetActivation(
       knowledgeBase.id,
       { isActive: false },
-      { api: memberApi },
+      { api },
     );
     const afterDeactivation = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
     expect(afterDeactivation.status()).toBe(404);
@@ -162,33 +148,33 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
     await generatedApi.knowledgeBasesControllerSetActivation(
       knowledgeBase.id,
       { isActive: true },
-      { api: memberApi },
+      { api },
     );
     const afterReactivation = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
     expect(afterReactivation.status()).toBe(200);
 
-    await generatedApi.sharesControllerDeleteShare(share.id, { api });
-    const afterRevocation = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+    await fixture.removeFromTeam(outsider);
+    const afterRemoval = await getThreadSourceCitationResponse(
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
-    expect(afterRevocation.status()).toBe(404);
-    expect(await afterRevocation.json()).toMatchObject({
+    expect(afterRemoval.status()).toBe(404);
+    expect(await afterRemoval.json()).toMatchObject({
       code: hiddenResponse.code,
       message: hiddenResponse.message,
     });
   } finally {
-    await memberContext.close();
-    await memberApi.dispose();
+    await outsiderContext.close();
+    await fixture.cleanup();
   }
 });
 
-test('reauthorizes a skill source before and after sharing', async ({
+test('reauthorizes a team skill source by team membership', async ({
   api,
   browser,
   mail,
@@ -196,9 +182,15 @@ test('reauthorizes a skill source before and after sharing', async ({
 }) => {
   const suffix = `${Date.now()}`;
   await permitFirstEmbeddingModel(api);
+  const fixture = await createTeamOwnershipFixture(
+    api,
+    mail,
+    `team-skill-citation-${suffix}`,
+  );
   const skill = await generatedApi.skillsControllerCreate(
     {
-      ownerType: CreateSkillDtoOwnerType.personal,
+      ownerType: CreateSkillDtoOwnerType.team,
+      teamId: fixture.team.id,
       name: `Citation skill ${suffix}`,
       shortDescription: 'Provides source citation evidence.',
       instructions: 'Use the attached source for evidence.',
@@ -219,59 +211,44 @@ test('reauthorizes a skill source before and after sharing', async ({
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   );
 
-  const member = await createUser(api, mail, `skill-citation-${suffix}`);
-  const memberApi = await request.newContext({ baseURL: config.apiURL });
-  await login(memberApi, member.email, member.password);
-  await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
-  const memberContext = await browser.newContext({
+  const { outsider } = fixture;
+  const outsiderContext = await browser.newContext({
     baseURL: config.baseURL,
-    storageState: await memberApi.storageState(),
+    storageState: outsider.storageState,
   });
   try {
-    const memberPage = await memberContext.newPage();
-    const memberThreadId = await startThread(
-      memberPage,
+    const outsiderPage = await outsiderContext.newPage();
+    const outsiderThreadId = await startThread(
+      outsiderPage,
       'Check skill source evidence',
     );
     const beforeGrant = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
     expect(beforeGrant.status()).toBe(404);
 
-    const share = await generatedApi.sharesControllerCreateSkillShare(
-      {
-        entityType: CreateSkillShareDtoEntityType.skill,
-        skillId: skill.id,
-      },
-      { api },
-    );
-    await generatedApi.skillsControllerActivate(
-      skill.id,
-      { isActive: true },
-      { api: memberApi },
-    );
-    await memberPage.goto(`/chats/${memberThreadId}`);
-    await sendMessage(memberPage, 'E2E cite first source');
-    const memberCitation = memberPage.getByTestId('source-citation').last();
-    await expect(memberCitation).toBeVisible();
-    await memberCitation.click();
+    await fixture.addToTeam(outsider);
+    await outsiderPage.goto(`/chats/${outsiderThreadId}`);
+    await sendMessage(outsiderPage, 'E2E cite first source');
+    const outsiderCitation = outsiderPage.getByTestId('source-citation').last();
+    await expect(outsiderCitation).toBeVisible();
+    await outsiderCitation.click();
     await expect(
-      memberPage.getByTestId('source-citation-excerpt'),
+      outsiderPage.getByTestId('source-citation-excerpt'),
     ).toContainText('The council approved the mobility plan');
 
-    await generatedApi.sharesControllerDeleteShare(share.id, { api });
-    const afterRevocation = await getThreadSourceCitationResponse(
-      memberApi,
-      memberThreadId,
+    await fixture.removeFromTeam(outsider);
+    const afterRemoval = await getThreadSourceCitationResponse(
+      outsider.api,
+      outsiderThreadId,
       chunkId,
     );
-    expect(afterRevocation.status()).toBe(404);
+    expect(afterRemoval.status()).toBe(404);
   } finally {
-    await memberContext.close();
-    await memberApi.dispose();
+    await outsiderContext.close();
+    await fixture.cleanup();
   }
 });
 

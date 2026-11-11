@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
-import type { APIRequestContext, Browser, BrowserContext } from "@playwright/test";
+import type {
+  APIRequestContext,
+  Browser,
+  BrowserContext,
+  Page,
+} from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
 import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
-import { generatedApi } from "../../src/clients/api/generated-api";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
+import { requestSkillCreation } from "../../src/clients/api/ownership.client";
 import { setUserRolePermissions } from "../../src/clients/api/role-permissions.client";
-import { requestSkillShare } from "../../src/clients/api/shares.client";
 import {
   addTeamMember,
   createTeam,
@@ -109,46 +113,54 @@ test("a team admin manages their team from the admin settings", async ({
   }
 });
 
-test("a team admin can share with their team when their role cannot", async ({
+async function openCreateSkillDialog(page: Page): Promise<void> {
+  await page.goto("/skills");
+  await page.getByTestId("create-skill-menu").first().click();
+  await page.getByTestId("create-skill-editor").click();
+  await expect(page.getByTestId("create-entity-submit")).toBeEnabled();
+}
+
+test("a team admin can create team skills when their role cannot", async ({
   browser,
   mail,
 }) => {
   test.setTimeout(120_000);
   const key = randomUUID().slice(0, 8);
   const org = await createOrg(
-    `team-admin-share-${key}`,
-    test.info().outputPath("team-admin-share-org.json"),
+    `team-admin-owner-${key}`,
+    test.info().outputPath("team-admin-owner-org.json"),
   );
   const adminApi = await createApiContext(emptySession);
   await login(adminApi, org.admin.email, org.admin.password);
-  const lead = await signIn(adminApi, mail, `share-lead-${key}`);
+  const lead = await signIn(adminApi, mail, `owner-lead-${key}`);
   const team = await createTeam(adminApi, `Bauamt ${key}`);
   await addTeamMember(adminApi, team.id, lead.user.id);
   await setUserRolePermissions(adminApi, ["manage_skills"]);
-  const skill = await generatedApi.skillsControllerCreate(
-    {
-      ownerType: "personal",
-      name: `Bauantrag ${key}`,
-      shortDescription: "Answers building permit questions",
-      instructions: "Answer building permit questions.",
-      isActive: true,
-    },
-    { api: lead.api },
-  );
   const leadContext = await openContext(browser, lead.api);
   try {
     const page = await leadContext.newPage();
-    await page.goto(`/skills/${skill.id}?tab=share`);
-    const teamSwitch = page.getByTestId(`shares-team-switch-${team.id}`);
-    await expect(teamSwitch).toBeDisabled();
+    await openCreateSkillDialog(page);
+    const ownerSelect = page.getByTestId("skill-create-owner");
+    await expect(ownerSelect).toHaveCount(0);
 
     await setTeamMemberRole(adminApi, team.id, lead.user.id, "admin");
 
-    await page.reload();
-    await expect(teamSwitch).toBeEnabled();
-    await expect(page.getByTestId("shares-org-switch")).toBeDisabled();
+    await openCreateSkillDialog(page);
+    await ownerSelect.click();
+    await expect(
+      page.getByTestId(`skill-create-owner-option-team:${team.id}`),
+    ).toBeVisible();
+    await expect(page.getByTestId("skill-create-owner-option-org")).toHaveCount(
+      0,
+    );
     expect(
-      (await requestSkillShare(lead.api, skill.id, team.id)).status(),
+      (
+        await requestSkillCreation(
+          lead.api,
+          { ownerType: "team", teamId: team.id },
+          `Bauantrag ${key}`,
+        )
+      ).status(),
     ).toBe(201);
   } finally {
     await leadContext.close();

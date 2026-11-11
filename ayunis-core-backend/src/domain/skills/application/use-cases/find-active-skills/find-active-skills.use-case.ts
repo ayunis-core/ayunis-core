@@ -1,5 +1,4 @@
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import type { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
 import { Injectable, Logger } from '@nestjs/common';
@@ -8,11 +7,6 @@ import { FindActiveSkillsQuery } from './find-active-skills.query';
 
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedSkillError } from 'src/domain/skills/application/skills.errors';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
-import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { SkillShare } from 'src/domain/shares/domain/share.entity';
-import { UUID } from 'crypto';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 @Injectable()
@@ -21,7 +15,6 @@ export class FindActiveSkillsUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
-    private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
     private readonly collectiveAccess: CollectiveSkillAccessService,
   ) {}
@@ -32,57 +25,11 @@ export class FindActiveSkillsUseCase {
 
     const { userId } = getRequiredUserContext(this.contextService);
     const [personal, collective] = await Promise.all([
-      this.findActivePersonal(userId),
+      this.skillRepository.findActiveByOwner(userId),
       this.collectiveAccess
         .readableOwners()
         .then((owners) => this.skillRepository.findActiveCollective(owners)),
     ]);
     return [...personal, ...collective];
-  }
-
-  private async findActivePersonal(userId: UUID): Promise<PersonalSkill[]> {
-    // 1. Fetch owned active skills
-    const ownedActiveSkills =
-      await this.skillRepository.findActiveByOwner(userId);
-    const ownedSkillIds = new Set(ownedActiveSkills.map((s) => s.id));
-
-    // 2. Get all active skill IDs for this user
-    const activeSkillIds = await this.skillRepository.getActiveSkillIds(userId);
-
-    // 3. Find active skill IDs that are not owned (must be shared)
-    const potentialSharedActiveIds: UUID[] = [];
-    for (const activeId of activeSkillIds) {
-      if (!ownedSkillIds.has(activeId)) {
-        potentialSharedActiveIds.push(activeId);
-      }
-    }
-
-    if (potentialSharedActiveIds.length === 0) {
-      return ownedActiveSkills;
-    }
-
-    // 4. Verify these are actually shared with the user
-    const shares = await this.findSharesByScopeUseCase.execute(
-      new FindSharesByScopeQuery(SharedEntityType.SKILL),
-    );
-    const sharedSkillIds = new Set(
-      shares.map((s) => (s as SkillShare).skillId),
-    );
-
-    const confirmedSharedActiveIds = potentialSharedActiveIds.filter((id) =>
-      sharedSkillIds.has(id),
-    );
-
-    if (confirmedSharedActiveIds.length === 0) {
-      return ownedActiveSkills;
-    }
-
-    // 5. Fetch the shared active skills
-    const sharedActiveSkills = await this.skillRepository.findByIds(
-      confirmedSharedActiveIds,
-      null,
-    );
-
-    return [...ownedActiveSkills, ...sharedActiveSkills];
   }
 }
