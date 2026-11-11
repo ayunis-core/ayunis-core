@@ -9,6 +9,7 @@ interface AssistantContentBlock {
   id?: string;
   name?: string;
   params?: Record<string, unknown>;
+  requiresConfirmation?: boolean;
   stream?: {
     status: 'streaming' | 'invalid';
     argumentsJson: string;
@@ -40,6 +41,7 @@ function assistantMessage(blocks: AssistantContentBlock[]): Message {
         id: block.id,
         name: block.name,
         params: block.params ?? {},
+        requiresConfirmation: block.requiresConfirmation,
         stream: block.stream,
       };
     }),
@@ -261,6 +263,44 @@ describe('groupMessagesIntoRuns', () => {
     expect(run.blocks.map((block) => block.kind)).toEqual([
       'activity',
       'routine-finished',
+    ]);
+  });
+
+  it('shows the other calls of a turn awaiting confirmation only once they run', () => {
+    const pausedTurn = [
+      userMessage('Suche und lege ein Ticket an'),
+      assistantMessage([
+        { type: 'tool_use', id: 't1', name: 'internet_search' },
+        { type: 'tool_use', id: 't2', name: 'send_email' },
+        {
+          type: 'tool_use',
+          id: 't3',
+          name: 'mcp__tool__create_ticket__b0eb63cb',
+          requiresConfirmation: true,
+        },
+      ]),
+    ];
+    const toolNames = (units: ReturnType<typeof groupMessagesIntoRuns>) => {
+      const run = units[1];
+      if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+      return run.blocks.flatMap((block) =>
+        block.kind === 'activity' || block.kind === 'rich-tool'
+          ? block.steps.flatMap((step) =>
+              step.kind === 'tool' ? [step.toolUse.name] : [],
+            )
+          : [],
+      );
+    };
+
+    expect(
+      toolNames(groupMessagesIntoRuns(pausedTurn, { isStreaming: false })),
+    ).toEqual(['mcp__tool__create_ticket__b0eb63cb']);
+    expect(
+      toolNames(groupMessagesIntoRuns(pausedTurn, { isStreaming: true })),
+    ).toEqual([
+      'internet_search',
+      'send_email',
+      'mcp__tool__create_ticket__b0eb63cb',
     ]);
   });
 

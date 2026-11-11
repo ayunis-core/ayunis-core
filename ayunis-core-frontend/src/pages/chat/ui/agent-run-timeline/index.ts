@@ -8,3 +8,7 @@ export type {
   TimelineStep,
   ToolTimelineStep,
 } from './model/types';
+export {
+  ToolCallConfirmationContext,
+  type ToolCallConfirmation,
+} from './model/tool-call-confirmation';

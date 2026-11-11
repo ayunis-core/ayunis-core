@@ -2,6 +2,7 @@ import type {
   AssistantMessage as InferenceAssistantMessage,
   Message as InferenceMessage,
 } from '@ayunis/inference';
+import type { Tool as RuntimeTool } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
@@ -12,6 +13,7 @@ import {
   toBackendAssistantMessage,
   toBackendToolResultMessage,
 } from './inference-message.mapper';
+import { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const fixedId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -74,6 +76,60 @@ describe('inference-message.mapper', () => {
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe(MessageContentType.TEXT);
+    });
+  });
+
+  describe('calls awaiting confirmation', () => {
+    const MCP_TOOL = 'mcp__tool__create_ticket__423e4567';
+    const runtimeTools: RuntimeTool[] = [
+      {
+        name: MCP_TOOL,
+        description: 'Creates a ticket',
+        parameters: { type: 'object' },
+        needsApproval: true,
+        validateInput: (input) => {
+          if (typeof input.title !== 'string') throw new Error('title');
+        },
+        execute: () => 'created',
+      },
+      {
+        name: 'internet_search',
+        description: 'Searches the web',
+        parameters: { type: 'object' },
+        execute: () => 'results',
+      },
+    ];
+    const registry = new RuntimeToolIntegrationRegistry([], runtimeTools);
+    const turn = (
+      ticketInput: Record<string, unknown>,
+    ): InferenceAssistantMessage => ({
+      role: 'assistant',
+      content: [
+        { type: 'tool_use', id: 'call_1', name: MCP_TOOL, input: ticketInput },
+        {
+          type: 'tool_use',
+          id: 'call_2',
+          name: 'internet_search',
+          input: { query: 'Laterne' },
+        },
+      ],
+    });
+    const marks = (message: InferenceAssistantMessage) =>
+      toBackendAssistantMessage(
+        message,
+        threadId,
+        fixedId,
+        registry,
+      ).content.map(
+        (content) => (content as ToolUseMessageContent).requiresConfirmation,
+      );
+
+    it('marks only the calls needing approval of a turn that ends the run for confirmation', () => {
+      expect(marks(turn({ title: 'Laterne defekt' }))).toEqual([true, false]);
+    });
+
+    it('marks no call of a turn whose invalid input goes back to the model', () => {
+      expect(marks(turn({}))).toEqual([false, false]);
     });
   });
 

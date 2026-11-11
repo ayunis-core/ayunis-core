@@ -128,6 +128,7 @@ function assembleChat(
     ),
     resolved({}),
     { toRuntimeTools: jest.fn() } as never,
+    resolved([]),
   );
   return assembler.assemble(buildChatProfile(), {
     profile: { id: 'chat' },

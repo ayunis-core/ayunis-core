@@ -1,6 +1,8 @@
 import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { McpToolAllowance } from 'src/domain/mcp/domain/mcp-tool-allowance.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
@@ -68,5 +70,24 @@ export function requiresExclusiveExecution(tool: Tool): boolean {
     tool instanceof EditDocumentTool ||
     tool instanceof UpdateDiagramTool ||
     tool instanceof UpdateSpreadsheetTool
+  );
+}
+
+/**
+ * Calls to an MCP tool wait for the user's confirmation unless the user always
+ * allowed that tool of that integration. Tool annotations such as
+ * `readOnlyHint` are ignored: servers report them unverified.
+ */
+export function requiresApproval(
+  tool: Tool,
+  allowances: readonly McpToolAllowance[],
+): boolean {
+  return (
+    tool instanceof McpIntegrationTool &&
+    !allowances.some(
+      (allowance) =>
+        allowance.integrationId === tool.integrationId &&
+        allowance.toolName === tool.originalName,
+    )
   );
 }

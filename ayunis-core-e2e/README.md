@@ -87,7 +87,8 @@ tool ran.
 integration of the worker org and attach it to a new chat. A message
 `E2E call MCP echo: <text>` (build it with `MCP_ECHO_PROMPT`) makes the mock
 model call the tool with `<text>`, then answer `mcp-tool-result::<result text>`
-once the result is in the chat.
+once the result is in the chat. The chat asks to confirm the call first:
+`src/flows/tool-confirmation.flow.ts` confirms or rejects its card.
 
 ## Architecture
 

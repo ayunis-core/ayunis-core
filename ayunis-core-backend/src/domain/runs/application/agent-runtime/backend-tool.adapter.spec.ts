@@ -21,6 +21,8 @@ import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spre
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -135,6 +137,35 @@ describe('BackendToolAdapter', () => {
       expect(tool.execute).toBeUndefined();
     },
   );
+
+  it('sends invalid input of a tool needing approval back to the model instead of asking to confirm it', () => {
+    const backendTool = new McpIntegrationTool(
+      new McpTool(
+        'create_ticket',
+        undefined,
+        {
+          type: 'object',
+          properties: { title: { type: 'string' } },
+          required: ['title'],
+        },
+        '423e4567-e89b-12d3-a456-426614174000',
+      ),
+      false,
+      'Rathaus',
+      null,
+    );
+
+    const [tool] = adapter.toRuntimeTools(
+      [backendTool],
+      new Set([backendTool.name]),
+    );
+
+    expect(tool.needsApproval).toBe(true);
+    expect(() => tool.validateInput!({})).toThrow(/title/);
+    expect(() =>
+      tool.validateInput!({ title: 'Laterne defekt' }),
+    ).not.toThrow();
+  });
 
   it('validates terminal widget input before display (AYC-675)', () => {
     const [tool] = adapter.toRuntimeTools([new CreateCalendarEventTool()]);

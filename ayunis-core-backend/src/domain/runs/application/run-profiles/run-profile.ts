@@ -39,4 +39,9 @@ export interface RunProfile {
   readonly completionPolicy: RunCompletionPolicy;
   /** Model-and-tool iterations allowed in one run. */
   readonly maxIterations: number;
+  /**
+   * Whether tool calls that need approval wait for the user's confirmation.
+   * Only for runs someone watches: nobody could confirm an unattended run.
+   */
+  readonly asksForToolConfirmation: boolean;
 }

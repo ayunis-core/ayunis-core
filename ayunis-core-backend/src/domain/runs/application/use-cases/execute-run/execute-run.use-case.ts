@@ -159,7 +159,10 @@ export class ExecuteRunUseCase {
       isAnonymous,
       activatedSkillName: activated.skillName,
     });
-    const preparedTools = this.prepareTools(assembled.tools);
+    const preparedTools = this.prepareTools(
+      assembled.tools,
+      assembled.toolsNeedingApproval,
+    );
 
     return {
       thread: activated.thread,
@@ -199,11 +202,18 @@ export class ExecuteRunUseCase {
     };
   }
 
-  private prepareTools(backendTools: BackendTool[]): PreparedTools {
-    return {
-      tools: this.backendToolAdapter.toRuntimeTools(backendTools),
+  private prepareTools(
+    backendTools: BackendTool[],
+    toolsNeedingApproval: ReadonlySet<string>,
+  ): PreparedTools {
+    const tools = this.backendToolAdapter.toRuntimeTools(
       backendTools,
-      toolIntegrations: new RuntimeToolIntegrationRegistry(backendTools),
+      toolsNeedingApproval,
+    );
+    return {
+      tools,
+      backendTools,
+      toolIntegrations: new RuntimeToolIntegrationRegistry(backendTools, tools),
     };
   }
 

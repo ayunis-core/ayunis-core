@@ -95,6 +95,7 @@ export {
   RepeatedToolFailureError,
   RunAbortedError,
 } from './contracts/errors';
+export { hasToolCallNeedingApproval } from './engine/exit-conditions';
 export { MAX_TOOL_RESULT_LENGTH } from './engine/tool-executor';
 export { ToolFailureBreaker } from './engine/tool-failure-breaker';
 export type {

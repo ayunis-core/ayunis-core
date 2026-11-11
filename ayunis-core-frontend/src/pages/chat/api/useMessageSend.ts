@@ -5,6 +5,7 @@ import type {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
+  ToolCallDecisionDto,
 } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,7 @@ import {
   getThreadsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
   getThreadAiContextControllerGetAiContextQueryKey,
+  getMcpToolAllowancesControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   activeThreadRunsQueryKey,
@@ -423,6 +425,24 @@ export function useMessageSend(params: UseMessageSendParams) {
     [params.threadId, sendMessage],
   );
 
+  const sendToolCallDecisions = useCallback(
+    async (decisions: ToolCallDecisionDto[]) => {
+      await sendMessage({
+        threadId: params.threadId,
+        decisions,
+        streaming: true,
+      });
+      if (
+        decisions.some((decision) => decision.approved && decision.alwaysAllow)
+      ) {
+        void queryClient.invalidateQueries({
+          queryKey: getMcpToolAllowancesControllerListQueryKey(),
+        });
+      }
+    },
+    [params.threadId, sendMessage, queryClient],
+  );
+
   const attach = useCallback(() => {
     const controller = new AbortController();
     return sendMessage({
@@ -447,6 +467,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   return {
     sendTextMessage,
     sendToolResult,
+    sendToolCallDecisions,
     attach,
     abort,
   };

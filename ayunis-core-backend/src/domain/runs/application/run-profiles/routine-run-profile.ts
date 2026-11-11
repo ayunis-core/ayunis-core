@@ -32,6 +32,7 @@ export class RoutineRunProfile implements RunProfile {
   readonly completionPolicy: RunCompletionPolicy = routineCompletionPolicy;
   // Per run, so with two nudges one routine execution has at most 60 iterations.
   readonly maxIterations = 20;
+  readonly asksForToolConfirmation = false;
   readonly capabilities: readonly RunCapability[];
 
   constructor(

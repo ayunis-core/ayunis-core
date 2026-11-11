@@ -13,12 +13,17 @@ import type {
   AgentRunBlock,
   AgentRunUnit,
   InlineToolRunBlock,
+  ToolTimelineStep,
 } from '@/pages/chat/ui/agent-run-timeline/model/types';
 import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import { getArtifactToolTarget } from '@/pages/chat/ui/agent-run-timeline/lib/tool-classification';
 import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
+import {
+  type ToolCallConfirmation,
+  useToolCallConfirmation,
+} from '@/pages/chat/ui/agent-run-timeline/model/tool-call-confirmation';
 
 interface AgentRunTimelineProps {
   unit: AgentRunUnit;
@@ -228,20 +233,42 @@ function InlineToolBlock({
       ? renderRichToolCard({
           toolUse: cardStep.toolUse,
           result: cardStep.result,
+          decision: cardStep.decision,
           isStreaming: latestStep.status === 'in_progress',
           threadId,
           onOpenArtifact,
           index,
         })
       : null;
+  const confirmation = useToolCallConfirmation();
+  const rowSteps = steps.filter((step) =>
+    hasRunOrIsRunning(step, confirmation),
+  );
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-lg border border-border bg-muted/30 px-3 py-1">
-        {steps.map((step) => (
-          <AgentRunTimelineRow key={step.key} step={step} />
-        ))}
-      </div>
+      {rowSteps.length > 0 && (
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-1">
+          {rowSteps.map((step) => (
+            <AgentRunTimelineRow key={step.key} step={step} />
+          ))}
+        </div>
+      )}
       {card}
     </div>
+  );
+}
+
+// A call awaiting confirmation has not run, and a rejected one never does.
+// While the decisions are sent, every call of the paused turn is in
+// progress; only the confirmed ones run.
+function hasRunOrIsRunning(
+  step: ToolTimelineStep,
+  { decisionFor }: ToolCallConfirmation,
+): boolean {
+  if (!step.toolUse.requiresConfirmation) return true;
+  if (step.decision) return step.decision === 'confirmed';
+  return (
+    step.status === 'in_progress' &&
+    decisionFor(step.toolUse.id)?.approved === true
   );
 }

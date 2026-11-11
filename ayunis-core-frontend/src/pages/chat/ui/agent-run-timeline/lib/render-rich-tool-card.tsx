@@ -1,6 +1,8 @@
 import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { ToolCallDecision } from '@/shared/api';
+import ToolCallConfirmationCard from '@/pages/chat/ui/agent-run-timeline/ui/ToolCallConfirmationCard';
 
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
@@ -22,6 +24,7 @@ import {
 interface RenderRichToolCardOptions {
   toolUse: ToolUseMessageContent;
   result?: string;
+  decision?: ToolCallDecision;
   isStreaming: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
@@ -32,11 +35,21 @@ interface RenderRichToolCardOptions {
 export function renderRichToolCard({
   toolUse,
   result,
+  decision,
   isStreaming,
   threadId,
   onOpenArtifact,
   index,
 }: RenderRichToolCardOptions): ReactNode {
+  if (toolUse.requiresConfirmation) {
+    return (
+      <ToolCallConfirmationCard
+        toolUse={toolUse}
+        result={result}
+        decision={decision}
+      />
+    );
+  }
   switch (toolUse.name) {
     case 'create_file':
       return <CreateFileWidget content={toolUse} isStreaming={isStreaming} />;
