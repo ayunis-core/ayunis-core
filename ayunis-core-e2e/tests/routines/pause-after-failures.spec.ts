@@ -42,11 +42,9 @@ test("a routine paused after three failed runs says so in the inbox and resumes 
   expect(notifications[1].headline).toContain("fehlgeschlagen");
 
   await page.goto(`/inbox/${notifications[0].id}`);
-  await expect(page.getByTestId("notification-detail")).toHaveAttribute(
-    "data-type",
-    "routine_error",
-  );
-  await expect(page.getByTestId("notification-error-icon")).toBeVisible();
+  const detail = page.getByTestId("notification-detail");
+  await expect(detail).toHaveAttribute("data-type", "routine_error");
+  await expect(detail.getByTestId("notification-error-icon")).toBeVisible();
 
   await page.goto("/routines");
   const card = routineCard(page, name);

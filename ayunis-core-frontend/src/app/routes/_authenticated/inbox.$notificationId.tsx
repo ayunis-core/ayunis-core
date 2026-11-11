@@ -1,5 +1,5 @@
 import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { NotificationPage } from '@/pages/notification';
 import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
@@ -11,14 +11,10 @@ import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
 } from './-default-model-selection-query';
-import { isRoutinesEnabled } from './-routines-enabled-query';
 
 export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
   component: RouteComponent,
   loader: async ({ params: { notificationId }, context: { queryClient } }) => {
-    if (!(await isRoutinesEnabled(queryClient))) {
-      throw redirect({ to: '/chat' });
-    }
     const [notification, defaultSelection, embeddingModelResponse] =
       await Promise.all([
         queryClient.query({

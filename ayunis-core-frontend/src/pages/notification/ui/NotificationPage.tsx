@@ -4,9 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { CalendarClock, MessagesSquare } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
-import AppLayout from '@/layouts/app-layout';
-import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Markdown } from '@/widgets/markdown';
 import { ChatStarter } from '@/widgets/chat-starter';
 import {
@@ -45,40 +42,26 @@ export default function NotificationPage(
   }, [isUnread, markRead, notification.id]);
 
   return (
-    <AppLayout>
-      <ContentAreaLayout
-        contentHeader={
-          <ContentAreaHeader
-            breadcrumbs={[
-              { label: t('page.title'), href: '/inbox' },
-              { label: notification.headline },
-            ]}
-          />
-        }
-        contentArea={
-          <article
-            className="mx-auto flex w-full max-w-3xl flex-col gap-6"
-            data-testid="notification-detail"
-            data-type={notification.type}
-          >
-            <NotificationHeading notification={notification} />
-            <NotificationMedia notification={notification} />
-            <Markdown renderImages={false} className="text-sm">
-              {notification.body}
-            </Markdown>
-            <NotificationActions notification={notification} />
-            <div data-testid="notification-chat-starter">
-              <ChatStarter
-                sourceNotificationId={notification.id}
-                placeholder={t('detail.chatPlaceholder')}
-                selectedModelId={props.selectedModelId}
-                isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
-              />
-            </div>
-          </article>
-        }
-      />
-    </AppLayout>
+    <article
+      className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-2"
+      data-testid="notification-detail"
+      data-type={notification.type}
+    >
+      <NotificationHeading notification={notification} />
+      <NotificationMedia notification={notification} />
+      <Markdown renderImages={false} className="text-sm">
+        {notification.body}
+      </Markdown>
+      <NotificationActions notification={notification} />
+      <div data-testid="notification-chat-starter">
+        <ChatStarter
+          sourceNotificationId={notification.id}
+          placeholder={t('detail.chatPlaceholder')}
+          selectedModelId={props.selectedModelId}
+          isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
+        />
+      </div>
+    </article>
   );
 }
 

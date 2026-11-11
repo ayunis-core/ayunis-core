@@ -8,3 +8,4 @@ export {
 } from './model/notification-type-appearance';
 export { NotificationTypeIcon } from './ui/NotificationTypeIcon';
 export { NotificationListItem } from './ui/NotificationListItem';
+export { NotificationMarkReadButton } from './ui/NotificationMarkReadButton';

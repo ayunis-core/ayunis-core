@@ -76,7 +76,7 @@ test("another member of the organization can neither see nor read a user's notif
   });
   const memberPage = await memberContext.newPage();
   await memberPage.goto("/inbox");
-  await expect(memberPage.getByTestId("sidebar-footer-inbox")).toBeVisible();
+  await expect(memberPage.getByTestId("sidebar-inbox")).toBeVisible();
   await expect(inboxItem(memberPage, headline)).toHaveCount(0);
   await memberPage.goto(`/inbox/${notification.id}`);
   await expect(memberPage.getByTestId("error-fallback")).toBeVisible();

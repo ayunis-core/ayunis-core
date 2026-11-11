@@ -48,7 +48,7 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
   await expect(page.getByTestId("sidebar")).toBeVisible();
   await expect(page.getByTestId("sidebar-navigation-routines")).toHaveCount(0);
   await expect(page.getByTestId("sidebar-chats-filter")).toHaveCount(0);
-  await expect(page.getByTestId("sidebar-footer-inbox")).toHaveCount(0);
+  await expect(page.getByTestId("sidebar-inbox")).toHaveCount(0);
   await expect(page.getByTestId("input")).toBeVisible();
   await expect(page.getByTestId("new-chat-unread-notifications")).toHaveCount(
     0,

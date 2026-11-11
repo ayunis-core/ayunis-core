@@ -16,7 +16,6 @@ export function unreadNotificationsButton(page: Page, type: NotificationType) {
     .and(page.locator(`[data-type="${type}"]`));
 }
 
-/** The inbox entry at the bottom of the sidebar, above the user menu. */
 export function sidebarInbox(page: Page) {
-  return page.getByTestId('sidebar-footer').getByTestId('sidebar-footer-inbox');
+  return page.getByTestId('sidebar-inbox');
 }

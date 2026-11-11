@@ -138,6 +138,9 @@ test("unread notifications show per type on the new chat page, open the filtered
     await expect(page.getByTestId("notification-detail-headline")).toContainText(
       headline,
     );
+    // Opening a notification keeps the filtered list beside it.
+    await expect(page).toHaveURL(/\/inbox\/[0-9a-f-]+\?type=routine$/);
+    await expect(items).toHaveCount(1);
 
     await page.getByTestId("sidebar-navigation-new-chat").click();
     await expect(errorButton).toBeVisible();
@@ -146,7 +149,6 @@ test("unread notifications show per type on the new chat page, open the filtered
       "1",
     );
 
-    await expect(page.getByTestId("sidebar-navigation-inbox")).toHaveCount(0);
     await sidebarInbox(page).click();
     await expect(page).toHaveURL(/\/inbox$/);
     await page.getByTestId("inbox-mark-all-read").click();
