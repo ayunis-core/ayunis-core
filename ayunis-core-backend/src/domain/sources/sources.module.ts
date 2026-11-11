@@ -54,6 +54,7 @@ import { SweepSourceUploadSessionsUseCase } from './application/use-cases/sweep-
 import { SourceUploadSessionAccessService } from './application/services/source-upload-session-access.service';
 import { SourceUploadQueueingService } from './application/services/source-upload-queueing.service';
 import { SourceUploadSweepTask } from './infrastructure/tasks/source-upload-sweep.task';
+import { StaleProcessingCleanupTask } from './infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceUploadsController } from './presenters/http/source-uploads.controller';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
@@ -99,6 +100,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     SourceUploadSessionAccessService,
     SourceUploadQueueingService,
     SourceUploadSweepTask,
+    StaleProcessingCleanupTask,
     ...SOURCE_UPLOAD_USE_CASES,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,

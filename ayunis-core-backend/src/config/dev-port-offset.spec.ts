@@ -33,6 +33,7 @@ describe('applyDevPortOffset', () => {
       MINIO_INTERNAL_PORT: '9000',
       REDIS_PORT: '6379',
       SMTP_PORT: '1025',
+      INGESTION_WORKER_HEALTH_PORT: '3009',
     };
 
     applyDevPortOffset(env);
@@ -42,6 +43,7 @@ describe('applyDevPortOffset', () => {
     expect(env.MINIO_INTERNAL_PORT).toBe('9020');
     expect(env.REDIS_PORT).toBe('6399');
     expect(env.SMTP_PORT).toBe('1045');
+    expect(env.INGESTION_WORKER_HEALTH_PORT).toBe('3029');
   });
 
   it('leaves a non-numeric port variable untouched', () => {

@@ -221,3 +221,45 @@ pnpm run test
 # Generate test coverage report
 pnpm run test:cov
 ```
+
+### Separate ingestion worker
+
+By default the API also processes uploaded files (`INGESTION_IN_API=true`), which
+preserves the existing single-process setup. To separate ingestion, run the same
+image twice:
+
+- API: `INGESTION_IN_API=false`, existing default command. It still enqueues jobs
+  but no longer consumes them.
+- Worker: command `node --require ./appsignal.cjs dist/src/ingestion-worker.js`
+  (`pnpm start:ingestion-worker` locally). It needs no ingestion setting; the worker entry
+  point always consumes the queues.
+
+The image's health check targets the API. Give the worker container its own, for
+example `node -e "require('http').get('http://127.0.0.1:3009/health', r =>
+process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"`.
+
+Both need the same PostgreSQL, Redis, MinIO and provider configuration. Start the
+API first to run migrations; the worker never runs migrations. Worker readiness
+is available only on `127.0.0.1:${INGESTION_WORKER_HEALTH_PORT:-3009}/health`; do not publish
+this port. It checks consumers, PostgreSQL and Redis. The worker starts no API
+listener or application scheduler. Scheduled cleanup and queue telemetry stay on
+the API.
+
+Concurrency per worker defaults to 4 document jobs, 2 spreadsheet jobs and 2 crawls.
+Override with `INGESTION_DOCUMENT_CONCURRENCY`,
+`INGESTION_DATA_SOURCE_CONCURRENCY` and `INGESTION_URL_CRAWL_CONCURRENCY`.
+`POSTGRES_POOL_SIZE` controls each process's database pool. Adding replicas
+multiplies concurrency, provider calls and connections, including document/audio
+part concurrency. Start with one worker and measure provider throttling, queue
+depth, oldest-job age and failures before scaling. Upload limits do not change.
+`BULLMQ_PREFIX` defaults to `bull` and must match on API and workers; distinct
+prefixes are useful for isolated tests.
+
+On SIGTERM, workers drain active jobs before closing database connections. Allow
+a shutdown grace period longer than the provider timeout. Forced shutdown uses
+existing BullMQ stalled-job recovery and extraction checkpoints.
+
+Rollout: release a worker-capable image, start its worker, verify readiness, then
+set `INGESTION_IN_API=false` on the API. Brief overlap is safe through BullMQ job
+claims but increases concurrency temporarily. Rollback: set `INGESTION_IN_API=true`
+on the API before stopping the worker. Existing sources and jobs need no reprocessing.
