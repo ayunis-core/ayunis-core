@@ -23,6 +23,7 @@ import {
   type DataSourcePlan,
   resolveDataSourcePlans,
 } from 'src/domain/sources/application/util/data-source-plans.helper';
+import { recordSourceUploadOutcome } from 'src/domain/sources/application/util/source-upload-telemetry.helper';
 import { downloadMinioFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -127,6 +128,8 @@ export class CompleteSourceUploadUseCase {
       etag,
       command,
     );
+    // After the transaction: a failed attachment rolls the claim back.
+    if (won) recordSourceUploadOutcome('completed', session);
     this.logger.log(
       { uploadId: session.id, sources: planned.length, won },
       'Completed source upload',
@@ -140,8 +143,10 @@ export class CompleteSourceUploadUseCase {
       SourceUploadSessionStatus.PENDING,
       SourceUploadSessionStatus.EXPIRED,
     );
-    if (expired) await this.storageCleanup.discard(session);
-    return expired;
+    if (!expired) return false;
+    recordSourceUploadOutcome('expired', session);
+    await this.storageCleanup.discard(session);
+    return true;
   }
 
   private async verifyStoredObject(
@@ -234,7 +239,9 @@ export class CompleteSourceUploadUseCase {
       SourceUploadSessionStatus.PENDING,
       SourceUploadSessionStatus.ABORTED,
     );
-    if (aborted) await this.storageCleanup.discard(session);
+    if (!aborted) return;
+    recordSourceUploadOutcome('aborted', session);
+    await this.storageCleanup.discard(session);
   }
 
   @Transactional()

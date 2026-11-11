@@ -1,9 +1,15 @@
+import { Appsignal } from '@appsignal/nodejs';
 import { SweepSourceUploadSessionsUseCase } from './sweep-source-upload-sessions.use-case';
 import {
   buildUploadSession,
   createMockSourceUploadSessionRepository,
 } from 'src/domain/sources/application/testing/source-upload.fixtures';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
+import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
+
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { isActive: true, metrics: jest.fn() } },
+}));
 
 describe('SweepSourceUploadSessionsUseCase', () => {
   const sessions = createMockSourceUploadSessionRepository();
@@ -13,6 +19,9 @@ describe('SweepSourceUploadSessionsUseCase', () => {
     abort: jest.fn().mockResolvedValue(undefined),
   };
   const listIncompleteUploads = { execute: jest.fn().mockResolvedValue([]) };
+  const metrics = { incrementCounter: jest.fn() };
+  const countedTags = () =>
+    metrics.incrementCounter.mock.calls.map(([, , tags]) => tags as unknown);
   const useCase = new SweepSourceUploadSessionsUseCase(
     sessions,
     queueing as never,
@@ -22,9 +31,11 @@ describe('SweepSourceUploadSessionsUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
     sessions.transition.mockResolvedValue(true);
     storageCleanup.discard.mockResolvedValue(true);
     sessions.findExpiredPending.mockResolvedValue([]);
+    sessions.findOwnerlessUnfinished.mockResolvedValue([]);
     sessions.findOwnedByStatus.mockResolvedValue([]);
     sessions.deleteFinishedBefore.mockResolvedValue(0);
     listIncompleteUploads.execute.mockResolvedValue([]);
@@ -196,5 +207,46 @@ describe('SweepSourceUploadSessionsUseCase', () => {
     const result = await useCase.execute();
 
     expect(result.purgedSessions).toBe(3);
+  });
+
+  it('counts an abandoned session it expires as expired once', async () => {
+    sessions.findExpiredPending.mockResolvedValue([
+      buildUploadSession({
+        targetType: SourceUploadTargetType.SKILL,
+        multipart: true,
+      }),
+    ]);
+
+    await useCase.execute();
+
+    expect(countedTags()).toEqual([
+      { outcome: 'expired', target_type: 'skill', multipart: 'true' },
+    ]);
+  });
+
+  it('does not count an expiry it lost to a completion or abort', async () => {
+    sessions.findExpiredPending.mockResolvedValue([buildUploadSession()]);
+    sessions.transition.mockResolvedValue(false);
+
+    await useCase.execute();
+
+    expect(countedTags()).toEqual([]);
+  });
+
+  it('counts only the pending sessions of a deleted user as aborted', async () => {
+    sessions.findOwnerlessUnfinished.mockResolvedValue([
+      buildUploadSession({ userId: null }),
+      buildUploadSession({
+        userId: null,
+        status: SourceUploadSessionStatus.SOURCES_CREATED,
+      }),
+    ]);
+
+    await useCase.execute();
+
+    expect(countedTags()).toEqual([
+      { outcome: 'aborted', target_type: 'thread', multipart: 'false' },
+    ]);
+    expect(storageCleanup.discard).toHaveBeenCalledTimes(2);
   });
 });

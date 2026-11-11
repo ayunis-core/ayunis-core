@@ -4,6 +4,11 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { isActive: true, metrics: jest.fn() } },
+}));
+
+import { Appsignal } from '@appsignal/nodejs';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { CompleteSourceUploadUseCase } from './complete-source-upload.use-case';
@@ -67,6 +72,9 @@ describe('CompleteSourceUploadUseCase', () => {
     ),
   };
   const queueing = { tryQueue: jest.fn().mockResolvedValue(true) };
+  const metrics = { incrementCounter: jest.fn() };
+  const countedTags = () =>
+    metrics.incrementCounter.mock.calls.map(([, , tags]) => tags as unknown);
   const storageCleanup = {
     discard: jest.fn().mockResolvedValue(undefined),
     remove: jest.fn().mockResolvedValue(undefined),
@@ -102,6 +110,7 @@ describe('CompleteSourceUploadUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
     getObjectInfo.execute.mockResolvedValue({ size: 1024, etag: 'verified' });
     queueing.tryQueue.mockResolvedValue(true);
     sessions.transition.mockResolvedValue(true);
@@ -462,5 +471,112 @@ describe('CompleteSourceUploadUseCase', () => {
       ),
     ).rejects.toMatchObject({ code: 'UNEXPECTED_SOURCE_ERROR' });
     expect(sessions.transition).not.toHaveBeenCalled();
+  });
+
+  describe('outcome metric', () => {
+    const sourceId = '55555555-5555-5555-5555-555555555555' as UUID;
+    const completed = { outcome: 'completed', target_type: 'thread' };
+
+    it('counts the completion that claims the session as completed once', async () => {
+      pendingThenCreated();
+
+      await useCase.execute(command());
+
+      expect(countedTags()).toEqual([{ ...completed, multipart: 'false' }]);
+    });
+
+    it.each([
+      SourceUploadSessionStatus.COMPLETED,
+      SourceUploadSessionStatus.SOURCES_CREATED,
+    ])('does not count a replay of a %s session again', async (status) => {
+      sessions.findById.mockResolvedValue(
+        buildUploadSession({
+          status,
+          sources: [{ sourceId, sheetName: null }],
+        }),
+      );
+
+      await useCase.execute(command());
+
+      expect(countedTags()).toEqual([]);
+    });
+
+    it('does not count the loser of a concurrent completion', async () => {
+      sessions.findById
+        .mockResolvedValueOnce(buildUploadSession())
+        .mockResolvedValueOnce(
+          buildUploadSession({
+            status: SourceUploadSessionStatus.COMPLETED,
+            sources: [{ sourceId, sheetName: null }],
+          }),
+        );
+      sessions.transition.mockResolvedValue(false);
+
+      await useCase.execute(command());
+
+      expect(countedTags()).toEqual([]);
+    });
+
+    it('does not count a completion whose target attachment failed', async () => {
+      pendingThenCreated();
+      const attach = jest.fn().mockRejectedValue(new Error('attach failed'));
+
+      await expect(useCase.execute(command({ attach }))).rejects.toThrow();
+
+      expect(countedTags()).toEqual([]);
+    });
+
+    it('counts a session ended for mismatched bytes as aborted once', async () => {
+      sessions.findById.mockResolvedValue(
+        buildUploadSession({ fileSize: 2048, multipart: true }),
+      );
+
+      await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+        SourceUploadIncompleteError,
+      );
+
+      expect(countedTags()).toEqual([
+        { outcome: 'aborted', target_type: 'thread', multipart: 'true' },
+      ]);
+    });
+
+    it('does not count mismatched bytes when another call already ended the session', async () => {
+      sessions.findById.mockResolvedValue(
+        buildUploadSession({ fileSize: 2048 }),
+      );
+      sessions.transition.mockResolvedValue(false);
+
+      await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+        SourceUploadIncompleteError,
+      );
+
+      expect(countedTags()).toEqual([]);
+    });
+
+    it('counts a completion past the deadline as expired once', async () => {
+      sessions.findById.mockResolvedValue(
+        buildUploadSession({ expiresAt: new Date(Date.now() - 1) }),
+      );
+
+      await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+        SourceUploadExpiredError,
+      );
+
+      expect(countedTags()).toEqual([
+        { outcome: 'expired', target_type: 'thread', multipart: 'false' },
+      ]);
+    });
+
+    it('completes the upload when the metrics client throws', async () => {
+      pendingThenCreated();
+      metrics.incrementCounter.mockImplementation(() => {
+        throw new Error('appsignal extension unavailable');
+      });
+
+      const result = await useCase.execute(command());
+
+      expect(result.sources).toHaveLength(1);
+      expect(result.alreadyCompleted).toBe(false);
+    });
   });
 });

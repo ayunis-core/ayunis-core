@@ -4,6 +4,7 @@ import { SourceUploadSessionAccessService } from 'src/domain/sources/application
 import { SourceUploadStorageCleanupService } from 'src/domain/sources/application/services/source-upload-storage-cleanup.service';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
+import { recordSourceUploadOutcome } from 'src/domain/sources/application/util/source-upload-telemetry.helper';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
 import { AbortSourceUploadCommand } from './abort-source-upload.command';
 
@@ -27,6 +28,7 @@ export class AbortSourceUploadUseCase {
       SourceUploadSessionStatus.ABORTED,
     );
     if (!aborted) return;
+    recordSourceUploadOutcome('aborted', session);
     await this.storageCleanup.discard(session);
     this.logger.log({ uploadId: session.id }, 'Aborted source upload');
   }

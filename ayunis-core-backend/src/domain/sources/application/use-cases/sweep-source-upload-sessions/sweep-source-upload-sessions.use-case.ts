@@ -5,6 +5,7 @@ import type { UUID } from 'crypto';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 import { SourceUploadQueueingService } from 'src/domain/sources/application/services/source-upload-queueing.service';
 import { SourceUploadStorageCleanupService } from 'src/domain/sources/application/services/source-upload-storage-cleanup.service';
+import { recordSourceUploadOutcome } from 'src/domain/sources/application/util/source-upload-telemetry.helper';
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
 import { SOURCE_UPLOAD_SESSION_RETENTION_MS } from 'src/domain/sources/domain/upload/source-upload.constants';
@@ -60,15 +61,15 @@ export class SweepSourceUploadSessionsUseCase {
     const sessions = await this.sessions.findOwnerlessUnfinished(MAX_PER_RUN);
     const attempted: UUID[] = [];
     for (const session of sessions) {
-      if (
-        session.status === SourceUploadSessionStatus.PENDING &&
-        !(await this.sessions.transition(
+      if (session.status === SourceUploadSessionStatus.PENDING) {
+        const aborted = await this.sessions.transition(
           session.id,
           SourceUploadSessionStatus.PENDING,
           SourceUploadSessionStatus.ABORTED,
-        ))
-      )
-        continue;
+        );
+        if (!aborted) continue;
+        recordSourceUploadOutcome('aborted', session);
+      }
       await this.storageCleanup.discard(session);
       attempted.push(session.id);
     }
@@ -114,6 +115,7 @@ export class SweepSourceUploadSessionsUseCase {
         SourceUploadSessionStatus.EXPIRED,
       );
       if (!won) continue;
+      recordSourceUploadOutcome('expired', session);
       await this.storageCleanup.discard(session);
       expired += 1;
     }

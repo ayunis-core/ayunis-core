@@ -1,3 +1,4 @@
+import { Appsignal } from '@appsignal/nodejs';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { ConfigType } from '@nestjs/config';
 import type transcriptionConfig from 'src/config/transcription.config';
@@ -17,6 +18,10 @@ import {
   UPLOAD_TARGET_ID,
 } from 'src/domain/sources/application/testing/source-upload.fixtures';
 
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: { client: { isActive: true, metrics: jest.fn() } },
+}));
+
 describe('CreateSourceUploadSessionUseCase', () => {
   const sessions = createMockSourceUploadSessionRepository();
   const assertOrgActive = { execute: jest.fn().mockResolvedValue({}) };
@@ -32,6 +37,9 @@ describe('CreateSourceUploadSessionUseCase', () => {
     { maxUploadBytes: AUDIO_MAX } as ConfigType<typeof transcriptionConfig>,
   );
   const MAX = 25 * 1024 * 1024;
+  const metrics = { incrementCounter: jest.fn() };
+  const countedTags = () =>
+    metrics.incrementCounter.mock.calls.map(([, , tags]) => tags as unknown);
 
   function command(
     overrides: Partial<
@@ -49,7 +57,10 @@ describe('CreateSourceUploadSessionUseCase', () => {
     });
   }
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(Appsignal.client.metrics).mockReturnValue(metrics as never);
+  });
 
   it('reserves an org-scoped key for a single-request upload', async () => {
     const { session, partSizeBytes } = await useCase.execute(command());
@@ -170,5 +181,26 @@ describe('CreateSourceUploadSessionUseCase', () => {
     );
 
     expect(getPermittedEmbeddingModel.execute).toHaveBeenCalled();
+  });
+
+  it('counts a saved session as created once by target kind and transfer mode', async () => {
+    await useCase.execute(
+      command({
+        targetType: SourceUploadTargetType.KNOWLEDGE_BASE,
+        fileSize: SOURCE_UPLOAD_MULTIPART_THRESHOLD_BYTES + 1,
+      }),
+    );
+
+    expect(countedTags()).toEqual([
+      { outcome: 'created', target_type: 'knowledge_base', multipart: 'true' },
+    ]);
+  });
+
+  it('does not count an upload that was rejected before a session existed', async () => {
+    await expect(
+      useCase.execute(command({ fileSize: 0 })),
+    ).rejects.toBeInstanceOf(EmptyFileDataError);
+
+    expect(countedTags()).toEqual([]);
   });
 });

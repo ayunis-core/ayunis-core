@@ -24,6 +24,7 @@ import {
   UnsupportedFileTypeError,
   UnsupportedSourceFileTypeError,
 } from 'src/domain/sources/application/sources.errors';
+import { recordSourceUploadOutcome } from 'src/domain/sources/application/util/source-upload-telemetry.helper';
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadPipeline } from 'src/domain/sources/domain/upload/source-upload-pipeline.enum';
 import {
@@ -92,6 +93,7 @@ export class CreateSourceUploadSessionUseCase {
     }
 
     await this.sessions.save(session);
+    recordSourceUploadOutcome('created', session);
 
     this.logger.log(
       {
