@@ -6,6 +6,7 @@ import type {
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 
 /**
  * Unlike other mutation hooks, this hook intentionally does NOT invalidate the
@@ -25,6 +26,7 @@ export function useGeneratePersonalizedSystemPrompt(options?: {
   const mutation = useChatSettingsControllerGeneratePersonalizedSystemPrompt({
     mutation: {
       onSuccess: (data) => {
+        trackOpenPanelEvent('personalization_saved', { state: 'completed' });
         showSuccess(t('newChat.personalizedPromptSuccess'));
         options?.onSuccess?.(data);
       },

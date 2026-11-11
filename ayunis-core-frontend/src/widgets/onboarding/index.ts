@@ -11,6 +11,7 @@ export {
   type OnboardingProgress,
 } from './lib/useOnboardingProgress';
 export { useOpenPanelOnboardingStage } from './lib/useOpenPanelOnboardingStage';
+export { trackOnboardingChanges } from './lib/trackOnboardingChanges';
 export {
   ACTION_TYPE,
   SECONDARY_ACTION_TYPE,

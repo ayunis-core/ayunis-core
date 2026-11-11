@@ -4,11 +4,14 @@ import {
   onboardingControllerUpdateOnboarding,
   getOnboardingControllerGetOnboardingQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { OnboardingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showError } from '@/shared/lib/toast';
+import { trackOnboardingChanges } from '@/widgets/onboarding';
 
 export function useHideOnboarding() {
   const { t } = useTranslation('getting-started');
   const queryClient = useQueryClient();
+  const queryKey = getOnboardingControllerGetOnboardingQueryKey();
 
   const mutation = useMutation({
     mutationFn: async (completedStepIds: string[]) => {
@@ -17,10 +20,10 @@ export function useHideOnboarding() {
         hidden: true,
       });
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: getOnboardingControllerGetOnboardingQueryKey(),
-      });
+    onMutate: () => queryClient.getQueryData<OnboardingResponseDto>(queryKey),
+    onSuccess: (saved, _completedStepIds, previous) => {
+      if (previous) trackOnboardingChanges(previous, saved);
+      void queryClient.invalidateQueries({ queryKey });
     },
     onError: () => {
       showError(t('saveError'));

@@ -6,6 +6,7 @@ import {
   onboardingControllerMarkWelcomeVideoSeen,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';
 
 export function useWelcomeVideo() {
@@ -23,6 +24,7 @@ export function useWelcomeVideo() {
       return onboardingControllerMarkWelcomeVideoSeen();
     },
     onSuccess: () => {
+      trackOpenPanelEvent('welcome_video_seen');
       void queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => {

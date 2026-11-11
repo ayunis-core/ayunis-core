@@ -5,6 +5,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';
 
 /**
@@ -22,7 +23,10 @@ export function useSkipPersonalization(onSuccess?: () => void) {
 
   const mutation = useChatSettingsControllerUpsertSystemPrompt({
     mutation: {
-      onSuccess,
+      onSuccess: () => {
+        trackOpenPanelEvent('personalization_saved', { state: 'skipped' });
+        onSuccess?.();
+      },
       onError: () => {
         showError(t('newChat.personalization.skipError'));
       },
