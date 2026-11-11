@@ -28,6 +28,54 @@ export function isRichTool(toolName: string): boolean {
   return RICH_TOOL_NAMES.has(toolName);
 }
 
+/** The backend's `ToolType` values; every other name is an MCP tool. */
+const BUILT_IN_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
+  ...RICH_TOOL_NAMES,
+  'http',
+  'source_query',
+  'source_get_text',
+  'knowledge_query',
+  'knowledge_get_text',
+  'internet_search',
+  'website_content',
+  'code_execution',
+  'activate_skill',
+  'marketplace_search',
+  'send_notification',
+  'finish_routine',
+]);
+
+const ARTIFACT_CREATION_TOOLS: ReadonlySet<string> = new Set<string>([
+  'create_document',
+  'create_spreadsheet',
+  'create_diagram',
+  'create_file',
+  'bar_chart',
+  'line_chart',
+  'pie_chart',
+  'generate_image',
+]);
+
+export type ToolUsageKind =
+  | 'knowledge_base'
+  | 'source'
+  | 'internet_search'
+  | 'skill'
+  | 'integration'
+  | 'artifact';
+
+export function getToolUsageKind(toolName: string): ToolUsageKind | null {
+  if (!BUILT_IN_TOOL_NAMES.has(toolName)) return 'integration';
+  if (toolName.startsWith('knowledge_')) return 'knowledge_base';
+  if (toolName.startsWith('source_')) return 'source';
+  if (toolName === 'internet_search' || toolName === 'website_content') {
+    return 'internet_search';
+  }
+  if (toolName === 'activate_skill') return 'skill';
+  if (ARTIFACT_CREATION_TOOLS.has(toolName)) return 'artifact';
+  return null;
+}
+
 const ARTIFACT_TARGET_TOOLS: ReadonlyMap<string, ArtifactFamily> = new Map([
   ['edit_document', 'document'],
   ['read_document', 'document'],

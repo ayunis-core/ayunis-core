@@ -64,6 +64,18 @@ describe(usePendingMessage.name, () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it('passes on that the started first message was dictated', async () => {
+    startThreadRun({ threadId, text: 'Hallo', images: [], voiceInput: true });
+
+    const { sendTextMessage } = renderPendingMessage();
+
+    await waitFor(() =>
+      expect(sendTextMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ voiceInput: true }),
+      ),
+    );
+  });
+
   it('shows the started message as pending until the thread has it', () => {
     startThreadRun({ threadId, text: 'Hallo', images: [] });
 

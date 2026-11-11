@@ -1,4 +1,5 @@
 import type {
+  GetThreadResponseDto,
   RunSessionResponseDto,
   RunMessageResponseDto,
   RunErrorResponseDto,
@@ -27,6 +28,7 @@ import {
 } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
 import { createFrameCoalescer } from '@/pages/chat/lib/frame-coalescer';
+import { createRunFunnelTracker } from '@/pages/chat/lib/run-funnel-tracking';
 
 export interface PendingImage {
   file: File;
@@ -39,6 +41,8 @@ export interface SendMessageInput {
   skillId?: string;
   /** Already sent for this message; its response is read instead of sending again. */
   startedRequest?: StartedRunRequest;
+  /** The prompt contains text from a successful transcription. */
+  voiceInput?: boolean;
 }
 
 interface SendToolResultInput {
@@ -96,6 +100,7 @@ interface SendMessagePayload extends RunMessagePayload {
   startedRequest?: StartedRunRequest;
   /** Attaching to a run in progress; its failures are not send failures. */
   isAttach?: boolean;
+  voiceInput?: boolean;
 }
 
 async function refreshThreadQueriesAfterRun(
@@ -158,6 +163,14 @@ export function useMessageSend(params: UseMessageSendParams) {
       let sessionExpired = false;
       const requestThreadId = payload.threadId;
       const requestParams = currentParamsRef.current;
+      const runFunnel = createRunFunnelTracker({
+        isAttach: payload.isAttach ?? false,
+        voiceInput: payload.voiceInput ?? false,
+        getThread: () =>
+          queryClient.getQueryData<GetThreadResponseDto>(
+            getThreadsControllerFindOneQueryKey(requestThreadId),
+          ),
+      });
       const getCurrentParams = () =>
         mountedParamsByThread.get(requestThreadId) ?? null;
       // Each event carries a full message snapshot, so only the newest one per
@@ -219,16 +232,19 @@ export function useMessageSend(params: UseMessageSendParams) {
           try {
             const data = JSON.parse(line.slice(6)) as { type?: string };
             if (data.type === 'message') {
-              messageEvents.push(data as RunMessageResponseDto);
+              const event = data as RunMessageResponseDto;
+              messageEvents.push(event);
+              runFunnel.observeMessage(event.message);
               return;
             }
             messageEvents.flush();
             switch (data.type) {
-              case 'session':
-                getCurrentParams()?.onSessionEvent?.(
-                  data as RunSessionResponseDto,
-                );
+              case 'session': {
+                const event = data as RunSessionResponseDto;
+                if (event.streaming === false) runFunnel.observeRunEnd();
+                getCurrentParams()?.onSessionEvent?.(event);
                 break;
+              }
               case 'thread': {
                 const currentParams = getCurrentParams();
                 if (currentParams) {
@@ -353,6 +369,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         // When aborted, we keep the optimistic local state to avoid race conditions
         // with the backend's async save operation
         if (!wasAborted) {
+          if (!hadError) runFunnel.trackDelivered();
           requestParams.onComplete?.(hadError);
           if (!sessionExpired) {
             // Await the post-save server state unless navigation is already
@@ -371,6 +388,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         threadId: params.threadId,
         text: input.text,
         streaming: true,
+        voiceInput: input.voiceInput,
       };
 
       // Add images and their alt texts if present

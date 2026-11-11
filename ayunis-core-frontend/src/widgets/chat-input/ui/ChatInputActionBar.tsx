@@ -42,6 +42,8 @@ interface ChatInputActionBarProps {
   isCancelDisabled: boolean;
   setMessage: Dispatch<SetStateAction<string>>;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
+  /** A successful transcription was added to the message. */
+  onDictation: () => void;
 }
 
 function appendTranscription(
@@ -96,6 +98,7 @@ export function ChatInputActionBar({
   isCancelDisabled,
   setMessage,
   textareaRef,
+  onDictation,
 }: Readonly<ChatInputActionBarProps>) {
   const { t } = useTranslation('common');
 
@@ -153,6 +156,7 @@ export function ChatInputActionBar({
           <MicrophoneButton
             onTranscriptionComplete={(text) => {
               appendTranscription(setMessage, textareaRef, text);
+              onDictation();
             }}
           />
           <SendButton
