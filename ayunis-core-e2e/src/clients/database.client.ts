@@ -207,3 +207,81 @@ export async function expireInvites(emails: string[]): Promise<void> {
     await client.end();
   }
 }
+
+export type WorkspaceRole = "admin" | "manager" | "user";
+
+/**
+ * No API adds workspace members yet, so specs insert membership rows
+ * directly. `joinedAt` orders members by how long they have belonged.
+ */
+export async function addWorkspaceMember(params: {
+  workspaceId: string;
+  userId: string;
+  role: WorkspaceRole;
+  joinedAt: Date;
+}): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO workspace_members
+         (id, "createdAt", "updatedAt", "workspaceId", "userId", role)
+       VALUES ($1, $2, $2, $3, $4, $5)`,
+      [
+        randomUUID(),
+        params.joinedAt,
+        params.workspaceId,
+        params.userId,
+        params.role,
+      ],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+export async function findWorkspaceMemberRoles(
+  workspaceId: string,
+): Promise<Record<string, WorkspaceRole>> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ userId: string; role: WorkspaceRole }>(
+      `SELECT "userId", role FROM workspace_members WHERE "workspaceId" = $1`,
+      [workspaceId],
+    );
+    return Object.fromEntries(
+      result.rows.map((row) => [row.userId, row.role]),
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+export async function countWorkspaceRows(workspaceId: string): Promise<{
+  workspaces: number;
+  skills: number;
+  knowledgeBases: number;
+}> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{
+      workspaces: number;
+      skills: number;
+      knowledgeBases: number;
+    }>(
+      `SELECT
+         (SELECT COUNT(*)::int FROM workspaces WHERE id = $1) AS workspaces,
+         (SELECT COUNT(*)::int FROM skills WHERE "workspaceId" = $1) AS skills,
+         (SELECT COUNT(*)::int FROM knowledge_bases WHERE "workspaceId" = $1)
+           AS "knowledgeBases"`,
+      [workspaceId],
+    );
+    const [row] = result.rows;
+    if (!row) throw new Error(`Could not count rows of ${workspaceId}`);
+    return row;
+  } finally {
+    await client.end();
+  }
+}

@@ -72,7 +72,7 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
-- **WorkspacesModule** — Imported for workspace ownership validation when listing artifacts
+- **WorkspacesModule** — Imported for workspace membership validation when listing artifacts
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
 

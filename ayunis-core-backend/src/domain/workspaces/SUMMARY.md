@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Workspaces group a user's chats and own workspace-scoped skills and knowledge bases. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
+Workspaces group their members' chats and own workspace-scoped skills and knowledge bases. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
 
 ## Domain behavior
 
-- A workspace belongs to one user and organization.
+- A workspace belongs to one organization and to its members (`workspace_members`: `workspaceId`, `userId`, `role` as `UserRole`, `createdAt`; unique per workspace and user, both foreign keys cascade). There is no separate owner.
+- Creating a workspace adds the creator as `admin` in the same transaction.
+- Workspace lookups (`findById`, `findAllByUserId`, `findAllByIds`) only return workspaces the user is a member of. The list's chat count and chat activity only cover the requesting member's own chats, because chats stay private to their creator.
 - Creating a workspace does not add it to favorites. Users explicitly favorite or unfavorite it; existing favorites are unchanged.
 - Workspace skills and knowledge bases use `workspaceId` ownership and cannot be mixed with personal resources.
 - Skill and knowledge-base activation is workspace-wide. Both start active; deactivation excludes them from new run context. Deactivating a skill also clears its pin.
@@ -15,7 +17,7 @@ Workspaces group a user's chats and own workspace-scoped skills and knowledge ba
 
 ## Access boundary
 
-`WorkspaceAccessService` and the repository port are internal. Other modules use:
+`WorkspaceAccessService.requireMember` grants read, write and execution access to any member of the workspace in the caller's organization; anyone else, org admins included, gets `WorkspaceNotFoundError` (404). The service and the repository ports are internal. Other modules use:
 
 - `AssertWorkspaceReadAccessUseCase`
 - `AssertWorkspaceWriteAccessUseCase`
@@ -27,7 +29,9 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## Deletion
 
-`DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent` before deleting and drains deferred cleanup only after the database delete succeeds. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows and relation state; listeners handle external object and processing cleanup.
+`WorkspaceDeletionService` emits `WorkspaceDeletionRequestedEvent` before deleting and drains deferred cleanup only after the database delete succeeds. `DeleteWorkspaceUseCase` uses it after checking membership. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows and relation state; listeners handle external object and processing cleanup.
+
+Deleting a user account cascades their memberships but no workspace. `WorkspacesUserDeletionRequestedListener` resolves the user's workspaces before the user row is deleted and defers two independent tasks until after it: `WorkspaceMembersRepository.promoteSuccessors` makes the longest-standing remaining member `admin` wherever no admin is left (it locks the workspace rows first), and every workspace left without members is deleted through `WorkspaceDeletionService`, so the regular deletion listeners still run.
 
 ## HTTP API
 
@@ -43,9 +47,11 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## Structure
 
-- `domain/`: workspace and runtime-context entities.
+- `domain/`: workspace, workspace member and runtime-context entities.
 - `application/use-cases/`: workspace CRUD, access capabilities, instruction update, and run-context orchestration.
-- `infrastructure/persistence/local/`: TypeORM repository and mapper.
+- `application/services/`: membership access check and the shared deletion flow.
+- `application/listeners/`: workspace succession on user deletion.
+- `infrastructure/persistence/local/`: TypeORM workspace and membership repositories and mappers.
 - `presenters/http/`: workspace and runtime-context controllers and DTO mappers.
 
 ## Dependencies
