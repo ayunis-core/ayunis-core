@@ -29,6 +29,11 @@ vi.mock('@/shared/api', () => ({
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 
+vi.mock(
+  '@/pages/academy-chapter-confirmation/lib/celebrateChapterCompletion',
+  () => ({ celebrateChapterCompletion: vi.fn() }),
+);
+
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
