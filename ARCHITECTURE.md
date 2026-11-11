@@ -78,7 +78,8 @@ none of these packages implements the Agent Plugins standard.
 | [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema, CSV/text downloads and the Outlook pane's `outlook__` tools           |
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                              |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and org document collections                                             |
-| [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | Ownership      | Shared owner types, team/org access checks and owner constraints for skills and knowledge bases                |
+| [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | Ownership      | Shared owner types, team/org access checks and owner constraints for skills, knowledge bases and recordings    |
+| [recordings](ayunis-core-backend/src/domain/recordings/SUMMARY.md)              | Meetings       | Meeting recordings owned by a user, workspace, team or the organization                                        |
 | [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
 | [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
@@ -204,8 +205,9 @@ load-bearing):
   `assign_users_to_teams`, `manage_skills`, `share_skills_with_teams`,
   `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`, `manage_workspace`, `manage_workspace_members`) that org
-  admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
+  `manage_routines`, `manage_recordings`, `manage_team_recordings`,
+  `manage_org_recordings`, `manage_workspace`, `manage_workspace_members`)
+  that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
   `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the
   share's scope, so the shares use cases check them via
   `SharePermissionService`. **ADMIN implicitly holds every permission**;

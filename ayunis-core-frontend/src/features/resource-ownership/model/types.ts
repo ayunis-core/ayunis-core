@@ -1,12 +1,12 @@
-export type OwnedResourceKind = 'skill' | 'knowledge-base';
+export type OwnedResourceKind = 'skill' | 'knowledge-base' | 'recording';
 
-/** An owner a skill or knowledge base can be created for or moved to. */
+/** An owner a skill, knowledge base or recording can be created for or moved to. */
 export type OwnerSelection =
   | { ownerType: 'personal' }
   | { ownerType: 'team'; teamId: string }
   | { ownerType: 'org' };
 
-/** The ownership fields every skill and knowledge-base response carries. */
+/** The ownership fields every skill, knowledge-base and recording response carries. */
 export interface OwnedResource {
   ownerType: 'personal' | 'workspace' | 'team' | 'org';
   teamId?: string;

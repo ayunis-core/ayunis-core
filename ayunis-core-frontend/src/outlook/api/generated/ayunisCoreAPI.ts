@@ -65,6 +65,7 @@ import type {
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
+  CreateRecordingDto,
   CreateRoutineDto,
   CreateSkillDto,
   CreateSkillShareDto,
@@ -172,9 +173,14 @@ import type {
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
   RecordModuleHeartbeatRequestDto,
+  RecordingListResponseDto,
+  RecordingResponseDto,
+  RecordingTransferOwnerDto,
+  RecordingsControllerFindAllParams,
   RecoveryCodesResponseDto,
   RefreshTokenRequestDto,
   RegisterDto,
+  RenameRecordingDto,
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
   ReorderFavoritesDto,
@@ -17853,6 +17859,277 @@ export const superAdminAcademyCourseModulesControllerDeleteCourseModule = async 
     method: 'DELETE'
 
 
+  }
+);}
+
+
+
+export type recordingsControllerCreateResponse201 = {
+  data: RecordingResponseDto
+  status: 201
+}
+
+export type recordingsControllerCreateResponseSuccess = (recordingsControllerCreateResponse201) & {
+  headers: Headers;
+};
+;
+
+export type recordingsControllerCreateResponse = (recordingsControllerCreateResponseSuccess)
+
+export const getRecordingsControllerCreateUrl = () => {
+
+
+
+
+  return `/recordings`
+}
+
+/**
+ * @summary Create a recording
+ */
+export const recordingsControllerCreate = async (createRecordingDto: CreateRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerCreateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerCreateResponse>(getRecordingsControllerCreateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecordingDto)
+  }
+);}
+
+
+
+export type recordingsControllerFindAllResponse200 = {
+  data: RecordingListResponseDto
+  status: 200
+}
+
+export type recordingsControllerFindAllResponseSuccess = (recordingsControllerFindAllResponse200) & {
+  headers: Headers;
+};
+;
+
+export type recordingsControllerFindAllResponse = (recordingsControllerFindAllResponseSuccess)
+
+export const getRecordingsControllerFindAllUrl = (params: RecordingsControllerFindAllParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/recordings?${stringifiedParams}` : `/recordings`
+}
+
+/**
+ * @summary List the recordings of the user, their teams and organization, or of a workspace
+ */
+export const recordingsControllerFindAll = async (params: RecordingsControllerFindAllParams, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindAllResponse> => {
+
+  return paneFetch<recordingsControllerFindAllResponse>(getRecordingsControllerFindAllUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerFindOneResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerFindOneResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerFindOneResponseSuccess = (recordingsControllerFindOneResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerFindOneResponseError = (recordingsControllerFindOneResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerFindOneResponse = (recordingsControllerFindOneResponseSuccess | recordingsControllerFindOneResponseError)
+
+export const getRecordingsControllerFindOneUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Get a recording
+ */
+export const recordingsControllerFindOne = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindOneResponse> => {
+
+  return paneFetch<recordingsControllerFindOneResponse>(getRecordingsControllerFindOneUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerRenameResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerRenameResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerRenameResponseSuccess = (recordingsControllerRenameResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerRenameResponseError = (recordingsControllerRenameResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerRenameResponse = (recordingsControllerRenameResponseSuccess | recordingsControllerRenameResponseError)
+
+export const getRecordingsControllerRenameUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Rename a recording
+ */
+export const recordingsControllerRename = async (id: string,
+    renameRecordingDto: RenameRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerRenameResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerRenameResponse>(getRecordingsControllerRenameUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(renameRecordingDto)
+  }
+);}
+
+
+
+export type recordingsControllerDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type recordingsControllerDeleteResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerDeleteResponseSuccess = (recordingsControllerDeleteResponse204) & {
+  headers: Headers;
+};
+export type recordingsControllerDeleteResponseError = (recordingsControllerDeleteResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerDeleteResponse = (recordingsControllerDeleteResponseSuccess | recordingsControllerDeleteResponseError)
+
+export const getRecordingsControllerDeleteUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Delete a recording
+ */
+export const recordingsControllerDelete = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerDeleteResponse> => {
+
+  return paneFetch<recordingsControllerDeleteResponse>(getRecordingsControllerDeleteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerChangeOwnerResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerChangeOwnerResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerChangeOwnerResponseSuccess = (recordingsControllerChangeOwnerResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerChangeOwnerResponseError = (recordingsControllerChangeOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerChangeOwnerResponse = (recordingsControllerChangeOwnerResponseSuccess | recordingsControllerChangeOwnerResponseError)
+
+export const getRecordingsControllerChangeOwnerUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/owner`
+}
+
+/**
+ * @summary Move a recording to the caller, a team or the organization
+ */
+export const recordingsControllerChangeOwner = async (id: string,
+    recordingTransferOwnerDto: RecordingTransferOwnerDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerChangeOwnerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerChangeOwnerResponse>(getRecordingsControllerChangeOwnerUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordingTransferOwnerDto)
   }
 );}
 

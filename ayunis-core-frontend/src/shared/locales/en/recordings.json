@@ -1,0 +1,80 @@
+{
+  "page": {
+    "title": "Recordings"
+  },
+  "emptyState": {
+    "title": "No recordings yet",
+    "description": "Create a recording for a meeting. It belongs to you, one of your teams or the organisation.",
+    "noAccessDescription": "Recordings of your teams and organisation will appear here. Ask an admin for permission to create your own."
+  },
+  "listItem": {
+    "created": "Created {{date}}",
+    "createdBy": "Created {{date}} by {{name}}"
+  },
+  "createDialog": {
+    "buttonText": "Add Recording",
+    "buttonTextFirst": "Create your first recording",
+    "title": "Create New Recording",
+    "description": "Create a recording and choose who it belongs to.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Council meeting 12 November"
+    },
+    "validation": {
+      "nameRequired": "Name is required"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating..."
+    }
+  },
+  "create": {
+    "success": "Recording created",
+    "error": "The recording could not be created. Please try again.",
+    "validationError": "Please check the name and try again.",
+    "noPermission": "You are not allowed to create a recording for this owner."
+  },
+  "delete": {
+    "success": "Recording deleted",
+    "error": "The recording could not be deleted. Please try again.",
+    "notFound": "The recording no longer exists or you have lost access.",
+    "noPermission": "You are not allowed to delete this recording."
+  },
+  "confirmDelete": {
+    "title": "Delete Recording",
+    "description": "Delete \"{{name}}\"? This cannot be undone.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel"
+  },
+  "detail": {
+    "deleteLabel": "Delete",
+    "properties": {
+      "title": "Properties",
+      "description": "Name and origin of the recording.",
+      "owner": "Owner",
+      "workspaceOwner": "Workspace {{name}}",
+      "creator": "Created by",
+      "deletedCreator": "Deleted user",
+      "created": "Created on",
+      "form": {
+        "nameLabel": "Name",
+        "namePlaceholder": "e.g. Council meeting 12 November"
+      },
+      "buttons": {
+        "save": "Save",
+        "saving": "Saving..."
+      }
+    },
+    "validation": {
+      "nameRequired": "Name is required"
+    },
+    "rename": {
+      "success": "Recording renamed",
+      "error": "The recording could not be renamed. Please try again.",
+      "validationError": "Please check the name and try again.",
+      "notFound": "The recording no longer exists or you have lost access.",
+      "noPermission": "You are not allowed to rename this recording."
+    }
+  }
+}

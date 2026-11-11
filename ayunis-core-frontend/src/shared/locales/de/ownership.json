@@ -20,7 +20,8 @@
   "card": {
     "title": "Besitzer",
     "skillDescription": "Wem diese Fähigkeit gehört. Team- und Organisations-Fähigkeiten können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen.",
-    "knowledgeBaseDescription": "Wem diese Wissenssammlung gehört. Team- und Organisations-Wissenssammlungen können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen."
+    "knowledgeBaseDescription": "Wem diese Wissenssammlung gehört. Team- und Organisations-Wissenssammlungen können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen.",
+    "recordingDescription": "Wem diese Aufzeichnung gehört. Team- und Organisationsaufzeichnungen können alle Mitglieder lesen und alle ändern, die sie verwalten dürfen."
   },
   "change": {
     "title": "Besitzer ändern",

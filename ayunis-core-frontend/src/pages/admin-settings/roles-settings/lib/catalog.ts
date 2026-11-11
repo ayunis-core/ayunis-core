@@ -36,6 +36,15 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     permissions: ['manage_routines'],
     feature: 'routinesEnabled',
   },
+  {
+    group: 'recordings',
+    permissions: [
+      'manage_recordings',
+      'manage_team_recordings',
+      'manage_org_recordings',
+    ],
+    feature: 'recordingsEnabled',
+  },
   // Granted through the role a member holds inside each workspace, never
   // through their organisation role.
   {

@@ -15,6 +15,13 @@ export class FeatureTogglesResponseDto {
 
   @ApiProperty({
     description:
+      'Users can keep meeting recordings owned by them, a team, a workspace or the organization',
+    default: false,
+  })
+  recordingsEnabled: boolean;
+
+  @ApiProperty({
+    description:
       'Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source)',
     default: false,
   })

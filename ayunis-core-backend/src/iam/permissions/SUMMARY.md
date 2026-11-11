@@ -10,7 +10,8 @@ hold whatever an org admin grants them.
   `manage_teams`, `assign_users_to_teams`, `manage_skills`,
   `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`, `manage_workspace`, `manage_workspace_members`. Sharing
+  `manage_routines`, `manage_workspace`, `manage_workspace_members`,
+  `manage_recordings`, `manage_team_recordings`, `manage_org_recordings`. Sharing
   is split by audience: `*_with_teams` covers teams the member belongs to,
   `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
   migration granted both wherever the former `share_*` permission was held).
@@ -28,12 +29,13 @@ hold whatever an org admin grants them.
 - `CONFIGURABLE_ROLES` = `[MANAGER, USER]` — the only roles that can be
   configured. `ADMIN` is intentionally excluded (implicit-all, never persisted).
 - `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation. Chosen to
-  preserve pre-RBAC behaviour (all skill + knowledge-base permissions and
-  `manage_routines` for both MANAGER and USER; teams stay admin-only). In a
-  workspace, MANAGER gets `manage_workspace` and `manage_workspace_members`,
-  USER neither. **Kept in sync with the backfill VALUES lists in the
-  `CreateRolePermissions`, `GrantManageRoutines` and
-  `GrantWorkspacePermissions` migrations.**
+  preserve pre-RBAC behaviour (all skill + knowledge-base permissions,
+  `manage_routines` and the three recording permissions for both MANAGER and
+  USER; teams stay admin-only). In a workspace, MANAGER gets
+  `manage_workspace` and `manage_workspace_members`, USER neither. **Kept in
+  sync with the backfill VALUES lists in the `CreateRolePermissions`,
+  `GrantManageRoutines`, `GrantWorkspacePermissions` and
+  `GrantRecordingPermissions` migrations.**
 
 ## Enforcement
 
@@ -64,7 +66,8 @@ team or org share permission from the share's scope).
   `GrantManageRoutines` migration, which grants `manage_routines` to MANAGER
   and USER in every org that existed before the permission, and by the
   `GrantWorkspacePermissions` migration, which grants both workspace
-  permissions to MANAGER.
+  permissions to MANAGER, and by the `GrantRecordingPermissions` migration,
+  which grants the three recording permissions to MANAGER and USER.
 
 ## Management
 

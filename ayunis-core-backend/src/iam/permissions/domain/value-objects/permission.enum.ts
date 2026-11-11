@@ -10,4 +10,7 @@ export enum Permission {
   MANAGE_ROUTINES = 'manage_routines',
   MANAGE_WORKSPACE = 'manage_workspace',
   MANAGE_WORKSPACE_MEMBERS = 'manage_workspace_members',
+  MANAGE_RECORDINGS = 'manage_recordings',
+  MANAGE_TEAM_RECORDINGS = 'manage_team_recordings',
+  MANAGE_ORG_RECORDINGS = 'manage_org_recordings',
 }

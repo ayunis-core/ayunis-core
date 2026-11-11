@@ -90,6 +90,7 @@
           "assign_users_to_teams": "Add and remove members",
           "share_skills_with_teams": "Share skills with the team",
           "share_knowledge_bases_with_teams": "Share knowledge bases with the team",
+          "manage_team_recordings": "Manage recordings of the team",
           "manage_roles": "Change team roles and remove team admins"
         }
       },
