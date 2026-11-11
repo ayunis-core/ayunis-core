@@ -1,18 +1,25 @@
 import { useTranslation } from 'react-i18next';
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from '@ayunis/ui/components/select';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import {
+  MemberRoleSelect,
+  type MemberRoleTranslation,
+} from '@/widgets/member-role-select';
 import { useUpdateTeamMemberRole } from '@/pages/admin-settings/team-detail/api/useUpdateTeamMemberRole';
 import { useTeamRolePermissions } from '@/pages/admin-settings/team-detail/api/useTeamRolePermissions';
-import type {
-  TeamMember,
-  TeamRole,
+import {
+  TEAM_ROLES,
+  type TeamMember,
+  type TeamRole,
 } from '@/pages/admin-settings/team-detail/model/types';
-import { TeamRoleOptions } from './TeamRoleOptions';
+
+const ROLE_TRANSLATION: MemberRoleTranslation = {
+  namespace: 'admin-settings-teams',
+  keyPrefix: 'teamDetail.memberRole',
+};
+
+// Not a matrix permission: the backend reserves role changes and removing
+// team admins for team admins.
+const ADMIN_ONLY_ITEMS = ['manage_roles'];
 
 interface TeamMemberRoleSelectProps {
   teamId: string;
@@ -43,18 +50,17 @@ export function TeamMemberRoleSelect({
   };
 
   return (
-    <Select value={member.role} onValueChange={handleChange}>
-      <SelectTrigger
-        size="sm"
-        disabled={isUpdating}
-        aria-label={t('teamDetail.members.role')}
-        data-testid={`team-member-role-${member.userId}`}
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <TeamRoleOptions rolePermissions={rolePermissions} />
-      </SelectContent>
-    </Select>
+    <MemberRoleSelect
+      value={member.role}
+      onValueChange={handleChange}
+      roles={TEAM_ROLES}
+      rolePermissions={rolePermissions}
+      adminOnlyItems={ADMIN_ONLY_ITEMS}
+      translation={ROLE_TRANSLATION}
+      ariaLabel={t('teamDetail.members.role')}
+      disabled={isUpdating}
+      triggerTestId={`team-member-role-${member.userId}`}
+      testIdPrefix="team-member-role"
+    />
   );
 }
