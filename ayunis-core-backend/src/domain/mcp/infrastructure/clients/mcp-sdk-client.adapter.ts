@@ -1,7 +1,7 @@
 import { Injectable, Optional, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  Client,
+  type Client,
   StreamableHTTPClientTransport,
   type StreamableHTTPClientTransportOptions,
 } from '@modelcontextprotocol/client';
@@ -29,6 +29,7 @@ import {
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { McpClientPoolService } from './mcp-client-pool.service';
+import { connectMcpClient } from './connect-mcp-client';
 
 /**
  * Node's AbortController.abort() mints a DOMException with name 'AbortError'
@@ -457,21 +458,19 @@ export class McpSdkClientAdapter extends McpClientPort {
       onInsufficientScope: 'throw',
       ...(guardedFetch ? { fetch: guardedFetch.fetch } : {}),
     };
-    const transport = new StreamableHTTPClientTransport(
-      new URL(config.serverUrl),
-      transportOptions,
-    );
-
-    // Create client with capabilities
-    const client = new Client(
-      { name: 'ayunis-core', version: '1.0.0' },
-      { versionNegotiation: { mode: 'auto' } },
-    );
-
-    // Connect to server (covers the initialize handshake with the same timeout)
-    await client.connect(transport, requestOptions);
-
-    return client;
+    return connectMcpClient({
+      createTransport: () =>
+        new StreamableHTTPClientTransport(
+          new URL(config.serverUrl),
+          transportOptions,
+        ),
+      requestOptions,
+      onLegacyFallback: (error) =>
+        this.logger.warn(
+          { serverHost: serverHost(config.serverUrl), error: String(error) },
+          'MCP version negotiation failed, connecting without it',
+        ),
+    });
   }
 
   private async buildOAuthProvider(config: McpConnectionConfig) {

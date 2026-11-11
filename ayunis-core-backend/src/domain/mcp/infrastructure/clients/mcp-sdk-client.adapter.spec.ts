@@ -83,7 +83,9 @@ describe('McpSdkClientAdapter', () => {
 
       expect(Client).toHaveBeenCalledWith(
         { name: 'ayunis-core', version: '1.0.0' },
-        { versionNegotiation: { mode: 'auto' } },
+        {
+          versionNegotiation: { mode: 'auto', probe: { timeoutMs: 3000 } },
+        },
       );
     });
 
