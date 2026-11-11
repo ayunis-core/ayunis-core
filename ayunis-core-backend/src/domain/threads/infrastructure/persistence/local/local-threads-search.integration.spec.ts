@@ -56,10 +56,15 @@ describe('Chat title and content search (PostgreSQL)', () => {
       migrations: [],
       migrationsRun: false,
       logging: false,
+      // The workspace membership condition names workspace_members unqualified.
+      extra: { options: `-c search_path=${schema}` },
     });
     await db.initialize();
     await db.query(`CREATE SCHEMA "${schema}"`);
     await db.synchronize();
+    await db.query(
+      `CREATE TABLE workspace_members ("workspaceId" uuid, "userId" uuid)`,
+    );
     repository = new LocalThreadsRepository(
       db.getRepository(ThreadRecord),
       new ThreadMapper(undefined!, undefined!, undefined!, undefined!),
@@ -158,6 +163,10 @@ describe('Chat title and content search (PostgreSQL)', () => {
 
   it('intersects content matches with the workspace filter', async () => {
     const workspaceId = randomUUID();
+    await db.query(
+      `INSERT INTO workspace_members ("workspaceId", "userId") VALUES ($1, $2)`,
+      [workspaceId, ownerId],
+    );
     const id = await thread('Budget', ownerId, workspaceId);
     await message(id);
     await message(await thread());

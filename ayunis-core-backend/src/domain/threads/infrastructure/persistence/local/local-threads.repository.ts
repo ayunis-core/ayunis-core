@@ -14,7 +14,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
@@ -26,6 +26,12 @@ import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { findThreadCitationContext } from './queries/find-thread-citation-context';
 import { applyThreadListFilters } from './queries/apply-thread-list-filters';
+import { applyThreadListRelations } from './queries/apply-thread-list-relations';
+import {
+  accessibleThread,
+  personalOrMemberWorkspace,
+  personalOrMemberWorkspaceSql,
+} from './queries/personal-or-member-workspace';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -80,7 +86,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async findOne(id: UUID, userId: UUID): Promise<Thread | null> {
     this.logger.log({ id, userId }, 'findOne');
     const threadEntity = await this.threadRepository.findOne({
-      where: { id, userId },
+      where: accessibleThread(id, userId),
       relationLoadStrategy: 'query',
       relations: [
         'messages',
@@ -102,7 +108,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   existsForUser(id: UUID, userId: UUID): Promise<boolean> {
-    return this.threadRepository.exists({ where: { id, userId } });
+    return this.threadRepository.exists({
+      where: accessibleThread(id, userId),
+    });
   }
 
   async findContextRefs(
@@ -116,6 +124,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .addSelect('assignment.knowledgeBaseId', 'knowledgeBaseId')
       .where('thread.id = :id', { id })
       .andWhere('thread.userId = :userId', { userId })
+      .andWhere(personalOrMemberWorkspaceSql('thread.workspaceId', ':userId'))
       .getRawMany<{
         workspaceId: UUID | null;
         knowledgeBaseId: UUID | null;
@@ -140,7 +149,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
     if (ids.length === 0) return [];
 
     const records = await this.threadRepository.find({
-      where: { userId, id: In(ids) },
+      where: {
+        userId,
+        id: In(ids),
+        workspaceId: personalOrMemberWorkspace(userId),
+      },
     });
     return records.map((record) => this.threadMapper.toDomain(record));
   }
@@ -156,10 +169,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
     const queryBuilder = this.threadRepository
       .createQueryBuilder('thread')
-      .where('thread.userId = :userId', { userId });
+      .where('thread.userId = :userId', { userId })
+      .andWhere(personalOrMemberWorkspaceSql('thread.workspaceId', ':userId'));
 
     applyThreadListFilters(queryBuilder, filters);
-    this.applyFindAllRelations(queryBuilder, options);
+    applyThreadListRelations(queryBuilder, options);
 
     queryBuilder.orderBy('thread.createdAt', 'DESC');
 
@@ -185,39 +199,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       offset,
       total,
     });
-  }
-
-  private applyFindAllRelations(
-    queryBuilder: SelectQueryBuilder<ThreadRecord>,
-    options?: ThreadsFindAllOptions,
-  ): void {
-    if (options?.withMessages) {
-      queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
-    }
-    if (options?.withSources) {
-      queryBuilder.leftJoinAndSelect(
-        'thread.sourceAssignments',
-        'sourceAssignments',
-      );
-      queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
-      queryBuilder.leftJoinAndSelect(
-        'source.dataSourceDetails',
-        'dataSourceDetails',
-      );
-    }
-    if (options?.withKnowledgeBases) {
-      queryBuilder.leftJoinAndSelect(
-        'thread.knowledgeBaseAssignments',
-        'knowledgeBaseAssignments',
-      );
-      queryBuilder.leftJoinAndSelect(
-        'knowledgeBaseAssignments.knowledgeBase',
-        'knowledgeBase',
-      );
-    }
-    if (options?.withModel) {
-      queryBuilder.leftJoinAndSelect('thread.model', 'model');
-    }
   }
 
   async findAllByModel(
@@ -276,7 +257,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       'updateTitle',
     );
     const result = await this.threadRepository.update(
-      { id: params.threadId, userId: params.userId },
+      accessibleThread(params.threadId, params.userId),
       { title: params.title },
     );
     if (!result.affected || result.affected === 0) {
@@ -417,7 +398,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       'assignToWorkspace',
     );
     const result = await this.threadRepository.update(
-      { id: params.threadId, userId: params.userId },
+      accessibleThread(params.threadId, params.userId),
       { workspaceId: params.workspaceId },
     );
     if (!result.affected) {

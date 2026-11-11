@@ -72,6 +72,11 @@ export abstract class ThreadsRepository {
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]>;
   abstract update(thread: Thread): Promise<Thread>;
+  /**
+   * Scoped to the creator but not to workspace membership: replacing a
+   * deleted model must also reach the chats of creators who are no longer
+   * members of the chat's workspace.
+   */
   abstract updateModel(params: {
     threadId: UUID;
     userId: UUID;
@@ -134,6 +139,11 @@ export abstract class ThreadsRepository {
     userId: UUID;
     workspaceId: UUID | null;
   }): Promise<void>;
+  /**
+   * Scoped to the creator but not to workspace membership: callers decide
+   * access first, and retention must also delete the chats of creators who
+   * are no longer members of the chat's workspace.
+   */
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
   /** Sources uploaded into the user's threads directly, not brought in by a skill. */
