@@ -13,6 +13,10 @@
     "org": "Organisation",
     "shared": "Shared with me"
   },
+  "group": {
+    "personal": "Personal",
+    "orgAndTeams": "Organisation & teams"
+  },
   "card": {
     "title": "Owner",
     "skillDescription": "Who this skill belongs to. Team and organisation skills can be used by all members and edited by everyone allowed to manage them.",

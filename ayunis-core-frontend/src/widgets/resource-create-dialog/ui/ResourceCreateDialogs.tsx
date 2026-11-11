@@ -145,6 +145,7 @@ export function SkillCreateDialog({
               options={ownerOptions}
               value={ownerKey}
               onValueChange={setOwnerKey}
+              grouped
               testId="skill-create-owner"
             />
             <NameField

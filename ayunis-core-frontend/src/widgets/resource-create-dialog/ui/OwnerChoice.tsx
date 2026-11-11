@@ -14,11 +14,13 @@ export function OwnerChoice({
   options,
   value,
   onValueChange,
+  grouped = false,
   testId,
 }: Readonly<{
   options: OwnerOption[] | undefined;
   value: string;
   onValueChange: (key: string) => void;
+  grouped?: boolean;
   testId: string;
 }>) {
   const { t } = useTranslation('ownership');
@@ -32,6 +34,7 @@ export function OwnerChoice({
         options={options}
         value={value}
         onValueChange={onValueChange}
+        grouped={grouped}
         testId={testId}
       />
     </div>
