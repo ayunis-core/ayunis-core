@@ -6,6 +6,7 @@ import {
   skillsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import type { OwnerSelection } from '@/features/resource-ownership';
@@ -34,6 +35,7 @@ export function useCreateSkill() {
         ...(owner ?? { ownerType: 'personal' }),
       }),
     onSuccess: (data) => {
+      trackOpenPanelEvent('skill_created');
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
       });

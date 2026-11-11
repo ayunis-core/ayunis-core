@@ -34,6 +34,7 @@ import { useToggleFavorite, type Favorite } from '@/features/favorites';
 import { useWorkspaces, type Workspace } from '@/features/workspaces';
 import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 
 interface FavoriteSidebarItemProps {
   item: Favorite;
@@ -102,6 +103,11 @@ export function FavoriteSidebarItem({
               isWorkspace
                 ? { workspaceId: item.referenceId }
                 : { threadId: item.referenceId }
+            }
+            onClick={() =>
+              trackOpenPanelEvent('favorite_opened', {
+                resource_type: item.referenceType,
+              })
             }
           >
             {isWorkspace ? (

@@ -6,6 +6,8 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
+import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useInstallIntegrationFromMarketplace() {
@@ -15,7 +17,11 @@ export function useInstallIntegrationFromMarketplace() {
 
   return useMcpIntegrationsControllerInstallFromMarketplace({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (integration, { data }) => {
+        trackOpenPanelEvent('integration_installed', {
+          marketplace_slug: data.identifier,
+        });
+        trackProbedIntegrationConnection(integration);
         showSuccess(t('success'));
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),

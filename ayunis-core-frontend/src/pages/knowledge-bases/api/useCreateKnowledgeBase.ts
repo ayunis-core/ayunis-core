@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { OwnerSelection } from '@/features/resource-ownership';
 
@@ -28,6 +29,9 @@ export function useCreateKnowledgeBase() {
         description: data.description ?? '',
       }),
     onSuccess: (knowledgeBase) => {
+      trackOpenPanelEvent('knowledge_base_created', {
+        workspace_context: false,
+      });
       void queryClient.invalidateQueries({
         queryKey: getKnowledgeBasesControllerFindAllQueryKey(
           personalKnowledgeBaseListParams,

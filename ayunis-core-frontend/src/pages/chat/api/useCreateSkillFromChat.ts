@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { skillsControllerCreate } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { invalidateChatSkillQueries } from './invalidateChatSkillQueries';
 
@@ -32,6 +33,7 @@ export function useCreateSkillFromChat({
           : { ownerType: 'personal' as const }),
       }),
     onSuccess: () => {
+      trackOpenPanelEvent('skill_created');
       onCreated();
       showSuccess(t('chat.tools.create_skill.success'));
       invalidateChatSkillQueries(queryClient, {

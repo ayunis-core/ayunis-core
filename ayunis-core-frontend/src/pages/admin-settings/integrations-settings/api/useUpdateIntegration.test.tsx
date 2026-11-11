@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
               oauth?: { clientRegistration: 'automatic' | 'static' };
             };
             userAuthorizationRequired?: boolean;
+            marketplaceIdentifier?: string;
           },
           variables?: { data: Record<string, unknown> },
         ) => void;
@@ -25,6 +26,11 @@ const mocks = vi.hoisted(() => ({
   errorCode: 'UNKNOWN',
   showError: vi.fn(),
   showSuccess: vi.fn(),
+  track: vi.fn(),
+}));
+
+vi.mock('@/shared/lib/openpanel', () => ({
+  openPanel: { track: mocks.track },
 }));
 
 vi.mock('@tanstack/react-query', () => ({
@@ -71,6 +77,7 @@ describe(useUpdateIntegration.name, () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.errorCode = 'UNKNOWN';
+    mocks.track.mockResolvedValue(undefined);
   });
 
   it('reports a failed connection and keeps the edit dialog open', () => {
@@ -189,5 +196,54 @@ describe(useUpdateIntegration.name, () => {
     expect(mocks.showError).toHaveBeenCalledWith(
       `integrations.updateIntegration.${messageKey}`,
     );
+  });
+
+  describe('integration_connected', () => {
+    it('is sent once changed credentials passed the connection test', () => {
+      renderHook(() => useUpdateIntegration());
+
+      act(() => {
+        mocks.mutationOptions?.onSuccess(
+          { connectionStatus: 'connected', marketplaceIdentifier: 'oparl' },
+          { data: { orgConfigValues: { apiKey: 'new-key' } } },
+        );
+      });
+
+      expect(mocks.track.mock.calls).toEqual([
+        ['integration_connected', { marketplace_slug: 'oparl' }],
+      ]);
+    });
+
+    it.each([
+      [
+        'an edit without connection changes',
+        { connectionStatus: 'connected' },
+        { name: 'Renamed integration' },
+      ],
+      [
+        'a failed connection test',
+        { connectionStatus: 'error' },
+        { serverUrl: 'https://broken.example.com/mcp' },
+      ],
+      [
+        'an OAuth integration, which connects once OAuth completes',
+        {
+          connectionStatus: 'connected',
+          configSchema: {
+            authType: 'OAUTH',
+            oauth: { clientRegistration: 'automatic' as const },
+          },
+        },
+        { orgConfigValues: { tenant: 'council-42' } },
+      ],
+    ])('is not sent for %s', (_case, integration, data) => {
+      renderHook(() => useUpdateIntegration());
+
+      act(() => {
+        mocks.mutationOptions?.onSuccess(integration, { data });
+      });
+
+      expect(mocks.track).not.toHaveBeenCalled();
+    });
   });
 });

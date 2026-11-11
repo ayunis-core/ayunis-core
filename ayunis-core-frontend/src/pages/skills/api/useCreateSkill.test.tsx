@@ -6,13 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { showError } from '@/shared/lib/toast';
 import { useCreateSkill } from './useCreateSkill';
 
-const { request, navigate, invalidate } = vi.hoisted(() => ({
+const { request, navigate, invalidate, client } = vi.hoisted(() => ({
   request: vi.fn(),
   navigate: vi.fn(),
   invalidate: vi.fn(),
+  client: { track: vi.fn() },
 }));
 
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),
@@ -38,11 +40,15 @@ function conflict(code: string) {
 
 async function createFailingWith(error: unknown) {
   request.mockRejectedValue(error);
-  const client = new QueryClient({
+  await create();
+}
+
+async function create() {
+  const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
   });
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
   const { result } = renderHook(() => useCreateSkill(), { wrapper });
   await act(() =>
@@ -59,6 +65,7 @@ async function createFailingWith(error: unknown) {
 beforeEach(() => {
   vi.resetAllMocks();
   invalidate.mockResolvedValue(undefined);
+  client.track.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
 
@@ -73,5 +80,14 @@ describe('useCreateSkill', () => {
     await createFailingWith(conflict('SOMETHING_ELSE'));
 
     expect(showError).toHaveBeenCalledWith('create.error');
+    expect(client.track).not.toHaveBeenCalled();
+  });
+
+  it('sends skill_created without the skill name once the skill was created', async () => {
+    request.mockResolvedValue({ id: 'skill-1' });
+
+    await create();
+
+    expect(client.track.mock.calls).toEqual([['skill_created', undefined]]);
   });
 });

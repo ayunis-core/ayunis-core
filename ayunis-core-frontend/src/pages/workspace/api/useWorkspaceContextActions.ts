@@ -10,6 +10,7 @@ import {
   workspaceContextControllerUpdateInstruction,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateSkillDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
@@ -31,7 +32,10 @@ export function useWorkspaceContextActions(workspaceId: string) {
         workspaceId,
       }),
     retry: 0,
-    onSuccess: invalidateContext,
+    onSuccess: () => {
+      trackOpenPanelEvent('skill_created');
+      return invalidateContext();
+    },
     onError: (error) => {
       try {
         const { code } = extractErrorData(error);

@@ -4,12 +4,14 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreateKnowledgeBase } from './useCreateKnowledgeBase';
 
-const { request, invalidate, navigate } = vi.hoisted(() => ({
+const { request, invalidate, navigate, client } = vi.hoisted(() => ({
   request: vi.fn(),
   invalidate: vi.fn(),
   navigate: vi.fn(),
+  client: { track: vi.fn() },
 }));
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),
@@ -31,6 +33,7 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   vi.clearAllMocks();
   invalidate.mockResolvedValue(undefined);
+  client.track.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
 
@@ -61,6 +64,9 @@ describe('personal knowledge-base API migration', () => {
       to: '/knowledge-bases/$id',
       params: { id: 'personal-kb' },
     });
+    expect(client.track.mock.calls).toEqual([
+      ['knowledge_base_created', { workspace_context: false }],
+    ]);
   });
 
   it('stays on the list when creation fails', async () => {
@@ -74,5 +80,6 @@ describe('personal knowledge-base API migration', () => {
     );
 
     expect(navigate).not.toHaveBeenCalled();
+    expect(client.track).not.toHaveBeenCalled();
   });
 });

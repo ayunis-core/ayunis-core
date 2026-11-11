@@ -22,13 +22,17 @@ import {
   workspaceSkillListParams,
 } from '@/shared/api/skill-scopes';
 
-const { request, showError, showSuccess, invalidate } = vi.hoisted(() => ({
-  request: vi.fn(),
-  showError: vi.fn(),
-  showSuccess: vi.fn(),
-  invalidate: vi.fn(),
-}));
+const { request, showError, showSuccess, invalidate, openPanel } = vi.hoisted(
+  () => ({
+    request: vi.fn(),
+    showError: vi.fn(),
+    showSuccess: vi.fn(),
+    invalidate: vi.fn(),
+    openPanel: { track: vi.fn() },
+  }),
+);
 vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@/shared/lib/openpanel', () => ({ openPanel }));
 vi.mock('@/shared/lib/toast', () => ({
   showError,
   showSuccess,
@@ -57,6 +61,7 @@ function setup() {
 beforeEach(() => {
   vi.resetAllMocks();
   invalidate.mockResolvedValue(undefined);
+  openPanel.track.mockResolvedValue(undefined);
 });
 afterEach(() => {
   cleanup();
@@ -403,5 +408,67 @@ describe('workspace resource regressions', () => {
         data: { url: 'https://example.com', maxDepth: 1 },
       }),
     );
+  });
+});
+
+describe('workspace adoption tracking', () => {
+  it('sends knowledge_base_created in workspace context once the knowledge base was created', async () => {
+    request.mockResolvedValue({ id: 'knowledge' });
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useWorkspaceKnowledgeBaseActions('project'),
+      { wrapper },
+    );
+
+    await act(() => result.current.createKnowledgeBase({ name: 'Rules' }));
+
+    expect(openPanel.track.mock.calls).toEqual([
+      ['knowledge_base_created', { workspace_context: true }],
+    ]);
+  });
+
+  it('sends skill_created once a workspace skill was created', async () => {
+    request.mockResolvedValue({ id: 'skill' });
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useWorkspaceContextActions('project'), {
+      wrapper,
+    });
+
+    await act(() =>
+      result.current.createSkill({
+        name: 'Permit review',
+        shortDescription: 'Reviews permits',
+        instructions: 'Review the permit.',
+      }),
+    );
+
+    expect(openPanel.track.mock.calls).toEqual([['skill_created', undefined]]);
+  });
+
+  it('sends nothing when creating a workspace knowledge base or skill failed', async () => {
+    request.mockRejectedValue(new Error('create failed'));
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => ({
+        knowledgeBases: useWorkspaceKnowledgeBaseActions('project'),
+        context: useWorkspaceContextActions('project'),
+      }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.knowledgeBases
+        .createKnowledgeBase({ name: 'Rules' })
+        .catch(() => undefined);
+      await result.current.context
+        .createSkill({
+          name: 'Permit review',
+          shortDescription: 'Reviews permits',
+          instructions: 'Review the permit.',
+        })
+        .catch(() => undefined);
+    });
+
+    expect(openPanel.track).not.toHaveBeenCalled();
   });
 });

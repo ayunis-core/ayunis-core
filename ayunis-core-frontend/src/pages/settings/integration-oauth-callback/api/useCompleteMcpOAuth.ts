@@ -5,12 +5,17 @@ import {
   mcpIntegrationsControllerCompleteOAuth,
   type CompleteMcpOAuthDto,
 } from '@/shared/api';
+import { trackOAuthIntegrationConnected } from '@/shared/lib/openpanel-integrations';
 
 export function useCompleteMcpOAuth(data: CompleteMcpOAuthDto) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ['mcp-oauth', 'complete', data.state],
-    queryFn: () => mcpIntegrationsControllerCompleteOAuth(data),
+    queryFn: async () => {
+      const completed = await mcpIntegrationsControllerCompleteOAuth(data);
+      trackOAuthIntegrationConnected(queryClient, completed.integrationId);
+      return completed;
+    },
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
