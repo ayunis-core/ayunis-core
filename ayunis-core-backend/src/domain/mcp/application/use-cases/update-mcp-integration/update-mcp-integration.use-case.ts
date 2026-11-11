@@ -71,9 +71,10 @@ export class UpdateMcpIntegrationUseCase {
       command.serverUrl,
       command.oauthClient !== undefined,
     );
-    const removedUserFieldKeys = this.removedUserFieldKeys(
+    const clearedUserFieldKeys = this.clearedUserFieldKeys(
       integration,
       command.configSchema,
+      serverUrlChanged,
     );
 
     // OAuth state is bound to the current server, so it is replaced before
@@ -88,7 +89,7 @@ export class UpdateMcpIntegrationUseCase {
     await this.applyUpdates(integration, command);
     const saved = await this.txHost.withTransaction(async () => {
       const updated = await this.repository.save(integration);
-      await this.removeDeletedUserConfigValues(updated, removedUserFieldKeys);
+      await this.removeUserConfigValues(updated, clearedUserFieldKeys);
       return updated;
     });
 
@@ -262,20 +263,30 @@ export class UpdateMcpIntegrationUseCase {
     };
   }
 
-  private removedUserFieldKeys(
+  /**
+   * Saved user secrets were entered for the previous server. Keeping them
+   * across a URL change would send them to whatever host the URL now points
+   * at, so they are cleared together with the values of removed fields.
+   */
+  private clearedUserFieldKeys(
     integration: McpIntegration,
     update: UpdateMcpIntegrationCommand['configSchema'],
+    serverUrlChanged: boolean,
   ): string[] {
-    if (!(integration instanceof SchemaConfiguredMcpIntegration) || !update) {
-      return [];
-    }
-    const nextKeys = new Set(update.userFields.map((field) => field.key));
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) return [];
+    const nextKeys = update
+      ? new Set(update.userFields.map((field) => field.key))
+      : undefined;
     return integration.configSchema.userFields
-      .map((field) => field.key)
-      .filter((key) => !nextKeys.has(key));
+      .filter(
+        (field) =>
+          (serverUrlChanged && field.type === 'secret') ||
+          (nextKeys && !nextKeys.has(field.key)),
+      )
+      .map((field) => field.key);
   }
 
-  private async removeDeletedUserConfigValues(
+  private async removeUserConfigValues(
     integration: McpIntegration,
     keys: string[],
   ): Promise<void> {

@@ -149,6 +149,7 @@ describe('UpdateMcpIntegrationUseCase transaction', () => {
 
   const orgId = randomUUID();
   const userId = randomUUID();
+  const otherUserId = randomUUID();
   let integrationId: UUID;
 
   beforeAll(async () => {
@@ -203,6 +204,13 @@ describe('UpdateMcpIntegrationUseCase transaction', () => {
         configValues: { personalToken: 'encrypted-token', region: 'eu' },
       }),
     );
+    await userConfigs.save(
+      new McpIntegrationUserConfig({
+        integrationId,
+        userId: otherUserId,
+        configValues: { personalToken: 'other-encrypted-token', region: 'us' },
+      }),
+    );
   }, 30_000);
 
   afterAll(async () => {
@@ -248,6 +256,63 @@ describe('UpdateMcpIntegrationUseCase transaction', () => {
     expect(await storedUserFieldKeys()).toEqual(['personalToken', 'region']);
     expect(await storedUserValues()).toEqual({ region: 'eu' });
     expect(invalidateConnections).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears every user's saved secrets when the server URL changes, so they are never sent to the new server", async () => {
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        serverUrl: 'https://attacker.example/mcp',
+      }),
+    );
+
+    expect(await storedServerUrl()).toBe('https://attacker.example/mcp');
+    expect(await storedUserValues()).toEqual({ region: 'eu' });
+    expect(await storedUserValues(otherUserId)).toEqual({ region: 'us' });
+  });
+
+  it('keeps the previous URL and saved secrets when clearing the secrets fails', async () => {
+    const previousUrl = await storedServerUrl();
+    await dataSource.query(`
+      CREATE TRIGGER fail_user_config_cleanup
+      BEFORE UPDATE ON "${schemaName}"."mcp_integration_user_configs"
+      FOR EACH ROW EXECUTE FUNCTION "${schemaName}".fail_user_config_cleanup()
+    `);
+    try {
+      await expect(
+        useCase.execute(
+          new UpdateMcpIntegrationCommand({
+            integrationId,
+            serverUrl: 'https://attacker.example/mcp',
+          }),
+        ),
+      ).rejects.toThrow();
+    } finally {
+      await dataSource.query(
+        `DROP TRIGGER fail_user_config_cleanup ON "${schemaName}"."mcp_integration_user_configs"`,
+      );
+    }
+
+    expect(await storedServerUrl()).toBe(previousUrl);
+    expect(await storedUserValues()).toEqual({
+      personalToken: 'encrypted-token',
+      region: 'eu',
+    });
+  });
+
+  it('keeps saved secrets when the submitted server URL is unchanged', async () => {
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({
+        integrationId,
+        serverUrl: await storedServerUrl(),
+        name: 'Renamed',
+      }),
+    );
+
+    expect(await storedUserValues()).toEqual({
+      personalToken: 'encrypted-token',
+      region: 'eu',
+    });
   });
 
   function configureUseCase(): void {
@@ -301,10 +366,19 @@ describe('UpdateMcpIntegrationUseCase transaction', () => {
     return (record.configSchema?.userFields ?? []).map((field) => field.key);
   }
 
-  async function storedUserValues(): Promise<Record<string, string>> {
+  async function storedServerUrl(): Promise<string> {
+    const record = await dataSource
+      .getRepository(McpIntegrationRecord)
+      .findOneByOrFail({ id: integrationId });
+    return record.serverUrl;
+  }
+
+  async function storedUserValues(
+    ownerId: UUID = userId,
+  ): Promise<Record<string, string>> {
     const record = await dataSource
       .getRepository(McpIntegrationUserConfigRecord)
-      .findOneByOrFail({ integrationId, userId });
+      .findOneByOrFail({ integrationId, userId: ownerId });
     return record.configValues;
   }
 });
