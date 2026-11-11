@@ -49,8 +49,11 @@ export function SkillCreateDialog({
   onOpenChange,
   ownerOptions,
   isOwnerChoiceLoading = false,
+  workspaceId,
 }: Readonly<{
   onCreate: (data: CreateSkillSubmission) => Promise<unknown>;
+  /** Set when creating a workspace skill, so improving its text checks the workspace. */
+  workspaceId?: string;
   /** Offered as an owner choice when there is more than one. */
   ownerOptions?: OwnerOption[];
   /** Blocks creating until the owner choice is known. */
@@ -97,6 +100,7 @@ export function SkillCreateDialog({
       trigger: t('createDialog.form.shortDescriptionLabel'),
       instructions: t('createDialog.form.instructionsLabel'),
     },
+    workspaceId,
   });
 
   const close = () => {

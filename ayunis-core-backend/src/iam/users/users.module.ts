@@ -17,6 +17,7 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 // Import use cases
 import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUsersByIdsUseCase } from './application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
+import { SearchOrgUsersUseCase } from './application/use-cases/search-org-users/search-org-users.use-case';
 import { FindUsersByOrgIdUseCase } from './application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { DeleteUserUseCase } from './application/use-cases/delete-user/delete-user.use-case';
 import { UpdateUserRoleUseCase } from './application/use-cases/update-user-role/update-user-role.use-case';
@@ -127,6 +128,7 @@ import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/applica
     // Use cases
     FindUserByIdUseCase,
     FindUsersByIdsUseCase,
+    SearchOrgUsersUseCase,
     FindUsersByOrgIdUseCase,
     DeleteUserUseCase,
     UpdateUserRoleUseCase,
@@ -193,6 +195,7 @@ import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/applica
     ValidateUserUseCase,
     FindUserByIdUseCase,
     FindUsersByIdsUseCase,
+    SearchOrgUsersUseCase,
     FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
     EmailConfirmationJwtService,

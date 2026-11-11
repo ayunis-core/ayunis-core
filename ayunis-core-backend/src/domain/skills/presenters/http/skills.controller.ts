@@ -114,7 +114,6 @@ export class SkillsController {
     });
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @RequireSubscription()
   @RequireAcademyCertificate()
   @Post('improve-text')
@@ -123,7 +122,12 @@ export class SkillsController {
   })
   @ApiBody({ type: ImproveSkillTextDto })
   @ApiResponse({ status: 200, type: ImprovedSkillTextResponseDto })
-  @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Subscription required, or missing manage_skills (manage_workspace for a workspace skill)',
+  })
+  @ApiResponse({ status: 404, description: 'Workspace not found' })
   @ApiResponse({
     status: 422,
     description:
@@ -147,6 +151,7 @@ export class SkillsController {
         language: dto.language,
         trigger: dto.trigger,
         instructions: dto.instructions,
+        workspaceId: dto.workspaceId,
         consumeTrialMessage: Boolean(
           request.subscriptionContext?.hasRemainingTrialMessages,
         ),

@@ -10,6 +10,8 @@ interface ImproveSkillTextParams {
   name?: string;
   trigger: string;
   instructions: string;
+  /** Set in a workspace's skill editor, where the workspace role decides. */
+  workspaceId?: string;
 }
 
 export function useImproveSkillText() {

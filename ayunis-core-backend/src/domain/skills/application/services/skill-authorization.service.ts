@@ -90,6 +90,19 @@ export class SkillAuthorizationService {
     return this.requireWrite(skill);
   }
 
+  /**
+   * Rewriting a draft in a workspace's skill editor takes `manage_workspace`
+   * there; every other editor takes `manage_skills`.
+   */
+  async requireTextImprovement(workspaceId?: UUID): Promise<void> {
+    this.requirePrincipal();
+    if (workspaceId) {
+      await this.workspaceWrite.execute({ workspaceId });
+      return;
+    }
+    await this.requireManageSkills();
+  }
+
   async requireExecution(skill: Skill, threadId: UUID): Promise<void> {
     const skillId = skill.id;
     this.requirePrincipal();

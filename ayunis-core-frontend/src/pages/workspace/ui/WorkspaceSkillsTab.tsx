@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
+import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SkillListItem } from '@/shared/ui/skill-list-item';
 import {
   WorkspaceContextEmpty,
@@ -23,7 +24,8 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceSkillsTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canManage,
+}: Readonly<{ workspaceId: string; canManage: boolean }>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -35,21 +37,16 @@ export function WorkspaceSkillsTab({
     workspaceId,
     listParams,
   );
-  const {
-    createSkill,
-    deleteSkill,
-    setSkillActive,
-    setSkillPinned,
-    isChangingSkillState,
-  } = useWorkspaceContextActions(workspaceId);
+  const actions = useWorkspaceContextActions(workspaceId);
 
   const addButton = (
     <OnboardingTourTarget name={TOUR_TARGET.workspaceSkill}>
       <SkillCreateDialog
         buttonText={t('context.skills.create')}
         buttonTestId="workspace-skill-create"
+        workspaceId={workspaceId}
         onCreate={async (data) => {
-          const skill = await createSkill(data);
+          const skill = await actions.createSkill(data);
           await navigate({
             to: '/workspaces/$workspaceId/skills/$skillId',
             params: { workspaceId, skillId: skill.id },
@@ -61,7 +58,7 @@ export function WorkspaceSkillsTab({
 
   return (
     <section className="space-y-3">
-      <div className="flex justify-end">{addButton}</div>
+      {canManage ? <div className="flex justify-end">{addButton}</div> : null}
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
       {!isLoading && skills.length === 0 ? (
         <WorkspaceContextEmpty
@@ -85,80 +82,15 @@ export function WorkspaceSkillsTab({
                 })
               }
               actions={
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {skill.isActive
-                        ? t('context.skills.active')
-                        : t('context.skills.inactive')}
-                    </span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="inline-flex">
-                          <Switch
-                            data-testid={`workspace-skill-active-${skill.id}`}
-                            checked={skill.isActive}
-                            disabled={isChangingSkillState}
-                            onCheckedChange={(isActive) =>
-                              setSkillActive({ skillId: skill.id, isActive })
-                            }
-                          />
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        {t('context.skills.activeTooltip')}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  {skill.isActive ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          data-testid={`workspace-skill-pin-${skill.id}`}
-                          disabled={isChangingSkillState}
-                          aria-label={
-                            skill.isPinned
-                              ? t('context.skills.unpin')
-                              : t('context.skills.pin')
-                          }
-                          onClick={() =>
-                            setSkillPinned({
-                              skillId: skill.id,
-                              isPinned: !skill.isPinned,
-                            })
-                          }
-                        >
-                          <Pin
-                            className={skill.isPinned ? 'fill-current' : ''}
-                          />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {skill.isPinned
-                          ? t('context.skills.unpin')
-                          : t('context.skills.pin')}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : null}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        aria-label={t('context.skills.delete')}
-                        onClick={() => deleteSkill(skill.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t('context.skills.delete')}
-                    </TooltipContent>
-                  </Tooltip>
-                </>
+                canManage ? (
+                  <WorkspaceSkillActions skill={skill} actions={actions} />
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    {skill.isActive
+                      ? t('context.skills.active')
+                      : t('context.skills.inactive')}
+                  </span>
+                )
               }
             />
           ))}
@@ -171,5 +103,91 @@ export function WorkspaceSkillsTab({
         onPageChange={setPage}
       />
     </section>
+  );
+}
+
+function WorkspaceSkillActions({
+  skill,
+  actions,
+}: Readonly<{
+  skill: SkillResponseDto;
+  actions: ReturnType<typeof useWorkspaceContextActions>;
+}>) {
+  const { t } = useTranslation('workspace');
+  const { deleteSkill, setSkillActive, setSkillPinned, isChangingSkillState } =
+    actions;
+
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {skill.isActive
+            ? t('context.skills.active')
+            : t('context.skills.inactive')}
+        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <Switch
+                data-testid={`workspace-skill-active-${skill.id}`}
+                checked={skill.isActive}
+                disabled={isChangingSkillState}
+                onCheckedChange={(isActive) =>
+                  setSkillActive({ skillId: skill.id, isActive })
+                }
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            {t('context.skills.activeTooltip')}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      {skill.isActive ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              data-testid={`workspace-skill-pin-${skill.id}`}
+              disabled={isChangingSkillState}
+              aria-label={
+                skill.isPinned
+                  ? t('context.skills.unpin')
+                  : t('context.skills.pin')
+              }
+              onClick={() =>
+                setSkillPinned({
+                  skillId: skill.id,
+                  isPinned: !skill.isPinned,
+                })
+              }
+            >
+              <Pin className={skill.isPinned ? 'fill-current' : ''} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {skill.isPinned
+              ? t('context.skills.unpin')
+              : t('context.skills.pin')}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            aria-label={t('context.skills.delete')}
+            data-testid={`workspace-skill-delete-${skill.id}`}
+            onClick={() => deleteSkill(skill.id)}
+          >
+            <Trash2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('context.skills.delete')}</TooltipContent>
+      </Tooltip>
+    </>
   );
 }

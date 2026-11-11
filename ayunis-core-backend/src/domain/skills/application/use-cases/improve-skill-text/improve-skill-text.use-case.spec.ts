@@ -14,6 +14,7 @@ import { CollectUsageAsyncService } from 'src/domain/usage/application/services/
 import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { SkillTextModelResolver } from 'src/domain/skills/application/services/skill-text-model-resolver.service';
+import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
   SkillTextImprovementFailedError,
   UnexpectedSkillError,
@@ -37,6 +38,7 @@ describe('ImproveSkillTextUseCase', () => {
   };
   let collectUsage: { collectCritical: jest.Mock };
   let incrementTrialMessages: { execute: jest.Mock };
+  let authorization: { requireTextImprovement: jest.Mock };
   const permittedModel = { model: { id: 'org-model', consumesCredits: true } };
 
   function answer(text: string) {
@@ -63,6 +65,9 @@ describe('ImproveSkillTextUseCase', () => {
     incrementTrialMessages = {
       execute: jest.fn().mockResolvedValue(undefined),
     };
+    authorization = {
+      requireTextImprovement: jest.fn().mockResolvedValue(undefined),
+    };
     const module = await Test.createTestingModule({
       providers: [
         ImproveSkillTextUseCase,
@@ -84,6 +89,7 @@ describe('ImproveSkillTextUseCase', () => {
           provide: ContextService,
           useValue: { get: (key: string) => values[key] },
         },
+        { provide: SkillAuthorizationService, useValue: authorization },
       ],
     }).compile();
     useCase = module.get(ImproveSkillTextUseCase);
@@ -125,6 +131,29 @@ describe('ImproveSkillTextUseCase', () => {
     expect(prompt).toContain('Immer wenn relevant');
     expect(prompt).toContain('Prüfe die Fristen im Bauantrag.');
     expect(prompt).toContain('INSTRUCTIONS');
+  });
+
+  it('calls no model when the caller may not edit skills in that editor', async () => {
+    const workspaceId = randomUUID();
+    authorization.requireTextImprovement.mockRejectedValue(
+      new UnauthorizedAccessError(),
+    );
+
+    await expect(
+      useCase.execute(
+        new ImproveSkillTextCommand({
+          field: SkillTextField.TRIGGER,
+          trigger: 'Immer wenn relevant',
+          instructions: 'Prüfe die Fristen im Bauantrag.',
+          consumeTrialMessage: false,
+          workspaceId,
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    expect(authorization.requireTextImprovement).toHaveBeenCalledWith(
+      workspaceId,
+    );
+    expect(getInference.execute).not.toHaveBeenCalled();
   });
 
   it('calls the model the resolver picked for the caller', async () => {
@@ -335,6 +364,10 @@ describe('ImproveSkillTextUseCase trial accounting', () => {
           provide: ContextService,
           useValue: { get: getFromUserContext({ userId, orgId }) },
         },
+        {
+          provide: SkillAuthorizationService,
+          useValue: { requireTextImprovement: async () => undefined },
+        },
       ],
     }).compile();
     useCase = module.get(ImproveSkillTextUseCase);
@@ -433,6 +466,10 @@ describe('ImproveSkillTextUseCase with real inference accounting', () => {
         {
           provide: ContextService,
           useValue: { get: getFromUserContext({ userId, orgId }) },
+        },
+        {
+          provide: SkillAuthorizationService,
+          useValue: { requireTextImprovement: async () => undefined },
         },
         {
           provide: InferenceCallService,

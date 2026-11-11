@@ -21,9 +21,12 @@ export function useSkillTextAssist(
   {
     labels,
     canImprove = true,
+    workspaceId,
   }: {
     labels: { trigger: string; instructions: string };
     canImprove?: boolean;
+    /** The workspace whose skill the form edits, if any. */
+    workspaceId?: string;
   },
 ): {
   trigger: FieldAssist;
@@ -53,6 +56,7 @@ export function useSkillTextAssist(
         name={name}
         trigger={shortDescription}
         instructions={instructions}
+        workspaceId={workspaceId}
         onPendingChange={onPendingChange}
         onImproved={(text) =>
           form.setValue(target, text, { shouldDirty: true })

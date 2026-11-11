@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
+import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
 import {
   WorkspaceContextEmpty,
@@ -23,7 +24,8 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 export function WorkspaceKnowledgeTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canManage,
+}: Readonly<{ workspaceId: string; canManage: boolean }>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -62,7 +64,9 @@ export function WorkspaceKnowledgeTab({
   );
   return (
     <section className="space-y-3">
-      <div className="flex justify-end">{createButton}</div>
+      {canManage ? (
+        <div className="flex justify-end">{createButton}</div>
+      ) : null}
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
       {!isLoading && knowledgeBases.length === 0 ? (
         <WorkspaceContextEmpty
@@ -89,37 +93,25 @@ export function WorkspaceKnowledgeTab({
                 })
               }
               actions={
-                <>
-                  <KnowledgeBaseActivationToggle
-                    knowledgeBaseId={knowledgeBase.id}
-                    isActive={knowledgeBase.isActive}
+                canManage ? (
+                  <WorkspaceKnowledgeBaseActions
+                    knowledgeBase={knowledgeBase}
                     isPending={isChangingKnowledgeBaseState}
-                    testId={`workspace-knowledge-base-active-${knowledgeBase.id}`}
-                    tooltip={t('context.knowledge.activeTooltip')}
                     onToggle={(isActive) =>
                       setKnowledgeBaseActive({
                         knowledgeBaseId: knowledgeBase.id,
                         isActive,
                       })
                     }
+                    onDelete={() => deleteKnowledgeBase(knowledgeBase.id)}
                   />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        aria-label={t('context.knowledge.detach')}
-                        onClick={() => deleteKnowledgeBase(knowledgeBase.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t('context.knowledge.detach')}
-                    </TooltipContent>
-                  </Tooltip>
-                </>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    {knowledgeBase.isActive
+                      ? t('context.knowledge.active')
+                      : t('context.knowledge.inactive')}
+                  </span>
+                )
               }
             />
           ))}
@@ -132,5 +124,47 @@ export function WorkspaceKnowledgeTab({
         onPageChange={setPage}
       />
     </section>
+  );
+}
+
+function WorkspaceKnowledgeBaseActions({
+  knowledgeBase,
+  isPending,
+  onToggle,
+  onDelete,
+}: Readonly<{
+  knowledgeBase: KnowledgeBaseResponseDto;
+  isPending: boolean;
+  onToggle: (isActive: boolean) => void;
+  onDelete: () => void;
+}>) {
+  const { t } = useTranslation('workspace');
+
+  return (
+    <>
+      <KnowledgeBaseActivationToggle
+        knowledgeBaseId={knowledgeBase.id}
+        isActive={knowledgeBase.isActive}
+        isPending={isPending}
+        testId={`workspace-knowledge-base-active-${knowledgeBase.id}`}
+        tooltip={t('context.knowledge.activeTooltip')}
+        onToggle={onToggle}
+      />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            aria-label={t('context.knowledge.detach')}
+            data-testid={`workspace-knowledge-base-delete-${knowledgeBase.id}`}
+            onClick={onDelete}
+          >
+            <Trash2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('context.knowledge.detach')}</TooltipContent>
+      </Tooltip>
+    </>
   );
 }

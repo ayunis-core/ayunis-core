@@ -39,6 +39,7 @@ import type {
   AddGlobalPiiWhitelistWordsResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
+  AddWorkspaceMembersDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
   ApiKeyCreditLimitItemDto,
@@ -320,6 +321,7 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
+  UpdateWorkspaceMemberRoleDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -345,6 +347,9 @@ import type {
   WorkspaceContextResponseDto,
   WorkspaceFavoriteResponseDto,
   WorkspaceListResponseDto,
+  WorkspaceMemberCandidateResponseDto,
+  WorkspaceMemberResponseDto,
+  WorkspaceMembersControllerListCandidatesParams,
   WorkspaceResponseDto,
   WorkspaceRolePermissionsResponseDto,
   WorkspacesControllerFindAllParams
@@ -17550,6 +17555,341 @@ export function useWorkspacesControllerGetRolePermissions<TData = Awaited<Return
 
 
 
+
+/**
+ * @summary List the members of a workspace
+ */
+export const workspaceMembersControllerList = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceMemberResponseDto[]>(
+      {url: `/workspaces/${id}/members`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerListQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/members`
+    ] as const;
+    }
+
+
+export const getWorkspaceMembersControllerListQueryOptions = <TData = Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceMembersControllerListQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceMembersControllerList>>> = ({ signal }) => workspaceMembersControllerList(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceMembersControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerList>>>
+export type WorkspaceMembersControllerListQueryError = void
+
+
+export function useWorkspaceMembersControllerList<TData = Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceMembersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceMembersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceMembersControllerList<TData = Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceMembersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceMembersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceMembersControllerList<TData = Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the members of a workspace
+ */
+
+export function useWorkspaceMembersControllerList<TData = Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceMembersControllerListQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Adds every listed user with one role. Users who already are members are skipped and keep their role; the response holds only the members added. Unknown users and users of another organization reject the whole request.
+ * @summary Add users of the organization to a workspace
+ */
+export const workspaceMembersControllerAdd = (
+    id: string,
+    addWorkspaceMembersDto: AddWorkspaceMembersDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceMemberResponseDto[]>(
+      {url: `/workspaces/${id}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addWorkspaceMembersDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerAddMutationKey = () => ['workspaceMembersControllerAdd'] as const;
+
+export const getWorkspaceMembersControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerAdd>>, TError,WorkspaceMembersControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerAdd>>, TError,WorkspaceMembersControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceMembersControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerAdd>>, WorkspaceMembersControllerAddMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceMembersControllerAdd(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerAdd>>>
+    export type WorkspaceMembersControllerAddMutationBody = AddWorkspaceMembersDto
+    export type WorkspaceMembersControllerAddMutationError = void
+    export type WorkspaceMembersControllerAddMutationVariables = {id: string;data: AddWorkspaceMembersDto}
+
+    /**
+ * @summary Add users of the organization to a workspace
+ */
+export const useWorkspaceMembersControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerAdd>>, TError,WorkspaceMembersControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerAdd>>,
+        TError,
+        WorkspaceMembersControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceMembersControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * Returns up to 25 users of the organization who are not members yet, matching the search by name or email.
+ * @summary Search colleagues who can be added to a workspace
+ */
+export const workspaceMembersControllerListCandidates = (
+    id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceMemberCandidateResponseDto[]>(
+      {url: `/workspaces/${id}/member-candidates`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerListCandidatesQueryKey = (id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams,) => {
+    return [
+    `/workspaces/${id}/member-candidates`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getWorkspaceMembersControllerListCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError = void>(id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceMembersControllerListCandidatesQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>> = ({ signal }) => workspaceMembersControllerListCandidates(id,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceMembersControllerListCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>>
+export type WorkspaceMembersControllerListCandidatesQueryError = void
+
+
+export function useWorkspaceMembersControllerListCandidates<TData = Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError = void>(
+ id: string,
+    params: undefined |  WorkspaceMembersControllerListCandidatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceMembersControllerListCandidates<TData = Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError = void>(
+ id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceMembersControllerListCandidates<TData = Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError = void>(
+ id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search colleagues who can be added to a workspace
+ */
+
+export function useWorkspaceMembersControllerListCandidates<TData = Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError = void>(
+ id: string,
+    params?: WorkspaceMembersControllerListCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceMembersControllerListCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceMembersControllerListCandidatesQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Change a member's role in a workspace
+ */
+export const workspaceMembersControllerUpdateRole = (
+    id: string,
+    userId: string,
+    updateWorkspaceMemberRoleDto: UpdateWorkspaceMemberRoleDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<WorkspaceMemberResponseDto>(
+      {url: `/workspaces/${id}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateWorkspaceMemberRoleDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerUpdateRoleMutationKey = () => ['workspaceMembersControllerUpdateRole'] as const;
+
+export const getWorkspaceMembersControllerUpdateRoleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,WorkspaceMembersControllerUpdateRoleMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,WorkspaceMembersControllerUpdateRoleMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceMembersControllerUpdateRoleMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, WorkspaceMembersControllerUpdateRoleMutationVariables> = (props) => {
+          const {id,userId,data} = props ?? {};
+
+          return  workspaceMembersControllerUpdateRole(id,userId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerUpdateRoleMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>>
+    export type WorkspaceMembersControllerUpdateRoleMutationBody = UpdateWorkspaceMemberRoleDto
+    export type WorkspaceMembersControllerUpdateRoleMutationError = void
+    export type WorkspaceMembersControllerUpdateRoleMutationVariables = {id: string;userId: string;data: UpdateWorkspaceMemberRoleDto}
+
+    /**
+ * @summary Change a member's role in a workspace
+ */
+export const useWorkspaceMembersControllerUpdateRole = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,WorkspaceMembersControllerUpdateRoleMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>,
+        TError,
+        WorkspaceMembersControllerUpdateRoleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceMembersControllerUpdateRoleMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary Get workspace context

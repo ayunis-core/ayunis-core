@@ -220,13 +220,17 @@ load-bearing):
   permission. See [teams/SUMMARY.md](ayunis-core-backend/src/iam/teams/SUMMARY.md).
 - **Workspace role** — each workspace membership carries a `UserRole`, and
   only that role counts inside the workspace: workspace `ADMIN` ⇒ every
-  workspace permission plus deleting the workspace, workspace
+  workspace permission plus changing roles and deleting the workspace, workspace
   `MANAGER`/`USER` ⇒ the workspace permissions (`manage_workspace`,
   `manage_workspace_members`) of that row of the matrix. The org role grants
   nothing there, and non-members, org admins included, get 404. Workspace
   skills and knowledge bases are gated by `manage_workspace` instead of
   `manage_skills` / `manage_knowledge_bases`, so those write routes check the
-  owner's permission in the authorization services rather than on the route.
+  owner's permission in the authorization services rather than on the route;
+  the same goes for improving skill text in a workspace's skill editor.
+  Members are added directly from the organization, without invitations.
+  The frontend hides workspace controls from the `role` and `permissions`
+  that every workspace response carries.
   See [workspaces/SUMMARY.md](ayunis-core-backend/src/domain/workspaces/SUMMARY.md).
 
 **Reads stay open** — only manage/share (write) endpoints are permission-gated;
