@@ -8,16 +8,29 @@ import enOutlook from '@/shared/locales/en/outlook.json';
  * they follow Outlook's display language instead of the app's stored choice.
  */
 export function createOutlookI18n(displayLanguage: string): i18n {
-  const lng = displayLanguage.toLowerCase().startsWith('de') ? 'de' : 'en';
-  document.documentElement.lang = lng;
   const instance = i18next.createInstance();
   void instance.use(initReactI18next).init({
-    lng,
+    lng: outlookLanguage(displayLanguage),
     fallbackLng: 'de',
     defaultNS: 'outlook',
     resources: { de: { outlook: deOutlook }, en: { outlook: enOutlook } },
     interpolation: { escapeValue: false },
     initAsync: false,
   });
+  document.documentElement.lang = outlookLanguage(displayLanguage);
   return instance;
+}
+
+/** Switches to Outlook's display language once Office has reported it. */
+export function applyOutlookLanguage(
+  instance: i18n,
+  displayLanguage: string,
+): void {
+  const lng = outlookLanguage(displayLanguage);
+  document.documentElement.lang = lng;
+  void instance.changeLanguage(lng);
+}
+
+function outlookLanguage(displayLanguage: string): 'de' | 'en' {
+  return displayLanguage.toLowerCase().startsWith('de') ? 'de' : 'en';
 }
