@@ -33,7 +33,7 @@ export function usePendingMessage({
     const startedRun = takeStartedThreadRun(threadId);
     if (!startedRun) return;
 
-    const { text, images, request } = startedRun;
+    const { text, images, voiceInput, request } = startedRun;
     startThreadSubmission(threadId, { text, images });
     // The run may have saved the message before the chat route loaded the
     // thread; a pending bubble would then show it twice.
@@ -41,7 +41,7 @@ export function usePendingMessage({
 
     void (async () => {
       try {
-        await sendTextMessage({ text, startedRequest: request });
+        await sendTextMessage({ text, startedRequest: request, voiceInput });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           showError(t('chat.upgradeToProError'));

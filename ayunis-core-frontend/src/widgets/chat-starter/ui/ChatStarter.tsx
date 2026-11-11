@@ -120,6 +120,7 @@ export function ChatStarter({
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
+    voiceInput?: boolean,
   ) {
     if (!resolvedModelId) {
       showError(t('newChat.noModelOrAgentError'));
@@ -137,6 +138,7 @@ export function ChatStarter({
       workspaceId,
       sourceNotificationId,
       skillId,
+      voiceInput,
       onSourceStatus: handleSourceStatus,
     });
   }

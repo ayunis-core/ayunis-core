@@ -76,6 +76,8 @@ interface InitiateChatParams {
   /** Starts a chat about this notification ("Chat about this"). */
   sourceNotificationId?: string;
   skillId?: string;
+  /** The prompt contains text from a successful transcription. */
+  voiceInput?: boolean;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
@@ -395,14 +397,14 @@ export const useInitiateChat = (options?: {
     thread: GetThreadResponseDto,
     params: InitiateChatParams,
   ): Promise<void> {
-    const { message, images, skillId, workspaceId } = params;
+    const { message, images, skillId, workspaceId, voiceInput } = params;
     const threadId = thread.id;
     if (cancelledRef.current) {
       stopInitiatingChat();
       return;
     }
 
-    startThreadRun({ threadId, text: message, images, skillId });
+    startThreadRun({ threadId, text: message, images, skillId, voiceInput });
     startedThreadIdRef.current = threadId;
 
     await waitForSettleAnimation();

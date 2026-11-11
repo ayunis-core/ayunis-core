@@ -10,6 +10,7 @@ export interface StartedRunRequest {
 export interface StartedThreadRun {
   text: string;
   images: File[];
+  voiceInput: boolean;
   request: StartedRunRequest;
 }
 
@@ -25,11 +26,13 @@ export function startThreadRun({
   text,
   images,
   skillId,
+  voiceInput = false,
 }: {
   threadId: string;
   text: string;
   images: Array<{ file: File; altText?: string }>;
   skillId?: string;
+  voiceInput?: boolean;
 }): void {
   const files = images.map((image) => image.file);
   const controller = new AbortController();
@@ -52,6 +55,7 @@ export function startThreadRun({
   startedRuns.set(threadId, {
     text,
     images: files,
+    voiceInput,
     request: { controller, response },
   });
 }

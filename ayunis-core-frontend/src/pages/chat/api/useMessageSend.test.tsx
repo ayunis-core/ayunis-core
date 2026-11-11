@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,6 +26,15 @@ const { redirectToLogin } = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/lib/redirect-to-login', () => ({ redirectToLogin }));
 
+const openPanel = vi.hoisted(() => ({
+  client: null as { track: ReturnType<typeof vi.fn> } | null,
+}));
+vi.mock('@/shared/lib/openpanel', () => ({
+  get openPanel() {
+    return openPanel.client;
+  },
+}));
+
 const threadId = '00000000-0000-0000-0000-000000000001';
 const otherThreadId = '00000000-0000-0000-0000-000000000002';
 
@@ -46,6 +55,7 @@ function createControlledSseResponse() {
         new TextEncoder().encode(`data: ${JSON.stringify(data)}\n`),
       ),
     close: () => controller.close(),
+    fail: (reason: unknown) => controller.error(reason),
   };
 }
 
@@ -701,6 +711,127 @@ describe('useMessageSend', () => {
       });
       expect(fetchMock).not.toHaveBeenCalled();
       await finish();
+    });
+  });
+
+  describe('OpenPanel run funnel', () => {
+    const track = vi.fn();
+
+    beforeEach(() => {
+      track.mockReset();
+      openPanel.client = { track };
+    });
+
+    afterEach(() => {
+      openPanel.client = null;
+    });
+
+    function renderSendHook() {
+      const stream = createControlledSseResponse();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+          init?.signal?.addEventListener('abort', () =>
+            stream.fail(new DOMException('Aborted', 'AbortError')),
+          );
+          return Promise.resolve(stream.response);
+        }),
+      );
+      const queryClient = new QueryClient();
+      const { result } = renderHook(() => useMessageSend({ threadId }), {
+        wrapper: ({ children }) =>
+          createElement(QueryClientProvider, { client: queryClient }, children),
+      });
+      return { result, stream };
+    }
+
+    function trackedEvents() {
+      return track.mock.calls.map(([name]) => name as string);
+    }
+
+    const userMessage = (id: string) => ({
+      id,
+      role: 'user',
+      content: [{ type: 'text', text: 'Frage' }],
+    });
+    const runEnd = { type: 'session', streaming: false, threadId };
+
+    it('sends run_started and ai_output_delivered once for a completed message', async () => {
+      const { result, stream } = renderSendHook();
+
+      await act(async () => {
+        const send = result.current.sendTextMessage({
+          text: 'Frage',
+          voiceInput: true,
+        });
+        stream.send({ type: 'session', streaming: true, threadId });
+        stream.send({ type: 'message', message: userMessage('sent') });
+        stream.send(runEnd);
+        stream.close();
+        await send;
+      });
+
+      expect(trackedEvents()).toEqual(['run_started', 'ai_output_delivered']);
+      expect(track).toHaveBeenCalledWith(
+        'run_started',
+        expect.objectContaining({ thread_turn: 'first', voice_input: true }),
+      );
+    });
+
+    it('sends only run_started for a run that fails', async () => {
+      const { result, stream } = renderSendHook();
+
+      await act(async () => {
+        const send = result.current.sendTextMessage({ text: 'Frage' });
+        stream.send({ type: 'message', message: userMessage('failed') });
+        stream.send({ type: 'error', code: 'RUN_FAILED' });
+        stream.send(runEnd);
+        stream.close();
+        await send;
+      });
+
+      expect(trackedEvents()).toEqual(['run_started']);
+      expect(track).toHaveBeenCalledWith(
+        'run_started',
+        expect.objectContaining({ voice_input: false }),
+      );
+    });
+
+    it('sends only run_started for a run the user stops', async () => {
+      const { result, stream } = renderSendHook();
+
+      let send: Promise<void> | undefined;
+      act(() => {
+        send = result.current.sendTextMessage({ text: 'Frage' });
+      });
+      await act(async () => {
+        stream.send({ type: 'message', message: userMessage('stopped') });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      act(() => result.current.abort());
+      await act(async () => await send);
+
+      expect(trackedEvents()).toEqual(['run_started']);
+    });
+
+    it('reports a reattached run once and never as started', async () => {
+      const replay = [
+        { type: 'session', streaming: true, threadId },
+        { type: 'message', message: userMessage('reattached') },
+        runEnd,
+      ];
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { result, stream } = renderSendHook();
+        await act(async () => {
+          const attach = result.current.attach();
+          replay.forEach((event) => stream.send(event));
+          stream.close();
+          await attach;
+        });
+      }
+
+      expect(trackedEvents()).toEqual(['ai_output_delivered']);
     });
   });
 });

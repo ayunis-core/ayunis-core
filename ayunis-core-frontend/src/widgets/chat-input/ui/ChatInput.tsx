@@ -96,6 +96,8 @@ interface ChatInputProps {
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
+    /** The prompt contains text from a successful transcription. */
+    voiceInput?: boolean,
   ) => void;
   /** Fired when the user clicks the cancel button while in-flight. */
   onCancel: () => void;
@@ -167,6 +169,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const { message, setMessage } = useChatDraft(draftChatId, initialMessage);
+    const hasDictationRef = useRef(false);
+    useEffect(() => {
+      if (!message) hasDictationRef.current = false;
+    }, [message]);
     const isSubmitting = submissionState === 'submitting';
     const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
@@ -271,6 +277,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         message,
         imageFiles.length > 0 ? imageFiles : undefined,
         selectedSkillId,
+        hasDictationRef.current,
       );
       // Note: we deliberately do NOT clear `message` here. Parents can call
       // `chatInputRef.current.setMessage('')` once the submit has actually
@@ -424,6 +431,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     isCancelDisabled={isCancelDisabled}
                     setMessage={setMessage}
                     textareaRef={textareaRef}
+                    onDictation={() => {
+                      hasDictationRef.current = true;
+                    }}
                   />
                 </div>
               </CardContent>

@@ -205,6 +205,7 @@ export default function NewChatPage({
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
+    voiceInput?: boolean,
   ) {
     if (!resolvedModelId) {
       showError(t('newChat.noModelOrAgentError'));
@@ -223,6 +224,7 @@ export default function NewChatPage({
       isAnonymous,
       workspaceId: workspaceId ?? undefined,
       skillId,
+      voiceInput,
       onSourceStatus: handleSourceStatus,
     });
   }

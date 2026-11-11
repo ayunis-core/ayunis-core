@@ -20,14 +20,30 @@ vi.mock('./SourcesList', () => ({ SourcesList: () => null }));
 vi.mock('./ChatInputActionBar', () => ({
   ChatInputActionBar: ({
     onImageSelect,
+    onSend,
+    onDictation,
+    setMessage,
   }: {
     onImageSelect: (files: FileList | null) => void;
+    onSend: () => void;
+    onDictation: () => void;
+    setMessage: (update: (previous: string) => string) => void;
   }) => (
-    <input
-      data-testid="image-picker"
-      type="file"
-      onChange={(event) => onImageSelect(event.target.files)}
-    />
+    <>
+      <input
+        data-testid="image-picker"
+        type="file"
+        onChange={(event) => onImageSelect(event.target.files)}
+      />
+      <button
+        data-testid="dictate"
+        onClick={() => {
+          setMessage((previous) => `${previous}Bitte Antrag prüfen`);
+          onDictation();
+        }}
+      />
+      <button data-testid="send" onClick={onSend} />
+    </>
   ),
 }));
 
@@ -210,5 +226,55 @@ describe('ChatInput prompt recall', () => {
     moveCaret(input, 0);
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(input.value).toBe('Older prompt');
+  });
+});
+
+describe('ChatInput voice input', () => {
+  function renderWithSend() {
+    const onSend = vi.fn();
+    render(
+      <ChatInput
+        modelId="municipal-model"
+        sources={[]}
+        isEmbeddingModelEnabled={false}
+        isAnonymous={false}
+        onModelChange={vi.fn()}
+        onFileUpload={vi.fn()}
+        onRemoveSource={vi.fn()}
+        onSend={onSend}
+        onCancel={vi.fn()}
+      />,
+    );
+    const voiceInputOfSend = () => {
+      fireEvent.click(screen.getByTestId('send'));
+      return onSend.mock.calls[0]?.[3] as boolean | undefined;
+    };
+    return { input: screen.getByTestId('input'), voiceInputOfSend };
+  }
+
+  it('reports a prompt with dictated text as voice input', () => {
+    const { voiceInputOfSend } = renderWithSend();
+
+    fireEvent.click(screen.getByTestId('dictate'));
+
+    expect(voiceInputOfSend()).toBe(true);
+  });
+
+  it('does not report a typed prompt as voice input', () => {
+    const { input, voiceInputOfSend } = renderWithSend();
+
+    fireEvent.change(input, { target: { value: 'Bitte Antrag prüfen' } });
+
+    expect(voiceInputOfSend()).toBe(false);
+  });
+
+  it('forgets dictated text once the prompt was cleared', () => {
+    const { input, voiceInputOfSend } = renderWithSend();
+
+    fireEvent.click(screen.getByTestId('dictate'));
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.change(input, { target: { value: 'Bitte Antrag prüfen' } });
+
+    expect(voiceInputOfSend()).toBe(false);
   });
 });

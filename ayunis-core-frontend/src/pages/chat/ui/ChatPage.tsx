@@ -294,6 +294,7 @@ export default function ChatPage({
   async function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
+    voiceInput?: boolean,
   ) {
     try {
       startSubmission(thread.id, {
@@ -310,10 +311,7 @@ export default function ChatPage({
             }))
           : undefined;
 
-      await sendTextMessage({
-        text: message,
-        images,
-      });
+      await sendTextMessage({ text: message, images, voiceInput });
     } catch {
       // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
       // onErrorEvent/onError); this only catches a rejected send promise.
@@ -430,7 +428,9 @@ export default function ChatPage({
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onAddIntegration={(integration) => addIntegration(integration.id)}
         onRemoveIntegration={removeIntegration}
-        onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
+        onSend={(m, imageFiles, _skillId, voiceInput) =>
+          void handleSend(m, imageFiles, voiceInput)
+        }
         onCancel={handleSendCancelled}
         isCancelDisabled={!isRunCancellable}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
