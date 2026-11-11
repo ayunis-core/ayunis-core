@@ -6,6 +6,9 @@ import {
 
 export type SignInResult = DialogMessage | { type: 'closed' };
 
+/** `promptLogin` shows the login form even when the dialog holds a session. */
+export type SignInOptions = { promptLogin?: boolean };
+
 // 12006 means the user closed the dialog, but Office also reports it when an
 // off-origin page (an identity provider during SSO) cuts the dialog off from
 // the pane. A message may still follow, so `closed` is not final.
@@ -20,9 +23,11 @@ const DIALOG_CLOSED = 12006;
  */
 export function openSignInDialog(
   onResult: (result: SignInResult) => void,
+  options: SignInOptions = {},
 ): () => void {
   const url = new URL('/outlook/login', window.location.origin);
   url.searchParams.set('client', OUTLOOK_CLIENT);
+  if (options.promptLogin) url.searchParams.set('prompt', 'login');
   let dialog: Office.Dialog | undefined;
   let open = true;
   let closed = false;

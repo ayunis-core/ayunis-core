@@ -6,6 +6,7 @@ import {
 } from '@/outlook/api/pane-session';
 import {
   openSignInDialog,
+  type SignInOptions,
   type SignInResult,
 } from '@/outlook/lib/sign-in-dialog';
 
@@ -50,7 +51,7 @@ export function usePaneAuth(
       );
   }, [session]);
 
-  function signIn(): void {
+  function signIn(options?: SignInOptions): void {
     closeDialog.current?.();
     closeDialog.current = null;
     setState({ status: 'signingIn' });
@@ -60,7 +61,10 @@ export function usePaneAuth(
           setState({ status: 'signedOut', error: 'outlookRequired' });
           return;
         }
-        closeDialog.current = openSignInDialog(handleDialogResultSafely);
+        closeDialog.current = openSignInDialog(
+          handleDialogResultSafely,
+          options,
+        );
       })
       // Whatever fails before the dialog opened, the button must come back.
       .catch(() => setState({ status: 'signedOut', error: 'outlookRequired' }));

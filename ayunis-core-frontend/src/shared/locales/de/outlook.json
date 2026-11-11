@@ -5,6 +5,7 @@
     "signIn": "Anmelden",
     "signingIn": "Anmeldung läuft …",
     "signOut": "Abmelden",
+    "switchAccount": "Anderes Konto verwenden",
     "dialogClosed": "Wenn Sie die Anmeldung im Anmeldefenster abgeschlossen haben, wählen Sie erneut „Anmelden“, um die Verbindung herzustellen.",
     "error": {
       "signInFailed": "Die Anmeldung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",

@@ -76,4 +76,27 @@ describe('openSignInDialog', () => {
     expect(results).toEqual([session]);
     expect(close).toHaveBeenCalledTimes(1);
   });
+
+  // The login page hands a kept cookie session over without a form; a user
+  // switching accounts needs the form, so the pane has to ask for it.
+  it('asks the login page for a fresh login when switching account', () => {
+    const displayDialogAsync = vi.fn();
+    vi.stubGlobal('Office', {
+      AsyncResultStatus: { Succeeded: 'succeeded', Failed: 'failed' },
+      EventType: {
+        DialogMessageReceived: 'dialogMessageReceived',
+        DialogEventReceived: 'dialogEventReceived',
+      },
+      context: { ui: { displayDialogAsync } },
+    });
+
+    openSignInDialog(() => undefined, { promptLogin: true });
+    openSignInDialog(() => undefined);
+
+    const [switching, plain] = displayDialogAsync.mock.calls.map(([url]) =>
+      new URL(url as string).searchParams.get('prompt'),
+    );
+    expect(switching).toBe('login');
+    expect(plain).toBeNull();
+  });
 });
