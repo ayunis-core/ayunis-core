@@ -80,6 +80,7 @@ import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport 
 import { Route as AuthenticatedSuperAdminSettingsSkillsIndexRouteImport } from './routes/_authenticated/super-admin-settings.skills.index'
 import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
 import { Route as AuthenticatedSuperAdminSettingsUsersIndexRouteImport } from './routes/_authenticated/super-admin-settings.users.index'
+import { Route as AuthenticatedWorkspacesWorkspaceIdMembersRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.members'
 import { Route as AuthenticatedAdminSettingsModelsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.models.teams.$id'
 import { Route as AuthenticatedSettingsIntegrationsOauthCallbackRouteImport } from './routes/_authenticated/settings.integrations_.oauth.callback'
 import { Route as AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRouteImport } from './routes/_authenticated/workspaces_.$workspaceId.knowledge-bases.$knowledgeBaseId'
@@ -490,6 +491,12 @@ const AuthenticatedSuperAdminSettingsUsersIndexRoute =
     path: '/users/',
     getParentRoute: () => AuthenticatedSuperAdminSettingsRoute,
   } as any)
+const AuthenticatedWorkspacesWorkspaceIdMembersRoute =
+  AuthenticatedWorkspacesWorkspaceIdMembersRouteImport.update({
+    id: '/workspaces_/$workspaceId/members',
+    path: '/workspaces/$workspaceId/members',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsModelsTeamsIdRoute =
   AuthenticatedAdminSettingsModelsTeamsIdRouteImport.update({
     id: '/models/teams/$id',
@@ -575,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/workspaces/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
@@ -648,6 +656,7 @@ export interface FileRoutesByTo {
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/workspaces/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsIndexRoute
@@ -726,6 +735,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/workspaces_/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/_authenticated/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
@@ -804,6 +814,7 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/workspaces/$workspaceId/members'
     | '/admin-settings/credit-limits/'
     | '/admin-settings/letterheads/'
     | '/admin-settings/models/'
@@ -877,6 +888,7 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/workspaces/$workspaceId/members'
     | '/admin-settings/credit-limits'
     | '/admin-settings/letterheads'
     | '/admin-settings/models'
@@ -954,6 +966,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/workspaces_/$workspaceId/members'
     | '/_authenticated/admin-settings/credit-limits/'
     | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/models/'
@@ -1492,6 +1505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsUsersIndexRouteImport
       parentRoute: typeof AuthenticatedSuperAdminSettingsRoute
     }
+    '/_authenticated/workspaces_/$workspaceId/members': {
+      id: '/_authenticated/workspaces_/$workspaceId/members'
+      path: '/workspaces/$workspaceId/members'
+      fullPath: '/workspaces/$workspaceId/members'
+      preLoaderRoute: typeof AuthenticatedWorkspacesWorkspaceIdMembersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/models/teams/$id': {
       id: '/_authenticated/admin-settings/models/teams/$id'
       path: '/models/teams/$id'
@@ -1668,6 +1688,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
   AuthenticatedAcademyChapterIdCompleteRoute: typeof AuthenticatedAcademyChapterIdCompleteRoute
+  AuthenticatedWorkspacesWorkspaceIdMembersRoute: typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   AuthenticatedSettingsIntegrationsOauthCallbackRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
   AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute
   AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdSkillsSkillIdRoute
@@ -1702,6 +1723,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,
   AuthenticatedAcademyChapterIdCompleteRoute:
     AuthenticatedAcademyChapterIdCompleteRoute,
+  AuthenticatedWorkspacesWorkspaceIdMembersRoute:
+    AuthenticatedWorkspacesWorkspaceIdMembersRoute,
   AuthenticatedSettingsIntegrationsOauthCallbackRoute:
     AuthenticatedSettingsIntegrationsOauthCallbackRoute,
   AuthenticatedWorkspacesWorkspaceIdKnowledgeBasesKnowledgeBaseIdRoute:
