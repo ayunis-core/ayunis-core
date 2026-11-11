@@ -5,6 +5,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { UUID } from 'crypto';
 import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
+import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
 
 interface TextMessageContentData {
   type: MessageContentType.TEXT;
@@ -25,6 +26,7 @@ interface ToolUseMessageContentData {
     name: string;
     logoUrl: string | null;
   };
+  requiresConfirmation?: boolean;
 }
 
 interface ToolResultMessageContentData {
@@ -32,6 +34,7 @@ interface ToolResultMessageContentData {
   toolId: string;
   toolName: string;
   result: string;
+  decision?: ToolCallDecision;
 }
 
 interface ThinkingMessageContentData {

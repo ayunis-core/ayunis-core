@@ -13,7 +13,11 @@ import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entit
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
-import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  RunToolDecisionsInput,
+  RunToolResultInput,
+} from 'src/domain/runs/domain/run-input.entity';
+import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
 import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
@@ -227,6 +231,68 @@ describe('ToolResultCollectorService', () => {
     expect(executeTool).toHaveBeenCalledTimes(1);
   });
 
+  describe('with decisions on calls that required confirmation', () => {
+    const meetings = mcpTool('search_meetings', 'Ratsinformationssystem');
+    const minutes = mcpTool('publish_minutes', 'Ratsinformationssystem');
+    const backendTool = new BackendTestTool('municipal_search');
+    const chart = new BarChartTool();
+    const thread = threadWith(
+      toolUse('meetings-1', meetings.name, { committee: 'Bauausschuss' }),
+      toolUse('minutes-1', minutes.name, { meetingId: 'm-42' }),
+      toolUse('search-1', backendTool.name),
+      toolUse('chart-1', chart.name, chartParams()),
+    );
+    const decisions = new RunToolDecisionsInput([
+      { toolCallId: 'meetings-1', approved: true, alwaysAllow: false },
+      { toolCallId: 'minutes-1', approved: false, alwaysAllow: true },
+    ]);
+
+    it('runs a confirmed call once, never a rejected one, and settles every sibling once', async () => {
+      const result = await collect(
+        service,
+        thread,
+        [meetings, minutes, backendTool, chart],
+        decisions,
+      );
+
+      expect(executeTool.mock.calls.map(([command]) => command.tool)).toEqual([
+        meetings,
+        backendTool,
+      ]);
+      expect(result.contents).toEqual([
+        expect.objectContaining({
+          toolId: 'meetings-1',
+          result: 'backend result',
+          decision: ToolCallDecision.CONFIRMED,
+        }),
+        expect.objectContaining({
+          toolId: 'minutes-1',
+          result: 'The user rejected this tool call.',
+          decision: ToolCallDecision.REJECTED,
+        }),
+        expect.objectContaining({ toolId: 'search-1', decision: undefined }),
+        expect.objectContaining({
+          toolId: 'chart-1',
+          result: 'Tool has been displayed successfully',
+          decision: undefined,
+        }),
+      ]);
+    });
+
+    it('answers a confirmed call whose tool is gone with the usual not-found result', async () => {
+      const result = await collect(service, thread, [backendTool], decisions);
+
+      expect(result.contents[0]).toMatchObject({
+        toolId: 'meetings-1',
+        result: expect.stringMatching(/was not found/),
+        decision: ToolCallDecision.CONFIRMED,
+      });
+      expect(executeTool.mock.calls.map(([command]) => command.tool)).toEqual([
+        backendTool,
+      ]);
+    });
+  });
+
   it('keeps an invalid terminal widget retryable', async () => {
     const calendar = new CreateCalendarEventTool();
     const call = toolUse('calendar-1', calendar.name, {
@@ -363,7 +429,7 @@ async function collect(
   service: ToolResultCollectorService,
   thread: Thread,
   tools: Tool[],
-  input: RunToolResultInput = new RunToolResultInput(
+  input: RunToolResultInput | RunToolDecisionsInput = new RunToolResultInput(
     'client-result',
     'external_widget',
     'Client-provided result',

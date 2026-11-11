@@ -7,7 +7,7 @@ import {
   RunToolRepeatedlyFailingError,
   RunUsageAccountingFailedError,
 } from 'src/domain/runs/application/runs.errors';
-import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import { RunToolContinuationInput } from 'src/domain/runs/domain/run-input.entity';
 import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 
 /** Completed phases must remain because rollback would re-arm pending tool calls. */
@@ -28,7 +28,7 @@ function shouldPreserveRejectedTranscript(
 ): boolean {
   const rejection = findTranscriptPreservingRejection(error);
   if (!rejection) return false;
-  if (input instanceof RunToolResultInput) return true;
+  if (input instanceof RunToolContinuationInput) return true;
   const modelTurn = rejection.metadata?.modelTurn;
   return typeof modelTurn === 'number' && modelTurn > 1;
 }

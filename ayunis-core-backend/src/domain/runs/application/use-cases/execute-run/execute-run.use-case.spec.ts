@@ -60,6 +60,8 @@ import type { MessageCleanupService } from 'src/domain/runs/application/services
 import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { ToolCallConfirmationService } from 'src/domain/runs/application/services/tool-call-confirmation.service';
+import type { AllowMcpToolUseCase } from 'src/domain/mcp/application/use-cases/allow-mcp-tool/allow-mcp-tool.use-case';
 import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
 import type { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
@@ -73,6 +75,7 @@ import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import {
   RunAnonymizationUnavailableError,
+  RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
 } from 'src/domain/runs/application/runs.errors';
@@ -95,8 +98,13 @@ import {
 } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
+  RunToolDecisionsInput,
   RunToolResultInput,
+  type RunToolCallDecision,
 } from 'src/domain/runs/domain/run-input.entity';
+import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
+import { AllowMcpToolCommand } from 'src/domain/mcp/application/use-cases/allow-mcp-tool/allow-mcp-tool.command';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import { ExecuteRunUseCase } from './execute-run.use-case';
@@ -132,6 +140,7 @@ interface Harness {
   trackedError: () => unknown;
   resolveModelAccess: jest.Mock;
   materializeHistory: jest.Mock;
+  allowTool: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -360,6 +369,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const modelCallObservabilityHookFactory =
     new ModelCallObservabilityHookFactory(eventEmitter);
   const cleanup = jest.fn().mockResolvedValue(undefined);
+  const allowTool = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
     cleanupTrailingNonAssistantMessages: cleanup,
   } as unknown as MessageCleanupService;
@@ -428,6 +438,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     runProfileRegistry,
     runProfileAssembler,
     new ThreadRunLock(),
+    new ToolCallConfirmationService({
+      execute: allowTool,
+    } as unknown as AllowMcpToolUseCase),
   );
 
   return {
@@ -455,6 +468,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     trackedError: () => telemetryError,
     resolveModelAccess,
     materializeHistory,
+    allowTool,
   };
 }
 
@@ -2551,6 +2565,320 @@ describe('ExecuteRunUseCase', () => {
     expect(provider.requests).toHaveLength(1);
     expect(createUser.mock.calls[0][0]).toMatchObject({
       skillInstructions: 'Review the permit.',
+    });
+  });
+
+  describe('with tool calls awaiting confirmation', () => {
+    const integration = {
+      id: integrationId,
+      name: 'Ratsinformationssystem',
+      logoUrl: null,
+    };
+    const meetings = councilTool('search_meetings');
+    const minutes = councilTool('publish_minutes');
+    const search = new InternetSearchTool();
+    const chart = new BarChartTool();
+    const tools = [meetings, minutes, search, chart];
+
+    function councilTool(upstreamName: string): McpIntegrationTool {
+      return new McpIntegrationTool(
+        new McpTool(
+          upstreamName,
+          'Council tool',
+          { type: 'object' },
+          integrationId,
+        ),
+        false,
+        integration.name,
+        integration.logoUrl,
+      );
+    }
+
+    function awaitingCall(
+      id: string,
+      tool: McpIntegrationTool,
+      params: Record<string, unknown>,
+    ): ToolUseMessageContent {
+      return new ToolUseMessageContent(
+        id,
+        tool.name,
+        params,
+        null,
+        integration,
+        undefined,
+        true,
+      );
+    }
+
+    // Two MCP calls held for confirmation next to a backend tool and a widget.
+    function pausedTurn(): AssistantMessage {
+      return new AssistantMessage({
+        threadId,
+        content: [
+          awaitingCall('meetings-1', meetings, { committee: 'Bauausschuss' }),
+          awaitingCall('minutes-1', minutes, { meetingId: 'm-42' }),
+          new ToolUseMessageContent('search-1', search.name, {
+            query: 'Bauausschuss Tagesordnung',
+          }),
+          new ToolUseMessageContent('chart-1', chart.name, {
+            chartTitle: 'Sitzungen pro Jahr',
+            xAxis: ['2025', '2026'],
+            yAxis: [{ label: 'Sitzungen', values: [11, 12] }],
+            insight: 'Der Ausschuss tagt monatlich.',
+          }),
+        ],
+      });
+    }
+
+    function harnessWithCollector(executeTool: jest.Mock) {
+      return buildHarness({
+        backendTools: tools,
+        lastMessage: pausedTurn(),
+        toolResultCollector: new ToolResultCollectorService(
+          { execute: executeTool } as never,
+          { execute: jest.fn() } as never,
+          { get: jest.fn().mockReturnValue(userId) } as never,
+          { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+        ),
+      });
+    }
+
+    function decide(...decisions: RunToolCallDecision[]): ExecuteRunCommand {
+      return new ExecuteRunCommand({
+        profile: { id: 'chat' },
+        threadId,
+        input: new RunToolDecisionsInput(decisions),
+      });
+    }
+
+    const confirmMeetings = {
+      toolCallId: 'meetings-1',
+      approved: true,
+      alwaysAllow: false,
+    };
+    const rejectMinutes = {
+      toolCallId: 'minutes-1',
+      approved: false,
+      alwaysAllow: false,
+    };
+
+    it('runs the confirmed call once, never the rejected one, settles siblings once and continues with every result', async () => {
+      const executeTool = jest.fn().mockResolvedValue('3 Sitzungen gefunden');
+      const { useCase, createSeedToolResult, provider, materializeHistory } =
+        harnessWithCollector(executeTool);
+
+      await drain(
+        await useCase.execute(decide(confirmMeetings, rejectMinutes)),
+      );
+
+      expect(executeTool.mock.calls.map(([command]) => command.tool)).toEqual([
+        meetings,
+        search,
+      ]);
+      const persisted = (
+        createSeedToolResult.mock.calls[0][0] as {
+          content: ToolResultMessageContent[];
+        }
+      ).content;
+      expect(persisted).toEqual([
+        expect.objectContaining({
+          toolId: 'meetings-1',
+          result: '3 Sitzungen gefunden',
+          decision: ToolCallDecision.CONFIRMED,
+        }),
+        expect.objectContaining({
+          toolId: 'minutes-1',
+          result: 'The user rejected this tool call.',
+          decision: ToolCallDecision.REJECTED,
+        }),
+        expect.objectContaining({
+          toolId: 'search-1',
+          result: '3 Sitzungen gefunden',
+        }),
+        expect.objectContaining({
+          toolId: 'chart-1',
+          result: 'Tool has been displayed successfully',
+        }),
+      ]);
+      expect(provider.requests).toHaveLength(1);
+      const history = materializeHistory.mock.calls[0][0].messages as Message[];
+      expect(history.at(-1)?.content).toEqual(persisted);
+    });
+
+    it.each([
+      ['a call without a decision', [confirmMeetings]],
+      [
+        'a call decided twice',
+        [
+          confirmMeetings,
+          rejectMinutes,
+          { ...confirmMeetings, approved: false },
+        ],
+      ],
+      [
+        'a decision for an unknown or already answered call',
+        [
+          confirmMeetings,
+          rejectMinutes,
+          {
+            toolCallId: 'call-from-an-earlier-turn',
+            approved: true,
+            alwaysAllow: false,
+          },
+        ],
+      ],
+      [
+        'a decision for a call that did not require confirmation',
+        [
+          confirmMeetings,
+          rejectMinutes,
+          { toolCallId: 'search-1', approved: true, alwaysAllow: false },
+        ],
+      ],
+    ])(
+      'refuses %s and persists nothing',
+      async (_case, decisions: RunToolCallDecision[]) => {
+        const executeTool = jest.fn();
+        const { useCase, createSeedToolResult, allowTool, provider } =
+          harnessWithCollector(executeTool);
+
+        await expect(
+          useCase.execute(
+            decide(
+              ...decisions.map((decision) => ({
+                ...decision,
+                alwaysAllow: true,
+              })),
+            ),
+          ),
+        ).rejects.toBeInstanceOf(RunInvalidInputError);
+
+        expect(executeTool).not.toHaveBeenCalled();
+        expect(createSeedToolResult).not.toHaveBeenCalled();
+        expect(allowTool).not.toHaveBeenCalled();
+        expect(provider.requests).toHaveLength(0);
+      },
+    );
+
+    it('refuses a client tool result that would run the calls awaiting confirmation unconfirmed', async () => {
+      const executeTool = jest.fn();
+      const { useCase, createSeedToolResult } =
+        harnessWithCollector(executeTool);
+      const command = new ExecuteRunCommand({
+        profile: { id: 'chat' },
+        threadId,
+        input: new RunToolResultInput('chart-1', chart.name, 'Chart displayed'),
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        RunInvalidInputError,
+      );
+      expect(executeTool).not.toHaveBeenCalled();
+      expect(createSeedToolResult).not.toHaveBeenCalled();
+    });
+
+    it('always allows only the confirmed tool, before the run assembles its tools', async () => {
+      const { useCase, allowTool, profileContribute } = harnessWithCollector(
+        jest.fn().mockResolvedValue('3 Sitzungen gefunden'),
+      );
+
+      await drain(
+        await useCase.execute(
+          decide(
+            { ...confirmMeetings, alwaysAllow: true },
+            { ...rejectMinutes, alwaysAllow: true },
+          ),
+        ),
+      );
+
+      expect(allowTool.mock.calls).toEqual([
+        [new AllowMcpToolCommand(integrationId, 'search_meetings')],
+      ]);
+      expect(allowTool.mock.invocationCallOrder[0]).toBeLessThan(
+        profileContribute.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('continues when the integration of an always-allowed tool was deleted', async () => {
+      const { useCase, allowTool, createSeedToolResult, provider } =
+        harnessWithCollector(jest.fn().mockResolvedValue('3 Sitzungen'));
+      allowTool.mockRejectedValue(
+        new McpIntegrationNotFoundError(integrationId),
+      );
+
+      await drain(
+        await useCase.execute(
+          decide({ ...confirmMeetings, alwaysAllow: true }, rejectMinutes),
+        ),
+      );
+
+      expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+      expect(provider.requests).toHaveLength(1);
+    });
+
+    it('rejects the calls and runs no sibling before saving a new user message sent instead of deciding', async () => {
+      const executeTool = jest.fn().mockResolvedValue('Tagesordnung gefunden');
+      const { useCase, createSeedToolResult, createUser } =
+        harnessWithCollector(executeTool);
+
+      const items = await drain(
+        await useCase.execute(
+          userCommand(new RunUserInput('Nimm lieber die Sitzung vom Montag')),
+        ),
+      );
+
+      expect(items[0]).toBeInstanceOf(ToolResultMessage);
+      expect((items[0] as ToolResultMessage).content).toEqual([
+        expect.objectContaining({
+          toolId: 'meetings-1',
+          decision: ToolCallDecision.REJECTED,
+        }),
+        expect.objectContaining({
+          toolId: 'minutes-1',
+          decision: ToolCallDecision.REJECTED,
+        }),
+        expect.objectContaining({
+          toolId: 'search-1',
+          result: expect.stringMatching(/not run/),
+          decision: undefined,
+        }),
+        expect.objectContaining({
+          toolId: 'chart-1',
+          result: expect.stringMatching(/not run/),
+          decision: undefined,
+        }),
+      ]);
+      expect(items[1]).toBeInstanceOf(UserMessage);
+      expect(createSeedToolResult.mock.invocationCallOrder[0]).toBeLessThan(
+        createUser.mock.invocationCallOrder[0],
+      );
+      // A failed run rolls these results back, so nothing may have run.
+      expect(executeTool).not.toHaveBeenCalled();
+    });
+
+    it('rolls back the rejections with the new user message when its run fails, so the calls await confirmation again', async () => {
+      const { useCase, cleanup, createSeedToolResult } = buildHarness({
+        backendTools: tools,
+        lastMessage: pausedTurn(),
+        providerRejects: true,
+        toolResultCollector: new ToolResultCollectorService(
+          { execute: jest.fn().mockResolvedValue('Tagesordnung') } as never,
+          { execute: jest.fn() } as never,
+          { get: jest.fn().mockReturnValue(userId) } as never,
+          { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+        ),
+      });
+
+      await expect(
+        drain(await useCase.execute(userCommand())),
+      ).rejects.toThrow();
+
+      const rejections = (await createSeedToolResult.mock.results[0]
+        .value) as ToolResultMessage;
+      expect(cleanup).toHaveBeenCalledWith(
+        threadId,
+        new Set([rejections.id, 'user-msg']),
+      );
     });
   });
 });

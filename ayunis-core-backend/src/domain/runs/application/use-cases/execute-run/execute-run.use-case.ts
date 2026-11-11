@@ -27,6 +27,8 @@ import { CreateToolResultMessageCommand } from 'src/domain/messages/application/
 import {
   RunNudgeInput,
   RunUserInput,
+  RunToolContinuationInput,
+  RunToolDecisionsInput,
   RunToolResultInput,
   type RunInput,
 } from 'src/domain/runs/domain/run-input.entity';
@@ -45,13 +47,23 @@ import { MessageCleanupService } from 'src/domain/runs/application/services/mess
 import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import {
+  ToolCallConfirmationService,
+  answerWithoutRunning,
+} from 'src/domain/runs/application/services/tool-call-confirmation.service';
+import type { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
-import type { PreparedToolResultInput, SeededInput } from './execute-run.types';
+import type {
+  OwnMessage,
+  PreparedToolResultInput,
+  SeededInput,
+} from './execute-run.types';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { shouldPreserveTranscript } from './rejected-transcript-policy';
 import { toRunError } from './to-run-error';
@@ -84,6 +96,7 @@ export class ExecuteRunUseCase {
     private readonly runProfileRegistry: RunProfileRegistry,
     private readonly runProfileAssembler: RunProfileAssembler,
     private readonly threadRunLock: ThreadRunLock,
+    private readonly toolCallConfirmationService: ToolCallConfirmationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
@@ -119,6 +132,7 @@ export class ExecuteRunUseCase {
     const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
+    this.toolCallConfirmationService.validateInput(found.thread, command.input);
     const { model, isAnonymous } = await this.admitModel(
       found.thread,
       userId,
@@ -128,6 +142,13 @@ export class ExecuteRunUseCase {
       command,
       found.thread,
     );
+    // Saved before assembly, so the continuing run already allows the tool.
+    if (command.input instanceof RunToolDecisionsInput) {
+      await this.toolCallConfirmationService.saveAlwaysAllowedTools(
+        activated.thread,
+        command.input,
+      );
+    }
     const profile = this.runProfileRegistry.get(command.profile.id);
     const assembled = await this.runProfileAssembler.assemble(profile, {
       profile: command.profile,
@@ -219,27 +240,27 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
     const ownedMessageIds = new Set<UUID>();
+    const own: OwnMessage = (messageId) => ownedMessageIds.add(messageId);
     if (signal?.aborted) {
       if (input instanceof RunUserInput) input.releaseImages();
       return 'aborted';
     }
     try {
-      const seeded = await this.seedInput(prepared, input);
+      const seeded = await this.seedInput(prepared, input, own);
       if (seeded === null) {
         cleanupRequired = false;
         return 'aborted';
       }
-      ownedMessageIds.add(seeded.message.id);
       // Removing a settled continuation would make its earlier calls replayable.
-      cleanupRequired = !(input instanceof RunToolResultInput);
+      cleanupRequired = !(input instanceof RunToolContinuationInput);
       // Masks first, so the client can resolve {{pii:…}} tokens in the message.
       if (seeded.masks) {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
-      yield seeded.message;
+      yield* seeded.messages;
       const started = await this.runAssemblyService.assemble(
         prepared,
-        (messageId) => ownedMessageIds.add(messageId),
+        own,
         signal,
       );
       const outcome = yield* adaptRunEventsToStream(
@@ -266,9 +287,10 @@ export class ExecuteRunUseCase {
   private async seedInput(
     prepared: PreparedRun,
     input: RunInput,
+    own: OwnMessage,
   ): Promise<SeededInput | null> {
     try {
-      return await this.persistInput(prepared, input);
+      return await this.persistInput(prepared, input, own);
     } catch (error) {
       if (error instanceof ThreadPiiMaskThreadMissingError) return null;
       throw error;
@@ -280,12 +302,16 @@ export class ExecuteRunUseCase {
   private async persistInput(
     prepared: PreparedRun,
     input: RunInput,
+    own: OwnMessage,
   ): Promise<SeededInput | null> {
     if (input instanceof RunUserInput) {
-      return this.persistUserMessage(prepared, input);
+      return this.persistUserMessage(prepared, input, own);
     }
-    if (input instanceof RunToolResultInput) {
-      return this.persistToolResultSeed(prepared, input);
+    if (
+      input instanceof RunToolResultInput ||
+      input instanceof RunToolDecisionsInput
+    ) {
+      return this.persistToolResultSeed(prepared, input, own);
     }
     throw new RunInvalidInputError('Invalid run input');
   }
@@ -293,7 +319,47 @@ export class ExecuteRunUseCase {
   private async persistUserMessage(
     prepared: PreparedRun,
     input: RunUserInput,
-  ): Promise<SeededInput> {
+    own: OwnMessage,
+  ): Promise<SeededInput | null> {
+    const hasText = this.validateUserInput(prepared, input);
+    let text = input.text;
+    let masks: ThreadPiiMask[] | null = null;
+    if (hasText && prepared.isAnonymous) {
+      const anonymized = await this.anonymizeUserText(prepared, input.text);
+      text = anonymized.anonymizedText;
+      masks = anonymized.masks;
+    }
+    // Sending instead of deciding rejects the calls, so every call of the
+    // turn has its result before the user message.
+    const rejections = await this.rejectCallsAwaitingConfirmation(
+      prepared,
+      own,
+    );
+    if (rejections === null) return null;
+    const message = await this.createUserMessageUseCase.execute(
+      new CreateUserMessageCommand(
+        prepared.thread.id,
+        text,
+        input.pendingImages,
+        prepared.skillInstructions,
+        input instanceof RunNudgeInput,
+      ),
+    );
+    own(message.id);
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(prepared.thread, message),
+    );
+    return {
+      messages: [...rejections, message],
+      masks,
+    };
+  }
+
+  /** Returns whether the message has text. */
+  private validateUserInput(
+    prepared: PreparedRun,
+    input: RunUserInput,
+  ): boolean {
     const hasText = !!input.text && input.text.trim().length > 0;
     const hasImages = input.pendingImages.length > 0;
     const hasSkillInstructions = !!prepared.skillInstructions?.trim();
@@ -307,26 +373,18 @@ export class ExecuteRunUseCase {
         'The selected model does not support image inputs',
       );
     }
-    let text = input.text;
-    let masks: ThreadPiiMask[] | null = null;
-    if (hasText && prepared.isAnonymous) {
-      const anonymized = await this.anonymizeUserText(prepared, input.text);
-      text = anonymized.anonymizedText;
-      masks = anonymized.masks;
-    }
-    const message = await this.createUserMessageUseCase.execute(
-      new CreateUserMessageCommand(
-        prepared.thread.id,
-        text,
-        input.pendingImages,
-        prepared.skillInstructions,
-        input instanceof RunNudgeInput,
-      ),
-    );
-    this.addMessageToThreadUseCase.execute(
-      new AddMessageCommand(prepared.thread, message),
-    );
-    return { message, masks };
+    return hasText;
+  }
+
+  /** Null when the thread disappeared. */
+  private async rejectCallsAwaitingConfirmation(
+    prepared: PreparedRun,
+    own: OwnMessage,
+  ): Promise<ToolResultMessage[] | null> {
+    const contents = answerWithoutRunning(prepared.thread);
+    if (contents.length === 0) return [];
+    const message = await this.persistToolResults(prepared, contents, own);
+    return message && [message];
   }
 
   private async anonymizeUserText(
@@ -362,9 +420,13 @@ export class ExecuteRunUseCase {
 
   private async persistToolResultSeed(
     prepared: PreparedRun,
-    input: RunToolResultInput,
+    input: RunToolResultInput | RunToolDecisionsInput,
+    own: OwnMessage,
   ): Promise<SeededInput | null> {
-    const safeInput = await this.prepareToolResultInput(prepared, input);
+    const safeInput =
+      input instanceof RunToolResultInput
+        ? await this.prepareToolResultInput(prepared, input)
+        : { input, masks: null };
     const { contents, piiMasks } =
       await this.toolResultCollectorService.collectToolResults({
         thread: prepared.thread,
@@ -379,14 +441,25 @@ export class ExecuteRunUseCase {
         'No pending tool call to attach this result to',
       );
     }
+    const message = await this.persistToolResults(prepared, contents, own);
+    if (message === null) return null;
+    return { messages: [message], masks: piiMasks ?? safeInput.masks };
+  }
+
+  private async persistToolResults(
+    prepared: PreparedRun,
+    contents: ToolResultMessageContent[],
+    own: OwnMessage,
+  ): Promise<ToolResultMessage | null> {
     const message = await this.createToolResultMessageUseCase.execute(
       new CreateToolResultMessageCommand(prepared.thread.id, contents),
     );
     if (message === null) return null;
+    own(message.id);
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(prepared.thread, message),
     );
-    return { message, masks: piiMasks ?? safeInput.masks };
+    return message;
   }
 
   private async prepareToolResultInput(

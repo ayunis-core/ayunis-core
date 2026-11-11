@@ -18,3 +18,21 @@ export function buildMcpCanonicalName(
   );
   return `mcp__${kind}__${originalName}__${integrationPrefix}`;
 }
+
+/** The upstream name in a canonical name built for this integration, if any. */
+export function parseMcpCanonicalName(
+  kind: McpCapabilityKind,
+  canonicalName: string,
+  integrationId: string,
+): string | null {
+  const prefix = `mcp__${kind}__`;
+  const suffix = `__${integrationId.slice(0, MCP_INTEGRATION_ID_PREFIX_LENGTH)}`;
+  if (
+    canonicalName.length <= prefix.length + suffix.length ||
+    !canonicalName.startsWith(prefix) ||
+    !canonicalName.endsWith(suffix)
+  ) {
+    return null;
+  }
+  return canonicalName.slice(prefix.length, -suffix.length);
+}

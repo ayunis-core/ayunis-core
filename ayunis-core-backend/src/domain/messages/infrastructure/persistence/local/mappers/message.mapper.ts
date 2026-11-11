@@ -77,6 +77,7 @@ function contentToRecord(content: MessageContent): MessageContentData {
       toolId: content.toolId,
       toolName: content.toolName,
       result: content.result,
+      ...(content.decision && { decision: content.decision }),
     };
   }
   if (content instanceof ThinkingMessageContent) {
@@ -124,6 +125,7 @@ function toolUseToRecord(content: ToolUseMessageContent): MessageContentData {
     ...(content.integration && {
       integration: content.integration,
     }),
+    ...(content.requiresConfirmation && { requiresConfirmation: true }),
   };
 }
 
@@ -164,6 +166,8 @@ function assistantContentToDomain(
       content.params,
       content.providerMetadata ?? null,
       content.integration ?? undefined,
+      undefined,
+      content.requiresConfirmation ?? false,
     );
   }
   if (content.type === MessageContentType.THINKING) {
@@ -184,6 +188,7 @@ function toolContentToDomain(
       content.toolId,
       content.toolName,
       content.result,
+      content.decision,
     );
   }
   throw new Error(INVALID_CONTENT);

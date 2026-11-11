@@ -1,6 +1,7 @@
 import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import {
   RunUserInput,
+  RunToolDecisionsInput,
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import type { SendMessageDto } from 'src/domain/runs/presenters/http/dto/send-message.dto';
@@ -27,6 +28,16 @@ export class RunInputMapper {
       contentType: file.mimetype,
       altText: dto.imageAltTexts?.[index],
     }));
+    if (dto.decisions) {
+      releaseUploads?.();
+      return new RunToolDecisionsInput(
+        dto.decisions.map(({ toolCallId, approved, alwaysAllow }) => ({
+          toolCallId,
+          approved,
+          alwaysAllow,
+        })),
+      );
+    }
     if (dto.toolResult) {
       releaseUploads?.();
       return new RunToolResultInput(

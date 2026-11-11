@@ -7,9 +7,10 @@ import {
   IsBoolean,
   IsString,
   IsArray,
+  ArrayNotEmpty,
 } from 'class-validator';
 import { ApiProperty, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
+import { Type, Transform, plainToInstance } from 'class-transformer';
 import { UUID } from 'crypto';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
@@ -69,6 +70,31 @@ export class ToolResultInput extends Input {
   result: string;
 }
 
+export class ToolCallDecisionDto {
+  @ApiProperty({
+    description: 'ID of a tool call awaiting confirmation',
+    example: 'call_abc123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  toolCallId: string;
+
+  @ApiProperty({
+    description: 'Whether the user confirmed (true) or rejected (false) it',
+    example: true,
+  })
+  @IsBoolean()
+  approved: boolean;
+
+  @ApiProperty({
+    description:
+      'Always allow this tool of this integration for the user; only applied to a confirmed call',
+    example: false,
+  })
+  @IsBoolean()
+  alwaysAllow: boolean;
+}
+
 export class ToolConfigDto {
   @IsEnum(ToolType)
   @ApiProperty({
@@ -100,7 +126,7 @@ export class ToolConfigDto {
  * For tool results (no files):
  * - Can send as application/json or multipart/form-data
  */
-@ApiExtraModels(TextInput, ToolResultInput)
+@ApiExtraModels(TextInput, ToolResultInput, ToolCallDecisionDto)
 export class SendMessageDto {
   @IsNotEmpty()
   @IsUUID()
@@ -166,6 +192,28 @@ export class SendMessageDto {
     required: false,
   })
   toolResult?: ToolResultInput;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => ToolCallDecisionDto)
+  // Multipart sends the decisions as a JSON string.
+  @Transform(({ value }: { value: unknown }): unknown => {
+    if (typeof value !== 'string') return value;
+    try {
+      return plainToInstance(ToolCallDecisionDto, JSON.parse(value) as unknown);
+    } catch {
+      return value;
+    }
+  })
+  @ApiProperty({
+    description:
+      'Decisions on every tool call awaiting confirmation in the last assistant turn; excludes all other inputs',
+    type: [ToolCallDecisionDto],
+    required: false,
+  })
+  decisions?: ToolCallDecisionDto[];
 
   @IsOptional()
   @IsUUID()

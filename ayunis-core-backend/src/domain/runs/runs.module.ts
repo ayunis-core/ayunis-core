@@ -31,6 +31,7 @@ import { RunAssemblyService } from './application/services/run-assembly.service'
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
+import { ToolCallConfirmationService } from './application/services/tool-call-confirmation.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { ThreadRunLock } from './application/services/thread-run-lock.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
@@ -137,6 +138,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ArtifactToolAssemblerService,
     McpToolAssemblerService,
     ToolResultCollectorService,
+    ToolCallConfirmationService,
     MessageCleanupService,
     ThreadRunLock,
     ActiveThreadRuns,
