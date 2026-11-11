@@ -7,6 +7,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import type { AnyWebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
 import type { UsageBasedWebhookPayload } from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
@@ -121,6 +122,7 @@ function createUsageEvents(): AnyWebhookEvent[] {
       }),
       'Municipal Model',
       user,
+      ModelMode.AUTO,
     ),
     new ChatSentWebhookEvent(
       { userId: id, orgId: id, threadId: id, messageId: id },
