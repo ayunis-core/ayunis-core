@@ -7,6 +7,7 @@ import {
   PopoverContent,
 } from '@ayunis/ui/components/popover';
 import { SelectItem } from '@ayunis/ui/components/select';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
   TEAM_ROLES,
   type TeamRole,
@@ -73,10 +74,14 @@ function TeamRoleCard({
   permissions: TeamRolePermissionSet['permissions'] | undefined;
 }>) {
   const { t } = useTranslation('admin-settings-teams');
+  const recordingsEnabled = useIsFeatureEnabled('recordingsEnabled');
   // Not a matrix permission: the backend reserves role changes and removing
   // team admins for team admins.
   const items = [
-    ...(permissions ?? []),
+    ...(permissions ?? []).filter(
+      (permission) =>
+        recordingsEnabled || permission !== 'manage_team_recordings',
+    ),
     ...(role === 'admin' ? ['manage_roles'] : []),
   ];
 

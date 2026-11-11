@@ -17,6 +17,8 @@ export interface FeatureTogglesResponseDto {
   externalSubscriptionsEnabled: boolean;
   /** Users can create routines that run on their behalf */
   routinesEnabled: boolean;
+  /** Users can keep meeting recordings owned by them, a team, a workspace or the organization */
+  recordingsEnabled: boolean;
   /** Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source) */
   releaseNotesEnabled: boolean;
   /** Voice input is available (needs a configured Mistral API key) */
@@ -194,6 +196,9 @@ export const RolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_recordings: 'manage_recordings',
+  manage_team_recordings: 'manage_team_recordings',
+  manage_org_recordings: 'manage_org_recordings',
 } as const;
 
 export interface RolePermissionSetDto {
@@ -219,6 +224,9 @@ export const UpdateRolePermissionsDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_recordings: 'manage_recordings',
+  manage_team_recordings: 'manage_team_recordings',
+  manage_org_recordings: 'manage_org_recordings',
 } as const;
 
 export interface UpdateRolePermissionsDto {
@@ -239,6 +247,9 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_recordings: 'manage_recordings',
+  manage_team_recordings: 'manage_team_recordings',
+  manage_org_recordings: 'manage_org_recordings',
 } as const;
 
 export interface MyPermissionsResponseDto {
@@ -2224,6 +2235,9 @@ export const MyTeamResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_recordings: 'manage_recordings',
+  manage_team_recordings: 'manage_team_recordings',
+  manage_org_recordings: 'manage_org_recordings',
 } as const;
 
 export interface MyTeamResponseDto {
@@ -2269,6 +2283,9 @@ export const TeamRolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  manage_recordings: 'manage_recordings',
+  manage_team_recordings: 'manage_team_recordings',
+  manage_org_recordings: 'manage_org_recordings',
 } as const;
 
 export interface TeamRolePermissionSetDto {
@@ -6001,6 +6018,82 @@ export interface UpdateCourseModuleRequestDto {
   loomUrl: string;
 }
 
+export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];
+
+
+export const CreateRecordingDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface CreateRecordingDto {
+  ownerType: CreateRecordingDtoOwnerType;
+  workspaceId?: string;
+  teamId?: string;
+  /**
+     * The name of the recording
+     * @minLength 1
+     * @maxLength 255
+     */
+  name: string;
+}
+
+export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
+
+
+export const RecordingResponseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface RecordingResponseDto {
+  id: string;
+  name: string;
+  ownerType: RecordingResponseDtoOwnerType;
+  /** The owning workspace of workspace recordings */
+  workspaceId?: string;
+  /** The owning team of team recordings */
+  teamId?: string;
+  /**
+     * The name of the user who created the recording; null once they are deleted
+     * @nullable
+     */
+  creatorName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecordingListResponseDto {
+  data: RecordingResponseDto[];
+}
+
+export interface RenameRecordingDto {
+  /**
+     * The new name of the recording
+     * @minLength 1
+     * @maxLength 255
+     */
+  name: string;
+}
+
+export type RecordingTransferOwnerDtoOwnerType = typeof RecordingTransferOwnerDtoOwnerType[keyof typeof RecordingTransferOwnerDtoOwnerType];
+
+
+export const RecordingTransferOwnerDtoOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface RecordingTransferOwnerDto {
+  ownerType: RecordingTransferOwnerDtoOwnerType;
+  teamId?: string;
+}
+
 /**
  * Current UI language, used when the language of the text is unidentifiable; defaults to English
  */
@@ -6952,4 +7045,20 @@ search?: string;
  */
 status?: CertificateValidityStatus;
 };
+
+export type RecordingsControllerFindAllParams = {
+/**
+ * personal lists the own recordings plus those of the user’s teams and organization
+ */
+ownerType: RecordingsControllerFindAllOwnerType;
+workspaceId?: string;
+};
+
+export type RecordingsControllerFindAllOwnerType = typeof RecordingsControllerFindAllOwnerType[keyof typeof RecordingsControllerFindAllOwnerType];
+
+
+export const RecordingsControllerFindAllOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
 

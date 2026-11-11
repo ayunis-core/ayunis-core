@@ -4,6 +4,7 @@ import { releaseNotesConfig } from './release-notes.config';
 export enum FeatureFlag {
   ExternalSubscriptions = 'externalSubscriptionsEnabled',
   Routines = 'routinesEnabled',
+  Recordings = 'recordingsEnabled',
   /** Release notes arrive in the routines' inbox, so they need both. */
   ReleaseNotes = 'releaseNotesEnabled',
   /** Voice input and read-aloud both run on Mistral, so they need its key. */
@@ -41,6 +42,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
         false,
       ),
     routinesEnabled,
+    recordingsEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_RECORDINGS_ENABLED,
+      false,
+    ),
     releaseNotesEnabled:
       routinesEnabled && releaseNotesConfig().announcableOrgId !== null,
     voiceEnabled,

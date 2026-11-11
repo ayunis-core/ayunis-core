@@ -36,6 +36,15 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     permissions: ['manage_routines'],
     feature: 'routinesEnabled',
   },
+  {
+    group: 'recordings',
+    permissions: [
+      'manage_recordings',
+      'manage_team_recordings',
+      'manage_org_recordings',
+    ],
+    feature: 'recordingsEnabled',
+  },
 ];
 
 export function visiblePermissionSections(

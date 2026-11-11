@@ -26,6 +26,11 @@ const PERMISSIONS: Record<OwnedResourceKind, KindPermissions> = {
     team: 'share_knowledge_bases_with_teams',
     org: 'share_knowledge_bases_with_org',
   },
+  recording: {
+    manage: 'manage_recordings',
+    team: 'manage_team_recordings',
+    org: 'manage_org_recordings',
+  },
 };
 
 export function ownerKey(selection: OwnerSelection): string {
@@ -52,8 +57,8 @@ export function ownerOf(resource: OwnedResource): OwnerSelection | null {
 
 /**
  * The owners a user may create for or move to. Mirrors the backend: the
- * organization takes the org share permission, a team membership plus the
- * team share permission as resolved for the user's role in that team.
+ * organization takes the kind's org permission, a team membership plus the
+ * kind's team permission as resolved for the user's role in that team.
  */
 export function manageableOwners(
   kind: OwnedResourceKind,

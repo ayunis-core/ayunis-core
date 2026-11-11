@@ -13358,6 +13358,211 @@
         "tags": ["Super Admin Academy"]
       }
     },
+    "/recordings": {
+      "post": {
+        "operationId": "RecordingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a recording",
+        "tags": ["recordings"]
+      },
+      "get": {
+        "operationId": "RecordingsController_findAll",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "description": "personal lists the own recordings plus those of the user’s teams and organization",
+            "schema": {
+              "type": "string",
+              "enum": ["personal", "workspace"]
+            }
+          },
+          {
+            "name": "workspaceId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the recordings of the user, their teams and organization, or of a workspace",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}": {
+      "get": {
+        "operationId": "RecordingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Get a recording",
+        "tags": ["recordings"]
+      },
+      "patch": {
+        "operationId": "RecordingsController_rename",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameRecordingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Rename a recording",
+        "tags": ["recordings"]
+      },
+      "delete": {
+        "operationId": "RecordingsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Delete a recording",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/owner": {
+      "patch": {
+        "operationId": "RecordingsController_changeOwner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordingTransferOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Move a recording to the caller, a team or the organization",
+        "tags": ["recordings"]
+      }
+    },
     "/speech": {
       "post": {
         "description": "Streams the text as MP3 speech while it is generated. The voice matches the detected language of the text, or the UI language when the text is too short or its language has no voice.",
@@ -14629,6 +14834,11 @@
             "description": "Users can create routines that run on their behalf",
             "default": false
           },
+          "recordingsEnabled": {
+            "type": "boolean",
+            "description": "Users can keep meeting recordings owned by them, a team, a workspace or the organization",
+            "default": false
+          },
           "releaseNotesEnabled": {
             "type": "boolean",
             "description": "Release notes of Ayunis arrive in the inbox (needs routines and a configured release-note source)",
@@ -14648,6 +14858,7 @@
         "required": [
           "externalSubscriptionsEnabled",
           "routinesEnabled",
+          "recordingsEnabled",
           "releaseNotesEnabled",
           "voiceEnabled",
           "readAloudEnabled"
@@ -14944,7 +15155,10 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_recordings",
+                "manage_team_recordings",
+                "manage_org_recordings"
               ]
             }
           }
@@ -14981,7 +15195,10 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_recordings",
+                "manage_team_recordings",
+                "manage_org_recordings"
               ]
             }
           }
@@ -15005,7 +15222,10 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_recordings",
+                "manage_team_recordings",
+                "manage_org_recordings"
               ]
             }
           }
@@ -18028,7 +18248,10 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_recordings",
+                "manage_team_recordings",
+                "manage_org_recordings"
               ]
             }
           }
@@ -18065,7 +18288,10 @@
                 "manage_knowledge_bases",
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
-                "manage_routines"
+                "manage_routines",
+                "manage_recordings",
+                "manage_team_recordings",
+                "manage_org_recordings"
               ]
             }
           }
@@ -24361,6 +24587,118 @@
           }
         },
         "required": ["title", "loomUrl"]
+      },
+      "CreateRecordingDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "workspace", "team", "org"]
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the recording",
+            "example": "Stadtratssitzung 12. November",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": ["ownerType", "name"]
+      },
+      "RecordingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Stadtratssitzung 12. November"
+          },
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "workspace", "team", "org"]
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning workspace of workspace recordings"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning team of team recordings"
+          },
+          "creatorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "The name of the user who created the recording; null once they are deleted"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ownerType",
+          "creatorName",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RecordingListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingResponseDto"
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "RenameRecordingDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name of the recording",
+            "example": "Stadtratssitzung 12. November",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "RecordingTransferOwnerDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "team", "org"]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["ownerType"]
       },
       "SynthesizeSpeechDto": {
         "type": "object",

@@ -19,6 +19,10 @@ import type {
   OwnerSelection,
 } from '@/features/resource-ownership';
 import { OwnerChoice, PERSONAL_OWNER_KEY } from './OwnerChoice';
+import {
+  OwnedResourceCreateDialog,
+  type OwnedResourceCreateDialogProps,
+} from './OwnedResourceCreateDialog';
 
 export interface CreateSkillFormData {
   name: string;
@@ -182,30 +186,10 @@ export type CreateKnowledgeBaseSubmission = CreateKnowledgeBaseFormData & {
   owner?: OwnerSelection;
 };
 
-export function KnowledgeBaseCreateDialog({
-  onCreate,
-  buttonText,
-  buttonTestId,
-  buttonClassName,
-  showIcon = false,
-  ownerOptions,
-  isOwnerChoiceLoading = false,
-}: Readonly<{
-  onCreate: (data: CreateKnowledgeBaseSubmission) => Promise<unknown>;
-  /** Offered as an owner choice when there is more than one. */
-  ownerOptions?: OwnerOption[];
-  /** Blocks creating until the owner choice is known. */
-  isOwnerChoiceLoading?: boolean;
-  buttonText?: string;
-  buttonTestId?: string;
-  buttonClassName?: string;
-  showIcon?: boolean;
-}>) {
+export function KnowledgeBaseCreateDialog(
+  props: Readonly<OwnedResourceCreateDialogProps<CreateKnowledgeBaseFormData>>,
+) {
   const { t } = useTranslation('knowledge-bases');
-  const translations = useCreateDialogTranslations('knowledge-bases');
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [ownerKey, setOwnerKey] = useState(PERSONAL_OWNER_KEY);
   const form = useForm<CreateKnowledgeBaseFormData>({
     resolver: zodResolver(
       z.object({
@@ -219,62 +203,24 @@ export function KnowledgeBaseCreateDialog({
     defaultValues: { name: '', description: '' },
   });
 
-  const close = () => {
-    setIsOpen(false);
-    setOwnerKey(PERSONAL_OWNER_KEY);
-    form.reset();
-  };
-  const submit = async (data: CreateKnowledgeBaseFormData) => {
-    setIsLoading(true);
-    try {
-      await onCreate({ ...data, owner: selectedOwner(ownerOptions, ownerKey) });
-      form.clearErrors();
-      close();
-    } catch {
-      // Scope-specific mutation handlers surface the error.
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <CreateEntityDialog
-      isOpen={isOpen}
-      onOpenChange={(next) => {
-        if (!next) setOwnerKey(PERSONAL_OWNER_KEY);
-        setIsOpen(next);
-      }}
-      onCancel={close}
-      onSubmit={(event) => void form.handleSubmit(submit)(event)}
-      isLoading={isLoading}
-      translations={translations}
-      buttonText={buttonText}
-      showIcon={showIcon}
-      buttonClassName={buttonClassName}
-      buttonTestId={buttonTestId}
-      isSubmitDisabled={isOwnerChoiceLoading}
+    <OwnedResourceCreateDialog
+      {...props}
+      form={form}
+      namespace="knowledge-bases"
+      ownerTestId="knowledge-base-create-owner"
     >
-      <Form {...form}>
-        <div className="space-y-6">
-          <OwnerChoice
-            options={ownerOptions}
-            value={ownerKey}
-            onValueChange={setOwnerKey}
-            testId="knowledge-base-create-owner"
-          />
-          <NameField
-            control={form.control}
-            name="name"
-            translationNamespace="knowledge-bases"
-          />
-          <ShortDescriptionField
-            control={form.control}
-            name="description"
-            translationNamespace="knowledge-bases"
-            multiline
-          />
-        </div>
-      </Form>
-    </CreateEntityDialog>
+      <NameField
+        control={form.control}
+        name="name"
+        translationNamespace="knowledge-bases"
+      />
+      <ShortDescriptionField
+        control={form.control}
+        name="description"
+        translationNamespace="knowledge-bases"
+        multiline
+      />
+    </OwnedResourceCreateDialog>
   );
 }

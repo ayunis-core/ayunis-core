@@ -3,6 +3,7 @@
     "breadcrumb": "Workspaces",
     "chatsTab": "Your chats",
     "knowledgeTab": "Knowledge",
+    "recordingsTab": "Recordings",
     "skillsTab": "Skills",
     "instructionsTab": "Instructions",
     "artifactsTab": "Created content",
@@ -89,6 +90,11 @@
       "active": "Active",
       "inactive": "Inactive",
       "activeTooltip": "Active knowledge bases are available to every chat in this workspace. Inactive knowledge bases are excluded from workspace chats."
+    },
+    "recordings": {
+      "create": "Create recording",
+      "emptyTitle": "No workspace recordings",
+      "empty": "No recordings have been created in this workspace yet."
     },
     "documents": {
       "upload": "Upload file",

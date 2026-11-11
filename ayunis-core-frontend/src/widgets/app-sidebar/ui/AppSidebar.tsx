@@ -11,6 +11,7 @@ import {
   Store,
   GraduationCap,
   CalendarClock,
+  AudioLines,
 } from 'lucide-react';
 
 import {
@@ -60,6 +61,7 @@ import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/u
 const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
   '/routines': 'sidebar-navigation-routines',
+  '/recordings': 'sidebar-navigation-recordings',
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -75,6 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
   const marketplace = useMarketplaceConfig();
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
+  const recordingsEnabled = useIsFeatureEnabled('recordingsEnabled');
   const canManageRoutines =
     routinesEnabled && authorization.can('manage_routines');
   const academyAddonActive = useIsAcademyAddonActive();
@@ -114,6 +117,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/knowledge-bases',
       icon: Brain,
     },
+    ...(recordingsEnabled
+      ? [
+          {
+            title: t('sidebar.recordings'),
+            url: '/recordings',
+            icon: AudioLines,
+          },
+        ]
+      : []),
     ...(canManageRoutines
       ? [
           {
