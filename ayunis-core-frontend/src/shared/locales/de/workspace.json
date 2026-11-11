@@ -107,10 +107,11 @@
     "open": "Mitglieder",
     "title": "Mitglieder",
     "description": "Mitglieder teilen die Anweisungen, Fähigkeiten und das Wissen dieses Arbeitsbereichs. Chats bleiben privat.",
-    "loading": "Mitglieder werden geladen…",
-    "loadError": "Mitglieder konnten nicht geladen werden.",
+    "count_one": "{{count}} Mitglied",
+    "count_other": "{{count}} Mitglieder",
     "name": "Name",
     "email": "E-Mail",
+    "joinedAt": "Beigetreten",
     "role": {
       "label": "Rolle",
       "roles": {
@@ -133,7 +134,11 @@
       "error": "Rolle konnte nicht aktualisiert werden",
       "notFound": "Mitglied nicht gefunden",
       "notAllowed": "Nur Administratoren des Arbeitsbereichs können Rollen ändern",
-      "lastAdmin": "Ein Arbeitsbereich braucht mindestens einen Administrator"
+      "lastAdmin": "Ein Arbeitsbereich braucht mindestens einen Administrator",
+      "confirmTitle": "Rolle ändern",
+      "confirmDescription": "Rolle von {{name}} in diesem Arbeitsbereich zu {{role}} ändern?",
+      "confirmButton": "Rolle ändern",
+      "cancelButton": "Abbrechen"
     },
     "add": {
       "open": "Mitglieder hinzufügen",

@@ -26,7 +26,6 @@ import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
-import { WorkspaceMembersDialog } from './WorkspaceMembersDialog';
 import {
   WorkspaceInstructionsTab,
   WorkspaceKnowledgeTab,
@@ -61,7 +60,6 @@ export default function WorkspacePage({
 }: Readonly<WorkspacePageProps>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
-  const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { deleteChat } = useDeleteChat();
@@ -95,7 +93,6 @@ export default function WorkspacePage({
             action={
               <WorkspaceHeaderActions
                 workspace={workspace}
-                onOpenMembers={() => setIsMembersOpen(true)}
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 onOpenDelete={() => setIsDeleteOpen(true)}
               />
@@ -190,11 +187,6 @@ export default function WorkspacePage({
         }
       />
 
-      <WorkspaceMembersDialog
-        workspace={workspace}
-        open={isMembersOpen}
-        onOpenChange={setIsMembersOpen}
-      />
       <WorkspaceSettingsDialog
         workspace={workspace}
         open={isSettingsOpen}

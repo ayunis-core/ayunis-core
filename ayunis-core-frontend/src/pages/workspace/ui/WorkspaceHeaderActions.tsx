@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import { MoreHorizontal, Pencil, Trash2, Users } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -7,11 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { PinButton } from '@/shared/ui/pin-button';
 import {
@@ -23,14 +19,12 @@ import { getWorkspaceAccess, type Workspace } from '@/features/workspaces';
 
 interface WorkspaceHeaderActionsProps {
   workspace: Workspace;
-  onOpenMembers: () => void;
   onOpenSettings: () => void;
   onOpenDelete: () => void;
 }
 
 export function WorkspaceHeaderActions({
   workspace,
-  onOpenMembers,
   onOpenSettings,
   onOpenDelete,
 }: Readonly<WorkspaceHeaderActionsProps>) {
@@ -44,20 +38,16 @@ export function WorkspaceHeaderActions({
   return (
     <div className="flex items-center gap-1">
       <HelpLink path="workspaces/" />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t('members.open')}
-            onClick={onOpenMembers}
-            data-testid="workspace-members-open"
-          >
-            <Users />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('members.open')}</TooltipContent>
-      </Tooltip>
+      <Button variant="outline" size="sm" asChild>
+        <Link
+          to="/workspaces/$workspaceId/members"
+          params={{ workspaceId: workspace.id }}
+          data-testid="workspace-members-open"
+        >
+          <Users />
+          {t('members.open')}
+        </Link>
+      </Button>
       <PinButton
         isPinned={isPinned}
         pinLabel={t('page.pin')}

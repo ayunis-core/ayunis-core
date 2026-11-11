@@ -125,9 +125,12 @@ async function roleOf(principal: Principal, workspaceId: string) {
   return workspace.role;
 }
 
-async function openAs(browser: Browser, principal: Principal): Promise<Page> {
+async function openAs(
+  browser: Browser,
+  principal: Principal | APIRequestContext,
+): Promise<Page> {
   const context = await browser.newContext({
-    storageState: await principal.api.storageState(),
+    storageState: await as(principal).api.storageState(),
   });
   return context.newPage();
 }
@@ -313,6 +316,9 @@ test("workspace members get what their workspace role allows, never more", async
       await expect(
         generatedApi.workspacesControllerFindOne(id, as(adminApi)),
       ).rejects.toThrow(/\(HTTP 404\)/);
+      await expect(
+        generatedApi.workspaceMembersControllerList(id, as(adminApi)),
+      ).rejects.toThrow(/\(HTTP 404\)/);
       expect(await listedWorkspaceIds(adminApi)).not.toContain(id);
     });
 
@@ -389,17 +395,18 @@ test("workspace members get what their workspace role allows, never more", async
   }
 });
 
-test("the workspace page shows each member only the controls their role allows", async ({
+test("the workspace and members pages show each member only the controls their role allows", async ({
   browser,
   mail,
 }) => {
   test.setTimeout(180_000);
   const org = await createMemberRolesOrg(mail, randomUUID().slice(0, 8));
-  const { anna, ben, clara, workspace } = org;
+  const { adminApi, anna, ben, clara, workspace } = org;
   const { id } = workspace;
   const annaPage = await openAs(browser, anna);
   const benPage = await openAs(browser, ben);
   const claraPage = await openAs(browser, clara);
+  const orgAdminPage = await openAs(browser, adminApi);
   try {
     await test.step("before being added, Ben cannot find the workspace", async () => {
       const own = await generatedApi.workspacesControllerCreate(
@@ -418,6 +425,14 @@ test("the workspace page shows each member only the controls their role allows",
         benPage.getByTestId(`workspace-picker-item-${id}`),
       ).toHaveCount(0);
       await benPage.keyboard.press("Escape");
+    });
+
+    await test.step("non-members, even the org admin, cannot open the members page", async () => {
+      for (const page of [benPage, orgAdminPage]) {
+        await page.goto(`/workspaces/${id}/members`);
+        await expect(page).toHaveURL(/\/workspaces\/?(?:\?.*)?$/);
+        await expect(page.getByTestId("workspace-members-page")).toHaveCount(0);
+      }
     });
 
     await test.step("Anna adds Ben as user and Clara as manager", async () => {
@@ -459,17 +474,17 @@ test("the workspace page shows each member only the controls their role allows",
         benPage.getByTestId("workspace-instruction-save"),
       ).toHaveCount(0);
 
-      await benPage.getByTestId("workspace-members-open").click();
-      const members = benPage.getByTestId("workspace-members-dialog");
+      await openWorkspaceMembers(benPage, id);
+      const members = benPage.getByTestId("workspace-members-page");
       await expect(
         members.getByTestId(`workspace-member-role-label-${anna.member.id}`),
       ).toBeVisible();
-      await expect(members.getByTestId("workspace-members-add")).toHaveCount(0);
+      await expect(benPage.getByTestId("workspace-members-add")).toHaveCount(0);
       await expect(
         members.getByTestId(`workspace-member-role-${anna.member.id}`),
       ).toHaveCount(0);
-      await benPage.keyboard.press("Escape");
 
+      await benPage.goto(`/workspaces/${id}`);
       await sendMessage(benPage, "Was steht im Haushaltsentwurf?");
       await expect(benPage).toHaveURL(/\/chats\/[0-9a-f-]+/);
       await expect(
@@ -492,13 +507,19 @@ test("the workspace page shows each member only the controls their role allows",
         claraPage.getByTestId("workspace-skill-create").first(),
       ).toBeVisible();
 
-      await claraPage.getByTestId("workspace-members-open").click();
-      const members = claraPage.getByTestId("workspace-members-dialog");
+      await openWorkspaceMembers(claraPage, id);
+      const members = claraPage.getByTestId("workspace-members-page");
+      await expect(
+        members.getByTestId(`workspace-member-role-label-${ben.member.id}`),
+      ).toBeVisible();
       await expect(
         members.getByTestId(`workspace-member-role-${ben.member.id}`),
       ).toHaveCount(0);
-      await members.getByTestId("workspace-members-add").click();
-      await members.getByTestId("workspace-members-add-role").click();
+      await claraPage.getByTestId("workspace-members-add").click();
+      await claraPage
+        .getByTestId("workspace-members-add-dialog")
+        .getByTestId("workspace-members-add-role")
+        .click();
       await expect(
         claraPage.getByTestId("workspace-members-add-role-option-manager"),
       ).toBeVisible();
@@ -523,7 +544,7 @@ test("the workspace page shows each member only the controls their role allows",
         benPage.locator('[data-sonner-toast][data-type="error"]'),
       ).toBeVisible();
       expect(await roleOf(ben, id)).toBe("admin");
-      await benPage.keyboard.press("Escape");
+      await benPage.goto(`/workspaces/${id}`);
       await benPage.getByTestId("workspace-actions-menu").click();
       await expect(
         benPage.getByTestId("workspace-actions-delete"),
@@ -531,7 +552,9 @@ test("the workspace page shows each member only the controls their role allows",
     });
   } finally {
     await Promise.all(
-      [annaPage, benPage, claraPage].map((page) => page.context().close()),
+      [annaPage, benPage, claraPage, orgAdminPage].map((page) =>
+        page.context().close(),
+      ),
     );
     await org.dispose();
   }
