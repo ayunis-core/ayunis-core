@@ -13,6 +13,10 @@
     "org": "Organisation",
     "shared": "Mit mir geteilt"
   },
+  "group": {
+    "personal": "Persönlich",
+    "orgAndTeams": "Organisation & Teams"
+  },
   "card": {
     "title": "Besitzer",
     "skillDescription": "Wem diese Fähigkeit gehört. Team- und Organisations-Fähigkeiten können alle Mitglieder nutzen und alle bearbeiten, die sie verwalten dürfen.",

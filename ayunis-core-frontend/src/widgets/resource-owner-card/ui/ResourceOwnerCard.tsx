@@ -107,6 +107,7 @@ export function ResourceOwnerCard({
           value={ownerKey(current)}
           onValueChange={(key) => void handleSelect(key)}
           disabled={isBusy || options.length < 2}
+          grouped={kind === 'skill'}
           testId={`${kind}-owner-select`}
         />
       </CardContent>
