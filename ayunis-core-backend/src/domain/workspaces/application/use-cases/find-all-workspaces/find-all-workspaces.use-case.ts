@@ -3,7 +3,12 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import {
+  WorkspacesRepository,
+  type WorkspaceListStats,
+} from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import type { WorkspaceAccess } from 'src/domain/workspaces/application/models/workspace-access.model';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
@@ -11,6 +16,7 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 
 export interface WorkspaceListItem {
   workspace: Workspace;
+  access: WorkspaceAccess;
   chatCount: number;
   skillCount: number;
   knowledgeBaseCount: number;
@@ -24,6 +30,7 @@ export class FindAllWorkspacesUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceAccess: WorkspaceAccessService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -38,24 +45,17 @@ export class FindAllWorkspacesUseCase {
       userId,
       query,
     );
-    const stats = await this.workspacesRepository.getListStats(
-      userId,
-      workspaces.data.map((workspace) => workspace.id),
-    );
+    const workspaceIds = workspaces.data.map((workspace) => workspace.id);
+    const [stats, accesses] = await Promise.all([
+      this.workspacesRepository.getListStats(userId, workspaceIds),
+      this.workspaceAccess.forWorkspaces(workspaceIds),
+    ]);
 
-    const data = workspaces.data.map((workspace) => {
-      const workspaceStats = stats.get(workspace.id);
-      const chatActivity = workspaceStats?.lastActivityAt;
-      return {
-        workspace,
-        chatCount: workspaceStats?.chatCount ?? 0,
-        skillCount: workspaceStats?.skillCount ?? 0,
-        knowledgeBaseCount: workspaceStats?.knowledgeBaseCount ?? 0,
-        lastActivityAt:
-          chatActivity && chatActivity > workspace.updatedAt
-            ? chatActivity
-            : workspace.updatedAt,
-      };
+    const data = workspaces.data.flatMap((workspace) => {
+      const access = accesses.get(workspace.id);
+      // Membership can end between the two reads.
+      if (!access) return [];
+      return [this.toListItem(workspace, access, stats.get(workspace.id))];
     });
 
     return new Paginated({
@@ -64,6 +64,25 @@ export class FindAllWorkspacesUseCase {
       offset: workspaces.offset,
       total: workspaces.total,
     });
+  }
+
+  private toListItem(
+    workspace: Workspace,
+    access: WorkspaceAccess,
+    stats: WorkspaceListStats | undefined,
+  ): WorkspaceListItem {
+    const chatActivity = stats?.lastActivityAt;
+    return {
+      workspace,
+      access,
+      chatCount: stats?.chatCount ?? 0,
+      skillCount: stats?.skillCount ?? 0,
+      knowledgeBaseCount: stats?.knowledgeBaseCount ?? 0,
+      lastActivityAt:
+        chatActivity && chatActivity > workspace.updatedAt
+          ? chatActivity
+          : workspace.updatedAt,
+    };
   }
 
   private resolveUserId(): UUID {

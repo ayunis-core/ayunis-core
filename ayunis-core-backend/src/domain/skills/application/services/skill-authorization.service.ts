@@ -15,7 +15,17 @@ import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/applica
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { CollectiveSkillAccessService } from 'src/domain/skills/application/services/collective-skill-access.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
+/**
+ * Writing takes the permission of the owner: `manage_skills` for personal
+ * skills, the team or org permissions for collective skills, and
+ * `manage_workspace` in the workspace for workspace skills. The skill routes
+ * therefore do not gate on `manage_skills` themselves.
+ */
 @Injectable()
 export class SkillAuthorizationService {
   constructor(
@@ -28,6 +38,7 @@ export class SkillAuthorizationService {
     private readonly workspaceExecution: AssertWorkspaceExecutionAccessUseCase,
     private readonly context: ContextService,
     private readonly collectiveAccess: CollectiveSkillAccessService,
+    private readonly hasPermission: HasPermissionUseCase,
   ) {}
 
   async requireRead(skill: Skill): Promise<void> {
@@ -57,6 +68,7 @@ export class SkillAuthorizationService {
     const userId = this.requirePrincipal();
     if (skill instanceof PersonalSkill) {
       if (skill.userId !== userId) throw new SkillNotFoundError(skill.id);
+      await this.requireManageSkills();
       return;
     }
     if (skill instanceof AbstractCollectiveSkill) {
@@ -97,6 +109,14 @@ export class SkillAuthorizationService {
         threadId,
       }),
     );
+  }
+
+  private async requireManageSkills(): Promise<void> {
+    const { orgId, role } = getRequiredUserContext(this.context);
+    const allowed = await this.hasPermission.execute(
+      new HasPermissionQuery(orgId, role, Permission.MANAGE_SKILLS),
+    );
+    if (!allowed) throw new UnauthorizedAccessError();
   }
 
   private requirePrincipal(): UUID {

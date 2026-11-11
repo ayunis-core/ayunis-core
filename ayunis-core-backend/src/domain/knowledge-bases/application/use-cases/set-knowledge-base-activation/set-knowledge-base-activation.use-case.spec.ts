@@ -10,8 +10,6 @@ import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { WorkspaceKnowledgeBase } from 'src/domain/knowledge-bases/domain/workspace-knowledge-base.entity';
 import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
-import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
@@ -52,7 +50,6 @@ async function setup(knowledgeBase: KnowledgeBase) {
       return undefined;
     }),
   };
-  const hasPermission = { execute: jest.fn().mockResolvedValue(true) };
   const module = await Test.createTestingModule({
     providers: [
       SetKnowledgeBaseActivationUseCase,
@@ -60,7 +57,6 @@ async function setup(knowledgeBase: KnowledgeBase) {
       { provide: KnowledgeBaseReadAccessService, useValue: readAccess },
       { provide: KnowledgeBaseWriteAccessService, useValue: writeAccess },
       { provide: ContextService, useValue: context },
-      { provide: HasPermissionUseCase, useValue: hasPermission },
     ],
   }).compile();
   return {
@@ -68,7 +64,6 @@ async function setup(knowledgeBase: KnowledgeBase) {
     repository,
     readAccess,
     writeAccess,
-    hasPermission,
   };
 }
 
@@ -84,7 +79,7 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
         userId: ownerId,
         orgId: ORG_ID,
       });
-      const { useCase, repository, hasPermission } = await setup(knowledgeBase);
+      const { useCase, repository } = await setup(knowledgeBase);
 
       await expect(
         useCase.execute(
@@ -97,7 +92,6 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
         USER_ID,
       );
       expect(repository.activateForWorkspace).not.toHaveBeenCalled();
-      expect(hasPermission.execute).not.toHaveBeenCalled();
     },
   );
 
@@ -107,8 +101,7 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
       workspaceId: WORKSPACE_ID,
       orgId: ORG_ID,
     });
-    const { useCase, repository, writeAccess, hasPermission } =
-      await setup(knowledgeBase);
+    const { useCase, repository, writeAccess } = await setup(knowledgeBase);
 
     await expect(
       useCase.execute(
@@ -122,23 +115,16 @@ describe(SetKnowledgeBaseActivationUseCase.name, () => {
       WORKSPACE_ID,
     );
     expect(repository.deactivate).not.toHaveBeenCalled();
-    expect(hasPermission.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orgId: ORG_ID,
-        role: UserRole.MANAGER,
-        permission: Permission.MANAGE_KNOWLEDGE_BASES,
-      }),
-    );
   });
 
-  it('rejects workspace activation without the manage knowledge bases permission', async () => {
+  it('rejects workspace activation for a member without manage_workspace', async () => {
     const knowledgeBase = new WorkspaceKnowledgeBase({
       name: 'Project regulations',
       workspaceId: WORKSPACE_ID,
       orgId: ORG_ID,
     });
-    const { useCase, repository, hasPermission } = await setup(knowledgeBase);
-    hasPermission.execute.mockResolvedValue(false);
+    const { useCase, repository, writeAccess } = await setup(knowledgeBase);
+    writeAccess.requireWrite.mockRejectedValue(new UnauthorizedAccessError());
 
     await expect(
       useCase.execute(

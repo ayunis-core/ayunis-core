@@ -17,8 +17,6 @@ import { CompleteKnowledgeBaseUploadCommand } from 'src/domain/knowledge-bases/a
 import { CreateSourceUploadDto } from 'src/domain/sources/presenters/http/dto/create-source-upload.dto';
 import { SourceUploadSessionResponseDto } from 'src/domain/sources/presenters/http/dto/source-upload-session-response.dto';
 import { toSourceUploadSessionDto } from 'src/domain/sources/presenters/http/mappers/source-upload.mapper';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { KnowledgeBaseDocumentResponseDto } from './dto/knowledge-base-document-response.dto';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 
@@ -41,7 +39,6 @@ export class KnowledgeBaseUploadsController {
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/uploads')
   @ApiOperation({
     summary: 'Create a direct document upload for a knowledge base',
@@ -72,7 +69,6 @@ export class KnowledgeBaseUploadsController {
     );
   }
 
-  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/uploads/:uploadId/complete')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({

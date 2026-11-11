@@ -1,10 +1,7 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID, type UUID } from 'crypto';
-import { DataSource, EntitySchema, type QueryRunner } from 'typeorm';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import 'src/config/env';
-import { typeormConfigRaw } from 'src/config/typeorm.config';
+import { DataSource, type QueryRunner } from 'typeorm';
 import {
   aUserContext,
   createMockContextService,
@@ -19,63 +16,11 @@ import { WorkspaceMemberMapper } from './mappers/workspace-member.mapper';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
 import { WorkspaceMemberRecord } from './schema/workspace-member.record';
 import { WorkspaceRecord } from './schema/workspace.record';
-
-// ts-jest drops the column types of the records, so the tables are declared
-// explicitly for TypeORM.
-const timestamps = {
-  createdAt: { type: 'timestamp', createDate: true },
-  updatedAt: { type: 'timestamp', updateDate: true },
-} as const;
-const workspaceSchema = new EntitySchema<WorkspaceRecord>({
-  name: 'WorkspaceRecord',
-  target: WorkspaceRecord,
-  tableName: 'workspaces',
-  columns: {
-    id: { type: String, primary: true },
-    ...timestamps,
-    name: { type: String },
-    description: { type: String, nullable: true },
-    instruction: { type: String, nullable: true },
-    icon: { type: String },
-    color: { type: String },
-    orgId: { type: String },
-  },
-});
-const memberSchema = new EntitySchema<WorkspaceMemberRecord>({
-  name: 'WorkspaceMemberRecord',
-  target: WorkspaceMemberRecord,
-  tableName: 'workspace_members',
-  columns: {
-    id: { type: String, primary: true },
-    ...timestamps,
-    workspaceId: { type: String },
-    userId: { type: String },
-    role: { type: String },
-  },
-});
-
-const TABLES = [
-  `CREATE TABLE users (id varchar PRIMARY KEY)`,
-  `CREATE TABLE workspaces (
-    id varchar PRIMARY KEY, "createdAt" timestamp NOT NULL DEFAULT now(),
-    "updatedAt" timestamp NOT NULL DEFAULT now(), name varchar NOT NULL,
-    description varchar, instruction text, icon varchar NOT NULL,
-    color varchar NOT NULL, "orgId" varchar NOT NULL
-  )`,
-  `CREATE TABLE workspace_members (
-    id varchar PRIMARY KEY, "createdAt" timestamp NOT NULL DEFAULT now(),
-    "updatedAt" timestamp NOT NULL DEFAULT now(),
-    "workspaceId" varchar NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-    "userId" varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role varchar NOT NULL, UNIQUE ("workspaceId", "userId")
-  )`,
-  `CREATE TABLE threads (
-    id varchar PRIMARY KEY, "userId" varchar NOT NULL, "workspaceId" varchar,
-    "createdAt" timestamp NOT NULL DEFAULT now(), "lastActivityAt" timestamp
-  )`,
-  `CREATE TABLE skills (id varchar PRIMARY KEY, "workspaceId" varchar)`,
-  `CREATE TABLE knowledge_bases (id varchar PRIMARY KEY, "workspaceId" varchar)`,
-];
+import {
+  createWorkspaceTestDb,
+  dropWorkspaceTestDb,
+  WORKSPACE_TABLES,
+} from './testing/workspace-db.fixtures';
 
 const orgId = randomUUID();
 const owner = randomUUID();
@@ -98,29 +43,10 @@ describe('Workspace membership persistence', () => {
   let permits: UUID;
 
   beforeAll(async () => {
-    schema = `ayc1696_${randomUUID().replaceAll('-', '')}`;
-    db = new DataSource({
-      ...(typeormConfigRaw as PostgresConnectionOptions),
-      schema,
-      entities: [workspaceSchema, memberSchema],
-      migrations: [],
-      migrationsRun: false,
-      logging: false,
-    });
-    await db.initialize();
-    const setup = db.createQueryRunner();
-    await setup.createSchema(schema, true);
-    await setup.query(`SET search_path TO "${schema}"`);
-    for (const statement of TABLES) await setup.query(statement);
-    await setup.query('SET search_path TO public');
-    await setup.release();
+    ({ db, schema } = await createWorkspaceTestDb('ayc1696'));
   }, 30_000);
 
-  afterAll(async () => {
-    if (!db?.isInitialized) return;
-    await db.query(`DROP SCHEMA "${schema}" CASCADE`);
-    await db.destroy();
-  }, 30_000);
+  afterAll(() => dropWorkspaceTestDb(db, schema), 30_000);
 
   beforeEach(async () => {
     runner = db.createQueryRunner();
@@ -338,22 +264,10 @@ describe('Creating a workspace', () => {
     );
 
   beforeAll(async () => {
-    schema = `ayc1696_create_${randomUUID().replaceAll('-', '')}`;
-    db = new DataSource({
-      ...(typeormConfigRaw as PostgresConnectionOptions),
-      schema,
-      entities: [workspaceSchema, memberSchema],
-      migrations: [],
-      migrationsRun: false,
-      logging: false,
-    });
-    await db.initialize();
-    const setup = db.createQueryRunner();
-    await setup.createSchema(schema, true);
-    await setup.query(`SET search_path TO "${schema}"`);
-    for (const statement of TABLES.slice(0, 3)) await setup.query(statement);
-    await setup.query('SET search_path TO public');
-    await setup.release();
+    ({ db, schema } = await createWorkspaceTestDb(
+      'ayc1696_create',
+      WORKSPACE_TABLES.slice(0, 3),
+    ));
     await db.query(`INSERT INTO "${schema}".users VALUES ($1)`, [creator]);
 
     const adapter = new TransactionalAdapterTypeOrm({
@@ -381,14 +295,10 @@ describe('Creating a workspace', () => {
     );
   }, 30_000);
 
-  afterAll(async () => {
-    if (!db?.isInitialized) return;
-    await db.query(`DROP SCHEMA "${schema}" CASCADE`);
-    await db.destroy();
-  }, 30_000);
+  afterAll(() => dropWorkspaceTestDb(db, schema), 30_000);
 
   it('stores the creator as the admin of the new workspace', async () => {
-    const workspace = await createAs(creator).execute(
+    const { workspace } = await createAs(creator).execute(
       new CreateWorkspaceCommand({ name: 'Feuerwehr' }),
     );
 

@@ -4,11 +4,13 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
 import type { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
+import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { WorkspaceMemberMapper } from './mappers/workspace-member.mapper';
 import { WorkspaceMemberRecord } from './schema/workspace-member.record';
+import { WorkspaceRecord } from './schema/workspace.record';
 
 @Injectable()
 export class LocalWorkspaceMembersRepository extends WorkspaceMembersRepository {
@@ -37,6 +39,38 @@ export class LocalWorkspaceMembersRepository extends WorkspaceMembersRepository 
       select: { workspaceId: true },
     });
     return records.map((record) => record.workspaceId);
+  }
+
+  async findRole(
+    workspaceId: UUID,
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<UserRole | null> {
+    const record = await this.repo
+      .createQueryBuilder('member')
+      .innerJoin(
+        WorkspaceRecord,
+        'workspace',
+        'workspace.id = member.workspaceId',
+      )
+      .select('member.role', 'role')
+      .where('member.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('member.userId = :userId', { userId })
+      .andWhere('workspace.orgId = :orgId', { orgId })
+      .getRawOne<{ role: UserRole }>();
+    return record?.role ?? null;
+  }
+
+  async findRolesByUserId(
+    userId: UUID,
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, UserRole>> {
+    if (workspaceIds.length === 0) return new Map();
+    const records = await this.repo.find({
+      where: { userId, workspaceId: In(workspaceIds) },
+      select: { workspaceId: true, role: true },
+    });
+    return new Map(records.map((record) => [record.workspaceId, record.role]));
   }
 
   async promoteSuccessors(workspaceIds: UUID[]): Promise<void> {

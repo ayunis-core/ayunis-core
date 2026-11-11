@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import type { AccessibleWorkspace } from 'src/domain/workspaces/application/models/workspace-access.model';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
 } from 'src/domain/workspaces/application/workspaces.errors';
 import { assertValidWorkspaceFields } from 'src/domain/workspaces/application/util/workspace-fields';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { UpdateWorkspaceCommand } from './update-workspace.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -18,15 +19,21 @@ export class UpdateWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceAccess: WorkspaceAccessService,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(command: UpdateWorkspaceCommand): Promise<Workspace> {
+  async execute(command: UpdateWorkspaceCommand): Promise<AccessibleWorkspace> {
     this.logger.log({ workspaceId: command.id }, 'Updating workspace');
 
+    const access = await this.workspaceAccess.requirePermission(
+      command.id,
+      Permission.MANAGE_WORKSPACE,
+    );
+    const { userId } = getRequiredUserContext(this.contextService);
     const workspace = await this.workspacesRepository.findById(
-      this.resolveUserId(),
+      userId,
       command.id,
     );
     if (!workspace) {
@@ -45,11 +52,9 @@ export class UpdateWorkspaceUseCase {
       workspace.restyle({ icon: command.icon, color: command.color });
     }
 
-    return await this.workspacesRepository.save(workspace);
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+    return {
+      workspace: await this.workspacesRepository.save(workspace),
+      access,
+    };
   }
 }

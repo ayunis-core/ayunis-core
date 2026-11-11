@@ -35,10 +35,16 @@ describe('visiblePermissionSections', () => {
       'skills',
       'knowledge_bases',
       'routines',
+      'workspace',
     ]);
   });
 
   it('hides the routines group while routines are disabled', () => {
-    expect(groups(false)).toEqual(['teams', 'skills', 'knowledge_bases']);
+    expect(groups(false)).toEqual([
+      'teams',
+      'skills',
+      'knowledge_bases',
+      'workspace',
+    ]);
   });
 });

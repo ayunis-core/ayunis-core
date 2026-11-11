@@ -4,6 +4,10 @@ import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import {
+  type AccessibleWorkspace,
+  WorkspaceAccess,
+} from 'src/domain/workspaces/application/models/workspace-access.model';
 import { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
@@ -24,7 +28,7 @@ export class CreateWorkspaceUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(command: CreateWorkspaceCommand): Promise<Workspace> {
+  async execute(command: CreateWorkspaceCommand): Promise<AccessibleWorkspace> {
     this.logger.log('Creating workspace');
 
     assertValidWorkspaceFields({
@@ -43,7 +47,10 @@ export class CreateWorkspaceUseCase {
       color: command.color,
     });
 
-    return this.createWithAdmin(workspace, userId);
+    return {
+      workspace: await this.createWithAdmin(workspace, userId),
+      access: WorkspaceAccess.forAdmin(),
+    };
   }
 
   @Transactional()

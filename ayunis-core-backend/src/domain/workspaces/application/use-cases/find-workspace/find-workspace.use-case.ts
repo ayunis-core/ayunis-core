@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import type { AccessibleWorkspace } from 'src/domain/workspaces/application/models/workspace-access.model';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
   UnexpectedWorkspaceError,
   WorkspaceNotFoundError,
@@ -17,25 +17,23 @@ export class FindWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceAccess: WorkspaceAccessService,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(query: FindWorkspaceQuery): Promise<Workspace> {
+  async execute(query: FindWorkspaceQuery): Promise<AccessibleWorkspace> {
     this.logger.log({ workspaceId: query.id }, 'Finding workspace');
 
+    const access = await this.workspaceAccess.requireMember(query.id);
+    const { userId } = getRequiredUserContext(this.contextService);
     const workspace = await this.workspacesRepository.findById(
-      this.resolveUserId(),
+      userId,
       query.id,
     );
     if (!workspace) {
       throw new WorkspaceNotFoundError(query.id);
     }
-    return workspace;
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+    return { workspace, access };
   }
 }

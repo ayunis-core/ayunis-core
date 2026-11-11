@@ -42,13 +42,17 @@ export class WorkspaceContextController {
 
   @Patch('instruction')
   @ApiResponse({ status: 200, type: WorkspaceResponseDto })
+  @ApiResponse({
+    status: 403,
+    description: 'Not allowed to manage the workspace',
+  })
   async updateInstruction(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateWorkspaceInstructionDto,
   ): Promise<WorkspaceResponseDto> {
-    const workspace = await this.updateWorkspaceInstruction.execute(
+    const updated = await this.updateWorkspaceInstruction.execute(
       new UpdateWorkspaceInstructionCommand(id, dto.instruction),
     );
-    return this.workspaceMapper.toDto(workspace);
+    return this.workspaceMapper.toDto(updated);
   }
 }

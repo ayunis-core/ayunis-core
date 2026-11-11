@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
@@ -11,9 +10,6 @@ import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/
 import { KnowledgeBaseReadAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-read-access.service';
 import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base';
-import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { SetKnowledgeBaseActivationCommand } from './set-knowledge-base-activation.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
@@ -29,7 +25,6 @@ export class SetKnowledgeBaseActivationUseCase {
     private readonly readAccess: KnowledgeBaseReadAccessService,
     private readonly writeAccess: KnowledgeBaseWriteAccessService,
     private readonly context: ContextService,
-    private readonly hasPermission: HasPermissionUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
@@ -72,7 +67,6 @@ export class SetKnowledgeBaseActivationUseCase {
     isActive: boolean,
   ): Promise<void> {
     await this.writeAccess.requireWrite(knowledgeBase);
-    await this.requireWorkspaceManagementPermission();
     if (isActive) {
       await this.repository.activateForWorkspace(
         knowledgeBase.id,
@@ -84,14 +78,6 @@ export class SetKnowledgeBaseActivationUseCase {
         knowledgeBase.workspaceId,
       );
     }
-  }
-
-  private async requireWorkspaceManagementPermission(): Promise<void> {
-    const { orgId, role } = getRequiredUserContext(this.context);
-    const allowed = await this.hasPermission.execute(
-      new HasPermissionQuery(orgId, role, Permission.MANAGE_KNOWLEDGE_BASES),
-    );
-    if (!allowed) throw new UnauthorizedAccessError();
   }
 
   private async setPersonalActivation(
