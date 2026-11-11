@@ -21,6 +21,7 @@ interface CodeBlockProps {
   className?: string;
   /** False renders the code as plain text, e.g. while its fence is still streaming. */
   highlight?: boolean;
+  onCopied?: () => void;
 }
 
 function CodeBlock({
@@ -29,6 +30,7 @@ function CodeBlock({
   inline = false,
   className = '',
   highlight = true,
+  onCopied,
 }: Readonly<CodeBlockProps>) {
   const { theme } = useTheme();
   const { t } = useTranslation('chat');
@@ -52,6 +54,7 @@ function CodeBlock({
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      onCopied?.();
     } catch (error) {
       console.error('Failed to copy code block:', error);
     }

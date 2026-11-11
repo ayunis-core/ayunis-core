@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import CreateCalendarEventWidget from './CreateCalendarEventWidget';
 
 vi.mock('react-i18next', () => ({
@@ -9,8 +9,20 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-vi.mock('../../api/useGenerateIcs', () => ({
-  useGenerateIcs: () => ({ generate: vi.fn() }),
+const { generate, saveBlobAs, trackOutcome } = vi.hoisted(() => ({
+  generate: vi.fn(),
+  saveBlobAs: vi.fn(),
+  trackOutcome: vi.fn(),
+}));
+
+vi.mock('@/pages/chat/api/useGenerateIcs', () => ({
+  useGenerateIcs: () => ({ generate }),
+}));
+
+vi.mock('@/shared/lib/save-blob-as', () => ({ saveBlobAs }));
+
+vi.mock('@/shared/lib/openpanel-outcomes', () => ({
+  useTrackProductiveOutcome: () => trackOutcome,
 }));
 
 vi.mock('@/shared/lib/toast', () => ({
@@ -32,7 +44,17 @@ function makeContent(params: Record<string, unknown>): ToolUseMessageContent {
   } as unknown as ToolUseMessageContent;
 }
 
+const meeting = makeContent({
+  title: 'Sitzung',
+  start: '2026-01-31T14:30:00Z',
+  end: '2026-01-31T15:30:00Z',
+});
+
 describe('CreateCalendarEventWidget', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders without crashing when dates are unparseable (AYC-675)', () => {
     render(
       <CreateCalendarEventWidget
@@ -64,5 +86,41 @@ describe('CreateCalendarEventWidget', () => {
     const [startPicker, endPicker] = screen.getAllByTestId('date-picker');
     expect(startPicker.textContent).toBe('2026-01-31T14:30:00.000Z');
     expect(endPicker.textContent).toBe('2026-01-31T15:30:00.000Z');
+  });
+
+  it('sends calendar_event_downloaded once the .ics download started', () => {
+    generate.mockReturnValue('BEGIN:VCALENDAR');
+    render(<CreateCalendarEventWidget content={meeting} />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'chat.tools.create_calendar_event.downloadIcs',
+      }),
+    );
+
+    expect(saveBlobAs).toHaveBeenCalledTimes(1);
+    expect(trackOutcome.mock.calls).toEqual([
+      [
+        {
+          outcome_type: 'calendar_event_downloaded',
+          output_type: 'calendar_event',
+          format: 'ics',
+        },
+      ],
+    ]);
+  });
+
+  it('sends nothing when the .ics could not be generated', () => {
+    generate.mockReturnValue(undefined);
+    render(<CreateCalendarEventWidget content={meeting} />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'chat.tools.create_calendar_event.downloadIcs',
+      }),
+    );
+
+    expect(saveBlobAs).not.toHaveBeenCalled();
+    expect(trackOutcome).not.toHaveBeenCalled();
   });
 });

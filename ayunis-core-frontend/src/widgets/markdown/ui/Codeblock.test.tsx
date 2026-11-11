@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CodeBlock from './Codeblock';
+import Markdown from './Markdown';
 
 const theme = vi.hoisted(() => ({
   current: 'light',
@@ -110,5 +111,35 @@ describe('CodeBlock line numbers', () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith(MULTILINE);
     });
+  });
+});
+
+describe('CodeBlock copy', () => {
+  it('reports a code block copy to the markdown owner only once the clipboard accepted it', async () => {
+    const writeText = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('denied'))
+      .mockResolvedValueOnce(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const onCopied = vi.fn();
+
+    render(
+      <Markdown onCodeCopied={onCopied}>
+        {['```ts', MULTILINE, '```'].join('\n')}
+      </Markdown>,
+    );
+    const copyButton = screen.getByRole('button', {
+      name: 'chat.copyToClipboard',
+    });
+    fireEvent.click(copyButton);
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    expect(onCopied).not.toHaveBeenCalled();
+
+    fireEvent.click(copyButton);
+    await waitFor(() => expect(onCopied).toHaveBeenCalledTimes(1));
   });
 });

@@ -4,13 +4,19 @@ import {
   getArtifactsControllerFindByThreadQueryKey,
   getArtifactsControllerFindByWorkspaceQueryKey,
 } from '@/shared/api';
-import type { UpdateArtifactDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  UpdateArtifactDtoAuthorType,
+  type ArtifactResponseDtoType,
+  type UpdateArtifactDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { trackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UseUpdateArtifactOptions {
   artifactId: string;
   threadId: string;
   workspaceId?: string | null;
+  artifactType?: ArtifactResponseDtoType;
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 }
@@ -19,6 +25,7 @@ export function useUpdateArtifact({
   artifactId,
   threadId,
   workspaceId,
+  artifactType,
   onSuccess,
   onError,
 }: UseUpdateArtifactOptions) {
@@ -27,7 +34,19 @@ export function useUpdateArtifact({
   const mutation = useMutation({
     mutationFn: (data: UpdateArtifactDto) =>
       artifactsControllerUpdate(artifactId, data),
-    onSuccess,
+    onSuccess: (_, variables) => {
+      if (
+        variables.content !== undefined &&
+        variables.authorType === UpdateArtifactDtoAuthorType.USER &&
+        (artifactType === 'document' || artifactType === 'spreadsheet')
+      ) {
+        trackProductiveOutcome(queryClient, threadId, {
+          outcome_type: 'artifact_edited',
+          output_type: artifactType,
+        });
+      }
+      onSuccess?.();
+    },
     onError,
     onSettled: () => {
       void queryClient.invalidateQueries({

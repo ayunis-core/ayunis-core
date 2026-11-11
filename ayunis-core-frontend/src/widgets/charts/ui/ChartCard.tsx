@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { useDownloadChartImage } from '@/widgets/charts/lib/useDownloadChartImage';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 
 // UI
 import { ChartContainer, type ChartConfig } from '@ayunis/ui/components/chart';
@@ -38,6 +39,17 @@ export function ChartCard({
   children,
 }: Readonly<ChartCardProps>) {
   const { chartRef, download, isDownloading } = useDownloadChartImage(title);
+  const trackOutcome = useTrackProductiveOutcome();
+
+  const handleDownload = async () => {
+    if (await download()) {
+      trackOutcome({
+        outcome_type: 'visual_downloaded',
+        output_type: 'chart',
+        format: 'png',
+      });
+    }
+  };
 
   const dynamicWidth = useMemo(() => {
     if (!xCount) {
@@ -55,7 +67,7 @@ export function ChartCard({
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => void download()}
+            onClick={() => void handleDownload()}
             disabled={isDownloading}
             aria-label="Download chart as image"
           >

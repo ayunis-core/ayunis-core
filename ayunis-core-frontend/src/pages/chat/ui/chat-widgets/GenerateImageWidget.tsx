@@ -8,6 +8,7 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
 import config from '@/shared/config';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import ImageGenerationLoader from './ImageGenerationLoader';
@@ -16,15 +17,18 @@ import { generatedImageBackdropStyle } from './generated-image-backdrop';
 const MAX_AUTO_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 1000;
 
-async function downloadImage(url: string, fileName: string): Promise<void> {
+/** Resolves `true` when the file was downloaded, not opened in a new tab. */
+async function downloadImage(url: string, fileName: string): Promise<boolean> {
   try {
     const response = await fetch(url, { credentials: 'include' });
     if (!response.ok) {
       throw new Error(`Image download failed with ${response.status}`);
     }
     saveBlobAs(await response.blob(), fileName);
+    return true;
   } catch {
     window.open(url, '_blank', 'noopener,noreferrer');
+    return false;
   }
 }
 
@@ -48,6 +52,7 @@ export default function GenerateImageWidget({
   const [attempt, setAttempt] = useState(0);
   const autoRetries = useRef(0);
   const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const trackOutcome = useTrackProductiveOutcome();
 
   useEffect(() => () => clearTimeout(retryTimer.current), []);
 
@@ -59,6 +64,16 @@ export default function GenerateImageWidget({
     const delay = RETRY_BASE_DELAY_MS * 2 ** autoRetries.current;
     autoRetries.current += 1;
     retryTimer.current = setTimeout(() => setAttempt((n) => n + 1), delay);
+  }
+
+  async function download(url: string) {
+    if (await downloadImage(url, 'ayunis-generated-image.png')) {
+      trackOutcome({
+        outcome_type: 'visual_downloaded',
+        output_type: 'image',
+        format: 'png',
+      });
+    }
   }
 
   function retry() {
@@ -136,9 +151,7 @@ export default function GenerateImageWidget({
             variant="secondary"
             size="sm"
             className="absolute left-3 top-3 gap-2 shadow-md"
-            onClick={() =>
-              void downloadImage(url, 'ayunis-generated-image.png')
-            }
+            onClick={() => void download(url)}
           >
             <Download className="size-4" />
             {t('chat.tools.generate_image.download')}

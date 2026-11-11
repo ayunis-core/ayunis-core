@@ -2,6 +2,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Download } from 'lucide-react';
 import { useCallback, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
@@ -115,6 +116,7 @@ export function DiagramExportButtons({
 }: DiagramExportButtonsProps) {
   const { t } = useTranslation('artifacts');
   const masks = usePiiMasks();
+  const trackOutcome = useTrackProductiveOutcome();
 
   const handleSvgExport = useCallback(() => {
     const svg = containerRef.current?.querySelector('svg');
@@ -125,7 +127,12 @@ export function DiagramExportButtons({
     const svgString = serializer.serializeToString(cloned);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     saveBlobAs(blob, `${safeTitle(fileName)}.svg`);
-  }, [containerRef, fileName, masks]);
+    trackOutcome({
+      outcome_type: 'visual_downloaded',
+      output_type: 'diagram',
+      format: 'svg',
+    });
+  }, [containerRef, fileName, masks, trackOutcome]);
 
   const handlePngExport = useCallback(() => {
     const svg = containerRef.current?.querySelector('svg');
@@ -141,6 +148,11 @@ export function DiagramExportButtons({
         .then((pngBlob) => {
           if (pngBlob) {
             saveBlobAs(pngBlob, `${safeTitle(fileName)}.png`);
+            trackOutcome({
+              outcome_type: 'visual_downloaded',
+              output_type: 'diagram',
+              format: 'png',
+            });
           } else {
             fail();
           }
@@ -149,7 +161,7 @@ export function DiagramExportButtons({
     };
     img.onerror = fail;
     img.src = svgDataUrl;
-  }, [containerRef, fileName, t, masks]);
+  }, [containerRef, fileName, t, masks, trackOutcome]);
 
   return (
     <>

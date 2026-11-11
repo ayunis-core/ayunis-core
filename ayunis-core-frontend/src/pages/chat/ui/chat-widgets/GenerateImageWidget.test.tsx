@@ -22,6 +22,11 @@ vi.mock('@/shared/lib/save-blob-as', () => ({
   saveBlobAs: (...args: unknown[]) => saveBlobAs(...args),
 }));
 
+const trackOutcome = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/lib/openpanel-outcomes', () => ({
+  useTrackProductiveOutcome: () => trackOutcome,
+}));
+
 const imageId = '4f3a1c2e-8b7d-4e6a-9c1f-2a6b8d0e4f71';
 const imageUrl = `${config.api.baseUrl}/threads/thread-1/generated-images/${imageId}`;
 
@@ -60,6 +65,7 @@ describe('GenerateImageWidget', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     saveBlobAs.mockReset();
+    trackOutcome.mockReset();
   });
 
   it('loads the image from the app on a checkerboard in the chat and the enlarged view', () => {
@@ -109,7 +115,7 @@ describe('GenerateImageWidget', () => {
     expect(thumbnail().getAttribute('src')).toBe(`${imageUrl}?attempt=3`);
   });
 
-  it('downloads the image from the app with the session cookie', async () => {
+  it('downloads the image from the app with the session cookie and sends visual_downloaded', async () => {
     const blob = new Blob(['png'], { type: 'image/png' });
     const fetchMock = vi.fn().mockResolvedValue(new Response(blob));
     vi.stubGlobal('fetch', fetchMock);
@@ -127,9 +133,20 @@ describe('GenerateImageWidget', () => {
       credentials: 'include',
     });
     expect(saveBlobAs.mock.calls[0][1]).toBe('ayunis-generated-image.png');
+    await waitFor(() =>
+      expect(trackOutcome.mock.calls).toEqual([
+        [
+          {
+            outcome_type: 'visual_downloaded',
+            output_type: 'image',
+            format: 'png',
+          },
+        ],
+      ]),
+    );
   });
 
-  it('opens the image in a new tab when the download request fails', async () => {
+  it('opens the image in a new tab without counting a download when the download request fails', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(new Response(null, { status: 404 })),
@@ -153,6 +170,7 @@ describe('GenerateImageWidget', () => {
       ),
     );
     expect(saveBlobAs).not.toHaveBeenCalled();
+    expect(trackOutcome).not.toHaveBeenCalled();
   });
 });
 
