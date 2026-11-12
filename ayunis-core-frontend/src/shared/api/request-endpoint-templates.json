@@ -226,6 +226,7 @@
   "/super-admin/platform-config/credits-per-euro",
   "/super-admin/platform-config/fair-use-limits",
   "/super-admin/platform-config/image-fair-use-limit",
+  "/super-admin/platform-config/recording-fair-use-limit",
   "/super-admin/skill-templates",
   "/super-admin/skill-templates/{id}",
   "/super-admin/subscriptions/{orgId}",

@@ -9,6 +9,11 @@ export class CreateSourceUploadSessionCommand {
   readonly mimeType: string;
   readonly fileSize: number;
   readonly maxFileSizeBytes: number;
+  /**
+   * Runs once every check has passed, right before the session is reserved,
+   * so a refused file costs the caller nothing; throwing rejects the upload.
+   */
+  readonly admit?: () => Promise<void>;
 
   constructor(params: {
     targetType: SourceUploadTargetType;
@@ -17,6 +22,7 @@ export class CreateSourceUploadSessionCommand {
     mimeType: string;
     fileSize: number;
     maxFileSizeBytes: number;
+    admit?: () => Promise<void>;
   }) {
     this.targetType = params.targetType;
     this.targetId = params.targetId;
@@ -24,5 +30,6 @@ export class CreateSourceUploadSessionCommand {
     this.mimeType = params.mimeType;
     this.fileSize = params.fileSize;
     this.maxFileSizeBytes = params.maxFileSizeBytes;
+    this.admit = params.admit;
   }
 }

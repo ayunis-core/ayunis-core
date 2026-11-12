@@ -5,6 +5,7 @@ import transcriptionConfig from 'src/config/transcription.config';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { TeamsApplicationModule } from 'src/iam/teams/teams-application.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { RecordingsOrgDeletionRequestedListener } from './application/listeners/org-deletion-requested.listener';
 import { RecordingsTeamDeletionRequestedListener } from './application/listeners/team-deletion-requested.listener';
@@ -34,6 +35,7 @@ import { RecordingUploadsController } from './presenters/http/recording-uploads.
     ConfigModule.forFeature(transcriptionConfig),
     LocalRecordingRepositoryModule,
     SourcesModule,
+    QuotasModule,
     ContextModule,
     TeamsApplicationModule,
     UsersModule,

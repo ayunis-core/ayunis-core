@@ -4548,6 +4548,8 @@ export interface FairUseLimitsResponseDto {
   high: FairUseTierLimitDto;
   /** Fair-use limit for image generation. Single global bucket (no tiering). */
   images: FairUseTierLimitDto;
+  /** Fair-use limit for recording uploads, counted per user when an upload starts. Only enforced while recordings are enabled. */
+  recordings: FairUseTierLimitDto;
 }
 
 /**
@@ -4581,6 +4583,19 @@ export interface SetFairUseLimitRequestDto {
 export interface SetImageFairUseLimitRequestDto {
   /**
      * Maximum number of images allowed within the sliding window. Must be a positive integer.
+     * @minimum 1
+     */
+  limit: number;
+  /**
+     * Sliding window duration in milliseconds. Must be a positive integer.
+     * @minimum 1
+     */
+  windowMs: number;
+}
+
+export interface SetRecordingFairUseLimitRequestDto {
+  /**
+     * Maximum number of recording uploads a user may start within the sliding window. Must be a positive integer.
      * @minimum 1
      */
   limit: number;

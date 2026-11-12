@@ -107,6 +107,8 @@
     }
   },
   "audio": {
-    "alreadyUploaded": "Diese Aufzeichnung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Aufzeichnung."
+    "alreadyUploaded": "Diese Aufzeichnung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Aufzeichnung.",
+    "uploadLimitReached": "Upload-Limit für Aufzeichnungen erreicht. Versuchen Sie es später erneut.",
+    "uploadLimitReachedWithTime": "Upload-Limit für Aufzeichnungen erreicht. Versuchen Sie es in {{minutes}} Minuten erneut."
   }
 }

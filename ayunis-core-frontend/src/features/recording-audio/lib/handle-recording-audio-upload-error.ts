@@ -13,8 +13,20 @@ export function handleRecordingAudioUploadError(
   tCommon: TFunction,
 ): void {
   try {
-    if (extractErrorData(error).code === 'RECORDING_AUDIO_ALREADY_UPLOADED') {
+    const { code, metadata } = extractErrorData(error);
+    if (code === 'RECORDING_AUDIO_ALREADY_UPLOADED') {
       showError(tRecordings('audio.alreadyUploaded'));
+      return;
+    }
+    if (code === 'QUOTA_EXCEEDED') {
+      const retryAfterSeconds = Number(metadata?.retryAfterSeconds);
+      showError(
+        retryAfterSeconds > 0
+          ? tRecordings('audio.uploadLimitReachedWithTime', {
+              minutes: Math.ceil(retryAfterSeconds / 60),
+            })
+          : tRecordings('audio.uploadLimitReached'),
+      );
       return;
     }
   } catch {
