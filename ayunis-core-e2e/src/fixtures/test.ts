@@ -5,6 +5,8 @@ import { config } from '../config';
 import { MailcatcherClient } from '../clients/mailcatcher.client';
 import { createOrg } from '../factories/org.factory';
 import type { OrgContext } from '../factories/org.factory';
+import { startEchoMcpServer } from '../servers/echo-mcp.server';
+import type { EchoMcpServer } from '../servers/echo-mcp.server';
 
 interface TestFixtures {
   // Authenticated API context for the worker org's admin — use for test
@@ -13,6 +15,8 @@ interface TestFixtures {
   publicApi: APIRequestContext;
   // Mailcatcher client for awaiting emails and extracting link tokens.
   mail: MailcatcherClient;
+  // A loopback MCP server per test; see src/servers/echo-mcp.server.ts.
+  echoMcpServer: EchoMcpServer;
   // Opt-out for the page-error guard: test.use({ allowPageErrors: true }).
   allowPageErrors: boolean;
   pageErrorGuard: void;
@@ -61,6 +65,12 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const context = await apiRequest.newContext();
     await use(new MailcatcherClient(context, config.mailURL));
     await context.dispose();
+  },
+
+  echoMcpServer: async ({}, use) => {
+    const server = await startEchoMcpServer();
+    await use(server);
+    await server.close();
   },
 
   allowPageErrors: [false, { option: true }],

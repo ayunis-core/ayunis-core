@@ -71,6 +71,24 @@ environment. Do not use this configuration with a real broker or production
 data. Only one broker spec can bind port 4422 at a time. CI supplies the same
 settings automatically; the spec closes its broker after the test.
 
+### E2E MCP server
+
+Chat journeys with MCP tools use a loopback MCP server that the Playwright run
+hosts itself (`src/servers/echo-mcp.server.ts`, built on the official MCP SDK).
+Every test that uses the `echoMcpServer` fixture gets its own server on a free
+`127.0.0.1` port, so it needs no setup, network access or secrets, locally or
+in CI. The backend reaches it because both `./dev` and CI run the backend on
+the Playwright host. Its one tool, `echo`, answers `echo::<text>` and records
+the text of every call in `echoMcpServer.calls`, so a test can tell whether the
+tool ran.
+
+`createEchoMcpIntegration` and `createThreadWithMcpIntegration`
+(`src/factories/mcp-integration.factory.ts`) register the server as a custom
+integration of the worker org and attach it to a new chat. A message
+`E2E call MCP echo: <text>` (build it with `MCP_ECHO_PROMPT`) makes the mock
+model call the tool with `<text>`, then answer `mcp-tool-result::<result text>`
+once the result is in the chat.
+
 ## Architecture
 
 - **Worker-scoped orgs** — each Playwright worker registers its own org via
