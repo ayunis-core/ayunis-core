@@ -27,6 +27,15 @@ import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-
  */
 const EMBEDDING_BATCH_SIZE = 64;
 
+/**
+ * Embedding requests one ingestion keeps in flight. Sent one after another, a
+ * 660-page PDF spent 75 s of its 110 s here (AYC-1803). Half of the process-wide
+ * throttle (EMBEDDINGS_MAX_CONCURRENCY, default 16), so one long document
+ * leaves slots for other documents and, where the API ingests too, for chat
+ * queries: the throttle ranks those first but cannot interrupt a running call.
+ */
+const EMBEDDING_BATCH_CONCURRENCY = 8;
+
 @Injectable()
 export class IngestBulkContentUseCase {
   private readonly logger = new Logger(IngestBulkContentUseCase.name);
@@ -109,26 +118,49 @@ export class IngestBulkContentUseCase {
     model: EmbeddingModel,
     orgId: UUID,
   ): Promise<number[][]> {
-    if (texts.length === 0) return [];
-
-    const allVectors: number[][] = [];
-
+    const batches: string[][] = [];
     for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
-      const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE);
-      const embeddings = await this.embedTextUseCase.execute(
-        new EmbedTextCommand({
-          texts: batch,
-          model,
-          orgId,
-          priority: EmbeddingPriority.INGESTION,
-        }),
-      );
-      for (const embedding of embeddings) {
-        allVectors.push(embedding.vector);
-      }
+      batches.push(texts.slice(i, i + EMBEDDING_BATCH_SIZE));
     }
 
-    return allVectors;
+    const vectors: number[][][] = [];
+    const failures: unknown[] = [];
+    let next = 0;
+    // After a failure no further batch is sent, and the ingestion fails only
+    // once the batches already sent have returned: the queue retries the job
+    // within seconds, and requests still running from this attempt would
+    // spend the provider's capacity on vectors nobody stores.
+    const sendBatches = async (): Promise<void> => {
+      while (failures.length === 0 && next < batches.length) {
+        const index = next++;
+        try {
+          vectors[index] = await this.embedBatch(batches[index], model, orgId);
+        } catch (error) {
+          failures.push(error);
+        }
+      }
+    };
+    await Promise.all(
+      Array.from({ length: EMBEDDING_BATCH_CONCURRENCY }, sendBatches),
+    );
+    if (failures.length > 0) throw failures[0];
+    return vectors.flat();
+  }
+
+  private async embedBatch(
+    texts: string[],
+    model: EmbeddingModel,
+    orgId: UUID,
+  ): Promise<number[][]> {
+    const embeddings = await this.embedTextUseCase.execute(
+      new EmbedTextCommand({
+        texts,
+        model,
+        orgId,
+        priority: EmbeddingPriority.INGESTION,
+      }),
+    );
+    return embeddings.map((embedding) => embedding.vector);
   }
 
   private assembleParentChunks(
