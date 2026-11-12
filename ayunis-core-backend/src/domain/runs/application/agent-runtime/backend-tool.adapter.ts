@@ -39,8 +39,10 @@ interface ToolExecutionOutcome {
  * Adapts backend catalog tools to the runtime's optional-execute contract.
  * Backend and hybrid tools delegate through `ExecuteToolUseCase`, charts and
  * maps acknowledge without side effects, and externally handled widgets omit
- * `execute` so the current run terminates after their tool phase. The
- * runtime runs a turn's calls concurrently unless a tool is marked exclusive.
+ * `execute` so the current run terminates after their tool phase. Tools that
+ * need approval end the run before their turn's calls run, once their input
+ * is valid. The runtime runs a turn's calls concurrently unless a tool is
+ * marked exclusive.
  *
  * In anonymous threads, PII-returning tool output is redacted before the mask
  * dictionary and result are streamed to the client.
@@ -52,11 +54,19 @@ export class BackendToolAdapter {
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
   ) {}
 
-  toRuntimeTools(tools: BackendTool[]): RuntimeTool[] {
-    return tools.map((tool) => this.toRuntimeTool(tool));
+  toRuntimeTools(
+    tools: BackendTool[],
+    toolsNeedingApproval: ReadonlySet<string> = new Set(),
+  ): RuntimeTool[] {
+    return tools.map((tool) =>
+      this.toRuntimeTool(tool, toolsNeedingApproval.has(tool.name)),
+    );
   }
 
-  private toRuntimeTool(tool: BackendTool): RuntimeTool {
+  private toRuntimeTool(
+    tool: BackendTool,
+    needsApproval: boolean,
+  ): RuntimeTool {
     const schema = {
       name: tool.name,
       description: tool.description,
@@ -75,6 +85,10 @@ export class BackendToolAdapter {
     return {
       ...schema,
       exclusive: requiresExclusiveExecution(tool),
+      ...(needsApproval && {
+        needsApproval,
+        validateInput: this.buildInputValidator(tool),
+      }),
       execute: (input, ctx) =>
         this.execute(tool, input, ctx, isHybridArtifactTool(tool)),
     };

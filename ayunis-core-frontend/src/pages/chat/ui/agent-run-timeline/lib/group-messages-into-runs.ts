@@ -2,6 +2,7 @@ import type {
   Message,
   AssistantMessage,
   ThinkingMessageContent,
+  ToolResultMessageContent,
   ToolUseMessageContent,
   TextMessageContent,
 } from '@/pages/chat/model/openapi';
@@ -103,13 +104,13 @@ function findActiveAssistantMessageIndex(messages: readonly Message[]): number {
 
 function indexToolResults(
   messages: readonly Message[],
-): Readonly<Record<string, string>> {
-  const results: Record<string, string> = {};
+): Readonly<Record<string, ToolResultMessageContent>> {
+  const results: Record<string, ToolResultMessageContent> = {};
   for (const message of messages) {
     if (message.role !== 'tool') continue;
     for (const content of message.content) {
       if (content.type === 'tool_result') {
-        results[content.toolId] = content.result;
+        results[content.toolId] = content;
       }
     }
   }
@@ -134,7 +135,7 @@ function collectSkillInstructionSteps(message: Message): TimelineStep[] {
 
 interface AppendOptions {
   isActiveAssistantMessage: boolean;
-  toolResultsByToolId: Readonly<Record<string, string>>;
+  toolResultsByToolId: Readonly<Record<string, ToolResultMessageContent>>;
 }
 
 function getToolStatus(
@@ -152,6 +153,10 @@ function appendAssistantMessage(
   { isActiveAssistantMessage, toolResultsByToolId }: AppendOptions,
 ): void {
   const content = message.content;
+  const awaitsConfirmation = hasCallAwaitingConfirmation(
+    message,
+    toolResultsByToolId,
+  );
 
   let pendingThinking: { transcript: string; key: string } | null = null;
   const flushThinking = (status: 'in_progress' | 'done') => {
@@ -184,18 +189,26 @@ function appendAssistantMessage(
 
     if (block.type === 'tool_use') {
       const toolUse = block as ToolUseMessageContent;
-      const hasResult = toolUse.id in toolResultsByToolId;
-      const result = hasResult ? toolResultsByToolId[toolUse.id] : undefined;
+      const result = toolResultsByToolId[toolUse.id] as
+        ToolResultMessageContent | undefined;
       const status = getToolStatus(
         toolUse,
-        hasResult,
+        result !== undefined,
         isActiveAssistantMessage,
       );
+      // The turn's other calls run only once its confirmations are decided.
+      const isHeldBack =
+        awaitsConfirmation &&
+        !toolUse.requiresConfirmation &&
+        result === undefined &&
+        status !== 'in_progress';
+      if (isHeldBack) return;
       appendToolStep(run, {
         kind: 'tool',
         key: `${message.id}-tool-${toolUse.id}`,
         toolUse,
-        result,
+        result: result?.result,
+        decision: result?.decision,
         status,
       });
       return;
@@ -211,6 +224,18 @@ function appendAssistantMessage(
   });
 
   flushThinking(isActiveAssistantMessage ? 'in_progress' : 'done');
+}
+
+function hasCallAwaitingConfirmation(
+  message: AssistantMessage,
+  toolResultsByToolId: Readonly<Record<string, ToolResultMessageContent>>,
+): boolean {
+  return message.content.some(
+    (block) =>
+      block.type === 'tool_use' &&
+      (block as ToolUseMessageContent).requiresConfirmation === true &&
+      !((block as ToolUseMessageContent).id in toolResultsByToolId),
+  );
 }
 
 const FINISH_ROUTINE_TOOL = 'finish_routine';
@@ -231,7 +256,10 @@ function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
     });
     return;
   }
-  if (status !== 'error' && isRichTool(toolUse.name)) {
+  if (
+    status !== 'error' &&
+    (isRichTool(toolUse.name) || toolUse.requiresConfirmation)
+  ) {
     const mergeTarget = findSameArtifactRichBlock(run, toolUse);
     if (mergeTarget) {
       mergeTarget.steps.push(step);

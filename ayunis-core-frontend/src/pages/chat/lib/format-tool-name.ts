@@ -1,5 +1,10 @@
 const CANONICAL_MCP_NAME = /^mcp__(?:tool|resource)__(.+)__[0-9a-f]{8}$/i;
 
+/** The name the MCP server gave a tool, or `toolName` for any other tool. */
+export function upstreamToolName(toolName: string): string {
+  return CANONICAL_MCP_NAME.exec(toolName)?.[1] ?? toolName;
+}
+
 /**
  * Formats a raw tool name into a human-readable label.
  *

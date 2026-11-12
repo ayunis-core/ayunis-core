@@ -1,4 +1,5 @@
 import config from '@/shared/config';
+import type { ToolCallDecisionDto } from '@/shared/api';
 
 export interface RunMessagePayload {
   threadId: string;
@@ -10,6 +11,7 @@ export interface RunMessagePayload {
     toolName: string;
     result: string;
   };
+  decisions?: ToolCallDecisionDto[];
   skillId?: string;
   streaming?: boolean;
 }
@@ -37,6 +39,10 @@ export function postRunMessage(
 
   if (payload.toolResult) {
     formData.append('toolResult', JSON.stringify(payload.toolResult));
+  }
+
+  if (payload.decisions) {
+    formData.append('decisions', JSON.stringify(payload.decisions));
   }
 
   if (payload.skillId) {

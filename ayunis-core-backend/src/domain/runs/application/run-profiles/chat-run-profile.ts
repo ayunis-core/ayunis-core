@@ -40,6 +40,7 @@ export class ChatRunProfile implements RunProfile {
   readonly closing = 'You are now ready to assist the user.';
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
   readonly maxIterations = 50;
+  readonly asksForToolConfirmation = true;
   readonly capabilities: readonly RunCapability[];
 
   constructor(

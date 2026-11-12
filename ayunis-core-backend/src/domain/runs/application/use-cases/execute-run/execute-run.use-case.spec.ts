@@ -249,6 +249,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     capabilities: [{ contribute: profileContribute }],
     completionPolicy: DONE_WHEN_MODEL_STOPS,
     maxIterations: 50,
+    asksForToolConfirmation: true,
   };
   const runProfileRegistry = {
     get: jest.fn().mockReturnValue(profile),
@@ -293,6 +294,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     ),
     findThreadUseCase,
     backendToolAdapter,
+    { execute: jest.fn().mockResolvedValue([]) } as never,
   );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',

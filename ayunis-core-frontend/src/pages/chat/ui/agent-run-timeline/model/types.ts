@@ -3,6 +3,7 @@ import type {
   ToolUseMessageContent,
   TextMessageContent,
 } from '@/pages/chat/model/openapi';
+import type { ToolCallDecision } from '@/shared/api';
 
 export type StepStatus = 'in_progress' | 'done' | 'error';
 
@@ -18,6 +19,8 @@ export type TimelineStep =
       key: string;
       toolUse: ToolUseMessageContent;
       result?: string;
+      /** How the user decided a call that required confirmation. */
+      decision?: ToolCallDecision;
       status: StepStatus;
     }
   | {

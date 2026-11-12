@@ -50,6 +50,8 @@ import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
+import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
+import { ToolCallConfirmationContext } from '@/pages/chat/ui/agent-run-timeline';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
@@ -240,18 +242,24 @@ export default function ChatPage({
     [queryClient, setThreadTitle],
   );
 
-  const { sendTextMessage, attach, abort } = useMessageSend({
-    threadId: thread.id,
-    onMessageReceived: () => clearPendingSubmission(thread.id),
-    onMessageEvent: (data) => handleMessage(data.message),
-    onErrorEvent: handleError,
-    onThreadEvent: handleThread,
-    onMasksEvent: handleMasks,
-    onError: (error) => {
-      console.error('Error in useMessageSend:', error);
-      showError(t('chat.errorSendMessage'));
-    },
-    onComplete: (failed) => completeSubmission(thread.id, failed),
+  const { sendTextMessage, sendToolCallDecisions, attach, abort } =
+    useMessageSend({
+      threadId: thread.id,
+      onMessageReceived: () => clearPendingSubmission(thread.id),
+      onMessageEvent: (data) => handleMessage(data.message),
+      onErrorEvent: handleError,
+      onThreadEvent: handleThread,
+      onMasksEvent: handleMasks,
+      onError: (error) => {
+        console.error('Error in useMessageSend:', error);
+        showError(t('chat.errorSendMessage'));
+      },
+      onComplete: (failed) => completeSubmission(thread.id, failed),
+    });
+  const toolCallConfirmation = useToolCallDecisions({
+    messages,
+    isStreaming,
+    sendDecisions: sendToolCallDecisions,
   });
 
   const { isRunCancellable } = useThreadRunReattach({
@@ -360,20 +368,22 @@ export default function ChatPage({
     pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
 
   const chatContent = (
-    <ChatThreadContent
-      renderUnits={renderUnits}
-      threadId={thread.id}
-      pendingSubmission={pendingSubmission}
-      contextHint={
-        <ChatContextHint
-          threadId={thread.id}
-          workspaceId={thread.workspaceId}
-          onOpen={() => sidePanelTransitions.changeTab('context')}
-        />
-      }
-      showLoadingPlaceholder={showLoadingPlaceholder}
-      onOpenArtifact={sidePanelTransitions.openArtifactPanel}
-    />
+    <ToolCallConfirmationContext.Provider value={toolCallConfirmation}>
+      <ChatThreadContent
+        renderUnits={renderUnits}
+        threadId={thread.id}
+        pendingSubmission={pendingSubmission}
+        contextHint={
+          <ChatContextHint
+            threadId={thread.id}
+            workspaceId={thread.workspaceId}
+            onOpen={() => sidePanelTransitions.changeTab('context')}
+          />
+        }
+        showLoadingPlaceholder={showLoadingPlaceholder}
+        onOpenArtifact={sidePanelTransitions.openArtifactPanel}
+      />
+    </ToolCallConfirmationContext.Provider>
   );
 
   const chatInput = isModelUnavailable ? (

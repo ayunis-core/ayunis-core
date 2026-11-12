@@ -1,4 +1,7 @@
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { RunInvalidInputError } from 'src/domain/runs/application/runs.errors';
 import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
@@ -48,6 +51,7 @@ function assembleRoutine(
     orgAllowsInternet?: boolean;
     canUseTools?: boolean;
     isAnonymous?: boolean;
+    extraTools?: Tool[];
   } = {},
 ) {
   const assembler = new RunProfileAssembler(
@@ -59,22 +63,31 @@ function assembleRoutine(
     ),
     resolved({}),
     { toRuntimeTools: jest.fn() } as never,
+    resolved([]),
   );
-  return assembler.assemble(buildRoutineProfile(options.orgAllowsInternet), {
-    profile: {
-      id: 'routine',
-      routine: {
-        name: 'Verkündungsplattform prüfen',
-        internetEnabled: options.internetEnabled ?? true,
+  const profile = buildRoutineProfile(options.orgAllowsInternet);
+  const capabilities = [
+    ...profile.capabilities,
+    { contribute: () => ({ tools: options.extraTools ?? [] }) },
+  ];
+  return assembler.assemble(
+    { ...profile, capabilities },
+    {
+      profile: {
+        id: 'routine',
+        routine: {
+          name: 'Verkündungsplattform prüfen',
+          internetEnabled: options.internetEnabled ?? true,
+        },
       },
+      thread: aThread({ routineId: '44444444-4444-4444-8444-444444444444' }),
+      model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
+        .model,
+      userId: TEST_USER_ID,
+      orgId: TEST_ORG_ID,
+      isAnonymous: options.isAnonymous ?? false,
     },
-    thread: aThread({ routineId: '44444444-4444-4444-8444-444444444444' }),
-    model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
-      .model,
-    userId: TEST_USER_ID,
-    orgId: TEST_ORG_ID,
-    isAnonymous: options.isAnonymous ?? false,
-  });
+  );
 }
 
 describe('RoutineRunProfile', () => {
@@ -160,6 +173,27 @@ describe('RoutineRunProfile', () => {
     await expect(
       assembleRoutine({ canUseTools: false }),
     ).rejects.toBeInstanceOf(RunInvalidInputError);
+  });
+
+  it('never waits for a confirmation nobody can give, even for an MCP tool the owner has not always allowed', async () => {
+    const mcpTool = new McpIntegrationTool(
+      new McpTool(
+        'create_ticket',
+        undefined,
+        { type: 'object' },
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      ),
+      false,
+      'Rathaus',
+      null,
+    );
+
+    const { tools, toolsNeedingApproval } = await assembleRoutine({
+      extraTools: [mcpTool],
+    });
+
+    expect(tools).toContain(mcpTool);
+    expect(toolsNeedingApproval.size).toBe(0);
   });
 
   it('caps a run at fewer iterations than a chat', () => {

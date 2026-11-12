@@ -30,8 +30,11 @@ export function toBackendAssistantMessage(
   id: UUID = randomUUID(),
   integrations: RuntimeToolIntegrationRegistry = EMPTY_TOOL_INTEGRATIONS,
 ): AssistantMessage {
+  const awaitingConfirmation = integrations.callsAwaitingConfirmation(message);
   const content = message.content
-    .map((item) => toBackendAssistantContent(item, integrations))
+    .map((item) =>
+      toBackendAssistantContent(item, integrations, awaitingConfirmation),
+    )
     .filter((c): c is BackendAssistantContent => c !== null);
   return new AssistantMessage({ id, threadId, content });
 }
@@ -39,6 +42,7 @@ export function toBackendAssistantMessage(
 function toBackendAssistantContent(
   content: InferenceMessageContent,
   integrations: RuntimeToolIntegrationRegistry,
+  awaitingConfirmation: ReadonlySet<string>,
 ): BackendAssistantContent | null {
   switch (content.type) {
     case 'text':
@@ -59,6 +63,8 @@ function toBackendAssistantContent(
         content.input,
         content.providerMetadata ?? null,
         integrations.get(content.name),
+        undefined,
+        awaitingConfirmation.has(content.id),
       );
     case 'tool_result':
     case 'image':
