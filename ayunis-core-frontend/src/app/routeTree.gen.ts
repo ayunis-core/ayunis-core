@@ -51,6 +51,8 @@ import { Route as AuthenticatedInboxIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInboxNotificationIdRouteImport } from './routes/_authenticated/inbox.$notificationId'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedRecordingsIndexRouteImport } from './routes/_authenticated/recordings.index'
+import { Route as AuthenticatedRecordingsIdRouteImport } from './routes/_authenticated/recordings.$id'
 import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
 import { Route as AuthenticatedRoutinesRoutineIdRouteImport } from './routes/_authenticated/routines.$routineId'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -317,6 +319,18 @@ const AuthenticatedKnowledgeBasesIdRoute =
     path: '/knowledge-bases/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRecordingsIndexRoute =
+  AuthenticatedRecordingsIndexRouteImport.update({
+    id: '/recordings/',
+    path: '/recordings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedRecordingsIdRoute =
+  AuthenticatedRecordingsIdRouteImport.update({
+    id: '/recordings/$id',
+    path: '/recordings/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRoutinesIndexRoute =
   AuthenticatedRoutinesIndexRouteImport.update({
     id: '/routines/',
@@ -552,6 +566,7 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
@@ -566,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox/': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -625,6 +641,7 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
@@ -639,6 +656,7 @@ export interface FileRoutesByTo {
   '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/recordings': typeof AuthenticatedRecordingsIndexRoute
   '/routines': typeof AuthenticatedRoutinesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
@@ -703,6 +721,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/_authenticated/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/_authenticated/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
@@ -717,6 +736,7 @@ export interface FileRoutesById {
   '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/inbox/': typeof AuthenticatedInboxIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/_authenticated/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/_authenticated/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -781,6 +801,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
     | '/settings/chat'
@@ -795,6 +816,7 @@ export interface FileRouteTypes {
     | '/getting-started/'
     | '/inbox/'
     | '/knowledge-bases/'
+    | '/recordings/'
     | '/routines/'
     | '/settings/'
     | '/skills/'
@@ -854,6 +876,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
     | '/settings/chat'
@@ -868,6 +891,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/inbox'
     | '/knowledge-bases'
+    | '/recordings'
     | '/routines'
     | '/settings'
     | '/skills'
@@ -931,6 +955,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/inbox/$notificationId'
     | '/_authenticated/knowledge-bases/$id'
+    | '/_authenticated/recordings/$id'
     | '/_authenticated/routines/$routineId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
@@ -945,6 +970,7 @@ export interface FileRouteTypes {
     | '/_authenticated/getting-started/'
     | '/_authenticated/inbox/'
     | '/_authenticated/knowledge-bases/'
+    | '/_authenticated/recordings/'
     | '/_authenticated/routines/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
@@ -1287,6 +1313,20 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases/$id'
       fullPath: '/knowledge-bases/$id'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recordings/': {
+      id: '/_authenticated/recordings/'
+      path: '/recordings'
+      fullPath: '/recordings/'
+      preLoaderRoute: typeof AuthenticatedRecordingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recordings/$id': {
+      id: '/_authenticated/recordings/$id'
+      path: '/recordings/$id'
+      fullPath: '/recordings/$id'
+      preLoaderRoute: typeof AuthenticatedRecordingsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/routines/': {
@@ -1651,6 +1691,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedRecordingsIdRoute: typeof AuthenticatedRecordingsIdRoute
   AuthenticatedRoutinesRoutineIdRoute: typeof AuthenticatedRoutinesRoutineIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
@@ -1663,6 +1704,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedRecordingsIndexRoute: typeof AuthenticatedRecordingsIndexRoute
   AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
@@ -1682,6 +1724,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedRecordingsIdRoute: AuthenticatedRecordingsIdRoute,
   AuthenticatedRoutinesRoutineIdRoute: AuthenticatedRoutinesRoutineIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
@@ -1696,6 +1739,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedRecordingsIndexRoute: AuthenticatedRecordingsIndexRoute,
   AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,

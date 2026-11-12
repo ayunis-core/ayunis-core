@@ -78,6 +78,7 @@ test("adds skills, knowledge bases, and instructions to a project", async ({
       "workspace-tab-artifacts",
       "workspace-tab-skills",
       "workspace-tab-knowledge",
+      "workspace-tab-recordings",
       "workspace-tab-instructions",
     ]);
   await expect(page.getByTestId("workspace-tab-artifacts")).toContainText(

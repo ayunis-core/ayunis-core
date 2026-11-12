@@ -8,4 +8,7 @@ export enum Permission {
   SHARE_KNOWLEDGE_BASES_WITH_TEAMS = 'share_knowledge_bases_with_teams',
   SHARE_KNOWLEDGE_BASES_WITH_ORG = 'share_knowledge_bases_with_org',
   MANAGE_ROUTINES = 'manage_routines',
+  MANAGE_RECORDINGS = 'manage_recordings',
+  MANAGE_TEAM_RECORDINGS = 'manage_team_recordings',
+  MANAGE_ORG_RECORDINGS = 'manage_org_recordings',
 }

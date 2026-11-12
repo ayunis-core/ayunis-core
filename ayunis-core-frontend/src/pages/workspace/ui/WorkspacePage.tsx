@@ -22,10 +22,13 @@ import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ay
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
+import { useWorkspaceRecordings } from '@/pages/workspace/api/useWorkspaceRecordings';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
+import { WorkspaceRecordingsTab } from './WorkspaceRecordingsTab';
 import {
   WorkspaceInstructionsTab,
   WorkspaceKnowledgeTab,
@@ -33,7 +36,12 @@ import {
 } from './WorkspaceContextTabs';
 
 type WorkspaceTab =
-  'chats' | 'artifacts' | 'skills' | 'knowledge' | 'instructions';
+  | 'chats'
+  | 'artifacts'
+  | 'skills'
+  | 'knowledge'
+  | 'recordings'
+  | 'instructions';
 
 interface WorkspacePageProps {
   workspace: Workspace;
@@ -76,6 +84,13 @@ export default function WorkspacePage({
     workspace.id,
     countParams,
   );
+  const recordingsEnabled = useIsFeatureEnabled('recordingsEnabled');
+  const { recordings } = useWorkspaceRecordings(
+    workspace.id,
+    recordingsEnabled,
+  );
+  const visibleTab =
+    activeTab === 'recordings' && !recordingsEnabled ? 'chats' : activeTab;
   const knowledgeCount = knowledgeBasesPagination?.total ?? 0;
   const skillsCount = skillsPagination?.total ?? 0;
   const artifactCount = artifactCountPage?.pagination.total ?? 0;
@@ -109,7 +124,7 @@ export default function WorkspacePage({
             />
 
             <Tabs
-              value={activeTab}
+              value={visibleTab}
               onValueChange={(tab) =>
                 void navigate({
                   to: '/workspaces/$workspaceId',
@@ -143,6 +158,15 @@ export default function WorkspacePage({
                   {t('page.knowledgeTab')}
                   <Badge variant="secondary">{knowledgeCount}</Badge>
                 </TabsTrigger>
+                {recordingsEnabled ? (
+                  <TabsTrigger
+                    value="recordings"
+                    data-testid="workspace-tab-recordings"
+                  >
+                    {t('page.recordingsTab')}
+                    <Badge variant="secondary">{recordings.length}</Badge>
+                  </TabsTrigger>
+                ) : null}
                 <TabsTrigger
                   value="instructions"
                   data-testid="workspace-tab-instructions"
@@ -169,6 +193,11 @@ export default function WorkspacePage({
               <TabsContent value="knowledge" className="pt-4">
                 <WorkspaceKnowledgeTab workspaceId={workspace.id} />
               </TabsContent>
+              {recordingsEnabled ? (
+                <TabsContent value="recordings" className="pt-4">
+                  <WorkspaceRecordingsTab workspaceId={workspace.id} />
+                </TabsContent>
+              ) : null}
               <TabsContent value="instructions" className="pt-4">
                 <WorkspaceInstructionsTab workspaceId={workspace.id} />
               </TabsContent>

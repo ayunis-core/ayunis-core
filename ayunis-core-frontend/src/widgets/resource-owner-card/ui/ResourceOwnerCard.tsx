@@ -18,6 +18,17 @@ import {
 } from '@/features/resource-ownership';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 
+const DESCRIPTION_KEYS: Record<OwnedResourceKind, string> = {
+  skill: 'card.skillDescription',
+  'knowledge-base': 'card.knowledgeBaseDescription',
+  recording: 'card.recordingDescription',
+};
+
+const LINKS_WARNING_KEYS: Partial<Record<OwnedResourceKind, string>> = {
+  skill: 'change.skillLinksWarning',
+  'knowledge-base': 'change.knowledgeBaseLinksWarning',
+};
+
 export function ResourceOwnerCard({
   kind,
   resource,
@@ -26,8 +37,8 @@ export function ResourceOwnerCard({
 }: Readonly<{
   kind: OwnedResourceKind;
   resource: OwnedResource & { name: string };
-  /** Resolves to the number of links the move would remove. */
-  onPreview: (owner: OwnerSelection) => Promise<number>;
+  /** Resolves to the number of links the move would remove, for kinds with links. */
+  onPreview?: (owner: OwnerSelection) => Promise<number>;
   onChange: (owner: OwnerSelection) => Promise<unknown>;
 }>) {
   const { t } = useTranslation('ownership');
@@ -41,10 +52,9 @@ export function ResourceOwnerCard({
     return null;
   }
 
-  const warningKey =
-    kind === 'skill'
-      ? 'change.skillLinksWarning'
-      : 'change.knowledgeBaseLinksWarning';
+  const warningKey = LINKS_WARNING_KEYS[kind];
+  // Recordings cannot be shared.
+  const canHaveShares = kind !== 'recording';
 
   const moveDescription = (owner: OwnerSelection): string => {
     switch (owner.ownerType) {
@@ -65,14 +75,18 @@ export function ResourceOwnerCard({
     if (!owner || key === ownerKey(current)) return;
     setIsBusy(true);
     try {
-      const unlinkedCount = await onPreview(owner);
+      const unlinkedCount = onPreview ? await onPreview(owner) : 0;
       confirm({
         title: t('change.title'),
         description: [
           moveDescription(owner),
           // Only personal items can have shares.
-          current.ownerType === 'personal' ? t('change.sharesRemoved') : '',
-          unlinkedCount > 0 ? t(warningKey, { count: unlinkedCount }) : '',
+          canHaveShares && current.ownerType === 'personal'
+            ? t('change.sharesRemoved')
+            : '',
+          warningKey && unlinkedCount > 0
+            ? t(warningKey, { count: unlinkedCount })
+            : '',
         ]
           .filter(Boolean)
           .join(' '),
@@ -93,13 +107,7 @@ export function ResourceOwnerCard({
     <Card>
       <CardHeader>
         <CardTitle>{t('card.title')}</CardTitle>
-        <CardDescription>
-          {t(
-            kind === 'skill'
-              ? 'card.skillDescription'
-              : 'card.knowledgeBaseDescription',
-          )}
-        </CardDescription>
+        <CardDescription>{t(DESCRIPTION_KEYS[kind])}</CardDescription>
       </CardHeader>
       <CardContent>
         <OwnerSelect
@@ -107,7 +115,7 @@ export function ResourceOwnerCard({
           value={ownerKey(current)}
           onValueChange={(key) => void handleSelect(key)}
           disabled={isBusy || options.length < 2}
-          grouped={kind === 'skill'}
+          grouped={kind !== 'knowledge-base'}
           testId={`${kind}-owner-select`}
         />
       </CardContent>
