@@ -69,9 +69,8 @@ export function TeamMembersList({
             <TableCell>
               {canRemove(member) && (
                 <Button
-                  variant="ghost"
+                  variant="destructive-ghost"
                   size="icon"
-                  className="text-destructive hover:text-destructive"
                   onClick={() => removeTeamMember(member.userId)}
                   disabled={removingUserIds.has(member.userId)}
                   data-testid={`team-member-remove-${member.userId}`}

@@ -118,9 +118,8 @@ function WorkspaceChatRow({ chat, onDelete }: Readonly<WorkspaceChatRowProps>) {
             onToggle={() => toggleFavorite('thread', chat.id)}
           />
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
-            className="text-destructive hover:text-destructive"
             aria-label={tChats('card.confirmDelete.title')}
             onClick={() => onDelete(chat)}
           >

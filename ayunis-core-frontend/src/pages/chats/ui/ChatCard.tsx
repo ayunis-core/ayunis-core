@@ -50,9 +50,8 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
             onToggle={() => toggleFavorite('thread', chat.id)}
           />
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
-            className="text-destructive hover:text-destructive"
             aria-label={t('card.confirmDelete.title')}
             onClick={handleDelete}
             disabled={isDeleting}

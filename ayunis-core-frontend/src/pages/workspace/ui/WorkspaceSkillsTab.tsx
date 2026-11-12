@@ -145,9 +145,8 @@ export function WorkspaceSkillsTab({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="destructive-ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive"
                         aria-label={t('context.skills.delete')}
                         onClick={() => deleteSkill(skill.id)}
                       >

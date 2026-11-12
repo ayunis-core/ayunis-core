@@ -244,9 +244,8 @@ export function SkillPage({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="destructive-ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive"
                         onClick={handleDelete}
                         disabled={deleteSkill.isPending}
                         aria-label={tSkills('card.deleteLabel')}

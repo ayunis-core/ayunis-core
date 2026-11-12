@@ -26,10 +26,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@ayunis/ui/components/alert-dialog';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { LetterheadFormDialog } from './LetterheadFormDialog';
-import { useLetterheads } from '../api/useLetterheads';
-import { useDeleteLetterhead } from '../api/useDeleteLetterhead';
+import { useLetterheads } from '@/pages/admin-settings/letterheads-settings/api/useLetterheads';
+import { useDeleteLetterhead } from '@/pages/admin-settings/letterheads-settings/api/useDeleteLetterhead';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export function LetterheadsSettingsPage() {
@@ -89,9 +89,8 @@ export function LetterheadsSettingsPage() {
                   </Button>
                 </Link>
                 <Button
-                  variant="ghost"
+                  variant="destructive-ghost"
                   size="icon"
-                  className="text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleteTarget(lh);
