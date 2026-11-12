@@ -147,11 +147,21 @@ test('rejects bad uploads, hides sessions from other users, and completes idempo
     data: { fileName: 'setup.exe', mimeType: 'application/octet-stream', fileSize: 10 },
   });
   expect(unsupported.status()).toBe(400);
-  const tooLarge = await api.post(uploadsUrl, {
-    data: { fileName: 'huge.pdf', mimeType: 'application/pdf', fileSize: 26 * 1024 * 1024 },
+  // PDFs may reach PDF_MAX_UPLOAD_BYTES (default 100 MiB); other documents keep 25 MiB.
+  const tooLargePdf = await api.post(uploadsUrl, {
+    data: { fileName: 'huge.pdf', mimeType: 'application/pdf', fileSize: 101 * 1024 * 1024 },
   });
-  expect(tooLarge.status()).toBe(413);
-  expect((await tooLarge.json()).code).toBe('FILE_TOO_LARGE');
+  expect(tooLargePdf.status()).toBe(413);
+  expect((await tooLargePdf.json()).code).toBe('FILE_TOO_LARGE');
+  const tooLargeDocx = await api.post(uploadsUrl, {
+    data: {
+      fileName: 'huge.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      fileSize: 26 * 1024 * 1024,
+    },
+  });
+  expect(tooLargeDocx.status()).toBe(413);
+  expect((await tooLargeDocx.json()).code).toBe('FILE_TOO_LARGE');
 
   const pdf = createOcrRejectedPdf(BUDGET);
   const session = await generatedApi.knowledgeBaseUploadsControllerCreateUpload(
