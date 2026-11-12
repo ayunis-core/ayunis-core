@@ -9,6 +9,7 @@ import type {
   UpdateIntegrationFormData,
 } from '@/pages/admin-settings/integrations-settings/model/types';
 import { parseOAuthScopes } from '@/shared/lib/mcp-oauth';
+import { buildInstructionsUpdate } from './integration-instructions';
 
 type CustomIntegrationUpdatePayload = UpdateIntegrationFormData;
 
@@ -27,6 +28,7 @@ export function toEditCustomIntegrationFormData(
     oauthScopes: schema.oauth?.scopes?.join(' ') ?? '',
     oauthClientId: '',
     oauthClientSecret: '',
+    instructions: integration.instructions ?? '',
     fields: [
       ...schema.orgFields.map((field) =>
         toFormField(field, 'organization', orgValues[field.key]),
@@ -49,6 +51,7 @@ export function buildCustomIntegrationUpdatePayload(
   );
   const payload: CustomIntegrationUpdatePayload = {
     ...buildOAuthClientUpdate(data),
+    ...buildInstructionsUpdate(data.instructions, integration.instructions),
   };
 
   const name = data.name.trim();

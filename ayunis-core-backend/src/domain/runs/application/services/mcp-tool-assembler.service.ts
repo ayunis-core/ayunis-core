@@ -15,7 +15,26 @@ import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error
 type McpCapability = Awaited<
   ReturnType<DiscoverMcpCapabilitiesUseCase['execute']>
 >;
-type McpIntegrationMeta = { name: string; logoUrl: string | null };
+type McpIntegrationMeta = {
+  name: string;
+  logoUrl: string | null;
+  instructions: string | null;
+};
+
+export interface McpIntegrationInstructions {
+  readonly integrationId: UUID;
+  readonly integrationName: string;
+  readonly instructions: string;
+}
+
+export interface McpAssembly {
+  readonly tools: Tool[];
+  /**
+   * Admin instructions of the integrations that contributed at least one
+   * tool, ordered by integration id so the prompt stays stable across runs.
+   */
+  readonly integrationInstructions: McpIntegrationInstructions[];
+}
 
 /**
  * Assembles MCP tools and resources for a thread's integrations, used by
@@ -39,8 +58,9 @@ export class McpToolAssemblerService {
   async assemble(
     thread: Thread,
     reservedNames: ReadonlySet<string>,
-  ): Promise<Tool[]> {
-    const mcpTools = await this.assembleMcpTools(thread);
+  ): Promise<McpAssembly> {
+    const { tools: mcpTools, integrationMetaMap } =
+      await this.assembleMcpTools(thread);
     const { unique, duplicates } = McpToolAssemblerService.filterDuplicateNames(
       mcpTools,
       reservedNames,
@@ -51,7 +71,42 @@ export class McpToolAssemblerService {
         'Duplicate MCP tool name, skipping later occurrence',
       );
     }
-    return unique;
+    return {
+      tools: unique,
+      integrationInstructions: McpToolAssemblerService.collectInstructions(
+        unique,
+        integrationMetaMap,
+      ),
+    };
+  }
+
+  private static collectInstructions(
+    tools: Tool[],
+    integrationMetaMap: Map<UUID, McpIntegrationMeta>,
+  ): McpIntegrationInstructions[] {
+    const assembledIntegrationIds = new Set<UUID>();
+    for (const tool of tools) {
+      if (
+        tool instanceof McpIntegrationTool ||
+        tool instanceof McpIntegrationResource
+      ) {
+        assembledIntegrationIds.add(tool.integrationId);
+      }
+    }
+    return [...assembledIntegrationIds]
+      .sort((a, b) => a.localeCompare(b))
+      .flatMap((integrationId) => {
+        const meta = integrationMetaMap.get(integrationId);
+        return meta?.instructions
+          ? [
+              {
+                integrationId,
+                integrationName: meta.name,
+                instructions: meta.instructions,
+              },
+            ]
+          : [];
+      });
   }
 
   /**
@@ -78,11 +133,16 @@ export class McpToolAssemblerService {
     return { unique, duplicates };
   }
 
-  private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
+  private async assembleMcpTools(thread: Thread): Promise<{
+    tools: Tool[];
+    integrationMetaMap: Map<UUID, McpIntegrationMeta>;
+  }> {
     const mcpIntegrationIds = new Set<UUID>();
     thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
 
-    if (mcpIntegrationIds.size === 0) return [];
+    if (mcpIntegrationIds.size === 0) {
+      return { tools: [], integrationMetaMap: new Map() };
+    }
 
     const integrationIdList = [...mcpIntegrationIds];
 
@@ -105,7 +165,13 @@ export class McpToolAssemblerService {
       integrationMetaMap,
     );
 
-    return this.mapMcpCapabilitiesToTools(mcpCapabilities, integrationMetaMap);
+    return {
+      tools: this.mapMcpCapabilitiesToTools(
+        mcpCapabilities,
+        integrationMetaMap,
+      ),
+      integrationMetaMap,
+    };
   }
 
   private buildMcpIntegrationMetaMap(
@@ -121,6 +187,7 @@ export class McpToolAssemblerService {
           integration instanceof MarketplaceMcpIntegration
             ? integration.logoUrl
             : null,
+        instructions: integration.instructions,
       });
     }
     return integrationMetaMap;

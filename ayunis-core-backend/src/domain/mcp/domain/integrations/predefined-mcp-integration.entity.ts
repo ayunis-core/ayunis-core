@@ -1,8 +1,8 @@
 import type { UUID } from 'crypto';
-import { McpIntegration } from '../mcp-integration.entity';
-import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import type { PredefinedMcpIntegrationSlug } from '../value-objects/predefined-mcp-integration-slug.enum';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import type { McpIntegrationAuth } from 'src/domain/mcp/domain/auth/mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import type { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 
 export class PredefinedMcpIntegration extends McpIntegration {
   public readonly slug: PredefinedMcpIntegrationSlug;
@@ -23,6 +23,7 @@ export class PredefinedMcpIntegration extends McpIntegration {
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
     description?: string;
+    instructions?: string | null;
   }) {
     super({
       id: params.id,
@@ -36,6 +37,7 @@ export class PredefinedMcpIntegration extends McpIntegration {
       lastConnectionCheck: params.lastConnectionCheck,
       returnsPii: params.returnsPii,
       description: params.description,
+      instructions: params.instructions,
       auth: params.auth,
     });
 

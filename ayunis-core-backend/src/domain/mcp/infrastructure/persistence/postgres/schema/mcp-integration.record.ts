@@ -46,6 +46,9 @@ export abstract class McpIntegrationRecord extends BaseRecord {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
+  @Column({ type: 'text', nullable: true })
+  instructions: string | null;
+
   @Column({ name: 'config_schema', type: 'jsonb', nullable: true })
   configSchema?: IntegrationConfigSchema;
 

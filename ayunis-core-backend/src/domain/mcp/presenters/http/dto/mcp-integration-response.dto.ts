@@ -210,4 +210,12 @@ export class McpIntegrationResponseDto {
     example: 'Access municipal council data via OParl',
   })
   description?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Instructions written by the organization that brief the model whenever this integration is active in a chat',
+    type: 'string',
+    nullable: true,
+  })
+  instructions?: string | null;
 }

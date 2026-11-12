@@ -21,6 +21,7 @@ export abstract class McpIntegration {
   public lastConnectionCheck?: Date;
   public returnsPii: boolean;
   public description?: string;
+  public instructions: string | null;
 
   private _auth: McpIntegrationAuth;
 
@@ -36,6 +37,7 @@ export abstract class McpIntegration {
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
     description?: string;
+    instructions?: string | null;
     auth: McpIntegrationAuth;
   }) {
     this.id = params.id ?? randomUUID();
@@ -49,6 +51,9 @@ export abstract class McpIntegration {
     this.lastConnectionCheck = params.lastConnectionCheck;
     this.returnsPii = params.returnsPii ?? true; // Default to true for safety
     this.description = params.description;
+    this.instructions = McpIntegration.normalizeInstructions(
+      params.instructions,
+    );
     this._auth = params.auth;
   }
 
@@ -118,6 +123,18 @@ export abstract class McpIntegration {
   updateReturnsPii(value: boolean): void {
     this.returnsPii = value;
     this.touch();
+  }
+
+  updateInstructions(instructions: string | null): void {
+    this.instructions = McpIntegration.normalizeInstructions(instructions);
+    this.touch();
+  }
+
+  private static normalizeInstructions(
+    instructions: string | null | undefined,
+  ): string | null {
+    const trimmed = instructions?.trim();
+    return trimmed ? trimmed : null;
   }
 
   protected touch(): void {

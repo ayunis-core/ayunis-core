@@ -21,6 +21,7 @@ import {
 import { CustomConfigFieldEditor } from './custom-config-field-editor';
 import { CustomOAuthFields } from './custom-oauth-fields';
 import { CustomIntegrationIdentityFields } from './custom-integration-identity-fields';
+import { IntegrationInstructionsField } from './integration-instructions-field';
 
 interface CreateCustomDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ const DEFAULT_VALUES: CreateCustomIntegrationFormData = {
   oauthScopes: '',
   oauthClientId: '',
   oauthClientSecret: '',
+  instructions: '',
   fields: [],
 };
 
@@ -117,6 +119,8 @@ export function CreateCustomDialog({
               form={form}
               disabled={isCreating}
             />
+
+            <IntegrationInstructionsField disabled={isCreating} />
 
             <CustomOAuthFields form={form} disabled={isCreating} />
 

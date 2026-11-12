@@ -153,6 +153,7 @@ export class McpIntegrationsController {
       dto.slug,
       credentialFields,
       dto.returnsPii,
+      dto.instructions,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -187,6 +188,7 @@ export class McpIntegrationsController {
       dto.orgConfigValues,
       dto.returnsPii,
       dto.oauthClient,
+      dto.instructions,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -296,6 +298,7 @@ export class McpIntegrationsController {
       credentials: dto.credentials,
       authHeaderName: dto.authHeaderName,
       returnsPii: dto.returnsPii,
+      instructions: dto.instructions,
       orgConfigValues: dto.orgConfigValues,
       oauthClient: dto.oauthClient,
     });
@@ -398,6 +401,7 @@ export class McpIntegrationsController {
       dto.returnsPii,
       dto.oauthClient,
       dto.serverUrl,
+      dto.instructions,
     );
 
     const integration =

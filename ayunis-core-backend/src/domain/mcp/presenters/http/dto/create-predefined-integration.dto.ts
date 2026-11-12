@@ -7,10 +7,12 @@ import {
   IsOptional,
   IsBoolean,
   ValidateNested,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
+import { MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH } from 'src/domain/mcp/domain/value-objects/mcp-integration-instructions.constant';
 
 /**
  * DTO for a single config value (credential field value).
@@ -72,4 +74,14 @@ export class CreatePredefinedIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Instructions written by the organization that brief the model whenever this integration is active in a chat.',
+    maxLength: MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH)
+  instructions?: string;
 }

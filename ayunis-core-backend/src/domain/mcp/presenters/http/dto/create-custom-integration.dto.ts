@@ -17,6 +17,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
+import { MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH } from 'src/domain/mcp/domain/value-objects/mcp-integration-instructions.constant';
 
 export class CustomMcpConfigFieldDto {
   @ApiProperty({ example: 'personalToken' })
@@ -152,4 +153,14 @@ export class CreateCustomIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Instructions written by the organization that brief the model whenever this integration is active in a chat.',
+    maxLength: MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH)
+  instructions?: string;
 }

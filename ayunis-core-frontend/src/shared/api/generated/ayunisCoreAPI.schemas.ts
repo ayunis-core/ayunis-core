@@ -3771,6 +3771,11 @@ export interface McpIntegrationResponseDto {
   serverUrlHint?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
+  /**
+     * Instructions written by the organization that brief the model whenever this integration is active in a chat
+     * @nullable
+     */
+  instructions?: string | null;
 }
 
 export interface McpOAuthAuthorizationUrlDto {
@@ -3826,6 +3831,11 @@ export interface CreatePredefinedIntegrationDto {
   configValues: ConfigValueDto[];
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
   returnsPii?: boolean;
+  /**
+     * Instructions written by the organization that brief the model whenever this integration is active in a chat.
+     * @maxLength 10000
+     */
+  instructions?: string;
 }
 
 export type CustomMcpConfigFieldDtoType = typeof CustomMcpConfigFieldDtoType[keyof typeof CustomMcpConfigFieldDtoType];
@@ -3889,6 +3899,11 @@ export interface CreateCustomIntegrationDto {
   oauthClient?: McpOAuthClientDto;
   orgConfigValues: CreateCustomIntegrationDtoOrgConfigValues;
   returnsPii?: boolean;
+  /**
+     * Instructions written by the organization that brief the model whenever this integration is active in a chat.
+     * @maxLength 10000
+     */
+  instructions?: string;
 }
 
 /**
@@ -3967,6 +3982,12 @@ export interface UpdateMcpIntegrationDto {
   /** Organization-level config values for schema-configured integrations. For secret fields, omit or send empty string to keep the existing value. */
   orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
   oauthClient?: McpOAuthClientDto;
+  /**
+     * Instructions written by the organization that brief the model whenever this integration is active in a chat. Omit to keep the stored text; send null or an empty string to remove it.
+     * @maxLength 10000
+     * @nullable
+     */
+  instructions?: string | null;
 }
 
 /**
@@ -3984,6 +4005,11 @@ export interface InstallMarketplaceIntegrationDto {
   /** URL of the customer's own MCP server. Required when the marketplace entry lets the customer provide the server URL; rejected otherwise. */
   serverUrl?: string;
   oauthClient?: McpOAuthClientDto;
+  /**
+     * Instructions written by the organization that brief the model whenever this integration is active in a chat.
+     * @maxLength 10000
+     */
+  instructions?: string;
 }
 
 /**

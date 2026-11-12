@@ -8,5 +8,6 @@ export class InstallMarketplaceIntegrationCommand {
       clientSecret?: string;
     },
     public readonly serverUrl?: string,
+    public readonly instructions?: string | null,
   ) {}
 }

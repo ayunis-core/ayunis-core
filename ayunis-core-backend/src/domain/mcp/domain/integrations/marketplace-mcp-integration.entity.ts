@@ -36,6 +36,7 @@ export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
     description?: string;
+    instructions?: string | null;
   }) {
     super({
       id: params.id,
@@ -49,6 +50,7 @@ export class MarketplaceMcpIntegration extends SchemaConfiguredMcpIntegration {
       lastConnectionCheck: params.lastConnectionCheck,
       returnsPii: params.returnsPii,
       description: params.description,
+      instructions: params.instructions,
       auth: params.auth,
       configSchema: params.configSchema,
       orgConfigValues: params.orgConfigValues,
