@@ -21,7 +21,7 @@ import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-e
 import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
 import { useUploadRecordingAudio } from '@/features/recording-audio';
 import { useRecordingTranscript } from '@/pages/recording/api';
-import { formatTranscriptTime } from '@/pages/recording/lib/format-transcript-time';
+import { formatTranscriptTime } from '@/shared/lib/format-transcript-time';
 
 /** Status, audio upload and transcript of a recording. */
 export function RecordingTranscriptCard({

@@ -1,4 +1,5 @@
 import { mockSourceReadingResponse } from './mock-source-reading-response';
+import { mockRecordingSearchResponse } from './mock-recording-search-response';
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import { mockCodeExecutionResponse } from './mock-code-execution-response';
@@ -28,8 +29,9 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * message select scripted responses (chat naming, malformed tool calls,
  * slow tool preparation, paginated research, source citations,
  * inline-document echo, the headline of the notification a chat is
- * about, routine widget proposals, a slow answer); a routine task's
- * trigger ends the routine run, optionally after sending a notification.
+ * about, routine widget proposals, a slow answer, a recording search);
+ * a routine task's trigger ends the routine run, optionally after sending
+ * a notification.
  *
  * The text is emitted as several delta chunks with a small delay between
  * them. An instant single-chunk response completes faster than any real
@@ -93,6 +95,7 @@ function mockToolResponse(
 ): AsyncIterable<ProviderChunk> | null {
   return (
     mockSourceReadingResponse(request, userText) ??
+    mockRecordingSearchResponse(request, userText) ??
     mockCreateFileResponse(request, userText) ??
     mockCodeExecutionResponse(request, userText) ??
     mockImageEditResponse(request, userText) ??

@@ -36,6 +36,7 @@ const BUILT_IN_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'source_get_text',
   'knowledge_query',
   'knowledge_get_text',
+  'recording_search',
   'internet_search',
   'website_content',
   'code_execution',

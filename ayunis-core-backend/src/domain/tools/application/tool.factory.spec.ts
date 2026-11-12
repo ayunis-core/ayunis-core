@@ -184,6 +184,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.EDIT_SKILL);
       expect(types).toContain(ToolType.KNOWLEDGE_QUERY);
       expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
+      expect(types).toContain(ToolType.RECORDING_SEARCH);
       expect(types).toContain(ToolType.CREATE_DOCUMENT);
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
@@ -198,7 +199,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.FINISH_ROUTINE);
       expect(types).toContain(ToolType.SEND_NOTIFICATION);
 
-      expect(types).toHaveLength(36);
+      expect(types).toHaveLength(37);
     });
   });
 });

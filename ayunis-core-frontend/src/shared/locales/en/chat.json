@@ -129,6 +129,7 @@
         "website_content": "Fetched website",
         "source_query": "Searched files",
         "knowledge_query": "Searched knowledge base",
+        "recording_search": "Searched recordings",
         "code_execution": "Calculated",
         "http": "Made HTTP request",
         "use_tool": "Used {{tool}}",
@@ -319,7 +320,14 @@
       "line": "Line {{line}}",
       "lines": "Lines {{start}}–{{end}}",
       "excerpt": "Cited excerpt",
-      "close": "Close"
+      "close": "Close",
+      "recording": {
+        "uploaded": "Uploaded on {{date}}",
+        "summary": "From the summary",
+        "timeRange": "{{start}}–{{end}}",
+        "speaker": "Speaker {{number}}",
+        "open": "Open recording"
+      }
     },
     "piiMask": {
       "tooltip": "{{category}} — anonymized before being sent to the AI model",

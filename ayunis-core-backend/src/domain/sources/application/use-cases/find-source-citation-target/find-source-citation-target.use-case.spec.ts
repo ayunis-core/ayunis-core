@@ -21,6 +21,7 @@ describe('FindSourceCitationTargetUseCase', () => {
       createdBy: SourceCreator.USER,
       status: SourceStatus.READY,
       knowledgeBaseId: null,
+      recordingId: null,
       url: null,
     },
   };

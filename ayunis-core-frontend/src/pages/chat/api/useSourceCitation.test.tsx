@@ -12,6 +12,7 @@ const chunkId = '123e4567-e89b-12d3-a456-426614174000';
 const citation = {
   chunk: { id: chunkId, content: 'Excerpt', startLine: 2, endLine: 4 },
   source: { id: 'source-1', name: 'Source', url: null },
+  recording: null,
 };
 
 describe('useSourceCitation', () => {

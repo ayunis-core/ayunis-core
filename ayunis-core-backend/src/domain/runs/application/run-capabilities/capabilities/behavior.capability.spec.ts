@@ -29,7 +29,7 @@ describe('BehaviorCapability', () => {
 
     expect(policies).toContain('{{source:<chunk UUID>|<plain-text label>}}');
     expect(policies).toContain(
-      'Use only chunkId values returned by source_query or knowledge_query',
+      'Use only chunkId values returned by retrieval tools',
     );
     expect(policies).toContain(
       'Never cite a result marked citable=false or a system-only source',

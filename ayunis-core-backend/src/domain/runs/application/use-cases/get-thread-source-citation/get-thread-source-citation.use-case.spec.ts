@@ -22,6 +22,8 @@ import {
   DocumentNotInKnowledgeBaseError,
   KnowledgeBaseNotFoundError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import type { FindCitedRecordingUseCase } from 'src/domain/recordings/application/use-cases/find-cited-recording/find-cited-recording.use-case';
+import { RecordingNotFoundError } from 'src/domain/recordings/application/recordings.errors';
 import { GetThreadSourceCitationQuery } from './get-thread-source-citation.query';
 import { GetThreadSourceCitationUseCase } from './get-thread-source-citation.use-case';
 
@@ -36,6 +38,7 @@ describe('GetThreadSourceCitationUseCase', () => {
   let getKnowledgeBaseDocumentTextUseCase: jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
   let findActiveKnowledgeBasesUseCase: jest.Mocked<FindActiveKnowledgeBasesUseCase>;
   let buildWorkspaceRunContextUseCase: jest.Mocked<BuildWorkspaceRunContextUseCase>;
+  let findCitedRecordingUseCase: jest.Mocked<FindCitedRecordingUseCase>;
   let useCase: GetThreadSourceCitationUseCase;
 
   beforeEach(() => {
@@ -57,6 +60,9 @@ describe('GetThreadSourceCitationUseCase', () => {
     buildWorkspaceRunContextUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<BuildWorkspaceRunContextUseCase>;
+    findCitedRecordingUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindCitedRecordingUseCase>;
     useCase = new GetThreadSourceCitationUseCase(
       findThreadCitationContextUseCase,
       findCitationTargetUseCase,
@@ -64,6 +70,7 @@ describe('GetThreadSourceCitationUseCase', () => {
       getKnowledgeBaseDocumentTextUseCase,
       findActiveKnowledgeBasesUseCase,
       buildWorkspaceRunContextUseCase,
+      findCitedRecordingUseCase,
     );
   });
 
@@ -85,6 +92,7 @@ describe('GetThreadSourceCitationUseCase', () => {
     params: {
       sourceId?: UUID;
       knowledgeBaseId?: UUID | null;
+      recordingId?: UUID | null;
       createdBy?: SourceCreator;
       status?: SourceStatus;
       sourceUrl?: string | null;
@@ -109,6 +117,7 @@ describe('GetThreadSourceCitationUseCase', () => {
         createdBy: params.createdBy ?? SourceCreator.USER,
         status: params.status ?? SourceStatus.READY,
         knowledgeBaseId: params.knowledgeBaseId ?? null,
+        recordingId: params.recordingId ?? null,
         url: params.sourceUrl ?? null,
       },
     };
@@ -175,6 +184,7 @@ describe('GetThreadSourceCitationUseCase', () => {
         name: citationTarget.source.name,
         url: citationTarget.source.url,
       },
+      recording: null,
     };
   }
 
@@ -404,6 +414,65 @@ describe('GetThreadSourceCitationUseCase', () => {
     await expect(
       executeFor(thread({ workspaceId }), citationTarget),
     ).resolves.toEqual(expectedResult(citationTarget));
+  });
+
+  describe('a recording chunk', () => {
+    const recordingId = randomUUID();
+    const workspaceId = randomUUID();
+    const recording = {
+      id: recordingId,
+      name: 'Gemeinderat März',
+      uploadedAt: new Date('2026-03-02T09:30:00Z'),
+    };
+
+    function transcriptTarget(): SourceCitationTarget {
+      return {
+        chunk: new TextSourceContentChunk({
+          id: chunkId,
+          content:
+            '[00:00:01.600 - 00:00:02.800] Speaker 2: Danke, wir beginnen mit dem Haushalt.',
+          meta: {
+            fileName: 'sitzung.mp3',
+            start: 1.6,
+            end: 2.8,
+            speakers: ['speaker_1'],
+          },
+        }),
+        source: { ...target({ recordingId }).source, name: 'sitzung.mp3' },
+      };
+    }
+
+    it('returns the recording and the time range while the recording search can still find it in this chat', async () => {
+      findCitedRecordingUseCase.execute.mockResolvedValue(recording);
+
+      const result = await executeFor(
+        thread({ workspaceId }),
+        transcriptTarget(),
+      );
+
+      expect(result.recording).toEqual({
+        ...recording,
+        position: {
+          kind: 'transcript',
+          start: 1.6,
+          end: 2.8,
+          speakerNumbers: [2],
+        },
+      });
+      expect(findCitedRecordingUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ recordingId, workspaceId }),
+      );
+    });
+
+    it('returns the citation 404 once the recording can no longer be read in this chat', async () => {
+      findCitedRecordingUseCase.execute.mockRejectedValue(
+        new RecordingNotFoundError(recordingId),
+      );
+
+      await expect(executeFor(thread(), transcriptTarget())).rejects.toThrow(
+        SourceCitationNotFoundError,
+      );
+    });
   });
 
   it('returns the citation 404 for an unrelated source', async () => {

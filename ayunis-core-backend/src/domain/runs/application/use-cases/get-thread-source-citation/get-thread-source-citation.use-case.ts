@@ -13,6 +13,10 @@ import {
   SourceCitationNotFoundError,
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
+import type { CitedRecording } from 'src/domain/recordings/application/models/recording-search';
+import { RecordingNotFoundError } from 'src/domain/recordings/application/recordings.errors';
+import { FindCitedRecordingQuery } from 'src/domain/recordings/application/use-cases/find-cited-recording/find-cited-recording.query';
+import { FindCitedRecordingUseCase } from 'src/domain/recordings/application/use-cases/find-cited-recording/find-cited-recording.use-case';
 import { FindOneSkillQuery } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.query';
 import { FindOneSkillUseCase } from 'src/domain/skills/application/use-cases/find-one-skill/find-one-skill.use-case';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
@@ -21,6 +25,10 @@ import { FindSourceCitationTargetQuery } from 'src/domain/sources/application/us
 import { FindSourceCitationTargetUseCase } from 'src/domain/sources/application/use-cases/find-source-citation-target/find-source-citation-target.use-case';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import {
+  type TranscriptChunkPosition,
+  transcriptChunkPosition,
+} from 'src/domain/sources/application/util/transcript-chunks';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { FindThreadCitationContextQuery } from 'src/domain/threads/application/use-cases/find-thread-citation-context/find-thread-citation-context.query';
@@ -39,6 +47,8 @@ export interface ThreadSourceCitation {
     endLine: number | null;
   };
   source: { id: string; name: string; url: string | null };
+  /** Set when the chunk is part of a recording's transcript or summary. */
+  recording: (CitedRecording & { position: TranscriptChunkPosition }) | null;
 }
 
 @Injectable()
@@ -52,6 +62,7 @@ export class GetThreadSourceCitationUseCase {
     private readonly getKnowledgeBaseDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
     private readonly findActiveKnowledgeBasesUseCase: FindActiveKnowledgeBasesUseCase,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
+    private readonly findCitedRecordingUseCase: FindCitedRecordingUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
@@ -66,12 +77,39 @@ export class GetThreadSourceCitationUseCase {
     if (!target || !this.isVisibleTarget(target)) {
       throw new SourceCitationNotFoundError();
     }
+    if (target.source.recordingId) {
+      const recording = await this.findCitedRecording(
+        target.source.recordingId,
+        thread,
+      );
+      return this.toResult(target, {
+        ...recording,
+        position: transcriptChunkPosition(target.chunk),
+      });
+    }
     if (
       !(await this.isAvailable(thread, target, query.orgId, query.threadId))
     ) {
       throw new SourceCitationNotFoundError();
     }
-    return this.toResult(target);
+    return this.toResult(target, null);
+  }
+
+  /** Read access is checked again: the user may have lost it since the search. */
+  private async findCitedRecording(
+    recordingId: UUID,
+    thread: ThreadCitationContext,
+  ): Promise<CitedRecording> {
+    try {
+      return await this.findCitedRecordingUseCase.execute(
+        new FindCitedRecordingQuery(recordingId, thread.workspaceId),
+      );
+    } catch (error) {
+      if (error instanceof RecordingNotFoundError) {
+        throw new SourceCitationNotFoundError();
+      }
+      throw error;
+    }
   }
 
   private async findOwnedThreadContext(
@@ -242,8 +280,12 @@ export class GetThreadSourceCitationUseCase {
     );
   }
 
-  private toResult(target: SourceCitationTarget): ThreadSourceCitation {
+  private toResult(
+    target: SourceCitationTarget,
+    recording: ThreadSourceCitation['recording'],
+  ): ThreadSourceCitation {
     return {
+      recording,
       chunk: {
         id: target.chunk.id,
         content: target.chunk.content,

@@ -4,6 +4,7 @@ import { ContextModule } from 'src/common/context/context.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import transcriptionConfig from 'src/config/transcription.config';
 import { ModelsModule } from 'src/domain/models/models.module';
+import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
@@ -31,6 +32,8 @@ import { ChangeRecordingOwnerUseCase } from './application/use-cases/change-reco
 import { CreateRecordingUseCase } from './application/use-cases/create-recording/create-recording.use-case';
 import { DeleteRecordingUseCase } from './application/use-cases/delete-recording/delete-recording.use-case';
 import { FindRecordingUseCase } from './application/use-cases/find-recording/find-recording.use-case';
+import { FindCitedRecordingUseCase } from './application/use-cases/find-cited-recording/find-cited-recording.use-case';
+import { SearchRecordingsUseCase } from './application/use-cases/search-recordings/search-recordings.use-case';
 import { ListRecordingsUseCase } from './application/use-cases/list-recordings/list-recordings.use-case';
 import { RenameRecordingUseCase } from './application/use-cases/rename-recording/rename-recording.use-case';
 import { LocalRecordingRepositoryModule } from './infrastructure/persistence/local/local-recording-repository.module';
@@ -48,6 +51,7 @@ import { RecordingSummaryController } from './presenters/http/recording-summary.
     LocalRecordingRepositoryModule,
     RecordingSummaryQueueModule,
     SourcesModule,
+    IndexersModule,
     ModelsModule,
     QuotasModule,
     UsageModule,
@@ -77,6 +81,8 @@ import { RecordingSummaryController } from './presenters/http/recording-summary.
     GenerateRecordingSummaryUseCase,
     FailRecordingSummaryUseCase,
     GetRecordingSummaryUseCase,
+    SearchRecordingsUseCase,
+    FindCitedRecordingUseCase,
     RecordingSummaryConsumer,
     RecordingDtoMapper,
     RecordingsUserDeletionRequestedListener,
@@ -89,5 +95,6 @@ import { RecordingSummaryController } from './presenters/http/recording-summary.
     RecordingUploadsController,
     RecordingSummaryController,
   ],
+  exports: [SearchRecordingsUseCase, FindCitedRecordingUseCase],
 })
 export class RecordingsModule {}

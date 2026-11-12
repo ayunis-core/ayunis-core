@@ -381,6 +381,7 @@ export class LocalSourceRepository extends SourceRepository {
         'source.createdBy',
         'source.status',
         'source.knowledgeBaseId',
+        'source.recordingId',
         'source.url',
       ])
       .where('chunk.id = :chunkId', { chunkId })
@@ -395,6 +396,7 @@ export class LocalSourceRepository extends SourceRepository {
         createdBy: record.source.source.createdBy,
         status: record.source.source.status,
         knowledgeBaseId: record.source.source.knowledgeBaseId,
+        recordingId: record.source.source.recordingId,
         url: record.source.source.url,
       },
     };

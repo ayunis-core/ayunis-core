@@ -24,6 +24,20 @@ import {
   requestRecordingFairUseLimitChange,
 } from '../../src/clients/api/platform-config.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
+import { permitEmbeddingModel } from '../../src/clients/api/models.client';
+import {
+  getThread,
+  getThreadSourceCitationResponse,
+  sendThreadMessage,
+  uploadThreadTextSource,
+} from '../../src/clients/api/threads.client';
+import { createPersonalThread } from '../../src/factories/workspace-context.factory';
+import { sendMessage } from '../../src/flows/chat.flow';
+import {
+  citedChunkIds,
+  searchRecordingsInNewChat,
+  uploadSearchableAudio,
+} from '../../src/flows/recording-search.flow';
 import { createApiContext } from '../../src/factories/api-context.factory';
 import { createOrg } from '../../src/factories/org.factory';
 import { test, expect } from '../../src/fixtures/test';
@@ -218,5 +232,109 @@ test('with recordings disabled the platform settings hide the recording upload l
   } finally {
     await context.close();
     await superAdmin.dispose();
+  }
+});
+
+// Uploads a recording as the admin of its own organization: the worker
+// admin's recording upload limit is shared with the other recording specs.
+test('with recordings disabled chats offer no recording search and recording citations are not found, while other citations stay', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const key = randomUUID().slice(0, 8);
+  const org = await createOrg(
+    `recordings-off-search-${key}`,
+    test.info().outputPath('recordings-off-search-org.json'),
+  );
+  const adminApi = await createApiContext({ cookies: [], origins: [] });
+  await login(adminApi, org.admin.email, org.admin.password);
+  const context = await browser.newContext({
+    storageState: await adminApi.storageState(),
+  });
+  try {
+    const page = await context.newPage();
+    await permitEmbeddingModel(adminApi);
+    const recording = await createRecording(adminApi, {
+      ownerType: 'personal',
+      name: `Gemeinderat ${key}`,
+    });
+    await uploadSearchableAudio(adminApi, recording.id);
+    const { threadId, answer } = await searchRecordingsInNewChat(
+      page,
+      adminApi,
+    );
+    const [chunkId] = await citedChunkIds(answer);
+    expect(
+      (await getThreadSourceCitationResponse(adminApi, threadId, chunkId)).status(),
+    ).toBe(200);
+
+    expect(
+      (
+        await getThreadSourceCitationResponse(
+          adminApi,
+          threadId,
+          chunkId,
+          disabledApiUrl,
+        )
+      ).status(),
+    ).toBe(404);
+    // The mock model answers so when the chat offers no recording_search.
+    const thread = await createPersonalThread(adminApi);
+    expect(
+      (
+        await sendThreadMessage(
+          adminApi,
+          thread.id,
+          'E2E search recordings',
+          disabledApiUrl,
+        )
+      ).ok(),
+    ).toBe(true);
+    const { messages } = await getThread(adminApi, thread.id);
+    expect(JSON.stringify(messages.at(-1)?.content)).toContain(
+      'recording-search::unavailable',
+    );
+
+    // A chat file is still cited on the backend with recordings disabled.
+    const fileThread = await createPersonalThread(adminApi);
+    expect(
+      (
+        await uploadThreadTextSource(
+          adminApi,
+          fileThread.id,
+          `haushalt-${key}.txt`,
+          'Der Gemeinderat hat den Haushalt 2026 beschlossen.',
+        )
+      ).ok(),
+    ).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (
+            await generatedApi.threadSourcesControllerGetThreadSources(
+              fileThread.id,
+              { api: adminApi },
+            )
+          ).map((source) => source.status),
+        { timeout: 30_000 },
+      )
+      .toEqual(['ready']);
+    await page.goto(`/chats/${fileThread.id}`);
+    await sendMessage(page, 'E2E cite first source');
+    const fileCitation = page.getByTestId('source-citation').last();
+    await expect(fileCitation).toBeVisible();
+    expect(
+      (
+        await getThreadSourceCitationResponse(
+          adminApi,
+          fileThread.id,
+          await fileCitation.getAttribute('data-source-chunk-id'),
+          disabledApiUrl,
+        )
+      ).status(),
+    ).toBe(200);
+  } finally {
+    await context.close();
+    await adminApi.dispose();
   }
 });

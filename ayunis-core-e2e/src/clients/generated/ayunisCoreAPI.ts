@@ -4205,6 +4205,154 @@ const superAdminTrialsControllerUpdateTrial = (
     }
 
 /**
+ * @summary Create a recording
+ */
+const recordingsControllerCreate = (
+    createRecordingDto: CreateRecordingDto,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRecordingDto
+    },
+      options);
+    }
+
+/**
+ * @summary List the recordings of the user, their teams and organization, or of a workspace
+ */
+const recordingsControllerFindAll = (
+    params: RecordingsControllerFindAllParams,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingListResponseDto>>,) => {
+      return playwrightApiClient<RecordingListResponseDto>(
+      {url: `/recordings`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get a recording
+ */
+const recordingsControllerFindOne = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Rename a recording
+ */
+const recordingsControllerRename = (
+    id: string,
+    renameRecordingDto: RenameRecordingDto,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: renameRecordingDto
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a recording
+ */
+const recordingsControllerDelete = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/recordings/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get a recording's transcript as speaker turns
+ */
+const recordingsControllerTranscript = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingTranscriptResponseDto>>,) => {
+      return playwrightApiClient<RecordingTranscriptResponseDto>(
+      {url: `/recordings/${id}/transcript`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Move a recording to the caller, a team or the organization
+ */
+const recordingsControllerChangeOwner = (
+    id: string,
+    recordingTransferOwnerDto: RecordingTransferOwnerDto,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings/${id}/owner`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: recordingTransferOwnerDto
+    },
+      options);
+    }
+
+/**
+ * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
+ * @summary Create the direct upload of a recording's audio
+ */
+const recordingUploadsControllerCreateUpload = (
+    id: string,
+    createSourceUploadDto: CreateSourceUploadDto,
+ options?: SecondParameter<typeof playwrightApiClient<SourceUploadSessionResponseDto>>,) => {
+      return playwrightApiClient<SourceUploadSessionResponseDto>(
+      {url: `/recordings/${id}/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto
+    },
+      options);
+    }
+
+/**
+ * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
+ * @summary Complete the direct upload of a recording's audio
+ */
+const recordingUploadsControllerCompleteUpload = (
+    id: string,
+    uploadId: string,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings/${id}/uploads/${uploadId}/complete`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Get a recording's generated summary
+ */
+const recordingSummaryControllerSummary = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingSummaryResponseDto>>,) => {
+      return playwrightApiClient<RecordingSummaryResponseDto>(
+      {url: `/recordings/${id}/summary`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
+ * @summary Try a failed summary again
+ */
+const recordingSummaryControllerRetry = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
+      return playwrightApiClient<RecordingResponseDto>(
+      {url: `/recordings/${id}/summary/retry`, method: 'POST'
+    },
+      options);
+    }
+
+/**
  * Create a new skill template. Only accessible to super admins.
  * @summary Create a new skill template
  */
@@ -5129,154 +5277,6 @@ const superAdminAcademyCourseModulesControllerDeleteCourseModule = (
     }
 
 /**
- * @summary Create a recording
- */
-const recordingsControllerCreate = (
-    createRecordingDto: CreateRecordingDto,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createRecordingDto
-    },
-      options);
-    }
-
-/**
- * @summary List the recordings of the user, their teams and organization, or of a workspace
- */
-const recordingsControllerFindAll = (
-    params: RecordingsControllerFindAllParams,
- options?: SecondParameter<typeof playwrightApiClient<RecordingListResponseDto>>,) => {
-      return playwrightApiClient<RecordingListResponseDto>(
-      {url: `/recordings`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Get a recording
- */
-const recordingsControllerFindOne = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings/${id}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Rename a recording
- */
-const recordingsControllerRename = (
-    id: string,
-    renameRecordingDto: RenameRecordingDto,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: renameRecordingDto
-    },
-      options);
-    }
-
-/**
- * @summary Delete a recording
- */
-const recordingsControllerDelete = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/recordings/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Get a recording's transcript as speaker turns
- */
-const recordingsControllerTranscript = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<RecordingTranscriptResponseDto>>,) => {
-      return playwrightApiClient<RecordingTranscriptResponseDto>(
-      {url: `/recordings/${id}/transcript`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Move a recording to the caller, a team or the organization
- */
-const recordingsControllerChangeOwner = (
-    id: string,
-    recordingTransferOwnerDto: RecordingTransferOwnerDto,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings/${id}/owner`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: recordingTransferOwnerDto
-    },
-      options);
-    }
-
-/**
- * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
- * @summary Create the direct upload of a recording's audio
- */
-const recordingUploadsControllerCreateUpload = (
-    id: string,
-    createSourceUploadDto: CreateSourceUploadDto,
- options?: SecondParameter<typeof playwrightApiClient<SourceUploadSessionResponseDto>>,) => {
-      return playwrightApiClient<SourceUploadSessionResponseDto>(
-      {url: `/recordings/${id}/uploads`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createSourceUploadDto
-    },
-      options);
-    }
-
-/**
- * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
- * @summary Complete the direct upload of a recording's audio
- */
-const recordingUploadsControllerCompleteUpload = (
-    id: string,
-    uploadId: string,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings/${id}/uploads/${uploadId}/complete`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Get a recording's generated summary
- */
-const recordingSummaryControllerSummary = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<RecordingSummaryResponseDto>>,) => {
-      return playwrightApiClient<RecordingSummaryResponseDto>(
-      {url: `/recordings/${id}/summary`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
- * @summary Try a failed summary again
- */
-const recordingSummaryControllerRetry = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<RecordingResponseDto>>,) => {
-      return playwrightApiClient<RecordingResponseDto>(
-      {url: `/recordings/${id}/summary/retry`, method: 'POST'
-    },
-      options);
-    }
-
-/**
  * Streams the text as MP3 speech while it is generated. The voice matches the detected language of the text, or the UI language when the text is too short or its language has no voice.
  * @summary Read text aloud
  */
@@ -5811,7 +5811,7 @@ const logoutControllerLogout = (
       options);
     }
 
-return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,recordingSummaryModelControllerGetRecordingSummaryModel,recordingSummaryModelControllerSetRecordingSummaryModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetRecordingFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,recordingsControllerCreate,recordingsControllerFindAll,recordingsControllerFindOne,recordingsControllerRename,recordingsControllerDelete,recordingsControllerTranscript,recordingsControllerChangeOwner,recordingUploadsControllerCreateUpload,recordingUploadsControllerCompleteUpload,recordingSummaryControllerSummary,recordingSummaryControllerRetry,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
+return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,recordingSummaryModelControllerGetRecordingSummaryModel,recordingSummaryModelControllerSetRecordingSummaryModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetRecordingFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,recordingsControllerCreate,recordingsControllerFindAll,recordingsControllerFindOne,recordingsControllerRename,recordingsControllerDelete,recordingsControllerTranscript,recordingsControllerChangeOwner,recordingUploadsControllerCreateUpload,recordingUploadsControllerCompleteUpload,recordingSummaryControllerSummary,recordingSummaryControllerRetry,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
 export type AppControllerIsCloudResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerIsCloud']>>>
 export type AppControllerHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerHealth']>>>
 export type AppControllerFeatureTogglesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerFeatureToggles']>>>
@@ -6098,6 +6098,17 @@ export type ApiKeysControllerRevokeApiKeyResult = NonNullable<Awaited<ReturnType
 export type SuperAdminTrialsControllerCreateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerCreateTrial']>>>
 export type SuperAdminTrialsControllerGetTrialByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerGetTrialByOrgId']>>>
 export type SuperAdminTrialsControllerUpdateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerUpdateTrial']>>>
+export type RecordingsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerCreate']>>>
+export type RecordingsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerFindAll']>>>
+export type RecordingsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerFindOne']>>>
+export type RecordingsControllerRenameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerRename']>>>
+export type RecordingsControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerDelete']>>>
+export type RecordingsControllerTranscriptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerTranscript']>>>
+export type RecordingsControllerChangeOwnerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerChangeOwner']>>>
+export type RecordingUploadsControllerCreateUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingUploadsControllerCreateUpload']>>>
+export type RecordingUploadsControllerCompleteUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingUploadsControllerCompleteUpload']>>>
+export type RecordingSummaryControllerSummaryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingSummaryControllerSummary']>>>
+export type RecordingSummaryControllerRetryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingSummaryControllerRetry']>>>
 export type SuperAdminSkillTemplatesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerCreate']>>>
 export type SuperAdminSkillTemplatesControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerFindAll']>>>
 export type SuperAdminSkillTemplatesControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerFindOne']>>>
@@ -6163,17 +6174,6 @@ export type SuperAdminAcademyCourseModulesControllerCreateCourseModuleResult = N
 export type SuperAdminAcademyCourseModulesControllerReorderCourseModulesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAcademyCourseModulesControllerReorderCourseModules']>>>
 export type SuperAdminAcademyCourseModulesControllerUpdateCourseModuleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAcademyCourseModulesControllerUpdateCourseModule']>>>
 export type SuperAdminAcademyCourseModulesControllerDeleteCourseModuleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminAcademyCourseModulesControllerDeleteCourseModule']>>>
-export type RecordingsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerCreate']>>>
-export type RecordingsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerFindAll']>>>
-export type RecordingsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerFindOne']>>>
-export type RecordingsControllerRenameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerRename']>>>
-export type RecordingsControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerDelete']>>>
-export type RecordingsControllerTranscriptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerTranscript']>>>
-export type RecordingsControllerChangeOwnerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingsControllerChangeOwner']>>>
-export type RecordingUploadsControllerCreateUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingUploadsControllerCreateUpload']>>>
-export type RecordingUploadsControllerCompleteUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingUploadsControllerCompleteUpload']>>>
-export type RecordingSummaryControllerSummaryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingSummaryControllerSummary']>>>
-export type RecordingSummaryControllerRetryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['recordingSummaryControllerRetry']>>>
 export type SpeechControllerSynthesizeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['speechControllerSynthesize']>>>
 export type RetentionPoliciesControllerGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['retentionPoliciesControllerGet']>>>
 export type RetentionPoliciesControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['retentionPoliciesControllerUpdate']>>>

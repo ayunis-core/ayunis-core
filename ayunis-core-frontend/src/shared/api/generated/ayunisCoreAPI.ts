@@ -22899,6 +22899,856 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
 
 /**
+ * @summary Create a recording
+ */
+export const recordingsControllerCreate = (
+    createRecordingDto: CreateRecordingDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRecordingDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerCreateMutationKey = () => ['recordingsControllerCreate'] as const;
+
+export const getRecordingsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getRecordingsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerCreate>>, RecordingsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordingsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerCreate>>>
+    export type RecordingsControllerCreateMutationBody = CreateRecordingDto
+    export type RecordingsControllerCreateMutationError = unknown
+    export type RecordingsControllerCreateMutationVariables = {data: CreateRecordingDto}
+
+    /**
+ * @summary Create a recording
+ */
+export const useRecordingsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingsControllerCreate>>,
+        TError,
+        RecordingsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingsControllerCreateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the recordings of the user, their teams and organization, or of a workspace
+ */
+export const recordingsControllerFindAll = (
+    params: RecordingsControllerFindAllParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingListResponseDto>(
+      {url: `/recordings`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerFindAllQueryKey = (params?: RecordingsControllerFindAllParams,) => {
+    return [
+    `/recordings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getRecordingsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerFindAllQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerFindAll>>> = ({ signal }) => recordingsControllerFindAll(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerFindAll>>>
+export type RecordingsControllerFindAllQueryError = unknown
+
+
+export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
+ params: RecordingsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
+ params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
+ params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the recordings of the user, their teams and organization, or of a workspace
+ */
+
+export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
+ params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingsControllerFindAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get a recording
+ */
+export const recordingsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerFindOneQueryKey = (id: string,) => {
+    return [
+    `/recordings/${id}`
+    ] as const;
+    }
+
+
+export const getRecordingsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerFindOneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerFindOne>>> = ({ signal }) => recordingsControllerFindOne(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerFindOne>>>
+export type RecordingsControllerFindOneQueryError = void
+
+
+export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a recording
+ */
+
+export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Rename a recording
+ */
+export const recordingsControllerRename = (
+    id: string,
+    renameRecordingDto: RenameRecordingDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: renameRecordingDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerRenameMutationKey = () => ['recordingsControllerRename'] as const;
+
+export const getRecordingsControllerRenameMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext> => {
+
+const mutationKey = getRecordingsControllerRenameMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerRename>>, RecordingsControllerRenameMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  recordingsControllerRename(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingsControllerRenameMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerRename>>>
+    export type RecordingsControllerRenameMutationBody = RenameRecordingDto
+    export type RecordingsControllerRenameMutationError = void
+    export type RecordingsControllerRenameMutationVariables = {id: string;data: RenameRecordingDto}
+
+    /**
+ * @summary Rename a recording
+ */
+export const useRecordingsControllerRename = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingsControllerRename>>,
+        TError,
+        RecordingsControllerRenameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingsControllerRenameMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete a recording
+ */
+export const recordingsControllerDelete = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/recordings/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerDeleteMutationKey = () => ['recordingsControllerDelete'] as const;
+
+export const getRecordingsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRecordingsControllerDeleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerDelete>>, RecordingsControllerDeleteMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  recordingsControllerDelete(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerDelete>>>
+
+    export type RecordingsControllerDeleteMutationError = void
+    export type RecordingsControllerDeleteMutationVariables = {id: string}
+
+    /**
+ * @summary Delete a recording
+ */
+export const useRecordingsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingsControllerDelete>>,
+        TError,
+        RecordingsControllerDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingsControllerDeleteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a recording's transcript as speaker turns
+ */
+export const recordingsControllerTranscript = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingTranscriptResponseDto>(
+      {url: `/recordings/${id}/transcript`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerTranscriptQueryKey = (id: string,) => {
+    return [
+    `/recordings/${id}/transcript`
+    ] as const;
+    }
+
+
+export const getRecordingsControllerTranscriptQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerTranscriptQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerTranscript>>> = ({ signal }) => recordingsControllerTranscript(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingsControllerTranscriptQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerTranscript>>>
+export type RecordingsControllerTranscriptQueryError = void
+
+
+export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerTranscript>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerTranscript>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingsControllerTranscript>>,
+          TError,
+          Awaited<ReturnType<typeof recordingsControllerTranscript>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a recording's transcript as speaker turns
+ */
+
+export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingsControllerTranscriptQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Move a recording to the caller, a team or the organization
+ */
+export const recordingsControllerChangeOwner = (
+    id: string,
+    recordingTransferOwnerDto: RecordingTransferOwnerDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}/owner`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: recordingTransferOwnerDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingsControllerChangeOwnerMutationKey = () => ['recordingsControllerChangeOwner'] as const;
+
+export const getRecordingsControllerChangeOwnerMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext> => {
+
+const mutationKey = getRecordingsControllerChangeOwnerMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, RecordingsControllerChangeOwnerMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  recordingsControllerChangeOwner(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingsControllerChangeOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>>
+    export type RecordingsControllerChangeOwnerMutationBody = RecordingTransferOwnerDto
+    export type RecordingsControllerChangeOwnerMutationError = void
+    export type RecordingsControllerChangeOwnerMutationVariables = {id: string;data: RecordingTransferOwnerDto}
+
+    /**
+ * @summary Move a recording to the caller, a team or the organization
+ */
+export const useRecordingsControllerChangeOwner = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingsControllerChangeOwner>>,
+        TError,
+        RecordingsControllerChangeOwnerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingsControllerChangeOwnerMutationOptions(options), queryClient);
+    }
+
+/**
+ * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
+ * @summary Create the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCreateUpload = (
+    id: string,
+    createSourceUploadDto: CreateSourceUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceUploadSessionResponseDto>(
+      {url: `/recordings/${id}/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingUploadsControllerCreateUploadMutationKey = () => ['recordingUploadsControllerCreateUpload'] as const;
+
+export const getRecordingUploadsControllerCreateUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext> => {
+
+const mutationKey = getRecordingUploadsControllerCreateUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, RecordingUploadsControllerCreateUploadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  recordingUploadsControllerCreateUpload(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingUploadsControllerCreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>>
+    export type RecordingUploadsControllerCreateUploadMutationBody = CreateSourceUploadDto
+    export type RecordingUploadsControllerCreateUploadMutationError = void
+    export type RecordingUploadsControllerCreateUploadMutationVariables = {id: string;data: CreateSourceUploadDto}
+
+    /**
+ * @summary Create the direct upload of a recording's audio
+ */
+export const useRecordingUploadsControllerCreateUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>,
+        TError,
+        RecordingUploadsControllerCreateUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingUploadsControllerCreateUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
+ * @summary Complete the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCompleteUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}/uploads/${uploadId}/complete`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingUploadsControllerCompleteUploadMutationKey = () => ['recordingUploadsControllerCompleteUpload'] as const;
+
+export const getRecordingUploadsControllerCompleteUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext> => {
+
+const mutationKey = getRecordingUploadsControllerCompleteUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, RecordingUploadsControllerCompleteUploadMutationVariables> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  recordingUploadsControllerCompleteUpload(id,uploadId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingUploadsControllerCompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>>
+
+    export type RecordingUploadsControllerCompleteUploadMutationError = void
+    export type RecordingUploadsControllerCompleteUploadMutationVariables = {id: string;uploadId: string}
+
+    /**
+ * @summary Complete the direct upload of a recording's audio
+ */
+export const useRecordingUploadsControllerCompleteUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>,
+        TError,
+        RecordingUploadsControllerCompleteUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingUploadsControllerCompleteUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a recording's generated summary
+ */
+export const recordingSummaryControllerSummary = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingSummaryResponseDto>(
+      {url: `/recordings/${id}/summary`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryControllerSummaryQueryKey = (id: string,) => {
+    return [
+    `/recordings/${id}/summary`
+    ] as const;
+    }
+
+
+export const getRecordingSummaryControllerSummaryQueryOptions = <TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingSummaryControllerSummaryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>> = ({ signal }) => recordingSummaryControllerSummary(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingSummaryControllerSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>>
+export type RecordingSummaryControllerSummaryQueryError = void
+
+
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a recording's generated summary
+ */
+
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingSummaryControllerSummaryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
+ * @summary Try a failed summary again
+ */
+export const recordingSummaryControllerRetry = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}/summary/retry`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryControllerRetryMutationKey = () => ['recordingSummaryControllerRetry'] as const;
+
+export const getRecordingSummaryControllerRetryMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext> => {
+
+const mutationKey = getRecordingSummaryControllerRetryMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, RecordingSummaryControllerRetryMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  recordingSummaryControllerRetry(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingSummaryControllerRetryMutationResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>>
+
+    export type RecordingSummaryControllerRetryMutationError = void
+    export type RecordingSummaryControllerRetryMutationVariables = {id: string}
+
+    /**
+ * @summary Try a failed summary again
+ */
+export const useRecordingSummaryControllerRetry = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingSummaryControllerRetry>>,
+        TError,
+        RecordingSummaryControllerRetryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingSummaryControllerRetryMutationOptions(options), queryClient);
+    }
+
+/**
  * Create a new skill template. Only accessible to super admins.
  * @summary Create a new skill template
  */
@@ -28185,856 +29035,6 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
         TContext
       > => {
       return useMutation(getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Create a recording
- */
-export const recordingsControllerCreate = (
-    createRecordingDto: CreateRecordingDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createRecordingDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerCreateMutationKey = () => ['recordingsControllerCreate'] as const;
-
-export const getRecordingsControllerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext> => {
-
-const mutationKey = getRecordingsControllerCreateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerCreate>>, RecordingsControllerCreateMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  recordingsControllerCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerCreate>>>
-    export type RecordingsControllerCreateMutationBody = CreateRecordingDto
-    export type RecordingsControllerCreateMutationError = unknown
-    export type RecordingsControllerCreateMutationVariables = {data: CreateRecordingDto}
-
-    /**
- * @summary Create a recording
- */
-export const useRecordingsControllerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerCreate>>, TError,RecordingsControllerCreateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingsControllerCreate>>,
-        TError,
-        RecordingsControllerCreateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingsControllerCreateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List the recordings of the user, their teams and organization, or of a workspace
- */
-export const recordingsControllerFindAll = (
-    params: RecordingsControllerFindAllParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingListResponseDto>(
-      {url: `/recordings`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerFindAllQueryKey = (params?: RecordingsControllerFindAllParams,) => {
-    return [
-    `/recordings`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getRecordingsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerFindAllQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerFindAll>>> = ({ signal }) => recordingsControllerFindAll(params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RecordingsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerFindAll>>>
-export type RecordingsControllerFindAllQueryError = unknown
-
-
-export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
- params: RecordingsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
- params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
- params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List the recordings of the user, their teams and organization, or of a workspace
- */
-
-export function useRecordingsControllerFindAll<TData = Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError = unknown>(
- params: RecordingsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRecordingsControllerFindAllQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get a recording
- */
-export const recordingsControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings/${id}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerFindOneQueryKey = (id: string,) => {
-    return [
-    `/recordings/${id}`
-    ] as const;
-    }
-
-
-export const getRecordingsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerFindOneQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerFindOne>>> = ({ signal }) => recordingsControllerFindOne(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RecordingsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerFindOne>>>
-export type RecordingsControllerFindOneQueryError = void
-
-
-export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a recording
- */
-
-export function useRecordingsControllerFindOne<TData = Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRecordingsControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Rename a recording
- */
-export const recordingsControllerRename = (
-    id: string,
-    renameRecordingDto: RenameRecordingDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: renameRecordingDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerRenameMutationKey = () => ['recordingsControllerRename'] as const;
-
-export const getRecordingsControllerRenameMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext> => {
-
-const mutationKey = getRecordingsControllerRenameMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerRename>>, RecordingsControllerRenameMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  recordingsControllerRename(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingsControllerRenameMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerRename>>>
-    export type RecordingsControllerRenameMutationBody = RenameRecordingDto
-    export type RecordingsControllerRenameMutationError = void
-    export type RecordingsControllerRenameMutationVariables = {id: string;data: RenameRecordingDto}
-
-    /**
- * @summary Rename a recording
- */
-export const useRecordingsControllerRename = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerRename>>, TError,RecordingsControllerRenameMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingsControllerRename>>,
-        TError,
-        RecordingsControllerRenameMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingsControllerRenameMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Delete a recording
- */
-export const recordingsControllerDelete = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/recordings/${id}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerDeleteMutationKey = () => ['recordingsControllerDelete'] as const;
-
-export const getRecordingsControllerDeleteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext> => {
-
-const mutationKey = getRecordingsControllerDeleteMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerDelete>>, RecordingsControllerDeleteMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  recordingsControllerDelete(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerDelete>>>
-
-    export type RecordingsControllerDeleteMutationError = void
-    export type RecordingsControllerDeleteMutationVariables = {id: string}
-
-    /**
- * @summary Delete a recording
- */
-export const useRecordingsControllerDelete = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerDelete>>, TError,RecordingsControllerDeleteMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingsControllerDelete>>,
-        TError,
-        RecordingsControllerDeleteMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingsControllerDeleteMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Get a recording's transcript as speaker turns
- */
-export const recordingsControllerTranscript = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingTranscriptResponseDto>(
-      {url: `/recordings/${id}/transcript`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerTranscriptQueryKey = (id: string,) => {
-    return [
-    `/recordings/${id}/transcript`
-    ] as const;
-    }
-
-
-export const getRecordingsControllerTranscriptQueryOptions = <TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRecordingsControllerTranscriptQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingsControllerTranscript>>> = ({ signal }) => recordingsControllerTranscript(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RecordingsControllerTranscriptQueryResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerTranscript>>>
-export type RecordingsControllerTranscriptQueryError = void
-
-
-export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerTranscript>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerTranscript>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingsControllerTranscript>>,
-          TError,
-          Awaited<ReturnType<typeof recordingsControllerTranscript>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a recording's transcript as speaker turns
- */
-
-export function useRecordingsControllerTranscript<TData = Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingsControllerTranscript>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRecordingsControllerTranscriptQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Move a recording to the caller, a team or the organization
- */
-export const recordingsControllerChangeOwner = (
-    id: string,
-    recordingTransferOwnerDto: RecordingTransferOwnerDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings/${id}/owner`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: recordingTransferOwnerDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingsControllerChangeOwnerMutationKey = () => ['recordingsControllerChangeOwner'] as const;
-
-export const getRecordingsControllerChangeOwnerMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext> => {
-
-const mutationKey = getRecordingsControllerChangeOwnerMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, RecordingsControllerChangeOwnerMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  recordingsControllerChangeOwner(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingsControllerChangeOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>>
-    export type RecordingsControllerChangeOwnerMutationBody = RecordingTransferOwnerDto
-    export type RecordingsControllerChangeOwnerMutationError = void
-    export type RecordingsControllerChangeOwnerMutationVariables = {id: string;data: RecordingTransferOwnerDto}
-
-    /**
- * @summary Move a recording to the caller, a team or the organization
- */
-export const useRecordingsControllerChangeOwner = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingsControllerChangeOwner>>, TError,RecordingsControllerChangeOwnerMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingsControllerChangeOwner>>,
-        TError,
-        RecordingsControllerChangeOwnerMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingsControllerChangeOwnerMutationOptions(options), queryClient);
-    }
-
-/**
- * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
- * @summary Create the direct upload of a recording's audio
- */
-export const recordingUploadsControllerCreateUpload = (
-    id: string,
-    createSourceUploadDto: CreateSourceUploadDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SourceUploadSessionResponseDto>(
-      {url: `/recordings/${id}/uploads`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createSourceUploadDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingUploadsControllerCreateUploadMutationKey = () => ['recordingUploadsControllerCreateUpload'] as const;
-
-export const getRecordingUploadsControllerCreateUploadMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext> => {
-
-const mutationKey = getRecordingUploadsControllerCreateUploadMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, RecordingUploadsControllerCreateUploadMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  recordingUploadsControllerCreateUpload(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingUploadsControllerCreateUploadMutationResult = NonNullable<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>>
-    export type RecordingUploadsControllerCreateUploadMutationBody = CreateSourceUploadDto
-    export type RecordingUploadsControllerCreateUploadMutationError = void
-    export type RecordingUploadsControllerCreateUploadMutationVariables = {id: string;data: CreateSourceUploadDto}
-
-    /**
- * @summary Create the direct upload of a recording's audio
- */
-export const useRecordingUploadsControllerCreateUpload = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>, TError,RecordingUploadsControllerCreateUploadMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingUploadsControllerCreateUpload>>,
-        TError,
-        RecordingUploadsControllerCreateUploadMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingUploadsControllerCreateUploadMutationOptions(options), queryClient);
-    }
-
-/**
- * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
- * @summary Complete the direct upload of a recording's audio
- */
-export const recordingUploadsControllerCompleteUpload = (
-    id: string,
-    uploadId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings/${id}/uploads/${uploadId}/complete`, method: 'POST', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingUploadsControllerCompleteUploadMutationKey = () => ['recordingUploadsControllerCompleteUpload'] as const;
-
-export const getRecordingUploadsControllerCompleteUploadMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext> => {
-
-const mutationKey = getRecordingUploadsControllerCompleteUploadMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, RecordingUploadsControllerCompleteUploadMutationVariables> = (props) => {
-          const {id,uploadId} = props ?? {};
-
-          return  recordingUploadsControllerCompleteUpload(id,uploadId,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingUploadsControllerCompleteUploadMutationResult = NonNullable<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>>
-
-    export type RecordingUploadsControllerCompleteUploadMutationError = void
-    export type RecordingUploadsControllerCompleteUploadMutationVariables = {id: string;uploadId: string}
-
-    /**
- * @summary Complete the direct upload of a recording's audio
- */
-export const useRecordingUploadsControllerCompleteUpload = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>, TError,RecordingUploadsControllerCompleteUploadMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingUploadsControllerCompleteUpload>>,
-        TError,
-        RecordingUploadsControllerCompleteUploadMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingUploadsControllerCompleteUploadMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Get a recording's generated summary
- */
-export const recordingSummaryControllerSummary = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingSummaryResponseDto>(
-      {url: `/recordings/${id}/summary`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingSummaryControllerSummaryQueryKey = (id: string,) => {
-    return [
-    `/recordings/${id}/summary`
-    ] as const;
-    }
-
-
-export const getRecordingSummaryControllerSummaryQueryOptions = <TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRecordingSummaryControllerSummaryQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>> = ({ signal }) => recordingSummaryControllerSummary(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RecordingSummaryControllerSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>>
-export type RecordingSummaryControllerSummaryQueryError = void
-
-
-export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
-          TError,
-          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
-          TError,
-          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a recording's generated summary
- */
-
-export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRecordingSummaryControllerSummaryQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
- * @summary Try a failed summary again
- */
-export const recordingSummaryControllerRetry = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<RecordingResponseDto>(
-      {url: `/recordings/${id}/summary/retry`, method: 'POST', signal
-    },
-      );
-    }
-
-
-
-
-export const getRecordingSummaryControllerRetryMutationKey = () => ['recordingSummaryControllerRetry'] as const;
-
-export const getRecordingSummaryControllerRetryMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext> => {
-
-const mutationKey = getRecordingSummaryControllerRetryMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, RecordingSummaryControllerRetryMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  recordingSummaryControllerRetry(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordingSummaryControllerRetryMutationResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>>
-
-    export type RecordingSummaryControllerRetryMutationError = void
-    export type RecordingSummaryControllerRetryMutationVariables = {id: string}
-
-    /**
- * @summary Try a failed summary again
- */
-export const useRecordingSummaryControllerRetry = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordingSummaryControllerRetry>>,
-        TError,
-        RecordingSummaryControllerRetryMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRecordingSummaryControllerRetryMutationOptions(options), queryClient);
     }
 
 /**

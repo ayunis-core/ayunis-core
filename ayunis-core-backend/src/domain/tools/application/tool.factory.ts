@@ -29,6 +29,10 @@ import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
+import {
+  RecordingSearchScope,
+  RecordingSearchTool,
+} from 'src/domain/tools/domain/tools/recording-search-tool.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
@@ -116,6 +120,8 @@ export class ToolFactory {
         new KnowledgeGetTextTool(
           requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_GET_TEXT),
         ),
+      [ToolType.RECORDING_SEARCH]: (p) =>
+        new RecordingSearchTool(requireRecordingSearchScope(p.context)),
       [ToolType.SEND_NOTIFICATION]: (p) =>
         new SendNotificationTool(requireSendNotificationOrigin(p.context)),
     };
@@ -213,6 +219,14 @@ function requireMapContext(
   }
   throw new ToolInvalidContextError({
     toolType,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireRecordingSearchScope(context: unknown): RecordingSearchScope {
+  if (context instanceof RecordingSearchScope) return context;
+  throw new ToolInvalidContextError({
+    toolType: ToolType.RECORDING_SEARCH,
     metadata: { contextType: contextTypeName(context) },
   });
 }
