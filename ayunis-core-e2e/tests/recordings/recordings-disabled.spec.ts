@@ -9,6 +9,13 @@ import {
   requestRecordingTranscript,
   requestRecordingUpload,
 } from '../../src/clients/api/recordings.client';
+import {
+  getRecordingSummaryModelId,
+  requestRecordingSummaryModel,
+  requestRecordingSummaryModelChange,
+  setRecordingSummaryModel,
+} from '../../src/clients/api/recording-summary-model.client';
+import { getEffectiveLanguageModels } from '../../src/clients/api/models.client';
 import { getRolePermissions } from '../../src/clients/api/role-permissions.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import { createApiContext } from '../../src/factories/api-context.factory';
@@ -136,5 +143,33 @@ test('with recordings disabled the roles settings hide the recording permissions
   } finally {
     await context.close();
     await adminApi.dispose();
+  }
+});
+
+test('with recordings disabled the model settings hide the summary model, its endpoints 404 and the stored selection is kept', async ({
+  api,
+  page,
+}) => {
+  const [orgModel] = await getEffectiveLanguageModels(api);
+  await setRecordingSummaryModel(api, orgModel.id);
+  try {
+    expect(
+      (await requestRecordingSummaryModel(api, disabledApiUrl)).status(),
+    ).toBe(404);
+    expect(
+      (
+        await requestRecordingSummaryModelChange(api, null, disabledApiUrl)
+      ).status(),
+    ).toBe(404);
+
+    await page.goto(`${disabledBaseUrl}/admin-settings/models`);
+    await expect(page.getByTestId('org-default-model-select')).toBeVisible();
+    await expect(page.getByTestId('recording-summary-model-card')).toHaveCount(
+      0,
+    );
+
+    expect(await getRecordingSummaryModelId(api)).toBe(orgModel.id);
+  } finally {
+    await setRecordingSummaryModel(api, null);
   }
 });

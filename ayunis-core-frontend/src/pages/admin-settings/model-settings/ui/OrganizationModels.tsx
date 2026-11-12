@@ -7,6 +7,7 @@ import {
 import { TriangleAlert } from 'lucide-react';
 import ModelTypeCard from './ModelTypeCard';
 import { OrgDefaultModelCard } from './OrgDefaultModelCard';
+import { RecordingSummaryModelCard } from './RecordingSummaryModelCard';
 
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { useTranslation } from 'react-i18next';
@@ -15,9 +16,11 @@ import {
   useEmbeddingModels,
   useImageGenerationModels,
 } from '@/features/models';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 export default function OrganizationModels() {
   const { t } = useTranslation('admin-settings-models');
+  const isRecordingsEnabled = useIsFeatureEnabled('recordingsEnabled');
   const {
     models: languageModels,
     isLoading: isLoadingLanguage,
@@ -81,10 +84,15 @@ export default function OrganizationModels() {
           </Alert>
         )}
         {!hasLanguageError && (
-          <OrgDefaultModelCard
-            models={languageModels}
-            isLoading={modelsLoading}
-          />
+          <>
+            <OrgDefaultModelCard
+              models={languageModels}
+              isLoading={modelsLoading}
+            />
+            {isRecordingsEnabled && (
+              <RecordingSummaryModelCard models={languageModels} />
+            )}
+          </>
         )}
         {hasModels ? (
           <>

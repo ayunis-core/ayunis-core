@@ -112,6 +112,7 @@
   "/models/mode-defaults/user",
   "/models/modes",
   "/models/org/default",
+  "/models/org/recording-summary-model",
   "/models/permitted",
   "/models/permitted/language-models",
   "/models/permitted/language-models/org",

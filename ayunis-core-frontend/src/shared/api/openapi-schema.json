@@ -2204,6 +2204,61 @@
         "tags": ["models"]
       }
     },
+    "/models/org/recording-summary-model": {
+      "get": {
+        "description": "Returns null when no model is selected and summaries use the organization default model.",
+        "operationId": "RecordingSummaryModelController_getRecordingSummaryModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the model that summarizes recordings",
+        "tags": ["models"]
+      },
+      "put": {
+        "operationId": "RecordingSummaryModelController_setRecordingSummaryModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRecordingSummaryModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The model may only receive anonymized input"
+          },
+          "404": {
+            "description": "The model is not permitted organization-wide"
+          }
+        },
+        "summary": "Set or clear the model that summarizes recordings",
+        "tags": ["models"]
+      }
+    },
     "/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
@@ -16313,6 +16368,18 @@
           }
         },
         "required": ["mode"]
+      },
+      "SetRecordingSummaryModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Org-wide permitted language model that summarizes recordings; null clears it so the org default model applies"
+          }
+        },
+        "required": ["permittedModelId"]
       },
       "CreateLanguageModelRequestDto": {
         "type": "object",

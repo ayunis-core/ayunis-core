@@ -8,3 +8,5 @@ export {
   useImageGenerationModels,
 } from '@/features/models';
 export { useManageOrgDefaultModel } from './useManageOrgDefaultModel';
+export { useRecordingSummaryModel } from './useRecordingSummaryModel';
+export { useSetRecordingSummaryModel } from './useSetRecordingSummaryModel';
