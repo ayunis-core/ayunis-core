@@ -82,9 +82,8 @@ export default function KnowledgeBaseCard({
           {(isCollective ? canManage(knowledgeBase) : !isShared) && (
             <PermissionGate permission="manage_knowledge_bases">
               <Button
-                variant="ghost"
+                variant="destructive-ghost"
                 size="icon"
-                className="text-destructive hover:text-destructive"
                 onClick={handleDelete}
                 disabled={deleteKnowledgeBase.isPending}
               >

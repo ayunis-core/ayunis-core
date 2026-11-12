@@ -80,9 +80,8 @@ export function WorkspaceKnowledgeBaseDetailPage({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="destructive-ghost"
                       size="icon"
-                      className="text-destructive hover:text-destructive"
                       aria-label={tKnowledge('detail.deleteLabel')}
                       onClick={() =>
                         confirm({

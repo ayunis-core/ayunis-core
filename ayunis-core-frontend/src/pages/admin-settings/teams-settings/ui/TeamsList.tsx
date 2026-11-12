@@ -67,9 +67,8 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             </TeamPermissionGate>
             <PermissionGate permission="manage_teams">
               <Button
-                variant="ghost"
+                variant="destructive-ghost"
                 size="icon"
-                className="text-destructive hover:text-destructive"
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteTeam(team.id);

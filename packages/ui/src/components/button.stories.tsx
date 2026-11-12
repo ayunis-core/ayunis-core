@@ -25,6 +25,7 @@ export const Variants: Story = {
           'ghost',
           'link',
           'destructive',
+          'destructive-ghost',
         ] as const
       ).map((variant) => (
         <Button key={variant} variant={variant}>

@@ -24,9 +24,8 @@ export function RoutineDeleteButton({
 
   return (
     <Button
-      variant="ghost"
+      variant="destructive-ghost"
       size="icon"
-      className="text-destructive hover:text-destructive"
       onClick={handleDelete}
       disabled={deleteRoutine.isPending}
       aria-label={t('card.delete')}
