@@ -5,7 +5,7 @@ import type { SourceRecord } from './schema/source.record';
 /**
  * Cross-module reachability of sources, kept in one place so the skill and
  * thread table names stay out of every other adapter: a source is reachable
- * through a knowledge base, a skill, or a thread assignment.
+ * through a knowledge base, a recording, a skill, or a thread assignment.
  */
 function unreferencedBefore(
   query: SelectQueryBuilder<SourceRecord>,
@@ -14,6 +14,7 @@ function unreferencedBefore(
 ): SelectQueryBuilder<SourceRecord> {
   const scoped = query
     .andWhere('s."knowledgeBaseId" IS NULL')
+    .andWhere('s."recordingId" IS NULL')
     .andWhere('s."createdAt" < :olderThan', { olderThan })
     .andWhere(
       `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,

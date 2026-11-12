@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { RecordingWithCreator } from 'src/domain/recordings/application/models/recording-with-creator';
+import { recordingStatusOf } from 'src/domain/recordings/application/models/recording-audio';
+import type { RecordingDetails } from 'src/domain/recordings/application/models/recording-details';
+import { RecordingStatus } from 'src/domain/recordings/domain/recording-status.enum';
 import { OrgRecording } from 'src/domain/recordings/domain/org-recording.entity';
 import { PersonalRecording } from 'src/domain/recordings/domain/personal-recording.entity';
 import type { Recording } from 'src/domain/recordings/domain/recording';
@@ -12,12 +14,18 @@ export class RecordingDtoMapper {
   toDto({
     recording,
     creatorName,
-  }: RecordingWithCreator): RecordingResponseDto {
+    audio,
+  }: RecordingDetails): RecordingResponseDto {
+    const status = recordingStatusOf(audio);
     return {
       id: recording.id,
       name: recording.name,
       ...this.toOwner(recording),
       creatorName,
+      status,
+      ...(status === RecordingStatus.FAILED && {
+        failureCode: audio?.failureCode ?? undefined,
+      }),
       createdAt: recording.createdAt,
       updatedAt: recording.updatedAt,
     };

@@ -175,6 +175,7 @@ import type {
   RecordModuleHeartbeatRequestDto,
   RecordingListResponseDto,
   RecordingResponseDto,
+  RecordingTranscriptResponseDto,
   RecordingTransferOwnerDto,
   RecordingsControllerFindAllParams,
   RecoveryCodesResponseDto,
@@ -18085,6 +18086,49 @@ export const recordingsControllerDelete = async (id: string, options?: Parameter
 
 
 
+export type recordingsControllerTranscriptResponse200 = {
+  data: RecordingTranscriptResponseDto
+  status: 200
+}
+
+export type recordingsControllerTranscriptResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerTranscriptResponseSuccess = (recordingsControllerTranscriptResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerTranscriptResponseError = (recordingsControllerTranscriptResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerTranscriptResponse = (recordingsControllerTranscriptResponseSuccess | recordingsControllerTranscriptResponseError)
+
+export const getRecordingsControllerTranscriptUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/transcript`
+}
+
+/**
+ * @summary Get a recording's transcript as speaker turns
+ */
+export const recordingsControllerTranscript = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerTranscriptResponse> => {
+
+  return paneFetch<recordingsControllerTranscriptResponse>(getRecordingsControllerTranscriptUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
 export type recordingsControllerChangeOwnerResponse200 = {
   data: RecordingResponseDto
   status: 200
@@ -18130,6 +18174,133 @@ return paneFetch<recordingsControllerChangeOwnerResponse>(getRecordingsControlle
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(recordingTransferOwnerDto)
+  }
+);}
+
+
+
+export type recordingUploadsControllerCreateUploadResponse201 = {
+  data: SourceUploadSessionResponseDto
+  status: 201
+}
+
+export type recordingUploadsControllerCreateUploadResponse400 = {
+  data: void
+  status: 400
+}
+
+export type recordingUploadsControllerCreateUploadResponse403 = {
+  data: void
+  status: 403
+}
+
+export type recordingUploadsControllerCreateUploadResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingUploadsControllerCreateUploadResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingUploadsControllerCreateUploadResponse413 = {
+  data: void
+  status: 413
+}
+
+export type recordingUploadsControllerCreateUploadResponseSuccess = (recordingUploadsControllerCreateUploadResponse201) & {
+  headers: Headers;
+};
+export type recordingUploadsControllerCreateUploadResponseError = (recordingUploadsControllerCreateUploadResponse400 | recordingUploadsControllerCreateUploadResponse403 | recordingUploadsControllerCreateUploadResponse404 | recordingUploadsControllerCreateUploadResponse409 | recordingUploadsControllerCreateUploadResponse413) & {
+  headers: Headers;
+};
+
+export type recordingUploadsControllerCreateUploadResponse = (recordingUploadsControllerCreateUploadResponseSuccess | recordingUploadsControllerCreateUploadResponseError)
+
+export const getRecordingUploadsControllerCreateUploadUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/uploads`
+}
+
+/**
+ * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
+ * @summary Create the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCreateUpload = async (id: string,
+    createSourceUploadDto: CreateSourceUploadDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCreateUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingUploadsControllerCreateUploadResponse>(getRecordingUploadsControllerCreateUploadUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createSourceUploadDto)
+  }
+);}
+
+
+
+export type recordingUploadsControllerCompleteUploadResponse202 = {
+  data: RecordingResponseDto
+  status: 202
+}
+
+export type recordingUploadsControllerCompleteUploadResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingUploadsControllerCompleteUploadResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingUploadsControllerCompleteUploadResponse410 = {
+  data: void
+  status: 410
+}
+
+export type recordingUploadsControllerCompleteUploadResponseSuccess = (recordingUploadsControllerCompleteUploadResponse202) & {
+  headers: Headers;
+};
+export type recordingUploadsControllerCompleteUploadResponseError = (recordingUploadsControllerCompleteUploadResponse404 | recordingUploadsControllerCompleteUploadResponse409 | recordingUploadsControllerCompleteUploadResponse410) & {
+  headers: Headers;
+};
+
+export type recordingUploadsControllerCompleteUploadResponse = (recordingUploadsControllerCompleteUploadResponseSuccess | recordingUploadsControllerCompleteUploadResponseError)
+
+export const getRecordingUploadsControllerCompleteUploadUrl = (id: string,
+    uploadId: string,) => {
+
+
+
+
+  return `/recordings/${id}/uploads/${uploadId}/complete`
+}
+
+/**
+ * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
+ * @summary Complete the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCompleteUpload = async (id: string,
+    uploadId: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCompleteUploadResponse> => {
+
+  return paneFetch<recordingUploadsControllerCompleteUploadResponse>(getRecordingUploadsControllerCompleteUploadUrl(id,uploadId),
+  {
+    ...options,
+    method: 'POST'
+
+
   }
 );}
 

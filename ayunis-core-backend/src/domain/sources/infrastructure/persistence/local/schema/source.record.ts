@@ -22,6 +22,7 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { RecordingRecord } from 'src/domain/recordings/infrastructure/persistence/local/schema/recording.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -72,6 +73,16 @@ export abstract class SourceRecord extends BaseRecord {
   })
   @JoinColumn({ name: 'knowledgeBaseId' })
   knowledgeBase: KnowledgeBaseRecord | null;
+
+  // The audio of a meeting recording; a recording has at most one. Deleting
+  // the recording deletes it with its transcript and index entries.
+  @Index({ unique: true, where: '"recordingId" IS NOT NULL' })
+  @Column({ nullable: true })
+  recordingId: UUID | null;
+
+  @ManyToOne(() => RecordingRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'recordingId' })
+  recording: RecordingRecord | null;
 }
 
 @ChildEntity(SourceType.TEXT)

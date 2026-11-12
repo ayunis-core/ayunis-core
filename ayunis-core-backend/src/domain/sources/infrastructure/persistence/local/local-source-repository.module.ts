@@ -20,6 +20,9 @@ import { SourceUploadSessionRecord } from './schema/source-upload-session.record
 import { SourceUploadSessionMapper } from './mappers/source-upload-session.mapper';
 import { LocalSourceUploadSessionRepository } from './local-source-upload-session.repository';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
+import { SourceTranscriptRepository } from 'src/domain/sources/application/ports/source-transcript.repository';
+import { SourceTranscriptSegmentRecord } from './schema/source-transcript-segment.record';
+import { LocalSourceTranscriptRepository } from './local-source-transcript.repository';
 
 @Module({
   imports: [
@@ -33,6 +36,7 @@ import { SourceUploadSessionRepository } from 'src/domain/sources/application/po
       UrlSourceDetailsRecord,
       SourceContentChunkRecord,
       SourceUploadSessionRecord,
+      SourceTranscriptSegmentRecord,
     ]),
   ],
   providers: [
@@ -49,7 +53,16 @@ import { SourceUploadSessionRepository } from 'src/domain/sources/application/po
       provide: SourceUploadSessionRepository,
       useExisting: LocalSourceUploadSessionRepository,
     },
+    {
+      provide: SourceTranscriptRepository,
+      useClass: LocalSourceTranscriptRepository,
+    },
   ],
-  exports: [SourceRepository, SourceMapper, SourceUploadSessionRepository],
+  exports: [
+    SourceRepository,
+    SourceMapper,
+    SourceUploadSessionRepository,
+    SourceTranscriptRepository,
+  ],
 })
 export class LocalSourceRepositoryModule {}

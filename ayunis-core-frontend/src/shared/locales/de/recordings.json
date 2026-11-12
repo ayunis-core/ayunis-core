@@ -15,13 +15,17 @@
     "buttonText": "Aufzeichnung hinzufügen",
     "buttonTextFirst": "Erste Aufzeichnung erstellen",
     "title": "Neue Aufzeichnung erstellen",
-    "description": "Erstellen Sie eine Aufzeichnung und wählen Sie, wem sie gehört.",
+    "description": "Erstellen Sie eine Aufzeichnung, wählen Sie, wem sie gehört, und fügen Sie das Audio hinzu.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "z. B. Stadtratssitzung 12. November"
+      "namePlaceholder": "z. B. Stadtratssitzung 12. November",
+      "fileLabel": "Audiodatei",
+      "fileDescription": "MP3, M4A, WAV oder WebM. Sie wird mit Sprecherkennzeichnung transkribiert."
     },
     "validation": {
-      "nameRequired": "Name ist erforderlich"
+      "nameRequired": "Name ist erforderlich",
+      "fileRequired": "Wählen Sie die Audiodatei der Aufzeichnung",
+      "fileNotAudio": "Wählen Sie eine MP3-, M4A-, WAV- oder WebM-Datei"
     },
     "buttons": {
       "cancel": "Abbrechen",
@@ -75,6 +79,34 @@
       "validationError": "Bitte prüfen Sie den Namen und versuchen Sie es erneut.",
       "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
       "noPermission": "Sie dürfen diese Aufzeichnung nicht umbenennen."
+    },
+    "transcript": {
+      "title": "Transkript",
+      "description": "Was gesagt wurde, nach Sprechern. Die Sprecherkennzeichnungen stammen aus der Transkription und sind keine Namen.",
+      "status": {
+        "uploading": "Wird hochgeladen",
+        "transcribing": "Wird transkribiert",
+        "transcribed": "Transkribiert",
+        "failed": "Fehlgeschlagen"
+      },
+      "transcribing": "Die Aufzeichnung wird transkribiert. Das kann einige Minuten dauern.",
+      "noAudio": "Das Audio dieser Aufzeichnung wurde noch nicht hochgeladen.",
+      "uploadHint": "Das Audio dieser Aufzeichnung wurde noch nicht hochgeladen. Laden Sie es hoch, um die Aufzeichnung zu transkribieren.",
+      "upload": "Audio hochladen",
+      "speaker": "Sprecher {{number}}",
+      "unknownSpeaker": "Unbekannter Sprecher",
+      "failure": {
+        "recordingTooLong": "Die Aufzeichnung ist zu lang für die Transkription. Schneiden Sie sie in kürzere Teile und laden Sie jeden als neue Aufzeichnung hoch.",
+        "unreadable": "Die Audiodatei konnte nicht gelesen werden. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
+        "empty": "In der Aufzeichnung wurde keine Sprache gefunden.",
+        "tooManyPages": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch.",
+        "timeout": "Die Transkription hat zu lange gedauert. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
+        "unavailable": "Der Transkriptionsdienst ist nicht erreichbar. Löschen Sie die Aufzeichnung und laden Sie die Datei später erneut hoch.",
+        "failed": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch. Wenn das Problem bleibt, wenden Sie sich an den Support."
+      }
     }
+  },
+  "audio": {
+    "alreadyUploaded": "Diese Aufzeichnung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Aufzeichnung."
   }
 }

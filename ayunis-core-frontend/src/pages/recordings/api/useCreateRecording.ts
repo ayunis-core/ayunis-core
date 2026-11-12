@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalRecordingListParams } from '@/shared/api/recording-scopes';
+import { useUploadNewRecordingAudio } from '@/features/recording-audio';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { CreateRecordingSubmission } from '@/widgets/resource-create-dialog';
 
@@ -19,13 +20,17 @@ export function useCreateRecording() {
   const { t } = useTranslation('recordings');
   const queryClient = useQueryClient();
   const router = useRouter();
+  const uploadAudio = useUploadNewRecordingAudio();
 
   const mutation = useMutation({
-    mutationFn: (data: CreateRecordingSubmission) =>
-      recordingsControllerCreate({
+    mutationFn: async (data: CreateRecordingSubmission) => {
+      const recording = await recordingsControllerCreate({
         ...(data.owner ?? { ownerType: 'personal' }),
         name: data.name,
-      }),
+      });
+      await uploadAudio(recording.id, data.file);
+      return recording;
+    },
     onSuccess: (recording) => {
       void queryClient.invalidateQueries({
         queryKey: getRecordingsControllerFindAllQueryKey(

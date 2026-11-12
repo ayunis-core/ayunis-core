@@ -13,6 +13,7 @@ import {
   isCSVFile,
   isDocumentSourceFile,
   isSpreadsheetFile,
+  SUPPORTED_AUDIO_FILE_TYPES,
   SUPPORTED_FILE_TYPES,
 } from 'src/common/util/file-type';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
@@ -28,6 +29,7 @@ import {
 import { recordSourceUploadOutcome } from 'src/domain/sources/application/util/source-upload-telemetry.helper';
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadPipeline } from 'src/domain/sources/domain/upload/source-upload-pipeline.enum';
+import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
 import {
   buildSourceUploadKey,
   SOURCE_UPLOAD_MULTIPART_THRESHOLD_BYTES,
@@ -112,11 +114,15 @@ export class CreateSourceUploadSessionUseCase {
 
   private resolveFileType(command: CreateSourceUploadSessionCommand): string {
     const detected = detectFileType(command.mimeType, command.fileName);
+    const recording = command.targetType === SourceUploadTargetType.RECORDING;
     const isTable = isCSVFile(detected) || isSpreadsheetFile(detected);
-    if (!isDocumentSourceFile(detected) && !isTable) {
+    const accepted = recording
+      ? isAudioFile(detected)
+      : isDocumentSourceFile(detected) || isTable;
+    if (!accepted) {
       throw new UnsupportedFileTypeError(
         detected === 'unknown' ? command.fileName : detected,
-        SUPPORTED_FILE_TYPES,
+        recording ? SUPPORTED_AUDIO_FILE_TYPES : SUPPORTED_FILE_TYPES,
       );
     }
     const canonical = getCanonicalMimeType(detected);

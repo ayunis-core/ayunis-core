@@ -4,9 +4,10 @@ import { RecordingRepository } from 'src/domain/recordings/application/ports/rec
 import { LocalRecordingRepository } from './local-recording.repository';
 import { RecordingMapper } from './mappers/recording.mapper';
 import { RecordingRecord } from './schema/recording.record';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RecordingRecord])],
+  imports: [TypeOrmModule.forFeature([RecordingRecord, SourceRecord])],
   providers: [
     RecordingMapper,
     { provide: RecordingRepository, useClass: LocalRecordingRepository },

@@ -8,8 +8,10 @@ import {
   UnexpectedRecordingError,
 } from 'src/domain/recordings/application/recordings.errors';
 import { RecordingAccessService } from 'src/domain/recordings/application/services/recording-access.service';
-import { RecordingCleanupService } from 'src/domain/recordings/application/services/recording-cleanup.service';
-import type { Recording } from 'src/domain/recordings/domain/recording';
+import {
+  RecordingCleanupService,
+  type DeletedRecordings,
+} from 'src/domain/recordings/application/services/recording-cleanup.service';
 import { DeleteRecordingCommand } from './delete-recording.command';
 
 @Injectable()
@@ -31,7 +33,7 @@ export class DeleteRecordingUseCase {
       [
         {
           label: 'clean up deleted recording',
-          run: () => this.cleanup.cleanUp([deleted]),
+          run: () => this.cleanup.cleanUp(deleted),
         },
       ],
       this.logger,
@@ -41,13 +43,14 @@ export class DeleteRecordingUseCase {
   @Transactional()
   private async deleteRecord(
     command: DeleteRecordingCommand,
-  ): Promise<Recording> {
+  ): Promise<DeletedRecordings> {
     const recording = await this.repository.findById(command.recordingId, {
       lock: true,
     });
     if (!recording) throw new RecordingNotFoundError(command.recordingId);
     await this.access.requireWrite(recording);
+    const deleted = await this.cleanup.snapshot([recording]);
     await this.repository.delete(recording);
-    return recording;
+    return deleted;
   }
 }

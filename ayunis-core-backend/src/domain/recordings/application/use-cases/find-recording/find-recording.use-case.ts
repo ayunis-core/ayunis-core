@@ -5,9 +5,9 @@ import {
   RecordingNotFoundError,
   UnexpectedRecordingError,
 } from 'src/domain/recordings/application/recordings.errors';
-import type { RecordingWithCreator } from 'src/domain/recordings/application/models/recording-with-creator';
+import type { RecordingDetails } from 'src/domain/recordings/application/models/recording-details';
 import { RecordingAccessService } from 'src/domain/recordings/application/services/recording-access.service';
-import { RecordingCreatorNameService } from 'src/domain/recordings/application/services/recording-creator-name.service';
+import { RecordingDetailsService } from 'src/domain/recordings/application/services/recording-details.service';
 import { FindRecordingQuery } from './find-recording.query';
 
 @Injectable()
@@ -17,16 +17,16 @@ export class FindRecordingUseCase {
   constructor(
     private readonly repository: RecordingRepository,
     private readonly access: RecordingAccessService,
-    private readonly creatorNames: RecordingCreatorNameService,
+    private readonly details: RecordingDetailsService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRecordingError)
-  async execute(query: FindRecordingQuery): Promise<RecordingWithCreator> {
+  async execute(query: FindRecordingQuery): Promise<RecordingDetails> {
     this.logger.log({ recordingId: query.id }, 'Finding recording');
     const recording = await this.repository.findById(query.id);
     if (!recording) throw new RecordingNotFoundError(query.id);
     await this.access.requireRead(recording);
-    const [withCreator] = await this.creatorNames.withCreators([recording]);
-    return withCreator;
+    const [details] = await this.details.describe([recording]);
+    return details;
   }
 }
