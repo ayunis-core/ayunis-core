@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.74.2](https://github.com/ayunis-core/ayunis-core/compare/v2.74.1...v2.74.2) (2026-11-12)
+
+
+### Performance Improvements
+
+* **rag:** send a document's embedding batches in parallel (AYC-1803) ([#2341](https://github.com/ayunis-core/ayunis-core/issues/2341)) ([1094ee0](https://github.com/ayunis-core/ayunis-core/commit/1094ee032703f8248b3efe64a10b90561ed10da3))
+
 ## [2.74.1](https://github.com/ayunis-core/ayunis-core/compare/v2.74.0...v2.74.1) (2026-11-12)
 
 
