@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { RecordingStatus } from 'src/domain/recordings/domain/recording-status.enum';
 import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { RecordingOwnerType } from './recording-owner.dto';
+import { RecordingSummaryStateDto } from './recording-summary-response.dto';
 
 export class RecordingResponseDto {
   @ApiProperty({ type: 'string', format: 'uuid' })
@@ -42,7 +43,7 @@ export class RecordingResponseDto {
     enum: RecordingStatus,
     enumName: 'RecordingStatus',
     description:
-      'uploading until the audio is stored, then transcribing, transcribed or failed',
+      'uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed',
   })
   status: RecordingStatus;
 
@@ -52,6 +53,12 @@ export class RecordingResponseDto {
     description: 'Why the transcription failed; only when the status is failed',
   })
   failureCode?: SourceProcessingErrorCode;
+
+  @ApiPropertyOptional({
+    type: RecordingSummaryStateDto,
+    description: 'The summary, from the moment the transcript is ready',
+  })
+  summary?: RecordingSummaryStateDto;
 
   @ApiProperty({ type: 'string', format: 'date-time' })
   createdAt: Date;

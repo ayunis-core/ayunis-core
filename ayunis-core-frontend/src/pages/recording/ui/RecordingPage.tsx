@@ -30,7 +30,7 @@ import {
   useRecording,
   useRenameRecording,
 } from '@/pages/recording/api';
-import { RecordingTranscriptCard } from './RecordingTranscriptCard';
+import { RecordingTabs } from './RecordingTabs';
 
 export function RecordingPage({
   recording: loaded,
@@ -130,24 +130,28 @@ export function RecordingPage({
           />
         }
         contentArea={
-          <div className="grid gap-4" data-testid="recording-page">
-            {isManageable && (
-              <ResourceOwnerCard
-                kind="recording"
-                resource={recording}
-                onChange={changeOwner}
-              />
-            )}
-            <RecordingPropertiesCard
-              key={`${recording.id}-${recording.updatedAt}`}
-              recording={recording}
-              ownerLabel={ownerLabel}
-              onRename={renameRecording}
-              disabled={!isManageable}
-            />
-            <RecordingTranscriptCard
+          <div data-testid="recording-page">
+            <RecordingTabs
               recording={recording}
               canManage={isManageable}
+              configuration={
+                <>
+                  {isManageable && (
+                    <ResourceOwnerCard
+                      kind="recording"
+                      resource={recording}
+                      onChange={changeOwner}
+                    />
+                  )}
+                  <RecordingPropertiesCard
+                    key={`${recording.id}-${recording.updatedAt}`}
+                    recording={recording}
+                    ownerLabel={ownerLabel}
+                    onRename={renameRecording}
+                    disabled={!isManageable}
+                  />
+                </>
+              }
             />
           </div>
         }

@@ -175,6 +175,7 @@ import type {
   RecordModuleHeartbeatRequestDto,
   RecordingListResponseDto,
   RecordingResponseDto,
+  RecordingSummaryResponseDto,
   RecordingTranscriptResponseDto,
   RecordingTransferOwnerDto,
   RecordingsControllerFindAllParams,
@@ -18454,6 +18455,103 @@ export const recordingUploadsControllerCompleteUpload = async (id: string,
     uploadId: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCompleteUploadResponse> => {
 
   return paneFetch<recordingUploadsControllerCompleteUploadResponse>(getRecordingUploadsControllerCompleteUploadUrl(id,uploadId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type recordingSummaryControllerSummaryResponse200 = {
+  data: RecordingSummaryResponseDto
+  status: 200
+}
+
+export type recordingSummaryControllerSummaryResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingSummaryControllerSummaryResponseSuccess = (recordingSummaryControllerSummaryResponse200) & {
+  headers: Headers;
+};
+export type recordingSummaryControllerSummaryResponseError = (recordingSummaryControllerSummaryResponse404) & {
+  headers: Headers;
+};
+
+export type recordingSummaryControllerSummaryResponse = (recordingSummaryControllerSummaryResponseSuccess | recordingSummaryControllerSummaryResponseError)
+
+export const getRecordingSummaryControllerSummaryUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/summary`
+}
+
+/**
+ * @summary Get a recording's generated summary
+ */
+export const recordingSummaryControllerSummary = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerSummaryResponse> => {
+
+  return paneFetch<recordingSummaryControllerSummaryResponse>(getRecordingSummaryControllerSummaryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingSummaryControllerRetryResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingSummaryControllerRetryResponse403 = {
+  data: void
+  status: 403
+}
+
+export type recordingSummaryControllerRetryResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingSummaryControllerRetryResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingSummaryControllerRetryResponseSuccess = (recordingSummaryControllerRetryResponse200) & {
+  headers: Headers;
+};
+export type recordingSummaryControllerRetryResponseError = (recordingSummaryControllerRetryResponse403 | recordingSummaryControllerRetryResponse404 | recordingSummaryControllerRetryResponse409) & {
+  headers: Headers;
+};
+
+export type recordingSummaryControllerRetryResponse = (recordingSummaryControllerRetryResponseSuccess | recordingSummaryControllerRetryResponseError)
+
+export const getRecordingSummaryControllerRetryUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/summary/retry`
+}
+
+/**
+ * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
+ * @summary Try a failed summary again
+ */
+export const recordingSummaryControllerRetry = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerRetryResponse> => {
+
+  return paneFetch<recordingSummaryControllerRetryResponse>(getRecordingSummaryControllerRetryUrl(id),
   {
     ...options,
     method: 'POST'

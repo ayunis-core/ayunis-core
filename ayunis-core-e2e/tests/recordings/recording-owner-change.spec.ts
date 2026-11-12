@@ -64,6 +64,7 @@ test('a recording moves between the user, a team and the organization and access
     try {
       const page = await context.newPage();
       await page.goto(`/recordings/${recording.id}`);
+      await page.getByTestId('recording-tab-configuration').click();
       await page.getByTestId('recording-owner-select').click();
       await page.getByTestId('recording-owner-select-option-org').click();
       await page.getByTestId('confirmation-confirm').click();

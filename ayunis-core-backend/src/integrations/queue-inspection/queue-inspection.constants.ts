@@ -3,6 +3,7 @@ import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/que
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
 import { ROUTINE_SWEEP_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-sweep.constants';
+import { RECORDING_SUMMARY_QUEUE } from 'src/domain/recordings/infrastructure/queue/recording-summary.constants';
 import { RELEASE_NOTE_SYNC_QUEUE } from 'src/domain/release-notes/infrastructure/queue/release-note-sync.constants';
 
 export const BULL_BOARD_PATH = '/internal/queues';
@@ -13,5 +14,6 @@ export const QUEUE_INSPECTION_QUEUE_NAMES = [
   URL_CRAWL_QUEUE,
   ROUTINE_EXECUTION_QUEUE,
   ROUTINE_SWEEP_QUEUE,
+  RECORDING_SUMMARY_QUEUE,
   RELEASE_NOTE_SYNC_QUEUE,
 ] as const;
