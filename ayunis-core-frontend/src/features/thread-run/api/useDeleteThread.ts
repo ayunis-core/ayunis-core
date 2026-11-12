@@ -6,6 +6,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { abortActiveThreadRun } from '@/features/thread-run/model/active-thread-run';
+import { cancelDeferredThreadRun } from '@/features/thread-run/model/deferred-thread-run';
 import { clearChatDraft } from '@/shared/lib/chat-draft-storage';
 
 interface UseDeleteChatParams {
@@ -37,6 +38,7 @@ export function useDeleteThread(params: UseDeleteChatParams) {
   function deleteChat(threadId: string) {
     params.onBeforeDelete?.();
     abortActiveThreadRun(threadId);
+    cancelDeferredThreadRun(threadId);
     mutate({ id: threadId });
   }
 

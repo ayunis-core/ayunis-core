@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
-import { takeStartedThreadRun } from '@/features/thread-run';
+import {
+  getDeferredThreadRun,
+  startDeferredThreadRun,
+  takeStartedThreadRun,
+} from '@/features/thread-run';
 import { showError } from '@/shared/lib/toast';
 import type { SendMessageInput } from '@/pages/chat/api/useMessageSend';
 import {
@@ -13,23 +17,35 @@ interface UsePendingMessageParams {
   threadId: string;
   /** Whether the chat route loaded the thread with saved messages. */
   hasLoadedMessages: boolean;
+  hasProcessingSources: boolean;
   sendTextMessage: (input: SendMessageInput) => Promise<void>;
 }
 
 /**
  * A new chat's first message is sent before navigation (see useInitiateChat),
- * after its sources, knowledge bases and integrations were attached. Once
- * ChatPage mounts, this hook takes that started run and streams its response
- * like any other send.
+ * after its knowledge bases and integrations were attached. Once ChatPage
+ * mounts, this hook takes that started run and streams its response like any
+ * other send. A chat started with files arrives with the message deferred
+ * instead: it is shown as pending and sent once no file is processing.
  */
 export function usePendingMessage({
   threadId,
   hasLoadedMessages,
+  hasProcessingSources,
   sendTextMessage,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
 
   useEffect(() => {
+    const deferredRun = getDeferredThreadRun(threadId);
+    if (deferredRun && hasProcessingSources) {
+      startThreadSubmission(threadId, {
+        text: deferredRun.text,
+        images: deferredRun.images.map((image) => image.file),
+      });
+      return;
+    }
+    startDeferredThreadRun(threadId);
     const startedRun = takeStartedThreadRun(threadId);
     if (!startedRun) return;
 
@@ -50,5 +66,5 @@ export function usePendingMessage({
         }
       }
     })();
-  }, [threadId, hasLoadedMessages, sendTextMessage, t]);
+  }, [threadId, hasLoadedMessages, hasProcessingSources, sendTextMessage, t]);
 }

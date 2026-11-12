@@ -14,6 +14,14 @@ export interface StartedThreadRun {
   request: StartedRunRequest;
 }
 
+export interface ThreadRunStart {
+  threadId: string;
+  text: string;
+  images: Array<{ file: File; altText?: string }>;
+  skillId?: string;
+  voiceInput?: boolean;
+}
+
 const startedRuns = new Map<string, StartedThreadRun>();
 
 /**
@@ -27,13 +35,7 @@ export function startThreadRun({
   images,
   skillId,
   voiceInput = false,
-}: {
-  threadId: string;
-  text: string;
-  images: Array<{ file: File; altText?: string }>;
-  skillId?: string;
-  voiceInput?: boolean;
-}): void {
+}: ThreadRunStart): void {
   const files = images.map((image) => image.file);
   const controller = new AbortController();
   const response = postRunMessage(

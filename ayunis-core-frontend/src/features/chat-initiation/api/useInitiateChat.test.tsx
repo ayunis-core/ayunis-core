@@ -4,12 +4,22 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   abortActiveThreadRun,
+  cancelDeferredThreadRun,
+  getDeferredThreadRun,
   takeStartedThreadRun,
 } from '@/features/thread-run';
+import { showError } from '@/shared/lib/toast';
 import { useInitiateChat } from './useInitiateChat';
 
 const threadId = '00000000-0000-0000-0000-000000000001';
 const SETTLE_ANIMATION_MS = 2430;
+const FIVE_MINUTES_MS = 300_000;
+const pdfSource = {
+  id: 'source-1',
+  name: 'haushalt.pdf',
+  type: 'text' as const,
+  file: new File(['pdf'], 'haushalt.pdf'),
+};
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -106,6 +116,7 @@ describe(useInitiateChat.name, () => {
 
   afterEach(() => {
     takeStartedThreadRun(threadId);
+    cancelDeferredThreadRun(threadId);
     abortActiveThreadRun(threadId);
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -168,7 +179,33 @@ describe(useInitiateChat.name, () => {
     expect(takeStartedThreadRun(threadId)).toBeNull();
   });
 
-  it('sends the first message only after attached files are processed', async () => {
+  it('opens the chat while an attached file is still processing and leaves the first message to be sent there', async () => {
+    mocks.findThread.mockResolvedValue({
+      sources: [{ id: 'source-1', status: 'processing' }],
+    });
+    const { result } = renderHook(() => useInitiateChat(), { wrapper });
+
+    await act(async () => {
+      void result.current.initiateChat({
+        ...chatParams,
+        sources: [pdfSource],
+      });
+      await vi.advanceTimersByTimeAsync(FIVE_MINUTES_MS);
+    });
+
+    expect(mocks.navigate).toHaveBeenCalledWith({
+      to: '/chats/$threadId',
+      params: { threadId },
+    });
+    expect(showError).not.toHaveBeenCalled();
+    expect(sentRunRequests()).toHaveLength(0);
+    expect(getDeferredThreadRun(threadId)).toMatchObject({
+      text: 'Fasse den Haushalt zusammen',
+      skillId: 'skill-1',
+    });
+  });
+
+  it('does not open the chat before the attached file is uploaded', async () => {
     let finishUpload: () => void = () => undefined;
     mocks.transfer.mockReturnValue(
       new Promise<void>((resolve) => {
@@ -180,26 +217,37 @@ describe(useInitiateChat.name, () => {
     await act(async () => {
       void result.current.initiateChat({
         ...chatParams,
-        sources: [
-          {
-            id: 'source-1',
-            name: 'haushalt.pdf',
-            type: 'text',
-            file: new File(['pdf'], 'haushalt.pdf'),
-          },
-        ],
+        sources: [pdfSource],
       });
       await vi.advanceTimersByTimeAsync(SETTLE_ANIMATION_MS);
     });
-    expect(sentRunRequests()).toHaveLength(0);
+    expect(mocks.navigate).not.toHaveBeenCalled();
 
     await act(async () => {
       finishUpload();
       await vi.advanceTimersByTimeAsync(0);
     });
 
-    expect(mocks.findThread).toHaveBeenCalledWith(threadId);
-    expect(sentRunRequests()).toHaveLength(1);
+    expect(mocks.navigate).toHaveBeenCalled();
+  });
+
+  it('drops the waiting first message when cancelled during the settle animation', async () => {
+    const { result } = renderHook(() => useInitiateChat(), { wrapper });
+    await act(async () => {
+      void result.current.initiateChat({
+        ...chatParams,
+        sources: [pdfSource],
+      });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(getDeferredThreadRun(threadId)).not.toBeNull();
+
+    act(() => result.current.cancel());
+    await act(() => vi.advanceTimersByTimeAsync(SETTLE_ANIMATION_MS));
+
+    expect(getDeferredThreadRun(threadId)).toBeNull();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(sentRunRequests()).toHaveLength(0);
   });
 });
 

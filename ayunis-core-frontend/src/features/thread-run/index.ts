@@ -23,3 +23,10 @@ export {
   takeStartedThreadRun,
   type StartedRunRequest,
 } from './model/started-thread-run';
+export {
+  cancelDeferredThreadRun,
+  deferThreadRun,
+  getDeferredThreadRun,
+  startDeferredThreadRun,
+  useIsThreadRunDeferred,
+} from './model/deferred-thread-run';
