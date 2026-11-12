@@ -201,6 +201,35 @@ describe('MistralFileRetrieverHandler', () => {
       );
     });
 
+    it('leaves the image text annotation out of the request when it is switched off', async () => {
+      const withoutImageText = new MistralFileRetrieverHandler(
+        new ConfigService({
+          retrieval: {
+            mistral: { apiKey: 'test-api-key' },
+            ocrImageText: false,
+          },
+        }),
+      );
+      const client = (
+        withoutImageText as unknown as { client: typeof mockClient }
+      ).client;
+      client.ocr.process.mockResolvedValue({
+        pages: [
+          { markdown: '# Content', index: 0, images: [{ id: 'img-0.jpeg' }] },
+        ],
+      });
+
+      const result = await withoutImageText.processFile(testFile);
+
+      expect(client.ocr.process.mock.calls[0][0]).not.toHaveProperty(
+        'bboxAnnotationFormat',
+      );
+      expect(client.ocr.process).toHaveBeenCalledWith(
+        expect.objectContaining({ includeImageBase64: false }),
+      );
+      expect(result.pages.map((page) => page.text)).toEqual(['# Content']);
+    });
+
     it('includes visible text extracted from screenshots embedded in a PDF', async () => {
       mockClient.ocr.process.mockResolvedValue({
         pages: [

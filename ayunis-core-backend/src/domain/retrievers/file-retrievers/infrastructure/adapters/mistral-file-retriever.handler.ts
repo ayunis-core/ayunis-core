@@ -34,11 +34,21 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
-  // Per-attempt OCR timeout. Healthy OCR p95 is ~27s; the slowest successful
-  // calls observed in production were ~115s, so 120s leaves headroom for
-  // large documents while a stalled connection fails fast and retries instead
-  // of eating a 5-minute slice per attempt (AYC-422).
+  // Per-attempt OCR timeout. Healthy OCR p95 is ~27s, but successful calls of
+  // ~115s were observed in production, and one batch of 20 picture pages
+  // answered correctly after 105s (2026-11-12), so 120s stays. Cutting it to
+  // 60s was considered and dropped: there are no production timings per
+  // batch to show that it would not fail slow but successful calls.
+  // What bounds a stalled provider is the retry window instead. Failures are
+  // retried only while the batch is younger than RETRY_WINDOW_MS: quick ones
+  // (429, 5xx) keep their three retries, a timed-out attempt gets one more
+  // and a second timeout ends the batch. That is about four minutes per
+  // batch at worst, after which the queue's own retry takes over with the
+  // finished batches saved; three retries of a timeout held a document slot
+  // for over eight minutes (AYC-1800).
   private readonly TIMEOUT_MS = 120 * 1000;
+  private readonly RETRY_WINDOW_MS = this.TIMEOUT_MS + 5 * 1000;
+  private readonly imageText: boolean;
 
   constructor(private readonly configService: ConfigService) {
     super();
@@ -48,6 +58,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       serverURL: this.configService.get('retrieval.mistral.serverUrl'),
       timeoutMs: this.TIMEOUT_MS,
     });
+    this.imageText =
+      this.configService.get<boolean>('retrieval.ocrImageText') !== false;
   }
 
   async processFile(
@@ -137,6 +149,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   // The EU endpoint has no Files API, so the document travels inline.
   private async runOcr(file: File, pageLimit?: number): Promise<OCRResponse> {
     const documentUrl = `data:${file.fileType};base64,${file.fileData.toString('base64')}`;
+    const startedAt = Date.now();
     return retryWithBackoff({
       fn: () =>
         this.client.ocr.process({
@@ -146,12 +159,16 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           // bytes pushed large documents into the 120s body-read deadline
           // (AYC-655).
           includeImageBase64: false,
-          bboxAnnotationFormat: IMAGE_TEXT_ANNOTATION_FORMAT,
+          ...(this.imageText
+            ? { bboxAnnotationFormat: IMAGE_TEXT_ANNOTATION_FORMAT }
+            : {}),
           ...(pageLimit === undefined ? {} : { pages: `0-${pageLimit - 1}` }),
         }),
       maxRetries: 3,
       delay: 1000,
-      retryIfError: isTransientMistralError,
+      retryIfError: (error) =>
+        Date.now() - startedAt < this.RETRY_WINDOW_MS &&
+        isTransientMistralError(error),
     });
   }
 

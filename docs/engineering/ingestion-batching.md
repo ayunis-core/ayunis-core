@@ -11,6 +11,7 @@ will move this same code into a separate worker; public upload limits stay uncha
 | `OCR_BATCH_MAX_PAGES`             | 20                  | Maximum pages in each independently readable PDF |
 | `OCR_BATCH_MAX_BYTES`             | 10485760            | Maximum encoded PDF request bytes                |
 | `OCR_MAX_CONCURRENCY`             | 4                   | Concurrent OCR requests per application process  |
+| `OCR_IMAGE_TEXT_ENABLED`          | true                | Transcribe text inside pictures embedded in PDFs |
 | `AUDIO_SEGMENT_MAX_SECONDS`       | 600                 | Maximum recording segment duration               |
 | `AUDIO_SEGMENT_MAX_BYTES`         | 20971520            | Maximum encoded audio request bytes              |
 | `AUDIO_TRANSCRIPTION_CONCURRENCY` | 2                   | Concurrent recording requests per process        |
@@ -21,7 +22,16 @@ will move this same code into a separate worker; public upload limits stay uncha
 The runtime image includes FFmpeg and ffprobe. Microphone transcription keeps its
 existing endpoint, validation and single-request behavior. Uploaded recordings
 retain original timestamps in searchable text. Text inside PDF figures continues
-through the existing Mistral image-text annotation path.
+through the existing Mistral image-text annotation path unless
+`OCR_IMAGE_TEXT_ENABLED=false`.
+
+Since AYC-1800 the batches of one PDF run in parallel under `OCR_MAX_CONCURRENCY`.
+A document may use every slot of its process, but never has more batches waiting
+or running than there are slots, so it holds at most that many batches in memory
+(`OCR_MAX_CONCURRENCY` × `OCR_BATCH_MAX_BYTES`) and another document's batch waits
+for one batch, not for the whole document. One OCR attempt may still take 120 s,
+but a timed-out attempt is retried only once, so a batch gives up after about
+four minutes instead of eight; the job retry continues from the saved batches.
 
 Completed parts are stored under
 `<orgId>/processing/<sourceId>/results/<identity>.json`. The identity includes the

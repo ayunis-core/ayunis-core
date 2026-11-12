@@ -200,6 +200,7 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   PDF_MAX_UPLOAD_BYTES?: number;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) OCR_IMAGE_TEXT_ENABLED?: string;
   @IsOptional()
   @Type(() => Number)
   @IsInt()

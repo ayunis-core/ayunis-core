@@ -9,12 +9,14 @@ export interface RetrievalConfig {
   ocrBatchPages?: number;
   ocrBatchBytes?: number;
   ocrConcurrency?: number;
+  ocrImageText: boolean;
 }
 
 export default registerAs('retrieval', (): RetrievalConfig => ({
   ocrBatchPages: Number(process.env.OCR_BATCH_MAX_PAGES || 20),
   ocrBatchBytes: Number(process.env.OCR_BATCH_MAX_BYTES || 10 * 1024 * 1024),
   ocrConcurrency: Number(process.env.OCR_MAX_CONCURRENCY || 4),
+  ocrImageText: process.env.OCR_IMAGE_TEXT_ENABLED !== 'false',
   mistral: {
     apiKey: process.env.MISTRAL_API_KEY,
     serverUrl: process.env.MISTRAL_OCR_SERVER_URL,
