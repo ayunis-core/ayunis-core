@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.74.1](https://github.com/ayunis-core/ayunis-core/compare/v2.74.0...v2.74.1) (2026-11-12)
+
+
+### Performance Improvements
+
+* **retrievers:** run ocr batches of a document in parallel and shorten the ocr retry budget (AYC-1800) ([#2339](https://github.com/ayunis-core/ayunis-core/issues/2339)) ([1f8cf59](https://github.com/ayunis-core/ayunis-core/commit/1f8cf5980668240d5667c5deee3ff9231ccd35b5))
+
 ## [2.74.0](https://github.com/ayunis-core/ayunis-core/compare/v2.73.0...v2.74.0) (2026-11-12)
 
 
