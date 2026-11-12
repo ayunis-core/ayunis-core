@@ -7,6 +7,7 @@ import { DataHandlingCapability } from 'src/domain/runs/application/run-capabili
 import { DateTimeCapability } from 'src/domain/runs/application/run-capabilities/capabilities/date-time.capability';
 import { InternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
+import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -49,6 +50,7 @@ export class OutlookRunProfile implements RunProfile {
     internet: InternetCapability,
     threadSources: ThreadSourcesCapability,
     knowledgeBases: KnowledgeBasesCapability,
+    recordings: RecordingsCapability,
     notificationContext: NotificationContextCapability,
     workspaceInstructions: WorkspaceInstructionsCapability,
     mcp: McpCapability,
@@ -64,6 +66,7 @@ export class OutlookRunProfile implements RunProfile {
       internet,
       threadSources,
       knowledgeBases,
+      recordings,
       notificationContext,
       workspaceInstructions,
       mcp,

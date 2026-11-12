@@ -10,6 +10,7 @@ import type { SourceCitationResponseDto } from '@/shared/api';
 import { useSourceCitation } from '@/pages/chat/api/useSourceCitation';
 import { Markdown } from '@/widgets/markdown';
 import type { SourceCitation } from '@/widgets/markdown';
+import { RecordingCitationDetails } from './RecordingCitationDetails';
 
 interface SourceCitationDialogProps {
   readonly threadId: string;
@@ -38,7 +39,9 @@ export default function SourceCitationDialog({
       >
         <DialogHeader>
           <DialogTitle>
-            {citation?.source.name ?? t('chat.sourceCitation.title')}
+            {citation?.recording?.name ??
+              citation?.source.name ??
+              t('chat.sourceCitation.title')}
           </DialogTitle>
         </DialogHeader>
         <CitationDialogBody
@@ -88,7 +91,6 @@ function CitationContent({
   citation,
 }: Readonly<{ citation: SourceCitationResponseDto }>) {
   const { t } = useTranslation('chat');
-  const safeUrl = getSafeHttpUrl(citation.source.url);
 
   return (
     <div
@@ -96,32 +98,52 @@ function CitationContent({
       className="min-w-0 w-full max-h-[70vh] overflow-y-auto pr-4"
     >
       <div className="min-w-0 space-y-6">
-        <div className="space-y-1 text-sm text-muted-foreground">
-          {safeUrl && (
-            <a
-              href={safeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block break-all text-brand underline underline-offset-4"
-            >
-              {citation.source.url}
-            </a>
-          )}
-          <LineMetadata
-            startLine={citation.chunk.startLine}
-            endLine={citation.chunk.endLine}
-          />
-        </div>
+        {citation.recording ? (
+          <RecordingCitationDetails recording={citation.recording} />
+        ) : (
+          <SourceDetails citation={citation} />
+        )}
         <section className="space-y-2">
           <h3 className="font-medium">{t('chat.sourceCitation.excerpt')}</h3>
           <div
             data-testid="source-citation-excerpt"
             className="rounded-md border border-brand/20 bg-brand/10 p-4"
           >
-            <Markdown renderImages={false}>{citation.chunk.content}</Markdown>
+            {citation.recording?.position === 'transcript' ? (
+              <p className="whitespace-pre-wrap text-sm">
+                {citation.chunk.content}
+              </p>
+            ) : (
+              <Markdown renderImages={false}>{citation.chunk.content}</Markdown>
+            )}
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function SourceDetails({
+  citation,
+}: Readonly<{ citation: SourceCitationResponseDto }>) {
+  const safeUrl = getSafeHttpUrl(citation.source.url);
+
+  return (
+    <div className="space-y-1 text-sm text-muted-foreground">
+      {safeUrl && (
+        <a
+          href={safeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block break-all text-brand underline underline-offset-4"
+        >
+          {citation.source.url}
+        </a>
+      )}
+      <LineMetadata
+        startLine={citation.chunk.startLine}
+        endLine={citation.chunk.endLine}
+      />
     </div>
   );
 }

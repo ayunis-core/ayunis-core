@@ -58,3 +58,13 @@ export function formatTurn(turn: TranscriptTurn): string {
     turn.speakerNumber === undefined ? '' : `Speaker ${turn.speakerNumber}: `;
   return `[${formatTimestamp(turn.start)} - ${formatTimestamp(turn.end)}] ${label}${turn.text}`;
 }
+
+const TURN_SPEAKER_PATTERN = /^\[[^\]\n]*\] Speaker (\d+): /gm;
+
+/** The speaker numbers of the lines `formatTurn` wrote, in order of first appearance. */
+export function speakerNumbersIn(text: string): number[] {
+  const numbers = [...text.matchAll(TURN_SPEAKER_PATTERN)].map((match) =>
+    Number(match[1]),
+  );
+  return [...new Set(numbers)];
+}

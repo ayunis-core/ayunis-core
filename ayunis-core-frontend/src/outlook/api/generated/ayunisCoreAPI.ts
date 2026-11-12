@@ -14836,6 +14836,544 @@ return paneFetch<superAdminTrialsControllerUpdateTrialResponse>(getSuperAdminTri
 
 
 
+export type recordingsControllerCreateResponse201 = {
+  data: RecordingResponseDto
+  status: 201
+}
+
+export type recordingsControllerCreateResponseSuccess = (recordingsControllerCreateResponse201) & {
+  headers: Headers;
+};
+;
+
+export type recordingsControllerCreateResponse = (recordingsControllerCreateResponseSuccess)
+
+export const getRecordingsControllerCreateUrl = () => {
+
+
+
+
+  return `/recordings`
+}
+
+/**
+ * @summary Create a recording
+ */
+export const recordingsControllerCreate = async (createRecordingDto: CreateRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerCreateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerCreateResponse>(getRecordingsControllerCreateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecordingDto)
+  }
+);}
+
+
+
+export type recordingsControllerFindAllResponse200 = {
+  data: RecordingListResponseDto
+  status: 200
+}
+
+export type recordingsControllerFindAllResponseSuccess = (recordingsControllerFindAllResponse200) & {
+  headers: Headers;
+};
+;
+
+export type recordingsControllerFindAllResponse = (recordingsControllerFindAllResponseSuccess)
+
+export const getRecordingsControllerFindAllUrl = (params: RecordingsControllerFindAllParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/recordings?${stringifiedParams}` : `/recordings`
+}
+
+/**
+ * @summary List the recordings of the user, their teams and organization, or of a workspace
+ */
+export const recordingsControllerFindAll = async (params: RecordingsControllerFindAllParams, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindAllResponse> => {
+
+  return paneFetch<recordingsControllerFindAllResponse>(getRecordingsControllerFindAllUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerFindOneResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerFindOneResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerFindOneResponseSuccess = (recordingsControllerFindOneResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerFindOneResponseError = (recordingsControllerFindOneResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerFindOneResponse = (recordingsControllerFindOneResponseSuccess | recordingsControllerFindOneResponseError)
+
+export const getRecordingsControllerFindOneUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Get a recording
+ */
+export const recordingsControllerFindOne = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindOneResponse> => {
+
+  return paneFetch<recordingsControllerFindOneResponse>(getRecordingsControllerFindOneUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerRenameResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerRenameResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerRenameResponseSuccess = (recordingsControllerRenameResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerRenameResponseError = (recordingsControllerRenameResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerRenameResponse = (recordingsControllerRenameResponseSuccess | recordingsControllerRenameResponseError)
+
+export const getRecordingsControllerRenameUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Rename a recording
+ */
+export const recordingsControllerRename = async (id: string,
+    renameRecordingDto: RenameRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerRenameResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerRenameResponse>(getRecordingsControllerRenameUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(renameRecordingDto)
+  }
+);}
+
+
+
+export type recordingsControllerDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type recordingsControllerDeleteResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerDeleteResponseSuccess = (recordingsControllerDeleteResponse204) & {
+  headers: Headers;
+};
+export type recordingsControllerDeleteResponseError = (recordingsControllerDeleteResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerDeleteResponse = (recordingsControllerDeleteResponseSuccess | recordingsControllerDeleteResponseError)
+
+export const getRecordingsControllerDeleteUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}`
+}
+
+/**
+ * @summary Delete a recording
+ */
+export const recordingsControllerDelete = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerDeleteResponse> => {
+
+  return paneFetch<recordingsControllerDeleteResponse>(getRecordingsControllerDeleteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerTranscriptResponse200 = {
+  data: RecordingTranscriptResponseDto
+  status: 200
+}
+
+export type recordingsControllerTranscriptResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerTranscriptResponseSuccess = (recordingsControllerTranscriptResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerTranscriptResponseError = (recordingsControllerTranscriptResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerTranscriptResponse = (recordingsControllerTranscriptResponseSuccess | recordingsControllerTranscriptResponseError)
+
+export const getRecordingsControllerTranscriptUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/transcript`
+}
+
+/**
+ * @summary Get a recording's transcript as speaker turns
+ */
+export const recordingsControllerTranscript = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerTranscriptResponse> => {
+
+  return paneFetch<recordingsControllerTranscriptResponse>(getRecordingsControllerTranscriptUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingsControllerChangeOwnerResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingsControllerChangeOwnerResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingsControllerChangeOwnerResponseSuccess = (recordingsControllerChangeOwnerResponse200) & {
+  headers: Headers;
+};
+export type recordingsControllerChangeOwnerResponseError = (recordingsControllerChangeOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type recordingsControllerChangeOwnerResponse = (recordingsControllerChangeOwnerResponseSuccess | recordingsControllerChangeOwnerResponseError)
+
+export const getRecordingsControllerChangeOwnerUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/owner`
+}
+
+/**
+ * @summary Move a recording to the caller, a team or the organization
+ */
+export const recordingsControllerChangeOwner = async (id: string,
+    recordingTransferOwnerDto: RecordingTransferOwnerDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerChangeOwnerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingsControllerChangeOwnerResponse>(getRecordingsControllerChangeOwnerUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordingTransferOwnerDto)
+  }
+);}
+
+
+
+export type recordingUploadsControllerCreateUploadResponse201 = {
+  data: SourceUploadSessionResponseDto
+  status: 201
+}
+
+export type recordingUploadsControllerCreateUploadResponse400 = {
+  data: void
+  status: 400
+}
+
+export type recordingUploadsControllerCreateUploadResponse403 = {
+  data: void
+  status: 403
+}
+
+export type recordingUploadsControllerCreateUploadResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingUploadsControllerCreateUploadResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingUploadsControllerCreateUploadResponse413 = {
+  data: void
+  status: 413
+}
+
+export type recordingUploadsControllerCreateUploadResponseSuccess = (recordingUploadsControllerCreateUploadResponse201) & {
+  headers: Headers;
+};
+export type recordingUploadsControllerCreateUploadResponseError = (recordingUploadsControllerCreateUploadResponse400 | recordingUploadsControllerCreateUploadResponse403 | recordingUploadsControllerCreateUploadResponse404 | recordingUploadsControllerCreateUploadResponse409 | recordingUploadsControllerCreateUploadResponse413) & {
+  headers: Headers;
+};
+
+export type recordingUploadsControllerCreateUploadResponse = (recordingUploadsControllerCreateUploadResponseSuccess | recordingUploadsControllerCreateUploadResponseError)
+
+export const getRecordingUploadsControllerCreateUploadUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/uploads`
+}
+
+/**
+ * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
+ * @summary Create the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCreateUpload = async (id: string,
+    createSourceUploadDto: CreateSourceUploadDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCreateUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingUploadsControllerCreateUploadResponse>(getRecordingUploadsControllerCreateUploadUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createSourceUploadDto)
+  }
+);}
+
+
+
+export type recordingUploadsControllerCompleteUploadResponse202 = {
+  data: RecordingResponseDto
+  status: 202
+}
+
+export type recordingUploadsControllerCompleteUploadResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingUploadsControllerCompleteUploadResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingUploadsControllerCompleteUploadResponse410 = {
+  data: void
+  status: 410
+}
+
+export type recordingUploadsControllerCompleteUploadResponseSuccess = (recordingUploadsControllerCompleteUploadResponse202) & {
+  headers: Headers;
+};
+export type recordingUploadsControllerCompleteUploadResponseError = (recordingUploadsControllerCompleteUploadResponse404 | recordingUploadsControllerCompleteUploadResponse409 | recordingUploadsControllerCompleteUploadResponse410) & {
+  headers: Headers;
+};
+
+export type recordingUploadsControllerCompleteUploadResponse = (recordingUploadsControllerCompleteUploadResponseSuccess | recordingUploadsControllerCompleteUploadResponseError)
+
+export const getRecordingUploadsControllerCompleteUploadUrl = (id: string,
+    uploadId: string,) => {
+
+
+
+
+  return `/recordings/${id}/uploads/${uploadId}/complete`
+}
+
+/**
+ * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
+ * @summary Complete the direct upload of a recording's audio
+ */
+export const recordingUploadsControllerCompleteUpload = async (id: string,
+    uploadId: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCompleteUploadResponse> => {
+
+  return paneFetch<recordingUploadsControllerCompleteUploadResponse>(getRecordingUploadsControllerCompleteUploadUrl(id,uploadId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type recordingSummaryControllerSummaryResponse200 = {
+  data: RecordingSummaryResponseDto
+  status: 200
+}
+
+export type recordingSummaryControllerSummaryResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingSummaryControllerSummaryResponseSuccess = (recordingSummaryControllerSummaryResponse200) & {
+  headers: Headers;
+};
+export type recordingSummaryControllerSummaryResponseError = (recordingSummaryControllerSummaryResponse404) & {
+  headers: Headers;
+};
+
+export type recordingSummaryControllerSummaryResponse = (recordingSummaryControllerSummaryResponseSuccess | recordingSummaryControllerSummaryResponseError)
+
+export const getRecordingSummaryControllerSummaryUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/summary`
+}
+
+/**
+ * @summary Get a recording's generated summary
+ */
+export const recordingSummaryControllerSummary = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerSummaryResponse> => {
+
+  return paneFetch<recordingSummaryControllerSummaryResponse>(getRecordingSummaryControllerSummaryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingSummaryControllerRetryResponse200 = {
+  data: RecordingResponseDto
+  status: 200
+}
+
+export type recordingSummaryControllerRetryResponse403 = {
+  data: void
+  status: 403
+}
+
+export type recordingSummaryControllerRetryResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingSummaryControllerRetryResponse409 = {
+  data: void
+  status: 409
+}
+
+export type recordingSummaryControllerRetryResponseSuccess = (recordingSummaryControllerRetryResponse200) & {
+  headers: Headers;
+};
+export type recordingSummaryControllerRetryResponseError = (recordingSummaryControllerRetryResponse403 | recordingSummaryControllerRetryResponse404 | recordingSummaryControllerRetryResponse409) & {
+  headers: Headers;
+};
+
+export type recordingSummaryControllerRetryResponse = (recordingSummaryControllerRetryResponseSuccess | recordingSummaryControllerRetryResponseError)
+
+export const getRecordingSummaryControllerRetryUrl = (id: string,) => {
+
+
+
+
+  return `/recordings/${id}/summary/retry`
+}
+
+/**
+ * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
+ * @summary Try a failed summary again
+ */
+export const recordingSummaryControllerRetry = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerRetryResponse> => {
+
+  return paneFetch<recordingSummaryControllerRetryResponse>(getRecordingSummaryControllerRetryUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
 export type superAdminSkillTemplatesControllerCreateResponse201 = {
   data: SkillTemplateResponseDto
   status: 201
@@ -18017,544 +18555,6 @@ export const superAdminAcademyCourseModulesControllerDeleteCourseModule = async 
   {
     ...options,
     method: 'DELETE'
-
-
-  }
-);}
-
-
-
-export type recordingsControllerCreateResponse201 = {
-  data: RecordingResponseDto
-  status: 201
-}
-
-export type recordingsControllerCreateResponseSuccess = (recordingsControllerCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type recordingsControllerCreateResponse = (recordingsControllerCreateResponseSuccess)
-
-export const getRecordingsControllerCreateUrl = () => {
-
-
-
-
-  return `/recordings`
-}
-
-/**
- * @summary Create a recording
- */
-export const recordingsControllerCreate = async (createRecordingDto: CreateRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerCreateResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return paneFetch<recordingsControllerCreateResponse>(getRecordingsControllerCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(createRecordingDto)
-  }
-);}
-
-
-
-export type recordingsControllerFindAllResponse200 = {
-  data: RecordingListResponseDto
-  status: 200
-}
-
-export type recordingsControllerFindAllResponseSuccess = (recordingsControllerFindAllResponse200) & {
-  headers: Headers;
-};
-;
-
-export type recordingsControllerFindAllResponse = (recordingsControllerFindAllResponseSuccess)
-
-export const getRecordingsControllerFindAllUrl = (params: RecordingsControllerFindAllParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/recordings?${stringifiedParams}` : `/recordings`
-}
-
-/**
- * @summary List the recordings of the user, their teams and organization, or of a workspace
- */
-export const recordingsControllerFindAll = async (params: RecordingsControllerFindAllParams, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindAllResponse> => {
-
-  return paneFetch<recordingsControllerFindAllResponse>(getRecordingsControllerFindAllUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-export type recordingsControllerFindOneResponse200 = {
-  data: RecordingResponseDto
-  status: 200
-}
-
-export type recordingsControllerFindOneResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingsControllerFindOneResponseSuccess = (recordingsControllerFindOneResponse200) & {
-  headers: Headers;
-};
-export type recordingsControllerFindOneResponseError = (recordingsControllerFindOneResponse404) & {
-  headers: Headers;
-};
-
-export type recordingsControllerFindOneResponse = (recordingsControllerFindOneResponseSuccess | recordingsControllerFindOneResponseError)
-
-export const getRecordingsControllerFindOneUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}`
-}
-
-/**
- * @summary Get a recording
- */
-export const recordingsControllerFindOne = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerFindOneResponse> => {
-
-  return paneFetch<recordingsControllerFindOneResponse>(getRecordingsControllerFindOneUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-export type recordingsControllerRenameResponse200 = {
-  data: RecordingResponseDto
-  status: 200
-}
-
-export type recordingsControllerRenameResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingsControllerRenameResponseSuccess = (recordingsControllerRenameResponse200) & {
-  headers: Headers;
-};
-export type recordingsControllerRenameResponseError = (recordingsControllerRenameResponse404) & {
-  headers: Headers;
-};
-
-export type recordingsControllerRenameResponse = (recordingsControllerRenameResponseSuccess | recordingsControllerRenameResponseError)
-
-export const getRecordingsControllerRenameUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}`
-}
-
-/**
- * @summary Rename a recording
- */
-export const recordingsControllerRename = async (id: string,
-    renameRecordingDto: RenameRecordingDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerRenameResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return paneFetch<recordingsControllerRenameResponse>(getRecordingsControllerRenameUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(renameRecordingDto)
-  }
-);}
-
-
-
-export type recordingsControllerDeleteResponse204 = {
-  data: void
-  status: 204
-}
-
-export type recordingsControllerDeleteResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingsControllerDeleteResponseSuccess = (recordingsControllerDeleteResponse204) & {
-  headers: Headers;
-};
-export type recordingsControllerDeleteResponseError = (recordingsControllerDeleteResponse404) & {
-  headers: Headers;
-};
-
-export type recordingsControllerDeleteResponse = (recordingsControllerDeleteResponseSuccess | recordingsControllerDeleteResponseError)
-
-export const getRecordingsControllerDeleteUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}`
-}
-
-/**
- * @summary Delete a recording
- */
-export const recordingsControllerDelete = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerDeleteResponse> => {
-
-  return paneFetch<recordingsControllerDeleteResponse>(getRecordingsControllerDeleteUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-export type recordingsControllerTranscriptResponse200 = {
-  data: RecordingTranscriptResponseDto
-  status: 200
-}
-
-export type recordingsControllerTranscriptResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingsControllerTranscriptResponseSuccess = (recordingsControllerTranscriptResponse200) & {
-  headers: Headers;
-};
-export type recordingsControllerTranscriptResponseError = (recordingsControllerTranscriptResponse404) & {
-  headers: Headers;
-};
-
-export type recordingsControllerTranscriptResponse = (recordingsControllerTranscriptResponseSuccess | recordingsControllerTranscriptResponseError)
-
-export const getRecordingsControllerTranscriptUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}/transcript`
-}
-
-/**
- * @summary Get a recording's transcript as speaker turns
- */
-export const recordingsControllerTranscript = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerTranscriptResponse> => {
-
-  return paneFetch<recordingsControllerTranscriptResponse>(getRecordingsControllerTranscriptUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-export type recordingsControllerChangeOwnerResponse200 = {
-  data: RecordingResponseDto
-  status: 200
-}
-
-export type recordingsControllerChangeOwnerResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingsControllerChangeOwnerResponseSuccess = (recordingsControllerChangeOwnerResponse200) & {
-  headers: Headers;
-};
-export type recordingsControllerChangeOwnerResponseError = (recordingsControllerChangeOwnerResponse404) & {
-  headers: Headers;
-};
-
-export type recordingsControllerChangeOwnerResponse = (recordingsControllerChangeOwnerResponseSuccess | recordingsControllerChangeOwnerResponseError)
-
-export const getRecordingsControllerChangeOwnerUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}/owner`
-}
-
-/**
- * @summary Move a recording to the caller, a team or the organization
- */
-export const recordingsControllerChangeOwner = async (id: string,
-    recordingTransferOwnerDto: RecordingTransferOwnerDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingsControllerChangeOwnerResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return paneFetch<recordingsControllerChangeOwnerResponse>(getRecordingsControllerChangeOwnerUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(recordingTransferOwnerDto)
-  }
-);}
-
-
-
-export type recordingUploadsControllerCreateUploadResponse201 = {
-  data: SourceUploadSessionResponseDto
-  status: 201
-}
-
-export type recordingUploadsControllerCreateUploadResponse400 = {
-  data: void
-  status: 400
-}
-
-export type recordingUploadsControllerCreateUploadResponse403 = {
-  data: void
-  status: 403
-}
-
-export type recordingUploadsControllerCreateUploadResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingUploadsControllerCreateUploadResponse409 = {
-  data: void
-  status: 409
-}
-
-export type recordingUploadsControllerCreateUploadResponse413 = {
-  data: void
-  status: 413
-}
-
-export type recordingUploadsControllerCreateUploadResponseSuccess = (recordingUploadsControllerCreateUploadResponse201) & {
-  headers: Headers;
-};
-export type recordingUploadsControllerCreateUploadResponseError = (recordingUploadsControllerCreateUploadResponse400 | recordingUploadsControllerCreateUploadResponse403 | recordingUploadsControllerCreateUploadResponse404 | recordingUploadsControllerCreateUploadResponse409 | recordingUploadsControllerCreateUploadResponse413) & {
-  headers: Headers;
-};
-
-export type recordingUploadsControllerCreateUploadResponse = (recordingUploadsControllerCreateUploadResponseSuccess | recordingUploadsControllerCreateUploadResponseError)
-
-export const getRecordingUploadsControllerCreateUploadUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}/uploads`
-}
-
-/**
- * Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.
- * @summary Create the direct upload of a recording's audio
- */
-export const recordingUploadsControllerCreateUpload = async (id: string,
-    createSourceUploadDto: CreateSourceUploadDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCreateUploadResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return paneFetch<recordingUploadsControllerCreateUploadResponse>(getRecordingUploadsControllerCreateUploadUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(createSourceUploadDto)
-  }
-);}
-
-
-
-export type recordingUploadsControllerCompleteUploadResponse202 = {
-  data: RecordingResponseDto
-  status: 202
-}
-
-export type recordingUploadsControllerCompleteUploadResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingUploadsControllerCompleteUploadResponse409 = {
-  data: void
-  status: 409
-}
-
-export type recordingUploadsControllerCompleteUploadResponse410 = {
-  data: void
-  status: 410
-}
-
-export type recordingUploadsControllerCompleteUploadResponseSuccess = (recordingUploadsControllerCompleteUploadResponse202) & {
-  headers: Headers;
-};
-export type recordingUploadsControllerCompleteUploadResponseError = (recordingUploadsControllerCompleteUploadResponse404 | recordingUploadsControllerCompleteUploadResponse409 | recordingUploadsControllerCompleteUploadResponse410) & {
-  headers: Headers;
-};
-
-export type recordingUploadsControllerCompleteUploadResponse = (recordingUploadsControllerCompleteUploadResponseSuccess | recordingUploadsControllerCompleteUploadResponseError)
-
-export const getRecordingUploadsControllerCompleteUploadUrl = (id: string,
-    uploadId: string,) => {
-
-
-
-
-  return `/recordings/${id}/uploads/${uploadId}/complete`
-}
-
-/**
- * Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.
- * @summary Complete the direct upload of a recording's audio
- */
-export const recordingUploadsControllerCompleteUpload = async (id: string,
-    uploadId: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingUploadsControllerCompleteUploadResponse> => {
-
-  return paneFetch<recordingUploadsControllerCompleteUploadResponse>(getRecordingUploadsControllerCompleteUploadUrl(id,uploadId),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-export type recordingSummaryControllerSummaryResponse200 = {
-  data: RecordingSummaryResponseDto
-  status: 200
-}
-
-export type recordingSummaryControllerSummaryResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingSummaryControllerSummaryResponseSuccess = (recordingSummaryControllerSummaryResponse200) & {
-  headers: Headers;
-};
-export type recordingSummaryControllerSummaryResponseError = (recordingSummaryControllerSummaryResponse404) & {
-  headers: Headers;
-};
-
-export type recordingSummaryControllerSummaryResponse = (recordingSummaryControllerSummaryResponseSuccess | recordingSummaryControllerSummaryResponseError)
-
-export const getRecordingSummaryControllerSummaryUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}/summary`
-}
-
-/**
- * @summary Get a recording's generated summary
- */
-export const recordingSummaryControllerSummary = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerSummaryResponse> => {
-
-  return paneFetch<recordingSummaryControllerSummaryResponse>(getRecordingSummaryControllerSummaryUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-export type recordingSummaryControllerRetryResponse200 = {
-  data: RecordingResponseDto
-  status: 200
-}
-
-export type recordingSummaryControllerRetryResponse403 = {
-  data: void
-  status: 403
-}
-
-export type recordingSummaryControllerRetryResponse404 = {
-  data: void
-  status: 404
-}
-
-export type recordingSummaryControllerRetryResponse409 = {
-  data: void
-  status: 409
-}
-
-export type recordingSummaryControllerRetryResponseSuccess = (recordingSummaryControllerRetryResponse200) & {
-  headers: Headers;
-};
-export type recordingSummaryControllerRetryResponseError = (recordingSummaryControllerRetryResponse403 | recordingSummaryControllerRetryResponse404 | recordingSummaryControllerRetryResponse409) & {
-  headers: Headers;
-};
-
-export type recordingSummaryControllerRetryResponse = (recordingSummaryControllerRetryResponseSuccess | recordingSummaryControllerRetryResponseError)
-
-export const getRecordingSummaryControllerRetryUrl = (id: string,) => {
-
-
-
-
-  return `/recordings/${id}/summary/retry`
-}
-
-/**
- * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
- * @summary Try a failed summary again
- */
-export const recordingSummaryControllerRetry = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryControllerRetryResponse> => {
-
-  return paneFetch<recordingSummaryControllerRetryResponse>(getRecordingSummaryControllerRetryUrl(id),
-  {
-    ...options,
-    method: 'POST'
 
 
   }

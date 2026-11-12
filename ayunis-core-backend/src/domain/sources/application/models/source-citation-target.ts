@@ -11,6 +11,8 @@ export interface SourceCitationTarget {
     createdBy: SourceCreator;
     status: SourceStatus;
     knowledgeBaseId: UUID | null;
+    /** Set when the source is the audio of a recording. */
+    recordingId: UUID | null;
     url: string | null;
   };
 }

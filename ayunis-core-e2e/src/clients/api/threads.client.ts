@@ -36,8 +36,9 @@ export function sendThreadMessage(
   api: APIRequestContext,
   threadId: string,
   text: string,
+  apiURL = config.apiURL,
 ): Promise<APIResponse> {
-  return api.post(`${config.apiURL}/api/runs/send-message`, {
+  return api.post(`${apiURL}/api/runs/send-message`, {
     multipart: { threadId, text, streaming: 'true' },
   });
 }
@@ -76,6 +77,23 @@ export async function uploadLegacyThreadPdf(
   return source.id;
 }
 
+export function uploadThreadTextSource(
+  api: APIRequestContext,
+  threadId: string,
+  filename: string,
+  content: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/threads/${threadId}/sources/file`, {
+    multipart: {
+      file: {
+        name: filename,
+        mimeType: 'text/plain',
+        buffer: Buffer.from(content, 'utf8'),
+      },
+    },
+  });
+}
+
 export function uploadThreadCsv(
   api: APIRequestContext,
   threadId: string,
@@ -100,15 +118,15 @@ export function getThreadAiContextResponse(
   return api.get(`${config.apiURL}/api/threads/${threadId}/ai-context`);
 }
 
+/** `apiURL` targets another backend, e.g. the one with recordings disabled. */
 export function getThreadSourceCitationResponse(
   api: APIRequestContext,
   threadId: string,
   chunkId: string | null,
+  apiURL = config.apiURL,
 ): Promise<APIResponse> {
   if (!chunkId) throw new Error('A source citation chunk ID is required');
-  return api.get(
-    `${config.apiURL}/api/threads/${threadId}/source-chunks/${chunkId}`,
-  );
+  return api.get(`${apiURL}/api/threads/${threadId}/source-chunks/${chunkId}`);
 }
 
 export function getGeneratedImageResponse(

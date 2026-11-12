@@ -7,6 +7,7 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 import { GetThreadSourceCitationQuery } from 'src/domain/runs/application/use-cases/get-thread-source-citation/get-thread-source-citation.query';
 import { GetThreadSourceCitationUseCase } from 'src/domain/runs/application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
 import { SourceCitationResponseDto } from './dto/source-citation-response.dto';
+import { SourceCitationResponseMapper } from './mappers/source-citation-response.mapper';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -16,6 +17,7 @@ export class ThreadSourceCitationsController {
 
   constructor(
     private readonly getThreadSourceCitationUseCase: GetThreadSourceCitationUseCase,
+    private readonly mapper: SourceCitationResponseMapper,
     private readonly contextService: ContextService,
   ) {}
 
@@ -36,8 +38,9 @@ export class ThreadSourceCitationsController {
     this.logger.log({ threadId, chunkId }, 'getSourceCitation');
     const orgId = this.contextService.get('orgId');
     if (!orgId) throw new UnauthorizedAccessError();
-    return this.getThreadSourceCitationUseCase.execute(
+    const citation = await this.getThreadSourceCitationUseCase.execute(
       new GetThreadSourceCitationQuery(threadId, chunkId, orgId),
     );
+    return this.mapper.toDto(citation);
   }
 }
