@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
+import { useIsThreadRunDeferred } from '@/features/thread-run';
 import {
   clearPendingThreadSubmission,
   completeThreadSubmission,
@@ -31,6 +32,7 @@ export function useThreadSubmissionState({
     () => getPendingThreadSubmission(threadId),
     () => null,
   );
+  const isRunDeferred = useIsThreadRunDeferred(threadId);
   const failedSubmission = useSyncExternalStore(
     subscribeToThreadSubmissions,
     () => getFailedThreadSubmission(threadId),
@@ -45,7 +47,7 @@ export function useThreadSubmissionState({
   }, [failedSubmission, onRestoreBlocked, restoreFailedSubmission, threadId]);
 
   return {
-    pendingSubmission: isStreaming ? pendingSubmission : null,
+    pendingSubmission: isStreaming || isRunDeferred ? pendingSubmission : null,
     startSubmission: startThreadSubmission,
     clearPendingSubmission: clearPendingThreadSubmission,
     completeSubmission: completeThreadSubmission,

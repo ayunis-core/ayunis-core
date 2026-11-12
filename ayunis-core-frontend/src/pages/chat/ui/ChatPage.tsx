@@ -14,7 +14,11 @@ import type { ThreadSubmission } from '@/pages/chat/model/pending-submissions';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import { useDeleteThread, useIsThreadRunActive } from '@/features/thread-run';
+import {
+  cancelDeferredThreadRun,
+  useDeleteThread,
+  useIsThreadRunActive,
+} from '@/features/thread-run';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
@@ -24,7 +28,6 @@ import { PiiMaskProvider } from '@/widgets/markdown';
 import type { PiiMaskEntry } from '@/widgets/markdown';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
-import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
@@ -36,12 +39,9 @@ import type { PendingSourceUpload } from '@/shared/lib/source-upload';
 import { useDeleteFileSource } from '@/pages/chat/api/useDeleteFileSource';
 import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import {
-  getThreadsControllerFindAllQueryKey,
-  getThreadsControllerFindOneQueryKey,
-  threadsControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useQueryClient } from '@tanstack/react-query';
+import { getThreadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { useChatThread } from '@/pages/chat/api/useChatThread';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
@@ -56,7 +56,6 @@ import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState'
 import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
-import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
 import { ProductiveOutcomeProvider } from '@/shared/lib/openpanel-outcomes';
 
 interface ChatPageProps {
@@ -90,24 +89,10 @@ export default function ChatPage({
     error: isModelsError,
   } = usePermittedModels();
   const isStreaming = useIsThreadRunActive(initialThread.id);
-  const processingPollInterval = useProcessingPollInterval(initialThread.id);
-  const { data: thread = initialThread } = useQuery({
-    queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
-    queryFn: () => threadsControllerFindOne(initialThread.id),
-    initialData: initialThread,
-    staleTime: 0,
-    // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
-    refetchInterval: (query) => {
-      // Polling during streaming can replace local output with stale persisted text.
-      if (isStreaming) return false;
-      const data = query.state.data;
-      if (!data) return false;
-      const hasProcessing = data.sources.some(
-        (s) => s.status === SourceResponseDtoStatus.processing,
-      );
-      return processingPollInterval(hasProcessing);
-    },
-  });
+  const { thread, hasProcessingSources } = useChatThread(
+    initialThread,
+    isStreaming,
+  );
 
   const selectedModel = findThreadModel(models, thread);
   const isVisionEnabled = selectedModel?.canVision ?? false;
@@ -275,13 +260,10 @@ export default function ChatPage({
     attach,
   });
 
-  const hasProcessingSources = thread.sources.some(
-    (s) => s.status === SourceResponseDtoStatus.processing,
-  );
-
   usePendingMessage({
     threadId: thread.id,
     hasLoadedMessages: thread.messages.length > 0,
+    hasProcessingSources,
     sendTextMessage,
   });
 
@@ -325,6 +307,11 @@ export default function ChatPage({
   }
 
   function handleSendCancelled() {
+    // A first message still waiting for its files goes back into the input.
+    if (cancelDeferredThreadRun(thread.id)) {
+      failSubmission(thread.id);
+      return;
+    }
     abort();
     resetRunState();
     setMessages(removePendingToolCalls);

@@ -7,10 +7,8 @@ import {
   threadMcpIntegrationsControllerAddMcpIntegration,
   threadSourcesControllerCompleteUpload,
   threadSourcesControllerCreateUpload,
-  threadsControllerFindOne,
   useThreadsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { uploadSourceFile } from '@/shared/lib/source-upload';
 import { showError } from '@/shared/lib/toast';
@@ -18,7 +16,12 @@ import {
   threadInteractionContext,
   trackOpenPanelEvent,
 } from '@/shared/lib/openpanel-events';
-import { cancelStartedThreadRun, startThreadRun } from '@/features/thread-run';
+import {
+  cancelDeferredThreadRun,
+  cancelStartedThreadRun,
+  deferThreadRun,
+  startThreadRun,
+} from '@/features/thread-run';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -35,8 +38,6 @@ import type {
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { SourceResponseDtoType } from '@/shared/api';
 
-const PROCESSING_POLL_INTERVAL_MS = 500;
-const PROCESSING_TIMEOUT_MS = 180_000;
 /** Compose slide duration (matches --new-chat-settle-duration in CSS) */
 const NEW_CHAT_SETTLE_MS = 1450;
 /** Disclaimer soft fade after slide (matches --new-chat-disclaimer-fade-duration) */
@@ -81,34 +82,6 @@ interface InitiateChatParams {
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
-}
-
-class CancelledError extends Error {
-  constructor() {
-    super('Cancelled');
-    this.name = 'CancelledError';
-  }
-}
-
-async function waitForSourcesProcessed(
-  threadId: string,
-  isCancelled: () => boolean,
-): Promise<void> {
-  const deadline = Date.now() + PROCESSING_TIMEOUT_MS;
-  for (;;) {
-    if (isCancelled()) throw new CancelledError();
-    const thread = await threadsControllerFindOne(threadId);
-    const stillProcessing = thread.sources.some(
-      (s) => s.status === SourceResponseDtoStatus.processing,
-    );
-    if (!stillProcessing) return;
-    if (Date.now() >= deadline) {
-      throw new Error('Source processing timed out');
-    }
-    await new Promise((resolve) =>
-      setTimeout(resolve, PROCESSING_POLL_INTERVAL_MS),
-    );
-  }
 }
 
 export const useInitiateChat = (options?: {
@@ -352,19 +325,6 @@ export const useInitiateChat = (options?: {
           stopInitiatingChat();
           return;
         }
-
-        try {
-          await waitForSourcesProcessed(thread.id, isCancelled);
-        } catch (error) {
-          if (error instanceof CancelledError) {
-            stopInitiatingChat();
-            return;
-          }
-          console.error('Source processing failed or timed out:', error);
-          showError(tCommon('sources.fileSourceTimeoutError'));
-          stopInitiatingChat();
-          return;
-        }
       }
 
       const kbOk = await attachKnowledgeBases(
@@ -397,14 +357,19 @@ export const useInitiateChat = (options?: {
     thread: GetThreadResponseDto,
     params: InitiateChatParams,
   ): Promise<void> {
-    const { message, images, skillId, workspaceId, voiceInput } = params;
+    const { message, images, skillId, workspaceId, voiceInput, sources } =
+      params;
     const threadId = thread.id;
     if (cancelledRef.current) {
       stopInitiatingChat();
       return;
     }
 
-    startThreadRun({ threadId, text: message, images, skillId, voiceInput });
+    const run = { threadId, text: message, images, skillId, voiceInput };
+    // Processing has no time limit, so the chat opens right after the upload
+    // and sends the message there once its files are processed.
+    if (sources.length > 0) deferThreadRun(run);
+    else startThreadRun(run);
     startedThreadIdRef.current = threadId;
 
     await waitForSettleAnimation();
@@ -444,6 +409,7 @@ export const useInitiateChat = (options?: {
     uploadAbortRef.current?.abort();
     if (startedThreadIdRef.current) {
       cancelStartedThreadRun(startedThreadIdRef.current);
+      cancelDeferredThreadRun(startedThreadIdRef.current);
     }
     setIsAttachingResources(false);
     stopInitiatingChat();
