@@ -8,6 +8,7 @@ import { SetCreditsPerEuroUseCase } from './application/use-cases/set-credits-pe
 import { GetFairUseLimitsUseCase } from './application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
 import { SetFairUseLimitUseCase } from './application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
 import { SetImageFairUseLimitUseCase } from './application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
+import { SetRecordingFairUseLimitUseCase } from './application/use-cases/set-recording-fair-use-limit/set-recording-fair-use-limit.use-case';
 import { GetAppAlertUseCase } from './application/use-cases/get-app-alert/get-app-alert.use-case';
 import { SetAppAlertUseCase } from './application/use-cases/set-app-alert/set-app-alert.use-case';
 import { GetAcademyMinimumModuleSecondsUseCase } from './application/use-cases/get-academy-minimum-module-seconds/get-academy-minimum-module-seconds.use-case';
@@ -28,6 +29,7 @@ import { AppAlertController } from './presenters/http/app-alert.controller';
     GetFairUseLimitsUseCase,
     SetFairUseLimitUseCase,
     SetImageFairUseLimitUseCase,
+    SetRecordingFairUseLimitUseCase,
     GetAppAlertUseCase,
     SetAppAlertUseCase,
     GetAcademyMinimumModuleSecondsUseCase,

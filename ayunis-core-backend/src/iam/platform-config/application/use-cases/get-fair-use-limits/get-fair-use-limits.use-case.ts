@@ -6,6 +6,7 @@ import {
   FairUseLimitsByTier,
 } from 'src/iam/platform-config/domain/fair-use-limits';
 
+const ONE_HOUR_MS = 60 * 60 * 1000;
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,8 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
  * The image-generation default (10 / 24h) is conservative on purpose — image
  * calls are the most expensive single tool action we expose, and operators
  * can raise the cap via the super-admin UI without a deploy.
+ *
+ * Recordings default to 5 upload starts per user per hour (AYC-1648).
  *
  * `zero` carries the same shape as the other tiers so the response is
  * uniform across `ModelTier`. The default value is a placeholder — the
@@ -32,6 +35,7 @@ const DEFAULT_FAIR_USE_LIMITS: FairUseLimitsByTier = {
   medium: { limit: 200, windowMs: THREE_HOURS_MS },
   high: { limit: 50, windowMs: THREE_HOURS_MS },
   images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
+  recordings: { limit: 5, windowMs: ONE_HOUR_MS },
 };
 
 @Injectable()
@@ -45,7 +49,7 @@ export class GetFairUseLimitsUseCase {
   ) {}
 
   async execute(): Promise<FairUseLimitsByTier> {
-    const [zero, low, medium, high, images] = await Promise.all([
+    const [zero, low, medium, high, images, recordings] = await Promise.all([
       this.readLimits(
         PlatformConfigKey.FAIR_USE_ZERO_LIMIT,
         PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS,
@@ -71,8 +75,13 @@ export class GetFairUseLimitsUseCase {
         PlatformConfigKey.FAIR_USE_IMAGES_WINDOW_MS,
         DEFAULT_FAIR_USE_LIMITS.images,
       ),
+      this.readLimits(
+        PlatformConfigKey.FAIR_USE_RECORDINGS_LIMIT,
+        PlatformConfigKey.FAIR_USE_RECORDINGS_WINDOW_MS,
+        DEFAULT_FAIR_USE_LIMITS.recordings,
+      ),
     ]);
-    return { zero, low, medium, high, images };
+    return { zero, low, medium, high, images, recordings };
   }
 
   private async readLimits(

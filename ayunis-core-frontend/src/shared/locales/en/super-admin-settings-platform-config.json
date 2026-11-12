@@ -52,6 +52,22 @@
       "windowHours": "Window must be at least 0.01 hours."
     }
   },
+  "recordingFairUseLimit": {
+    "title": "Recording Upload Fair Use Limit",
+    "description": "How many recording uploads each user may start per window. Uploads that are abandoned or fail still count.",
+    "loading": "Loading…",
+    "loadError": "Failed to load the recording upload fair-use limit.",
+    "limit": "Uploads",
+    "windowHours": "Window (hours)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Recording upload fair-use limit updated successfully.",
+    "updateError": "Failed to update the recording upload fair-use limit.",
+    "validationError": {
+      "limit": "Uploads must be a positive integer.",
+      "windowHours": "Window must be at least 0.01 hours."
+    }
+  },
   "academyMinimumModuleSeconds": {
     "title": "Academy: Minimum time per video page",
     "description": "How many seconds each video page must be open and visible before a chapter can be completed. This measures time on the page, not video playback.",

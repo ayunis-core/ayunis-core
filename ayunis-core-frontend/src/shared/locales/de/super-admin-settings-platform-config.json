@@ -52,6 +52,22 @@
       "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
     }
   },
+  "recordingFairUseLimit": {
+    "title": "Fair-Use-Limit für das Hochladen von Aufzeichnungen",
+    "description": "Wie viele Aufzeichnungen jeder Nutzer pro Zeitfenster hochladen darf. Abgebrochene oder fehlgeschlagene Uploads zählen mit.",
+    "loading": "Wird geladen…",
+    "loadError": "Fair-Use-Limit für Aufzeichnungen konnte nicht geladen werden.",
+    "limit": "Uploads",
+    "windowHours": "Zeitfenster (Stunden)",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Fair-Use-Limit für Aufzeichnungen erfolgreich aktualisiert.",
+    "updateError": "Fair-Use-Limit für Aufzeichnungen konnte nicht aktualisiert werden.",
+    "validationError": {
+      "limit": "Uploads müssen eine positive Ganzzahl sein.",
+      "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
+    }
+  },
   "academyMinimumModuleSeconds": {
     "title": "Academy: Mindestzeit pro Videoseite",
     "description": "Wie viele Sekunden jede Videoseite geöffnet und sichtbar sein muss, bevor ein Kapitel abgeschlossen werden kann. Gemessen wird die Zeit auf der Seite, nicht die Wiedergabe des Videos.",
