@@ -392,12 +392,12 @@
       "getStarted": "Los geht's"
     },
     "unreadNotifications": {
-      "routine_one": "{{count}} neue Routine-Benachrichtigung",
-      "routine_other": "{{count}} neue Routine-Benachrichtigungen",
-      "routine_error_one": "{{count}} neuer Routine-Fehler",
-      "routine_error_other": "{{count}} neue Routine-Fehler",
-      "release_note_one": "{{count}} ungelesene Neuigkeit",
-      "release_note_other": "{{count}} ungelesene Neuigkeiten"
+      "tabs": {
+        "routine_error": "Zu prüfen",
+        "routine": "Routinen",
+        "release_note": "Neuigkeiten"
+      },
+      "viewAll": "Alle im Posteingang ansehen"
     }
   }
 }

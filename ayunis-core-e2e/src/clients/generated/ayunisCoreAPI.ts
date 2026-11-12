@@ -372,511 +372,6 @@ const appControllerFeatureToggles = (
     }
 
 /**
- * Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
- * @summary Get users in current organization
- */
-const userControllerGetUsersInOrganization = (
-    params?: UserControllerGetUsersInOrganizationParams,
- options?: SecondParameter<typeof playwrightApiClient<PaginatedUsersListResponseDto>>,) => {
-      return playwrightApiClient<PaginatedUsersListResponseDto>(
-      {url: `/users`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Update the role of a user. You cannot update your own role.
- * @summary Update user role
- */
-const userControllerUpdateUserRole = (
-    id: string,
-    updateUserRoleDto: UpdateUserRoleDto,
- options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
-      return playwrightApiClient<UserResponseDto>(
-      {url: `/users/${id}/role`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateUserRoleDto
-    },
-      options);
-    }
-
-/**
- * Update the name of a user. Users can only update their own name.
- * @summary Update user name
- */
-const userControllerUpdateUserName = (
-    updateUserNameDto: UpdateUserNameDto,
- options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
-      return playwrightApiClient<UserResponseDto>(
-      {url: `/users/name`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateUserNameDto
-    },
-      options);
-    }
-
-/**
- * Update the password of the current authenticated user. Requires current password for verification.
- * @summary Update user password
- */
-const userControllerUpdatePassword = (
-    updatePasswordDto: UpdatePasswordDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/password`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updatePasswordDto
-    },
-      options);
-    }
-
-/**
- * Confirm a user's email address using a JWT token received via email
- * @summary Confirm user email
- */
-const userControllerConfirmEmail = (
-    confirmEmailDto: ConfirmEmailDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/confirm-email`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: confirmEmailDto
-    },
-      options);
-    }
-
-/**
- * Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.
- * @summary Resend email confirmation
- */
-const userControllerResendEmailConfirmation = (
-    resendEmailConfirmationDto: ResendEmailConfirmationDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/resend-confirmation`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resendEmailConfirmationDto
-    },
-      options);
-    }
-
-/**
- * Delete a user by their ID. Only users within the same organization can be deleted.
- * @summary Delete a user
- */
-const userControllerDeleteUser = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.
- * @summary Update a user (admin)
- */
-const adminUserControllerAdminUpdateUser = (
-    id: string,
-    adminUpdateUserDto: AdminUpdateUserDto,
- options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
-      return playwrightApiClient<UserResponseDto>(
-      {url: `/users/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: adminUpdateUserDto
-    },
-      options);
-    }
-
-/**
- * Send a password reset email to a user in your organization. Only organization admins can use this endpoint.
- * @summary Trigger password reset for a user
- */
-const userPasswordResetControllerTriggerPasswordResetForUser = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/${id}/trigger-password-reset`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
- * @summary Trigger password reset
- */
-const userPasswordResetControllerForgotPassword = (
-    forgotPasswordDto: ForgotPasswordDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/forgot-password`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: forgotPasswordDto
-    },
-      options);
-    }
-
-/**
- * Reset user password using the token received via email. The token must be valid and not expired.
- * @summary Reset password with token
- */
-const userPasswordResetControllerResetPassword = (
-    resetPasswordDto: ResetPasswordDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/reset-password`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resetPasswordDto
-    },
-      options);
-    }
-
-/**
- * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
- * @summary Validate password reset token
- */
-const userPasswordResetControllerValidateResetToken = (
-    params: UserPasswordResetControllerValidateResetTokenParams,
- options?: SecondParameter<typeof playwrightApiClient<UserPasswordResetControllerValidateResetToken200>>,) => {
-      return playwrightApiClient<UserPasswordResetControllerValidateResetToken200>(
-      {url: `/users/validate-reset-token`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.
- * @summary Get users by organization ID
- */
-const superAdminUsersControllerGetUsersByOrgId = (
-    orgId: string,
-    params?: SuperAdminUsersControllerGetUsersByOrgIdParams,
- options?: SecondParameter<typeof playwrightApiClient<PaginatedUsersListResponseDto>>,) => {
-      return playwrightApiClient<PaginatedUsersListResponseDto>(
-      {url: `/super-admin/users/${orgId}`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.
- * @summary Delete a user
- */
-const superAdminUsersControllerDeleteUser = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/users/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Unlock a user in any organization
- */
-const superAdminUsersControllerUnlockUser = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/users/${userId}/unlock`, method: 'PATCH'
-    },
-      options);
-    }
-
-/**
- * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
- * @summary Trigger password reset for a user
- */
-const superAdminUsersControllerTriggerPasswordReset = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<TriggerPasswordResetResponseDto>>,) => {
-      return playwrightApiClient<TriggerPasswordResetResponseDto>(
-      {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.
- * @summary Create a new user in an organization
- */
-const superAdminUsersControllerCreateUser = (
-    orgId: string,
-    createUserDto: CreateUserDto,
- options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
-      return playwrightApiClient<UserResponseDto>(
-      {url: `/super-admin/users/${orgId}/create`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createUserDto
-    },
-      options);
-    }
-
-/**
- * Retrieve paginated users across all organizations for platform administration.
- * @summary Get users across all organizations
- */
-const superAdminUserListControllerGetAllUsers = (
-    params?: SuperAdminUserListControllerGetAllUsersParams,
- options?: SecondParameter<typeof playwrightApiClient<PaginatedSuperAdminUsersListResponseDto>>,) => {
-      return playwrightApiClient<PaginatedSuperAdminUsersListResponseDto>(
-      {url: `/super-admin/users`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.
- * @summary Export users as CSV
- */
-const superAdminUserExportsControllerExportUsers = (
-
- options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {
-      return playwrightApiClient<Blob>(
-      {url: `/super-admin/users/export/users.csv`, method: 'GET',
-        responseType: 'blob'
-    },
-      options);
-    }
-
-/**
- * Retrieve all users with super admin status. Only accessible to super admins.
- * @summary List all super admins
- */
-const superAdminManagementControllerListSuperAdmins = (
-
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminUserResponseDto[]>>,) => {
-      return playwrightApiClient<SuperAdminUserResponseDto[]>(
-      {url: `/super-admin/super-admins`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Promote an existing user to super admin by email address. Idempotent if user is already a super admin.
- * @summary Promote a user to super admin
- */
-const superAdminManagementControllerPromoteToSuperAdmin = (
-    promoteToSuperAdminDto: PromoteToSuperAdminDto,
- options?: SecondParameter<typeof playwrightApiClient<SuperAdminUserResponseDto>>,) => {
-      return playwrightApiClient<SuperAdminUserResponseDto>(
-      {url: `/super-admin/super-admins`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: promoteToSuperAdminDto
-    },
-      options);
-    }
-
-/**
- * Demote a user from super admin to customer. Cannot demote yourself.
- * @summary Remove super admin status from a user
- */
-const superAdminManagementControllerDemoteFromSuperAdmin = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Unlock a user in the current organization
- */
-const adminUserAccountLockControllerUnlock = (
-    userId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/users/${userId}/unlock`, method: 'PATCH'
-    },
-      options);
-    }
-
-/**
- * Send an invitation to a user to join an organization with a specific role
- * @summary Create a new invite
- */
-const invitesControllerCreate = (
-    createInviteDto: CreateInviteDto,
- options?: SecondParameter<typeof playwrightApiClient<CreateInviteResponseDto>>,) => {
-      return playwrightApiClient<CreateInviteResponseDto>(
-      {url: `/invites`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createInviteDto
-    },
-      options);
-    }
-
-/**
- * Retrieve paginated invites with optional search
- * @summary Get all invites for current user's organization
- */
-const invitesControllerGetInvites = (
-    params?: InvitesControllerGetInvitesParams,
- options?: SecondParameter<typeof playwrightApiClient<PaginatedInvitesListResponseDto>>,) => {
-      return playwrightApiClient<PaginatedInvitesListResponseDto>(
-      {url: `/invites`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Send invitations to multiple users. All rows are validated before any are processed.
- * @summary Create multiple invites in bulk
- */
-const invitesControllerCreateBulk = (
-    createBulkInvitesDto: CreateBulkInvitesDto,
- options?: SecondParameter<typeof playwrightApiClient<CreateBulkInvitesResponseDto>>,) => {
-      return playwrightApiClient<CreateBulkInvitesResponseDto>(
-      {url: `/invites/bulk`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createBulkInvitesDto
-    },
-      options);
-    }
-
-/**
- * Retrieve invite details including organization name by token
- * @summary Get a single invite by token
- */
-const invitesControllerGetInviteByToken = (
-    token: string,
- options?: SecondParameter<typeof playwrightApiClient<InviteDetailResponseDto>>,) => {
-      return playwrightApiClient<InviteDetailResponseDto>(
-      {url: `/invites/${token}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Accept an invitation using the JWT token
- * @summary Accept an invite
- */
-const invitesControllerAcceptInvite = (
-    acceptInviteDto: AcceptInviteDto,
- options?: SecondParameter<typeof playwrightApiClient<AcceptInviteResponseDto>>,) => {
-      return playwrightApiClient<AcceptInviteResponseDto>(
-      {url: `/invites/accept`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: acceptInviteDto
-    },
-      options);
-    }
-
-/**
- * Delete the expired invite and create a new one with the same details, then send the invitation email
- * @summary Resend an expired invite
- */
-const invitesControllerResendExpiredInvite = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<CreateInviteResponseDto>>,) => {
-      return playwrightApiClient<CreateInviteResponseDto>(
-      {url: `/invites/${id}/resend`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * Delete all pending invitations for the organization (Admin only)
- * @summary Delete all pending invites
- */
-const invitesControllerDeleteAllPending = (
-
- options?: SecondParameter<typeof playwrightApiClient<DeleteAllPendingInvitesResponseDto>>,) => {
-      return playwrightApiClient<DeleteAllPendingInvitesResponseDto>(
-      {url: `/invites/all`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Delete an invitation of the caller's organization (Admin only)
- * @summary Delete an invite
- */
-const invitesControllerDeleteInvite = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/invites/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Replace every expired, unaccepted invite of the caller's organization with a new one and send the invitation emails (Admin only)
- * @summary Resend all expired invites
- */
-const expiredInvitesControllerResendAll = (
-
- options?: SecondParameter<typeof playwrightApiClient<ResendExpiredInvitesResponseDto>>,) => {
-      return playwrightApiClient<ResendExpiredInvitesResponseDto>(
-      {url: `/invites/resend-expired`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary List pending invites in an organization
- */
-const superAdminInvitesControllerGetInvites = (
-    orgId: string,
-    params?: SuperAdminInvitesControllerGetInvitesParams,
- options?: SecondParameter<typeof playwrightApiClient<PaginatedInvitesListResponseDto>>,) => {
-      return playwrightApiClient<PaginatedInvitesListResponseDto>(
-      {url: `/super-admin/orgs/${orgId}/invites`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Delete all pending invites in an organization
- */
-const superAdminInvitesControllerDeleteAllPending = (
-    orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<DeleteAllPendingInvitesResponseDto>>,) => {
-      return playwrightApiClient<DeleteAllPendingInvitesResponseDto>(
-      {url: `/super-admin/orgs/${orgId}/invites/all`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Delete a pending invite in an organization
- */
-const superAdminInvitesControllerDeleteInvite = (
-    orgId: string,
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/orgs/${orgId}/invites/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Create invitations for a selected organization, including team assignments applied when each user joins.
- * @summary Create multiple invites in an organization
- */
-const superAdminInvitesControllerCreateBulk = (
-    orgId: string,
-    createBulkInvitesDto: CreateBulkInvitesDto,
- options?: SecondParameter<typeof playwrightApiClient<CreateBulkInvitesResponseDto>>,) => {
-      return playwrightApiClient<CreateBulkInvitesResponseDto>(
-      {url: `/super-admin/orgs/${orgId}/invites/bulk`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createBulkInvitesDto
-    },
-      options);
-    }
-
-/**
  * Create a new organization in the system. Only accessible to users with the super admin system role.
  * @summary Create a new organization
  */
@@ -1019,188 +514,61 @@ const myPermissionsControllerGetMine = (
     }
 
 /**
- * @summary Check if the current organization has an active subscription
+ * Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.
+ * @summary Transcribe audio file to text
  */
-const subscriptionsControllerHasActiveSubscription = (
+const transcriptionsControllerTranscribe = (
+    transcriptionsControllerTranscribeBody: TranscriptionsControllerTranscribeBody,
+ options?: SecondParameter<typeof playwrightApiClient<TranscriptionResponseDto>>,) => {const formData = new FormData();
+formData.append(`file`, transcriptionsControllerTranscribeBody.file);
+if(transcriptionsControllerTranscribeBody.language !== undefined) {
+ formData.append(`language`, transcriptionsControllerTranscribeBody.language);
+ }
 
- options?: SecondParameter<typeof playwrightApiClient<ActiveSubscriptionResponseDto>>,) => {
-      return playwrightApiClient<ActiveSubscriptionResponseDto>(
-      {url: `/subscriptions/active`, method: 'GET'
+      return playwrightApiClient<TranscriptionResponseDto>(
+      {url: `/transcriptions`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
     },
       options);
     }
 
 /**
- * @summary Get the current price per seat monthly
+ * @summary List the crawl domains assigned to an organization
  */
-const subscriptionsControllerGetCurrentPrice = (
-
- options?: SecondParameter<typeof playwrightApiClient<PriceResponseDto>>,) => {
-      return playwrightApiClient<PriceResponseDto>(
-      {url: `/subscriptions/price`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.
- * @summary List an organization's subscription history
- */
-const superAdminSubscriptionsControllerGetSubscriptionHistory = (
+const superAdminCrawlDomainsControllerList = (
     orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<OrgSubscriptionsResponseDto>>,) => {
-      return playwrightApiClient<OrgSubscriptionsResponseDto>(
-      {url: `/super-admin/subscriptions/${orgId}/history`, method: 'GET'
+ options?: SecondParameter<typeof playwrightApiClient<CrawlDomainGrantResponseDto[]>>,) => {
+      return playwrightApiClient<CrawlDomainGrantResponseDto[]>(
+      {url: `/super-admin/crawl-domains/${orgId}`, method: 'GET'
     },
       options);
     }
 
 /**
- * Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.
- * @summary Get subscription details for a specific organization
+ * @summary Assign a crawl domain to an organization
  */
-const superAdminSubscriptionsControllerGetSubscription = (
+const superAdminCrawlDomainsControllerGrant = (
     orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<SubscriptionResponseDtoNullable>>,) => {
-      return playwrightApiClient<SubscriptionResponseDtoNullable>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Create a new subscription for the specified organization. This endpoint is only accessible to super admins.
- * @summary Create a new subscription for a specific organization
- */
-const superAdminSubscriptionsControllerCreateSubscription = (
-    orgId: string,
-    createSubscriptionRequestDto: CreateSubscriptionRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<SubscriptionResponseDto>>,) => {
-      return playwrightApiClient<SubscriptionResponseDto>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'POST',
+    grantCrawlDomainRequestDto: GrantCrawlDomainRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<CrawlDomainGrantResponseDto>>,) => {
+      return playwrightApiClient<CrawlDomainGrantResponseDto>(
+      {url: `/super-admin/crawl-domains/${orgId}`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createSubscriptionRequestDto
+      data: grantCrawlDomainRequestDto
     },
       options);
     }
 
 /**
- * Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.
- * @summary Cancel the subscription for a specific organization
+ * @summary Revoke a crawl domain from an organization
  */
-const superAdminSubscriptionsControllerCancelSubscription = (
+const superAdminCrawlDomainsControllerRevoke = (
     orgId: string,
+    grantId: string,
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Ends the current subscription (cancelled or deleted, per oldSubscriptionDisposition) and creates a new one with the provided data. This is the only way to change subscription type. Only accessible to super admins.
- * @summary Change an organization subscription (cancel/delete + recreate)
- */
-const superAdminSubscriptionsControllerChangeSubscription = (
-    orgId: string,
-    changeSubscriptionRequestDto: ChangeSubscriptionRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/change`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: changeSubscriptionRequestDto
-    },
-      options);
-    }
-
-/**
- * Update the number of seats for the specified organization. This endpoint is only accessible to super admins.
- * @summary Update the number of seats for a specific organization
- */
-const superAdminSubscriptionsControllerUpdateSeats = (
-    orgId: string,
-    updateSeatsDto: UpdateSeatsDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateSeatsDto
-    },
-      options);
-    }
-
-/**
- * @summary Update monthly credits for an organization (super admin)
- */
-const superAdminSubscriptionsControllerUpdateMonthlyCredits = (
-    orgId: string,
-    updateMonthlyCreditsDto: UpdateMonthlyCreditsDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/monthly-credits`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateMonthlyCreditsDto
-    },
-      options);
-    }
-
-/**
- * Update the billing information for the specified organization. This endpoint is only accessible to super admins.
- * @summary Update the billing information for a specific organization
- */
-const superAdminSubscriptionsControllerUpdateBillingInfo = (
-    orgId: string,
-    updateBillingInfoDto: UpdateBillingInfoDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBillingInfoDto
-    },
-      options);
-    }
-
-/**
- * Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.
- * @summary Update the start date for a specific organization subscription
- */
-const superAdminSubscriptionsControllerUpdateStartDate = (
-    orgId: string,
-    updateStartDateDto: UpdateStartDateDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateStartDateDto
-    },
-      options);
-    }
-
-/**
- * Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.
- * @summary Uncancel the subscription for a specific organization
- */
-const superAdminSubscriptionsControllerUncancelSubscription = (
-    orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * Selects the authoritative serving subscription and atomically ends access for every conflicting subscription while preserving history. Super admins only.
- * @summary Resolve an organization's overlapping subscription access
- */
-const superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap = (
-    orgId: string,
-    resolveSubscriptionOverlapDto: ResolveSubscriptionOverlapDto,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/subscriptions/${orgId}/resolve-overlap`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resolveSubscriptionOverlapDto
+      {url: `/super-admin/crawl-domains/${orgId}/${grantId}`, method: 'DELETE'
     },
       options);
     }
@@ -1888,6 +1256,698 @@ const superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel
     }
 
 /**
+ * Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
+ * @summary Get users in current organization
+ */
+const userControllerGetUsersInOrganization = (
+    params?: UserControllerGetUsersInOrganizationParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedUsersListResponseDto>>,) => {
+      return playwrightApiClient<PaginatedUsersListResponseDto>(
+      {url: `/users`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Update the role of a user. You cannot update your own role.
+ * @summary Update user role
+ */
+const userControllerUpdateUserRole = (
+    id: string,
+    updateUserRoleDto: UpdateUserRoleDto,
+ options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
+      return playwrightApiClient<UserResponseDto>(
+      {url: `/users/${id}/role`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserRoleDto
+    },
+      options);
+    }
+
+/**
+ * Update the name of a user. Users can only update their own name.
+ * @summary Update user name
+ */
+const userControllerUpdateUserName = (
+    updateUserNameDto: UpdateUserNameDto,
+ options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
+      return playwrightApiClient<UserResponseDto>(
+      {url: `/users/name`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserNameDto
+    },
+      options);
+    }
+
+/**
+ * Update the password of the current authenticated user. Requires current password for verification.
+ * @summary Update user password
+ */
+const userControllerUpdatePassword = (
+    updatePasswordDto: UpdatePasswordDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/password`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePasswordDto
+    },
+      options);
+    }
+
+/**
+ * Confirm a user's email address using a JWT token received via email
+ * @summary Confirm user email
+ */
+const userControllerConfirmEmail = (
+    confirmEmailDto: ConfirmEmailDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/confirm-email`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: confirmEmailDto
+    },
+      options);
+    }
+
+/**
+ * Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.
+ * @summary Resend email confirmation
+ */
+const userControllerResendEmailConfirmation = (
+    resendEmailConfirmationDto: ResendEmailConfirmationDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/resend-confirmation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendEmailConfirmationDto
+    },
+      options);
+    }
+
+/**
+ * Delete a user by their ID. Only users within the same organization can be deleted.
+ * @summary Delete a user
+ */
+const userControllerDeleteUser = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.
+ * @summary Update a user (admin)
+ */
+const adminUserControllerAdminUpdateUser = (
+    id: string,
+    adminUpdateUserDto: AdminUpdateUserDto,
+ options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
+      return playwrightApiClient<UserResponseDto>(
+      {url: `/users/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateUserDto
+    },
+      options);
+    }
+
+/**
+ * Send a password reset email to a user in your organization. Only organization admins can use this endpoint.
+ * @summary Trigger password reset for a user
+ */
+const userPasswordResetControllerTriggerPasswordResetForUser = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/${id}/trigger-password-reset`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
+ * @summary Trigger password reset
+ */
+const userPasswordResetControllerForgotPassword = (
+    forgotPasswordDto: ForgotPasswordDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: forgotPasswordDto
+    },
+      options);
+    }
+
+/**
+ * Reset user password using the token received via email. The token must be valid and not expired.
+ * @summary Reset password with token
+ */
+const userPasswordResetControllerResetPassword = (
+    resetPasswordDto: ResetPasswordDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPasswordDto
+    },
+      options);
+    }
+
+/**
+ * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
+ * @summary Validate password reset token
+ */
+const userPasswordResetControllerValidateResetToken = (
+    params: UserPasswordResetControllerValidateResetTokenParams,
+ options?: SecondParameter<typeof playwrightApiClient<UserPasswordResetControllerValidateResetToken200>>,) => {
+      return playwrightApiClient<UserPasswordResetControllerValidateResetToken200>(
+      {url: `/users/validate-reset-token`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.
+ * @summary Get users by organization ID
+ */
+const superAdminUsersControllerGetUsersByOrgId = (
+    orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedUsersListResponseDto>>,) => {
+      return playwrightApiClient<PaginatedUsersListResponseDto>(
+      {url: `/super-admin/users/${orgId}`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.
+ * @summary Delete a user
+ */
+const superAdminUsersControllerDeleteUser = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/users/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Unlock a user in any organization
+ */
+const superAdminUsersControllerUnlockUser = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/users/${userId}/unlock`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
+ * @summary Trigger password reset for a user
+ */
+const superAdminUsersControllerTriggerPasswordReset = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<TriggerPasswordResetResponseDto>>,) => {
+      return playwrightApiClient<TriggerPasswordResetResponseDto>(
+      {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.
+ * @summary Create a new user in an organization
+ */
+const superAdminUsersControllerCreateUser = (
+    orgId: string,
+    createUserDto: CreateUserDto,
+ options?: SecondParameter<typeof playwrightApiClient<UserResponseDto>>,) => {
+      return playwrightApiClient<UserResponseDto>(
+      {url: `/super-admin/users/${orgId}/create`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createUserDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve paginated users across all organizations for platform administration.
+ * @summary Get users across all organizations
+ */
+const superAdminUserListControllerGetAllUsers = (
+    params?: SuperAdminUserListControllerGetAllUsersParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedSuperAdminUsersListResponseDto>>,) => {
+      return playwrightApiClient<PaginatedSuperAdminUsersListResponseDto>(
+      {url: `/super-admin/users`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.
+ * @summary Export users as CSV
+ */
+const superAdminUserExportsControllerExportUsers = (
+
+ options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {
+      return playwrightApiClient<Blob>(
+      {url: `/super-admin/users/export/users.csv`, method: 'GET',
+        responseType: 'blob'
+    },
+      options);
+    }
+
+/**
+ * Retrieve all users with super admin status. Only accessible to super admins.
+ * @summary List all super admins
+ */
+const superAdminManagementControllerListSuperAdmins = (
+
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminUserResponseDto[]>>,) => {
+      return playwrightApiClient<SuperAdminUserResponseDto[]>(
+      {url: `/super-admin/super-admins`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Promote an existing user to super admin by email address. Idempotent if user is already a super admin.
+ * @summary Promote a user to super admin
+ */
+const superAdminManagementControllerPromoteToSuperAdmin = (
+    promoteToSuperAdminDto: PromoteToSuperAdminDto,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminUserResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminUserResponseDto>(
+      {url: `/super-admin/super-admins`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: promoteToSuperAdminDto
+    },
+      options);
+    }
+
+/**
+ * Demote a user from super admin to customer. Cannot demote yourself.
+ * @summary Remove super admin status from a user
+ */
+const superAdminManagementControllerDemoteFromSuperAdmin = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Unlock a user in the current organization
+ */
+const adminUserAccountLockControllerUnlock = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/${userId}/unlock`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * Send an invitation to a user to join an organization with a specific role
+ * @summary Create a new invite
+ */
+const invitesControllerCreate = (
+    createInviteDto: CreateInviteDto,
+ options?: SecondParameter<typeof playwrightApiClient<CreateInviteResponseDto>>,) => {
+      return playwrightApiClient<CreateInviteResponseDto>(
+      {url: `/invites`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createInviteDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve paginated invites with optional search
+ * @summary Get all invites for current user's organization
+ */
+const invitesControllerGetInvites = (
+    params?: InvitesControllerGetInvitesParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedInvitesListResponseDto>>,) => {
+      return playwrightApiClient<PaginatedInvitesListResponseDto>(
+      {url: `/invites`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Send invitations to multiple users. All rows are validated before any are processed.
+ * @summary Create multiple invites in bulk
+ */
+const invitesControllerCreateBulk = (
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ options?: SecondParameter<typeof playwrightApiClient<CreateBulkInvitesResponseDto>>,) => {
+      return playwrightApiClient<CreateBulkInvitesResponseDto>(
+      {url: `/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve invite details including organization name by token
+ * @summary Get a single invite by token
+ */
+const invitesControllerGetInviteByToken = (
+    token: string,
+ options?: SecondParameter<typeof playwrightApiClient<InviteDetailResponseDto>>,) => {
+      return playwrightApiClient<InviteDetailResponseDto>(
+      {url: `/invites/${token}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Accept an invitation using the JWT token
+ * @summary Accept an invite
+ */
+const invitesControllerAcceptInvite = (
+    acceptInviteDto: AcceptInviteDto,
+ options?: SecondParameter<typeof playwrightApiClient<AcceptInviteResponseDto>>,) => {
+      return playwrightApiClient<AcceptInviteResponseDto>(
+      {url: `/invites/accept`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: acceptInviteDto
+    },
+      options);
+    }
+
+/**
+ * Delete the expired invite and create a new one with the same details, then send the invitation email
+ * @summary Resend an expired invite
+ */
+const invitesControllerResendExpiredInvite = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<CreateInviteResponseDto>>,) => {
+      return playwrightApiClient<CreateInviteResponseDto>(
+      {url: `/invites/${id}/resend`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Delete all pending invitations for the organization (Admin only)
+ * @summary Delete all pending invites
+ */
+const invitesControllerDeleteAllPending = (
+
+ options?: SecondParameter<typeof playwrightApiClient<DeleteAllPendingInvitesResponseDto>>,) => {
+      return playwrightApiClient<DeleteAllPendingInvitesResponseDto>(
+      {url: `/invites/all`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Delete an invitation of the caller's organization (Admin only)
+ * @summary Delete an invite
+ */
+const invitesControllerDeleteInvite = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/invites/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Replace every expired, unaccepted invite of the caller's organization with a new one and send the invitation emails (Admin only)
+ * @summary Resend all expired invites
+ */
+const expiredInvitesControllerResendAll = (
+
+ options?: SecondParameter<typeof playwrightApiClient<ResendExpiredInvitesResponseDto>>,) => {
+      return playwrightApiClient<ResendExpiredInvitesResponseDto>(
+      {url: `/invites/resend-expired`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary List pending invites in an organization
+ */
+const superAdminInvitesControllerGetInvites = (
+    orgId: string,
+    params?: SuperAdminInvitesControllerGetInvitesParams,
+ options?: SecondParameter<typeof playwrightApiClient<PaginatedInvitesListResponseDto>>,) => {
+      return playwrightApiClient<PaginatedInvitesListResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Delete all pending invites in an organization
+ */
+const superAdminInvitesControllerDeleteAllPending = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<DeleteAllPendingInvitesResponseDto>>,) => {
+      return playwrightApiClient<DeleteAllPendingInvitesResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites/all`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a pending invite in an organization
+ */
+const superAdminInvitesControllerDeleteInvite = (
+    orgId: string,
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/orgs/${orgId}/invites/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Create invitations for a selected organization, including team assignments applied when each user joins.
+ * @summary Create multiple invites in an organization
+ */
+const superAdminInvitesControllerCreateBulk = (
+    orgId: string,
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ options?: SecondParameter<typeof playwrightApiClient<CreateBulkInvitesResponseDto>>,) => {
+      return playwrightApiClient<CreateBulkInvitesResponseDto>(
+      {url: `/super-admin/orgs/${orgId}/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto
+    },
+      options);
+    }
+
+/**
+ * @summary Check if the current organization has an active subscription
+ */
+const subscriptionsControllerHasActiveSubscription = (
+
+ options?: SecondParameter<typeof playwrightApiClient<ActiveSubscriptionResponseDto>>,) => {
+      return playwrightApiClient<ActiveSubscriptionResponseDto>(
+      {url: `/subscriptions/active`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get the current price per seat monthly
+ */
+const subscriptionsControllerGetCurrentPrice = (
+
+ options?: SecondParameter<typeof playwrightApiClient<PriceResponseDto>>,) => {
+      return playwrightApiClient<PriceResponseDto>(
+      {url: `/subscriptions/price`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Return every subscription belonging to the organization, newest first, with lifecycle status. Super admins only. Does not change or constrain existing subscriptions.
+ * @summary List an organization's subscription history
+ */
+const superAdminSubscriptionsControllerGetSubscriptionHistory = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<OrgSubscriptionsResponseDto>>,) => {
+      return playwrightApiClient<OrgSubscriptionsResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}/history`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Get subscription details for a specific organization
+ */
+const superAdminSubscriptionsControllerGetSubscription = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<SubscriptionResponseDtoNullable>>,) => {
+      return playwrightApiClient<SubscriptionResponseDtoNullable>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Create a new subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Create a new subscription for a specific organization
+ */
+const superAdminSubscriptionsControllerCreateSubscription = (
+    orgId: string,
+    createSubscriptionRequestDto: CreateSubscriptionRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<SubscriptionResponseDto>>,) => {
+      return playwrightApiClient<SubscriptionResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSubscriptionRequestDto
+    },
+      options);
+    }
+
+/**
+ * Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Cancel the subscription for a specific organization
+ */
+const superAdminSubscriptionsControllerCancelSubscription = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Ends the current subscription (cancelled or deleted, per oldSubscriptionDisposition) and creates a new one with the provided data. This is the only way to change subscription type. Only accessible to super admins.
+ * @summary Change an organization subscription (cancel/delete + recreate)
+ */
+const superAdminSubscriptionsControllerChangeSubscription = (
+    orgId: string,
+    changeSubscriptionRequestDto: ChangeSubscriptionRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/change`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: changeSubscriptionRequestDto
+    },
+      options);
+    }
+
+/**
+ * Update the number of seats for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the number of seats for a specific organization
+ */
+const superAdminSubscriptionsControllerUpdateSeats = (
+    orgId: string,
+    updateSeatsDto: UpdateSeatsDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSeatsDto
+    },
+      options);
+    }
+
+/**
+ * @summary Update monthly credits for an organization (super admin)
+ */
+const superAdminSubscriptionsControllerUpdateMonthlyCredits = (
+    orgId: string,
+    updateMonthlyCreditsDto: UpdateMonthlyCreditsDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/monthly-credits`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateMonthlyCreditsDto
+    },
+      options);
+    }
+
+/**
+ * Update the billing information for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the billing information for a specific organization
+ */
+const superAdminSubscriptionsControllerUpdateBillingInfo = (
+    orgId: string,
+    updateBillingInfoDto: UpdateBillingInfoDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBillingInfoDto
+    },
+      options);
+    }
+
+/**
+ * Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the start date for a specific organization subscription
+ */
+const superAdminSubscriptionsControllerUpdateStartDate = (
+    orgId: string,
+    updateStartDateDto: UpdateStartDateDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateStartDateDto
+    },
+      options);
+    }
+
+/**
+ * Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Uncancel the subscription for a specific organization
+ */
+const superAdminSubscriptionsControllerUncancelSubscription = (
+    orgId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Selects the authoritative serving subscription and atomically ends access for every conflicting subscription while preserving history. Super admins only.
+ * @summary Resolve an organization's overlapping subscription access
+ */
+const superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap = (
+    orgId: string,
+    resolveSubscriptionOverlapDto: ResolveSubscriptionOverlapDto,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/subscriptions/${orgId}/resolve-overlap`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveSubscriptionOverlapDto
+    },
+      options);
+    }
+
+/**
  * Organisation-wide team managers get every team in the organisation; anyone else gets the teams their team role lets them manage.
  * @summary List the teams the current user may manage
  */
@@ -2131,66 +2191,6 @@ const sourceUploadsControllerAbort = (
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
       {url: `/source-uploads/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.
- * @summary Transcribe audio file to text
- */
-const transcriptionsControllerTranscribe = (
-    transcriptionsControllerTranscribeBody: TranscriptionsControllerTranscribeBody,
- options?: SecondParameter<typeof playwrightApiClient<TranscriptionResponseDto>>,) => {const formData = new FormData();
-formData.append(`file`, transcriptionsControllerTranscribeBody.file);
-if(transcriptionsControllerTranscribeBody.language !== undefined) {
- formData.append(`language`, transcriptionsControllerTranscribeBody.language);
- }
-
-      return playwrightApiClient<TranscriptionResponseDto>(
-      {url: `/transcriptions`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-/**
- * @summary List the crawl domains assigned to an organization
- */
-const superAdminCrawlDomainsControllerList = (
-    orgId: string,
- options?: SecondParameter<typeof playwrightApiClient<CrawlDomainGrantResponseDto[]>>,) => {
-      return playwrightApiClient<CrawlDomainGrantResponseDto[]>(
-      {url: `/super-admin/crawl-domains/${orgId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Assign a crawl domain to an organization
- */
-const superAdminCrawlDomainsControllerGrant = (
-    orgId: string,
-    grantCrawlDomainRequestDto: GrantCrawlDomainRequestDto,
- options?: SecondParameter<typeof playwrightApiClient<CrawlDomainGrantResponseDto>>,) => {
-      return playwrightApiClient<CrawlDomainGrantResponseDto>(
-      {url: `/super-admin/crawl-domains/${orgId}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: grantCrawlDomainRequestDto
-    },
-      options);
-    }
-
-/**
- * @summary Revoke a crawl domain from an organization
- */
-const superAdminCrawlDomainsControllerRevoke = (
-    orgId: string,
-    grantId: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/super-admin/crawl-domains/${orgId}/${grantId}`, method: 'DELETE'
     },
       options);
     }
@@ -5611,46 +5611,10 @@ const logoutControllerLogout = (
       options);
     }
 
-return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
+return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
 export type AppControllerIsCloudResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerIsCloud']>>>
 export type AppControllerHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerHealth']>>>
 export type AppControllerFeatureTogglesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerFeatureToggles']>>>
-export type UserControllerGetUsersInOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerGetUsersInOrganization']>>>
-export type UserControllerUpdateUserRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdateUserRole']>>>
-export type UserControllerUpdateUserNameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdateUserName']>>>
-export type UserControllerUpdatePasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdatePassword']>>>
-export type UserControllerConfirmEmailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerConfirmEmail']>>>
-export type UserControllerResendEmailConfirmationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerResendEmailConfirmation']>>>
-export type UserControllerDeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerDeleteUser']>>>
-export type AdminUserControllerAdminUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['adminUserControllerAdminUpdateUser']>>>
-export type UserPasswordResetControllerTriggerPasswordResetForUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerTriggerPasswordResetForUser']>>>
-export type UserPasswordResetControllerForgotPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerForgotPassword']>>>
-export type UserPasswordResetControllerResetPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerResetPassword']>>>
-export type UserPasswordResetControllerValidateResetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerValidateResetToken']>>>
-export type SuperAdminUsersControllerGetUsersByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerGetUsersByOrgId']>>>
-export type SuperAdminUsersControllerDeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerDeleteUser']>>>
-export type SuperAdminUsersControllerUnlockUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerUnlockUser']>>>
-export type SuperAdminUsersControllerTriggerPasswordResetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerTriggerPasswordReset']>>>
-export type SuperAdminUsersControllerCreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerCreateUser']>>>
-export type SuperAdminUserListControllerGetAllUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUserListControllerGetAllUsers']>>>
-export type SuperAdminUserExportsControllerExportUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUserExportsControllerExportUsers']>>>
-export type SuperAdminManagementControllerListSuperAdminsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerListSuperAdmins']>>>
-export type SuperAdminManagementControllerPromoteToSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerPromoteToSuperAdmin']>>>
-export type SuperAdminManagementControllerDemoteFromSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerDemoteFromSuperAdmin']>>>
-export type AdminUserAccountLockControllerUnlockResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['adminUserAccountLockControllerUnlock']>>>
-export type InvitesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreate']>>>
-export type InvitesControllerGetInvitesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerGetInvites']>>>
-export type InvitesControllerCreateBulkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreateBulk']>>>
-export type InvitesControllerGetInviteByTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerGetInviteByToken']>>>
-export type InvitesControllerAcceptInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerAcceptInvite']>>>
-export type InvitesControllerResendExpiredInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerResendExpiredInvite']>>>
-export type InvitesControllerDeleteAllPendingResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerDeleteAllPending']>>>
-export type InvitesControllerDeleteInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerDeleteInvite']>>>
-export type ExpiredInvitesControllerResendAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['expiredInvitesControllerResendAll']>>>
-export type SuperAdminInvitesControllerGetInvitesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerGetInvites']>>>
-export type SuperAdminInvitesControllerDeleteAllPendingResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerDeleteAllPending']>>>
-export type SuperAdminInvitesControllerDeleteInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerDeleteInvite']>>>
-export type SuperAdminInvitesControllerCreateBulkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerCreateBulk']>>>
 export type SuperAdminOrgsControllerCreateOrgResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerCreateOrg']>>>
 export type SuperAdminOrgsControllerGetAllOrgsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerGetAllOrgs']>>>
 export type SuperAdminOrgsControllerGetOrgByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerGetOrgById']>>>
@@ -5661,19 +5625,10 @@ export type SuperAdminOrgUsageVisibilityControllerSetUsageVisibilityResult = Non
 export type RolePermissionsControllerGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerGet']>>>
 export type RolePermissionsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerUpdate']>>>
 export type MyPermissionsControllerGetMineResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['myPermissionsControllerGetMine']>>>
-export type SubscriptionsControllerHasActiveSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['subscriptionsControllerHasActiveSubscription']>>>
-export type SubscriptionsControllerGetCurrentPriceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['subscriptionsControllerGetCurrentPrice']>>>
-export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerGetSubscriptionHistory']>>>
-export type SuperAdminSubscriptionsControllerGetSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerGetSubscription']>>>
-export type SuperAdminSubscriptionsControllerCreateSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerCreateSubscription']>>>
-export type SuperAdminSubscriptionsControllerCancelSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerCancelSubscription']>>>
-export type SuperAdminSubscriptionsControllerChangeSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerChangeSubscription']>>>
-export type SuperAdminSubscriptionsControllerUpdateSeatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateSeats']>>>
-export type SuperAdminSubscriptionsControllerUpdateMonthlyCreditsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateMonthlyCredits']>>>
-export type SuperAdminSubscriptionsControllerUpdateBillingInfoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateBillingInfo']>>>
-export type SuperAdminSubscriptionsControllerUpdateStartDateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateStartDate']>>>
-export type SuperAdminSubscriptionsControllerUncancelSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUncancelSubscription']>>>
-export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap']>>>
+export type TranscriptionsControllerTranscribeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['transcriptionsControllerTranscribe']>>>
+export type SuperAdminCrawlDomainsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerList']>>>
+export type SuperAdminCrawlDomainsControllerGrantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerGrant']>>>
+export type SuperAdminCrawlDomainsControllerRevokeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerRevoke']>>>
 export type ModelsControllerGetAvailableLanguageModelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['modelsControllerGetAvailableLanguageModels']>>>
 export type ModelsControllerGetAvailableEmbeddingModelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['modelsControllerGetAvailableEmbeddingModels']>>>
 export type ModelsControllerGetAvailableImageGenerationModelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['modelsControllerGetAvailableImageGenerationModels']>>>
@@ -5724,6 +5679,55 @@ export type SuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelResult
 export type SuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel']>>>
 export type SuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel']>>>
 export type SuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel']>>>
+export type UserControllerGetUsersInOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerGetUsersInOrganization']>>>
+export type UserControllerUpdateUserRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdateUserRole']>>>
+export type UserControllerUpdateUserNameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdateUserName']>>>
+export type UserControllerUpdatePasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerUpdatePassword']>>>
+export type UserControllerConfirmEmailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerConfirmEmail']>>>
+export type UserControllerResendEmailConfirmationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerResendEmailConfirmation']>>>
+export type UserControllerDeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userControllerDeleteUser']>>>
+export type AdminUserControllerAdminUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['adminUserControllerAdminUpdateUser']>>>
+export type UserPasswordResetControllerTriggerPasswordResetForUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerTriggerPasswordResetForUser']>>>
+export type UserPasswordResetControllerForgotPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerForgotPassword']>>>
+export type UserPasswordResetControllerResetPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerResetPassword']>>>
+export type UserPasswordResetControllerValidateResetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerValidateResetToken']>>>
+export type SuperAdminUsersControllerGetUsersByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerGetUsersByOrgId']>>>
+export type SuperAdminUsersControllerDeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerDeleteUser']>>>
+export type SuperAdminUsersControllerUnlockUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerUnlockUser']>>>
+export type SuperAdminUsersControllerTriggerPasswordResetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerTriggerPasswordReset']>>>
+export type SuperAdminUsersControllerCreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerCreateUser']>>>
+export type SuperAdminUserListControllerGetAllUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUserListControllerGetAllUsers']>>>
+export type SuperAdminUserExportsControllerExportUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUserExportsControllerExportUsers']>>>
+export type SuperAdminManagementControllerListSuperAdminsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerListSuperAdmins']>>>
+export type SuperAdminManagementControllerPromoteToSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerPromoteToSuperAdmin']>>>
+export type SuperAdminManagementControllerDemoteFromSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerDemoteFromSuperAdmin']>>>
+export type AdminUserAccountLockControllerUnlockResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['adminUserAccountLockControllerUnlock']>>>
+export type InvitesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreate']>>>
+export type InvitesControllerGetInvitesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerGetInvites']>>>
+export type InvitesControllerCreateBulkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreateBulk']>>>
+export type InvitesControllerGetInviteByTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerGetInviteByToken']>>>
+export type InvitesControllerAcceptInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerAcceptInvite']>>>
+export type InvitesControllerResendExpiredInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerResendExpiredInvite']>>>
+export type InvitesControllerDeleteAllPendingResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerDeleteAllPending']>>>
+export type InvitesControllerDeleteInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerDeleteInvite']>>>
+export type ExpiredInvitesControllerResendAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['expiredInvitesControllerResendAll']>>>
+export type SuperAdminInvitesControllerGetInvitesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerGetInvites']>>>
+export type SuperAdminInvitesControllerDeleteAllPendingResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerDeleteAllPending']>>>
+export type SuperAdminInvitesControllerDeleteInviteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerDeleteInvite']>>>
+export type SuperAdminInvitesControllerCreateBulkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminInvitesControllerCreateBulk']>>>
+export type SubscriptionsControllerHasActiveSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['subscriptionsControllerHasActiveSubscription']>>>
+export type SubscriptionsControllerGetCurrentPriceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['subscriptionsControllerGetCurrentPrice']>>>
+export type SuperAdminSubscriptionsControllerGetSubscriptionHistoryResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerGetSubscriptionHistory']>>>
+export type SuperAdminSubscriptionsControllerGetSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerGetSubscription']>>>
+export type SuperAdminSubscriptionsControllerCreateSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerCreateSubscription']>>>
+export type SuperAdminSubscriptionsControllerCancelSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerCancelSubscription']>>>
+export type SuperAdminSubscriptionsControllerChangeSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerChangeSubscription']>>>
+export type SuperAdminSubscriptionsControllerUpdateSeatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateSeats']>>>
+export type SuperAdminSubscriptionsControllerUpdateMonthlyCreditsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateMonthlyCredits']>>>
+export type SuperAdminSubscriptionsControllerUpdateBillingInfoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateBillingInfo']>>>
+export type SuperAdminSubscriptionsControllerUpdateStartDateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUpdateStartDate']>>>
+export type SuperAdminSubscriptionsControllerUncancelSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionsControllerUncancelSubscription']>>>
+export type SuperAdminSubscriptionOverlapControllerResolveSubscriptionOverlapResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap']>>>
 export type TeamsControllerListTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerListTeams']>>>
 export type TeamsControllerCreateTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerCreateTeam']>>>
 export type TeamsControllerListMyTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['teamsControllerListMyTeams']>>>
@@ -5743,10 +5747,6 @@ export type SuperAdminTeamsControllerDeleteMemberResult = NonNullable<Awaited<Re
 export type SuperAdminTeamsControllerRemoveTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTeamsControllerRemoveTeam']>>>
 export type SourceUploadsControllerSignResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['sourceUploadsControllerSign']>>>
 export type SourceUploadsControllerAbortResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['sourceUploadsControllerAbort']>>>
-export type TranscriptionsControllerTranscribeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['transcriptionsControllerTranscribe']>>>
-export type SuperAdminCrawlDomainsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerList']>>>
-export type SuperAdminCrawlDomainsControllerGrantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerGrant']>>>
-export type SuperAdminCrawlDomainsControllerRevokeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminCrawlDomainsControllerRevoke']>>>
 export type ThreadsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerCreate']>>>
 export type ThreadsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerFindAll']>>>
 export type ThreadsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerFindOne']>>>

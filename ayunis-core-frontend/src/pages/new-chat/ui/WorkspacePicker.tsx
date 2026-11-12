@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, FolderOpen } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,10 @@ export function WorkspacePicker({
           <Button
             variant="ghost"
             size="sm"
+            className={cn(
+              'h-7 gap-1.5 px-2 text-[13px] font-normal hover:text-foreground has-[>svg]:px-2 [&_svg:not([class*=size-])]:size-3.5',
+              selected ? 'text-foreground' : 'text-muted-foreground',
+            )}
             data-tour={TOUR_TARGET.selectWorkspaceInChat}
             data-tour-settle={NEW_CHAT_ENTRANCE_MS}
           >
@@ -48,6 +53,7 @@ export function WorkspacePicker({
                 icon={selected.icon}
                 color={selected.color}
                 variant="plain"
+                className="size-3.5 [&>svg]:size-3.5"
               />
             ) : (
               <FolderOpen />

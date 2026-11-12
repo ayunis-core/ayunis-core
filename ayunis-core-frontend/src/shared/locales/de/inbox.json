@@ -6,7 +6,7 @@
   "filter": {
     "type": {
       "routine": "Routine-Benachrichtigungen",
-      "routine_error": "Routine-Fehler",
+      "routine_error": "Zu prüfen",
       "release_note": "Neuigkeiten"
     },
     "clear": "Filter entfernen"
@@ -17,7 +17,7 @@
   },
   "item": {
     "unread": "Ungelesen",
-    "error": "Fehler",
+    "error": "Zu prüfen",
     "markRead": "Als gelesen markieren"
   },
   "detail": {

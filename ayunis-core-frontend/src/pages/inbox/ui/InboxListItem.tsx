@@ -88,7 +88,7 @@ export function InboxListItem({
           </time>
         </p>
         {notification.type === NotificationType.routine_error && (
-          <Badge variant="destructive" className="mt-1">
+          <Badge variant="outline" className="mt-1">
             {t('item.error')}
           </Badge>
         )}
