@@ -33,6 +33,7 @@ import {
 } from '@/pages/admin-settings/integrations-settings/lib/build-update-integration-payload';
 import { describeServerUrlChange } from '@/pages/admin-settings/integrations-settings/lib/server-url-change';
 import { EditOAuthClientFields } from './edit-oauth-client-fields';
+import { IntegrationInstructionsField } from './integration-instructions-field';
 import { EditCustomIntegrationDialog } from './edit-custom-integration-dialog';
 import { MarketplaceServerUrlField } from './marketplace-server-url-field';
 import { ServerUrlChangeNotice } from './server-url-change-notice';
@@ -64,6 +65,7 @@ function useResetEditForm(
       form.reset({
         name: integration.name,
         serverUrl: integration.serverUrl ?? '',
+        instructions: integration.instructions ?? '',
         authHeaderName: '',
         credentials: '',
         oauthClientId: '',
@@ -112,6 +114,7 @@ function LegacyEditIntegrationDialog({
     defaultValues: {
       name: '',
       serverUrl: '',
+      instructions: '',
       authHeaderName: '',
       credentials: '',
       oauthClientId: '',
@@ -239,6 +242,8 @@ function LegacyEditIntegrationDialog({
                   </FormItem>
                 )}
               />
+
+              <IntegrationInstructionsField disabled={isUpdating} />
 
               {integration.customerProvidesServerUrl && (
                 <MarketplaceServerUrlField

@@ -36,6 +36,7 @@ export interface CreateCustomIntegrationFormData {
   oauthScopes: string;
   oauthClientId: string;
   oauthClientSecret: string;
+  instructions: string;
   fields: CustomConfigFieldFormData[];
 }
 

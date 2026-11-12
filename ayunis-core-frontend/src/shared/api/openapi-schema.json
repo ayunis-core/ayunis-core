@@ -20214,6 +20214,11 @@
             "type": "string",
             "description": "Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)",
             "example": "Access municipal council data via OParl"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Instructions written by the organization that brief the model whenever this integration is active in a chat",
+            "nullable": true
           }
         },
         "required": [
@@ -20310,6 +20315,11 @@
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.",
             "example": true,
             "default": true
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Instructions written by the organization that brief the model whenever this integration is active in a chat.",
+            "maxLength": 10000
           }
         },
         "required": ["slug", "configValues"]
@@ -20437,6 +20447,11 @@
             "type": "boolean",
             "example": true,
             "default": true
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Instructions written by the organization that brief the model whenever this integration is active in a chat.",
+            "maxLength": 10000
           }
         },
         "required": ["name", "serverUrl", "configSchema", "orgConfigValues"]
@@ -20554,6 +20569,12 @@
           },
           "oauthClient": {
             "$ref": "#/components/schemas/McpOAuthClientDto"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Instructions written by the organization that brief the model whenever this integration is active in a chat. Omit to keep the stored text; send null or an empty string to remove it.",
+            "nullable": true,
+            "maxLength": 10000
           }
         }
       },
@@ -20587,6 +20608,11 @@
           },
           "oauthClient": {
             "$ref": "#/components/schemas/McpOAuthClientDto"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Instructions written by the organization that brief the model whenever this integration is active in a chat.",
+            "maxLength": 10000
           }
         },
         "required": ["identifier", "orgConfigValues"]

@@ -263,6 +263,29 @@ describe('McpIntegrationMapper', () => {
     ).toBe('X-API-Key');
   });
 
+  it('round-trips admin instructions through record mapping', () => {
+    const original = aCustomMcpIntegration({
+      ...baseParams,
+      instructions: 'Search by surname before using the address.',
+    });
+
+    const reconstructed = mapper.toDomain(mapper.toRecord(original));
+
+    expect(reconstructed.instructions).toBe(
+      'Search by surname before using the address.',
+    );
+  });
+
+  it('writes null for cleared instructions so the stored text is removed', () => {
+    const integration = aCustomMcpIntegration({
+      ...baseParams,
+      instructions: 'Search by surname before using the address.',
+    });
+    integration.updateInstructions(null);
+
+    expect(mapper.toRecord(integration).instructions).toBeNull();
+  });
+
   const oparlConfigSchema: IntegrationConfigSchema = {
     authType: 'NO_AUTH',
     orgFields: [

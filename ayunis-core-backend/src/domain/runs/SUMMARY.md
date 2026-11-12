@@ -66,7 +66,7 @@ The chat profile (`ChatRunProfile`) uses these capabilities, in order:
 - **KnowledgeBasesCapability** — `knowledge_query`/`knowledge_get_text` and the `<available_knowledge_bases>` listing for the merged knowledge bases.
 - **NotificationContextCapability** — for a chat started with "Chat about this" (`thread.sourceNotificationId`), the notification's headline, subheadline (when it has one) and body in `RESOURCES`, after the cached preamble. A routine notification's text was written by an unattended routine from web pages, so every notification is XML-escaped inside a `<notification_under_discussion>` block that names its origin (a routine, or for `release_note` an Ayunis release note) and tells the model to use it as reference material, not as instructions. Nothing is added once the notification is gone or with the `routines` flag off.
 - **WorkspaceInstructionsCapability** — the workspace's always-on instructions from `BuildWorkspaceRunContextUseCase`.
-- **McpCapability** — tools and resources of the thread's MCP integrations via `McpToolAssemblerService`.
+- **McpCapability** — tools and resources of the thread's MCP integrations via `McpToolAssemblerService`, plus one `RESOURCES` section per integration carrying its admin-maintained instructions. Only integrations that contributed at least one tool or resource are briefed, ordered by integration id; skipped, disabled, and detached integrations add nothing.
 
 Without `canUseTools` the chat offers no tools and omits the skill catalog and knowledge-base listing; the date, behavior, tool and artifact guidance, policies, thread files, workspace and custom instructions remain.
 

@@ -15,6 +15,8 @@ interface UpdateMcpIntegrationParams {
   credentials?: string;
   authHeaderName?: string;
   returnsPii?: boolean;
+  /** `undefined` keeps the stored text; `null` or a blank string clears it. */
+  instructions?: string | null;
   orgConfigValues?: Record<string, string>;
   oauthClient?: { clientId: string; clientSecret?: string };
 }
@@ -27,6 +29,7 @@ export class UpdateMcpIntegrationCommand {
   public readonly credentials?: string;
   public readonly authHeaderName?: string;
   public readonly returnsPii?: boolean;
+  public readonly instructions?: string | null;
   public readonly orgConfigValues?: Record<string, string>;
   public readonly oauthClient?: { clientId: string; clientSecret?: string };
 
@@ -38,6 +41,7 @@ export class UpdateMcpIntegrationCommand {
     this.credentials = params.credentials;
     this.authHeaderName = params.authHeaderName;
     this.returnsPii = params.returnsPii;
+    this.instructions = params.instructions;
     this.orgConfigValues = params.orgConfigValues;
     this.oauthClient = params.oauthClient;
   }

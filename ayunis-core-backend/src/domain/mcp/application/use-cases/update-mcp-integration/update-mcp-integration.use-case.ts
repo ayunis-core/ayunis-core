@@ -146,6 +146,10 @@ export class UpdateMcpIntegrationUseCase {
       integration.updateReturnsPii(command.returnsPii);
     }
 
+    if (command.instructions !== undefined) {
+      integration.updateInstructions(command.instructions);
+    }
+
     this.updateServerUrl(integration, command.serverUrl);
 
     if (
