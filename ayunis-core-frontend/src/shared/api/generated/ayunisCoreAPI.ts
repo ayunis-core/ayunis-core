@@ -233,6 +233,7 @@ import type {
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
   SetOrgUsageVisibilityRequestDto,
+  SetRecordingSummaryModelDto,
   SetSkillActivationDto,
   SetSkillPinDto,
   SetTeamDefaultModelDto,
@@ -5386,6 +5387,168 @@ export const useModelModeDefaultsControllerSetTeamModeDefault = <TError = unknow
         TContext
       > => {
       return useMutation(getModelModeDefaultsControllerSetTeamModeDefaultMutationOptions(options), queryClient);
+    }
+
+/**
+ * Returns null when no model is selected and summaries use the organization default model.
+ * @summary Get the model that summarizes recordings
+ */
+export const recordingSummaryModelControllerGetRecordingSummaryModel = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
+      {url: `/models/org/recording-summary-model`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryModelControllerGetRecordingSummaryModelQueryKey = () => {
+    return [
+    `/models/org/recording-summary-model`
+    ] as const;
+    }
+
+
+export const getRecordingSummaryModelControllerGetRecordingSummaryModelQueryOptions = <TData = Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingSummaryModelControllerGetRecordingSummaryModelQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>> = ({ signal }) => recordingSummaryModelControllerGetRecordingSummaryModel(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingSummaryModelControllerGetRecordingSummaryModelQueryResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>>
+export type RecordingSummaryModelControllerGetRecordingSummaryModelQueryError = unknown
+
+
+export function useRecordingSummaryModelControllerGetRecordingSummaryModel<TData = Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryModelControllerGetRecordingSummaryModel<TData = Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryModelControllerGetRecordingSummaryModel<TData = Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the model that summarizes recordings
+ */
+
+export function useRecordingSummaryModelControllerGetRecordingSummaryModel<TData = Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerGetRecordingSummaryModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingSummaryModelControllerGetRecordingSummaryModelQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Set or clear the model that summarizes recordings
+ */
+export const recordingSummaryModelControllerSetRecordingSummaryModel = (
+    setRecordingSummaryModelDto: SetRecordingSummaryModelDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
+      {url: `/models/org/recording-summary-model`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setRecordingSummaryModelDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryModelControllerSetRecordingSummaryModelMutationKey = () => ['recordingSummaryModelControllerSetRecordingSummaryModel'] as const;
+
+export const getRecordingSummaryModelControllerSetRecordingSummaryModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>, TError,RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>, TError,RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables, TContext> => {
+
+const mutationKey = getRecordingSummaryModelControllerSetRecordingSummaryModelMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>, RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordingSummaryModelControllerSetRecordingSummaryModel(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingSummaryModelControllerSetRecordingSummaryModelMutationResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>>
+    export type RecordingSummaryModelControllerSetRecordingSummaryModelMutationBody = SetRecordingSummaryModelDto
+    export type RecordingSummaryModelControllerSetRecordingSummaryModelMutationError = void
+    export type RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables = {data: SetRecordingSummaryModelDto}
+
+    /**
+ * @summary Set or clear the model that summarizes recordings
+ */
+export const useRecordingSummaryModelControllerSetRecordingSummaryModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>, TError,RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingSummaryModelControllerSetRecordingSummaryModel>>,
+        TError,
+        RecordingSummaryModelControllerSetRecordingSummaryModelMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingSummaryModelControllerSetRecordingSummaryModelMutationOptions(options), queryClient);
     }
 
 /**

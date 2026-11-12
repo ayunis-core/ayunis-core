@@ -104,12 +104,18 @@ import { EffectiveModelScopeResolverService } from './application/services/effec
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
 import { UsageReferencesModule } from 'src/domain/usage/usage-references.module';
+import { LocalRecordingSummaryModelsRepositoryModule } from './infrastructure/persistence/local-recording-summary-models/local-recording-summary-models-repository.module';
+import { RecordingSummaryModelController } from './presenters/http/recording-summary-model.controller';
+import { GetRecordingSummaryModelUseCase } from './application/use-cases/get-recording-summary-model/get-recording-summary-model.use-case';
+import { SetRecordingSummaryModelUseCase } from './application/use-cases/set-recording-summary-model/set-recording-summary-model.use-case';
+import { ResolveRecordingSummaryModelUseCase } from './application/use-cases/resolve-recording-summary-model/resolve-recording-summary-model.use-case';
 
 @Module({
   imports: [
     LocalPermittedModelsRepositoryModule,
     LocalModelModeEntriesRepositoryModule,
     LocalDefaultModelSelectionsRepositoryModule,
+    LocalRecordingSummaryModelsRepositoryModule,
     LocalModelsRepositoryModule,
     UsageReferencesModule,
     OrgsModule,
@@ -129,6 +135,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     SuperAdminModelModesController,
     ModelModesController,
     ModelModeDefaultsController,
+    RecordingSummaryModelController,
     SuperAdminLanguageCatalogModelsController,
     SuperAdminEmbeddingCatalogModelsController,
     SuperAdminImageGenerationCatalogModelsController,
@@ -286,8 +293,12 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     SetModelModeDefaultUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    GetRecordingSummaryModelUseCase,
+    SetRecordingSummaryModelUseCase,
+    ResolveRecordingSummaryModelUseCase,
   ],
   exports: [
+    ResolveRecordingSummaryModelUseCase,
     ResolveModelModesUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,

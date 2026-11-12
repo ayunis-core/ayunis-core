@@ -912,6 +912,14 @@ export interface SetModelModeDefaultDto {
   mode: ModelMode | null;
 }
 
+export interface SetRecordingSummaryModelDto {
+  /**
+     * Org-wide permitted language model that summarizes recordings; null clears it so the org default model applies
+     * @nullable
+     */
+  permittedModelId: string | null;
+}
+
 /**
  * The provider of the model
  */

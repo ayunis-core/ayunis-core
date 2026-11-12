@@ -96,10 +96,49 @@ export async function removePermittedModel(
   });
 }
 
+export async function setPermittedModelAnonymousOnly(
+  api: APIRequestContext,
+  permittedModelId: string,
+  anonymousOnly: boolean,
+): Promise<void> {
+  await generatedApi.modelsControllerUpdatePermittedModel(
+    permittedModelId,
+    { anonymousOnly },
+    { api },
+  );
+}
+
+export async function grantTeamLanguageModel(
+  api: APIRequestContext,
+  teamId: string,
+  modelId: string,
+): Promise<string> {
+  const grant =
+    await generatedApi.teamPermittedModelsControllerCreateTeamPermittedModel(
+      teamId,
+      { modelId },
+      { api },
+    );
+  return grant.id;
+}
+
 export function getConfiguredLanguageCandidates(
   api: APIRequestContext,
 ): Promise<ModelWithConfigResponseDto[]> {
   return generatedApi.modelsControllerGetAvailableLanguageModels({ api });
+}
+
+/** A configured catalog model the organization has not enabled yet. */
+export async function findUnpermittedLanguageCandidate(
+  api: APIRequestContext,
+): Promise<ModelWithConfigResponseDto> {
+  const candidate = (await getConfiguredLanguageCandidates(api)).find(
+    (model) => !model.isPermitted,
+  );
+  if (!candidate) {
+    throw new Error('No configured organization-unpermitted language candidate');
+  }
+  return candidate;
 }
 
 export function getConfiguredImageCandidates(

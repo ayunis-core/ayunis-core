@@ -143,7 +143,11 @@ export function OrgDefaultModelCardWidget({
               onValueChange={handleChange}
               disabled={isDisabled}
             >
-              <SelectTrigger id={selectId} className="w-full lg:w-[240px]">
+              <SelectTrigger
+                id={selectId}
+                data-testid={selectId}
+                className="w-full lg:w-[240px]"
+              >
                 <SelectValue
                   placeholder={
                     isLoading
