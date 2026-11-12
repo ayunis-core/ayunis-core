@@ -276,6 +276,133 @@ describe('IngestBulkContentUseCase', () => {
     expect(savedChunks[1].children[0].embedding).toEqual([3.0]);
   });
 
+  describe('a document with many embedding batches', () => {
+    const BATCH = 64;
+
+    interface PendingCall {
+      texts: string[];
+      resolve: () => void;
+      reject: (error: Error) => void;
+    }
+
+    // One entry whose text splits into `batches` full embedding batches. Each
+    // embedder call stays open until the test settles it.
+    function longDocument(batches: number): {
+      command: IngestBulkContentCommand;
+      calls: PendingCall[];
+    } {
+      const texts = Array.from(
+        { length: batches * BATCH },
+        (_, index) => `Absatz ${index}`,
+      );
+      mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
+      mockSplitter.execute.mockReturnValue(
+        new SplitResult(
+          texts.map((text, index) => new TextChunk(text, { index })),
+          {},
+        ),
+      );
+      const calls: PendingCall[] = [];
+      mockEmbedder.execute.mockImplementation(
+        (command) =>
+          new Promise((resolve, reject) => {
+            calls.push({
+              texts: command.texts,
+              resolve: () =>
+                resolve(
+                  command.texts.map(
+                    (text) =>
+                      new Embedding(
+                        [Number(text.split(' ')[1])],
+                        text,
+                        EMBEDDING_MODEL,
+                      ),
+                  ),
+                ),
+              reject,
+            });
+          }),
+      );
+      const command = new IngestBulkContentCommand({
+        orgId: ORG_ID,
+        entries: [
+          {
+            indexEntry: new IndexEntry({
+              relatedDocumentId: DOC_ID,
+              relatedChunkId: CHUNK_ID_1,
+            }),
+            content: 'Ein sehr langes Dokument',
+          },
+        ],
+      });
+      return { command, calls };
+    }
+
+    const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+    it('sends its batches at the same time and keeps the vectors in text order', async () => {
+      const { command, calls } = longDocument(5);
+
+      const ingestion = useCase.execute(command);
+      await settle();
+
+      expect(calls).toHaveLength(5);
+      [...calls].reverse().forEach((call) => call.resolve());
+      await ingestion;
+
+      const [saved] = mockRepo.saveMany.mock.calls[0][0];
+      expect(saved.children.map((child) => child.embedding[0])).toEqual(
+        Array.from({ length: 5 * BATCH }, (_, index) => index),
+      );
+    });
+
+    it('keeps at most eight batches in flight and starts the next one as soon as one returns', async () => {
+      const { command, calls } = longDocument(20);
+
+      const ingestion = useCase.execute(command);
+      await settle();
+      expect(calls).toHaveLength(8);
+
+      calls[3].resolve();
+      await settle();
+      expect(calls).toHaveLength(9);
+
+      while (mockEmbedder.execute.mock.calls.length < 20 || calls.length > 0) {
+        calls.splice(0).forEach((call) => call.resolve());
+        await settle();
+      }
+      await ingestion;
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(20);
+    });
+
+    it('after a failed batch sends no further one and fails only once the started ones have returned', async () => {
+      const { command, calls } = longDocument(20);
+      let outcome: 'pending' | 'rejected' = 'pending';
+
+      const ingestion = useCase.execute(command).catch((error: Error) => {
+        outcome = 'rejected';
+        return error;
+      });
+      await settle();
+      calls[0].reject(new Error('embedding failed'));
+      await settle();
+
+      expect(outcome).toBe('pending');
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(8);
+
+      calls.slice(1, 7).forEach((call) => call.resolve());
+      await settle();
+      expect(outcome).toBe('pending');
+
+      calls[7].reject(new Error('second failure'));
+      await expect(ingestion).resolves.toMatchObject({
+        message: 'embedding failed',
+      });
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(8);
+      expect(mockRepo.saveMany).not.toHaveBeenCalled();
+    });
+  });
+
   it('should do nothing when entries array is empty', async () => {
     const command = new IngestBulkContentCommand({
       orgId: ORG_ID,
