@@ -15,16 +15,21 @@ import { isAborted } from './run-state';
 export const MAX_TOOL_RESULT_LENGTH = 200_000;
 export const MAX_CONCURRENT_TOOL_CALLS = 8;
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
+const APPROVAL_NOT_REQUESTED_RESULT =
+  'This tool call was not run because it needs approval and another tool call in this turn had invalid input. Call it again together with the corrected calls.';
 
 interface ToolOutcome {
   result: string;
   isError: boolean;
   aborted?: true;
+  /** Not run because it needs approval; says nothing about the tool failing. */
+  deferred?: true;
   fatalError?: AgentRuntimeError;
 }
 
 interface ToolPhaseOutcome {
   results: ToolResultContent[];
+  deferredToolCallIds: string[];
   fatalError?: AgentRuntimeError;
 }
 
@@ -151,6 +156,7 @@ async function* finalizeToolCalls(
   phase: ToolPhase,
 ): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
   const results: ToolResultContent[] = [];
+  const deferredToolCallIds: string[] = [];
   let fatalError: AgentRuntimeError | undefined;
   const lastIndex = phase.scheduled.length - 1;
   for (const [callIndex, scheduled] of phase.scheduled.entries()) {
@@ -167,9 +173,14 @@ async function* finalizeToolCalls(
     });
     yield* drainEmits(state);
     results.push(result);
+    if (outcome.deferred) deferredToolCallIds.push(result.toolCallId);
     yield result;
   }
-  return { results, ...(fatalError ? { fatalError } : {}) };
+  return {
+    results,
+    deferredToolCallIds,
+    ...(fatalError ? { fatalError } : {}),
+  };
 }
 
 const toolCallOutcome = (outcome: ToolOutcome): ToolCallOutcome => {
@@ -237,6 +248,13 @@ const runTool = async (
   const validationError = validateToolInput(tool, call.input);
   if (validationError !== null) {
     return { result: validationError, isError: true };
+  }
+  if (tool.needsApproval) {
+    return {
+      result: APPROVAL_NOT_REQUESTED_RESULT,
+      isError: true,
+      deferred: true,
+    };
   }
   if (!tool.execute) {
     return {

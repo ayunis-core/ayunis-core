@@ -17,6 +17,7 @@ import { drainEmits } from './event-queue';
 import {
   getToolUseContents,
   hasExternallyHandledToolCall,
+  hasToolCallNeedingApproval,
 } from './exit-conditions';
 import type { TerminalHookFailure } from './hook-runner';
 import { streamModelCall } from './model-call';
@@ -72,6 +73,9 @@ async function* runIteration(
     state.tools,
   );
   if (isSignalAborted(state)) return { status: 'aborted' };
+  if (hasToolCallNeedingApproval(result.message, state.tools)) {
+    return { status: 'completed' };
+  }
   yield* runToolPhase(state, iteration, toolCalls, breaker);
   if (isAborted(state)) return { status: 'aborted' };
   return exitAfterTools ? { status: 'completed' } : null;
@@ -400,7 +404,7 @@ async function* runToolPhase(
   toolCalls: readonly ToolUseContent[],
   breaker: ToolFailureBreaker,
 ): AsyncGenerator<RunEventPayload> {
-  const { results, fatalError } = yield* executeToolCalls(
+  const { results, deferredToolCallIds, fatalError } = yield* executeToolCalls(
     state,
     iteration,
     toolCalls,
@@ -410,7 +414,11 @@ async function* runToolPhase(
   yield { type: 'tool_result_message', message };
   if (fatalError) throw fatalError;
   if (isAborted(state)) return;
-  const tripped = breaker.record(results);
+  const tripped = breaker.record(
+    results.filter(
+      (result) => !deferredToolCallIds.includes(result.toolCallId),
+    ),
+  );
   if (tripped) throw new RepeatedToolFailureError(tripped);
 }
 

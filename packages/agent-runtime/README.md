@@ -233,6 +233,18 @@ string or `{ result, isError }`. Tool output is capped at 200,000 characters.
 Malformed tool arguments are never executed. After recovery consumes the last
 retry, the final call disables tools and asks for a direct answer.
 
+A tool without `execute` is handled externally: its call gets the result
+`Tool execution is handled externally`, and the run completes once the tool
+phase has settled. A tool marked `needsApproval` is never run by the runtime.
+When every call of a turn passes `validateInput` and at least one needs
+approval, the run completes right after `afterModelTurn` without a tool
+phase: no call of that turn runs, no tool hooks fire, and no `tool_result`
+events or results exist, so the host can ask for approval and settle the
+calls in a later run. When any call of the turn has invalid input or names an
+unknown tool, the tool phase runs as usual so the model can correct it, and
+the calls needing approval get an error result asking the model to repeat
+them.
+
 Tools can call `ctx.runChild(...)`. Child contexts read through to parent
 values while keeping writes local. Hooks, retry policy, idle timeout, and
 cancellation inherit unless explicitly overridden; hook contexts always carry
