@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.74.0](https://github.com/ayunis-core/ayunis-core/compare/v2.73.0...v2.74.0) (2026-11-12)
+
+
+### Features
+
+* **chat:** confirm mcp tool calls in chat (AYC-1757) ([#2308](https://github.com/ayunis-core/ayunis-core/issues/2308)) ([48979f8](https://github.com/ayunis-core/ayunis-core/commit/48979f8b39b27788334c0ee5903d28db1b1343fd))
+
+
+### Bug Fixes
+
+* **chat:** open the new chat while its file is still processing (AYC-1801) ([#2338](https://github.com/ayunis-core/ayunis-core/issues/2338)) ([124d616](https://github.com/ayunis-core/ayunis-core/commit/124d616b12f67b3229047d46d20b4fd87109c4b7))
+* **mcp:** clear saved user secrets when the server url changes (AYC-1779) ([#2323](https://github.com/ayunis-core/ayunis-core/issues/2323)) ([12b1696](https://github.com/ayunis-core/ayunis-core/commit/12b1696ca4f56b51619afc24b26bffa353055b46))
+
+
+### Code Refactoring
+
+* **ui:** add destructive-ghost button variant for delete buttons (AYC-1791) ([#2334](https://github.com/ayunis-core/ayunis-core/issues/2334)) ([ecdfb87](https://github.com/ayunis-core/ayunis-core/commit/ecdfb8762db30e2d5026b8232aa3a45adfeab17b))
+
+
+### Tests
+
+* **sources:** assert the 100 MiB pdf upload limit in direct-upload e2e (AYC-000) ([#2328](https://github.com/ayunis-core/ayunis-core/issues/2328)) ([6b13cb1](https://github.com/ayunis-core/ayunis-core/commit/6b13cb1c0f1a98e55d7658f20ca5a78667c74638))
+
+
+### Miscellaneous
+
+* **e2e:** regenerate the api client from the current openapi schema (AYC-000) ([#2337](https://github.com/ayunis-core/ayunis-core/issues/2337)) ([900ae94](https://github.com/ayunis-core/ayunis-core/commit/900ae945ea8e014785dde716e6bc1485c2fb688d))
+
 ## [2.73.0](https://github.com/ayunis-core/ayunis-core/compare/v2.72.0...v2.73.0) (2026-11-11)
 
 
