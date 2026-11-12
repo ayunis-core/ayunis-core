@@ -7,6 +7,8 @@ import { BatchedPdfOcrHandler } from './batched-pdf-ocr.handler';
 import { QpdfPdfBatcherAdapter } from 'src/domain/retrievers/file-retrievers/infrastructure/adapters/qpdf-pdf-batcher.adapter';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { UnprocessableDocumentError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
+import type { PdfBatcherPort } from 'src/domain/retrievers/file-retrievers/application/ports/pdf-batcher.port';
+import { ProcessingStoppedError } from 'src/common/types/processing-context';
 import {
   FileRetrieverPage,
   FileRetrieverResult,
@@ -176,5 +178,220 @@ describe('batched PDF OCR', () => {
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
+  });
+});
+
+describe('batched PDF OCR across several batches', () => {
+  const PAGES_PER_BATCH = 2;
+  const cache = new Map<string, string>();
+  let active: boolean;
+  let started: number[];
+  let running: number;
+  let mostRunning: number;
+  let produced: number;
+  let finished: number;
+  let mostHeld: number;
+  let secondsFor: (batch: number) => number;
+  let failing: Set<number>;
+  let progress: number[];
+  const context = {
+    read: async (key: string) => cache.get(key),
+    write: async (key: string, value: string) => {
+      cache.set(key, value);
+    },
+    isActive: async () => active,
+    progress: async (completed: number) => {
+      progress.push(completed);
+    },
+  };
+
+  // The document's bytes name its number of batches; a batch's bytes name its
+  // position, so the OCR double knows which batch it was handed.
+  function pdfOf(batches: number): File {
+    return new File(
+      Buffer.from(String(batches)),
+      'council-minutes.pdf',
+      'application/pdf',
+    );
+  }
+
+  const batcher: PdfBatcherPort = {
+    pageCount: async (source) =>
+      Number((source as Buffer).toString()) * PAGES_PER_BATCH,
+    async *split(source) {
+      const batches = Number((source as Buffer).toString());
+      for (let batch = 0; batch < batches; batch++) {
+        produced++;
+        mostHeld = Math.max(mostHeld, produced - finished);
+        yield {
+          data: Buffer.from(String(batch)),
+          startPage: batch * PAGES_PER_BATCH,
+          pageCount: PAGES_PER_BATCH,
+        };
+      }
+    },
+  };
+
+  const ocr = {
+    processFile: async (file: File) => {
+      const batch = Number(file.fileData.toString());
+      started.push(batch);
+      mostRunning = Math.max(mostRunning, ++running);
+      try {
+        await new Promise((resolve) =>
+          setTimeout(resolve, secondsFor(batch) * 1000),
+        );
+        if (failing.has(batch)) throw new Error('provider timeout');
+        return new FileRetrieverResult(
+          Array.from(
+            { length: PAGES_PER_BATCH },
+            (_, page) =>
+              new FileRetrieverPage(
+                `batch ${batch} page ${page + 1}`,
+                page + 1,
+              ),
+          ),
+        );
+      } finally {
+        running--;
+        finished++;
+      }
+    },
+  };
+
+  function handler(ocrConcurrency = 4) {
+    return new BatchedPdfOcrHandler(
+      batcher,
+      ocr,
+      new ConfigService({ retrieval: { ocrConcurrency } }),
+    );
+  }
+
+  // Resolves with the seconds of fake time the work took, however it ended.
+  function timed<T>(work: Promise<T>) {
+    const startedAt = Date.now();
+    const seconds = () => (Date.now() - startedAt) / 1000;
+    return work.then(
+      (result) => ({ result, error: undefined, seconds: seconds() }),
+      (error: unknown) => ({ result: undefined, error, seconds: seconds() }),
+    );
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    cache.clear();
+    active = true;
+    started = [];
+    running = 0;
+    mostRunning = 0;
+    produced = 0;
+    finished = 0;
+    mostHeld = 0;
+    secondsFor = () => 1;
+    failing = new Set();
+    progress = [];
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('finishes in the time of its slowest batch instead of the sum of all batches', async () => {
+    secondsFor = (batch) => (batch === 0 ? 4 : 1);
+
+    const work = timed(handler().processFile(pdfOf(8)));
+    await jest.runAllTimersAsync();
+
+    expect((await work).seconds).toBe(4);
+  });
+
+  it('keeps the pages in document order when later batches answer first', async () => {
+    secondsFor = (batch) => 8 - batch;
+
+    const work = timed(handler().processFile(pdfOf(8)));
+    await jest.runAllTimersAsync();
+    const { result } = await work;
+
+    expect(result?.pages.map((page) => page.number)).toEqual(
+      Array.from({ length: 16 }, (_, index) => index + 1),
+    );
+    expect(result?.pages.map((page) => page.text)).toEqual(
+      Array.from(
+        { length: 16 },
+        (_, index) => `batch ${Math.floor(index / 2)} page ${(index % 2) + 1}`,
+      ),
+    );
+  });
+
+  it('never runs more OCR requests at once than the process limit, across documents', async () => {
+    const shared = handler(4);
+
+    const work = Promise.all([
+      shared.processFile(pdfOf(8)),
+      shared.processFile(pdfOf(8)),
+      shared.processFile(pdfOf(1)),
+    ]);
+    await jest.runAllTimersAsync();
+    await work;
+
+    expect(mostRunning).toBe(4);
+  });
+
+  it('holds no more batches of a document in memory than it may send at once', async () => {
+    const work = handler(2).processFile(pdfOf(10));
+    await jest.runAllTimersAsync();
+    await work;
+
+    expect(mostHeld).toBe(2);
+  });
+
+  it('lets another document in after one batch, not after the whole long document', async () => {
+    const shared = handler(4);
+
+    const long = timed(shared.processFile(pdfOf(12)));
+    await jest.advanceTimersByTimeAsync(100);
+    const short = timed(shared.processFile(pdfOf(1)));
+    await jest.runAllTimersAsync();
+
+    expect((await short).seconds).toBeCloseTo(1.9);
+    expect((await long).seconds).toBe(4);
+  });
+
+  it('starts no further batch after one fails and keeps the ones still running for the retry', async () => {
+    secondsFor = (batch) => (batch === 1 ? 0.5 : 1);
+    failing = new Set([1]);
+    const file = pdfOf(6);
+
+    const failed = timed(handler(2).processFile(file, { context }));
+    await jest.runAllTimersAsync();
+
+    expect((await failed).error).toEqual(new Error('provider timeout'));
+    expect(started).toEqual([0, 1]);
+    expect(running).toBe(0);
+
+    failing = new Set();
+    const retried = timed(handler(2).processFile(file, { context }));
+    await jest.runAllTimersAsync();
+
+    expect((await retried).result?.pages).toHaveLength(12);
+    expect(started).toEqual([0, 1, 1, 2, 3, 4, 5]);
+  });
+
+  it('calls OCR for no further batch once the source is cancelled mid-document', async () => {
+    const work = timed(handler(2).processFile(pdfOf(6), { context }));
+    await jest.advanceTimersByTimeAsync(500);
+    active = false;
+    await jest.runAllTimersAsync();
+
+    expect((await work).error).toBeInstanceOf(ProcessingStoppedError);
+    expect(started).toEqual([0, 1]);
+  });
+
+  it('reports the pages completed so far each time a batch finishes', async () => {
+    const work = handler(2).processFile(pdfOf(3), { context });
+    await jest.runAllTimersAsync();
+    await work;
+
+    expect(progress).toEqual([2, 4, 6]);
   });
 });

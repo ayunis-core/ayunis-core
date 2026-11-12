@@ -24,6 +24,7 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(BatchedPdfOcrHandler.name);
   private readonly maxPages: number;
   private readonly maxBytes: number;
+  private readonly concurrency: number;
   private readonly limit: ReturnType<typeof pLimit>;
 
   constructor(
@@ -36,7 +37,8 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
     this.maxBytes = positive(
       config.get('retrieval.ocrBatchBytes', 10 * 1024 * 1024),
     );
-    this.limit = pLimit(positive(config.get('retrieval.ocrConcurrency', 4)));
+    this.concurrency = positive(config.get('retrieval.ocrConcurrency', 4));
+    this.limit = pLimit(this.concurrency);
   }
 
   async processFile(
@@ -47,28 +49,60 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
       options.cacheIdentity ??
       file.local?.sha256 ??
       createHash('sha256').update(file.fileData).digest('hex');
-    const pages: FileRetrieverPage[] = [];
-    const limits = {
+    const batches = this.batcher.split(file.local ?? file.fileData, {
       maxPages: this.maxPages,
       maxBytes: this.maxBytes,
       pageLimit: options.pageLimit,
-    };
-    const source = file.local ?? file.fileData;
-    for await (const batch of this.batcher.split(source, limits)) {
+    });
+    const done: Array<{ startPage: number; pages: FileRetrieverPage[] }> = [];
+    let completedPages = 0;
+    await this.inParallel(batches, async (batch) => {
       const result = await this.processBatch(file, batch, identity, options);
-      pages.push(
-        ...result.pages.map(
-          (page) =>
-            new FileRetrieverPage(
-              page.text,
-              batch.startPage + page.number,
-              page.metadata,
-            ),
-        ),
-      );
-      await options.context?.progress(pages.length);
-    }
+      done.push({ startPage: batch.startPage, pages: result.pages });
+      completedPages += batch.pageCount;
+      await options.context?.progress(completedPages);
+    });
+    done.sort((a, b) => a.startPage - b.startPage);
+    const pages = done.flatMap((batch) =>
+      batch.pages.map(
+        (page) =>
+          new FileRetrieverPage(
+            page.text,
+            batch.startPage + page.number,
+            page.metadata,
+          ),
+      ),
+    );
     return new FileRetrieverResult(pages, { batched: true });
+  }
+
+  // A document may fill every OCR slot of the process, but it never has more
+  // batches waiting or running than there are slots: the next one is split
+  // off only when one finishes. That bounds the batch bytes held per document
+  // and lets another document's batch in after one of these, not after all.
+  // After a failure nothing new starts; the batches already sent are awaited
+  // so their results are saved for the retry.
+  private async inParallel(
+    batches: AsyncIterable<PdfBatch>,
+    work: (batch: PdfBatch) => Promise<void>,
+  ): Promise<void> {
+    const running = new Set<Promise<void>>();
+    const failures: unknown[] = [];
+    try {
+      for await (const batch of batches) {
+        const task: Promise<void> = work(batch)
+          .catch((error: unknown) => {
+            failures.push(error);
+          })
+          .finally(() => running.delete(task));
+        running.add(task);
+        if (running.size >= this.concurrency) await Promise.race(running);
+        if (failures.length > 0) break;
+      }
+    } finally {
+      await Promise.all(running);
+    }
+    if (failures.length > 0) throw failures[0];
   }
 
   private async processBatch(

@@ -184,6 +184,20 @@ describe('validateEnv', () => {
       );
     });
 
+    it('rejects a non-boolean OCR image text switch', () => {
+      expect(() =>
+        validateEnv(baseEnv({ OCR_IMAGE_TEXT_ENABLED: 'off' })),
+      ).toThrow(/OCR_IMAGE_TEXT_ENABLED/);
+    });
+
+    it('accepts the OCR image text switch turned off, on, or left blank', () => {
+      for (const value of ['false', 'true', '']) {
+        expect(() =>
+          validateEnv(baseEnv({ OCR_IMAGE_TEXT_ENABLED: value })),
+        ).not.toThrow();
+      }
+    });
+
     it('rejects an Announcable org ID that is not a UUID', () => {
       expect(() =>
         validateEnv(baseEnv({ ANNOUNCABLE_ORG_ID: '../admin' })),
