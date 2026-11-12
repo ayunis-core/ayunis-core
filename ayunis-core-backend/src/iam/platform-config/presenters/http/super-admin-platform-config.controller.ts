@@ -14,6 +14,8 @@ import {
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { GetCreditsPerEuroUseCase } from 'src/iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
@@ -24,6 +26,8 @@ import { SetFairUseLimitUseCase } from 'src/iam/platform-config/application/use-
 import { SetFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
 import { SetImageFairUseLimitUseCase } from 'src/iam/platform-config/application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
 import { SetImageFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
+import { SetRecordingFairUseLimitUseCase } from 'src/iam/platform-config/application/use-cases/set-recording-fair-use-limit/set-recording-fair-use-limit.use-case';
+import { SetRecordingFairUseLimitCommand } from 'src/iam/platform-config/application/use-cases/set-recording-fair-use-limit/set-recording-fair-use-limit.command';
 import { SetAppAlertUseCase } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.use-case';
 import { SetAppAlertCommand } from 'src/iam/platform-config/application/use-cases/set-app-alert/set-app-alert.command';
 import { GetAcademyMinimumModuleSecondsUseCase } from 'src/iam/platform-config/application/use-cases/get-academy-minimum-module-seconds/get-academy-minimum-module-seconds.use-case';
@@ -35,6 +39,7 @@ import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.
 import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
 import { SetFairUseLimitRequestDto } from './dto/set-fair-use-limit-request.dto';
 import { SetImageFairUseLimitRequestDto } from './dto/set-image-fair-use-limit-request.dto';
+import { SetRecordingFairUseLimitRequestDto } from './dto/set-recording-fair-use-limit-request.dto';
 import { SetAppAlertRequestDto } from './dto/set-app-alert-request.dto';
 
 @ApiTags('Super Admin Platform Config')
@@ -49,6 +54,7 @@ export class SuperAdminPlatformConfigController {
     private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
     private readonly setFairUseLimitUseCase: SetFairUseLimitUseCase,
     private readonly setImageFairUseLimitUseCase: SetImageFairUseLimitUseCase,
+    private readonly setRecordingFairUseLimitUseCase: SetRecordingFairUseLimitUseCase,
     private readonly setAppAlertUseCase: SetAppAlertUseCase,
     private readonly getAcademyMinimumModuleSecondsUseCase: GetAcademyMinimumModuleSecondsUseCase,
     private readonly setAcademyMinimumModuleSecondsUseCase: SetAcademyMinimumModuleSecondsUseCase,
@@ -122,7 +128,7 @@ export class SuperAdminPlatformConfigController {
   @ApiOperation({
     summary: 'Get the current fair-use limits',
     description:
-      'Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.',
+      'Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high), a single global image-generation limit and the per-user recording upload limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -210,6 +216,43 @@ export class SuperAdminPlatformConfigController {
     });
     await this.setImageFairUseLimitUseCase.execute(command);
     this.logger.log('Successfully updated image fair-use limit');
+  }
+
+  @Put('recording-fair-use-limit')
+  @RequireFeature(FeatureFlag.Recordings)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set the fair-use limit for recording uploads',
+    description:
+      'Update how many recording uploads each user may start per window. Takes effect on the next upload. Not available while recordings are disabled. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated the recording fair-use limit',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid value provided (limit and windowMs must be positive)',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Recordings are disabled',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async setRecordingFairUseLimit(
+    @Body() dto: SetRecordingFairUseLimitRequestDto,
+  ): Promise<void> {
+    await this.setRecordingFairUseLimitUseCase.execute(
+      new SetRecordingFairUseLimitCommand({
+        limit: dto.limit,
+        windowMs: dto.windowMs,
+      }),
+    );
   }
 
   @Put('app-alert')

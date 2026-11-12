@@ -8,6 +8,7 @@ import {
   EmptyFileDataError,
   UnsupportedFileTypeError,
 } from 'src/domain/sources/application/sources.errors';
+import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
 import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
 import { SOURCE_UPLOAD_MULTIPART_THRESHOLD_BYTES } from 'src/domain/sources/domain/upload/source-upload.constants';
@@ -247,6 +248,45 @@ describe('CreateSourceUploadSessionUseCase', () => {
     expect(countedTags()).toEqual([
       { outcome: 'created', target_type: 'knowledge_base', multipart: 'true' },
     ]);
+  });
+
+  it('admits an upload only after its checks passed, so a refused file is not charged', async () => {
+    const admit = jest.fn().mockResolvedValue(undefined);
+
+    await expect(
+      useCase.execute(
+        command({
+          targetType: SourceUploadTargetType.RECORDING,
+          fileName: 'sitzung.mp3',
+          mimeType: 'audio/mpeg',
+          fileSize: AUDIO_MAX + 1,
+          admit,
+        }),
+      ),
+    ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE' });
+    expect(admit).not.toHaveBeenCalled();
+  });
+
+  it('reserves no session when the caller refuses to admit the upload', async () => {
+    const refusal = new QuotaExceededError(
+      'FAIR_USE_RECORDINGS',
+      5,
+      3600000,
+      60,
+    );
+
+    await expect(
+      useCase.execute(
+        command({
+          targetType: SourceUploadTargetType.RECORDING,
+          fileName: 'sitzung.mp3',
+          mimeType: 'audio/mpeg',
+          admit: () => Promise.reject(refusal),
+        }),
+      ),
+    ).rejects.toBe(refusal);
+    expect(sessions.save).not.toHaveBeenCalled();
+    expect(countedTags()).toEqual([]);
   });
 
   it('does not count an upload that was rejected before a session existed', async () => {

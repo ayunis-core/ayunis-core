@@ -9340,7 +9340,7 @@
     },
     "/super-admin/platform-config/fair-use-limits": {
       "get": {
-        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high), a single global image-generation limit and the per-user recording upload limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
         "parameters": [],
         "responses": {
@@ -9426,6 +9426,42 @@
           }
         },
         "summary": "Set the fair-use limit for image generation",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/recording-fair-use-limit": {
+      "put": {
+        "description": "Update how many recording uploads each user may start per window. Takes effect on the next upload. Not available while recordings are disabled. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setRecordingFairUseLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRecordingFairUseLimitRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the recording fair-use limit"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Recordings are disabled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for recording uploads",
         "tags": ["Super Admin Platform Config"]
       }
     },
@@ -22097,9 +22133,17 @@
                 "$ref": "#/components/schemas/FairUseTierLimitDto"
               }
             ]
+          },
+          "recordings": {
+            "description": "Fair-use limit for recording uploads, counted per user when an upload starts. Only enforced while recordings are enabled.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           }
         },
-        "required": ["zero", "low", "medium", "high", "images"]
+        "required": ["zero", "low", "medium", "high", "images", "recordings"]
       },
       "SetFairUseLimitRequestDto": {
         "type": "object",
@@ -22138,6 +22182,24 @@
             "type": "number",
             "description": "Sliding window duration in milliseconds. Must be a positive integer.",
             "example": 86400000,
+            "minimum": 1
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "SetRecordingFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of recording uploads a user may start within the sliding window. Must be a positive integer.",
+            "example": 5,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 3600000,
             "minimum": 1
           }
         },

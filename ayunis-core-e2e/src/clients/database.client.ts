@@ -290,3 +290,43 @@ export async function findRecordingAudioSourceId(
     await client.end();
   }
 }
+
+/** How many recording uploads the user has started in the current window. */
+export async function findRecordingUploadCount(
+  userId: string,
+): Promise<number | null> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ count: number }>(
+      `SELECT count FROM usage_quotas
+       WHERE "userId" = $1 AND "quotaType" = 'FAIR_USE_RECORDINGS'`,
+      [userId],
+    );
+    return result.rows[0]?.count ?? null;
+  } finally {
+    await client.end();
+  }
+}
+
+/** Moves the user's recording upload window into the past, as if it had passed. */
+export async function expireRecordingUploadWindow(
+  userId: string,
+): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query(
+      `UPDATE usage_quotas
+       SET "windowStartAt" = "windowStartAt"
+         - make_interval(secs => "windowDurationMs" / 1000.0 + 1)
+       WHERE "userId" = $1 AND "quotaType" = 'FAIR_USE_RECORDINGS'`,
+      [userId],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error(`No recording upload window of user ${userId}`);
+    }
+  } finally {
+    await client.end();
+  }
+}

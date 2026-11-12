@@ -107,6 +107,8 @@
     }
   },
   "audio": {
-    "alreadyUploaded": "This recording already has its audio. Create a new recording for another file."
+    "alreadyUploaded": "This recording already has its audio. Create a new recording for another file.",
+    "uploadLimitReached": "Recording upload limit reached. Try again later.",
+    "uploadLimitReachedWithTime": "Recording upload limit reached. Try again in {{minutes}} minutes."
   }
 }

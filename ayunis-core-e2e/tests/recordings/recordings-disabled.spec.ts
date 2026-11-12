@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { login } from '../../src/clients/api/auth.client';
+import { login, markWelcomeVideoSeen } from '../../src/clients/api/auth.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
 import {
   createRecording,
@@ -17,6 +17,10 @@ import {
 } from '../../src/clients/api/recording-summary-model.client';
 import { getEffectiveLanguageModels } from '../../src/clients/api/models.client';
 import { getRolePermissions } from '../../src/clients/api/role-permissions.client';
+import {
+  getRecordingFairUseLimit,
+  requestRecordingFairUseLimitChange,
+} from '../../src/clients/api/platform-config.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import { createApiContext } from '../../src/factories/api-context.factory';
 import { createOrg } from '../../src/factories/org.factory';
@@ -171,5 +175,38 @@ test('with recordings disabled the model settings hide the summary model, its en
     expect(await getRecordingSummaryModelId(api)).toBe(orgModel.id);
   } finally {
     await setRecordingSummaryModel(api, null);
+  }
+});
+
+test('with recordings disabled the platform settings hide the recording upload limit, its endpoint 404s and the stored limit is kept', async ({
+  browser,
+}) => {
+  const superAdmin = await createApiContext({ cookies: [], origins: [] });
+  await login(superAdmin, 'admin@demo.local', 'admin');
+  await markWelcomeVideoSeen(superAdmin);
+  const context = await browser.newContext({
+    storageState: await superAdmin.storageState(),
+  });
+  try {
+    const stored = await getRecordingFairUseLimit(superAdmin);
+    expect(
+      (
+        await requestRecordingFairUseLimitChange(
+          superAdmin,
+          stored.limit + 1,
+          disabledApiUrl,
+        )
+      ).status(),
+    ).toBe(404);
+
+    const page = await context.newPage();
+    await page.goto(`${disabledBaseUrl}/super-admin-settings/platform-config`);
+    await expect(page.getByTestId('image-fair-use-section')).toBeVisible();
+    await expect(page.getByTestId('recording-fair-use-section')).toHaveCount(0);
+
+    expect(await getRecordingFairUseLimit(superAdmin)).toEqual(stored);
+  } finally {
+    await context.close();
+    await superAdmin.dispose();
   }
 });

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { assertNever } from 'src/common/util/assert-never';
 import { GetFairUseLimitsUseCase } from 'src/iam/platform-config/application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
 import { FairUseLimit } from 'src/iam/platform-config/domain/fair-use-limits';
-import { QuotaType } from '../../domain/quota-type.enum';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 
 @Injectable()
 export class QuotaLimitResolverService {
@@ -22,6 +22,8 @@ export class QuotaLimitResolverService {
         return limits.high;
       case QuotaType.FAIR_USE_IMAGES:
         return limits.images;
+      case QuotaType.FAIR_USE_RECORDINGS:
+        return limits.recordings;
       default:
         // Defensive: when `QuotaType` grows a non-fair-use value, this throws
         // at the resolver instead of silently returning `undefined` and

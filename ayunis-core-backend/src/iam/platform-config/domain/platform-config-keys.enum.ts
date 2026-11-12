@@ -16,6 +16,8 @@ export enum PlatformConfigKey {
   FAIR_USE_HIGH_WINDOW_MS = 'FAIR_USE_HIGH_WINDOW_MS',
   FAIR_USE_IMAGES_LIMIT = 'FAIR_USE_IMAGES_LIMIT',
   FAIR_USE_IMAGES_WINDOW_MS = 'FAIR_USE_IMAGES_WINDOW_MS',
+  FAIR_USE_RECORDINGS_LIMIT = 'FAIR_USE_RECORDINGS_LIMIT',
+  FAIR_USE_RECORDINGS_WINDOW_MS = 'FAIR_USE_RECORDINGS_WINDOW_MS',
   // Persistent app-wide alert banner controlled by super admins. ENABLED is
   // stored as the string 'true' | 'false'; MESSAGE holds the banner text.
   APP_ALERT_ENABLED = 'APP_ALERT_ENABLED',

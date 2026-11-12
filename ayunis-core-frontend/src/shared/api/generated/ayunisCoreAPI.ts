@@ -233,6 +233,7 @@ import type {
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
   SetOrgUsageVisibilityRequestDto,
+  SetRecordingFairUseLimitRequestDto,
   SetRecordingSummaryModelDto,
   SetSkillActivationDto,
   SetSkillPinDto,
@@ -19070,7 +19071,7 @@ export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = 
     }
 
 /**
- * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
+ * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high), a single global image-generation limit and the per-user recording upload limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
  * @summary Get the current fair-use limits
  */
 export const superAdminPlatformConfigControllerGetFairUseLimits = (
@@ -19299,6 +19300,75 @@ export const useSuperAdminPlatformConfigControllerSetImageFairUseLimit = <TError
         TContext
       > => {
       return useMutation(getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions(options), queryClient);
+    }
+
+/**
+ * Update how many recording uploads each user may start per window. Takes effect on the next upload. Not available while recordings are disabled. Super admin only.
+ * @summary Set the fair-use limit for recording uploads
+ */
+export const superAdminPlatformConfigControllerSetRecordingFairUseLimit = (
+    setRecordingFairUseLimitRequestDto: SetRecordingFairUseLimitRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/recording-fair-use-limit`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setRecordingFairUseLimitRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationKey = () => ['superAdminPlatformConfigControllerSetRecordingFairUseLimit'] as const;
+
+export const getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>, SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetRecordingFairUseLimit(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>>
+    export type SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationBody = SetRecordingFairUseLimitRequestDto
+    export type SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationError = void
+    export type SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables = {data: SetRecordingFairUseLimitRequestDto}
+
+    /**
+ * @summary Set the fair-use limit for recording uploads
+ */
+export const useSuperAdminPlatformConfigControllerSetRecordingFairUseLimit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>, TError,SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetRecordingFairUseLimit>>,
+        TError,
+        SuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitMutationOptions(options), queryClient);
     }
 
 /**

@@ -50,4 +50,11 @@ export class FairUseLimitsResponseDto {
     type: FairUseTierLimitDto,
   })
   images: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description:
+      'Fair-use limit for recording uploads, counted per user when an upload starts. Only enforced while recordings are enabled.',
+    type: FairUseTierLimitDto,
+  })
+  recordings: FairUseTierLimitDto;
 }
