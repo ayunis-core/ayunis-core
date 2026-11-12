@@ -2574,6 +2574,8 @@ export interface ToolUseMessageContentResponseDto {
   integration?: ToolUseIntegrationDto;
   /** Presentation-only stream state; absent from finalized valid tool calls */
   stream?: ToolUseStreamDto;
+  /** Whether the call was held for the user's confirmation instead of running. It awaits confirmation while no tool result answers it. */
+  requiresConfirmation?: boolean;
 }
 
 /**
@@ -2634,6 +2636,17 @@ export const ToolResultMessageContentResponseDtoType = {
   image: 'image',
 } as const;
 
+/**
+ * The user's decision when this result answers a call that required confirmation
+ */
+export type ToolCallDecision = typeof ToolCallDecision[keyof typeof ToolCallDecision];
+
+
+export const ToolCallDecision = {
+  confirmed: 'confirmed',
+  rejected: 'rejected',
+} as const;
+
 export interface ToolResultMessageContentResponseDto {
   /** Type of the message content */
   type: ToolResultMessageContentResponseDtoType;
@@ -2643,6 +2656,8 @@ export interface ToolResultMessageContentResponseDto {
   toolName: string;
   /** The result returned by the tool */
   result: string;
+  /** The user's decision when this result answers a call that required confirmation */
+  decision?: ToolCallDecision;
 }
 
 export interface ToolResultMessageResponseDto {
@@ -5530,6 +5545,15 @@ export interface ToolResultInput {
   result: string;
 }
 
+export interface ToolCallDecisionDto {
+  /** ID of a tool call awaiting confirmation */
+  toolCallId: string;
+  /** Whether the user confirmed (true) or rejected (false) it */
+  approved: boolean;
+  /** Always allow this tool of this integration for the user; only applied to a confirmed call */
+  alwaysAllow: boolean;
+}
+
 export interface SendMessageDto {
   /** The thread to use for the inference. */
   threadId: string;
@@ -5539,6 +5563,8 @@ export interface SendMessageDto {
   imageAltTexts?: string[];
   /** Tool result input (for tool_result type only) */
   toolResult?: ToolResultInput & ToolResultInput;
+  /** Decisions on every tool call awaiting confirmation in the last assistant turn; excludes all other inputs */
+  decisions?: ToolCallDecisionDto[];
   /** Skill ID to activate for this message — injects skill instructions and resources into the thread */
   skillId?: string;
   /** Enable streaming mode for real-time response updates */
@@ -6931,6 +6957,8 @@ export type RunsControllerSendMessageBody = {
   imageAltTexts?: string;
   /** JSON object for tool result input */
   toolResult?: string;
+  /** JSON array of { toolCallId, approved, alwaysAllow } deciding every tool call awaiting confirmation; excludes all other inputs */
+  decisions?: string;
   /** Skill ID to activate for this message */
   skillId?: string;
   streaming?: boolean;

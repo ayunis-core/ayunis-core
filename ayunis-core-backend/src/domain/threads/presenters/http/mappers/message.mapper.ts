@@ -211,6 +211,7 @@ export class MessageDtoMapper {
       params: content.params,
       ...(content.integration && { integration: content.integration }),
       ...(content.stream && { stream: content.stream }),
+      ...(content.requiresConfirmation && { requiresConfirmation: true }),
     };
   }
 
@@ -222,6 +223,7 @@ export class MessageDtoMapper {
       toolId: content.toolId,
       toolName: content.toolName,
       result: content.result,
+      ...(content.decision && { decision: content.decision }),
     };
   }
 }

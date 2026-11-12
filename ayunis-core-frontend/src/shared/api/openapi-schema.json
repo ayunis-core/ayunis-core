@@ -11782,6 +11782,10 @@
                     "type": "string",
                     "description": "JSON object for tool result input"
                   },
+                  "decisions": {
+                    "type": "string",
+                    "description": "JSON array of { toolCallId, approved, alwaysAllow } deciding every tool call awaiting confirmation; excludes all other inputs"
+                  },
                   "skillId": {
                     "type": "string",
                     "format": "uuid",
@@ -18595,9 +18599,19 @@
                 "$ref": "#/components/schemas/ToolUseStreamDto"
               }
             ]
+          },
+          "requiresConfirmation": {
+            "type": "boolean",
+            "description": "Whether the call was held for the user's confirmation instead of running. It awaits confirmation while no tool result answers it.",
+            "example": true
           }
         },
         "required": ["type", "id", "name", "params"]
+      },
+      "ToolCallDecision": {
+        "type": "string",
+        "enum": ["confirmed", "rejected"],
+        "description": "The user's decision when this result answers a call that required confirmation"
       },
       "ToolResultMessageContentResponseDto": {
         "type": "object",
@@ -18622,6 +18636,15 @@
             "type": "string",
             "description": "The result returned by the tool",
             "example": "The current temperature in New York is 22°C with partly cloudy skies."
+          },
+          "decision": {
+            "description": "The user's decision when this result answers a call that required confirmation",
+            "example": "confirmed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolCallDecision"
+              }
+            ]
           }
         },
         "required": ["type", "toolId", "toolName", "result"]
@@ -23485,6 +23508,27 @@
         },
         "required": ["type", "toolId", "toolName", "result"]
       },
+      "ToolCallDecisionDto": {
+        "type": "object",
+        "properties": {
+          "toolCallId": {
+            "type": "string",
+            "description": "ID of a tool call awaiting confirmation",
+            "example": "call_abc123"
+          },
+          "approved": {
+            "type": "boolean",
+            "description": "Whether the user confirmed (true) or rejected (false) it",
+            "example": true
+          },
+          "alwaysAllow": {
+            "type": "boolean",
+            "description": "Always allow this tool of this integration for the user; only applied to a confirmed call",
+            "example": false
+          }
+        },
+        "required": ["toolCallId", "approved", "alwaysAllow"]
+      },
       "SendMessageDto": {
         "type": "object",
         "properties": {
@@ -23517,6 +23561,13 @@
                 "$ref": "#/components/schemas/ToolResultInput"
               }
             ]
+          },
+          "decisions": {
+            "description": "Decisions on every tool call awaiting confirmation in the last assistant turn; excludes all other inputs",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolCallDecisionDto"
+            }
           },
           "skillId": {
             "type": "string",

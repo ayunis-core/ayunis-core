@@ -1,14 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import type { SendMessageDto } from '../dto/send-message.dto';
-import { MAX_TOTAL_SIZE_BYTES } from '../image-upload.constants';
+import type { SendMessageDto } from 'src/domain/runs/presenters/http/dto/send-message.dto';
+import { MAX_TOTAL_SIZE_BYTES } from 'src/domain/runs/presenters/http/image-upload.constants';
 
 // Cross-field rules that DTO decorators cannot express: the "at least one
-// input" rule spans body fields and uploaded files, and the total-size rule
-// aggregates over all files (multer only limits per-file size).
+// input" and "decisions alone" rules span body fields and uploaded files,
+// and the total-size rule aggregates over all files (multer only limits
+// per-file size).
 @Injectable()
 export class SendMessageRequestValidator {
   validate(dto: SendMessageDto, files: Express.Multer.File[]): void {
     this.requireInput(dto, files);
+    this.requireDecisionsAlone(dto, files);
     this.validateTotalFileSize(files);
   }
 
@@ -20,11 +22,29 @@ export class SendMessageRequestValidator {
       Boolean(dto.text?.trim()) ||
       files.length > 0 ||
       Boolean(dto.toolResult) ||
-      Boolean(dto.skillId);
+      Boolean(dto.skillId) ||
+      Boolean(dto.decisions);
 
     if (!hasInput) {
       throw new BadRequestException(
-        'Message must contain text, images, tool result, or skillId',
+        'Message must contain text, images, tool result, decisions, or skillId',
+      );
+    }
+  }
+
+  private requireDecisionsAlone(
+    dto: SendMessageDto,
+    files: Express.Multer.File[],
+  ): void {
+    if (!dto.decisions) return;
+    const hasOtherInput =
+      Boolean(dto.text?.trim()) ||
+      files.length > 0 ||
+      Boolean(dto.toolResult) ||
+      Boolean(dto.skillId);
+    if (hasOtherInput) {
+      throw new BadRequestException(
+        'Decisions cannot be combined with text, images, tool result, or skillId',
       );
     }
   }

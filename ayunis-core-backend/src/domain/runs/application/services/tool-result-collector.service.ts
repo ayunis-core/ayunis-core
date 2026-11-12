@@ -30,13 +30,18 @@ import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
 } from 'src/domain/runs/application/runs.errors';
-import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  RunToolDecisionsInput,
+  RunToolResultInput,
+} from 'src/domain/runs/domain/run-input.entity';
+import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
 import {
   addToolResultTruncationNotice,
   limitToolResult,
   truncateAnonymousToolResult,
 } from 'src/domain/runs/application/helpers/limit-tool-result.helper';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { REJECTED_TOOL_RESULT } from 'src/domain/runs/application/services/tool-call-confirmation.service';
 
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
@@ -69,10 +74,15 @@ export class ToolResultCollectorService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Settles every call of the thread's last turn: a client result answers
+   * its own call, decisions answer the calls that required confirmation, and
+   * the other calls settle by their runtime policy.
+   */
   async collectToolResults(params: {
     thread: Thread;
     tools: Tool[];
-    input: RunToolResultInput;
+    input: RunToolResultInput | RunToolDecisionsInput;
     orgId: UUID;
     isAnonymous: boolean;
     executionPath: RunExecutionPath;
@@ -91,25 +101,57 @@ export class ToolResultCollectorService {
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
-      let result: ProcessedToolResult;
-      try {
-        result = await this.processToolUse(content, tools, input, {
-          orgId,
-          threadId: thread.id,
-          isAnonymous,
-        });
-      } catch (error) {
-        this.emitToolCompleted(params.executionPath, 'error', content.name);
-        throw error;
-      }
-      const outcome = result.succeeded ? 'success' : 'error';
-      this.emitToolCompleted(params.executionPath, outcome, content.name);
+      const result = await this.settleToolUse(content, tools, input, {
+        orgId,
+        threadId: thread.id,
+        isAnonymous,
+        executionPath: params.executionPath,
+      });
       contents.push(result.content);
       // Each anonymization returns the full dictionary — the latest wins.
       piiMasks = result.piiMasks ?? piiMasks;
     }
 
     return { contents, piiMasks };
+  }
+
+  private async settleToolUse(
+    content: ToolUseMessageContent,
+    tools: Tool[],
+    input: RunToolResultInput | RunToolDecisionsInput,
+    context: ToolProcessingContext & { executionPath: RunExecutionPath },
+  ): Promise<{
+    content: ToolResultMessageContent;
+    piiMasks: ThreadPiiMask[] | null;
+  }> {
+    const decision =
+      input instanceof RunToolDecisionsInput
+        ? input.decisionFor(content.id)
+        : undefined;
+    if (decision === ToolCallDecision.REJECTED) {
+      return {
+        content: new ToolResultMessageContent(
+          content.id,
+          content.name,
+          REJECTED_TOOL_RESULT,
+          decision,
+        ),
+        piiMasks: null,
+      };
+    }
+    const clientResult =
+      input instanceof RunToolResultInput ? input : undefined;
+    let result: ProcessedToolResult;
+    try {
+      result = await this.processToolUse(content, tools, clientResult, context);
+    } catch (error) {
+      this.emitToolCompleted(context.executionPath, 'error', content.name);
+      throw error;
+    }
+    const outcome = result.succeeded ? 'success' : 'error';
+    this.emitToolCompleted(context.executionPath, outcome, content.name);
+    result.content.decision = decision;
+    return result;
   }
 
   private emitToolCompleted(
@@ -139,7 +181,7 @@ export class ToolResultCollectorService {
   private async processToolUse(
     content: ToolUseMessageContent,
     tools: Tool[],
-    input: RunToolResultInput,
+    clientResult: RunToolResultInput | undefined,
     context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     // History from before the integration namespace carries MCP calls under
@@ -165,7 +207,12 @@ export class ToolResultCollectorService {
     this.emitToolUsedEvent(context.orgId, content);
 
     try {
-      return await this.executeByRuntimePolicy(tool, content, input, context);
+      return await this.executeByRuntimePolicy(
+        tool,
+        content,
+        clientResult,
+        context,
+      );
     } catch (error) {
       if (
         error instanceof ApplicationError ||
@@ -213,15 +260,20 @@ export class ToolResultCollectorService {
   private async executeByRuntimePolicy(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput,
+    clientResult: RunToolResultInput | undefined,
     context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     if (isHybridArtifactTool(tool)) {
-      return this.processHybridTool(tool, content, input, context);
+      return this.processHybridTool(tool, content, clientResult, context);
     }
     if (isAcknowledgementOnlyTool(tool)) {
       return {
-        ...this.processClientRenderedTool(tool, content, input, DISPLAY_ACK),
+        ...this.processClientRenderedTool(
+          tool,
+          content,
+          clientResult,
+          DISPLAY_ACK,
+        ),
         piiMasks: null,
       };
     }
@@ -230,7 +282,7 @@ export class ToolResultCollectorService {
         ...this.processClientRenderedTool(
           tool,
           content,
-          input,
+          clientResult,
           EXTERNAL_TOOL_RESULT,
         ),
         piiMasks: null,
@@ -248,7 +300,7 @@ export class ToolResultCollectorService {
   private async processHybridTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput,
+    clientResult: RunToolResultInput | undefined,
     context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     const executionResult = await this.executeBackendTool(
@@ -263,7 +315,7 @@ export class ToolResultCollectorService {
       // null-stripped input, and rechecking the raw params could reject a
       // call whose side effect just succeeded.
       return {
-        ...this.handleClientRenderedTool(content, input, DISPLAY_ACK),
+        ...this.handleClientRenderedTool(content, clientResult, DISPLAY_ACK),
         piiMasks: executionResult.piiMasks,
       };
     }
@@ -277,13 +329,13 @@ export class ToolResultCollectorService {
   private processClientRenderedTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput,
+    clientResult: RunToolResultInput | undefined,
     defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
     // An explicit frontend-supplied result means the user already interacted
     // with the rendered widget — never block it on (possibly historical)
     // invalid params.
-    if (input.toolId !== content.id) {
+    if (clientResult?.toolId !== content.id) {
       const validationError = this.validateClientRenderedParams(tool, content);
       if (validationError !== null) {
         return {
@@ -296,20 +348,20 @@ export class ToolResultCollectorService {
         };
       }
     }
-    return this.handleClientRenderedTool(content, input, defaultResult);
+    return this.handleClientRenderedTool(content, clientResult, defaultResult);
   }
 
   private handleClientRenderedTool(
     content: ToolUseMessageContent,
-    input: RunToolResultInput,
+    clientResult: RunToolResultInput | undefined,
     defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
-    if (input.toolId === content.id) {
+    if (clientResult?.toolId === content.id) {
       return {
         content: new ToolResultMessageContent(
-          input.toolId,
-          input.toolName,
-          input.result,
+          clientResult.toolId,
+          clientResult.toolName,
+          clientResult.result,
         ),
         succeeded: true,
       };

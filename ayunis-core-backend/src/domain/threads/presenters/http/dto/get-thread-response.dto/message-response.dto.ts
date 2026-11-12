@@ -5,6 +5,7 @@ import {
 } from '@nestjs/swagger';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
+import { ToolCallDecision } from 'src/domain/messages/domain/value-objects/tool-call-decision.object';
 
 export class MessageContentResponseDto {
   @ApiProperty({
@@ -104,6 +105,13 @@ export class ToolUseMessageContentResponseDto extends MessageContentResponseDto 
     type: ToolUseStreamDto,
   })
   stream?: ToolUseStreamDto;
+
+  @ApiPropertyOptional({
+    description:
+      "Whether the call was held for the user's confirmation instead of running. It awaits confirmation while no tool result answers it.",
+    example: true,
+  })
+  requiresConfirmation?: boolean;
 }
 
 export class ToolResultMessageContentResponseDto extends MessageContentResponseDto {
@@ -125,6 +133,15 @@ export class ToolResultMessageContentResponseDto extends MessageContentResponseD
       'The current temperature in New York is 22°C with partly cloudy skies.',
   })
   result: string;
+
+  @ApiPropertyOptional({
+    description:
+      "The user's decision when this result answers a call that required confirmation",
+    enum: ToolCallDecision,
+    enumName: 'ToolCallDecision',
+    example: ToolCallDecision.CONFIRMED,
+  })
+  decision?: ToolCallDecision;
 }
 
 export class ThinkingMessageContentResponseDto extends MessageContentResponseDto {

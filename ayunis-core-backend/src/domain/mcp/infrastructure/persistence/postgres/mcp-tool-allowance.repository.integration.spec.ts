@@ -117,6 +117,15 @@ describe('McpToolAllowanceRepository (PostgreSQL)', () => {
     expect(await repository.findByUser(owner)).toHaveLength(1);
   });
 
+  it("stores a user's allowance when another user already allowed the same tool", async () => {
+    await allow(otherUser, integration, 'search_meetings');
+
+    await allow(owner, integration, 'search_meetings');
+
+    expect(await repository.findByUser(owner)).toHaveLength(1);
+    expect(await repository.findByUser(otherUser)).toHaveLength(1);
+  });
+
   it('allows a removed tool again', async () => {
     const first = await allow(owner, integration, 'search_meetings');
     await repository.deleteByIdAndUser(first.id, owner);

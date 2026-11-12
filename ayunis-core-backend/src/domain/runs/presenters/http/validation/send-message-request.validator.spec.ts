@@ -56,6 +56,15 @@ describe('SendMessageRequestValidator', () => {
     expect(() => validator.validate(dto, [])).not.toThrow();
   });
 
+  it('rejects decisions sent together with a new message, which would drop one of them', () => {
+    const dto = dtoWith({
+      text: 'Lieber die Sitzung vom Montag',
+      decisions: [{ toolCallId: 'call-1', approved: true, alwaysAllow: false }],
+    });
+
+    expect(() => validator.validate(dto, [])).toThrow(BadRequestException);
+  });
+
   it('accepts a skill-only message', () => {
     expect(() =>
       validator.validate(

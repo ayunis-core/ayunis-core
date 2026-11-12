@@ -37,6 +37,11 @@ export const SEND_MESSAGE_API_BODY = {
         type: 'string',
         description: 'JSON object for tool result input',
       },
+      decisions: {
+        type: 'string',
+        description:
+          'JSON array of { toolCallId, approved, alwaysAllow } deciding every tool call awaiting confirmation; excludes all other inputs',
+      },
       skillId: {
         type: 'string',
         format: 'uuid',

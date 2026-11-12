@@ -1,5 +1,5 @@
-import { MessageContent } from '../message-content.entity';
-import { MessageContentType } from '../value-objects/message-content-type.object';
+import { MessageContent } from 'src/domain/messages/domain/message-content.entity';
+import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { sanitizeObject } from 'src/common/util/unicode-sanitizer';
 import type { ProviderMetadata } from './provider-metadata.type';
 
@@ -21,6 +21,12 @@ export class ToolUseMessageContent extends MessageContent {
   public readonly providerMetadata: ProviderMetadata;
   public readonly integration?: ToolUseIntegration;
   public readonly stream?: ToolUseStream;
+  /**
+   * The call was held for the user's confirmation instead of running. It
+   * awaits confirmation while no tool result answers it; the result that
+   * does records the user's decision.
+   */
+  public readonly requiresConfirmation: boolean;
 
   constructor(
     id: string,
@@ -29,6 +35,7 @@ export class ToolUseMessageContent extends MessageContent {
     providerMetadata: ProviderMetadata = null,
     integration?: ToolUseIntegration,
     stream?: ToolUseStream,
+    requiresConfirmation = false,
   ) {
     super(MessageContentType.TOOL_USE);
     this.id = id;
@@ -38,5 +45,6 @@ export class ToolUseMessageContent extends MessageContent {
     this.providerMetadata = providerMetadata;
     this.integration = integration;
     this.stream = stream;
+    this.requiresConfirmation = requiresConfirmation;
   }
 }

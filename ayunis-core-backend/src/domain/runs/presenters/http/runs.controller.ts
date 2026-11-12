@@ -20,6 +20,7 @@ import {
 import {
   SendMessageDto,
   TextInput,
+  ToolCallDecisionDto,
   ToolResultInput,
 } from './dto/send-message.dto';
 import { UUID } from 'crypto';
@@ -88,6 +89,7 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
   SendMessageDto,
   TextInput,
   ToolResultInput,
+  ToolCallDecisionDto,
 )
 @RequireAcademyCertificate()
 @Controller('runs')
@@ -165,6 +167,7 @@ export class RunsController {
         fileCount,
         hasText: !!dto.text?.trim(),
         hasToolResult: !!dto.toolResult,
+        decisionCount: dto.decisions?.length,
       },
       'sendMessage',
     );

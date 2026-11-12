@@ -4476,6 +4476,9 @@ if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
 if(runsControllerSendMessageBody.toolResult !== undefined) {
  formData.append(`toolResult`, runsControllerSendMessageBody.toolResult);
  }
+if(runsControllerSendMessageBody.decisions !== undefined) {
+ formData.append(`decisions`, runsControllerSendMessageBody.decisions);
+ }
 if(runsControllerSendMessageBody.skillId !== undefined) {
  formData.append(`skillId`, runsControllerSendMessageBody.skillId);
  }
