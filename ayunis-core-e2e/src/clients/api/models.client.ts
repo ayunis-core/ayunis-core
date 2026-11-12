@@ -195,3 +195,19 @@ export async function setUserDefaultModel(
 export async function removeUserDefaultModel(api: APIRequestContext): Promise<void> {
   await generatedApi.modelsDefaultsControllerDeleteUserDefaultModel({ api });
 }
+
+/** Indexing needs a permitted embedding model; documents and recordings are rejected without one. */
+export async function permitEmbeddingModel(
+  api: APIRequestContext,
+): Promise<void> {
+  const models = await generatedApi.modelsControllerGetAvailableEmbeddingModels(
+    { api },
+  );
+  const model = models[0];
+  if (!model) throw new Error('No embedding model available');
+  if (model.permittedModelId) return;
+  await generatedApi.modelsControllerCreatePermittedModel(
+    { modelId: model.modelId },
+    { api },
+  );
+}

@@ -89,6 +89,14 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'WEBM',
 ];
 
+// Names shown when an upload target only takes recordings.
+export const SUPPORTED_AUDIO_FILE_TYPES: string[] = [
+  'MP3',
+  'M4A',
+  'WAV',
+  'WEBM',
+];
+
 export type DetectedFileType =
   | 'pdf'
   | 'docx'

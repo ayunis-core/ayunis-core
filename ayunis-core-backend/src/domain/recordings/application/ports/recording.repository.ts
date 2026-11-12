@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { RecordingAudio } from 'src/domain/recordings/application/models/recording-audio';
 import type { Recording } from 'src/domain/recordings/domain/recording';
 import type { WorkspaceRecording } from 'src/domain/recordings/domain/workspace-recording.entity';
 import type { ReadableCollectiveOwners } from 'src/iam/teams/application/models/collective-owner.model';
@@ -24,5 +25,12 @@ export abstract class RecordingRepository {
    */
   abstract findAllDeletedWithUser(userId: UUID): Promise<Recording[]>;
   abstract save(recording: Recording): Promise<Recording>;
+  /** The uploaded audio of each recording that has one, by recording id. */
+  abstract findAudio(recordingIds: UUID[]): Promise<Map<UUID, RecordingAudio>>;
+  /**
+   * Makes the source the recording's audio, within the ambient transaction.
+   * False when the recording already has audio.
+   */
+  abstract attachAudio(recordingId: UUID, sourceId: UUID): Promise<boolean>;
   abstract delete(recording: Recording): Promise<void>;
 }

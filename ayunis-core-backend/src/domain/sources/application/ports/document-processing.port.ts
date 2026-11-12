@@ -18,6 +18,11 @@ export interface DocumentProcessingJobData {
    */
   expectedSize?: number;
   expectedETag?: string;
+  /**
+   * True for meeting recordings: the transcript is kept as timed speaker
+   * segments and indexed in chunks that know their time range.
+   */
+  keepTranscriptSegments?: boolean;
 }
 
 /**

@@ -46,6 +46,32 @@ describe('SourceUploadQueueingService', () => {
     );
   });
 
+  it('queues a meeting recording to keep its transcript as timed segments, and nothing else', async () => {
+    const recording = buildUploadSession({
+      targetType: SourceUploadTargetType.RECORDING,
+      fileName: 'sitzung.mp3',
+      fileType: 'audio/mpeg',
+      status: SourceUploadSessionStatus.SOURCES_CREATED,
+      expectedETag: 'verified',
+      sources: [{ sourceId, sheetName: null }],
+    });
+    const chatAudio = buildUploadSession({
+      fileName: 'sitzung.mp3',
+      fileType: 'audio/mpeg',
+      status: SourceUploadSessionStatus.SOURCES_CREATED,
+      expectedETag: 'verified',
+      sources: [{ sourceId, sheetName: null }],
+    });
+
+    await service.tryQueue(recording);
+    await service.tryQueue(chatAudio);
+
+    expect(enqueueDocument.execute.mock.calls).toEqual([
+      [expect.objectContaining({ keepTranscriptSegments: true })],
+      [expect.objectContaining({ keepTranscriptSegments: false })],
+    ]);
+  });
+
   it('queues one data-source batch for a thread workbook', async () => {
     const session = buildUploadSession({
       fileName: 'Haushalt.xlsx',

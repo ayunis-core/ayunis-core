@@ -15,13 +15,17 @@
     "buttonText": "Add Recording",
     "buttonTextFirst": "Create your first recording",
     "title": "Create New Recording",
-    "description": "Create a recording and choose who it belongs to.",
+    "description": "Create a recording, choose who it belongs to and add its audio.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "e.g. Council meeting 12 November"
+      "namePlaceholder": "e.g. Council meeting 12 November",
+      "fileLabel": "Audio file",
+      "fileDescription": "MP3, M4A, WAV or WebM. It is transcribed with speaker labels."
     },
     "validation": {
-      "nameRequired": "Name is required"
+      "nameRequired": "Name is required",
+      "fileRequired": "Choose the audio file of the recording",
+      "fileNotAudio": "Choose an MP3, M4A, WAV or WebM file"
     },
     "buttons": {
       "cancel": "Cancel",
@@ -75,6 +79,34 @@
       "validationError": "Please check the name and try again.",
       "notFound": "The recording no longer exists or you have lost access.",
       "noPermission": "You are not allowed to rename this recording."
+    },
+    "transcript": {
+      "title": "Transcript",
+      "description": "What was said, by speaker. Speaker labels come from the transcription and are not names.",
+      "status": {
+        "uploading": "Uploading",
+        "transcribing": "Transcribing",
+        "transcribed": "Transcribed",
+        "failed": "Failed"
+      },
+      "transcribing": "The recording is being transcribed. This can take a few minutes.",
+      "noAudio": "The audio of this recording has not been uploaded yet.",
+      "uploadHint": "The audio of this recording has not been uploaded yet. Upload it to transcribe the recording.",
+      "upload": "Upload audio",
+      "speaker": "Speaker {{number}}",
+      "unknownSpeaker": "Unknown speaker",
+      "failure": {
+        "recordingTooLong": "The recording is too long to transcribe. Cut it into shorter parts and upload each as a new recording.",
+        "unreadable": "The audio file could not be read. Delete the recording and upload the file again.",
+        "empty": "No speech was found in the recording.",
+        "tooManyPages": "The recording could not be transcribed. Delete it and upload the file again.",
+        "timeout": "The transcription took too long. Delete the recording and upload the file again.",
+        "unavailable": "The transcription service is not available. Delete the recording and upload the file again later.",
+        "failed": "The recording could not be transcribed. Delete it and upload the file again. If the problem persists, contact support."
+      }
     }
+  },
+  "audio": {
+    "alreadyUploaded": "This recording already has its audio. Create a new recording for another file."
   }
 }

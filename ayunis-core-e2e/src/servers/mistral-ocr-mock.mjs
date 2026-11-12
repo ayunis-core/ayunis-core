@@ -6,6 +6,10 @@ const port = Number(process.env.E2E_MISTRAL_OCR_PORT ?? 3199);
 
 const extractionCounts = new Map();
 const speech = { requests: [], hold: false, releases: [] };
+// Recordings whose file name carries this marker are answered only once a
+// test releases them, so it can act while the transcription is running.
+const HELD_TRANSCRIPTION_MARKER = "transcription-hold";
+const transcriptions = { requests: [], held: new Map() };
 
 const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
@@ -21,6 +25,14 @@ const server = createServer(async (request, response) => {
 
   if (request.url.startsWith("/speech/")) {
     return handleSpeechControl(request, response);
+  }
+
+  if (request.url.startsWith("/transcription/")) {
+    return handleTranscriptionControl(request, response);
+  }
+
+  if (request.method === "POST" && request.url === "/v1/audio/transcriptions") {
+    return transcribe(request, response);
   }
 
   if (request.method === "POST" && request.url === "/v1/audio/speech") {
@@ -175,13 +187,75 @@ function silentMp3Frames(count) {
   return Array.from({ length: count }, () => frame);
 }
 
+// A short council meeting with two speakers, as Voxtral returns it with
+// diarization and segment timestamps.
+async function transcribe(request, response) {
+  const body = (await readRawBody(request)).toString("latin1");
+  const fileName = body.match(/filename="([^"]*)"/)?.[1] ?? "";
+  transcriptions.requests.push({
+    fileName,
+    diarize: /name="diarize"\r\n\r\ntrue/.test(body),
+  });
+  if (fileName.includes(HELD_TRANSCRIPTION_MARKER)) {
+    await new Promise((resolve) => {
+      transcriptions.held.set(fileName, resolve);
+      request.on("close", resolve);
+    });
+    transcriptions.held.delete(fileName);
+    if (response.destroyed) return;
+  }
+  const segments = [
+    ["speaker_0", 0.2, 1.4, "Willkommen zur Sitzung des Gemeinderats."],
+    ["speaker_1", 1.6, 2.8, "Danke, wir beginnen mit dem Haushalt."],
+    ["speaker_0", 3.0, 3.9, "Der Haushalt ist beschlossen."],
+  ].map(([speakerId, start, end, text]) => ({
+    type: "transcription_segment",
+    text,
+    start,
+    end,
+    speaker_id: speakerId,
+  }));
+  return sendJson(response, 200, {
+    text: segments.map((segment) => segment.text).join(" "),
+    language: "de",
+    model: "voxtral-mini-2602",
+    usage: {
+      prompt_audio_seconds: 4,
+      prompt_tokens: 0,
+      total_tokens: 0,
+      completion_tokens: 0,
+      request_count: 1,
+    },
+    segments,
+  });
+}
+
+async function handleTranscriptionControl(request, response) {
+  if (request.method === "GET" && request.url === "/transcription/requests") {
+    return sendJson(response, 200, transcriptions.requests);
+  }
+  if (request.method === "GET" && request.url === "/transcription/held") {
+    return sendJson(response, 200, [...transcriptions.held.keys()]);
+  }
+  if (request.method === "POST" && request.url === "/transcription/release") {
+    const { fileName } = JSON.parse(await readBody(request));
+    transcriptions.held.get(fileName)?.();
+    return sendJson(response, 200, {});
+  }
+  return sendJson(response, 404, { message: "Not found" });
+}
+
 function sendJson(response, status, body) {
   response.writeHead(status, { "content-type": "application/json" });
   response.end(JSON.stringify(body));
 }
 
 async function readBody(request) {
+  return (await readRawBody(request)).toString("utf8");
+}
+
+async function readRawBody(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }

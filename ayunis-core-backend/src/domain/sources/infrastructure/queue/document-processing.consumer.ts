@@ -7,7 +7,6 @@ import { ProcessingCheckpointService } from 'src/domain/sources/application/serv
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { tmpdir } from 'os';
-import { withStagingDirectory } from './staging-directory';
 import { join } from 'path';
 import transcriptionConfig from 'src/config/transcription.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -48,6 +47,12 @@ import { classifyJobFailure, documentRetryDelayMs } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import { SourceTranscriptContentService } from 'src/domain/sources/application/services/source-transcript-content.service';
+import { audioStagingRoot, withStagedJobFile } from './staged-job-file';
+import {
+  RecordingTranscriptExtractor,
+  type ExtractedContent,
+} from './recording-transcript.extractor';
 
 function isProcessedFromDisk(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || isOfficeDocumentFile(fileType);
@@ -76,6 +81,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
     private readonly heartbeat: SourceProcessingHeartbeatService,
     private readonly checkpoints: ProcessingCheckpointService,
+    private readonly recordingTranscripts: RecordingTranscriptExtractor,
+    private readonly transcriptContent: SourceTranscriptContentService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
   ) {
@@ -146,7 +153,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     cleanupPath: string | null,
   ): Promise<void> {
     const { sourceId, orgId } = job.data;
-    const { text, chunks } = await this.heartbeat.run(sourceId, () =>
+    const content = await this.heartbeat.run(sourceId, () =>
       this.downloadAndExtractText(job),
     );
 
@@ -158,11 +165,12 @@ export class DocumentProcessingConsumer extends WorkerHost {
       return;
     }
 
-    if (!(await this.updateSourceWithContent(source, text, chunks))) {
+    if (!(await this.updateSourceWithContent(source, content))) {
       await this.cleanupMinioFile(cleanupPath);
       await this.cleanupCheckpoints(orgId, sourceId);
       return;
     }
+    const { chunks } = content;
     await processingStage('document.indexing', () =>
       this.helper.index(sourceId, orgId, chunks),
     );
@@ -240,13 +248,15 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async downloadAndExtractText(
     job: Job<DocumentProcessingJobData>,
-  ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
+  ): Promise<ExtractedContent> {
     const { fileName, fileType } = job.data;
     const context = this.checkpoints.create(
       job.data.orgId,
       job.data.sourceId,
       (completed) => job.updateProgress({ stage: 'extraction', completed }),
     );
+    if (job.data.keepTranscriptSegments)
+      return this.recordingTranscripts.extract(job.data, context);
     const text = isAudioFile(detectFileType(fileType, fileName))
       ? await this.transcribeRecording(job, context)
       : await this.extractDocument(job, context);
@@ -317,43 +327,18 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
     context?: ProcessingContext,
   ): Promise<string> {
-    const root =
-      this.transcription.tempDirectory ?? join(tmpdir(), 'ayunis-audio');
+    const root = audioStagingRoot(this.transcription);
     return this.withStagedFile(job, root, (localFile) =>
       this.retrieveText(job, localFile, context),
     );
   }
 
-  // PDFs, office documents and recordings are streamed to disk and processed
-  // from there: the process never holds the file, and splitting, conversion,
-  // segmenting and the provider upload all read the path.
-  private async withStagedFile<T>(
+  private withStagedFile<T>(
     job: Job<DocumentProcessingJobData>,
     root: string,
     use: (localFile: LocalFile) => Promise<T>,
   ): Promise<T> {
-    const { minioPath, expectedSize, expectedETag } = job.data;
-    return withStagingDirectory(root, async (directory) => {
-      const path = join(directory, 'file');
-      const stored = await processingStage('document.download', () =>
-        job.data.retainFile
-          ? this.storedFiles.readRetainedToFile(
-              minioPath,
-              path,
-              expectedSize,
-              expectedETag,
-            )
-          : this.storedFiles.readToFile(
-              minioPath,
-              path,
-              expectedSize,
-              expectedETag,
-            ),
-      );
-      return processingStage('document.extraction', () =>
-        use({ path, ...stored }),
-      );
-    });
+    return withStagedJobFile(this.storedFiles, job.data, root, use);
   }
 
   private async retrieveText(
@@ -433,9 +418,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async updateSourceWithContent(
     source: TextSource,
-    text: string,
-    chunks: TextSourceContentChunk[],
+    { text, chunks, segments }: ExtractedContent,
   ): Promise<boolean> {
+    if (segments)
+      return this.transcriptContent.save(source, { text, chunks }, segments);
     return this.sourceRepository.saveProcessingTextSourceContent(source, {
       text,
       chunks,

@@ -89,9 +89,9 @@ describe('uploaded recording transcription', () => {
       }),
     );
 
-    await expect(whole.execute(command())).resolves.toContain(
-      'Council decision.',
-    );
+    await expect(whole.execute(command())).resolves.toMatchObject({
+      text: expect.stringContaining('Council decision.'),
+    });
   });
 
   it('rejects a recording above the configured upload cap', async () => {
@@ -115,23 +115,27 @@ describe('uploaded recording transcription', () => {
       processingContext: context,
     });
 
-    await expect(useCase().execute(onDisk)).resolves.toContain(
-      'Council decision.',
-    );
+    await expect(useCase().execute(onDisk)).resolves.toMatchObject({
+      text: expect.stringContaining('Council decision.'),
+    });
     expect(requests).toBe(2);
   });
 
   it('adds original recording offsets to provider timestamps', async () => {
-    const text = await useCase().execute(command());
+    const { text, segments } = await useCase().execute(command());
     expect(text).toContain('[00:00:01.250 - 00:00:03.500] Council decision.');
     expect(text).toContain('[00:10:01.250 - 00:10:03.500] Council decision.');
+    expect(segments).toEqual([
+      { text: 'Council decision.', start: 1.25, end: 3.5 },
+      { text: 'Council decision.', start: 601.25, end: 603.5 },
+    ]);
   });
 
   it('resumes after a failed request without repeating completed transcription', async () => {
     failSecond = true;
     await expect(useCase().execute(command())).rejects.toThrow();
     failSecond = false;
-    expect(await useCase().execute(command())).toContain('00:10:01.250');
+    expect((await useCase().execute(command())).text).toContain('00:10:01.250');
     expect(requests).toBe(3);
   });
 

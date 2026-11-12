@@ -19,7 +19,7 @@ export class RecordingsTeamDeletionRequestedListener {
   async handle(event: TeamDeletionRequestedEvent): Promise<void> {
     try {
       const recordings = await this.repository.findAllByTeamId(event.teamId);
-      this.cleanup.deferCleanup(event, recordings, 'team');
+      await this.cleanup.deferCleanup(event, recordings, 'team');
     } catch (error) {
       this.logger.error(
         { teamId: event.teamId, err: error as Error },

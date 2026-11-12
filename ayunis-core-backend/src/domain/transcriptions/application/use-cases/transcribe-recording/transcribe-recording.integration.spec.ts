@@ -113,7 +113,7 @@ describe('recording preparation and Mistral SDK contract', () => {
   }
 
   it('compresses a fitting recording whole and preserves SDK speaker ids', async () => {
-    const text = await useCase(20).execute(
+    const { text, segments } = await useCase(20).execute(
       new TranscribeCommand({
         file: recording(12),
         fileName: 'meeting.wav',
@@ -127,10 +127,18 @@ describe('recording preparation and Mistral SDK contract', () => {
     expect(text).toBe(
       '[00:00:00.100 - 00:00:00.900] Speaker 1: Budget approved.',
     );
+    expect(segments).toEqual([
+      {
+        text: 'Budget approved.',
+        start: 0.1,
+        end: 0.9,
+        speakerId: 'speaker_1',
+      },
+    ]);
   });
 
   it('keeps identities local to each fallback part and offsets timestamps', async () => {
-    const text = await useCase(1).execute(
+    const { text, segments } = await useCase(1).execute(
       new TranscribeCommand({
         file: recording(2.5),
         fileName: 'meeting.wav',
@@ -141,5 +149,12 @@ describe('recording preparation and Mistral SDK contract', () => {
     expect(text).toContain('Part 1 / Speaker 1:');
     expect(text).toContain('[00:00:01.100 - 00:00:01.900] Part 2 / Speaker 1:');
     expect(text).toContain('Part 3 / Speaker 1:');
+    expect(
+      segments.map(({ speakerId, start }) => ({ speakerId, start })),
+    ).toEqual([
+      { speakerId: 'part-1/speaker_1', start: 0.1 },
+      { speakerId: 'part-2/speaker_1', start: 1.1 },
+      { speakerId: 'part-3/speaker_1', start: 2.1 },
+    ]);
   });
 });

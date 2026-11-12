@@ -768,7 +768,7 @@ describe('RetrieveFileContentUseCase', () => {
     const transcript = 'Hello world, this is the transcribed audio.';
     jest
       .spyOn(mockTranscribeRecordingUseCase, 'execute')
-      .mockResolvedValue(transcript);
+      .mockResolvedValue({ text: transcript, segments: [] });
 
     const command = new RetrieveFileContentCommand({
       fileData: audioBuffer,

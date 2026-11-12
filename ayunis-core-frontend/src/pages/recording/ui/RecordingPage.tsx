@@ -26,17 +26,20 @@ import { RecordingPropertiesCard } from '@/widgets/resource-properties-card';
 import { useDeleteRecording } from '@/pages/recordings/api/useDeleteRecording';
 import {
   useChangeRecordingOwner,
+  useRecording,
   useRenameRecording,
 } from '@/pages/recording/api';
+import { RecordingTranscriptCard } from './RecordingTranscriptCard';
 
 export function RecordingPage({
-  recording,
+  recording: loaded,
   workspace,
 }: Readonly<{
   recording: RecordingResponseDto;
   /** The owning workspace of a workspace recording. */
   workspace?: WorkspaceResponseDto;
 }>) {
+  const recording = useRecording(loaded);
   const { t } = useTranslation('recordings');
   const { t: tWorkspace } = useTranslation('workspace');
   const navigate = useNavigate();
@@ -139,6 +142,10 @@ export function RecordingPage({
               ownerLabel={ownerLabel}
               onRename={renameRecording}
               disabled={!isManageable}
+            />
+            <RecordingTranscriptCard
+              recording={recording}
+              canManage={isManageable}
             />
           </div>
         }

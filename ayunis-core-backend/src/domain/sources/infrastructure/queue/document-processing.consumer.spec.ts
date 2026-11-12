@@ -13,6 +13,7 @@ import {
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
+import { RecordingTranscriptExtractor } from './recording-transcript.extractor';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -125,6 +126,10 @@ const admitOrgProcessing = {
   execute: jest.fn().mockResolvedValue(true),
 };
 
+const transcribeRecordingUseCase = { execute: jest.fn() };
+
+const transcriptContent = { save: jest.fn().mockResolvedValue(true) };
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
@@ -159,6 +164,12 @@ describe('DocumentProcessingConsumer', () => {
       admitOrgProcessing as never,
       new SourceProcessingHeartbeatService(sourceRepository as never),
       checkpoints as never,
+      new RecordingTranscriptExtractor(
+        storedFiles as never,
+        transcribeRecordingUseCase as never,
+        { tempDirectory: undefined } as never,
+      ),
+      transcriptContent as never,
       { tempDirectory: undefined } as never,
     );
   });
@@ -366,6 +377,64 @@ describe('DocumentProcessingConsumer', () => {
         localFile: expect.objectContaining({ size: 1234, sha256: 'abc' }),
         fileName: 'sitzung.mp3',
       }),
+    );
+  });
+
+  it('keeps the speaker segments of a meeting recording with its text and indexes chunks that know their time range', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+    const segments = [
+      { text: 'Wir beginnen.', start: 0.5, end: 2, speakerId: 'speaker_0' },
+      { text: 'Einverstanden.', start: 2.5, end: 3, speakerId: 'speaker_1' },
+    ];
+    transcribeRecordingUseCase.execute.mockResolvedValue({
+      text: 'formatted transcript',
+      segments,
+    });
+
+    await consumer.process(
+      makeJob({
+        data: makeJobData({
+          retainFile: true,
+          expectedSize: 1234,
+          expectedETag: 'verified',
+          fileName: 'sitzung.mp3',
+          fileType: 'audio/mpeg',
+          keepTranscriptSegments: true,
+        }),
+      } as never),
+    );
+
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(transcribeRecordingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recording: expect.objectContaining({ size: 1234, sha256: 'abc' }),
+      }),
+    );
+    expect(
+      sourceRepository.saveProcessingTextSourceContent,
+    ).not.toHaveBeenCalled();
+    const [, content, savedSegments] = transcriptContent.save.mock.calls[0];
+    expect(content.text).toBe('formatted transcript');
+    expect(savedSegments).toEqual(segments);
+    const [, , indexedChunks] = helper.index.mock.calls[0];
+    expect(indexedChunks).toHaveLength(1);
+    expect(indexedChunks[0].content).toBe(
+      '[00:00:00.500 - 00:00:02.000] Speaker 1: Wir beginnen.\n' +
+        '[00:00:02.500 - 00:00:03.000] Speaker 2: Einverstanden.',
+    );
+    expect(indexedChunks[0].meta).toEqual({
+      fileName: 'sitzung.mp3',
+      start: 0.5,
+      end: 3,
+      speakers: ['speaker_0', 'speaker_1'],
+    });
+    expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
+      SOURCE_ID,
+      SourceStatus.PROCESSING,
+      SourceStatus.READY,
+      { processingError: null },
     );
   });
 

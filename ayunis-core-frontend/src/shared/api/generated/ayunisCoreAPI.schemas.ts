@@ -6040,6 +6040,19 @@ export interface CreateRecordingDto {
   name: string;
 }
 
+/**
+ * uploading until the audio is stored, then transcribing, transcribed or failed
+ */
+export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatus];
+
+
+export const RecordingStatus = {
+  uploading: 'uploading',
+  transcribing: 'transcribing',
+  transcribed: 'transcribed',
+  failed: 'failed',
+} as const;
+
 export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
 
 
@@ -6063,12 +6076,33 @@ export interface RecordingResponseDto {
      * @nullable
      */
   creatorName: string | null;
+  /** uploading until the audio is stored, then transcribing, transcribed or failed */
+  status: RecordingStatus;
+  /** Why the transcription failed; only when the status is failed */
+  failureCode?: SourceProcessingErrorCode;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface RecordingListResponseDto {
   data: RecordingResponseDto[];
+}
+
+export interface RecordingTranscriptTurnDto {
+  /** The speaker label the transcription provider assigned; absent when it named none */
+  speakerId?: string;
+  /** Speakers numbered in order of first appearance */
+  speakerNumber?: number;
+  /** Seconds from the start of the recording */
+  start: number;
+  /** Seconds from the start of the recording */
+  end: number;
+  text: string;
+}
+
+export interface RecordingTranscriptResponseDto {
+  /** Empty until the recording is transcribed */
+  turns: RecordingTranscriptTurnDto[];
 }
 
 export interface RenameRecordingDto {

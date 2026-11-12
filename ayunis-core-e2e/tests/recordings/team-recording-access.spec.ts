@@ -1,13 +1,24 @@
 import { randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
+import { permitEmbeddingModel } from '../../src/clients/api/models.client';
 import {
+  createRecording,
   listRecordingIds,
   requestRecording,
   requestRecordingCreation,
   requestRecordingDeletion,
   requestRecordingOwnerChange,
   requestRecordingRename,
+  requestRecordingTranscript,
+  requestRecordingUpload,
 } from '../../src/clients/api/recordings.client';
+import {
+  countOrphanedAudioRows,
+  findRecordingAudioRows,
+  findRecordingAudioSourceId,
+} from '../../src/clients/database.client';
+import { objectExists } from '../../src/clients/object-storage.client';
+import { createSilentWav } from '../../src/factories/audio.factory';
 import {
   addTeamMember,
   requestTeamMemberRemoval,
@@ -33,6 +44,7 @@ test('a team recording is managed by permitted members, read-only for other memb
     test.info().outputPath('recordings-team-org.json'),
   );
   const { admin, member, outsider, team } = fixture;
+  await permitEmbeddingModel(admin.api);
   const contexts = await Promise.all(
     [admin, member].map(({ storageState }) =>
       browser.newContext({ storageState }),
@@ -56,11 +68,21 @@ test('a team recording is managed by permitted members, read-only for other memb
     await adminPage.keyboard.press('Escape');
     await chooseOwner(adminPage, `team:${team.id}`);
     await adminPage.getByTestId('entity-form-name').fill(`Bauausschuss ${key}`);
+    await adminPage.getByTestId('recording-create-audio').setInputFiles({
+      name: `bauausschuss-${key}.wav`,
+      mimeType: 'audio/wav',
+      buffer: createSilentWav(5),
+    });
     await adminPage.getByTestId('create-entity-submit').click();
     await expect(
       adminPage.getByTestId('recording-detail-owner-badge'),
     ).toHaveAttribute('data-owner-type', 'team');
     const recordingId = new URL(adminPage.url()).pathname.split('/').pop()!;
+    await expect(adminPage.getByTestId('recording-status')).toHaveAttribute(
+      'data-status',
+      'transcribed',
+      { timeout: 60_000 },
+    );
 
     // Without the team and org permission only the user is offered as owner,
     // and the API refuses the other owners.
@@ -88,6 +110,9 @@ test('a team recording is managed by permitted members, read-only for other memb
     expect((await requestRecording(outsider.api, recordingId)).status()).toBe(
       404,
     );
+    expect(
+      (await requestRecordingTranscript(outsider.api, recordingId)).status(),
+    ).toBe(404);
     expect((await requestRecording(api, recordingId)).status()).toBe(404);
 
     // A team member without manage_team_recordings reads it, but cannot
@@ -105,6 +130,45 @@ test('a team recording is managed by permitted members, read-only for other memb
     await expect(memberPage.getByTestId('recording-detail-delete')).toHaveCount(
       0,
     );
+    // It reads the status and the transcript, but cannot upload audio.
+    await expect(memberPage.getByTestId('recording-status')).toHaveAttribute(
+      'data-status',
+      'transcribed',
+    );
+    await expect(
+      memberPage.getByTestId('recording-transcript-turn'),
+    ).toHaveCount(3);
+    expect(
+      (
+        await requestRecordingUpload(member.api, recordingId, {
+          fileName: `nachtrag-${key}.wav`,
+          mimeType: 'audio/wav',
+          fileSize: 1024,
+        })
+      ).status(),
+    ).toBe(403);
+    const withoutAudio = await createRecording(admin.api, {
+      ownerType: 'team',
+      teamId: team.id,
+      name: `Ohne Audio ${key}`,
+    });
+    await memberPage.goto(`/recordings/${withoutAudio.id}`);
+    await expect(memberPage.getByTestId('recording-status')).toHaveAttribute(
+      'data-status',
+      'uploading',
+    );
+    await expect(memberPage.getByTestId('recording-audio-upload')).toHaveCount(
+      0,
+    );
+    expect(
+      (
+        await requestRecordingUpload(member.api, withoutAudio.id, {
+          fileName: `nachtrag-${key}.wav`,
+          mimeType: 'audio/wav',
+          fileSize: 1024,
+        })
+      ).status(),
+    ).toBe(403);
     expect(
       (await requestRecordingRename(member.api, recordingId, 'Umbenannt')).status(),
     ).toBe(403);
@@ -133,11 +197,16 @@ test('a team recording is managed by permitted members, read-only for other memb
       404,
     );
 
-    // The admin manages it.
+    // The admin manages it; deleting it removes its audio and transcript.
+    const sourceId = await findRecordingAudioSourceId(recordingId);
+    const storageKey = (await findRecordingAudioRows(recordingId))?.storageKey;
+    expect(await objectExists(storageKey!)).toBe(true);
     await adminPage.getByTestId('recording-detail-delete').click();
     await adminPage.getByTestId('confirmation-confirm').click();
     await expect(adminPage).toHaveURL(/\/recordings$/);
     expect((await requestRecording(admin.api, recordingId)).status()).toBe(404);
+    expect(await objectExists(storageKey!)).toBe(false);
+    expect(await countOrphanedAudioRows([sourceId!])).toBe(0);
   } finally {
     await Promise.all(contexts.map((context) => context.close()));
     await fixture.dispose();

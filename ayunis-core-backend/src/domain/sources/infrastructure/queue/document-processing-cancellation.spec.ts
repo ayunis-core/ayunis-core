@@ -87,6 +87,8 @@ async function interruptedDelivery(
     { execute: async () => true } as never,
     new SourceProcessingHeartbeatService(repository),
     checkpoints,
+    {} as never,
+    {} as never,
     { tempDirectory: undefined } as never,
   );
   await consumer.process({
