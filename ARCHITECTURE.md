@@ -79,7 +79,7 @@ none of these packages implements the Agent Plugins standard.
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                              |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and org document collections                                             |
 | [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | Ownership      | Shared owner types, team/org access checks and owner constraints for skills, knowledge bases and recordings    |
-| [recordings](ayunis-core-backend/src/domain/recordings/SUMMARY.md)              | Meetings       | Meeting recordings owned by a user, workspace, team or the organization, with audio, transcript and summary    |
+| [recordings](ayunis-core-backend/src/domain/recordings/SUMMARY.md)              | Meetings       | Meeting recordings owned by a user, workspace, team or the org: transcript, summary and search in chat         |
 | [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
 | [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
 | [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |

@@ -3,7 +3,7 @@ External data sources for RAG context enrichment
 
 Sources manage user-uploaded files, URLs, and text content that feed the RAG pipeline. Each source is chunked, indexed, and made available for semantic search during AI conversations. Sources may optionally belong to a knowledge base via the `knowledgeBaseId` foreign key column.
 
-Source citation reads use `FindSourceCitationTargetUseCase`, backed by a single joined repository query that returns the exact persisted content chunk and its owning text-source metadata without loading the full extracted source text. The use case intentionally performs no caller authorization; consuming modules must establish their own access boundary before exposing the result.
+Source citation reads use `FindSourceCitationTargetUseCase`, backed by a single joined repository query that returns the exact persisted content chunk and its owning text-source metadata without loading the full extracted source text. The target carries the source's `knowledgeBaseId` and `recordingId`. The use case intentionally performs no caller authorization; consuming modules must establish their own access boundary before exposing the result. `transcriptChunkPosition` (`application/util/transcript-chunks.ts`) tells where a chunk of a transcribed source lies: its summary, or a time range with the speakers numbered as in the transcript text.
 
 Processing failures persist a nullable `processingErrorCode` alongside the existing diagnostic text. Codes are classified from typed exceptions, not their messages; unknown failures use `PROCESSING_FAILED`. Successful status transitions clear the code, and legacy rows remain unclassified rather than guessing from stored text.
 

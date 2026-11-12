@@ -177,6 +177,7 @@ describe('LocalSourceRepository', () => {
     const sourceRecord = {
       id: source.id,
       knowledgeBaseId: null,
+      recordingId: null,
     } as TextSourceRecord;
     const detailsRecord = { source: sourceRecord } as TextSourceDetailsRecord;
     const chunks = [{ id: randomUUID() }] as SourceContentChunkRecord[];
@@ -242,6 +243,7 @@ describe('LocalSourceRepository', () => {
           createdBy: SourceCreator.USER,
           status: SourceStatus.READY,
           knowledgeBaseId: null,
+          recordingId: null,
           url: null,
         },
       },
@@ -278,6 +280,7 @@ describe('LocalSourceRepository', () => {
         createdBy: SourceCreator.USER,
         status: SourceStatus.READY,
         knowledgeBaseId: null,
+        recordingId: null,
         url: null,
       },
     });

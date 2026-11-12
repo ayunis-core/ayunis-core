@@ -166,6 +166,11 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.knowledge_query'),
         target: asStringList(params.queries) ?? asString(params.query),
       };
+    case 'recording_search':
+      return {
+        verb: t('chat.timeline.actions.recording_search'),
+        target: asStringList(params.queries),
+      };
     case 'code_execution':
       return { verb: t('chat.timeline.actions.code_execution') };
     case 'http':

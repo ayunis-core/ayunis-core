@@ -285,6 +285,119 @@ describe('Recording persistence', () => {
     ).resolves.toEqual(['otherOrg']);
   });
 
+  describe('searchable recordings', () => {
+    async function attachIndexedAudio(key: string): Promise<void> {
+      const sourceId = await insertSource(runner.manager);
+      await runner.query(
+        `UPDATE "sources" SET "status" = 'ready' WHERE "id" = $1`,
+        [sourceId],
+      );
+      await repository.attachAudio(ids[key], sourceId);
+    }
+
+    async function setUploadedAt(key: string, uploadedAt: string) {
+      await runner.query(
+        `UPDATE "recordings" SET "createdAt" = $2 WHERE "id" = $1`,
+        [ids[key], new Date(uploadedAt)],
+      );
+    }
+
+    async function searchable(
+      filter: Partial<Parameters<typeof repository.findSearchable>[0]> = {},
+    ) {
+      return repository
+        .findSearchable({
+          userId,
+          owners: { orgId, teamIds: [ownTeamId] },
+          workspaceId: null,
+          uploaded: {},
+          ...filter,
+        })
+        .then(names);
+    }
+
+    beforeEach(async () => {
+      for (const key of Object.keys(ids)) await attachIndexedAudio(key);
+    });
+
+    it('searches the own, own-team and own-organization recordings, never a colleague’s, another team’s or another organization’s', async () => {
+      await expect(searchable()).resolves.toEqual([
+        'org',
+        'ownTeam',
+        'personal',
+      ]);
+      await expect(
+        searchable({ owners: { orgId: otherOrgId, teamIds: [] } }),
+      ).resolves.toEqual(['otherOrg']);
+    });
+
+    it('searches workspace recordings only in that workspace’s chat', async () => {
+      await expect(
+        searchable({ workspaceId: ownWorkspaceId }),
+      ).resolves.toEqual(['org', 'ownTeam', 'ownWorkspace', 'personal']);
+      await expect(
+        searchable({ workspaceId: colleagueWorkspaceId }),
+      ).resolves.toEqual(['colleagueWorkspace', 'org', 'ownTeam', 'personal']);
+    });
+
+    it('returns each recording with its audio source and upload time', async () => {
+      const [{ id: audioSourceId }]: { id: UUID }[] = await runner.query(
+        `SELECT "id" FROM "sources" WHERE "recordingId" = $1`,
+        [ids.personal],
+      );
+      await setUploadedAt('personal', '2026-03-02T09:30:00Z');
+      const recordings = await repository.findSearchable({
+        userId,
+        owners: { orgId, teamIds: [] },
+        workspaceId: null,
+        uploaded: {},
+      });
+      expect(recordings.find(({ id }) => id === ids.personal)).toEqual({
+        id: ids.personal,
+        name: 'personal',
+        uploadedAt: new Date('2026-03-02T09:30:00Z'),
+        audioSourceId,
+      });
+    });
+
+    it('skips recordings whose transcript is not indexed: no audio, still transcribing or failed', async () => {
+      await runner.query(
+        `UPDATE "sources" SET "status" = 'processing' WHERE "recordingId" = $1`,
+        [ids.ownTeam],
+      );
+      await runner.query(
+        `UPDATE "sources" SET "status" = 'failed' WHERE "recordingId" = $1`,
+        [ids.org],
+      );
+      await runner.query(`DELETE FROM "sources" WHERE "recordingId" = $1`, [
+        ids.personal,
+      ]);
+
+      await expect(searchable()).resolves.toEqual([]);
+    });
+
+    it('keeps only recordings uploaded within the time range', async () => {
+      await setUploadedAt('personal', '2026-03-02T09:30:00Z');
+      await setUploadedAt('ownTeam', '2026-04-15T12:00:00Z');
+      await setUploadedAt('org', '2026-05-20T16:45:00Z');
+
+      await expect(
+        searchable({ uploaded: { from: new Date('2026-04-01T00:00:00Z') } }),
+      ).resolves.toEqual(['org', 'ownTeam']);
+      await expect(
+        searchable({ uploaded: { to: new Date('2026-04-15T12:00:00Z') } }),
+      ).resolves.toEqual(['ownTeam', 'personal']);
+      await expect(
+        searchable({
+          uploaded: {
+            from: new Date('2026-04-01T00:00:00Z'),
+            to: new Date('2026-04-30T23:59:59Z'),
+          },
+        }),
+      ).resolves.toEqual(['ownTeam']);
+    });
+  });
+
   it('rejects a recording without exactly one owner', async () => {
     await expect(insert(runner.manager, 'noOwner', { orgId })).rejects.toThrow(
       /CHK_recordings_single_owner/,

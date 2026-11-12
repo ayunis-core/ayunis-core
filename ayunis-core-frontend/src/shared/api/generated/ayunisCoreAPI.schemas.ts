@@ -5079,6 +5079,159 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];
+
+
+export const CreateRecordingDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface CreateRecordingDto {
+  ownerType: CreateRecordingDtoOwnerType;
+  workspaceId?: string;
+  teamId?: string;
+  /**
+     * The name of the recording
+     * @minLength 1
+     * @maxLength 255
+     */
+  name: string;
+}
+
+/**
+ * uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed
+ */
+export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatus];
+
+
+export const RecordingStatus = {
+  uploading: 'uploading',
+  transcribing: 'transcribing',
+  summarizing: 'summarizing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type RecordingSummaryState = typeof RecordingSummaryState[keyof typeof RecordingSummaryState];
+
+
+export const RecordingSummaryState = {
+  summarizing: 'summarizing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
+ * Why the summary failed; only when the status is failed
+ */
+export type RecordingSummaryFailure = typeof RecordingSummaryFailure[keyof typeof RecordingSummaryFailure];
+
+
+export const RecordingSummaryFailure = {
+  NO_SUMMARY_MODEL: 'NO_SUMMARY_MODEL',
+  CREDIT_BUDGET_EXCEEDED: 'CREDIT_BUDGET_EXCEEDED',
+  CREDIT_LIMIT_EXCEEDED: 'CREDIT_LIMIT_EXCEEDED',
+  TRANSCRIPT_TOO_LONG: 'TRANSCRIPT_TOO_LONG',
+  TRANSCRIPT_EMPTY: 'TRANSCRIPT_EMPTY',
+  PROVIDER_ERROR: 'PROVIDER_ERROR',
+  SUMMARY_FAILED: 'SUMMARY_FAILED',
+} as const;
+
+export interface RecordingSummaryStateDto {
+  status: RecordingSummaryState;
+  /** Why the summary failed; only when the status is failed */
+  failureCode?: RecordingSummaryFailure;
+  /** The model that generated the summary; only when the status is ready */
+  modelName?: string;
+  /** When the summary was generated; only when the status is ready */
+  generatedAt?: string;
+}
+
+export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
+
+
+export const RecordingResponseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface RecordingResponseDto {
+  id: string;
+  name: string;
+  ownerType: RecordingResponseDtoOwnerType;
+  /** The owning workspace of workspace recordings */
+  workspaceId?: string;
+  /** The owning team of team recordings */
+  teamId?: string;
+  /**
+     * The name of the user who created the recording; null once they are deleted
+     * @nullable
+     */
+  creatorName: string | null;
+  /** uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed */
+  status: RecordingStatus;
+  /** Why the transcription failed; only when the status is failed */
+  failureCode?: SourceProcessingErrorCode;
+  /** The summary, from the moment the transcript is ready */
+  summary?: RecordingSummaryStateDto;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecordingListResponseDto {
+  data: RecordingResponseDto[];
+}
+
+export interface RecordingTranscriptTurnDto {
+  /** The speaker label the transcription provider assigned; absent when it named none */
+  speakerId?: string;
+  /** Speakers numbered in order of first appearance */
+  speakerNumber?: number;
+  /** Seconds from the start of the recording */
+  start: number;
+  /** Seconds from the start of the recording */
+  end: number;
+  text: string;
+}
+
+export interface RecordingTranscriptResponseDto {
+  /** Empty until the recording is transcribed */
+  turns: RecordingTranscriptTurnDto[];
+}
+
+export interface RenameRecordingDto {
+  /**
+     * The new name of the recording
+     * @minLength 1
+     * @maxLength 255
+     */
+  name: string;
+}
+
+export type RecordingTransferOwnerDtoOwnerType = typeof RecordingTransferOwnerDtoOwnerType[keyof typeof RecordingTransferOwnerDtoOwnerType];
+
+
+export const RecordingTransferOwnerDtoOwnerType = {
+  personal: 'personal',
+  team: 'team',
+  org: 'org',
+} as const;
+
+export interface RecordingTransferOwnerDto {
+  ownerType: RecordingTransferOwnerDtoOwnerType;
+  teamId?: string;
+}
+
+export interface RecordingSummaryResponseDto {
+  /** The summary in Markdown */
+  content: string;
+}
+
 /**
  * The distribution mode of the skill template
  */
@@ -5616,9 +5769,45 @@ export interface SourceCitationSourceResponseDto {
   url: string | null;
 }
 
+/**
+ * Whether the chunk is part of the transcript or the summary
+ */
+export type SourceCitationRecordingPosition = typeof SourceCitationRecordingPosition[keyof typeof SourceCitationRecordingPosition];
+
+
+export const SourceCitationRecordingPosition = {
+  transcript: 'transcript',
+  summary: 'summary',
+} as const;
+
+export interface SourceCitationRecordingResponseDto {
+  id: string;
+  name: string;
+  uploadedAt: string;
+  /** Whether the chunk is part of the transcript or the summary */
+  position: SourceCitationRecordingPosition;
+  /**
+     * Start of the transcript chunk, in seconds
+     * @nullable
+     */
+  start: number | null;
+  /**
+     * End of the transcript chunk, in seconds
+     * @nullable
+     */
+  end: number | null;
+  /** Speakers of the transcript chunk, numbered as in the transcript */
+  speakerNumbers: number[];
+}
+
 export interface SourceCitationResponseDto {
   chunk: SourceCitationChunkResponseDto;
   source: SourceCitationSourceResponseDto;
+  /**
+     * The recording whose transcript or summary is cited
+     * @nullable
+     */
+  recording: SourceCitationRecordingResponseDto | null;
 }
 
 export interface UserSystemPromptResponseDto {
@@ -6039,159 +6228,6 @@ export interface UpdateCourseModuleRequestDto {
      * @maxLength 500
      */
   loomUrl: string;
-}
-
-export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];
-
-
-export const CreateRecordingDtoOwnerType = {
-  personal: 'personal',
-  workspace: 'workspace',
-  team: 'team',
-  org: 'org',
-} as const;
-
-export interface CreateRecordingDto {
-  ownerType: CreateRecordingDtoOwnerType;
-  workspaceId?: string;
-  teamId?: string;
-  /**
-     * The name of the recording
-     * @minLength 1
-     * @maxLength 255
-     */
-  name: string;
-}
-
-/**
- * uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed
- */
-export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatus];
-
-
-export const RecordingStatus = {
-  uploading: 'uploading',
-  transcribing: 'transcribing',
-  summarizing: 'summarizing',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export type RecordingSummaryState = typeof RecordingSummaryState[keyof typeof RecordingSummaryState];
-
-
-export const RecordingSummaryState = {
-  summarizing: 'summarizing',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-/**
- * Why the summary failed; only when the status is failed
- */
-export type RecordingSummaryFailure = typeof RecordingSummaryFailure[keyof typeof RecordingSummaryFailure];
-
-
-export const RecordingSummaryFailure = {
-  NO_SUMMARY_MODEL: 'NO_SUMMARY_MODEL',
-  CREDIT_BUDGET_EXCEEDED: 'CREDIT_BUDGET_EXCEEDED',
-  CREDIT_LIMIT_EXCEEDED: 'CREDIT_LIMIT_EXCEEDED',
-  TRANSCRIPT_TOO_LONG: 'TRANSCRIPT_TOO_LONG',
-  TRANSCRIPT_EMPTY: 'TRANSCRIPT_EMPTY',
-  PROVIDER_ERROR: 'PROVIDER_ERROR',
-  SUMMARY_FAILED: 'SUMMARY_FAILED',
-} as const;
-
-export interface RecordingSummaryStateDto {
-  status: RecordingSummaryState;
-  /** Why the summary failed; only when the status is failed */
-  failureCode?: RecordingSummaryFailure;
-  /** The model that generated the summary; only when the status is ready */
-  modelName?: string;
-  /** When the summary was generated; only when the status is ready */
-  generatedAt?: string;
-}
-
-export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
-
-
-export const RecordingResponseDtoOwnerType = {
-  personal: 'personal',
-  workspace: 'workspace',
-  team: 'team',
-  org: 'org',
-} as const;
-
-export interface RecordingResponseDto {
-  id: string;
-  name: string;
-  ownerType: RecordingResponseDtoOwnerType;
-  /** The owning workspace of workspace recordings */
-  workspaceId?: string;
-  /** The owning team of team recordings */
-  teamId?: string;
-  /**
-     * The name of the user who created the recording; null once they are deleted
-     * @nullable
-     */
-  creatorName: string | null;
-  /** uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed */
-  status: RecordingStatus;
-  /** Why the transcription failed; only when the status is failed */
-  failureCode?: SourceProcessingErrorCode;
-  /** The summary, from the moment the transcript is ready */
-  summary?: RecordingSummaryStateDto;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface RecordingListResponseDto {
-  data: RecordingResponseDto[];
-}
-
-export interface RecordingTranscriptTurnDto {
-  /** The speaker label the transcription provider assigned; absent when it named none */
-  speakerId?: string;
-  /** Speakers numbered in order of first appearance */
-  speakerNumber?: number;
-  /** Seconds from the start of the recording */
-  start: number;
-  /** Seconds from the start of the recording */
-  end: number;
-  text: string;
-}
-
-export interface RecordingTranscriptResponseDto {
-  /** Empty until the recording is transcribed */
-  turns: RecordingTranscriptTurnDto[];
-}
-
-export interface RenameRecordingDto {
-  /**
-     * The new name of the recording
-     * @minLength 1
-     * @maxLength 255
-     */
-  name: string;
-}
-
-export type RecordingTransferOwnerDtoOwnerType = typeof RecordingTransferOwnerDtoOwnerType[keyof typeof RecordingTransferOwnerDtoOwnerType];
-
-
-export const RecordingTransferOwnerDtoOwnerType = {
-  personal: 'personal',
-  team: 'team',
-  org: 'org',
-} as const;
-
-export interface RecordingTransferOwnerDto {
-  ownerType: RecordingTransferOwnerDtoOwnerType;
-  teamId?: string;
-}
-
-export interface RecordingSummaryResponseDto {
-  /** The summary in Markdown */
-  content: string;
 }
 
 /**
@@ -7052,6 +7088,22 @@ export type CreditLimitsControllerGetUserUsageParams = {
 userIds: string[];
 };
 
+export type RecordingsControllerFindAllParams = {
+/**
+ * personal lists the own recordings plus those of the user’s teams and organization
+ */
+ownerType: RecordingsControllerFindAllOwnerType;
+workspaceId?: string;
+};
+
+export type RecordingsControllerFindAllOwnerType = typeof RecordingsControllerFindAllOwnerType[keyof typeof RecordingsControllerFindAllOwnerType];
+
+
+export const RecordingsControllerFindAllOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
 export type ArtifactsControllerFindByWorkspaceParams = {
 /**
  * Search artifacts by title
@@ -7145,20 +7197,4 @@ search?: string;
  */
 status?: CertificateValidityStatus;
 };
-
-export type RecordingsControllerFindAllParams = {
-/**
- * personal lists the own recordings plus those of the user’s teams and organization
- */
-ownerType: RecordingsControllerFindAllOwnerType;
-workspaceId?: string;
-};
-
-export type RecordingsControllerFindAllOwnerType = typeof RecordingsControllerFindAllOwnerType[keyof typeof RecordingsControllerFindAllOwnerType];
-
-
-export const RecordingsControllerFindAllOwnerType = {
-  personal: 'personal',
-  workspace: 'workspace',
-} as const;
 

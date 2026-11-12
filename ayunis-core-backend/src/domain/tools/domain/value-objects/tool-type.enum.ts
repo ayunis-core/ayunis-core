@@ -21,6 +21,7 @@ export enum ToolType {
   EDIT_SKILL = 'edit_skill',
   KNOWLEDGE_QUERY = 'knowledge_query',
   KNOWLEDGE_GET_TEXT = 'knowledge_get_text',
+  RECORDING_SEARCH = 'recording_search',
   CREATE_DOCUMENT = 'create_document',
   UPDATE_DOCUMENT = 'update_document',
   EDIT_DOCUMENT = 'edit_document',

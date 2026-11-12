@@ -11070,6 +11070,426 @@
         "tags": ["Super Admin Trials"]
       }
     },
+    "/recordings": {
+      "post": {
+        "operationId": "RecordingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a recording",
+        "tags": ["recordings"]
+      },
+      "get": {
+        "operationId": "RecordingsController_findAll",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "description": "personal lists the own recordings plus those of the user’s teams and organization",
+            "schema": {
+              "type": "string",
+              "enum": ["personal", "workspace"]
+            }
+          },
+          {
+            "name": "workspaceId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the recordings of the user, their teams and organization, or of a workspace",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}": {
+      "get": {
+        "operationId": "RecordingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Get a recording",
+        "tags": ["recordings"]
+      },
+      "patch": {
+        "operationId": "RecordingsController_rename",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameRecordingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Rename a recording",
+        "tags": ["recordings"]
+      },
+      "delete": {
+        "operationId": "RecordingsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Delete a recording",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/transcript": {
+      "get": {
+        "operationId": "RecordingsController_transcript",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingTranscriptResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Get a recording's transcript as speaker turns",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/owner": {
+      "patch": {
+        "operationId": "RecordingsController_changeOwner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordingTransferOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Move a recording to the caller, a team or the organization",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/uploads": {
+      "post": {
+        "description": "Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.",
+        "operationId": "RecordingUploadsController_createUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not an audio file"
+          },
+          "403": {
+            "description": "The recording is read-only"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "409": {
+            "description": "The recording has its audio"
+          },
+          "413": {
+            "description": "File exceeds the upload limit"
+          }
+        },
+        "summary": "Create the direct upload of a recording's audio",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/uploads/{uploadId}/complete": {
+      "post": {
+        "description": "Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.",
+        "operationId": "RecordingUploadsController_completeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The upload id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording or upload not found"
+          },
+          "409": {
+            "description": "The file was not fully transferred, or the recording has its audio"
+          },
+          "410": {
+            "description": "The upload expired"
+          }
+        },
+        "summary": "Complete the direct upload of a recording's audio",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/summary": {
+      "get": {
+        "operationId": "RecordingSummaryController_summary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found, or its summary is not generated"
+          }
+        },
+        "summary": "Get a recording's generated summary",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/summary/retry": {
+      "post": {
+        "description": "Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.",
+        "operationId": "RecordingSummaryController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The recording is read-only"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "409": {
+            "description": "The summary is generated, or the transcript is not ready"
+          }
+        },
+        "summary": "Try a failed summary again",
+        "tags": ["recordings"]
+      }
+    },
     "/super-admin/skill-templates": {
       "post": {
         "description": "Create a new skill template. Only accessible to super admins.",
@@ -13447,426 +13867,6 @@
         },
         "summary": "Delete an academy module",
         "tags": ["Super Admin Academy"]
-      }
-    },
-    "/recordings": {
-      "post": {
-        "operationId": "RecordingsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRecordingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Create a recording",
-        "tags": ["recordings"]
-      },
-      "get": {
-        "operationId": "RecordingsController_findAll",
-        "parameters": [
-          {
-            "name": "ownerType",
-            "required": true,
-            "in": "query",
-            "description": "personal lists the own recordings plus those of the user’s teams and organization",
-            "schema": {
-              "type": "string",
-              "enum": ["personal", "workspace"]
-            }
-          },
-          {
-            "name": "workspaceId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "List the recordings of the user, their teams and organization, or of a workspace",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}": {
-      "get": {
-        "operationId": "RecordingsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording not found"
-          }
-        },
-        "summary": "Get a recording",
-        "tags": ["recordings"]
-      },
-      "patch": {
-        "operationId": "RecordingsController_rename",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RenameRecordingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording not found"
-          }
-        },
-        "summary": "Rename a recording",
-        "tags": ["recordings"]
-      },
-      "delete": {
-        "operationId": "RecordingsController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          },
-          "404": {
-            "description": "Recording not found"
-          }
-        },
-        "summary": "Delete a recording",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/transcript": {
-      "get": {
-        "operationId": "RecordingsController_transcript",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingTranscriptResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording not found"
-          }
-        },
-        "summary": "Get a recording's transcript as speaker turns",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/owner": {
-      "patch": {
-        "operationId": "RecordingsController_changeOwner",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecordingTransferOwnerDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording not found"
-          }
-        },
-        "summary": "Move a recording to the caller, a team or the organization",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/uploads": {
-      "post": {
-        "description": "Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.",
-        "operationId": "RecordingUploadsController_createUpload",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the recording",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSourceUploadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Not an audio file"
-          },
-          "403": {
-            "description": "The recording is read-only"
-          },
-          "404": {
-            "description": "Recording not found"
-          },
-          "409": {
-            "description": "The recording has its audio"
-          },
-          "413": {
-            "description": "File exceeds the upload limit"
-          }
-        },
-        "summary": "Create the direct upload of a recording's audio",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/uploads/{uploadId}/complete": {
-      "post": {
-        "description": "Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.",
-        "operationId": "RecordingUploadsController_completeUpload",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the recording",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "uploadId",
-            "required": true,
-            "in": "path",
-            "description": "The upload id",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording or upload not found"
-          },
-          "409": {
-            "description": "The file was not fully transferred, or the recording has its audio"
-          },
-          "410": {
-            "description": "The upload expired"
-          }
-        },
-        "summary": "Complete the direct upload of a recording's audio",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/summary": {
-      "get": {
-        "operationId": "RecordingSummaryController_summary",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the recording",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingSummaryResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recording not found, or its summary is not generated"
-          }
-        },
-        "summary": "Get a recording's generated summary",
-        "tags": ["recordings"]
-      }
-    },
-    "/recordings/{id}/summary/retry": {
-      "post": {
-        "description": "Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.",
-        "operationId": "RecordingSummaryController_retry",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the recording",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecordingResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The recording is read-only"
-          },
-          "404": {
-            "description": "Recording not found"
-          },
-          "409": {
-            "description": "The summary is generated, or the transcript is not ready"
-          }
-        },
-        "summary": "Try a failed summary again",
-        "tags": ["recordings"]
       }
     },
     "/speech": {
@@ -23240,6 +23240,248 @@
           }
         }
       },
+      "CreateRecordingDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "workspace", "team", "org"]
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the recording",
+            "example": "Stadtratssitzung 12. November",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": ["ownerType", "name"]
+      },
+      "RecordingStatus": {
+        "type": "string",
+        "enum": ["uploading", "transcribing", "summarizing", "ready", "failed"],
+        "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed"
+      },
+      "RecordingSummaryState": {
+        "type": "string",
+        "enum": ["summarizing", "ready", "failed"]
+      },
+      "RecordingSummaryFailure": {
+        "type": "string",
+        "enum": [
+          "NO_SUMMARY_MODEL",
+          "CREDIT_BUDGET_EXCEEDED",
+          "CREDIT_LIMIT_EXCEEDED",
+          "TRANSCRIPT_TOO_LONG",
+          "TRANSCRIPT_EMPTY",
+          "PROVIDER_ERROR",
+          "SUMMARY_FAILED"
+        ],
+        "description": "Why the summary failed; only when the status is failed"
+      },
+      "RecordingSummaryStateDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryState"
+              }
+            ]
+          },
+          "failureCode": {
+            "description": "Why the summary failed; only when the status is failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryFailure"
+              }
+            ]
+          },
+          "modelName": {
+            "type": "string",
+            "description": "The model that generated the summary; only when the status is ready",
+            "example": "Mistral Large (Mistral)"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the summary was generated; only when the status is ready"
+          }
+        },
+        "required": ["status"]
+      },
+      "RecordingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Stadtratssitzung 12. November"
+          },
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "workspace", "team", "org"]
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning workspace of workspace recordings"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The owning team of team recordings"
+          },
+          "creatorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "The name of the user who created the recording; null once they are deleted"
+          },
+          "status": {
+            "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingStatus"
+              }
+            ]
+          },
+          "failureCode": {
+            "description": "Why the transcription failed; only when the status is failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
+          },
+          "summary": {
+            "description": "The summary, from the moment the transcript is ready",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryStateDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ownerType",
+          "creatorName",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RecordingListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingResponseDto"
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "RecordingTranscriptTurnDto": {
+        "type": "object",
+        "properties": {
+          "speakerId": {
+            "type": "string",
+            "description": "The speaker label the transcription provider assigned; absent when it named none",
+            "example": "speaker_0"
+          },
+          "speakerNumber": {
+            "type": "number",
+            "description": "Speakers numbered in order of first appearance",
+            "example": 1
+          },
+          "start": {
+            "type": "number",
+            "description": "Seconds from the start of the recording"
+          },
+          "end": {
+            "type": "number",
+            "description": "Seconds from the start of the recording"
+          },
+          "text": {
+            "type": "string",
+            "example": "Wir kommen zum Haushalt."
+          }
+        },
+        "required": ["start", "end", "text"]
+      },
+      "RecordingTranscriptResponseDto": {
+        "type": "object",
+        "properties": {
+          "turns": {
+            "description": "Empty until the recording is transcribed",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingTranscriptTurnDto"
+            }
+          }
+        },
+        "required": ["turns"]
+      },
+      "RenameRecordingDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name of the recording",
+            "example": "Stadtratssitzung 12. November",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "RecordingTransferOwnerDto": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": ["personal", "team", "org"]
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["ownerType"]
+      },
+      "RecordingSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The summary in Markdown",
+            "example": "## Thema\n\nHaushalt 2027"
+          }
+        },
+        "required": ["content"]
+      },
       "CreateSkillTemplateDto": {
         "type": "object",
         "properties": {
@@ -24131,6 +24373,61 @@
         },
         "required": ["id", "name", "url"]
       },
+      "SourceCitationRecordingPosition": {
+        "type": "string",
+        "enum": ["transcript", "summary"],
+        "description": "Whether the chunk is part of the transcript or the summary"
+      },
+      "SourceCitationRecordingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "position": {
+            "description": "Whether the chunk is part of the transcript or the summary",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceCitationRecordingPosition"
+              }
+            ]
+          },
+          "start": {
+            "type": "number",
+            "nullable": true,
+            "description": "Start of the transcript chunk, in seconds"
+          },
+          "end": {
+            "type": "number",
+            "nullable": true,
+            "description": "End of the transcript chunk, in seconds"
+          },
+          "speakerNumbers": {
+            "description": "Speakers of the transcript chunk, numbered as in the transcript",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "uploadedAt",
+          "position",
+          "start",
+          "end",
+          "speakerNumbers"
+        ]
+      },
       "SourceCitationResponseDto": {
         "type": "object",
         "properties": {
@@ -24139,9 +24436,19 @@
           },
           "source": {
             "$ref": "#/components/schemas/SourceCitationSourceResponseDto"
+          },
+          "recording": {
+            "nullable": true,
+            "description": "The recording whose transcript or summary is cited",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceCitationRecordingResponseDto"
+              }
+            ]
           }
         },
-        "required": ["chunk", "source"]
+        "required": ["chunk", "source", "recording"]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",
@@ -24931,248 +25238,6 @@
           }
         },
         "required": ["title", "loomUrl"]
-      },
-      "CreateRecordingDto": {
-        "type": "object",
-        "properties": {
-          "ownerType": {
-            "type": "string",
-            "enum": ["personal", "workspace", "team", "org"]
-          },
-          "workspaceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "teamId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the recording",
-            "example": "Stadtratssitzung 12. November",
-            "minLength": 1,
-            "maxLength": 255
-          }
-        },
-        "required": ["ownerType", "name"]
-      },
-      "RecordingStatus": {
-        "type": "string",
-        "enum": ["uploading", "transcribing", "summarizing", "ready", "failed"],
-        "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed"
-      },
-      "RecordingSummaryState": {
-        "type": "string",
-        "enum": ["summarizing", "ready", "failed"]
-      },
-      "RecordingSummaryFailure": {
-        "type": "string",
-        "enum": [
-          "NO_SUMMARY_MODEL",
-          "CREDIT_BUDGET_EXCEEDED",
-          "CREDIT_LIMIT_EXCEEDED",
-          "TRANSCRIPT_TOO_LONG",
-          "TRANSCRIPT_EMPTY",
-          "PROVIDER_ERROR",
-          "SUMMARY_FAILED"
-        ],
-        "description": "Why the summary failed; only when the status is failed"
-      },
-      "RecordingSummaryStateDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RecordingSummaryState"
-              }
-            ]
-          },
-          "failureCode": {
-            "description": "Why the summary failed; only when the status is failed",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RecordingSummaryFailure"
-              }
-            ]
-          },
-          "modelName": {
-            "type": "string",
-            "description": "The model that generated the summary; only when the status is ready",
-            "example": "Mistral Large (Mistral)"
-          },
-          "generatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When the summary was generated; only when the status is ready"
-          }
-        },
-        "required": ["status"]
-      },
-      "RecordingResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "example": "Stadtratssitzung 12. November"
-          },
-          "ownerType": {
-            "type": "string",
-            "enum": ["personal", "workspace", "team", "org"]
-          },
-          "workspaceId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The owning workspace of workspace recordings"
-          },
-          "teamId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The owning team of team recordings"
-          },
-          "creatorName": {
-            "type": "string",
-            "nullable": true,
-            "description": "The name of the user who created the recording; null once they are deleted"
-          },
-          "status": {
-            "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RecordingStatus"
-              }
-            ]
-          },
-          "failureCode": {
-            "description": "Why the transcription failed; only when the status is failed",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SourceProcessingErrorCode"
-              }
-            ]
-          },
-          "summary": {
-            "description": "The summary, from the moment the transcript is ready",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RecordingSummaryStateDto"
-              }
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "ownerType",
-          "creatorName",
-          "status",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "RecordingListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecordingResponseDto"
-            }
-          }
-        },
-        "required": ["data"]
-      },
-      "RecordingTranscriptTurnDto": {
-        "type": "object",
-        "properties": {
-          "speakerId": {
-            "type": "string",
-            "description": "The speaker label the transcription provider assigned; absent when it named none",
-            "example": "speaker_0"
-          },
-          "speakerNumber": {
-            "type": "number",
-            "description": "Speakers numbered in order of first appearance",
-            "example": 1
-          },
-          "start": {
-            "type": "number",
-            "description": "Seconds from the start of the recording"
-          },
-          "end": {
-            "type": "number",
-            "description": "Seconds from the start of the recording"
-          },
-          "text": {
-            "type": "string",
-            "example": "Wir kommen zum Haushalt."
-          }
-        },
-        "required": ["start", "end", "text"]
-      },
-      "RecordingTranscriptResponseDto": {
-        "type": "object",
-        "properties": {
-          "turns": {
-            "description": "Empty until the recording is transcribed",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecordingTranscriptTurnDto"
-            }
-          }
-        },
-        "required": ["turns"]
-      },
-      "RenameRecordingDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The new name of the recording",
-            "example": "Stadtratssitzung 12. November",
-            "minLength": 1,
-            "maxLength": 255
-          }
-        },
-        "required": ["name"]
-      },
-      "RecordingTransferOwnerDto": {
-        "type": "object",
-        "properties": {
-          "ownerType": {
-            "type": "string",
-            "enum": ["personal", "team", "org"]
-          },
-          "teamId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": ["ownerType"]
-      },
-      "RecordingSummaryResponseDto": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The summary in Markdown",
-            "example": "## Thema\n\nHaushalt 2027"
-          }
-        },
-        "required": ["content"]
       },
       "SynthesizeSpeechDto": {
         "type": "object",

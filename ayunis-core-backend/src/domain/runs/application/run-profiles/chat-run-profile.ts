@@ -12,6 +12,7 @@ import { FilesChartsMapCapability } from 'src/domain/runs/application/run-capabi
 import { ImageGenerationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/image-generation.capability';
 import { InternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
+import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
@@ -60,6 +61,7 @@ export class ChatRunProfile implements RunProfile {
     imageGeneration: ImageGenerationCapability,
     threadSources: ThreadSourcesCapability,
     knowledgeBases: KnowledgeBasesCapability,
+    recordings: RecordingsCapability,
     notificationContext: NotificationContextCapability,
     workspaceInstructions: WorkspaceInstructionsCapability,
     mcp: McpCapability,
@@ -82,6 +84,7 @@ export class ChatRunProfile implements RunProfile {
       imageGeneration,
       threadSources,
       knowledgeBases,
+      recordings,
       notificationContext,
       workspaceInstructions,
       mcp,

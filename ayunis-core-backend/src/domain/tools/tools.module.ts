@@ -22,6 +22,7 @@ import { McpIntegrationResourceHandler } from './application/handlers/mcp-integr
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
 import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
+import { RecordingSearchToolHandler } from './application/handlers/recording-search-tool.handler';
 import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
@@ -32,6 +33,7 @@ import { CreateSpreadsheetToolHandler } from './application/handlers/create-spre
 import { UpdateSpreadsheetToolHandler } from './application/handlers/update-spreadsheet-tool.handler';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { RecordingsModule } from 'src/domain/recordings/recordings.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
@@ -54,6 +56,7 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
     McpModule,
     SkillsModule,
     KnowledgeBasesModule,
+    RecordingsModule,
     SkillTemplatesModule,
     ArtifactsModule,
     UsageModule,
@@ -79,6 +82,7 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
     ActivateSkillToolHandler,
     KnowledgeQueryToolHandler,
     KnowledgeGetTextToolHandler,
+    RecordingSearchToolHandler,
     CreateDocumentToolHandler,
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,

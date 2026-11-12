@@ -17,6 +17,7 @@ import { SendMessageUseCase } from './application/use-cases/send-message/send-me
 import { GetThreadAiContextUseCase } from './application/use-cases/get-thread-ai-context/get-thread-ai-context.use-case';
 import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
 import { ThreadAiContextResponseMapper } from './presenters/http/mappers/thread-ai-context-response.mapper';
+import { SourceCitationResponseMapper } from './presenters/http/mappers/source-citation-response.mapper';
 import { RunSsePresenter } from './presenters/http/sse/run-sse.presenter';
 import { SendMessageRequestValidator } from './presenters/http/validation/send-message-request.validator';
 import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
@@ -48,6 +49,7 @@ import { FilesChartsMapCapability } from './application/run-capabilities/capabil
 import { ImageGenerationCapability } from './application/run-capabilities/capabilities/image-generation.capability';
 import { InternetCapability } from './application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from './application/run-capabilities/capabilities/knowledge-bases.capability';
+import { RecordingsCapability } from './application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from './application/run-capabilities/capabilities/legal-references.capability';
 import { MarketplaceCapability } from './application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
@@ -82,6 +84,7 @@ import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { RecordingsModule } from 'src/domain/recordings/recordings.module';
 import { RoutinesModule } from 'src/domain/routines/routines.module';
 import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
 import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
@@ -106,6 +109,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     LetterheadsModule,
     WorkspacesModule,
     KnowledgeBasesModule,
+    RecordingsModule,
     NotificationsModule,
     forwardRef(() => RoutinesModule), // Runs → Routines → Runs (circular)
   ],
@@ -132,6 +136,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     SendMessageUseCase,
     RunEventResponseMapper,
     ThreadAiContextResponseMapper,
+    SourceCitationResponseMapper,
     RunSsePresenter,
     SendMessageRequestValidator,
     ArtifactToolAssemblerService,
@@ -164,6 +169,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ImageGenerationCapability,
     InternetCapability,
     KnowledgeBasesCapability,
+    RecordingsCapability,
     LegalReferencesCapability,
     MarketplaceCapability,
     McpCapability,
