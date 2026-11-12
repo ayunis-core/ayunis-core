@@ -42,6 +42,10 @@ export default [
           .toBe(1);
         await page.reload();
       }
+      await page
+        .getByTestId('new-chat-unread-notifications-tab')
+        .and(page.locator('[data-type="routine"]'))
+        .click();
       await expect(page.getByTestId('new-chat-unread-notification').first()).toBeVisible();
       return page.getByTestId('new-chat-unread-notifications');
     },
@@ -51,7 +55,7 @@ export default [
         action: async ({ page }) => {
           await page
             .getByTestId('new-chat-unread-notifications-tab')
-            .and(page.locator('[data-type="routine"]'))
+            .and(page.locator('[data-type="routine_error"]'))
             .click();
           await page.getByTestId('new-chat-unread-notification').first().hover();
         },
