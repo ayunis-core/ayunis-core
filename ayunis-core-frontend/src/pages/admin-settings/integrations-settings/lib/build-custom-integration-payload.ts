@@ -1,8 +1,9 @@
 import type {
   CreateCustomIntegrationFormData,
   CustomConfigFieldFormData,
-} from '../model/types';
+} from '@/pages/admin-settings/integrations-settings/model/types';
 import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { buildInstructionsForCreate } from './integration-instructions';
 import {
   parseOAuthScopes,
   type McpOAuthClientInput,
@@ -43,6 +44,7 @@ export function buildCustomIntegrationPayload(
       ...(oauth ? { oauth } : {}),
     },
     ...buildOAuthClient(data),
+    ...buildInstructionsForCreate(data.instructions),
     orgConfigValues,
   };
 }

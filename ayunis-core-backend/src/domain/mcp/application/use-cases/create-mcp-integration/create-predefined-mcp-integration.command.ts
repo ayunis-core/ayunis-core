@@ -6,5 +6,6 @@ export class CreatePredefinedMcpIntegrationCommand {
     public readonly slug: PredefinedMcpIntegrationSlug,
     public readonly credentialFields: CredentialFieldValue[],
     public readonly returnsPii?: boolean,
+    public readonly instructions?: string | null,
   ) {}
 }

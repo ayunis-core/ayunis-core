@@ -29,8 +29,10 @@ import { Button } from '@ayunis/ui/components/button';
 import type {
   PredefinedConfig,
   CreatePredefinedIntegrationFormData,
-} from '../model/types';
-import { useCreatePredefinedIntegration } from '../api/useCreatePredefinedIntegration';
+} from '@/pages/admin-settings/integrations-settings/model/types';
+import { useCreatePredefinedIntegration } from '@/pages/admin-settings/integrations-settings/api/useCreatePredefinedIntegration';
+import { buildInstructionsForCreate } from '@/pages/admin-settings/integrations-settings/lib/integration-instructions';
+import { IntegrationInstructionsField } from './integration-instructions-field';
 import type { ConfigValueDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreatePredefinedDialogProps {
@@ -51,6 +53,7 @@ export function CreatePredefinedDialog({
     defaultValues: {
       slug: '',
       configValues: [],
+      instructions: '',
     },
   });
   const { createPredefinedIntegration, isCreating } =
@@ -103,6 +106,7 @@ export function CreatePredefinedDialog({
         name: value.name,
         value: value.value,
       })),
+      ...buildInstructionsForCreate(data.instructions),
     };
 
     createPredefinedIntegration(payload);
@@ -229,6 +233,10 @@ export function CreatePredefinedDialog({
                   />
                 ))}
               </div>
+            )}
+
+            {selectedConfig && (
+              <IntegrationInstructionsField disabled={isCreating} />
             )}
 
             {selectedConfig && credentialFields.length === 0 && (

@@ -11,6 +11,7 @@ describe('buildCustomIntegrationPayload', () => {
       oauthScopes: '',
       oauthClientId: '',
       oauthClientSecret: '',
+      instructions: '',
       fields: [
         {
           key: 'tenant',
@@ -76,6 +77,7 @@ describe('buildCustomIntegrationPayload', () => {
       oauthScopes: ' documents:read, documents:write documents:read ',
       oauthClientId: ' client-id ',
       oauthClientSecret: ' client-secret ',
+      instructions: '',
       fields: [],
     });
 
@@ -97,5 +99,28 @@ describe('buildCustomIntegrationPayload', () => {
       },
       orgConfigValues: {},
     });
+  });
+
+  it.each([
+    [
+      'submits trimmed instructions',
+      '  Search by file number first. ',
+      'Search by file number first.',
+    ],
+    ['omits blank instructions', '   ', undefined],
+  ])('%s', (_, instructions, expected) => {
+    const payload = buildCustomIntegrationPayload({
+      name: 'Records',
+      serverUrl: 'https://records.example.com/mcp',
+      authType: 'CUSTOM',
+      oauthClientRegistration: 'automatic',
+      oauthScopes: '',
+      oauthClientId: '',
+      oauthClientSecret: '',
+      instructions,
+      fields: [],
+    });
+
+    expect(payload.instructions).toBe(expected);
   });
 });

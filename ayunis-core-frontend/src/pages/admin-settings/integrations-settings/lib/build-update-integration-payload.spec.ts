@@ -60,3 +60,59 @@ describe('buildUpdatePayload server URL', () => {
     ).toEqual({});
   });
 });
+
+describe('buildUpdatePayload instructions', () => {
+  const withInstructions = {
+    ...marketplace,
+    instructions: 'Search by surname first.',
+  } as McpIntegration;
+
+  it('omits unchanged instructions so a rename cannot overwrite them', () => {
+    expect(
+      payloadFor(withInstructions, {
+        name: 'Projects',
+        serverUrl: 'https://projekte.stadt.de/mcp',
+        instructions: 'Search by surname first.',
+      }),
+    ).toEqual({ name: 'Projects' });
+  });
+
+  it('sends changed instructions trimmed', () => {
+    expect(
+      payloadFor(withInstructions, {
+        name: 'OpenProject',
+        serverUrl: 'https://projekte.stadt.de/mcp',
+        instructions: '  Always cite the work package number. ',
+      }),
+    ).toEqual({ instructions: 'Always cite the work package number.' });
+  });
+
+  it('sends null when the admin empties the field, so the stored text is removed', () => {
+    expect(
+      payloadFor(withInstructions, {
+        name: 'OpenProject',
+        serverUrl: 'https://projekte.stadt.de/mcp',
+        instructions: '   ',
+      }),
+    ).toEqual({ instructions: null });
+  });
+
+  it('sends instructions for an integration without a config schema', () => {
+    expect(
+      buildUpdatePayload({
+        data: { name: 'Notion', instructions: 'Search before creating pages.' },
+        integration: {
+          id: '33333333-3333-3333-3333-333333333333',
+          name: 'Notion',
+          type: 'predefined',
+          authMethod: 'NO_AUTH',
+        } as unknown as McpIntegration,
+        isSchemaConfigured: false,
+        editableFields: [],
+        configFormValues: {},
+        currentOrgValues: {},
+        hasStaticOAuthClient: false,
+      }),
+    ).toEqual({ instructions: 'Search before creating pages.' });
+  });
+});

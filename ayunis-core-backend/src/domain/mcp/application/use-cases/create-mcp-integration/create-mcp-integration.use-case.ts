@@ -101,6 +101,7 @@ export class CreateMcpIntegrationUseCase {
         serverUrl: config.serverUrl,
         auth: await this.buildPredefinedAuth(command, config),
         returnsPii: command.returnsPii,
+        instructions: command.instructions,
       });
 
       return await this.saveAndValidate(integration);
@@ -215,6 +216,7 @@ export class CreateMcpIntegrationUseCase {
         configSchema: command.configSchema,
         orgConfigValues: encryptedValues,
         returnsPii: command.returnsPii,
+        instructions: command.instructions,
       });
 
       this.oauthClientConfiguration.validate(integration, command.oauthClient);

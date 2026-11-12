@@ -175,6 +175,11 @@
       "updating": "Wird aktualisiert...",
       "update": "Aktualisieren"
     },
+    "instructions": {
+      "label": "Anweisungen für den Assistenten",
+      "placeholder": "z. B. Zuerst nach dem Aktenzeichen suchen. Immer den Dokumenttitel nennen.",
+      "description": "Wird jedem Chat mitgegeben, in dem diese Integration aktiv ist. Leer lassen, wenn keine nötig sind."
+    },
     "serverUrlChange": {
       "title": "Alle müssen sich neu anmelden",
       "description": "Wenn Sie die Server-URL ändern, werden alle Nutzenden dieser Integration abgemeldet. Jede Person muss ihr Konto erneut verbinden.",
