@@ -30,9 +30,10 @@ export function RecordingTranscriptCard({
 }: Readonly<{ recording: RecordingResponseDto; canManage: boolean }>) {
   const { t } = useTranslation('recordings');
   const { status } = recording;
+  const isTranscribed = status === 'summarizing' || status === 'ready';
   const { turns, isLoading } = useRecordingTranscript(
     recording.id,
-    status === 'transcribed',
+    isTranscribed,
   );
 
   return (
@@ -74,7 +75,7 @@ export function RecordingTranscriptCard({
             </AlertDescription>
           </Alert>
         ) : null}
-        {status === 'transcribed' && isLoading ? (
+        {isTranscribed && isLoading ? (
           <Loader2 className="size-4 animate-spin text-muted-foreground" />
         ) : null}
         {turns.length > 0 ? <TranscriptTurns turns={turns} /> : null}

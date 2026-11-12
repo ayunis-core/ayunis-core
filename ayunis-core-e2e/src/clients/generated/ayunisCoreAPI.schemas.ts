@@ -6064,7 +6064,7 @@ export interface CreateRecordingDto {
 }
 
 /**
- * uploading until the audio is stored, then transcribing, transcribed or failed
+ * uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed
  */
 export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatus];
 
@@ -6072,9 +6072,45 @@ export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatu
 export const RecordingStatus = {
   uploading: 'uploading',
   transcribing: 'transcribing',
-  transcribed: 'transcribed',
+  summarizing: 'summarizing',
+  ready: 'ready',
   failed: 'failed',
 } as const;
+
+export type RecordingSummaryState = typeof RecordingSummaryState[keyof typeof RecordingSummaryState];
+
+
+export const RecordingSummaryState = {
+  summarizing: 'summarizing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
+ * Why the summary failed; only when the status is failed
+ */
+export type RecordingSummaryFailure = typeof RecordingSummaryFailure[keyof typeof RecordingSummaryFailure];
+
+
+export const RecordingSummaryFailure = {
+  NO_SUMMARY_MODEL: 'NO_SUMMARY_MODEL',
+  CREDIT_BUDGET_EXCEEDED: 'CREDIT_BUDGET_EXCEEDED',
+  CREDIT_LIMIT_EXCEEDED: 'CREDIT_LIMIT_EXCEEDED',
+  TRANSCRIPT_TOO_LONG: 'TRANSCRIPT_TOO_LONG',
+  TRANSCRIPT_EMPTY: 'TRANSCRIPT_EMPTY',
+  PROVIDER_ERROR: 'PROVIDER_ERROR',
+  SUMMARY_FAILED: 'SUMMARY_FAILED',
+} as const;
+
+export interface RecordingSummaryStateDto {
+  status: RecordingSummaryState;
+  /** Why the summary failed; only when the status is failed */
+  failureCode?: RecordingSummaryFailure;
+  /** The model that generated the summary; only when the status is ready */
+  modelName?: string;
+  /** When the summary was generated; only when the status is ready */
+  generatedAt?: string;
+}
 
 export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
 
@@ -6099,10 +6135,12 @@ export interface RecordingResponseDto {
      * @nullable
      */
   creatorName: string | null;
-  /** uploading until the audio is stored, then transcribing, transcribed or failed */
+  /** uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed */
   status: RecordingStatus;
   /** Why the transcription failed; only when the status is failed */
   failureCode?: SourceProcessingErrorCode;
+  /** The summary, from the moment the transcript is ready */
+  summary?: RecordingSummaryStateDto;
   createdAt: string;
   updatedAt: string;
 }
@@ -6149,6 +6187,11 @@ export const RecordingTransferOwnerDtoOwnerType = {
 export interface RecordingTransferOwnerDto {
   ownerType: RecordingTransferOwnerDtoOwnerType;
   teamId?: string;
+}
+
+export interface RecordingSummaryResponseDto {
+  /** The summary in Markdown */
+  content: string;
 }
 
 /**

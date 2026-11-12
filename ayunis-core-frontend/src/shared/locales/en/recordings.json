@@ -80,13 +80,34 @@
       "notFound": "The recording no longer exists or you have lost access.",
       "noPermission": "You are not allowed to rename this recording."
     },
+    "summary": {
+      "title": "Summary",
+      "description": "The minutes of the meeting, generated from the transcript.",
+      "generatedWith": "Generated with {{model}} on {{date}}",
+      "summarizing": "The summary is being generated. This can take a few minutes.",
+      "retry": "Try again",
+      "retryError": "The summary could not be restarted. Please try again.",
+      "retryNotFound": "The recording no longer exists or you have lost access.",
+      "retryNotRetryable": "The summary is already being generated or is done.",
+      "retryNoPermission": "You are not allowed to manage this recording.",
+      "failure": {
+        "noModel": "The summary could not be generated: no language model is available for it. An admin can choose one in the model settings.",
+        "creditBudget": "The summary could not be generated: the organization's credits for this month are used up.",
+        "creditLimit": "The summary could not be generated: the monthly credit limit is reached.",
+        "tooLong": "The summary could not be generated: the transcript is too long for the summary model.",
+        "empty": "The summary could not be generated: the recording contains no speech.",
+        "unavailable": "The summary could not be generated: the model provider is not available.",
+        "failed": "The summary could not be generated."
+      }
+    },
     "transcript": {
       "title": "Transcript",
       "description": "What was said, by speaker. Speaker labels come from the transcription and are not names.",
       "status": {
         "uploading": "Uploading",
         "transcribing": "Transcribing",
-        "transcribed": "Transcribed",
+        "summarizing": "Summarizing",
+        "ready": "Ready",
         "failed": "Failed"
       },
       "transcribing": "The recording is being transcribed. This can take a few minutes.",

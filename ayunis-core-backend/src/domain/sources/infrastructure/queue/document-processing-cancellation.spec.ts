@@ -90,6 +90,7 @@ async function interruptedDelivery(
     {} as never,
     {} as never,
     { tempDirectory: undefined } as never,
+    {} as never,
   );
   await consumer.process({
     id: 'overlapping-delivery',

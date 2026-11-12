@@ -80,7 +80,7 @@ test('a team recording is managed by permitted members, read-only for other memb
     const recordingId = new URL(adminPage.url()).pathname.split('/').pop()!;
     await expect(adminPage.getByTestId('recording-status')).toHaveAttribute(
       'data-status',
-      'transcribed',
+      'ready',
       { timeout: 60_000 },
     );
 
@@ -133,7 +133,7 @@ test('a team recording is managed by permitted members, read-only for other memb
     // It reads the status and the transcript, but cannot upload audio.
     await expect(memberPage.getByTestId('recording-status')).toHaveAttribute(
       'data-status',
-      'transcribed',
+      'ready',
     );
     await expect(
       memberPage.getByTestId('recording-transcript-turn'),

@@ -13794,6 +13794,81 @@
         "tags": ["recordings"]
       }
     },
+    "/recordings/{id}/summary": {
+      "get": {
+        "operationId": "RecordingSummaryController_summary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found, or its summary is not generated"
+          }
+        },
+        "summary": "Get a recording's generated summary",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/summary/retry": {
+      "post": {
+        "description": "Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.",
+        "operationId": "RecordingSummaryController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The recording is read-only"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "409": {
+            "description": "The summary is generated, or the transcript is not ready"
+          }
+        },
+        "summary": "Try a failed summary again",
+        "tags": ["recordings"]
+      }
+    },
     "/speech": {
       "post": {
         "description": "Streams the text as MP3 speech while it is generated. The voice matches the detected language of the text, or the UI language when the text is too short or its language has no voice.",
@@ -24884,8 +24959,56 @@
       },
       "RecordingStatus": {
         "type": "string",
-        "enum": ["uploading", "transcribing", "transcribed", "failed"],
-        "description": "uploading until the audio is stored, then transcribing, transcribed or failed"
+        "enum": ["uploading", "transcribing", "summarizing", "ready", "failed"],
+        "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed"
+      },
+      "RecordingSummaryState": {
+        "type": "string",
+        "enum": ["summarizing", "ready", "failed"]
+      },
+      "RecordingSummaryFailure": {
+        "type": "string",
+        "enum": [
+          "NO_SUMMARY_MODEL",
+          "CREDIT_BUDGET_EXCEEDED",
+          "CREDIT_LIMIT_EXCEEDED",
+          "TRANSCRIPT_TOO_LONG",
+          "TRANSCRIPT_EMPTY",
+          "PROVIDER_ERROR",
+          "SUMMARY_FAILED"
+        ],
+        "description": "Why the summary failed; only when the status is failed"
+      },
+      "RecordingSummaryStateDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryState"
+              }
+            ]
+          },
+          "failureCode": {
+            "description": "Why the summary failed; only when the status is failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryFailure"
+              }
+            ]
+          },
+          "modelName": {
+            "type": "string",
+            "description": "The model that generated the summary; only when the status is ready",
+            "example": "Mistral Large (Mistral)"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the summary was generated; only when the status is ready"
+          }
+        },
+        "required": ["status"]
       },
       "RecordingResponseDto": {
         "type": "object",
@@ -24918,7 +25041,7 @@
             "description": "The name of the user who created the recording; null once they are deleted"
           },
           "status": {
-            "description": "uploading until the audio is stored, then transcribing, transcribed or failed",
+            "description": "uploading until the audio is stored, then transcribing, summarizing once the transcript is ready, and ready when the summary is done (generated or failed); failed when the transcription failed",
             "allOf": [
               {
                 "$ref": "#/components/schemas/RecordingStatus"
@@ -24930,6 +25053,14 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
+          },
+          "summary": {
+            "description": "The summary, from the moment the transcript is ready",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingSummaryStateDto"
               }
             ]
           },
@@ -25031,6 +25162,17 @@
           }
         },
         "required": ["ownerType"]
+      },
+      "RecordingSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The summary in Markdown",
+            "example": "## Thema\n\nHaushalt 2027"
+          }
+        },
+        "required": ["content"]
       },
       "SynthesizeSpeechDto": {
         "type": "object",

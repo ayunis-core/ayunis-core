@@ -1,23 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { RecordingRepository } from 'src/domain/recordings/application/ports/recording.repository';
+import { RecordingSummaryRepository } from 'src/domain/recordings/application/ports/recording-summary.repository';
 import type { RecordingDetails } from 'src/domain/recordings/application/models/recording-details';
 import type { Recording } from 'src/domain/recordings/domain/recording';
 import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 
-/** Adds the creator's name and the uploaded audio to recordings, in one lookup each. */
+/** Adds the creator's name, the uploaded audio and the summary to recordings, in one lookup each. */
 @Injectable()
 export class RecordingDetailsService {
   constructor(
     private readonly repository: RecordingRepository,
+    private readonly summaries: RecordingSummaryRepository,
     private readonly findUsersByIds: FindUsersByIdsUseCase,
   ) {}
 
   async describe(recordings: Recording[]): Promise<RecordingDetails[]> {
-    const [names, audio] = await Promise.all([
+    const ids = recordings.map(({ id }) => id);
+    const [names, audio, summaries] = await Promise.all([
       this.creatorNames(recordings),
-      this.repository.findAudio(recordings.map(({ id }) => id)),
+      this.repository.findAudio(ids),
+      this.summaries.findByRecordingIds(ids),
     ]);
     return recordings.map((recording) => ({
       recording,
@@ -25,6 +29,7 @@ export class RecordingDetailsService {
         ? (names.get(recording.createdByUserId) ?? null)
         : null,
       audio: audio.get(recording.id) ?? null,
+      summary: summaries.get(recording.id) ?? null,
     }));
   }
 

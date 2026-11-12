@@ -46,7 +46,7 @@ test('a recording created with its audio is transcribed into speaker turns that 
 
   await expect(page.getByTestId('recording-status')).toHaveAttribute(
     'data-status',
-    'transcribed',
+    'ready',
     { timeout: 60_000 },
   );
   const turns = page.getByTestId('recording-transcript-turn');
@@ -83,7 +83,8 @@ test('a recording created with its audio is transcribed into speaker turns that 
       end: 3.9,
     },
   ]);
-  // Every search index entry leads back to a time range of the recording.
+  // Every search index entry of the transcript leads back to a time range of
+  // the recording.
   expect(audio?.indexEntries).toBeGreaterThan(0);
   expect(audio?.chunkRanges).toEqual([{ start: 0.2, end: 3.9 }]);
 
@@ -170,9 +171,10 @@ test('deleting a recording while it is transcribed removes its original from sto
     expect(sourceId).not.toBeNull();
     expect(storageKey).toBeTruthy();
     expect(await objectExists(storageKey!)).toBe(true);
-    expect(await getRecording(api, recording.id)).toMatchObject({
-      status: 'transcribing',
-    });
+    const transcribing = await getRecording(api, recording.id);
+    expect(transcribing.status).toBe('transcribing');
+    // Its summary waits for the transcript and is not shown before it.
+    expect(transcribing.summary).toBeUndefined();
 
     expect(
       (await requestRecordingDeletion(api, recording.id)).status(),

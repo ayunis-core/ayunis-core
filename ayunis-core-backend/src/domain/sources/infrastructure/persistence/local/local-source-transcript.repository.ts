@@ -4,7 +4,13 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { randomUUID, type UUID } from 'crypto';
 import { Repository, type EntityManager } from 'typeorm';
-import { SourceTranscriptRepository } from 'src/domain/sources/application/ports/source-transcript.repository';
+import {
+  SourceTranscriptRepository,
+  type SummaryChunksOutcome,
+} from 'src/domain/sources/application/ports/source-transcript.repository';
+import { TRANSCRIPT_SUMMARY_CHUNK_KIND } from 'src/domain/sources/application/util/transcript-chunks';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { TranscriptSegment } from 'src/domain/transcriptions/domain/recording-transcript';
 import { SourceTranscriptSegmentRecord } from './schema/source-transcript-segment.record';
 
@@ -60,5 +66,35 @@ export class LocalSourceTranscriptRepository extends SourceTranscriptRepository 
       end: record.endSeconds,
       ...(record.speaker !== null && { speakerId: record.speaker }),
     }));
+  }
+
+  async addSummaryChunks(
+    sourceId: UUID,
+    chunks: TextSourceContentChunk[],
+  ): Promise<SummaryChunksOutcome> {
+    const { manager } = this.repository;
+    const ready: unknown[] = await manager.query(
+      'SELECT 1 FROM sources WHERE id = $1 AND status = $2 FOR UPDATE',
+      [sourceId, SourceStatus.READY],
+    );
+    if (ready.length === 0) return 'source_gone';
+    const summarized: unknown[] = await manager.query(
+      `SELECT 1 FROM source_content_chunks
+       WHERE "sourceId" = $1 AND meta->>'kind' = $2 LIMIT 1`,
+      [sourceId, TRANSCRIPT_SUMMARY_CHUNK_KIND],
+    );
+    if (summarized.length > 0) return 'already_added';
+    await manager.query(
+      `INSERT INTO source_content_chunks (id, content, meta, "sourceId")
+       SELECT id, content, meta, $4
+       FROM unnest($1::varchar[], $2::text[], $3::jsonb[]) AS chunk(id, content, meta)`,
+      [
+        chunks.map(({ id }) => id),
+        chunks.map(({ content }) => content),
+        chunks.map(({ meta }) => JSON.stringify(meta)),
+        sourceId,
+      ],
+    );
+    return 'added';
   }
 }

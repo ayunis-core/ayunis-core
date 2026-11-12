@@ -422,9 +422,11 @@ jobs:
           PORT: 3002
           APP_ENVIRONMENT: cloud
           FEATURE_EXTERNAL_SUBSCRIPTIONS_ENABLED: 'true'
-          # Keeps this instance's routine worker stopped, so Run now jobs from
-          # the main backend are never executed under cloud subscription rules.
+          # Keeps this instance's routine and recording summary workers
+          # stopped, so jobs from the main backend are never executed under
+          # cloud subscription rules.
           FEATURE_ROUTINES_ENABLED: 'false'
+          FEATURE_RECORDINGS_ENABLED: 'false'
           CORE_CONNECT_SERVICE_TOKEN: e2e-connect-service-token
         run: |
           nohup node dist/src/main > backend-external-subscriptions.log 2>&1 &

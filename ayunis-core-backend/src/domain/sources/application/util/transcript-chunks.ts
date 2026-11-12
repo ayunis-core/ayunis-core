@@ -8,6 +8,16 @@ import {
 /** Same size as the document splitter's chunks; a longer single turn stays whole. */
 const MAX_CHUNK_CHARACTERS = 2000;
 
+/**
+ * Marks the chunks of a transcript's summary, which are indexed under the
+ * same source as its transcript chunks; those carry a time range instead.
+ */
+export const TRANSCRIPT_SUMMARY_CHUNK_KIND = 'summary';
+
+export type TranscriptSummaryChunkMeta = {
+  kind: typeof TRANSCRIPT_SUMMARY_CHUNK_KIND;
+};
+
 /** Where a transcript chunk lies in the recording, kept in the chunk's meta. */
 export interface TranscriptChunkMeta {
   fileName: string;

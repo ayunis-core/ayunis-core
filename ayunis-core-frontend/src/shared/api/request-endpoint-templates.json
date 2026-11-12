@@ -135,6 +135,8 @@
   "/recordings",
   "/recordings/{id}",
   "/recordings/{id}/owner",
+  "/recordings/{id}/summary",
+  "/recordings/{id}/summary/retry",
   "/recordings/{id}/transcript",
   "/recordings/{id}/uploads",
   "/recordings/{id}/uploads/{uploadId}/complete",

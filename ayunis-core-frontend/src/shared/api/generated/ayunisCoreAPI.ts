@@ -192,6 +192,7 @@ import type {
   RecordModuleHeartbeatRequestDto,
   RecordingListResponseDto,
   RecordingResponseDto,
+  RecordingSummaryResponseDto,
   RecordingTranscriptResponseDto,
   RecordingTransferOwnerDto,
   RecordingsControllerFindAllParams,
@@ -28874,6 +28875,166 @@ export const useRecordingUploadsControllerCompleteUpload = <TError = void,
         TContext
       > => {
       return useMutation(getRecordingUploadsControllerCompleteUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a recording's generated summary
+ */
+export const recordingSummaryControllerSummary = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingSummaryResponseDto>(
+      {url: `/recordings/${id}/summary`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryControllerSummaryQueryKey = (id: string,) => {
+    return [
+    `/recordings/${id}/summary`
+    ] as const;
+    }
+
+
+export const getRecordingSummaryControllerSummaryQueryOptions = <TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRecordingSummaryControllerSummaryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>> = ({ signal }) => recordingSummaryControllerSummary(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RecordingSummaryControllerSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>>
+export type RecordingSummaryControllerSummaryQueryError = void
+
+
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>,
+          TError,
+          Awaited<ReturnType<typeof recordingSummaryControllerSummary>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a recording's generated summary
+ */
+
+export function useRecordingSummaryControllerSummary<TData = Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recordingSummaryControllerSummary>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRecordingSummaryControllerSummaryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Queues a new summary run, billed to the caller. While a run is queued or running, nothing more is queued.
+ * @summary Try a failed summary again
+ */
+export const recordingSummaryControllerRetry = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RecordingResponseDto>(
+      {url: `/recordings/${id}/summary/retry`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRecordingSummaryControllerRetryMutationKey = () => ['recordingSummaryControllerRetry'] as const;
+
+export const getRecordingSummaryControllerRetryMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext> => {
+
+const mutationKey = getRecordingSummaryControllerRetryMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, RecordingSummaryControllerRetryMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  recordingSummaryControllerRetry(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordingSummaryControllerRetryMutationResult = NonNullable<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>>
+
+    export type RecordingSummaryControllerRetryMutationError = void
+    export type RecordingSummaryControllerRetryMutationVariables = {id: string}
+
+    /**
+ * @summary Try a failed summary again
+ */
+export const useRecordingSummaryControllerRetry = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordingSummaryControllerRetry>>, TError,RecordingSummaryControllerRetryMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordingSummaryControllerRetry>>,
+        TError,
+        RecordingSummaryControllerRetryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordingSummaryControllerRetryMutationOptions(options), queryClient);
     }
 
 /**

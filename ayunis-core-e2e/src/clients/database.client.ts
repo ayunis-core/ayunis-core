@@ -216,6 +216,8 @@ export interface RecordingAudioRows {
   indexEntries: number;
   /** Time ranges of the transcript chunks the index entries point at. */
   chunkRanges: { start: number; end: number }[];
+  /** Search index entries of the recording's summary, kept under the same source. */
+  summaryIndexEntries: number;
 }
 
 /** What the database keeps of a recording's audio; null once it is gone. */
@@ -241,17 +243,24 @@ export async function findRecordingAudioRows(
        FROM source_transcript_segments WHERE "sourceId" = $1 ORDER BY position`,
       [audio.id],
     );
-    const chunks = await client.query<{ start: number; end: number }>(
-      `SELECT (c.meta->>'start')::float AS start, (c.meta->>'end')::float AS "end"
+    const chunks = await client.query<{
+      start: number;
+      end: number;
+      summary: boolean;
+    }>(
+      `SELECT (c.meta->>'start')::float AS start, (c.meta->>'end')::float AS "end",
+         c.meta->>'kind' IS NOT DISTINCT FROM 'summary' AS summary
        FROM parent_chunks p JOIN source_content_chunks c ON c.id = p."relatedChunkId"
        WHERE p."relatedDocumentId" = $1`,
       [audio.id],
     );
+    const transcriptChunks = chunks.rows.filter(({ summary }) => !summary);
     return {
       storageKey: audio.storageKey,
       segments: segments.rows,
-      indexEntries: chunks.rowCount ?? 0,
-      chunkRanges: chunks.rows,
+      indexEntries: transcriptChunks.length,
+      chunkRanges: transcriptChunks.map(({ start, end }) => ({ start, end })),
+      summaryIndexEntries: chunks.rows.length - transcriptChunks.length,
     };
   } finally {
     await client.end();
@@ -286,6 +295,59 @@ export async function findRecordingAudioSourceId(
       [recordingId],
     );
     return result.rows[0]?.id ?? null;
+  } finally {
+    await client.end();
+  }
+}
+
+/** Where the summary run of a recording is (`pending`, `running`, …); null without one. */
+export async function findRecordingSummaryRunStatus(
+  recordingId: string,
+): Promise<string | null> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ status: string }>(
+      'SELECT status FROM recording_summaries WHERE "recordingId" = $1',
+      [recordingId],
+    );
+    return result.rows[0]?.status ?? null;
+  } finally {
+    await client.end();
+  }
+}
+
+/** Summary rows, summary chunks and index entries left of a recording and its audio. */
+export async function countRecordingSummaryRows(
+  recordingId: string,
+  audioSourceId: string,
+): Promise<number> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ count: string }>(
+      `SELECT (SELECT COUNT(*) FROM recording_summaries WHERE "recordingId" = $1)
+        + (SELECT COUNT(*) FROM source_content_chunks
+           WHERE "sourceId" = $2 AND meta->>'kind' = 'summary')
+        + (SELECT COUNT(*) FROM parent_chunks WHERE "relatedDocumentId" = $2) AS count`,
+      [recordingId, audioSourceId],
+    );
+    return Number(result.rows[0]?.count ?? 0);
+  } finally {
+    await client.end();
+  }
+}
+
+/** The catalogue models of the usage recorded for the user, oldest first. */
+export async function findUsageModelIds(userId: string): Promise<string[]> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ modelId: string }>(
+      'SELECT "modelId" FROM usage WHERE "userId" = $1 ORDER BY "createdAt"',
+      [userId],
+    );
+    return result.rows.map(({ modelId }) => modelId);
   } finally {
     await client.end();
   }
