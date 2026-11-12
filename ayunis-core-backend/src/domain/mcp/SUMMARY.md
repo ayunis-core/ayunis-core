@@ -3,7 +3,7 @@ Model Context Protocol server connections and capability discovery
 
 MCP integrations connect external tool servers to the platform using the Model Context Protocol. Organizations configure predefined, custom, or marketplace integrations with authentication, then discover available tools, resources, and prompts.
 
-The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined, custom, and marketplace subtypes), `SchemaConfiguredMcpIntegration` (shared org/user configuration schema behavior for custom and marketplace integrations), `McpIntegrationUserConfig` (per-user configuration values), and the per-user OAuth entities `McpOAuthClientRegistration`, `McpOAuthUserToken`, and `McpOAuthPendingSession`. `McpTool`, `McpResource`, and `McpPrompt` are ephemeral entities fetched from remote servers, not persisted locally. Predefined integrations use the authentication entity hierarchy; custom and marketplace integrations map typed organization/user config fields to HTTP headers. OAuth schemas use `authType: OAUTH` plus an `oauth` configuration, normalize scopes, and reserve the Authorization header for OAuth bearer tokens. Migration `1785752072933-BackfillLegacyCustomMcpIntegrations` converts supported legacy custom authentication rows into the schema-configured representation; unsupported or malformed legacy rows fail the migration instead of being silently changed.
+The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined, custom, and marketplace subtypes), `SchemaConfiguredMcpIntegration` (shared org/user configuration schema behavior for custom and marketplace integrations), `McpIntegrationUserConfig` (per-user configuration values), and the per-user OAuth entities `McpOAuthClientRegistration`, `McpOAuthUserToken`, and `McpOAuthPendingSession`, plus `McpToolAllowance` (a user's "always allow" for one upstream MCP tool name of one integration; unique per user, integration and tool name, deleted with the user or the integration). `McpTool`, `McpResource`, and `McpPrompt` are ephemeral entities fetched from remote servers, not persisted locally. Predefined integrations use the authentication entity hierarchy; custom and marketplace integrations map typed organization/user config fields to HTTP headers. OAuth schemas use `authType: OAUTH` plus an `oauth` configuration, normalize scopes, and reserve the Authorization header for OAuth bearer tokens. Migration `1785752072933-BackfillLegacyCustomMcpIntegrations` converts supported legacy custom authentication rows into the schema-configured representation; unsupported or malformed legacy rows fail the migration instead of being silently changed.
 
 **Use Cases:**
 
@@ -23,6 +23,10 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
 - `SetUserMcpConfigUseCase` — Saves per-user config values for a schema-configured integration
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
+- `AllowMcpToolUseCase` — Always allows an upstream MCP tool of an integration of the current org for the current user; allowing an already-allowed tool changes nothing (exported)
+- `FindMcpToolAllowancesUseCase` — Loads the current user's allowances for a set of integrations in one query (exported)
+- `ListMcpToolAllowancesUseCase` — Lists the current user's allowances with integration name and logo
+- `RemoveMcpToolAllowanceUseCase` — Removes one of the current user's allowances; another user's or an unknown entry is `MCP_TOOL_ALLOWANCE_NOT_FOUND` (404)
 
 **Services:**
 
@@ -40,6 +44,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
 - `McpIntegrationUserConfigRepository` — Persistence port for per-user config values
+- `McpToolAllowanceRepositoryPort` — Per-user tool allowances; inserts ignore an existing (user, integration, tool name) entry, and reads and deletes are scoped to the user
 - `McpClientPort` — Abstract port for MCP server communication
 - `McpCredentialEncryptionPort` — Abstract port for credential encryption/decryption
 - `McpOAuthClientRegistrationRepositoryPort` — Issuer-bound dynamic registrations and one unbound static registration per integration
@@ -67,6 +72,9 @@ The MCP module manages connections to external Model Context Protocol servers at
   - `POST /mcp-integrations/:id/oauth/authorize` — Start per-user OAuth authorization
   - `POST /mcp-integrations/oauth/complete` — Complete a pending OAuth authorization
   - `DELETE /mcp-integrations/:id/oauth/authorization` — Revoke and remove the current user's OAuth grant
+- `McpToolAllowancesController` — The current user's always-allowed MCP tools (no create endpoint; entries are added by confirming a tool call in the chat):
+  - `GET /mcp-tool-allowances` — List the current user's always-allowed tools
+  - `DELETE /mcp-tool-allowances/:id` — Remove one of them (404 for another user's or an unknown entry)
 - `McpOAuthMetadataController` — Public OAuth client metadata:
   - `GET /mcp-integrations/oauth/client-metadata.json` — Client ID Metadata Document derived from public URLs
 

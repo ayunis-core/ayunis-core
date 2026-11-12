@@ -8475,6 +8475,55 @@
         "tags": ["mcp-integrations"]
       }
     },
+    "/mcp-tool-allowances": {
+      "get": {
+        "operationId": "McpToolAllowancesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpToolAllowanceResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the current user's always-allowed MCP tools",
+        "tags": ["mcp-tool-allowances"]
+      }
+    },
+    "/mcp-tool-allowances/{id}": {
+      "delete": {
+        "operationId": "McpToolAllowancesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "Always-allowed tool not found"
+          }
+        },
+        "summary": "Remove one of the current user's always-allowed MCP tools",
+        "tags": ["mcp-tool-allowances"]
+      }
+    },
     "/marketplace/config": {
       "get": {
         "operationId": "MarketplaceController_getConfig",
@@ -20706,6 +20755,41 @@
           "response_types",
           "token_endpoint_auth_method",
           "application_type"
+        ]
+      },
+      "McpToolAllowanceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "integrationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "integrationName": {
+            "type": "string",
+            "example": "OParl Council Data"
+          },
+          "integrationLogoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Logo URL for marketplace integrations",
+            "example": "https://marketplace.ayunis.com/logos/oparl.png"
+          },
+          "toolName": {
+            "type": "string",
+            "description": "Tool name as reported by the MCP server",
+            "example": "search_meetings"
+          }
+        },
+        "required": [
+          "id",
+          "integrationId",
+          "integrationName",
+          "integrationLogoUrl",
+          "toolName"
         ]
       },
       "MarketplaceConfigResponseDto": {

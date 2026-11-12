@@ -13,3 +13,4 @@ export { McpIntegrationUserConfigRecord } from './mcp-integration-user-config.re
 export { McpOAuthClientRegistrationRecord } from './mcp-oauth-client-registration.record';
 export { McpOAuthUserTokenRecord } from './mcp-oauth-user-token.record';
 export { McpOAuthPendingSessionRecord } from './mcp-oauth-pending-session.record';
+export { McpToolAllowanceRecord } from './mcp-tool-allowance.record';

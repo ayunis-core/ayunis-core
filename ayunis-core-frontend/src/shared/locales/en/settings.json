@@ -40,6 +40,16 @@
         "errorDescription": "The secure connection could not be completed. Return to integrations and try again.",
         "back": "Back to integrations"
       }
+    },
+    "alwaysAllowed": {
+      "title": "Always-allowed tools",
+      "description": "These tools run in the chat without asking you first. Remove a tool to be asked again before it runs.",
+      "empty": "No always-allowed tools. When you confirm a tool in the chat, you can choose to always allow it.",
+      "failedToLoad": "Failed to load always-allowed tools.",
+      "remove": "Remove",
+      "removeSuccess": "You will be asked again before this tool runs.",
+      "removeError": "Could not remove the tool. Please try again.",
+      "notFound": "This tool is no longer always allowed."
     }
   },
   "account": {

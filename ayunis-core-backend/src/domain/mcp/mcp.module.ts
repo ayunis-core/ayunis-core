@@ -29,8 +29,8 @@ import {
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
-import { SourcesModule } from '../sources/sources.module';
-import { MarketplaceModule } from '../marketplace/marketplace.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
+import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
@@ -62,7 +62,14 @@ import {
   McpOAuthClientRegistrationRecord,
   McpOAuthPendingSessionRecord,
   McpOAuthUserTokenRecord,
+  McpToolAllowanceRecord,
 } from './infrastructure/persistence/postgres/schema';
+import { McpToolAllowanceRepositoryPort } from './application/ports/mcp-tool-allowance.repository.port';
+import { McpToolAllowanceRepository } from './infrastructure/persistence/postgres/mcp-tool-allowance.repository';
+import { AllowMcpToolUseCase } from './application/use-cases/allow-mcp-tool/allow-mcp-tool.use-case';
+import { ListMcpToolAllowancesUseCase } from './application/use-cases/list-mcp-tool-allowances/list-mcp-tool-allowances.use-case';
+import { RemoveMcpToolAllowanceUseCase } from './application/use-cases/remove-mcp-tool-allowance/remove-mcp-tool-allowance.use-case';
+import { FindMcpToolAllowancesUseCase } from './application/use-cases/find-mcp-tool-allowances/find-mcp-tool-allowances.use-case';
 
 // Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
@@ -75,6 +82,8 @@ import { McpOAuthAuthorizationService } from './application/services/mcp-oauth-a
 import { McpOAuthFetchPort } from './application/ports/mcp-oauth-fetch.port';
 import { McpOAuthFetchService } from './infrastructure/clients/mcp-oauth-fetch.service';
 import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-integration-response.mapper';
+import { McpToolAllowancesController } from './presenters/http/mcp-tool-allowances.controller';
+import { McpToolAllowanceResponseMapper } from './presenters/http/mappers/mcp-tool-allowance-response.mapper';
 
 @Module({
   imports: [
@@ -92,11 +101,16 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
       McpOAuthClientRegistrationRecord,
       McpOAuthUserTokenRecord,
       McpOAuthPendingSessionRecord,
+      McpToolAllowanceRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
     MarketplaceModule,
   ],
-  controllers: [McpIntegrationsController, McpOAuthMetadataController],
+  controllers: [
+    McpIntegrationsController,
+    McpOAuthMetadataController,
+    McpToolAllowancesController,
+  ],
   providers: [
     {
       provide: McpCredentialEncryptionPort,
@@ -131,6 +145,10 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
       provide: McpOAuthFetchPort,
       useClass: McpOAuthFetchService,
     },
+    {
+      provide: McpToolAllowanceRepositoryPort,
+      useClass: McpToolAllowanceRepository,
+    },
     McpIntegrationMapper,
     McpIntegrationFactory,
     McpIntegrationAuthFactory,
@@ -162,10 +180,15 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
     InstallMarketplaceIntegrationUseCase,
     SetUserMcpConfigUseCase,
     GetUserMcpConfigUseCase,
+    AllowMcpToolUseCase,
+    ListMcpToolAllowancesUseCase,
+    RemoveMcpToolAllowanceUseCase,
+    FindMcpToolAllowancesUseCase,
     // Mappers
     McpIntegrationDtoMapper,
     McpIntegrationResponseMapper,
     PredefinedConfigDtoMapper,
+    McpToolAllowanceResponseMapper,
   ],
   exports: [
     McpCredentialEncryptionPort,
@@ -178,6 +201,8 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
     GetMcpIntegrationsByIdsUseCase,
+    AllowMcpToolUseCase,
+    FindMcpToolAllowancesUseCase,
   ],
 })
 export class McpModule {}
