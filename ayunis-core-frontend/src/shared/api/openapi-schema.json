@@ -13521,6 +13521,38 @@
         "tags": ["recordings"]
       }
     },
+    "/recordings/{id}/transcript": {
+      "get": {
+        "operationId": "RecordingsController_transcript",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingTranscriptResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording not found"
+          }
+        },
+        "summary": "Get a recording's transcript as speaker turns",
+        "tags": ["recordings"]
+      }
+    },
     "/recordings/{id}/owner": {
       "patch": {
         "operationId": "RecordingsController_changeOwner",
@@ -13560,6 +13592,114 @@
           }
         },
         "summary": "Move a recording to the caller, a team or the organization",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/uploads": {
+      "post": {
+        "description": "Checks access, that the recording has no audio yet, the audio type and AUDIO_MAX_UPLOAD_BYTES, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /recordings/{id}/uploads/{uploadId}/complete.",
+        "operationId": "RecordingUploadsController_createUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not an audio file"
+          },
+          "403": {
+            "description": "The recording is read-only"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "409": {
+            "description": "The recording has its audio"
+          },
+          "413": {
+            "description": "File exceeds the upload limit"
+          }
+        },
+        "summary": "Create the direct upload of a recording's audio",
+        "tags": ["recordings"]
+      }
+    },
+    "/recordings/{id}/uploads/{uploadId}/complete": {
+      "post": {
+        "description": "Verifies the stored file, makes it the audio of the recording and queues its transcription. Safe to repeat.",
+        "operationId": "RecordingUploadsController_completeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the recording",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The upload id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recording or upload not found"
+          },
+          "409": {
+            "description": "The file was not fully transferred, or the recording has its audio"
+          },
+          "410": {
+            "description": "The upload expired"
+          }
+        },
+        "summary": "Complete the direct upload of a recording's audio",
         "tags": ["recordings"]
       }
     },
@@ -24613,6 +24753,11 @@
         },
         "required": ["ownerType", "name"]
       },
+      "RecordingStatus": {
+        "type": "string",
+        "enum": ["uploading", "transcribing", "transcribed", "failed"],
+        "description": "uploading until the audio is stored, then transcribing, transcribed or failed"
+      },
       "RecordingResponseDto": {
         "type": "object",
         "properties": {
@@ -24643,6 +24788,22 @@
             "nullable": true,
             "description": "The name of the user who created the recording; null once they are deleted"
           },
+          "status": {
+            "description": "uploading until the audio is stored, then transcribing, transcribed or failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecordingStatus"
+              }
+            ]
+          },
+          "failureCode": {
+            "description": "Why the transcription failed; only when the status is failed",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingErrorCode"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -24657,6 +24818,7 @@
           "name",
           "ownerType",
           "creatorName",
+          "status",
           "createdAt",
           "updatedAt"
         ]
@@ -24672,6 +24834,47 @@
           }
         },
         "required": ["data"]
+      },
+      "RecordingTranscriptTurnDto": {
+        "type": "object",
+        "properties": {
+          "speakerId": {
+            "type": "string",
+            "description": "The speaker label the transcription provider assigned; absent when it named none",
+            "example": "speaker_0"
+          },
+          "speakerNumber": {
+            "type": "number",
+            "description": "Speakers numbered in order of first appearance",
+            "example": 1
+          },
+          "start": {
+            "type": "number",
+            "description": "Seconds from the start of the recording"
+          },
+          "end": {
+            "type": "number",
+            "description": "Seconds from the start of the recording"
+          },
+          "text": {
+            "type": "string",
+            "example": "Wir kommen zum Haushalt."
+          }
+        },
+        "required": ["start", "end", "text"]
+      },
+      "RecordingTranscriptResponseDto": {
+        "type": "object",
+        "properties": {
+          "turns": {
+            "description": "Empty until the recording is transcribed",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingTranscriptTurnDto"
+            }
+          }
+        },
+        "required": ["turns"]
       },
       "RenameRecordingDto": {
         "type": "object",

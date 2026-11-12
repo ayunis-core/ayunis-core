@@ -20,11 +20,15 @@ import {
   UnexpectedTranscriptionError,
 } from 'src/domain/transcriptions/application/transcription.errors';
 import { validateAudio } from 'src/domain/transcriptions/application/util/validate-audio';
-import type { RecordingTranscript } from 'src/domain/transcriptions/domain/recording-transcript';
+import type {
+  RecordingTranscript,
+  TranscriptSegment,
+} from 'src/domain/transcriptions/domain/recording-transcript';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import {
   restoreTranscript,
   formatTranscript,
+  toRecordingSegments,
 } from './recording-transcript.helpers';
 
 @Injectable()
@@ -56,8 +60,12 @@ export class TranscribeRecordingUseCase {
       'voxtral-mini-2602';
   }
 
+  /**
+   * Returns the readable transcript text, plus its segments in recording time
+   * with the provider's speaker labels kept apart from the text.
+   */
   @HandleUnexpectedErrors(UnexpectedTranscriptionError)
-  async execute(command: TranscribeCommand): Promise<string> {
+  async execute(command: TranscribeCommand): Promise<RecordingTranscript> {
     this.logger.log(
       { fileName: command.fileName },
       'Transcribing uploaded recording',
@@ -70,6 +78,7 @@ export class TranscribeRecordingUseCase {
       recording?.sha256 ??
       createHash('sha256').update(command.file).digest('hex');
     const lines: string[] = [];
+    const segments: TranscriptSegment[] = [];
     let completed = 0;
     const input: RecordingInput = recording
       ? { path: recording.path, size: recording.size, fileName, mimeType }
@@ -81,13 +90,14 @@ export class TranscribeRecordingUseCase {
     )) {
       const result = await this.transcribePart(command, segment, identity);
       lines.push(...formatTranscript(result, segment));
+      segments.push(...toRecordingSegments(result, segment));
       await command.processingContext?.progress(++completed);
     }
     if (lines.length === 0)
       throw new InvalidAudioFileError(
         'No speech was detected in the recording',
       );
-    return lines.join('\n');
+    return { text: lines.join('\n'), segments };
   }
 
   private async transcribePart(

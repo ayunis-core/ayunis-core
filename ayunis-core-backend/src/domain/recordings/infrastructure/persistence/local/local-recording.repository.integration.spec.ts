@@ -10,6 +10,8 @@ import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { CreateRecordingsAndRecordingPermissions1794434967773 } from 'src/db/migrations/1794434967773-CreateRecordingsAndRecordingPermissions';
 import { GrantRecordingPermissions1794434967774 } from 'src/db/migrations/1794434967774-GrantRecordingPermissions';
+import { AddRecordingAudioAndTranscriptSegments1794440444209 } from 'src/db/migrations/1794440444209-AddRecordingAudioAndTranscriptSegments';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { LocalRecordingRepository } from './local-recording.repository';
 import { RecordingMapper } from './mappers/recording.mapper';
@@ -41,6 +43,19 @@ const recordingSchema = new EntitySchema<RecordingRecord>({
     },
   },
 });
+const sourceSchema = new EntitySchema<SourceRecord>({
+  name: 'SourceRecord',
+  target: SourceRecord,
+  tableName: 'sources',
+  columns: {
+    id: { type: String, primary: true },
+    name: { type: String },
+    status: { type: String },
+    storageKey: { type: String, nullable: true },
+    processingErrorCode: { type: String, nullable: true },
+    recordingId: { type: String, nullable: true },
+  },
+});
 const workspaceSchema = new EntitySchema<{ id: string; userId: string }>({
   name: 'WorkspaceRecord',
   target: WorkspaceRecord,
@@ -59,6 +74,9 @@ const PRE_MIGRATION_TABLES = [
   `CREATE TABLE "users" ("id" varchar PRIMARY KEY)`,
   `CREATE TABLE "teams" ("id" varchar PRIMARY KEY)`,
   `CREATE TABLE "workspaces" ("id" varchar PRIMARY KEY, "userId" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE)`,
+  `CREATE TABLE "sources" ("id" varchar PRIMARY KEY, "name" varchar NOT NULL, "status" varchar NOT NULL, "storageKey" varchar, "processingErrorCode" varchar)`,
+  `CREATE TYPE "source_upload_sessions_targettype_enum" AS ENUM('thread', 'skill', 'knowledge_base')`,
+  `CREATE TABLE "source_upload_sessions" ("id" varchar PRIMARY KEY, "targetType" "source_upload_sessions_targettype_enum" NOT NULL)`,
   `CREATE TYPE "role_permissions_role_enum" AS ENUM('admin', 'manager', 'user')`,
   `CREATE TYPE "role_permissions_permission_enum" AS ENUM('manage_teams', 'assign_users_to_teams', 'manage_skills', 'share_skills_with_teams', 'share_skills_with_org', 'manage_knowledge_bases', 'share_knowledge_bases_with_teams', 'share_knowledge_bases_with_org', 'manage_routines')`,
   `CREATE TABLE "role_permissions" (
@@ -110,7 +128,7 @@ describe('Recording persistence', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [recordingSchema, workspaceSchema],
+      entities: [recordingSchema, workspaceSchema, sourceSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -129,6 +147,9 @@ describe('Recording persistence', () => {
       migrating,
     );
     await new GrantRecordingPermissions1794434967774().up(migrating);
+    await new AddRecordingAudioAndTranscriptSegments1794440444209().up(
+      migrating,
+    );
     await setup.query('SET search_path TO public');
     await setup.release();
   }, 30_000);
@@ -147,6 +168,7 @@ describe('Recording persistence', () => {
       db.getRepository(RecordingRecord),
       new RecordingMapper(),
       { tx: runner.manager } as never,
+      db.getRepository(SourceRecord),
     );
     await seed(runner.manager);
   });
@@ -224,6 +246,24 @@ describe('Recording persistence', () => {
       `SELECT "name" FROM "recordings" ORDER BY "name"`,
     );
     return rows.map(({ name }) => name);
+  }
+
+  async function insertSource(manager: EntityManager): Promise<UUID> {
+    const id = randomUUID();
+    await manager.query(
+      `INSERT INTO "sources" ("id", "name", "status", "storageKey") VALUES ($1, 'sitzung.mp3', 'processing', $2)`,
+      [id, `${orgId}/uploads/${id}/sitzung.mp3`],
+    );
+    return id;
+  }
+
+  async function countRows(table: string, sourceId: UUID): Promise<number> {
+    const column = table === 'sources' ? 'id' : 'sourceId';
+    const rows: { count: string }[] = await runner.query(
+      `SELECT COUNT(*) AS "count" FROM "${table}" WHERE "${column}" = $1`,
+      [sourceId],
+    );
+    return Number(rows[0].count);
   }
 
   const names = (items: { name: string }[]) =>
@@ -307,6 +347,48 @@ describe('Recording persistence', () => {
     await runner.query(`DELETE FROM "orgs" WHERE "id" = $1`, [otherOrgId]);
 
     expect(await remainingNames()).not.toContain('otherOrg');
+  });
+
+  it('keeps one audio file per recording: another source cannot become its audio', async () => {
+    const first = await insertSource(runner.manager);
+    const second = await insertSource(runner.manager);
+
+    await expect(repository.attachAudio(ids.personal, first)).resolves.toBe(
+      true,
+    );
+    await expect(repository.attachAudio(ids.personal, second)).resolves.toBe(
+      false,
+    );
+
+    const audio = await repository.findAudio([ids.personal, ids.ownTeam]);
+    expect([...audio.keys()]).toEqual([ids.personal]);
+    expect(audio.get(ids.personal)).toMatchObject({
+      sourceId: first,
+      fileName: 'sitzung.mp3',
+      storageKey: `${orgId}/uploads/${first}/sitzung.mp3`,
+    });
+  });
+
+  it('deleting a recording, or the team owning it, deletes its audio with the transcript segments', async () => {
+    const personalAudio = await insertSource(runner.manager);
+    const teamAudio = await insertSource(runner.manager);
+    await repository.attachAudio(ids.personal, personalAudio);
+    await repository.attachAudio(ids.ownTeam, teamAudio);
+    for (const sourceId of [personalAudio, teamAudio]) {
+      await runner.query(
+        `INSERT INTO "source_transcript_segments" ("id", "sourceId", "position", "startSeconds", "endSeconds", "speaker", "text") VALUES ($1, $2, 0, 0.5, 2, 'speaker_0', 'Wir beginnen.')`,
+        [randomUUID(), sourceId],
+      );
+    }
+
+    const personal = await repository.findById(ids.personal);
+    await repository.delete(personal!);
+    await runner.query(`DELETE FROM "teams" WHERE "id" = $1`, [ownTeamId]);
+
+    for (const sourceId of [personalAudio, teamAudio]) {
+      expect(await countRows('sources', sourceId)).toBe(0);
+      expect(await countRows('source_transcript_segments', sourceId)).toBe(0);
+    }
   });
 
   it('grants the recording permissions to managers and users of existing organizations', async () => {

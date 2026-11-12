@@ -27,601 +27,6 @@ export interface FeatureTogglesResponseDto {
   readAloudEnabled: boolean;
 }
 
-export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
-
-
-export const OrgUsersSortField = {
-  name: 'name',
-  email: 'email',
-  role: 'role',
-  createdAt: 'createdAt',
-} as const;
-
-export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
-
-
-export const SortOrder = {
-  asc: 'asc',
-  desc: 'desc',
-} as const;
-
-export interface UserTeamResponseDto {
-  id: string;
-  name: string;
-}
-
-/**
- * User role
- */
-export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
-
-
-export const UserResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface UserResponseDto {
-  /** Current teams, included only for administrators in user lists */
-  teams?: UserTeamResponseDto[];
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
-  /** User email address */
-  email: string;
-  /** User role */
-  role: UserResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /**
-     * Department the user belongs to
-     * @nullable
-     */
-  department?: string | null;
-  /** Whether the account is locked after failed login attempts */
-  isLocked?: boolean;
-  /** Date when the user was created */
-  createdAt: string;
-}
-
-export interface PaginationDto {
-  /** Maximum number of items per page */
-  limit: number;
-  /** Number of items to skip */
-  offset: number;
-  /** Total number of items available */
-  total?: number;
-}
-
-export interface PaginatedUsersListResponseDto {
-  /** Array of users for the current page */
-  data: UserResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-/**
- * New role for the user
- */
-export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
-
-
-export const UpdateUserRoleDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface UpdateUserRoleDto {
-  /** New role for the user */
-  role: UpdateUserRoleDtoRole;
-}
-
-export interface UpdateUserNameDto {
-  /**
-     * New name for the user
-     * @minLength 1
-     * @maxLength 100
-     */
-  name: string;
-}
-
-export interface UpdatePasswordDto {
-  /**
-     * Current password for verification
-     * @minLength 8
-     */
-  currentPassword: string;
-  /**
-     * New password
-     * @minLength 8
-     */
-  newPassword: string;
-  /**
-     * Confirmation of the new password
-     * @minLength 8
-     */
-  newPasswordConfirmation: string;
-}
-
-export interface ConfirmEmailDto {
-  /** JWT token for email confirmation */
-  token: string;
-}
-
-export interface ResendEmailConfirmationDto {
-  /** Email address to resend confirmation to */
-  email: string;
-}
-
-export interface ForgotPasswordDto {
-  /** Email address to send password reset link to */
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  /** Password reset token from email */
-  resetToken: string;
-  /**
-     * New password
-     * @minLength 8
-     */
-  newPassword: string;
-  /**
-     * Confirm new password
-     * @minLength 8
-     */
-  newPasswordConfirmation: string;
-}
-
-export interface AdminUpdateUserDto {
-  /**
-     * New name for the user
-     * @minLength 1
-     * @maxLength 100
-     */
-  name?: string;
-  /** New email address for the user */
-  email?: string;
-}
-
-export interface TriggerPasswordResetResponseDto {
-  /** The password reset URL sent to the user */
-  resetUrl: string;
-}
-
-/**
- * Role for the user
- */
-export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUserDtoRole];
-
-
-export const CreateUserDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface CreateUserDto {
-  /** Email address for the user */
-  email: string;
-  /** Name of the user */
-  name: string;
-  /** Role for the user */
-  role: CreateUserDtoRole;
-  /** Send the account activation (welcome) email to the new user */
-  sendActivationEmail: boolean;
-}
-
-export type SuperAdminUsersSortField = typeof SuperAdminUsersSortField[keyof typeof SuperAdminUsersSortField];
-
-
-export const SuperAdminUsersSortField = {
-  name: 'name',
-  email: 'email',
-  orgName: 'orgName',
-  createdAt: 'createdAt',
-} as const;
-
-/**
- * User role
- */
-export type SuperAdminUserListItemResponseDtoRole = typeof SuperAdminUserListItemResponseDtoRole[keyof typeof SuperAdminUserListItemResponseDtoRole];
-
-
-export const SuperAdminUserListItemResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface SuperAdminUserListItemResponseDto {
-  /** Current teams, included only for administrators in user lists */
-  teams?: UserTeamResponseDto[];
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
-  /** User email address */
-  email: string;
-  /** User role */
-  role: SuperAdminUserListItemResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /**
-     * Department the user belongs to
-     * @nullable
-     */
-  department?: string | null;
-  /** Whether the account is locked after failed login attempts */
-  isLocked?: boolean;
-  /** Date when the user was created */
-  createdAt: string;
-  /** Name of the organization the user belongs to */
-  orgName: string;
-}
-
-export interface PaginatedSuperAdminUsersListResponseDto {
-  /** Array of users for the current page */
-  data: SuperAdminUserListItemResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-/**
- * User role
- */
-export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
-
-
-export const SuperAdminUserResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-/**
- * System-level role of the user
- */
-export type SuperAdminUserResponseDtoSystemRole = typeof SuperAdminUserResponseDtoSystemRole[keyof typeof SuperAdminUserResponseDtoSystemRole];
-
-
-export const SuperAdminUserResponseDtoSystemRole = {
-  customer: 'customer',
-  super_admin: 'super_admin',
-} as const;
-
-export interface SuperAdminUserResponseDto {
-  /** Current teams, included only for administrators in user lists */
-  teams?: UserTeamResponseDto[];
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
-  /** User email address */
-  email: string;
-  /** User role */
-  role: SuperAdminUserResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /**
-     * Department the user belongs to
-     * @nullable
-     */
-  department?: string | null;
-  /** Whether the account is locked after failed login attempts */
-  isLocked?: boolean;
-  /** Date when the user was created */
-  createdAt: string;
-  /** System-level role of the user */
-  systemRole: SuperAdminUserResponseDtoSystemRole;
-}
-
-export interface PromoteToSuperAdminDto {
-  /** Email address of the user to promote to super admin */
-  email: string;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
-
-
-export const InviteResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
-
-
-export const InviteResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-}
-
-/**
- * Role to assign to the invited user
- */
-export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
-
-
-export const CreateInviteDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface CreateInviteDto {
-  /** Email address of the person to invite */
-  email: string;
-  /** Role to assign to the invited user */
-  role: CreateInviteDtoRole;
-  /** Organization teams to assign on acceptance */
-  teamIds?: string[];
-}
-
-export interface CreateInviteResponseDto {
-  /**
-     * URL of the invite, returned when not using email configuration
-     * @nullable
-     */
-  url: string | null;
-}
-
-/**
- * Role to assign to the invited user
- */
-export type CreateBulkInviteItemDtoRole = typeof CreateBulkInviteItemDtoRole[keyof typeof CreateBulkInviteItemDtoRole];
-
-
-export const CreateBulkInviteItemDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface CreateBulkInviteItemDto {
-  /** Email address of the person to invite */
-  email: string;
-  /** Role to assign to the invited user */
-  role: CreateBulkInviteItemDtoRole;
-  /**
-     * Names of teams to assign after the invited user joins the organization
-     * @maxItems 50
-     */
-  teamNames?: string[];
-}
-
-export interface CreateBulkInvitesDto {
-  /**
-     * Array of invites to create
-     * @minItems 1
-     * @maxItems 500
-     */
-  invites: CreateBulkInviteItemDto[];
-}
-
-/**
- * Role assigned to the invited user
- */
-export type BulkInviteResultDtoRole = typeof BulkInviteResultDtoRole[keyof typeof BulkInviteResultDtoRole];
-
-
-export const BulkInviteResultDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-export interface BulkInviteResultDto {
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: BulkInviteResultDtoRole;
-  /** Whether the invite was created successfully */
-  success: boolean;
-  /**
-     * Invitation URL (only populated when email configuration is unavailable)
-     * @nullable
-     */
-  url: string | null;
-  /**
-     * Error code if the invite failed
-     * @nullable
-     */
-  errorCode: string | null;
-  /**
-     * Error message if the invite failed
-     * @nullable
-     */
-  errorMessage: string | null;
-}
-
-export interface CreateBulkInvitesResponseDto {
-  /** Total number of invites in the request */
-  totalCount: number;
-  /** Number of invites created successfully */
-  successCount: number;
-  /** Number of invites that failed */
-  failureCount: number;
-  /** Individual results for each invite */
-  results: BulkInviteResultDto[];
-}
-
-export type InvitesSortField = typeof InvitesSortField[keyof typeof InvitesSortField];
-
-
-export const InvitesSortField = {
-  email: 'email',
-  role: 'role',
-  createdAt: 'createdAt',
-} as const;
-
-export interface InviteTeamResponseDto {
-  id: string;
-  name: string;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteListItemResponseDtoRole = typeof InviteListItemResponseDtoRole[keyof typeof InviteListItemResponseDtoRole];
-
-
-export const InviteListItemResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteListItemResponseDtoStatus = typeof InviteListItemResponseDtoStatus[keyof typeof InviteListItemResponseDtoStatus];
-
-
-export const InviteListItemResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteListItemResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteListItemResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteListItemResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-  teams?: InviteTeamResponseDto[];
-}
-
-export interface PaginatedInvitesListResponseDto {
-  /** Array of invites for the current page */
-  data: InviteListItemResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
-
-
-export const InviteDetailResponseDtoRole = {
-  admin: 'admin',
-  manager: 'manager',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
-
-
-export const InviteDetailResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteDetailResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteDetailResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteDetailResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-  /** Organization the invitation belongs to */
-  orgId: string;
-  /** Name of the organization */
-  organizationName: string;
-  /** Whether this organization accepts local password login */
-  localPasswordLoginEnabled: boolean;
-}
-
-export interface AcceptInviteDto {
-  /** JWT token from the invite */
-  inviteToken: string;
-  /** Name of the user accepting the invite */
-  userName: string;
-  /** Password of the user accepting the invite */
-  password: string;
-  /** Marketing acceptance */
-  hasAcceptedMarketing: boolean;
-  /** Department within the municipality */
-  department?: string;
-}
-
-export interface AcceptInviteResponseDto {
-  /** ID of the accepted invite */
-  inviteId: string;
-  /** Email of the user who accepted the invite */
-  email: string;
-  /** Organization ID the user was invited to */
-  orgId: string;
-}
-
-export interface DeleteAllPendingInvitesResponseDto {
-  /** Number of invites deleted */
-  deletedCount: number;
-}
-
-export interface ResendExpiredInvitesResponseDto {
-  /** Number of expired invites that were renewed */
-  totalCount: number;
-  /** Number of renewed invites that were delivered */
-  successCount: number;
-  /** Number of renewed invites whose email could not be sent; they stay pending */
-  failureCount: number;
-  /** Individual delivery result for each renewed invite */
-  results: BulkInviteResultDto[];
-}
-
 export interface CreateOrgRequestDto {
   /** Organization display name */
   name: string;
@@ -660,6 +65,14 @@ export const OrgsSortField = {
   createdAt: 'createdAt',
 } as const;
 
+export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
 /**
  * Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
  */
@@ -687,6 +100,15 @@ export interface SuperAdminOrgOverviewResponseDto {
   createdAt: string;
   /** Derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan */
   lifecycleStatus: OrgLifecycleStatus;
+}
+
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
 }
 
 export interface OrgLifecycleCountsDto {
@@ -835,365 +257,21 @@ export interface MyPermissionsResponseDto {
   permissions: MyPermissionsResponseDtoPermissionsItem[];
 }
 
-/**
- * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
- * @nullable
- */
-export type ActiveSubscriptionResponseDtoSubscriptionType = typeof ActiveSubscriptionResponseDtoSubscriptionType[keyof typeof ActiveSubscriptionResponseDtoSubscriptionType] | null;
-
-
-export const ActiveSubscriptionResponseDtoSubscriptionType = {
-  SEAT_BASED: 'SEAT_BASED',
-  USAGE_BASED: 'USAGE_BASED',
-} as const;
-
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-  /**
-     * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
-     * @nullable
-     */
-  subscriptionType: ActiveSubscriptionResponseDtoSubscriptionType;
+export interface TranscriptionResponseDto {
+  /** The transcribed text from the audio file */
+  text: string;
 }
 
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
-}
-
-export interface SubscriptionBillingInfoResponseDto {
-  /** Company name */
-  companyName: string;
-  /** Street */
-  street: string;
-  /** Number */
-  houseNumber: string;
-  /** City */
-  city: string;
-  /** Postal code */
-  postalCode: string;
-  /** Country */
-  country: string;
-  /** USt-ID */
-  vatNumber?: string;
-}
-
-/**
- * Date when the subscription was cancelled (if applicable)
- */
-export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
-
-/**
- * Subscription type
- */
-export type SubscriptionResponseDtoType = typeof SubscriptionResponseDtoType[keyof typeof SubscriptionResponseDtoType];
-
-
-export const SubscriptionResponseDtoType = {
-  SEAT_BASED: 'SEAT_BASED',
-  USAGE_BASED: 'USAGE_BASED',
-} as const;
-
-/**
- * Renewal cycle of the subscription (seat-based only)
- */
-export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
-
-
-export const SubscriptionResponseDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
-
-export interface SubscriptionResponseDto {
-  /** Unique identifier of the subscription */
+export interface CrawlDomainGrantResponseDto {
   id: string;
-  /** Date when the subscription was created */
-  createdAt: string;
-  /** Date when the subscription was last updated */
-  updatedAt: string;
-  /** Date when the subscription was cancelled (if applicable) */
-  cancelledAt?: SubscriptionResponseDtoCancelledAt;
-  /** Date when the subscription becomes active */
-  startsAt: string;
-  /**
-     * Exclusive date when this subscription stops controlling product access
-     * @nullable
-     */
-  endsAt: string | null;
-  /** Organization ID associated with the subscription */
   orgId: string;
-  /** Subscription type */
-  type: SubscriptionResponseDtoType;
-  /** Number of seats in the subscription (seat-based only) */
-  noOfSeats?: number;
-  /** Price per seat in the subscription (seat-based only) */
-  pricePerSeat?: number;
-  /** Renewal cycle of the subscription (seat-based only) */
-  renewalCycle?: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles (seat-based only) */
-  renewalCycleAnchor?: string;
-  /** Monthly credit budget (usage-based only) */
-  monthlyCredits?: number;
-  /**
-     * Number of available seats (total seats minus invites, seat-based only)
-     * @nullable
-     */
-  availableSeats?: number | null;
-  /**
-     * Next renewal before the access end, or null when no renewal remains
-     * @nullable
-     */
-  nextRenewalDate: string | null;
-  /** Billing information */
-  billingInfo: SubscriptionBillingInfoResponseDto;
-}
-
-export interface SubscriptionResponseDtoNullable {
-  /** Subscription */
-  subscription?: SubscriptionResponseDto;
-}
-
-/**
- * Subscription type. Defaults to SEAT_BASED if not specified.
- */
-export type CreateSubscriptionRequestDtoType = typeof CreateSubscriptionRequestDtoType[keyof typeof CreateSubscriptionRequestDtoType];
-
-
-export const CreateSubscriptionRequestDtoType = {
-  SEAT_BASED: 'SEAT_BASED',
-  USAGE_BASED: 'USAGE_BASED',
-} as const;
-
-export interface CreateSubscriptionRequestDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-  /** Subscription type. Defaults to SEAT_BASED if not specified. */
-  type?: CreateSubscriptionRequestDtoType;
-  /**
-     * Number of seats for the subscription (seat-based only)
-     * @minimum 1
-     */
-  noOfSeats?: number;
-  /**
-     * Monthly credit budget (usage-based only)
-     * @minimum 1
-     */
-  monthlyCredits?: number;
-  /** Sub text for the subscription */
-  subText?: string;
-  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
-  startsAt?: string;
-  /** Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended. */
-  endsAt?: string;
-}
-
-/**
- * Subscription type. Defaults to SEAT_BASED if not specified.
- */
-export type ChangeSubscriptionRequestDtoType = typeof ChangeSubscriptionRequestDtoType[keyof typeof ChangeSubscriptionRequestDtoType];
-
-
-export const ChangeSubscriptionRequestDtoType = {
-  SEAT_BASED: 'SEAT_BASED',
-  USAGE_BASED: 'USAGE_BASED',
-} as const;
-
-/**
- * How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way.
- */
-export type ChangeSubscriptionRequestDtoOldSubscriptionDisposition = typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition[keyof typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition];
-
-
-export const ChangeSubscriptionRequestDtoOldSubscriptionDisposition = {
-  CANCEL: 'CANCEL',
-  DELETE: 'DELETE',
-} as const;
-
-export interface ChangeSubscriptionRequestDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-  /** Subscription type. Defaults to SEAT_BASED if not specified. */
-  type?: ChangeSubscriptionRequestDtoType;
-  /**
-     * Number of seats for the subscription (seat-based only)
-     * @minimum 1
-     */
-  noOfSeats?: number;
-  /**
-     * Monthly credit budget (usage-based only)
-     * @minimum 1
-     */
-  monthlyCredits?: number;
-  /** Sub text for the subscription */
-  subText?: string;
-  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
-  startsAt?: string;
-  /** How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way. */
-  oldSubscriptionDisposition: ChangeSubscriptionRequestDtoOldSubscriptionDisposition;
-}
-
-export interface UpdateBillingInfoDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface UpdateStartDateDto {
-  /** New subscription start date (ISO 8601) */
-  startsAt: string;
-}
-
-export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
-
-/**
- * Date when the subscription was cancelled (if applicable)
- */
-export type OrgSubscriptionHistoryItemDtoCancelledAt = { [key: string]: unknown };
-
-/**
- * Subscription type
- */
-export type OrgSubscriptionHistoryItemDtoType = typeof OrgSubscriptionHistoryItemDtoType[keyof typeof OrgSubscriptionHistoryItemDtoType];
-
-
-export const OrgSubscriptionHistoryItemDtoType = {
-  SEAT_BASED: 'SEAT_BASED',
-  USAGE_BASED: 'USAGE_BASED',
-} as const;
-
-/**
- * Renewal cycle of the subscription (seat-based only)
- */
-export type OrgSubscriptionHistoryItemDtoRenewalCycle = typeof OrgSubscriptionHistoryItemDtoRenewalCycle[keyof typeof OrgSubscriptionHistoryItemDtoRenewalCycle];
-
-
-export const OrgSubscriptionHistoryItemDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
-
-/**
- * Lifecycle status of this subscription record
- */
-export type OrgSubscriptionHistoryItemDtoStatus = typeof OrgSubscriptionHistoryItemDtoStatus[keyof typeof OrgSubscriptionHistoryItemDtoStatus];
-
-
-export const OrgSubscriptionHistoryItemDtoStatus = {
-  ACTIVE: 'ACTIVE',
-  SCHEDULED: 'SCHEDULED',
-  CANCELLED: 'CANCELLED',
-  HISTORICAL: 'HISTORICAL',
-} as const;
-
-export interface OrgSubscriptionHistoryItemDto {
-  /** Unique identifier of the subscription */
-  id: string;
-  /** Date when the subscription was created */
+  domain: string;
   createdAt: string;
-  /** Date when the subscription was last updated */
-  updatedAt: string;
-  /** Date when the subscription was cancelled (if applicable) */
-  cancelledAt?: OrgSubscriptionHistoryItemDtoCancelledAt;
-  /** Date when the subscription becomes active */
-  startsAt: string;
-  /**
-     * Exclusive date when this subscription stops controlling product access
-     * @nullable
-     */
-  endsAt: string | null;
-  /** Organization ID associated with the subscription */
-  orgId: string;
-  /** Subscription type */
-  type: OrgSubscriptionHistoryItemDtoType;
-  /** Number of seats in the subscription (seat-based only) */
-  noOfSeats?: number;
-  /** Price per seat in the subscription (seat-based only) */
-  pricePerSeat?: number;
-  /** Renewal cycle of the subscription (seat-based only) */
-  renewalCycle?: OrgSubscriptionHistoryItemDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles (seat-based only) */
-  renewalCycleAnchor?: string;
-  /** Monthly credit budget (usage-based only) */
-  monthlyCredits?: number;
-  /**
-     * Number of available seats (total seats minus invites, seat-based only)
-     * @nullable
-     */
-  availableSeats?: number | null;
-  /**
-     * Next renewal before the access end, or null when no renewal remains
-     * @nullable
-     */
-  nextRenewalDate: string | null;
-  /** Billing information */
-  billingInfo: SubscriptionBillingInfoResponseDto;
-  /** Lifecycle status of this subscription record */
-  status: OrgSubscriptionHistoryItemDtoStatus;
-  /** Whether this is the newest subscription for the organization */
-  isLatest: boolean;
 }
 
-export interface OrgSubscriptionsResponseDto {
-  /** All subscriptions belonging to the organization, newest first */
-  subscriptions: OrgSubscriptionHistoryItemDto[];
-  /** How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period) */
-  activeCount: number;
-}
-
-export interface UpdateSeatsDto { [key: string]: unknown }
-
-export interface SubscriptionAccessEndAdjustmentDto {
-  subscriptionId: string;
-  /** Exclusive end of product access for this subscription */
-  endsAt: string;
-}
-
-export interface ResolveSubscriptionOverlapDto {
-  authoritativeSubscriptionId: string;
-  adjustments: SubscriptionAccessEndAdjustmentDto[];
-  /**
-     * Audit reason for correcting the subscription access periods
-     * @minLength 1
-     * @maxLength 500
-     */
-  reason: string;
+export interface GrantCrawlDomainRequestDto {
+  /** The exact host to authorize for crawling by this organization. A full URL is accepted and reduced to its host. */
+  domain: string;
 }
 
 /**
@@ -2164,6 +1242,945 @@ export interface UpdateImageGenerationModelRequestDto {
   outputTokenCost?: number;
 }
 
+export type OrgUsersSortField = typeof OrgUsersSortField[keyof typeof OrgUsersSortField];
+
+
+export const OrgUsersSortField = {
+  name: 'name',
+  email: 'email',
+  role: 'role',
+  createdAt: 'createdAt',
+} as const;
+
+export interface UserTeamResponseDto {
+  id: string;
+  name: string;
+}
+
+/**
+ * User role
+ */
+export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
+
+
+export const UserResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface UserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: UserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /**
+     * Department the user belongs to
+     * @nullable
+     */
+  department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
+  /** Date when the user was created */
+  createdAt: string;
+}
+
+export interface PaginatedUsersListResponseDto {
+  /** Array of users for the current page */
+  data: UserResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+/**
+ * New role for the user
+ */
+export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
+
+
+export const UpdateUserRoleDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface UpdateUserRoleDto {
+  /** New role for the user */
+  role: UpdateUserRoleDtoRole;
+}
+
+export interface UpdateUserNameDto {
+  /**
+     * New name for the user
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+}
+
+export interface UpdatePasswordDto {
+  /**
+     * Current password for verification
+     * @minLength 8
+     */
+  currentPassword: string;
+  /**
+     * New password
+     * @minLength 8
+     */
+  newPassword: string;
+  /**
+     * Confirmation of the new password
+     * @minLength 8
+     */
+  newPasswordConfirmation: string;
+}
+
+export interface ConfirmEmailDto {
+  /** JWT token for email confirmation */
+  token: string;
+}
+
+export interface ResendEmailConfirmationDto {
+  /** Email address to resend confirmation to */
+  email: string;
+}
+
+export interface ForgotPasswordDto {
+  /** Email address to send password reset link to */
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  /** Password reset token from email */
+  resetToken: string;
+  /**
+     * New password
+     * @minLength 8
+     */
+  newPassword: string;
+  /**
+     * Confirm new password
+     * @minLength 8
+     */
+  newPasswordConfirmation: string;
+}
+
+export interface AdminUpdateUserDto {
+  /**
+     * New name for the user
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+  /** New email address for the user */
+  email?: string;
+}
+
+export interface TriggerPasswordResetResponseDto {
+  /** The password reset URL sent to the user */
+  resetUrl: string;
+}
+
+/**
+ * Role for the user
+ */
+export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUserDtoRole];
+
+
+export const CreateUserDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface CreateUserDto {
+  /** Email address for the user */
+  email: string;
+  /** Name of the user */
+  name: string;
+  /** Role for the user */
+  role: CreateUserDtoRole;
+  /** Send the account activation (welcome) email to the new user */
+  sendActivationEmail: boolean;
+}
+
+export type SuperAdminUsersSortField = typeof SuperAdminUsersSortField[keyof typeof SuperAdminUsersSortField];
+
+
+export const SuperAdminUsersSortField = {
+  name: 'name',
+  email: 'email',
+  orgName: 'orgName',
+  createdAt: 'createdAt',
+} as const;
+
+/**
+ * User role
+ */
+export type SuperAdminUserListItemResponseDtoRole = typeof SuperAdminUserListItemResponseDtoRole[keyof typeof SuperAdminUserListItemResponseDtoRole];
+
+
+export const SuperAdminUserListItemResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface SuperAdminUserListItemResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: SuperAdminUserListItemResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /**
+     * Department the user belongs to
+     * @nullable
+     */
+  department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
+  /** Date when the user was created */
+  createdAt: string;
+  /** Name of the organization the user belongs to */
+  orgName: string;
+}
+
+export interface PaginatedSuperAdminUsersListResponseDto {
+  /** Array of users for the current page */
+  data: SuperAdminUserListItemResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+/**
+ * User role
+ */
+export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
+
+
+export const SuperAdminUserResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * System-level role of the user
+ */
+export type SuperAdminUserResponseDtoSystemRole = typeof SuperAdminUserResponseDtoSystemRole[keyof typeof SuperAdminUserResponseDtoSystemRole];
+
+
+export const SuperAdminUserResponseDtoSystemRole = {
+  customer: 'customer',
+  super_admin: 'super_admin',
+} as const;
+
+export interface SuperAdminUserResponseDto {
+  /** Current teams, included only for administrators in user lists */
+  teams?: UserTeamResponseDto[];
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: SuperAdminUserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /**
+     * Department the user belongs to
+     * @nullable
+     */
+  department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
+  /** Date when the user was created */
+  createdAt: string;
+  /** System-level role of the user */
+  systemRole: SuperAdminUserResponseDtoSystemRole;
+}
+
+export interface PromoteToSuperAdminDto {
+  /** Email address of the user to promote to super admin */
+  email: string;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+
+
+export const InviteResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+
+
+export const InviteResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+}
+
+/**
+ * Role to assign to the invited user
+ */
+export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
+
+
+export const CreateInviteDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface CreateInviteDto {
+  /** Email address of the person to invite */
+  email: string;
+  /** Role to assign to the invited user */
+  role: CreateInviteDtoRole;
+  /** Organization teams to assign on acceptance */
+  teamIds?: string[];
+}
+
+export interface CreateInviteResponseDto {
+  /**
+     * URL of the invite, returned when not using email configuration
+     * @nullable
+     */
+  url: string | null;
+}
+
+/**
+ * Role to assign to the invited user
+ */
+export type CreateBulkInviteItemDtoRole = typeof CreateBulkInviteItemDtoRole[keyof typeof CreateBulkInviteItemDtoRole];
+
+
+export const CreateBulkInviteItemDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface CreateBulkInviteItemDto {
+  /** Email address of the person to invite */
+  email: string;
+  /** Role to assign to the invited user */
+  role: CreateBulkInviteItemDtoRole;
+  /**
+     * Names of teams to assign after the invited user joins the organization
+     * @maxItems 50
+     */
+  teamNames?: string[];
+}
+
+export interface CreateBulkInvitesDto {
+  /**
+     * Array of invites to create
+     * @minItems 1
+     * @maxItems 500
+     */
+  invites: CreateBulkInviteItemDto[];
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type BulkInviteResultDtoRole = typeof BulkInviteResultDtoRole[keyof typeof BulkInviteResultDtoRole];
+
+
+export const BulkInviteResultDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface BulkInviteResultDto {
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: BulkInviteResultDtoRole;
+  /** Whether the invite was created successfully */
+  success: boolean;
+  /**
+     * Invitation URL (only populated when email configuration is unavailable)
+     * @nullable
+     */
+  url: string | null;
+  /**
+     * Error code if the invite failed
+     * @nullable
+     */
+  errorCode: string | null;
+  /**
+     * Error message if the invite failed
+     * @nullable
+     */
+  errorMessage: string | null;
+}
+
+export interface CreateBulkInvitesResponseDto {
+  /** Total number of invites in the request */
+  totalCount: number;
+  /** Number of invites created successfully */
+  successCount: number;
+  /** Number of invites that failed */
+  failureCount: number;
+  /** Individual results for each invite */
+  results: BulkInviteResultDto[];
+}
+
+export type InvitesSortField = typeof InvitesSortField[keyof typeof InvitesSortField];
+
+
+export const InvitesSortField = {
+  email: 'email',
+  role: 'role',
+  createdAt: 'createdAt',
+} as const;
+
+export interface InviteTeamResponseDto {
+  id: string;
+  name: string;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteListItemResponseDtoRole = typeof InviteListItemResponseDtoRole[keyof typeof InviteListItemResponseDtoRole];
+
+
+export const InviteListItemResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteListItemResponseDtoStatus = typeof InviteListItemResponseDtoStatus[keyof typeof InviteListItemResponseDtoStatus];
+
+
+export const InviteListItemResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteListItemResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteListItemResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteListItemResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+  teams?: InviteTeamResponseDto[];
+}
+
+export interface PaginatedInvitesListResponseDto {
+  /** Array of invites for the current page */
+  data: InviteListItemResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
+
+
+export const InviteDetailResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
+
+
+export const InviteDetailResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteDetailResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteDetailResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteDetailResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+  /** Organization the invitation belongs to */
+  orgId: string;
+  /** Name of the organization */
+  organizationName: string;
+  /** Whether this organization accepts local password login */
+  localPasswordLoginEnabled: boolean;
+}
+
+export interface AcceptInviteDto {
+  /** JWT token from the invite */
+  inviteToken: string;
+  /** Name of the user accepting the invite */
+  userName: string;
+  /** Password of the user accepting the invite */
+  password: string;
+  /** Marketing acceptance */
+  hasAcceptedMarketing: boolean;
+  /** Department within the municipality */
+  department?: string;
+}
+
+export interface AcceptInviteResponseDto {
+  /** ID of the accepted invite */
+  inviteId: string;
+  /** Email of the user who accepted the invite */
+  email: string;
+  /** Organization ID the user was invited to */
+  orgId: string;
+}
+
+export interface DeleteAllPendingInvitesResponseDto {
+  /** Number of invites deleted */
+  deletedCount: number;
+}
+
+export interface ResendExpiredInvitesResponseDto {
+  /** Number of expired invites that were renewed */
+  totalCount: number;
+  /** Number of renewed invites that were delivered */
+  successCount: number;
+  /** Number of renewed invites whose email could not be sent; they stay pending */
+  failureCount: number;
+  /** Individual delivery result for each renewed invite */
+  results: BulkInviteResultDto[];
+}
+
+/**
+ * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+ * @nullable
+ */
+export type ActiveSubscriptionResponseDtoSubscriptionType = typeof ActiveSubscriptionResponseDtoSubscriptionType[keyof typeof ActiveSubscriptionResponseDtoSubscriptionType] | null;
+
+
+export const ActiveSubscriptionResponseDtoSubscriptionType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+  /**
+     * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+     * @nullable
+     */
+  subscriptionType: ActiveSubscriptionResponseDtoSubscriptionType;
+}
+
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
+}
+
+export interface SubscriptionBillingInfoResponseDto {
+  /** Company name */
+  companyName: string;
+  /** Street */
+  street: string;
+  /** Number */
+  houseNumber: string;
+  /** City */
+  city: string;
+  /** Postal code */
+  postalCode: string;
+  /** Country */
+  country: string;
+  /** USt-ID */
+  vatNumber?: string;
+}
+
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Subscription type
+ */
+export type SubscriptionResponseDtoType = typeof SubscriptionResponseDtoType[keyof typeof SubscriptionResponseDtoType];
+
+
+export const SubscriptionResponseDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
+ */
+export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
+
+
+export const SubscriptionResponseDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface SubscriptionResponseDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
+  /**
+     * Exclusive date when this subscription stops controlling product access
+     * @nullable
+     */
+  endsAt: string | null;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Subscription type */
+  type: SubscriptionResponseDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+     * Number of available seats (total seats minus invites, seat-based only)
+     * @nullable
+     */
+  availableSeats?: number | null;
+  /**
+     * Next renewal before the access end, or null when no renewal remains
+     * @nullable
+     */
+  nextRenewalDate: string | null;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
+}
+
+export interface SubscriptionResponseDtoNullable {
+  /** Subscription */
+  subscription?: SubscriptionResponseDto;
+}
+
+/**
+ * Subscription type. Defaults to SEAT_BASED if not specified.
+ */
+export type CreateSubscriptionRequestDtoType = typeof CreateSubscriptionRequestDtoType[keyof typeof CreateSubscriptionRequestDtoType];
+
+
+export const CreateSubscriptionRequestDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+export interface CreateSubscriptionRequestDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+  /** Subscription type. Defaults to SEAT_BASED if not specified. */
+  type?: CreateSubscriptionRequestDtoType;
+  /**
+     * Number of seats for the subscription (seat-based only)
+     * @minimum 1
+     */
+  noOfSeats?: number;
+  /**
+     * Monthly credit budget (usage-based only)
+     * @minimum 1
+     */
+  monthlyCredits?: number;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
+  /** Exclusive access end (ISO 8601). Must be after the start; omitted means open-ended. */
+  endsAt?: string;
+}
+
+/**
+ * Subscription type. Defaults to SEAT_BASED if not specified.
+ */
+export type ChangeSubscriptionRequestDtoType = typeof ChangeSubscriptionRequestDtoType[keyof typeof ChangeSubscriptionRequestDtoType];
+
+
+export const ChangeSubscriptionRequestDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way.
+ */
+export type ChangeSubscriptionRequestDtoOldSubscriptionDisposition = typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition[keyof typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition];
+
+
+export const ChangeSubscriptionRequestDtoOldSubscriptionDisposition = {
+  CANCEL: 'CANCEL',
+  DELETE: 'DELETE',
+} as const;
+
+export interface ChangeSubscriptionRequestDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+  /** Subscription type. Defaults to SEAT_BASED if not specified. */
+  type?: ChangeSubscriptionRequestDtoType;
+  /**
+     * Number of seats for the subscription (seat-based only)
+     * @minimum 1
+     */
+  noOfSeats?: number;
+  /**
+     * Monthly credit budget (usage-based only)
+     * @minimum 1
+     */
+  monthlyCredits?: number;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
+  /** How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way. */
+  oldSubscriptionDisposition: ChangeSubscriptionRequestDtoOldSubscriptionDisposition;
+}
+
+export interface UpdateBillingInfoDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface UpdateStartDateDto {
+  /** New subscription start date (ISO 8601) */
+  startsAt: string;
+}
+
+export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
+
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type OrgSubscriptionHistoryItemDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Subscription type
+ */
+export type OrgSubscriptionHistoryItemDtoType = typeof OrgSubscriptionHistoryItemDtoType[keyof typeof OrgSubscriptionHistoryItemDtoType];
+
+
+export const OrgSubscriptionHistoryItemDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
+ */
+export type OrgSubscriptionHistoryItemDtoRenewalCycle = typeof OrgSubscriptionHistoryItemDtoRenewalCycle[keyof typeof OrgSubscriptionHistoryItemDtoRenewalCycle];
+
+
+export const OrgSubscriptionHistoryItemDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+/**
+ * Lifecycle status of this subscription record
+ */
+export type OrgSubscriptionHistoryItemDtoStatus = typeof OrgSubscriptionHistoryItemDtoStatus[keyof typeof OrgSubscriptionHistoryItemDtoStatus];
+
+
+export const OrgSubscriptionHistoryItemDtoStatus = {
+  ACTIVE: 'ACTIVE',
+  SCHEDULED: 'SCHEDULED',
+  CANCELLED: 'CANCELLED',
+  HISTORICAL: 'HISTORICAL',
+} as const;
+
+export interface OrgSubscriptionHistoryItemDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: OrgSubscriptionHistoryItemDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
+  /**
+     * Exclusive date when this subscription stops controlling product access
+     * @nullable
+     */
+  endsAt: string | null;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Subscription type */
+  type: OrgSubscriptionHistoryItemDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: OrgSubscriptionHistoryItemDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+     * Number of available seats (total seats minus invites, seat-based only)
+     * @nullable
+     */
+  availableSeats?: number | null;
+  /**
+     * Next renewal before the access end, or null when no renewal remains
+     * @nullable
+     */
+  nextRenewalDate: string | null;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
+  /** Lifecycle status of this subscription record */
+  status: OrgSubscriptionHistoryItemDtoStatus;
+  /** Whether this is the newest subscription for the organization */
+  isLatest: boolean;
+}
+
+export interface OrgSubscriptionsResponseDto {
+  /** All subscriptions belonging to the organization, newest first */
+  subscriptions: OrgSubscriptionHistoryItemDto[];
+  /** How many subscriptions are currently serving access (including cancelled seat-based records still inside their paid period) */
+  activeCount: number;
+}
+
+export interface UpdateSeatsDto { [key: string]: unknown }
+
+export interface SubscriptionAccessEndAdjustmentDto {
+  subscriptionId: string;
+  /** Exclusive end of product access for this subscription */
+  endsAt: string;
+}
+
+export interface ResolveSubscriptionOverlapDto {
+  authoritativeSubscriptionId: string;
+  adjustments: SubscriptionAccessEndAdjustmentDto[];
+  /**
+     * Audit reason for correcting the subscription access periods
+     * @minLength 1
+     * @maxLength 500
+     */
+  reason: string;
+}
+
 export interface CreateTeamDto {
   /** The name of the team */
   name: string;
@@ -2393,23 +2410,6 @@ export interface SignedUploadUrlResponseDto {
   url: string;
   /** The URL stops working after this time; sign again to retry */
   expiresAt: string;
-}
-
-export interface TranscriptionResponseDto {
-  /** The transcribed text from the audio file */
-  text: string;
-}
-
-export interface CrawlDomainGrantResponseDto {
-  id: string;
-  orgId: string;
-  domain: string;
-  createdAt: string;
-}
-
-export interface GrantCrawlDomainRequestDto {
-  /** The exact host to authorize for crawling by this organization. A full URL is accepted and reduced to its host. */
-  domain: string;
 }
 
 export interface CreateThreadDto {
@@ -3736,7 +3736,7 @@ export interface McpIntegrationResponseDto {
   type: McpIntegrationResponseDtoType;
   /** Predefined integration slug (only for predefined integrations) */
   slug?: string;
-  /** Custom server URL (only for custom integrations) */
+  /** Server URL (custom integrations, and marketplace integrations whose URL the customer provides) */
   serverUrl?: string;
   /** Whether the integration is enabled */
   enabled: boolean;
@@ -3779,6 +3779,13 @@ export interface McpIntegrationResponseDto {
      * @nullable
      */
   logoUrl?: string | null;
+  /** Whether the organization provides the server URL of this marketplace integration (only for marketplace integrations) */
+  customerProvidesServerUrl?: boolean;
+  /**
+     * Tells the organization which server URL to enter (only for marketplace integrations)
+     * @nullable
+     */
+  serverUrlHint?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
 }
@@ -3991,6 +3998,8 @@ export interface InstallMarketplaceIntegrationDto {
   orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii?: boolean;
+  /** URL of the customer's own MCP server. Required when the marketplace entry lets the customer provide the server URL; rejected otherwise. */
+  serverUrl?: string;
   oauthClient?: McpOAuthClientDto;
 }
 
@@ -4099,10 +4108,10 @@ export interface MarketplaceSkillResponseDto {
      */
   skillCategoryId?: string | null;
   /**
-     * Icon URL
+     * Lucide icon name (kebab-case)
      * @nullable
      */
-  iconUrl?: string | null;
+  iconName?: string | null;
   /** Whether the skill is featured */
   featured: boolean;
   /** Whether the skill is published */
@@ -4193,8 +4202,18 @@ export interface MarketplaceIntegrationResponseDto {
      * @nullable
      */
   integrationCategoryId?: string | null;
-  /** MCP server URL */
-  serverUrl: string;
+  /**
+     * MCP server URL. Null when the customer provides the server URL at install time.
+     * @nullable
+     */
+  serverUrl: string | null;
+  /** Whether the customer enters the URL of their own MCP server at install time */
+  customerProvidesServerUrl: boolean;
+  /**
+     * Tells the customer which server URL to enter
+     * @nullable
+     */
+  serverUrlHint: string | null;
   /** Configuration schema (authType, orgFields, userFields, oauth) */
   configSchema: MarketplaceIntegrationConfigSchemaDto;
   /** Whether the integration is featured */
@@ -6021,6 +6040,19 @@ export interface CreateRecordingDto {
   name: string;
 }
 
+/**
+ * uploading until the audio is stored, then transcribing, transcribed or failed
+ */
+export type RecordingStatus = typeof RecordingStatus[keyof typeof RecordingStatus];
+
+
+export const RecordingStatus = {
+  uploading: 'uploading',
+  transcribing: 'transcribing',
+  transcribed: 'transcribed',
+  failed: 'failed',
+} as const;
+
 export type RecordingResponseDtoOwnerType = typeof RecordingResponseDtoOwnerType[keyof typeof RecordingResponseDtoOwnerType];
 
 
@@ -6044,12 +6076,33 @@ export interface RecordingResponseDto {
      * @nullable
      */
   creatorName: string | null;
+  /** uploading until the audio is stored, then transcribing, transcribed or failed */
+  status: RecordingStatus;
+  /** Why the transcription failed; only when the status is failed */
+  failureCode?: SourceProcessingErrorCode;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface RecordingListResponseDto {
   data: RecordingResponseDto[];
+}
+
+export interface RecordingTranscriptTurnDto {
+  /** The speaker label the transcription provider assigned; absent when it named none */
+  speakerId?: string;
+  /** Speakers numbered in order of first appearance */
+  speakerNumber?: number;
+  /** Seconds from the start of the recording */
+  start: number;
+  /** Seconds from the start of the recording */
+  end: number;
+  text: string;
+}
+
+export interface RecordingTranscriptResponseDto {
+  /** Empty until the recording is transcribed */
+  turns: RecordingTranscriptTurnDto[];
 }
 
 export interface RenameRecordingDto {
@@ -6428,6 +6481,40 @@ export interface LogoutResponseDto {
   brokerLogoutUrl: string | null;
 }
 
+export type SuperAdminOrgsControllerGetAllOrgsParams = {
+/**
+ * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
+ */
+lifecycle?: OrgLifecycleFilter;
+/**
+ * Search organizations by name, or by exact organization ID.
+ */
+search?: string;
+/**
+ * Maximum number of organizations to return (default: 50).
+ */
+limit?: number;
+/**
+ * Number of organizations to skip (default: 0).
+ */
+offset?: number;
+/**
+ * Column to sort by
+ */
+sortBy?: OrgsSortField;
+/**
+ * Sort direction
+ */
+sortOrder?: SortOrder;
+};
+
+export type TranscriptionsControllerTranscribeBody = {
+  /** The audio file to transcribe */
+  file: Blob | File;
+  /** Optional language hint (e.g., "en", "de") */
+  language?: string;
+};
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email
@@ -6554,33 +6641,6 @@ sortBy?: InvitesSortField;
 sortOrder?: SortOrder;
 };
 
-export type SuperAdminOrgsControllerGetAllOrgsParams = {
-/**
- * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
- */
-lifecycle?: OrgLifecycleFilter;
-/**
- * Search organizations by name, or by exact organization ID.
- */
-search?: string;
-/**
- * Maximum number of organizations to return (default: 50).
- */
-limit?: number;
-/**
- * Number of organizations to skip (default: 0).
- */
-offset?: number;
-/**
- * Column to sort by
- */
-sortBy?: OrgsSortField;
-/**
- * Sort direction
- */
-sortOrder?: SortOrder;
-};
-
 export type TeamMembersControllerListTeamMembersParams = {
 /**
  * Maximum number of items per page
@@ -6601,13 +6661,6 @@ limit?: number;
  * Number of items to skip
  */
 offset?: number;
-};
-
-export type TranscriptionsControllerTranscribeBody = {
-  /** The audio file to transcribe */
-  file: Blob | File;
-  /** Optional language hint (e.g., "en", "de") */
-  language?: string;
 };
 
 export type ThreadsControllerFindAllParams = {

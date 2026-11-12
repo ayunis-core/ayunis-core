@@ -3,7 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
-import { Brackets, Repository, type EntityManager } from 'typeorm';
+import {
+  Brackets,
+  In,
+  QueryFailedError,
+  Repository,
+  type EntityManager,
+} from 'typeorm';
+import type { RecordingAudio } from 'src/domain/recordings/application/models/recording-audio';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { whereCollectiveOwner } from 'src/domain/ownership/infrastructure/persistence/collective-owner.db-query';
 import { RecordingRepository } from 'src/domain/recordings/application/ports/recording.repository';
 import type { Recording } from 'src/domain/recordings/domain/recording';
@@ -19,8 +27,18 @@ export class LocalRecordingRepository extends RecordingRepository {
     private readonly defaultRepository: Repository<RecordingRecord>,
     private readonly mapper: RecordingMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
+    @InjectRepository(SourceRecord)
+    private readonly defaultSourceRepository: Repository<SourceRecord>,
   ) {
     super();
+  }
+
+  private get sources(): Repository<SourceRecord> {
+    const transactionManager = this.txHost.tx as EntityManager | undefined;
+    return (
+      transactionManager?.getRepository(SourceRecord) ??
+      this.defaultSourceRepository
+    );
   }
 
   private get repository(): Repository<RecordingRecord> {
@@ -116,7 +134,52 @@ export class LocalRecordingRepository extends RecordingRepository {
     return this.mapper.toDomain(saved);
   }
 
+  async findAudio(recordingIds: UUID[]): Promise<Map<UUID, RecordingAudio>> {
+    const audio = new Map<UUID, RecordingAudio>();
+    if (recordingIds.length === 0) return audio;
+    const records = await this.sources.find({
+      where: { recordingId: In(recordingIds) },
+    });
+    for (const record of records) {
+      if (!record.recordingId) continue;
+      audio.set(record.recordingId, {
+        sourceId: record.id,
+        fileName: record.name,
+        storageKey: record.storageKey,
+        sourceStatus: record.status,
+        failureCode: record.processingErrorCode,
+      });
+    }
+    return audio;
+  }
+
+  async attachAudio(recordingId: UUID, sourceId: UUID): Promise<boolean> {
+    try {
+      const result = await this.sources
+        .createQueryBuilder()
+        .update(SourceRecord)
+        .set({ recordingId })
+        .where('id = :sourceId', { sourceId })
+        .andWhere(
+          'NOT EXISTS (SELECT 1 FROM sources audio WHERE audio."recordingId" = :recordingId)',
+          { recordingId },
+        )
+        .execute();
+      return result.affected === 1;
+    } catch (error) {
+      // Two uploads completing at once: the unique index keeps the first.
+      if (isUniqueViolation(error)) return false;
+      throw error;
+    }
+  }
+
   async delete(recording: Recording): Promise<void> {
     await this.repository.delete({ id: recording.id });
   }
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!(error instanceof QueryFailedError)) return false;
+  const driverError: unknown = error.driverError;
+  return (driverError as { code?: string } | undefined)?.code === '23505';
 }

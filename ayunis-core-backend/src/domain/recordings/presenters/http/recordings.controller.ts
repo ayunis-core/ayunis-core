@@ -24,6 +24,8 @@ import { DeleteRecordingCommand } from 'src/domain/recordings/application/use-ca
 import { DeleteRecordingUseCase } from 'src/domain/recordings/application/use-cases/delete-recording/delete-recording.use-case';
 import { FindRecordingQuery } from 'src/domain/recordings/application/use-cases/find-recording/find-recording.query';
 import { FindRecordingUseCase } from 'src/domain/recordings/application/use-cases/find-recording/find-recording.use-case';
+import { GetRecordingTranscriptQuery } from 'src/domain/recordings/application/use-cases/get-recording-transcript/get-recording-transcript.query';
+import { GetRecordingTranscriptUseCase } from 'src/domain/recordings/application/use-cases/get-recording-transcript/get-recording-transcript.use-case';
 import { ListRecordingsQuery } from 'src/domain/recordings/application/use-cases/list-recordings/list-recordings.query';
 import { ListRecordingsUseCase } from 'src/domain/recordings/application/use-cases/list-recordings/list-recordings.use-case';
 import { RenameRecordingCommand } from 'src/domain/recordings/application/use-cases/rename-recording/rename-recording.command';
@@ -42,6 +44,7 @@ import {
   RecordingListResponseDto,
   RecordingResponseDto,
 } from './dto/recording-response.dto';
+import { RecordingTranscriptResponseDto } from './dto/recording-transcript-response.dto';
 import { RenameRecordingDto } from './dto/rename-recording.dto';
 import { RecordingDtoMapper } from './mappers/recording-dto.mapper';
 
@@ -58,6 +61,7 @@ export class RecordingsController {
     private readonly renameRecording: RenameRecordingUseCase,
     private readonly changeRecordingOwner: ChangeRecordingOwnerUseCase,
     private readonly deleteRecording: DeleteRecordingUseCase,
+    private readonly getTranscript: GetRecordingTranscriptUseCase,
     private readonly mapper: RecordingDtoMapper,
   ) {}
 
@@ -100,6 +104,19 @@ export class RecordingsController {
     return this.mapper.toDto(
       await this.findRecording.execute(new FindRecordingQuery(id)),
     );
+  }
+
+  @Get(':id/transcript')
+  @ApiOperation({ summary: "Get a recording's transcript as speaker turns" })
+  @ApiResponse({ status: 200, type: RecordingTranscriptResponseDto })
+  @ApiResponse({ status: 404, description: 'Recording not found' })
+  async transcript(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<RecordingTranscriptResponseDto> {
+    const turns = await this.getTranscript.execute(
+      new GetRecordingTranscriptQuery(id),
+    );
+    return { turns };
   }
 
   @RequirePermission(Permission.MANAGE_RECORDINGS)

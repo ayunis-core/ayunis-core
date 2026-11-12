@@ -36,8 +36,8 @@ export function WorkspaceRecordingsTab({
           <RecordingCreateDialog
             buttonText={t('context.recordings.create')}
             buttonTestId="workspace-recording-create"
-            onCreate={async ({ name }) => {
-              const recording = await createRecording(name);
+            onCreate={async ({ name, file }) => {
+              const recording = await createRecording({ name, file });
               open(recording.id);
             }}
           />

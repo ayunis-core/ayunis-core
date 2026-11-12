@@ -4,6 +4,10 @@ import type {
   TranscriptSegment,
 } from 'src/domain/transcriptions/domain/recording-transcript';
 import { TranscriptionFailedError } from 'src/domain/transcriptions/application/transcription.errors';
+import {
+  formatTimestamp,
+  speakerTurns,
+} from 'src/domain/transcriptions/domain/transcript-turns';
 
 export function restoreTranscript(
   json: string,
@@ -73,31 +77,36 @@ export function formatTranscript(
         if (segment.partNumber !== undefined)
           label = `Part ${segment.partNumber} / ${label}`;
       }
-      return `[${timestamp(segment.start + part.start)} - ${timestamp(segment.start + part.end)}] ${label}${part.text.trim().replace(/\s+/g, ' ')}`;
+      return `[${formatTimestamp(segment.start + part.start)} - ${formatTimestamp(segment.start + part.end)}] ${label}${part.text.trim().replace(/\s+/g, ' ')}`;
     });
 }
 
-function speakerTurns(segments: TranscriptSegment[]): TranscriptSegment[] {
-  const turns: TranscriptSegment[] = [];
-  for (const segment of segments) {
-    const previous = turns.at(-1);
-    if (
-      previous &&
-      previous.speakerId === segment.speakerId &&
-      previous.end <= segment.start &&
-      previous.text.length + segment.text.length < 2000
-    ) {
-      previous.text += ` ${segment.text.trim()}`;
-      previous.end = segment.end;
-    } else turns.push({ ...segment });
+/**
+ * The part's segments in recording time. Speaker labels stay the provider's,
+ * scoped to the part when the recording had to be split, since the provider
+ * only keeps them consistent within one request.
+ */
+export function toRecordingSegments(
+  result: RecordingTranscript,
+  segment: AudioSegment,
+): TranscriptSegment[] {
+  if (result.segments.length === 0) {
+    const text = result.text.trim();
+    return text
+      ? [{ text, start: segment.start, end: segment.start + segment.duration }]
+      : [];
   }
-  return turns;
-}
-
-function timestamp(seconds: number): string {
-  const milliseconds = Math.round(seconds * 1000);
-  const hours = Math.floor(milliseconds / 3_600_000);
-  const minutes = Math.floor(milliseconds / 60_000) % 60;
-  const secs = Math.floor(milliseconds / 1000) % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(milliseconds % 1000).padStart(3, '0')}`;
+  return result.segments
+    .filter((part) => part.text.trim())
+    .map((part) => ({
+      text: part.text.trim(),
+      start: segment.start + part.start,
+      end: segment.start + part.end,
+      ...(part.speakerId !== undefined && {
+        speakerId:
+          segment.partNumber === undefined
+            ? part.speakerId
+            : `part-${segment.partNumber}/${part.speakerId}`,
+      }),
+    }));
 }

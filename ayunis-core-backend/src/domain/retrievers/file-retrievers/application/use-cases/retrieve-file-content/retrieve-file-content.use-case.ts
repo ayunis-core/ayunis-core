@@ -427,7 +427,7 @@ export class RetrieveFileContentUseCase {
     mimeType: string,
     processingContext?: ProcessingContext,
   ): Promise<FileRetrieverResult> {
-    const transcript = await this.transcribeUseCase.execute(
+    const { text } = await this.transcribeUseCase.execute(
       new TranscribeCommand({
         file: fileData,
         recording,
@@ -436,6 +436,6 @@ export class RetrieveFileContentUseCase {
         processingContext,
       }),
     );
-    return new FileRetrieverResult([new FileRetrieverPage(transcript, 1)]);
+    return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
   }
 }

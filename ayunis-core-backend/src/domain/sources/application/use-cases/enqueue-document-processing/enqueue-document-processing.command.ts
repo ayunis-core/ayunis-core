@@ -10,6 +10,7 @@ export class EnqueueDocumentProcessingCommand {
   readonly retainFile: boolean;
   readonly expectedSize?: number;
   readonly expectedETag?: string;
+  readonly keepTranscriptSegments: boolean;
 
   constructor(params: {
     sourceId: UUID;
@@ -21,6 +22,7 @@ export class EnqueueDocumentProcessingCommand {
     retainFile?: boolean;
     expectedSize?: number;
     expectedETag?: string;
+    keepTranscriptSegments?: boolean;
   }) {
     this.sourceId = params.sourceId;
     this.orgId = params.orgId;
@@ -31,5 +33,6 @@ export class EnqueueDocumentProcessingCommand {
     this.retainFile = params.retainFile ?? false;
     this.expectedSize = params.expectedSize;
     this.expectedETag = params.expectedETag;
+    this.keepTranscriptSegments = params.keepTranscriptSegments ?? false;
   }
 }

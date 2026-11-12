@@ -6,6 +6,8 @@ import {
   requestRecording,
   requestRecordingCreation,
   requestRecordings,
+  requestRecordingTranscript,
+  requestRecordingUpload,
 } from '../../src/clients/api/recordings.client';
 import { getRolePermissions } from '../../src/clients/api/role-permissions.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
@@ -40,6 +42,19 @@ test('with recordings disabled there are no recording endpoints or pages, and sk
   expect((await requestRecordings(api, disabledApiUrl)).status()).toBe(404);
   expect(
     (await requestRecording(api, recording.id, disabledApiUrl)).status(),
+  ).toBe(404);
+  expect(
+    (
+      await requestRecordingUpload(
+        api,
+        recording.id,
+        { fileName: `sitzung-${key}.mp3`, mimeType: 'audio/mpeg', fileSize: 1024 },
+        disabledApiUrl,
+      )
+    ).status(),
+  ).toBe(404);
+  expect(
+    (await requestRecordingTranscript(api, recording.id, disabledApiUrl)).status(),
   ).toBe(404);
   expect(
     (

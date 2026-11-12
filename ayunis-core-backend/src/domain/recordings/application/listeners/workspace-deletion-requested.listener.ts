@@ -21,7 +21,7 @@ export class RecordingsWorkspaceDeletionRequestedListener {
       const recordings = await this.repository.findAllByWorkspaceId(
         event.workspaceId,
       );
-      this.cleanup.deferCleanup(event, recordings, 'workspace');
+      await this.cleanup.deferCleanup(event, recordings, 'workspace');
     } catch (error) {
       this.logger.error(
         { workspaceId: event.workspaceId, err: error as Error },

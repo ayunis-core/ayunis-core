@@ -207,3 +207,86 @@ export async function expireInvites(emails: string[]): Promise<void> {
     await client.end();
   }
 }
+
+export interface RecordingAudioRows {
+  storageKey: string | null;
+  /** The transcript segments, in order, with the speaker label apart from the text. */
+  segments: { speaker: string | null; text: string; start: number; end: number }[];
+  /** Search index entries of the audio's transcript. */
+  indexEntries: number;
+  /** Time ranges of the transcript chunks the index entries point at. */
+  chunkRanges: { start: number; end: number }[];
+}
+
+/** What the database keeps of a recording's audio; null once it is gone. */
+export async function findRecordingAudioRows(
+  recordingId: string,
+): Promise<RecordingAudioRows | null> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const source = await client.query<{ id: string; storageKey: string | null }>(
+      'SELECT id, "storageKey" FROM sources WHERE "recordingId" = $1',
+      [recordingId],
+    );
+    const audio = source.rows[0];
+    if (!audio) return null;
+    const segments = await client.query<{
+      speaker: string | null;
+      text: string;
+      start: number;
+      end: number;
+    }>(
+      `SELECT speaker, text, "startSeconds" AS start, "endSeconds" AS "end"
+       FROM source_transcript_segments WHERE "sourceId" = $1 ORDER BY position`,
+      [audio.id],
+    );
+    const chunks = await client.query<{ start: number; end: number }>(
+      `SELECT (c.meta->>'start')::float AS start, (c.meta->>'end')::float AS "end"
+       FROM parent_chunks p JOIN source_content_chunks c ON c.id = p."relatedChunkId"
+       WHERE p."relatedDocumentId" = $1`,
+      [audio.id],
+    );
+    return {
+      storageKey: audio.storageKey,
+      segments: segments.rows,
+      indexEntries: chunks.rowCount ?? 0,
+      chunkRanges: chunks.rows,
+    };
+  } finally {
+    await client.end();
+  }
+}
+
+/** Rows left behind by a deleted audio source: segments and index entries. */
+export async function countOrphanedAudioRows(sourceIds: string[]): Promise<number> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ count: string }>(
+      `SELECT (SELECT COUNT(*) FROM sources WHERE id = ANY($1))
+        + (SELECT COUNT(*) FROM source_transcript_segments WHERE "sourceId" = ANY($1))
+        + (SELECT COUNT(*) FROM parent_chunks WHERE "relatedDocumentId" = ANY($1)) AS count`,
+      [sourceIds],
+    );
+    return Number(result.rows[0]?.count ?? 0);
+  } finally {
+    await client.end();
+  }
+}
+
+export async function findRecordingAudioSourceId(
+  recordingId: string,
+): Promise<string | null> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{ id: string }>(
+      'SELECT id FROM sources WHERE "recordingId" = $1',
+      [recordingId],
+    );
+    return result.rows[0]?.id ?? null;
+  } finally {
+    await client.end();
+  }
+}

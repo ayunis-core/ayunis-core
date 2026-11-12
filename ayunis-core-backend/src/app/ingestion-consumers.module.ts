@@ -15,6 +15,9 @@ import { SourceProcessingHeartbeatService } from 'src/domain/sources/application
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { SourceTranscriptContentService } from 'src/domain/sources/application/services/source-transcript-content.service';
+import { RecordingTranscriptExtractor } from 'src/domain/sources/infrastructure/queue/recording-transcript.extractor';
+import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
 import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queue/document-processing.module';
 import { DataSourceProcessingModule } from 'src/domain/sources/infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-crawl.module';
@@ -46,6 +49,7 @@ export const INGESTION_QUEUES = [
     DataSourceProcessingModule,
     UrlCrawlModule,
     RetrieverModule,
+    TranscriptionsModule,
     SplitterModule,
     IndexersModule,
     StorageModule,
@@ -60,6 +64,8 @@ export const INGESTION_QUEUES = [
     SourceProcessingHelper,
     CrawledPdfSourcesService,
     MarkSourceFailedUseCase,
+    SourceTranscriptContentService,
+    RecordingTranscriptExtractor,
     DocumentProcessingConsumer,
     DataSourceProcessingConsumer,
     UrlCrawlConsumer,

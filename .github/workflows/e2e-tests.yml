@@ -320,10 +320,14 @@ jobs:
           AWS_BEDROCK_REGION=eu-central-1
           AZURE_OPENAI_API_KEY=e2e-ci-dummy
 
-          # Deterministic Mistral OCR and speech contract server
+          # Deterministic Mistral OCR, speech and transcription contract server
           MISTRAL_API_KEY=e2e-ci-mistral-key
           MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
           MISTRAL_SPEECH_SERVER_URL=http://127.0.0.1:3199
+          MISTRAL_TRANSCRIPTION_SERVER_URL=http://127.0.0.1:3199
+          # Short duration cap, so a 40-second recording proves RECORDING_TOO_LONG
+          # (tests/recordings/recording-transcription.spec.ts).
+          AUDIO_MAX_DURATION_SECONDS=30
           FEATURE_READ_ALOUD_ENABLED=true
 
           # MinIO
@@ -370,12 +374,12 @@ jobs:
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3198/health; do sleep 1; done' \
             || { cat announcable-mock.log; exit 1; }
 
-      # The backend and worker run on the runner, not in the image, and
-      # split PDFs with qpdf.
-      - name: Install qpdf
+      # The backend and worker run on the runner, not in the image: they split
+      # PDFs with qpdf and prepare recordings with FFmpeg.
+      - name: Install qpdf and FFmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y qpdf
+          sudo apt-get install -y qpdf ffmpeg
 
       - name: Run migrations
         working-directory: ayunis-core-backend

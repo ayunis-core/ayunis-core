@@ -32,6 +32,7 @@ export class EnqueueDocumentProcessingUseCase {
         retainFile: command.retainFile,
         expectedSize: command.expectedSize,
         expectedETag: command.expectedETag,
+        ...(command.keepTranscriptSegments && { keepTranscriptSegments: true }),
       });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
