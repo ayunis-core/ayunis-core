@@ -23,6 +23,7 @@ import { urlConfig } from './url.config';
 import { ssoOidcConfig } from 'src/config/sso-oidc.config';
 import { coreConnectConfig } from './core-connect.config';
 import { routinesConfig } from './routines.config';
+import { recordingsConfig } from './recordings.config';
 import { releaseNotesConfig } from './release-notes.config';
 
 /**
@@ -61,5 +62,6 @@ export const rootConfigs = [
   ssoOidcConfig,
   coreConnectConfig,
   routinesConfig,
+  recordingsConfig,
   releaseNotesConfig,
 ];

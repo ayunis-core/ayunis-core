@@ -10,6 +10,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import transcriptionConfig from 'src/config/transcription.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -28,6 +29,7 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import { TranscriptReadyEvent } from 'src/domain/sources/application/events/transcript-ready.event';
 import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
 import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
@@ -85,6 +87,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly transcriptContent: SourceTranscriptContentService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     super();
   }
@@ -174,8 +177,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
     await processingStage('document.indexing', () =>
       this.helper.index(sourceId, orgId, chunks),
     );
-    await this.markSourceReady(sourceId, cleanupPath);
+    const ready = await this.markSourceReady(sourceId, cleanupPath);
     await this.cleanupCheckpoints(orgId, sourceId);
+    if (ready && job.data.keepTranscriptSegments) {
+      await this.announceTranscript(job.data);
+    }
 
     this.logger.log(
       {
@@ -431,7 +437,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
   private async markSourceReady(
     sourceId: UUID,
     cleanupPath: string | null,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const updated = await this.sourceRepository.updateStatusConditionally(
       sourceId,
       SourceStatus.PROCESSING,
@@ -446,6 +452,26 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.helper.cleanupIndex(sourceId);
     }
     await this.cleanupMinioFile(cleanupPath);
+    return updated;
+  }
+
+  // The source is READY whatever its listeners do, so their failures must not
+  // fail (and retry) the processing job.
+  private async announceTranscript({
+    sourceId,
+    orgId,
+  }: DocumentProcessingJobData): Promise<void> {
+    try {
+      await this.eventEmitter.emitAsync(
+        TranscriptReadyEvent.EVENT_NAME,
+        new TranscriptReadyEvent(sourceId, orgId),
+      );
+    } catch (error) {
+      this.logger.error(
+        { sourceId, err: error as Error },
+        'Transcript ready listener failed',
+      );
+    }
   }
 
   private async cleanupCheckpoints(orgId: UUID, sourceId: UUID): Promise<void> {

@@ -18,6 +18,7 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { SourceTranscriptContentService } from 'src/domain/sources/application/services/source-transcript-content.service';
 import { RecordingTranscriptExtractor } from 'src/domain/sources/infrastructure/queue/recording-transcript.extractor';
 import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
+import { RecordingSummaryTriggerModule } from 'src/domain/recordings/recording-summary-trigger.module';
 import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queue/document-processing.module';
 import { DataSourceProcessingModule } from 'src/domain/sources/infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-crawl.module';
@@ -56,6 +57,8 @@ export const INGESTION_QUEUES = [
     ContextModule,
     SpreadsheetParsingModule,
     LocalSourceRepositoryModule,
+    // Recordings are summarized once the document consumer has their transcript.
+    RecordingSummaryTriggerModule,
   ],
   providers: [
     StoredSourceFileService,

@@ -219,6 +219,11 @@ export class EnvironmentVariables {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  RECORDING_SUMMARY_CONCURRENCY?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   SOURCE_GET_TEXT_MAX_LINES?: number;
   @IsOptional()
   @Type(() => Number)

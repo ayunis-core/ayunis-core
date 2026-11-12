@@ -7,6 +7,7 @@ import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/que
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
+import { RECORDING_SUMMARY_QUEUE } from 'src/domain/recordings/infrastructure/queue/recording-summary.constants';
 import { sampleQueueHealth } from './queue-health';
 
 @Injectable()
@@ -20,6 +21,8 @@ export class QueueTelemetryService {
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
     @InjectQueue(ROUTINE_EXECUTION_QUEUE) private readonly routines: Queue,
+    @InjectQueue(RECORDING_SUMMARY_QUEUE)
+    private readonly recordingSummaries: Queue,
   ) {}
 
   @Interval(30_000)
@@ -33,6 +36,7 @@ export class QueueTelemetryService {
         this.dataSources,
         this.urls,
         this.routines,
+        this.recordingSummaries,
       ]) {
         try {
           await sampleQueueHealth(queue, client.metrics());

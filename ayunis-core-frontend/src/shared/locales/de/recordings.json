@@ -80,13 +80,34 @@
       "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
       "noPermission": "Sie dürfen diese Aufzeichnung nicht umbenennen."
     },
+    "summary": {
+      "title": "Zusammenfassung",
+      "description": "Das Protokoll der Sitzung, erstellt aus dem Transkript.",
+      "generatedWith": "Erstellt mit {{model}} am {{date}}",
+      "summarizing": "Die Zusammenfassung wird erstellt. Das kann einige Minuten dauern.",
+      "retry": "Erneut versuchen",
+      "retryError": "Die Zusammenfassung konnte nicht neu gestartet werden. Bitte versuchen Sie es erneut.",
+      "retryNotFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+      "retryNotRetryable": "Die Zusammenfassung wird bereits erstellt oder ist fertig.",
+      "retryNoPermission": "Sie dürfen diese Aufzeichnung nicht verwalten.",
+      "failure": {
+        "noModel": "Die Zusammenfassung konnte nicht erstellt werden: Dafür ist kein Sprachmodell verfügbar. Administratoren können eines in den Modelleinstellungen auswählen.",
+        "creditBudget": "Die Zusammenfassung konnte nicht erstellt werden: Die Credits der Organisation für diesen Monat sind aufgebraucht.",
+        "creditLimit": "Die Zusammenfassung konnte nicht erstellt werden: Das monatliche Credit-Limit ist erreicht.",
+        "tooLong": "Die Zusammenfassung konnte nicht erstellt werden: Das Transkript ist zu lang für das Modell.",
+        "empty": "Die Zusammenfassung konnte nicht erstellt werden: Die Aufzeichnung enthält keine Sprache.",
+        "unavailable": "Die Zusammenfassung konnte nicht erstellt werden: Der Modellanbieter ist nicht erreichbar.",
+        "failed": "Die Zusammenfassung konnte nicht erstellt werden."
+      }
+    },
     "transcript": {
       "title": "Transkript",
       "description": "Was gesagt wurde, nach Sprechern. Die Sprecherkennzeichnungen stammen aus der Transkription und sind keine Namen.",
       "status": {
         "uploading": "Wird hochgeladen",
         "transcribing": "Wird transkribiert",
-        "transcribed": "Transkribiert",
+        "summarizing": "Wird zusammengefasst",
+        "ready": "Fertig",
         "failed": "Fehlgeschlagen"
       },
       "transcribing": "Die Aufzeichnung wird transkribiert. Das kann einige Minuten dauern.",

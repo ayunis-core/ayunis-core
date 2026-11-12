@@ -6,6 +6,8 @@ import {
   requestRecording,
   requestRecordingCreation,
   requestRecordings,
+  requestRecordingSummary,
+  requestRecordingSummaryRetry,
   requestRecordingTranscript,
   requestRecordingUpload,
 } from '../../src/clients/api/recordings.client';
@@ -66,6 +68,14 @@ test('with recordings disabled there are no recording endpoints or pages, and sk
   ).toBe(404);
   expect(
     (await requestRecordingTranscript(api, recording.id, disabledApiUrl)).status(),
+  ).toBe(404);
+  expect(
+    (await requestRecordingSummary(api, recording.id, disabledApiUrl)).status(),
+  ).toBe(404);
+  expect(
+    (
+      await requestRecordingSummaryRetry(api, recording.id, disabledApiUrl)
+    ).status(),
   ).toBe(404);
   expect(
     (

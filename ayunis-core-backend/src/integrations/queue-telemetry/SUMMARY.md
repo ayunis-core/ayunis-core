@@ -1,6 +1,6 @@
 # Queue telemetry
 
-Samples document-processing, data-source-processing, and url-crawl every 30 seconds
+Samples document-processing, data-source-processing, url-crawl, routine-execution and recording-summary every 30 seconds
 when AppSignal is active. Global Redis inventory is emitted as gauges tagged only
 by queue. Replicas may repeat these read-only, idempotent samples; event counters
 are emitted only by the executing consumer. Local overlap is skipped.

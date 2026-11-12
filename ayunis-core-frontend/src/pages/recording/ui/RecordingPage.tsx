@@ -29,6 +29,7 @@ import {
   useRecording,
   useRenameRecording,
 } from '@/pages/recording/api';
+import { RecordingSummaryCard } from './RecordingSummaryCard';
 import { RecordingTranscriptCard } from './RecordingTranscriptCard';
 
 export function RecordingPage({
@@ -143,6 +144,13 @@ export function RecordingPage({
               onRename={renameRecording}
               disabled={!isManageable}
             />
+            {recording.summary ? (
+              <RecordingSummaryCard
+                recording={recording}
+                summary={recording.summary}
+                canManage={isManageable}
+              />
+            ) : null}
             <RecordingTranscriptCard
               recording={recording}
               canManage={isManageable}
