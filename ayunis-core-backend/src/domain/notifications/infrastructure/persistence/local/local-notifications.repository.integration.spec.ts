@@ -264,6 +264,32 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
       expect(page.data.map((n) => n.id)).toEqual([error.id, olderError.id]);
     });
 
+    it("lists only the user's unread notifications of one type when filtered by both", async () => {
+      const unread = await stored({
+        type: NotificationType.ROUTINE_ERROR,
+        createdAt: new Date('2026-11-07T06:00:00.000Z'),
+      });
+      const olderUnread = await stored({
+        type: NotificationType.ROUTINE_ERROR,
+        createdAt: new Date('2026-11-06T06:00:00.000Z'),
+      });
+      await stored({
+        type: NotificationType.ROUTINE_ERROR,
+        readAt: new Date('2026-11-07T08:00:00.000Z'),
+      });
+      await stored({ type: NotificationType.ROUTINE });
+      await stored({ userId: otherUser, type: NotificationType.ROUTINE_ERROR });
+
+      const page = await repository.findPageByUserId(
+        owner,
+        { limit: 20, offset: 0 },
+        { type: NotificationType.ROUTINE_ERROR, unread: true },
+      );
+
+      expect(page.total).toBe(2);
+      expect(page.data.map((n) => n.id)).toEqual([unread.id, olderUnread.id]);
+    });
+
     it("finds nothing for another user's routine", async () => {
       const routineId = randomUUID();
       await stored({ userId: otherUser, routineId });

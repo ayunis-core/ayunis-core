@@ -6705,6 +6705,10 @@ routineId?: string;
  * Only the notifications of this type
  */
 type?: NotificationType;
+/**
+ * Only the unread notifications when true
+ */
+unread?: boolean;
 };
 
 export type UsageControllerGetUserUsageParams = {
