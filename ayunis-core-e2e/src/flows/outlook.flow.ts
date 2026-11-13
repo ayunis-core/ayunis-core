@@ -1,7 +1,9 @@
-import type { Page } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
 import { expect } from '../fixtures/test';
+import { handOffSessionToOutlook } from '../clients/api/session-tokens.client';
 import type {
   DialogTokens,
+  OfficeStubCall,
   OfficeStubWindow,
 } from '../clients/office-host-stub';
 
@@ -77,5 +79,27 @@ export async function storeRefreshToken(
   await pane.evaluate(
     ([key, value]) => window.localStorage.setItem(key, value),
     [REFRESH_TOKEN_KEY, refreshToken] as const,
+  );
+}
+
+/**
+ * Opens the pane signed in as the user of the cookie session in `userApi`,
+ * with the tokens the sign-in dialog would have handed over.
+ */
+export async function openSignedInPane(
+  pane: Page,
+  userApi: APIRequestContext,
+): Promise<void> {
+  const { refreshToken } = await handOffSessionToOutlook(userApi);
+  await pane.goto('/outlook/taskpane.html');
+  await storeRefreshToken(pane, refreshToken);
+  await pane.reload();
+  await expect(pane.getByTestId('outlook-pane-signed-in')).toBeVisible();
+}
+
+/** Calls the pane made on the stubbed mail item, in order. */
+export function officeItemCalls(pane: Page): Promise<OfficeStubCall[]> {
+  return pane.evaluate(
+    () => (window as unknown as OfficeStubWindow).__officeStub.calls,
   );
 }
