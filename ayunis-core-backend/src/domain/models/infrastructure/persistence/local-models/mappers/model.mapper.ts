@@ -42,6 +42,7 @@ export class ModelMapper {
     return new LanguageModel({
       id: record.id,
       name: record.name,
+      alias: record.alias,
       provider: record.provider,
       displayName: record.displayName,
       canStream: record.canStream,
@@ -101,6 +102,7 @@ export class ModelMapper {
     const record = new LanguageModelRecord();
     record.id = domain.id;
     record.name = domain.name;
+    record.alias = domain.alias;
     record.provider = domain.provider;
     record.displayName = domain.displayName;
     record.canStream = domain.canStream;

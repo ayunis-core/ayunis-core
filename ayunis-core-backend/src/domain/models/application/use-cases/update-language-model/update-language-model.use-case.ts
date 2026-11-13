@@ -70,6 +70,7 @@ export class UpdateLanguageModelUseCase {
     return new LanguageModel({
       id: command.id,
       name: command.name,
+      alias: command.alias,
       provider: command.provider,
       displayName: command.displayName,
       isArchived: command.isArchived,

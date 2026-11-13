@@ -13,6 +13,7 @@ export interface ModelPricingFormData {
 
 export interface LanguageModelFormData extends ModelPricingFormData {
   name: string;
+  alias: string;
   provider: CreateLanguageModelRequestDtoProvider;
   displayName: string;
   canStream: boolean;

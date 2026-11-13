@@ -333,6 +333,8 @@ export interface ModelWithConfigResponseDto {
   canUseTools: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /** Model ID for the OpenAI-compatible API. Undefined for non-language models. */
+  alias?: string;
   /**
      * Maximum context window size in tokens. Undefined for non-language models.
      * @minimum 1
@@ -695,6 +697,8 @@ export interface LanguageModelResponseDto {
   id: string;
   /** The name of the model */
   name: string;
+  /** Stable public model ID for the OpenAI-compatible API, unique across the catalog */
+  alias: string;
   /** The provider of the model */
   provider: LanguageModelResponseDtoProvider;
   /** The display name of the model */
@@ -938,6 +942,8 @@ export const CreateLanguageModelRequestDtoTier = {
 export interface CreateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
+  /** Stable public model ID for the OpenAI-compatible API, unique across the catalog. Keep it when swapping the provider model for a newer version; changing it breaks API clients that use the old alias. */
+  alias: string;
   /** The provider of the model */
   provider: CreateLanguageModelRequestDtoProvider;
   /** The display name of the model */
@@ -1016,6 +1022,8 @@ export const UpdateLanguageModelRequestDtoTier = {
 export interface UpdateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
+  /** Stable public model ID for the OpenAI-compatible API, unique across the catalog. Keep it when swapping the provider model for a newer version; changing it breaks API clients that use the old alias. */
+  alias: string;
   /** The provider of the model */
   provider: UpdateLanguageModelRequestDtoProvider;
   /** The display name of the model */

@@ -32,6 +32,7 @@ export class CreateLanguageModelUseCase {
 
     const model = new LanguageModel({
       name: command.name,
+      alias: command.alias,
       provider: command.provider,
       displayName: command.displayName,
       canStream: command.canStream,

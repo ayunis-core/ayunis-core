@@ -6,6 +6,7 @@ import type { GetPermittedLanguageModelsUseCase } from 'src/domain/models/applic
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { OpenAIUnexpectedError } from 'src/domain/openai-compat/application/openai-compat.errors';
 import { OpenAIModelMapper } from 'src/domain/openai-compat/application/mappers/openai-model.mapper';
@@ -21,7 +22,8 @@ describe('ListOpenAIModelsUseCase', () => {
     overrides?: Partial<ConstructorParameters<typeof LanguageModel>[0]>,
   ): LanguageModel =>
     new LanguageModel({
-      name: 'gpt-4o',
+      name: 'gpt-4o-2024-11-20',
+      alias: 'gpt-4o',
       provider: ModelProvider.OPENAI,
       displayName: 'GPT-4o',
       canStream: true,
@@ -54,7 +56,8 @@ describe('ListOpenAIModelsUseCase', () => {
       permit(buildModel({ createdAt })),
       permit(
         buildModel({
-          name: 'claude-sonnet',
+          name: 'claude-sonnet-4-5',
+          alias: 'claude-sonnet',
           provider: ModelProvider.ANTHROPIC,
         }),
       ),
@@ -84,16 +87,21 @@ describe('ListOpenAIModelsUseCase', () => {
     expect(result).toEqual({ object: 'list', data: [] });
   });
 
-  it('dedupes models sharing a name, keeping the first occurrence', async () => {
+  it('lists a catalog model permitted through several grants once', async () => {
+    const model = buildModel();
     getPermittedLanguageModelsUseCase.execute.mockResolvedValue([
-      permit(buildModel({ name: 'shared', provider: ModelProvider.OPENAI })),
-      permit(buildModel({ name: 'shared', provider: ModelProvider.AZURE })),
+      permit(model),
+      new PermittedLanguageModel({
+        model,
+        orgId,
+        scope: PermittedModelScope.TEAM,
+        scopeId: randomUUID(),
+      }),
     ]);
 
     const result = await useCase.execute(new ListOpenAIModelsQuery(orgId));
 
-    expect(result.data).toHaveLength(1);
-    expect(result.data[0].owned_by).toBe(ModelProvider.OPENAI);
+    expect(result.data.map(({ id }) => id)).toEqual(['gpt-4o']);
   });
 
   it('rethrows ApplicationError subclasses unchanged', async () => {

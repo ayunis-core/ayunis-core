@@ -6,6 +6,7 @@ import { UpdateLanguageModelRequestDto } from './update-language-model-request.d
 
 const inputWithoutContextWindow = {
   name: 'gpt-4o',
+  alias: 'gpt-4o',
   provider: ModelProvider.AZURE,
   displayName: 'GPT-4o',
   canStream: true,
@@ -52,6 +53,32 @@ describe('language model provider fault request validation', () => {
       expect(errors.map(({ property }) => property)).toContain(
         'hasProviderFault',
       );
+    },
+  );
+});
+
+describe('language model alias request validation', () => {
+  it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
+    '%s trims the alias so API clients can match it exactly',
+    async (Dto) => {
+      const dto = plainToInstance(Dto, {
+        ...validInput,
+        alias: ' ayunis-gpt ',
+      });
+
+      await expect(validate(dto)).resolves.toHaveLength(0);
+      expect(dto.alias).toBe('ayunis-gpt');
+    },
+  );
+
+  it.each([CreateLanguageModelRequestDto, UpdateLanguageModelRequestDto])(
+    '%s rejects a blank alias',
+    async (Dto) => {
+      const dto = plainToInstance(Dto, { ...validInput, alias: '   ' });
+
+      const errors = await validate(dto);
+
+      expect(errors.map(({ property }) => property)).toEqual(['alias']);
     },
   );
 });

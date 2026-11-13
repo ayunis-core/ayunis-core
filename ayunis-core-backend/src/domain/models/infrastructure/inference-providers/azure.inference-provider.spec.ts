@@ -16,6 +16,7 @@ type CreateProvider = (model: Model) => ModelProvider;
 const createModel = (name: string, isReasoning: boolean): LanguageModel =>
   new LanguageModel({
     name,
+    alias: name,
     provider: ModelProviderName.AZURE,
     displayName: name,
     canStream: true,

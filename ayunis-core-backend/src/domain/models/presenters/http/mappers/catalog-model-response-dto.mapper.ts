@@ -15,6 +15,7 @@ export class CatalogModelResponseDtoMapper {
     return {
       id: model.id,
       name: model.name,
+      alias: model.alias,
       provider: model.provider,
       displayName: model.displayName,
       type: ModelType.LANGUAGE,

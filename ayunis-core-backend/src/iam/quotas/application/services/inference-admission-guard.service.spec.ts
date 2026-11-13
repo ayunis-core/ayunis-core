@@ -35,6 +35,7 @@ describe('InferenceAdmissionGuard', () => {
   ): LanguageModel =>
     new LanguageModel({
       name: 'gpt-4o',
+      alias: 'gpt-4o',
       provider: ModelProvider.OPENAI,
       displayName: 'GPT-4o',
       canStream: true,

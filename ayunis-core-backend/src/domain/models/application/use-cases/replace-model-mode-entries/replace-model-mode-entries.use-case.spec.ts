@@ -28,6 +28,7 @@ const languageModel = (name: string, tier?: ModelTier): LanguageModel =>
   new LanguageModel({
     id: randomUUID(),
     name,
+    alias: name,
     provider: ModelProvider.MISTRAL,
     displayName: name,
     canStream: true,

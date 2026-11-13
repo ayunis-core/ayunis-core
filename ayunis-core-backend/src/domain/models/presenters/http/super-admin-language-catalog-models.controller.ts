@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
   ApiInternalServerErrorResponse,
@@ -73,7 +74,7 @@ export class SuperAdminLanguageCatalogModelsController {
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: 'Model already exists',
+    description: 'Model or alias already exists',
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
@@ -126,6 +127,7 @@ export class SuperAdminLanguageCatalogModelsController {
     status: HttpStatus.NOT_FOUND,
     description: 'Model not found',
   })
+  @ApiConflictResponse({ description: 'Model or alias already exists' })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })

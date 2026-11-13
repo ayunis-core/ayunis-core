@@ -18,6 +18,7 @@ describe('DeleteModelUseCase', () => {
   const model = new LanguageModel({
     id: modelId,
     name: 'gpt-4o-mini',
+    alias: 'gpt-4o-mini',
     displayName: 'GPT-4o mini',
     provider: ModelProvider.OPENAI,
     canStream: true,

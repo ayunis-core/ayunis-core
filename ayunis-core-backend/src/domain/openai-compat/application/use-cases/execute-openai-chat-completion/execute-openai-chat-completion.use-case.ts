@@ -90,7 +90,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
 
     return this.responseMapper.toResponse({
       id: this.completionId(),
-      modelName: command.request.model,
+      modelName: model.alias,
       response,
       tools,
     });
@@ -147,7 +147,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
       map((chunk) => {
         const mapped = this.streamMapper.toChunk({
           id: completionId,
-          modelName: command.request.model,
+          modelName: model.alias,
           chunk,
           isFirst,
           session,
@@ -222,21 +222,21 @@ export class ExecuteOpenAIChatCompletionUseCase {
 
   private async resolveModel(
     orgId: ReturnType<typeof randomUUID>,
-    modelName: string,
+    alias: string,
   ): Promise<LanguageModel> {
     const permitted = await this.getPermittedLanguageModelsUseCase.execute(
       new GetPermittedLanguageModelsQuery(orgId),
     );
-    const match = permitted.find((pm) => pm.model.name === modelName);
+    const match = permitted.find((pm) => pm.model.alias === alias);
     if (!match) {
       this.logger.debug(
         {
           orgId,
-          requestedModel: modelName,
+          requestedModel: alias,
         },
         'OpenAI-compat model not found',
       );
-      throw new OpenAIModelNotFoundError(modelName);
+      throw new OpenAIModelNotFoundError(alias);
     }
     return match.model;
   }
