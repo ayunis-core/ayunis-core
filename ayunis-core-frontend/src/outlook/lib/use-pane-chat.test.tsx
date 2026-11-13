@@ -88,6 +88,8 @@ function fakeApi(runs: PaneMessage[][], history: PaneMessage[] = []) {
         ReturnType<PaneChatApi['createThread']>
       >),
     ),
+    deleteThread: vi.fn(() => Promise.resolve()),
+    renameThread: vi.fn(() => Promise.resolve()),
     getThread: vi.fn(() =>
       Promise.resolve({ id: THREAD_ID, messages: history } as Awaited<
         ReturnType<PaneChatApi['getThread']>
