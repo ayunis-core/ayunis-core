@@ -117,7 +117,7 @@ export class CollectUsageUseCase {
     const creditsConsumed = await this.calculateCredits(cost);
     const usage = this.createUsage(command, principal, cost, creditsConsumed);
     await this.usageRepository.save(usage);
-    this.emitUsageCollected(usage, command.model.name);
+    this.emitUsageCollected(usage, command);
     this.logger.log(
       {
         ...principal,
@@ -152,11 +152,11 @@ export class CollectUsageUseCase {
     });
   }
 
-  private emitUsageCollected(usage: Usage, modelName: string): void {
+  private emitUsageCollected(usage: Usage, command: CollectUsageCommand): void {
     this.eventEmitter
       .emitAsync(
         UsageCollectedEvent.EVENT_NAME,
-        new UsageCollectedEvent(usage, modelName),
+        new UsageCollectedEvent(usage, command.model.name, command.mode),
       )
       .catch((err: unknown) => {
         this.logger.error(

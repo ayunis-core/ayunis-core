@@ -2,6 +2,7 @@ import type { AfterModelCallContext, Hook } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { RuntimeLanguageModelResolver } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
@@ -15,7 +16,10 @@ export class UsageHookFactory {
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
   ) {}
 
-  create(params: { resolveModel: RuntimeLanguageModelResolver }): Hook {
+  create(params: {
+    resolveModel: RuntimeLanguageModelResolver;
+    mode: ModelMode | null;
+  }): Hook {
     return {
       name: 'ayunis-usage',
       inheritToChildRuns: true,
@@ -36,6 +40,7 @@ export class UsageHookFactory {
           usage.outputTokens ?? 0,
           ctx.modelCallId as UUID,
           'agent_runtime',
+          params.mode,
         );
       },
     };

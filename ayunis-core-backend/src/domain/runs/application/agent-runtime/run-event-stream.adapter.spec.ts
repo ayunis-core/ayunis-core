@@ -161,6 +161,7 @@ function usageHook(models: RuntimeModelRegistry): Hook {
   return new UsageHookFactory({
     collectCritical: jest.fn().mockResolvedValue(undefined),
   } as unknown as CollectUsageAsyncService).create({
+    mode: null,
     resolveModel: models.resolve,
   });
 }
@@ -848,6 +849,7 @@ describe('adaptRunEventsToStream', () => {
             new UsageHookFactory({
               collectCritical,
             } as unknown as CollectUsageAsyncService).create({
+              mode: null,
               resolveModel: models.resolve,
             }),
           () => ({
@@ -867,6 +869,7 @@ describe('adaptRunEventsToStream', () => {
         32000,
         expect.any(String),
         'agent_runtime',
+        null,
       );
     },
   );
