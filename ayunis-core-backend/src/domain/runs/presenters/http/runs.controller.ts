@@ -9,6 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 import {
   ApiOperation,
   ApiBody,
@@ -102,6 +103,7 @@ export class RunsController {
     private readonly ssePresenter: RunSsePresenter,
   ) {}
 
+  @AllowedClients('outlook')
   @Post('send-message')
   @RequireSubscription()
   @UseInterceptors(FilesInterceptor('images', MAX_IMAGES, IMAGE_UPLOAD_OPTIONS))

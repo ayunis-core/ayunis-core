@@ -57,6 +57,7 @@ import { PiiMaskDtoMapper } from 'src/domain/thread-pii-masks/presenters/http/ma
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -79,6 +80,7 @@ export class ThreadsController {
     private readonly piiMaskDtoMapper: PiiMaskDtoMapper,
   ) {}
 
+  @AllowedClients('outlook')
   @Post()
   @ApiOperation({ summary: 'Create a new thread' })
   @ApiBody({ type: CreateThreadDto })
@@ -112,6 +114,7 @@ export class ThreadsController {
     return this.getThreadDtoMapper.toDto({ thread, isLongChat: false });
   }
 
+  @AllowedClients('outlook')
   @Get()
   @ApiOperation({ summary: 'Get all threads for the current user' })
   @ApiQuery({
@@ -162,6 +165,7 @@ export class ThreadsController {
     return this.getThreadsDtoMapper.toPaginatedDto(threads);
   }
 
+  @AllowedClients('outlook')
   @Get(':id')
   @ApiOperation({ summary: 'Get a thread by ID' })
   @ApiParam({
@@ -195,6 +199,7 @@ export class ThreadsController {
     return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
   }
 
+  @AllowedClients('outlook')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a thread' })
   @ApiParam({
@@ -215,6 +220,7 @@ export class ThreadsController {
     await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
   }
 
+  @AllowedClients('outlook')
   @Patch(':id/title')
   @ApiOperation({ summary: 'Update a thread title' })
   @ApiParam({
