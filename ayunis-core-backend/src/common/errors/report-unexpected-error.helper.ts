@@ -14,14 +14,17 @@ import {
  * send-message produce no AppSignal incident at all, leaving only the raw
  * transport error recorded by the undici instrumentation (AYC-653).
  *
- * 4xx ApplicationErrors and HttpExceptions are expected client outcomes and
- * stay unreported, matching the filter.
+ * 4xx ApplicationErrors, HttpExceptions and middleware rejections are
+ * expected client outcomes and stay unreported, matching the filter.
  */
 export function reportUnexpectedError(exception: unknown): void {
   if (exception instanceof ApplicationError && exception.statusCode < 500) {
     return;
   }
   if (exception instanceof HttpException && exception.getStatus() < 500) {
+    return;
+  }
+  if (isMiddlewareClientError(exception)) {
     return;
   }
 
@@ -37,4 +40,24 @@ export function reportUnexpectedError(exception: unknown): void {
   const error =
     exception instanceof Error ? exception : new Error(String(exception));
   setError(error);
+}
+
+/**
+ * Express middleware (body-parser, CORS, Multer) rejects a request before
+ * routing with a plain `http-errors` object, e.g. a 413 for an oversized
+ * body. `expose` is what marks it as the client's fault: an upstream SDK
+ * error that merely carries a 4xx `status` has none and stays reported.
+ */
+function isMiddlewareClientError(exception: unknown): boolean {
+  if (typeof exception !== 'object' || exception === null) return false;
+  const { expose, statusCode } = exception as {
+    expose?: unknown;
+    statusCode?: unknown;
+  };
+  return (
+    expose === true &&
+    typeof statusCode === 'number' &&
+    statusCode >= 400 &&
+    statusCode < 500
+  );
 }

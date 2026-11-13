@@ -55,6 +55,42 @@ describe('reportUnexpectedError', () => {
     expect(setError).not.toHaveBeenCalled();
   });
 
+  it('does not report a 4xx rejection from Express middleware', () => {
+    const tooLarge = Object.assign(new Error('request entity too large'), {
+      name: 'PayloadTooLargeError',
+      status: 413,
+      statusCode: 413,
+      expose: true,
+      type: 'entity.too.large',
+    });
+
+    reportUnexpectedError(tooLarge);
+
+    expect(setError).not.toHaveBeenCalled();
+  });
+
+  it('reports a 5xx failure from Express middleware', () => {
+    const failure = Object.assign(new Error('Internal Server Error'), {
+      status: 500,
+      statusCode: 500,
+      expose: false,
+    });
+
+    reportUnexpectedError(failure);
+
+    expect(setError).toHaveBeenCalledWith(failure);
+  });
+
+  it('reports an upstream error that merely carries a 4xx status', () => {
+    const upstream = Object.assign(new Error('401 Incorrect API key'), {
+      status: 401,
+    });
+
+    reportUnexpectedError(upstream);
+
+    expect(setError).toHaveBeenCalledWith(upstream);
+  });
+
   it('reports unclassified errors', () => {
     const error = new Error('unexpected');
 
