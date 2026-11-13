@@ -66,6 +66,7 @@
     "errorOutputLimit": "Das Modell hat seine maximale Antwortlänge erreicht, bevor es antworten konnte. Bitte grenzen Sie Ihre Anfrage ein oder teilen Sie sie in kleinere Schritte auf.",
     "errorMalformedToolCall": "Das Modell hat einen ungültigen Werkzeugaufruf erzeugt. Bitte versuchen Sie es erneut.",
     "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "errorProviderUnavailable": "Der Anbieter des KI-Modells ist vorübergehend nicht erreichbar. Bitte versuchen Sie es gleich noch einmal oder wählen Sie ein anderes Modell.",
     "errorNoModelFound": "Kein Modell gefunden",
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
     "errorToolNotFound": "Tool nicht gefunden",

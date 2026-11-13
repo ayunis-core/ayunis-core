@@ -175,6 +175,26 @@ describe('normalizeProviderError', () => {
     expect(classifyRejection).not.toHaveBeenCalled();
   });
 
+  it('marks a provider-recognized server fault as a server failure', () => {
+    const sdkError = { code: 400, message: 'provider engine state conflict' };
+
+    const error = normalizeProviderError(sdkError, {
+      ...ESTABLISHMENT,
+      classifyServerFault: (cause) => cause === sdkError,
+    });
+
+    expect(error.kind).toBe('server');
+  });
+
+  it('leaves a statusless failure unknown when the server-fault classifier declines it', () => {
+    const error = normalizeProviderError(
+      { code: 400, message: 'something else' },
+      { ...ESTABLISHMENT, classifyServerFault: () => false },
+    );
+
+    expect(error.kind).toBe('unknown');
+  });
+
   it('leaves an unknown statusless provider diagnostic unclassified', () => {
     const error = normalizeProviderError(
       { code: 'deployment_condition', type: 'upstream_error' },
