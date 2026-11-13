@@ -46,6 +46,7 @@ import { CompleteThreadSourceUploadCommand } from 'src/domain/threads/applicatio
 import { CreateSourceUploadDto } from 'src/domain/sources/presenters/http/dto/create-source-upload.dto';
 import { SourceUploadSessionResponseDto } from 'src/domain/sources/presenters/http/dto/source-upload-session-response.dto';
 import { toSourceUploadSessionDto } from 'src/domain/sources/presenters/http/mappers/source-upload.mapper';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 type ThreadSourceResponseDto =
   FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
@@ -66,6 +67,7 @@ export class ThreadSourcesController {
     private readonly sourceDtoMapper: SourceDtoMapper,
   ) {}
 
+  @AllowedClients('outlook')
   @Get(':id/sources')
   @ApiOperation({ summary: 'Get all sources for a thread' })
   @ApiThreadIdParam()
@@ -84,6 +86,7 @@ export class ThreadSourcesController {
     );
   }
 
+  @AllowedClients('outlook')
   @Post(':id/sources/file')
   @ApiFileSourceUpload()
   async addFileSource(
