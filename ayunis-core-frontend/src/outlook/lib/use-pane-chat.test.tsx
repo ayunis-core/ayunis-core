@@ -98,6 +98,8 @@ function fakeApi(runs: PaneMessage[][], history: PaneMessage[] = []) {
         ReturnType<PaneChatApi['createThread']>
       >),
     ),
+    deleteThread: vi.fn(() => Promise.resolve()),
+    renameThread: vi.fn(() => Promise.resolve()),
     getThread: vi.fn(() =>
       Promise.resolve({ id: THREAD_ID, messages: history } as Awaited<
         ReturnType<PaneChatApi['getThread']>
@@ -423,5 +425,33 @@ describe('usePaneChat', () => {
 
     expect(result.current.threadId).toBeNull();
     expect(result.current.messages).toEqual([]);
+  });
+  it('leaves the open chat alone when a different chat is deleted', async () => {
+    // The pane deletes the chat it has open, then the user opens another
+    // before the request answers; the late callback must not close that one.
+    const { api } = fakeApi([[]]);
+    const { result } = renderHook(() =>
+      usePaneChat({ api, onSessionExpired: vi.fn() }),
+    );
+
+    await act(() => result.current.openThread(THREAD_ID));
+    const closeDeleted = result.current.closeIfOpen;
+    await act(() => result.current.openThread('thread-2'));
+
+    act(() => closeDeleted(THREAD_ID));
+
+    expect(result.current.threadId).toBe('thread-2');
+  });
+
+  it('closes the chat it has open when that chat is deleted', async () => {
+    const { api } = fakeApi([[]]);
+    const { result } = renderHook(() =>
+      usePaneChat({ api, onSessionExpired: vi.fn() }),
+    );
+
+    await act(() => result.current.openThread(THREAD_ID));
+    act(() => result.current.closeIfOpen(THREAD_ID));
+
+    expect(result.current.threadId).toBeNull();
   });
 });

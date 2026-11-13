@@ -28,10 +28,15 @@
     "historyEmpty": "No chats from Outlook yet.",
     "historyFailed": "Recent chats could not be loaded.",
     "untitled": "Untitled chat",
+    "rename": "Rename",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirmDelete": "Delete this chat?",
     "thinking": "Ayunis is working …",
     "error": {
       "runFailed": "The answer could not be completed. Please try again.",
-      "loadFailed": "This chat could not be opened."
+      "loadFailed": "This chat could not be opened.",
+      "actionFailed": "This chat could not be changed."
     },
     "quickAction": {
       "summarize": {

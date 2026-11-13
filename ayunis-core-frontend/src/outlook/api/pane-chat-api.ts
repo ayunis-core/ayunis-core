@@ -7,8 +7,10 @@ import {
   threadSourcesControllerCreateUpload,
   threadSourcesControllerGetThreadSources,
   threadsControllerCreate,
+  threadsControllerDelete,
   threadsControllerFindAll,
   threadsControllerFindOne,
+  threadsControllerUpdateTitle,
 } from '@/outlook/api/generated/ayunisCoreAPI';
 import type {
   CSVDataSourceResponseDto,
@@ -58,6 +60,10 @@ export interface PaneChatApi {
   listThreads(): Promise<GetThreadsResponseDtoItem[]>;
   createThread(): Promise<GetThreadResponseDto>;
   getThread(threadId: string): Promise<GetThreadResponseDto>;
+  deleteThread(threadId: string): Promise<void>;
+  renameThread(threadId: string, title: string): Promise<void>;
+  deleteThread(threadId: string): Promise<void>;
+  renameThread(threadId: string, title: string): Promise<void>;
   /** Direct upload: reserve, transfer to storage, then complete. */
   createUpload(
     threadId: string,
@@ -131,6 +137,12 @@ export function createPaneChatApi(session: PaneSession): PaneChatApi {
     },
     getThread(threadId) {
       return succeeded(threadsControllerFindOne(threadId, on()));
+    },
+    async deleteThread(threadId) {
+      await threadsControllerDelete(threadId, on());
+    },
+    async renameThread(threadId, title) {
+      await threadsControllerUpdateTitle(threadId, { title }, on());
     },
     createUpload(threadId, file) {
       return succeeded(
