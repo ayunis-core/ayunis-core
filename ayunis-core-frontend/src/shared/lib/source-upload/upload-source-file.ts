@@ -1,6 +1,9 @@
 import { sourceUploadsControllerAbort } from '@/shared/api/generated/ayunisCoreAPI';
 import type { SourceUploadSessionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { transferSourceFile } from './transfer-source-file';
+import {
+  transferSourceFile,
+  type SignUploadRequest,
+} from './transfer-source-file';
 
 export interface DirectSourceUploadTarget<TResult> {
   createSession: (
@@ -8,6 +11,9 @@ export interface DirectSourceUploadTarget<TResult> {
     signal: AbortSignal,
   ) => Promise<SourceUploadSessionResponseDto>;
   complete: (uploadId: string, signal: AbortSignal) => Promise<TResult>;
+  /** Both default to the app's cookie-authenticated API client. */
+  sign?: SignUploadRequest;
+  abort?: (uploadId: string) => Promise<void>;
 }
 
 export async function uploadSourceFile<TResult>(
@@ -19,13 +25,19 @@ export async function uploadSourceFile<TResult>(
   let session: SourceUploadSessionResponseDto | undefined;
   try {
     session = await target.createSession(file, signal);
-    await transferSourceFile({ session, file, signal, onProgress });
+    await transferSourceFile({
+      session,
+      file,
+      signal,
+      onProgress,
+      sign: target.sign,
+    });
     return await target.complete(session.id, signal);
   } catch (error) {
     if (session) {
       try {
         // The upload signal may already be aborted; cleanup needs its own request.
-        await sourceUploadsControllerAbort(session.id);
+        await (target.abort ?? sourceUploadsControllerAbort)(session.id);
       } catch {
         // Preserve the upload error; abandoned sessions are also swept server-side.
       }

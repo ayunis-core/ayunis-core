@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PaneChatApi, PaneRunInput } from '@/outlook/api/pane-chat-api';
 import { SessionExpiredError } from '@/outlook/api/pane-session';
+import { addAttachmentAsSource } from '@/outlook/lib/attachment-source';
 import {
   currentOutlookItemKey,
   executeOutlookTool,
   isAwaitingResultTool,
-  type OutlookToolDependencies,
   type OutlookToolOutcome,
 } from '@/outlook/lib/outlook-tools';
 import {
@@ -26,7 +26,6 @@ export type PaneChatError = 'runFailed' | 'loadFailed';
 interface PaneChatOptions {
   api: PaneChatApi;
   onSessionExpired: () => void;
-  toolDependencies?: OutlookToolDependencies;
 }
 
 function isAbort(error: unknown): boolean {
@@ -35,11 +34,7 @@ function isAbort(error: unknown): boolean {
 
 // Only calls made while this pane watched the run are executed: reopening a
 // chat must not insert an old draft into the open email again.
-export function usePaneChat({
-  api,
-  onSessionExpired,
-  toolDependencies,
-}: PaneChatOptions) {
+export function usePaneChat({ api, onSessionExpired }: PaneChatOptions) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PaneMessage[]>([]);
   const [running, setRunning] = useState(false);
@@ -85,11 +80,19 @@ export function usePaneChat({
   const setToolState = (id: string, state: PaneToolState) =>
     setToolStates((current) => ({ ...current, [id]: state }));
 
-  async function executeCall(call: OutlookToolCall) {
+  async function executeCall(call: OutlookToolCall, runThreadId: string) {
     handledCalls.current.add(call.id);
     setToolState(call.id, { status: 'running' });
     const outcome = await executeOutlookTool(call.name, call.params, {
-      ...toolDependencies,
+      extractAttachmentText: (file) =>
+        // The run that just ended still owns the controller, so Stop and the
+        // unmount cleanup reach the upload poll, which can take two minutes.
+        addAttachmentAsSource(
+          api,
+          runThreadId,
+          file,
+          controller.current?.signal,
+        ),
       expectedItemKey: runItemKey.current ?? undefined,
     });
     setToolState(call.id, outcome);
@@ -124,7 +127,7 @@ export function usePaneChat({
         handledCalls.current.add(call.id);
         continue;
       }
-      const outcome = await executeCall(call);
+      const outcome = await executeCall(call, runThreadId);
       if (awaiting && outcome.status === 'result') {
         next = {
           threadId: runThreadId,

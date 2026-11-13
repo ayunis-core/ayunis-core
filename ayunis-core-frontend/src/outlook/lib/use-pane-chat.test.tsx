@@ -103,6 +103,11 @@ function fakeApi(runs: PaneMessage[][], history: PaneMessage[] = []) {
         ReturnType<PaneChatApi['getThread']>
       >),
     ),
+    createUpload: vi.fn(),
+    completeUpload: vi.fn(),
+    signUpload: vi.fn(),
+    abortUpload: vi.fn(),
+    listSources: vi.fn(),
     run: vi.fn((input: PaneRunInput, _signal, onEvent) => {
       inputs.push(input);
       (runs.shift() ?? []).forEach((message) => onEvent(messageEvent(message)));
@@ -171,7 +176,7 @@ describe('usePaneChat', () => {
     expect(executeOutlookTool).toHaveBeenCalledWith(
       'outlook__draft_email',
       { body: 'Sehr geehrte Damen und Herren' },
-      { expectedItemKey: undefined },
+      expect.anything(),
     );
     expect(inputs).toHaveLength(1);
     expect(result.current.toolStates['call-draft']).toEqual({

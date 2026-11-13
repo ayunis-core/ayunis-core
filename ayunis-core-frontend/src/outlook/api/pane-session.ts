@@ -1,3 +1,8 @@
+import {
+  getAuthenticationControllerMeUrl,
+  getAuthenticationControllerRefreshUrl,
+  getLogoutControllerLogoutUrl,
+} from '@/outlook/api/generated/ayunisCoreAPI';
 import config from '@/shared/config';
 import type {
   MeResponseDto,
@@ -95,7 +100,9 @@ export function createPaneSession(
   async function refresh(): Promise<void> {
     const refreshToken = refreshTokens.get();
     if (!refreshToken) throw new SessionExpiredError();
-    const response = await post('/auth/refresh', { refreshToken });
+    const response = await post(getAuthenticationControllerRefreshUrl(), {
+      refreshToken,
+    });
     // Only a rejected token ends the session; a rate limit or a deploy gap
     // must not sign the user out.
     if (response.status === 401) {
@@ -143,7 +150,9 @@ export function createPaneSession(
   }
 
   const currentUser = async () =>
-    (await (await authorizedGet('/auth/me')).json()) as MeResponseDto;
+    (await (
+      await authorizedGet(getAuthenticationControllerMeUrl())
+    ).json()) as MeResponseDto;
 
   return {
     async restore() {
@@ -158,7 +167,8 @@ export function createPaneSession(
     async signOut() {
       const refreshToken = refreshTokens.get();
       try {
-        if (refreshToken) await post('/auth/logout', { refreshToken });
+        if (refreshToken)
+          await post(getLogoutControllerLogoutUrl(), { refreshToken });
       } finally {
         clear();
       }

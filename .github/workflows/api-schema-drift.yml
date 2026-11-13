@@ -116,7 +116,9 @@ jobs:
 
       - name: Check for drift
         run: |
-          if ! git diff --exit-code ayunis-core-frontend/src/shared/api/generated/; then
+          if ! git diff --exit-code \
+            ayunis-core-frontend/src/shared/api/generated/ \
+            ayunis-core-frontend/src/outlook/api/generated/; then
             echo ""
             echo "❌ API client is out of date."
             echo "Run 'pnpm run openapi:update' in ayunis-core-frontend and commit the changes."
