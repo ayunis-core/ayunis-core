@@ -27,11 +27,21 @@ export default [{
     const chooser = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('menuitem').first().click();
-    await (await chooser).setFiles([{ name: 'Haushaltsplanung-2026.pdf', mimeType: 'application/pdf', buffer: createOcrRejectedPdf('Budget 2026') }]);
+    const audio = Buffer.alloc(16044);
+    audio.write('RIFF'); audio.writeUInt32LE(audio.length - 8, 4); audio.write('WAVEfmt ', 8);
+    audio.writeUInt32LE(16, 16); audio.writeUInt16LE(1, 20); audio.writeUInt16LE(1, 22);
+    audio.writeUInt32LE(16000, 24); audio.writeUInt32LE(32000, 28); audio.writeUInt16LE(2, 32);
+    audio.writeUInt16LE(16, 34); audio.write('data', 36); audio.writeUInt32LE(audio.length - 44, 40);
+    await (await chooser).setFiles([
+      { name: 'Haushaltsplanung-2026.pdf', mimeType: 'application/pdf', buffer: createOcrRejectedPdf('Budget 2026') },
+      { name: 'Besprechungsnotiz.wav', mimeType: 'audio/wav', buffer: audio },
+    ]);
     await transfer;
     await page.getByTestId('input').fill('Bitte fasse die wichtigsten Punkte des Haushaltsplans zusammen.');
     await page.getByTestId('send').click();
     await expect(page.getByTestId('pending-user-message')).toBeVisible();
-    await expect(page.getByTestId('attachment-progress')).toHaveAttribute('data-stage', 'uploading');
+    await expect(page.getByTestId('pending-user-message').getByTestId('chat-attachment')).toHaveCount(2);
+    await expect(page.getByTestId('attachment-progress')).toHaveCount(2);
+    await expect(page.getByTestId('attachment-progress').first()).toHaveAttribute('data-stage', 'uploading');
   },
 }] satisfies PrMediaScene[];
