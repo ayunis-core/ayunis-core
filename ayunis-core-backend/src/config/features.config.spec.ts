@@ -40,6 +40,25 @@ describe('Routines', () => {
   });
 });
 
+describe('Outlook add-in', () => {
+  const original = process.env;
+  afterEach(() => {
+    process.env = original;
+  });
+
+  it.each([
+    [undefined, false],
+    ['', false],
+    ['false', false],
+    ['true', true],
+  ])('resolves flag %p to %s', (flag, expected) => {
+    process.env = { ...original };
+    if (flag === undefined) delete process.env.FEATURE_OUTLOOK_ADDIN_ENABLED;
+    else process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = flag;
+    expect(featuresConfig().outlookAddinEnabled).toBe(expected);
+  });
+});
+
 describe('Release notes', () => {
   const original = process.env;
   afterEach(() => {

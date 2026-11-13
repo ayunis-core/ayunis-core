@@ -14696,6 +14696,11 @@
             "type": "boolean",
             "description": "Assistant messages can be read aloud (opt-in, needs voice to be available)",
             "default": false
+          },
+          "outlookAddinEnabled": {
+            "type": "boolean",
+            "description": "The Outlook add-in can be installed (manifest) and signed in to (session handoff)",
+            "default": false
           }
         },
         "required": [
@@ -14703,7 +14708,8 @@
           "routinesEnabled",
           "releaseNotesEnabled",
           "voiceEnabled",
-          "readAloudEnabled"
+          "readAloudEnabled",
+          "outlookAddinEnabled"
         ]
       },
       "CreateOrgRequestDto": {

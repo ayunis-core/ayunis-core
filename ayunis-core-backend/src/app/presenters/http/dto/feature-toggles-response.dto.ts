@@ -33,4 +33,11 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   readAloudEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'The Outlook add-in can be installed (manifest) and signed in to (session handoff)',
+    default: false,
+  })
+  outlookAddinEnabled: boolean;
 }

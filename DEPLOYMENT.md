@@ -196,6 +196,13 @@ Releases that need an operator action before or during the deploy. Entries
 stay until the next major version; everything else upgrades by pulling the
 new images and restarting.
 
+### 2.75.0: the Outlook add-in is behind a flag
+
+`FEATURE_OUTLOOK_ADDIN_ENABLED` defaults to `false`. A deployment that served
+the add-in manifest or let the add-in sign in before this release needs
+`FEATURE_OUTLOOK_ADDIN_ENABLED=true` in its backend environment to keep doing
+so; see [Outlook Add-in](#outlook-add-in).
+
 ### 2.71.0: direct uploads need a public MinIO host and an upload user
 
 File uploads now go from the browser straight to MinIO (AYC-1541). Two things
@@ -374,6 +381,9 @@ At least one must be configured:
   production.
 - `REDIS_HOST` / `REDIS_PORT`: Redis connection settings (the password itself is
   required — see above)
+- `FEATURE_OUTLOOK_ADDIN_ENABLED`: `true` serves the Outlook add-in manifest and
+  lets the add-in sign in (see [Outlook Add-in](#outlook-add-in)). Off by
+  default.
 - `OCR_MAX_CONCURRENCY`: OCR requests in flight per process (default `4`). The
   batches of one long PDF run in parallel and may use every slot, so the total
   against the Mistral account is this value times the number of API and worker
@@ -494,6 +504,11 @@ Encryption happens transparently; no application code changes needed for key rot
 - **Encryption key rotation**: See [Rotating MCP_ENCRYPTION_KEY](#rotating-mcp_encryption_key) below
 
 ## Outlook Add-in
+
+The add-in is off unless `FEATURE_OUTLOOK_ADDIN_ENABLED=true` is set: without
+it the manifest below answers 404 and an installed add-in cannot sign in. Turn
+it on per deployment, for example on an instance your own Microsoft 365 tenant
+uses to try the add-in before it is released.
 
 Each deployment serves its own Outlook add-in manifest, rendered for its
 `FRONTEND_BASEURL`:
