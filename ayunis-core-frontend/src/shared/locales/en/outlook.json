@@ -17,5 +17,56 @@
   "dialog": {
     "connecting": "Connecting to Outlook …",
     "outlookRequired": "Close this window and select Sign in in the Ayunis add-in in Outlook to finish."
+  },
+  "chat": {
+    "intro": "Ask about the open email or let Ayunis write with you.",
+    "placeholder": "Message Ayunis",
+    "send": "Send",
+    "stop": "Stop",
+    "newChat": "New chat",
+    "history": "Recent chats",
+    "historyEmpty": "No chats from Outlook yet.",
+    "historyFailed": "Recent chats could not be loaded.",
+    "untitled": "Untitled chat",
+    "thinking": "Ayunis is working …",
+    "error": {
+      "runFailed": "The answer could not be completed. Please try again.",
+      "loadFailed": "This chat could not be opened."
+    },
+    "quickAction": {
+      "summarize": {
+        "label": "Summarize this email",
+        "prompt": "Summarize this email."
+      },
+      "draftReply": {
+        "label": "Draft a reply",
+        "prompt": "Draft a reply to this email."
+      },
+      "improveDraft": {
+        "label": "Improve my draft",
+        "prompt": "Improve my draft."
+      }
+    },
+    "tool": {
+      "outlook__read_email": "Read the email",
+      "outlook__read_attachment": "Read an attachment",
+      "outlook__draft_email": "Draft in Outlook",
+      "outlook__move_email_to_composer": "Replace the draft",
+      "outlook__save_email_to_draft": "Save as draft"
+    },
+    "toolStatus": {
+      "running": "Working in Outlook …",
+      "read": "Done",
+      "readFailed": "Outlook could not provide this.",
+      "inserted": "Inserted into your draft",
+      "replaced": "Replaced your draft",
+      "replyOpened": "Reply opened",
+      "saved": "Saved as draft",
+      "failed": {
+        "noItem": "No email is open.",
+        "nothingToSave": "Only an email you are writing can be saved.",
+        "officeFailed": "Outlook could not do this."
+      }
+    }
   }
 }
