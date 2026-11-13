@@ -1,6 +1,9 @@
 import { request as apiRequest } from '@playwright/test';
 import type { APIRequestContext, APIResponse } from '@playwright/test';
-import type { MeResponseDto } from '../generated/ayunisCoreAPI.schemas';
+import type {
+  MeResponseDto,
+  SessionTokensResponseDto,
+} from '../generated/ayunisCoreAPI.schemas';
 import { config } from '../../config';
 import { generatedApi } from './generated-api';
 
@@ -12,6 +15,10 @@ async function withAccessToken<T>(
 ): Promise<T> {
   const api = await apiRequest.newContext({
     baseURL: config.apiURL,
+    // The backend prefers an access-token cookie over the bearer header, so a
+    // context that inherited the spec's cookies would answer as a browser
+    // session and a closed-route assertion would pass for the wrong reason.
+    storageState: { cookies: [], origins: [] },
     extraHTTPHeaders: { Authorization: `Bearer ${accessToken}` },
   });
   try {
@@ -55,4 +62,23 @@ export function refreshWithBodyToken(
   return api.post(`${config.apiURL}/api/auth/refresh`, {
     data: { refreshToken },
   });
+}
+
+/**
+ * Tokens the sign-in dialog would hand the pane for the cookie session in
+ * `api`. The backend only hands a session over to the frontend origin.
+ */
+export async function handOffSessionToOutlook(
+  api: APIRequestContext,
+): Promise<SessionTokensResponseDto> {
+  const response = await api.post(`${config.apiURL}/api/auth/session/handoff`, {
+    headers: { Origin: new URL(config.baseURL).origin },
+    data: { client: 'outlook' },
+  });
+  if (!response.ok()) {
+    throw new Error(
+      `Session handoff failed (HTTP ${response.status()}): ${await response.text()}`,
+    );
+  }
+  return (await response.json()) as SessionTokensResponseDto;
 }
