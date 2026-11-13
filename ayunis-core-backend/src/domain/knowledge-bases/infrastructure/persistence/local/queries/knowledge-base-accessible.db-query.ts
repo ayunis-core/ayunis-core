@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { whereCollectiveOwner } from 'src/domain/ownership/infrastructure/persistence/collective-owner.db-query';
 import {
   Brackets,
   type Repository,
@@ -30,16 +31,7 @@ export function whereCollectiveKnowledgeBaseOwner(
   query: WhereExpressionBuilder,
   owners: CollectiveOwnerFilter,
 ): WhereExpressionBuilder {
-  query.where(
-    'knowledgeBase.isOrgOwned = true AND knowledgeBase.orgId = :ownerOrgId',
-    { ownerOrgId: owners.orgId ?? null },
-  );
-  if (owners.teamIds.length > 0) {
-    query.orWhere('knowledgeBase.teamId IN (:...ownerTeamIds)', {
-      ownerTeamIds: owners.teamIds,
-    });
-  }
-  return query;
+  return whereCollectiveOwner(query, 'knowledgeBase', owners);
 }
 
 /**

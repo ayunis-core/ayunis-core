@@ -1,10 +1,9 @@
-import type { UUID } from 'crypto';
+import type {
+  ResourceOwner,
+  TransferableResourceOwner,
+} from 'src/domain/ownership/application/models/resource-owner';
 
-export type KnowledgeBaseOwner =
-  | { type: 'personal' }
-  | { type: 'workspace'; workspaceId: UUID }
-  | { type: 'team'; teamId: UUID }
-  | { type: 'org' };
+export type KnowledgeBaseOwner = ResourceOwner;
 
 /** The scopes a knowledge-base list can be requested for. */
 export type KnowledgeBaseListScope = Extract<
@@ -12,8 +11,4 @@ export type KnowledgeBaseListScope = Extract<
   { type: 'personal' | 'workspace' }
 >;
 
-/** The owners a knowledge base can be moved between; workspace ones stay put. */
-export type KnowledgeBaseTransferOwner = Exclude<
-  KnowledgeBaseOwner,
-  { type: 'workspace' }
->;
+export type KnowledgeBaseTransferOwner = TransferableResourceOwner;

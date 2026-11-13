@@ -1,5 +1,4 @@
 import {
-  Check,
   Column,
   Entity,
   Index,
@@ -14,12 +13,10 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { SingleOwnerCheck } from 'src/domain/ownership/infrastructure/persistence/single-owner-check.decorator';
 
 @Entity('knowledge_bases')
-@Check(
-  'CHK_knowledge_bases_single_owner',
-  'num_nonnulls("userId", "workspaceId", "teamId") + "isOrgOwned"::int = 1',
-)
+@SingleOwnerCheck('knowledge_bases')
 export class KnowledgeBaseRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 255 })
   name: string;
