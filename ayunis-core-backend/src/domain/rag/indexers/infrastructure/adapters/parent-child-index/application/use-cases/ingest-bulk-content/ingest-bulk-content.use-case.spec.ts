@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { IngestBulkContentUseCase } from './ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
 import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
@@ -42,8 +43,10 @@ describe('IngestBulkContentUseCase', () => {
   let mockSplitter: jest.Mocked<SplitTextUseCase>;
   let mockEmbedder: jest.Mocked<EmbedTextUseCase>;
   let mockGetModel: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
+  let embeddingsMaxConcurrency: number | undefined;
 
   beforeEach(async () => {
+    embeddingsMaxConcurrency = 16;
     mockRepo = {
       save: jest.fn(),
       saveMany: jest.fn(),
@@ -73,6 +76,15 @@ describe('IngestBulkContentUseCase', () => {
         {
           provide: GetPermittedEmbeddingModelUseCase,
           useValue: mockGetModel,
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string) =>
+              key === 'embeddings.throttle.maxConcurrency'
+                ? embeddingsMaxConcurrency
+                : undefined,
+          },
         },
       ],
     }).compile();
@@ -356,27 +368,57 @@ describe('IngestBulkContentUseCase', () => {
       );
     });
 
-    it('keeps at most eight batches in flight and starts the next one as soon as one returns', async () => {
+    it('keeps at most sixteen batches in flight and starts the next one as soon as one returns', async () => {
+      const { command, calls } = longDocument(40);
+
+      const ingestion = useCase.execute(command);
+      await settle();
+      expect(calls).toHaveLength(16);
+
+      calls[3].resolve();
+      await settle();
+      expect(calls).toHaveLength(17);
+
+      while (mockEmbedder.execute.mock.calls.length < 40 || calls.length > 0) {
+        calls.splice(0).forEach((call) => call.resolve());
+        await settle();
+      }
+      await ingestion;
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(40);
+    });
+
+    it('follows the configured embeddings limit (EMBEDDINGS_MAX_CONCURRENCY)', async () => {
+      embeddingsMaxConcurrency = 4;
+      const { command, calls } = longDocument(10);
+
+      const ingestion = useCase.execute(command);
+      await settle();
+      expect(calls).toHaveLength(4);
+
+      while (mockEmbedder.execute.mock.calls.length < 10 || calls.length > 0) {
+        calls.splice(0).forEach((call) => call.resolve());
+        await settle();
+      }
+      await ingestion;
+    });
+
+    it('still embeds, sixteen at a time, when the limit is not configured', async () => {
+      embeddingsMaxConcurrency = undefined;
       const { command, calls } = longDocument(20);
 
       const ingestion = useCase.execute(command);
       await settle();
-      expect(calls).toHaveLength(8);
-
-      calls[3].resolve();
-      await settle();
-      expect(calls).toHaveLength(9);
+      expect(calls).toHaveLength(16);
 
       while (mockEmbedder.execute.mock.calls.length < 20 || calls.length > 0) {
         calls.splice(0).forEach((call) => call.resolve());
         await settle();
       }
       await ingestion;
-      expect(mockEmbedder.execute).toHaveBeenCalledTimes(20);
     });
 
     it('after a failed batch sends no further one and fails only once the started ones have returned', async () => {
-      const { command, calls } = longDocument(20);
+      const { command, calls } = longDocument(40);
       let outcome: 'pending' | 'rejected' = 'pending';
 
       const ingestion = useCase.execute(command).catch((error: Error) => {
@@ -388,17 +430,17 @@ describe('IngestBulkContentUseCase', () => {
       await settle();
 
       expect(outcome).toBe('pending');
-      expect(mockEmbedder.execute).toHaveBeenCalledTimes(8);
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(16);
 
-      calls.slice(1, 7).forEach((call) => call.resolve());
+      calls.slice(1, 15).forEach((call) => call.resolve());
       await settle();
       expect(outcome).toBe('pending');
 
-      calls[7].reject(new Error('second failure'));
+      calls[15].reject(new Error('second failure'));
       await expect(ingestion).resolves.toMatchObject({
         message: 'embedding failed',
       });
-      expect(mockEmbedder.execute).toHaveBeenCalledTimes(8);
+      expect(mockEmbedder.execute).toHaveBeenCalledTimes(16);
       expect(mockRepo.saveMany).not.toHaveBeenCalled();
     });
   });

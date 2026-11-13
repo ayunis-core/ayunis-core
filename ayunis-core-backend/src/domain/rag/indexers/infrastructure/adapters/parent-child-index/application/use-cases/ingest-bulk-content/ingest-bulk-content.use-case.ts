@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { DEFAULT_EMBEDDINGS_MAX_CONCURRENCY } from 'src/config/embeddings.config';
 import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
@@ -27,15 +29,6 @@ import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-
  */
 const EMBEDDING_BATCH_SIZE = 64;
 
-/**
- * Embedding requests one ingestion keeps in flight. Sent one after another, a
- * 660-page PDF spent 75 s of its 110 s here (AYC-1803). Half of the process-wide
- * throttle (EMBEDDINGS_MAX_CONCURRENCY, default 16), so one long document
- * leaves slots for other documents and, where the API ingests too, for chat
- * queries: the throttle ranks those first but cannot interrupt a running call.
- */
-const EMBEDDING_BATCH_CONCURRENCY = 8;
-
 @Injectable()
 export class IngestBulkContentUseCase {
   private readonly logger = new Logger(IngestBulkContentUseCase.name);
@@ -45,6 +38,7 @@ export class IngestBulkContentUseCase {
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly embedTextUseCase: EmbedTextUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: IngestBulkContentCommand): Promise<void> {
@@ -141,10 +135,23 @@ export class IngestBulkContentUseCase {
       }
     };
     await Promise.all(
-      Array.from({ length: EMBEDDING_BATCH_CONCURRENCY }, sendBatches),
+      Array.from({ length: this.batchesInFlight() }, sendBatches),
     );
     if (failures.length > 0) throw failures[0];
     return vectors.flat();
+  }
+
+  // One ingestion may use the whole process-wide embeddings throttle
+  // (EMBEDDINGS_MAX_CONCURRENCY). Sent one after another, a 660-page PDF
+  // spent 75 s of its 110 s on embedding (AYC-1803); 60 batches took 12 s at
+  // eight and 7 s at sixteen against the provider, with single calls no
+  // slower. A chat query waiting behind a long document still goes first
+  // when a slot frees, about one call later.
+  private batchesInFlight(): number {
+    return (
+      this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
+      DEFAULT_EMBEDDINGS_MAX_CONCURRENCY
+    );
   }
 
   private async embedBatch(
