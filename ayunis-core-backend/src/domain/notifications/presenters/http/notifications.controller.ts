@@ -75,7 +75,7 @@ export class NotificationsController {
     @Query() query: FindNotificationsQueryParamsDto,
   ): Promise<PaginatedNotificationsResponseDto> {
     this.logger.log(
-      { routineId: query.routineId, type: query.type },
+      { routineId: query.routineId, type: query.type, unread: query.unread },
       'findAll',
     );
     const page = await this.findMyNotificationsUseCase.execute(
@@ -84,6 +84,7 @@ export class NotificationsController {
         offset: query.offset ?? 0,
         routineId: query.routineId,
         type: query.type,
+        unread: query.unread,
       }),
     );
     return this.notificationDtoMapper.toPaginatedDto(page);
