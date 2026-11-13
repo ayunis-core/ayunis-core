@@ -25,6 +25,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     workspaceId: { type: 'uuid', nullable: true },
     type: { type: String, default: ThreadType.CHAT },
     routineId: { type: 'uuid', nullable: true },
+    client: { type: String, nullable: true },
     createdAt: { type: 'timestamp' },
   },
 });
@@ -264,6 +265,39 @@ describe('Chat title and content search (PostgreSQL)', () => {
 
     expect(page.data.map((item) => item.id)).toEqual([newer, older]);
     expect(page.total).toBe(2);
+  });
+
+  it("keeps a client's chats out of the web list and lists only the owner's for that client", async () => {
+    const thirdUserId = randomUUID();
+    async function clientThread(userId: ReturnType<typeof randomUUID>) {
+      const record = {
+        id: randomUUID(),
+        userId,
+        title: 'Antwort an Frau Muster',
+        type: ThreadType.CHAT,
+        client: 'outlook' as const,
+        createdAt: new Date(),
+      };
+      await db.getRepository(ThreadRecord).insert(record);
+      return record.id;
+    }
+    const webChat = await thread('Budget');
+    const outlookChat = await clientThread(ownerId);
+    await clientThread(thirdUserId);
+
+    const web = await repository.findAll(ownerId);
+    const outlook = await repository.findAll(ownerId, undefined, {
+      client: 'outlook',
+    });
+    const otherUserOutlook = await repository.findAll(otherId, undefined, {
+      client: 'outlook',
+    });
+
+    expect(web.data.map((item) => item.id)).toEqual([webChat]);
+    expect(web.total).toBe(1);
+    expect(outlook.data.map((item) => item.id)).toEqual([outlookChat]);
+    expect(outlook.total).toBe(1);
+    expect(otherUserOutlook.total).toBe(0);
   });
 
   it('reflects message removal and recreation without stale matches', async () => {

@@ -7,6 +7,7 @@ import type { SourceAssignment } from './thread-source-assignment.entity';
 import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { ThreadType } from './thread-type.enum';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export class Thread {
   id: UUID;
@@ -26,6 +27,8 @@ export class Thread {
   routineId: UUID | null;
   /** The notification a "Chat about this" chat discusses; null once it is deleted. */
   sourceNotificationId: UUID | null;
+  /** The token client (e.g. the Outlook pane) the chat was started from; null for the web app. */
+  client: SessionClient | null;
   lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +48,7 @@ export class Thread {
     type?: ThreadType;
     routineId?: UUID | null;
     sourceNotificationId?: UUID | null;
+    client?: SessionClient | null;
     lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
@@ -63,6 +67,7 @@ export class Thread {
     this.type = params.type ?? ThreadType.CHAT;
     this.routineId = params.routineId ?? null;
     this.sourceNotificationId = params.sourceNotificationId ?? null;
+    this.client = params.client ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     // A freshly created thread's last activity is its creation time; it is
