@@ -13,6 +13,12 @@ export enum FeatureFlag {
    * train on regardless of opt-outs.
    */
   ReadAloud = 'readAloudEnabled',
+  /**
+   * Off until the Outlook add-in is released: gates installing it (manifest)
+   * and signing in to it (session handoff), which everything else in the
+   * add-in depends on.
+   */
+  OutlookAddin = 'outlookAddinEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -47,5 +53,9 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     readAloudEnabled:
       voiceEnabled &&
       parseBooleanWithDefault(process.env.FEATURE_READ_ALOUD_ENABLED, false),
+    outlookAddinEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_OUTLOOK_ADDIN_ENABLED,
+      false,
+    ),
   };
 });

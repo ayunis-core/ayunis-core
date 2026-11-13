@@ -23,6 +23,8 @@ export interface FeatureTogglesResponseDto {
   voiceEnabled: boolean;
   /** Assistant messages can be read aloud (opt-in, needs voice to be available) */
   readAloudEnabled: boolean;
+  /** The Outlook add-in can be installed (manifest) and signed in to (session handoff) */
+  outlookAddinEnabled: boolean;
 }
 
 export interface CreateOrgRequestDto {

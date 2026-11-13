@@ -18,7 +18,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
+import { RequireFeature } from 'src/common/guards/feature.guard';
 import { Public } from 'src/common/guards/public.guard';
+import { FeatureFlag } from 'src/config/features.config';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import {
   HandoffOriginNotAllowedError,
@@ -33,8 +35,11 @@ import {
 import { ErrorResponseDto } from 'src/iam/authentication/presenters/http/dtos/auth-response.dto';
 import { SessionTokensResponseDtoMapper } from 'src/iam/authentication/presenters/http/mappers/session-tokens-response-dto.mapper';
 
+// Off, the add-in cannot start a session, which every other add-in route
+// needs; refresh, logout and me stay open so an existing session can end.
 @ApiTags('Authentication')
 @Controller('auth/session')
+@RequireFeature(FeatureFlag.OutlookAddin)
 export class SessionHandoffController {
   private readonly logger = new Logger(SessionHandoffController.name);
 
