@@ -38,7 +38,6 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockKbRepo = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
-      findAllOwnedByUserId: jest.fn(),
       findAllByWorkspaceId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),

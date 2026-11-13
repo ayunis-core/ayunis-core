@@ -14,7 +14,6 @@ export const TEST_WORKSPACE_ID = '33333333-3333-4333-8333-333333333333' as UUID;
 export function aWorkspace(overrides: Partial<Workspace> = {}): Workspace {
   return new Workspace({
     id: TEST_WORKSPACE_ID,
-    userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     name: 'Bürgeranfragen',
     description: null,
@@ -42,6 +41,7 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
   return {
     findAllByUserId: jest.fn().mockResolvedValue([]),
     findAllByIds: jest.fn().mockResolvedValue([]),
+    findMemberless: jest.fn().mockResolvedValue([]),
     getListStats: jest.fn().mockResolvedValue(new Map()),
     findById: jest.fn().mockResolvedValue(null),
     getContextRefs: jest.fn().mockResolvedValue({

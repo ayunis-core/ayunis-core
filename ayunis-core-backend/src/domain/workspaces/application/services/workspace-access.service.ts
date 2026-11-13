@@ -12,7 +12,7 @@ export class WorkspaceAccessService {
     private readonly context: ContextService,
   ) {}
 
-  async requireOwned(workspaceId: UUID): Promise<void> {
+  async requireMember(workspaceId: UUID): Promise<void> {
     const { userId, orgId } = getRequiredUserContext(this.context);
     const workspace = await this.repository.findById(userId, workspaceId);
     if (workspace?.orgId !== orgId) {
