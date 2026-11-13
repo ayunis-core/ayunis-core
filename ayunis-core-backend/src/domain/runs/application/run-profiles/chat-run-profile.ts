@@ -20,6 +20,7 @@ import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { ClientContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/client-context.capability';
 import {
   DONE_WHEN_MODEL_STOPS,
   type RunCompletionPolicy,
@@ -49,6 +50,7 @@ export class ChatRunProfile implements RunProfile {
     anonymization: AnonymizationCapability,
     behavior: BehaviorCapability,
     legalReferences: LegalReferencesCapability,
+    clientContext: ClientContextCapability,
     customInstructions: CustomInstructionsCapability,
     codeExecution: CodeExecutionCapability,
     emailCalendar: EmailCalendarCapability,
@@ -71,6 +73,7 @@ export class ChatRunProfile implements RunProfile {
       anonymization,
       behavior,
       legalReferences,
+      clientContext,
       customInstructions,
       codeExecution,
       emailCalendar,

@@ -12,6 +12,7 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -30,6 +31,7 @@ import {
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
+import { awaitsClientResult } from './runtime-tool-policy';
 import {
   reconstructRuntimeAnonymizationError,
   reconstructRuntimeModelError,
@@ -63,6 +65,7 @@ export interface RunEventStreamOptions {
   integrations?: RuntimeToolIntegrationRegistry;
   models?: RuntimeModelRegistry;
   throttle?: SnapshotThrottle;
+  awaitingClientResultToolNames?: ReadonlySet<string>;
 }
 
 /** Delays mapped errors until runtime terminal hooks have completed. */
@@ -129,20 +132,38 @@ class RunEventTranslator {
     }
     yield* this.sendSnapshot();
     this.outcome = readOutcome(item) ?? this.outcome;
+    if (item.type === 'tool_result_message') {
+      yield* this.toolResultMessage(item);
+      return;
+    }
     const translated =
       this.assistant.complete(item) ??
-      toSideStreamItem(
-        item,
-        this.threadId,
-        this.assistant.lastCompletedIteration(),
-        this.logger,
-        this.options.models,
-      );
+      toSideStreamItem(item, this.logger, this.options.models);
     if (translated instanceof ApplicationError) {
       this.pendingError = translated;
     } else if (translated) {
       yield translated;
     }
+  }
+
+  /** Mirrors what the persistence hook stores for the tool phase. */
+  private *toolResultMessage(
+    event: Extract<RunEvent, { type: 'tool_result_message' }>,
+  ): Generator<ToolResultMessage> {
+    const awaiting = this.options.awaitingClientResultToolNames ?? new Set();
+    const message = toBackendToolResultMessage(
+      {
+        ...event.message,
+        content: event.message.content.filter(
+          (content) =>
+            content.type !== 'tool_result' ||
+            !awaitsClientResult(content, event.endsRun, awaiting),
+        ),
+      },
+      this.threadId,
+      toolResultMessageId(event.runId, this.assistant.lastCompletedIteration()),
+    );
+    if (message.content.length > 0) yield message;
   }
 
   *sendSnapshot(): Generator<AssistantMessage> {
@@ -254,18 +275,9 @@ class AssistantTurnAccumulator {
 
 function toSideStreamItem(
   event: RunEvent,
-  threadId: UUID,
-  iteration: number,
   logger: Logger,
   models?: RuntimeModelRegistry,
 ): RunStreamItem | ApplicationError | null {
-  if (event.type === 'tool_result_message') {
-    return toBackendToolResultMessage(
-      event.message,
-      threadId,
-      toolResultMessageId(event.runId, iteration),
-    );
-  }
   if (event.type === 'custom') {
     return event.name === THREAD_PII_MASKS_EVENT
       ? new RunPiiMasksUpdate(event.data as ThreadPiiMask[])

@@ -75,7 +75,7 @@ none of these packages implements the Agent Plugins standard.
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                  | Chat History   | Message storage and retrieval                                                                                  |
 | [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking, streaming, and chat image upload validation                                              |
 | [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                      | LLM Config     | Multi-provider model management                                                                                |
-| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema and CSV/text downloads                                                 |
+| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema, CSV/text downloads and the Outlook pane's `outlook__` tools           |
 | [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                              |
 | [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and org document collections                                             |
 | [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |

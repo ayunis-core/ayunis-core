@@ -6,6 +6,7 @@ import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/r
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export interface SkillCatalog {
   /** Advertised slug → skill name, for `activate_skill`. */
@@ -22,6 +23,8 @@ export interface RunCapabilityInput {
   readonly userId: UUID;
   readonly orgId: UUID;
   readonly isAnonymous: boolean;
+  /** The token client the user chats from; null for the web app. */
+  readonly client: SessionClient | null;
   /** Skill activated by a quick action before this run started. */
   readonly activatedSkillName?: string;
 }

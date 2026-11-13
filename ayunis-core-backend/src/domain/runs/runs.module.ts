@@ -60,6 +60,7 @@ import { RunCapabilityContextFactory } from './application/run-capabilities/run-
 import { FinishRoutineCapability } from './application/run-capabilities/capabilities/finish-routine.capability';
 import { NotificationsCapability } from './application/run-capabilities/capabilities/notifications.capability';
 import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
+import { ClientContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/client-context.capability';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
@@ -157,6 +158,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     AnonymizationCapability,
     ArtifactsCapability,
     BehaviorCapability,
+    ClientContextCapability,
     CodeExecutionCapability,
     CustomInstructionsCapability,
     DataHandlingCapability,

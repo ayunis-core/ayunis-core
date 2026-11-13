@@ -101,6 +101,7 @@ export class RunAssemblyService {
         onMessagePersisted,
         thread: prepared.thread,
         integrations: prepared.toolIntegrations,
+        awaitingClientResultToolNames: prepared.awaitingClientResultToolNames,
       }),
       this.toolUsageHookFactory.create({
         userId: prepared.userId,

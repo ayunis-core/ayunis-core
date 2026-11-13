@@ -1,6 +1,7 @@
 import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import {
+  MAX_TOOL_RESULT_LENGTH,
   MockProvider,
   ModelProviderError,
   textTurn,
@@ -36,7 +37,14 @@ import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-documen
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
+import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
+import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
+import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
+import { findOpenToolCalls } from 'src/domain/runs/application/helpers/open-tool-calls.helper';
+import { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
+import { RuntimeHistoryMaterializer as RealRuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { MAX_ANONYMOUS_TOOL_RESULT_LENGTH } from 'src/common/util/tool-result-limits';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -110,6 +118,7 @@ import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { RunAssemblyService } from 'src/domain/runs/application/services/run-assembly.service';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
+import { UNANSWERED_TOOL_CALL_RESULT } from 'src/domain/models/application/helpers/pair-tool-results.helper';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -2343,6 +2352,72 @@ describe('ExecuteRunUseCase', () => {
     expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
   });
 
+  describe('a long posted result', () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('read-1', ToolType.OUTLOOK_READ_EMAIL, {}),
+      ],
+    } as unknown as Message;
+    const echoResult = jest.fn(({ input }: { input: RunToolResultInput }) => ({
+      contents: [
+        new ToolResultMessageContent(
+          input.toolId,
+          input.toolName,
+          input.result,
+        ),
+      ],
+      piiMasks: null,
+    }));
+
+    function posted(result: string) {
+      return new ExecuteRunCommand({
+        profile: { id: 'chat' },
+        threadId,
+        input: new RunToolResultInput(
+          'read-1',
+          ToolType.OUTLOOK_READ_EMAIL,
+          result,
+        ),
+      });
+    }
+
+    it('is cut to the tool result limit like a backend result', async () => {
+      const { useCase, createSeedToolResult } = buildHarness({
+        lastMessage,
+        toolResultCollector: { collectToolResults: echoResult } as never,
+      });
+
+      await drain(
+        await useCase.execute(posted('x'.repeat(MAX_TOOL_RESULT_LENGTH + 1))),
+      );
+
+      expect(createSeedToolResult.mock.calls[0][0].content[0].result).toBe(
+        `${'x'.repeat(MAX_TOOL_RESULT_LENGTH)}\n[result truncated]`,
+      );
+    });
+
+    it('is cut to the anonymous limit before it reaches the anonymizer', async () => {
+      const { useCase, anonymize, createSeedToolResult } = buildHarness({
+        anonymous: true,
+        lastMessage,
+        toolResultCollector: { collectToolResults: echoResult } as never,
+      });
+
+      await drain(
+        await useCase.execute(
+          posted('x'.repeat(MAX_ANONYMOUS_TOOL_RESULT_LENGTH + 1)),
+        ),
+      );
+
+      expect(anonymize.mock.calls[0][0].text).toHaveLength(
+        MAX_ANONYMOUS_TOOL_RESULT_LENGTH,
+      );
+      expect(createSeedToolResult.mock.calls[0][0].content[0].result).toBe(
+        'Hi {{pii:PERSON_1}}\n[result truncated]',
+      );
+    });
+  });
+
   it('anonymizes the user message and streams the mask dictionary first', async () => {
     const { useCase, anonymize } = buildHarness({ anonymous: true });
 
@@ -2881,6 +2956,327 @@ describe('ExecuteRunUseCase', () => {
         threadId,
         new Set([rejections.id, 'user-msg']),
       );
+    });
+  });
+
+  describe('a call awaiting a client result', () => {
+    const mailJson = JSON.stringify({
+      subject: 'Antrag auf Fristverlängerung',
+      from: 'buerger@example.org',
+      body: 'Bitte verlängern Sie die Frist bis zum 30. November.',
+    });
+
+    function buildClientResultHarness(
+      backendTools: BackendTool[],
+      turns: readonly (readonly ProviderChunk[])[],
+      executeTool = jest.fn(),
+    ) {
+      const toolResultCollector = new ToolResultCollectorService(
+        { execute: executeTool } as never,
+        { execute: jest.fn() } as never,
+        { get: jest.fn().mockReturnValue(userId) } as never,
+        { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+      );
+      const harness = buildHarness({
+        backendTools,
+        backendToolAdapter: realBackendToolAdapter(executeTool),
+        toolResultCollector,
+        turns,
+      });
+      const materializer = new RealRuntimeHistoryMaterializer(
+        new MapMessagesToInferenceUseCase({} as never),
+      );
+      harness.materializeHistory.mockImplementation(
+        (
+          params: Parameters<RealRuntimeHistoryMaterializer['materialize']>[0],
+        ) => materializer.materialize(params),
+      );
+      return harness;
+    }
+
+    async function threadOf(findThread: jest.Mock): Promise<Thread> {
+      const { thread } = (await findThread()) as { thread: Thread };
+      thread.getLastMessage = () => thread.messages.at(-1);
+      return thread;
+    }
+
+    function postedResult(toolId: string, result = mailJson) {
+      return new ExecuteRunCommand({
+        profile: { id: 'chat' },
+        threadId,
+        input: new RunToolResultInput(
+          toolId,
+          ToolType.OUTLOOK_READ_EMAIL,
+          result,
+        ),
+      });
+    }
+
+    it('ends the run on outlook__read_email without storing or streaming a result, so the call stays open', async () => {
+      const { useCase, provider, findThread, createToolResult } =
+        buildClientResultHarness(
+          [new OutlookReadEmailTool()],
+          [
+            toolCallTurn({
+              id: 'read-1',
+              name: ToolType.OUTLOOK_READ_EMAIL,
+              input: {},
+            }),
+          ],
+        );
+      const thread = await threadOf(findThread);
+
+      const items = await drain(await useCase.execute(userCommand()));
+
+      expect(provider.requests).toHaveLength(1);
+      expect(createToolResult).not.toHaveBeenCalled();
+      expect(items.some((item) => item instanceof ToolResultMessage)).toBe(
+        false,
+      );
+      expect(thread.getLastMessage()).toBeInstanceOf(AssistantMessage);
+      expect(thread.getLastMessage()?.content).toEqual([
+        expect.objectContaining({
+          id: 'read-1',
+          name: ToolType.OUTLOOK_READ_EMAIL,
+        }),
+      ]);
+    });
+
+    it('resumes with the posted result, which the next model turn receives verbatim', async () => {
+      const { useCase, provider, findThread, createSeedToolResult } =
+        buildClientResultHarness(
+          [new OutlookReadEmailTool()],
+          [
+            toolCallTurn({
+              id: 'read-1',
+              name: ToolType.OUTLOOK_READ_EMAIL,
+              input: {},
+            }),
+            textTurn('Die Bürgerin bittet um eine Fristverlängerung.'),
+          ],
+        );
+      await threadOf(findThread);
+      await drain(await useCase.execute(userCommand()));
+
+      await drain(await useCase.execute(postedResult('read-1')));
+
+      expect(createSeedToolResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: [
+            expect.objectContaining({ toolId: 'read-1', result: mailJson }),
+          ],
+        }),
+      );
+      expect(provider.requests).toHaveLength(2);
+      expect(provider.requests[1].messages.at(-1)).toEqual({
+        role: 'tool_result',
+        content: [
+          expect.objectContaining({
+            type: 'tool_result',
+            toolCallId: 'read-1',
+            result: mailJson,
+          }),
+        ],
+      });
+    });
+
+    it('rejects a result for an unknown call or one already answered, persisting nothing', async () => {
+      const { useCase, findThread, createSeedToolResult } =
+        buildClientResultHarness(
+          [new OutlookReadEmailTool()],
+          [
+            toolCallTurn({
+              id: 'read-1',
+              name: ToolType.OUTLOOK_READ_EMAIL,
+              input: {},
+            }),
+            textTurn('Die Bürgerin bittet um eine Fristverlängerung.'),
+          ],
+        );
+      await threadOf(findThread);
+      await drain(await useCase.execute(userCommand()));
+
+      await expect(
+        drain(await useCase.execute(postedResult('read-unknown'))),
+      ).rejects.toMatchObject({ code: 'RUN_INVALID_INPUT' });
+      expect(createSeedToolResult).not.toHaveBeenCalled();
+
+      await drain(await useCase.execute(postedResult('read-1')));
+      await expect(
+        drain(await useCase.execute(postedResult('read-1'))),
+      ).rejects.toMatchObject({ code: 'RUN_INVALID_INPUT' });
+      expect(createSeedToolResult).toHaveBeenCalledTimes(1);
+    });
+
+    it('pairs the open call before a user message sent instead, and rejects a later posted result', async () => {
+      const { useCase, provider, findThread } = buildClientResultHarness(
+        [new OutlookReadEmailTool()],
+        [
+          toolCallTurn({
+            id: 'read-1',
+            name: ToolType.OUTLOOK_READ_EMAIL,
+            input: {},
+          }),
+          textTurn('Worum geht es in der E-Mail?'),
+        ],
+      );
+      await threadOf(findThread);
+      await drain(await useCase.execute(userCommand()));
+
+      await drain(
+        await useCase.execute(
+          userCommand(new RunUserInput('Lass gut sein, ich frage anders.')),
+        ),
+      );
+
+      expect(provider.requests[1].messages.slice(-3)).toEqual([
+        expect.objectContaining({ role: 'assistant' }),
+        {
+          role: 'tool_result',
+          content: [
+            expect.objectContaining({
+              toolCallId: 'read-1',
+              result: UNANSWERED_TOOL_CALL_RESULT,
+            }),
+          ],
+        },
+        expect.objectContaining({ role: 'user' }),
+      ]);
+      await expect(
+        drain(await useCase.execute(postedResult('read-1'))),
+      ).rejects.toMatchObject({ code: 'RUN_INVALID_INPUT' });
+    });
+
+    it('keeps a sibling backend result and resumes the open call without running the sibling again', async () => {
+      const executeTool = jest.fn().mockResolvedValue('Frist: 14 Tage');
+      const search = new InternetSearchTool();
+      const { useCase, provider, findThread, createToolResult } =
+        buildClientResultHarness(
+          [new OutlookReadEmailTool(), search],
+          [
+            [
+              {
+                toolCallDeltas: [
+                  {
+                    index: 0,
+                    id: 'read-1',
+                    name: ToolType.OUTLOOK_READ_EMAIL,
+                    argumentsDelta: '{}',
+                  },
+                  {
+                    index: 1,
+                    id: 'search-1',
+                    name: search.name,
+                    argumentsDelta: '{"query":"Widerspruchsfrist"}',
+                  },
+                ],
+              },
+              { finishReason: 'tool_calls' },
+            ],
+            textTurn('Die Frist beträgt 14 Tage.'),
+          ],
+          executeTool,
+        );
+      await threadOf(findThread);
+      await drain(await useCase.execute(userCommand()));
+
+      expect(createToolResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: [expect.objectContaining({ toolId: 'search-1' })],
+        }),
+      );
+
+      await drain(await useCase.execute(postedResult('read-1')));
+
+      expect(executeTool).toHaveBeenCalledTimes(1);
+      expect(provider.requests[1].messages.at(-1)).toEqual({
+        role: 'tool_result',
+        content: [
+          expect.objectContaining({ toolCallId: 'read-1', result: mailJson }),
+          expect.objectContaining({
+            toolCallId: 'search-1',
+            result: 'Frist: 14 Tage',
+          }),
+        ],
+      });
+    });
+
+    it('stores the placeholder the model saw when an invalid sibling keeps the run going', async () => {
+      const { useCase, provider, findThread, createToolResult } =
+        buildClientResultHarness(
+          [new OutlookReadEmailTool(), new OutlookReadAttachmentTool()],
+          [
+            [
+              {
+                toolCallDeltas: [
+                  {
+                    index: 0,
+                    id: 'read-1',
+                    name: ToolType.OUTLOOK_READ_EMAIL,
+                    argumentsDelta: '{}',
+                  },
+                  {
+                    index: 1,
+                    id: 'attachment-1',
+                    name: ToolType.OUTLOOK_READ_ATTACHMENT,
+                    argumentsDelta: '{}',
+                  },
+                ],
+              },
+              { finishReason: 'tool_calls' },
+            ],
+            textTurn('Welchen Anhang soll ich lesen?'),
+          ],
+        );
+      const thread = await threadOf(findThread);
+
+      const items = await drain(await useCase.execute(userCommand()));
+
+      expect(provider.requests).toHaveLength(2);
+      expect(createToolResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: [
+            expect.objectContaining({
+              toolId: 'read-1',
+              result: 'Tool execution is handled externally',
+            }),
+            expect.objectContaining({ toolId: 'attachment-1' }),
+          ],
+        }),
+      );
+      const streamed = items.filter(
+        (item): item is ToolResultMessage => item instanceof ToolResultMessage,
+      );
+      expect(streamed.flatMap((message) => message.content)).toHaveLength(2);
+      expect(findOpenToolCalls(thread)).toEqual([]);
+    });
+
+    it('ends a write call such as outlook__draft_email with the stored placeholder, like send_email', async () => {
+      const { useCase, provider, createToolResult } = buildClientResultHarness(
+        [new OutlookDraftEmailTool()],
+        [
+          toolCallTurn({
+            id: 'draft-1',
+            name: ToolType.OUTLOOK_DRAFT_EMAIL,
+            input: { body: 'Sehr geehrte Frau Muster, ...' },
+          }),
+        ],
+      );
+
+      const items = await drain(await useCase.execute(userCommand()));
+
+      expect(provider.requests).toHaveLength(1);
+      expect(createToolResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: [
+            expect.objectContaining({
+              toolId: 'draft-1',
+              result: 'Tool execution is handled externally',
+            }),
+          ],
+        }),
+      );
+      expect(items.at(-1)).toBeInstanceOf(ToolResultMessage);
     });
   });
 });
