@@ -3,6 +3,7 @@ import { generatedApi } from '../../src/clients/api/generated-api';
 import { enableTotp } from '../../src/clients/api/mfa.client';
 import {
   currentUserForAccessToken,
+  listActiveRunsStatusForAccessToken,
   listThreadsStatus,
   listThreadsStatusForAccessToken,
 } from '../../src/clients/api/session-tokens.client';
@@ -39,7 +40,10 @@ test('hands a password login to the add-in as working tokens', async ({
   expect((await currentUserForAccessToken(tokens.accessToken)).email).toBe(
     user.email,
   );
-  expect(await listThreadsStatusForAccessToken(tokens.accessToken)).toBe(403);
+  expect(await listThreadsStatusForAccessToken(tokens.accessToken)).toBe(200);
+  expect(await listActiveRunsStatusForAccessToken(tokens.accessToken)).toBe(
+    403,
+  );
   // On Outlook on the web the dialog shares cookies with the web app, which
   // must stay signed in.
   const cookieNames = (await page.context().cookies()).map(({ name }) => name);

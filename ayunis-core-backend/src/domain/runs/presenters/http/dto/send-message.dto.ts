@@ -8,6 +8,7 @@ import {
   IsString,
   IsArray,
   ArrayNotEmpty,
+  IsObject,
 } from 'class-validator';
 import { ApiProperty, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { Type, Transform, plainToInstance } from 'class-transformer';
@@ -168,22 +169,19 @@ export class SendMessageDto {
   imageAltTexts?: string[];
 
   @IsOptional()
+  // ValidateNested walks a list element by element, so without IsObject a
+  // posted list passes here and only fails deeper in, with no tool id.
+  @IsObject()
   @ValidateNested()
-  @Type(() => Object, {
-    discriminator: {
-      property: 'type',
-      subTypes: [{ value: ToolResultInput, name: 'tool_result' }],
-    },
-  })
-  @Transform(({ value }: { value: unknown }): ToolResultInput | undefined => {
-    if (typeof value !== 'string') {
-      return value as ToolResultInput | undefined;
-    }
+  @Type(() => ToolResultInput)
+  // Multipart sends the tool result as a JSON string. A plain parsed object
+  // would lose every field to the whitelist, so it becomes an instance here.
+  @Transform(({ value }: { value: unknown }): unknown => {
+    if (typeof value !== 'string') return value;
     try {
-      return JSON.parse(value) as ToolResultInput;
+      return plainToInstance(ToolResultInput, JSON.parse(value) as unknown);
     } catch {
-      // Return undefined - validation decorators will handle the error
-      return undefined;
+      return value;
     }
   })
   @ApiProperty({

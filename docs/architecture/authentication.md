@@ -416,6 +416,15 @@ everywhere else. Browser sessions and API keys carry no client and are not
 affected. A token whose `client` is no longer in the registry is rejected
 rather than treated as a browser session.
 
+Routes open to `outlook`: the session routes (`GET /api/auth/me`,
+`POST /api/auth/refresh`, `POST /api/auth/logout`) and what the pane's chat
+needs: `POST /api/runs/send-message`, `GET` and `POST /api/threads`, `GET` and
+`DELETE /api/threads/:id`, `PATCH /api/threads/:id/title` and
+`GET /api/models/default-selection` (the pane starts a chat with the user's
+default mode or model and has no model picker). Aborting a pane run closes its
+response, which cancels the run, so `POST /api/runs/threads/:threadId/cancel`
+stays closed.
+
 ## Organization authentication policy
 
 The Superadmin organization SSO tab is the only current management UI. Customer
