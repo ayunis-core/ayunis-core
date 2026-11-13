@@ -20,10 +20,20 @@ export type PaneRunInput =
   | { threadId: string; text: string }
   | { threadId: string; toolResult: PaneToolResult };
 
+/** What the pane reads from a thread source response. */
+export interface PaneSource {
+  id: string;
+  name: string;
+  status: 'processing' | 'ready' | 'failed';
+  processingError?: string;
+}
+
 export interface PaneChatApi {
   listThreads(): Promise<GetThreadsResponseDtoItem[]>;
   createThread(): Promise<GetThreadResponseDto>;
   getThread(threadId: string): Promise<GetThreadResponseDto>;
+  addFileSource(threadId: string, file: File): Promise<PaneSource[]>;
+  listSources(threadId: string): Promise<PaneSource[]>;
   /** Streams one run; resolves when the backend closes the response. */
   run(
     input: PaneRunInput,
@@ -87,6 +97,18 @@ export function createPaneChatApi(session: PaneSession): PaneChatApi {
     },
     getThread(threadId) {
       return getJson<GetThreadResponseDto>(`/threads/${threadId}`);
+    },
+    async addFileSource(threadId, file) {
+      const form = new FormData();
+      form.append('file', file);
+      const response = await session.request(
+        `/threads/${threadId}/sources/file`,
+        { method: 'POST', body: form },
+      );
+      return (await (await ensureOk(response)).json()) as PaneSource[];
+    },
+    listSources(threadId) {
+      return getJson<PaneSource[]>(`/threads/${threadId}/sources`);
     },
     async run(input, signal, onEvent) {
       const response = await session.request('/runs/send-message', {
