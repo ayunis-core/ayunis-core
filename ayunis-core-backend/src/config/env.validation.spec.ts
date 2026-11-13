@@ -190,6 +190,17 @@ describe('validateEnv', () => {
       ).toThrow(/OCR_IMAGE_TEXT_ENABLED/);
     });
 
+    it('rejects a non-boolean early embedding switch and accepts true, false or blank', () => {
+      expect(() =>
+        validateEnv(baseEnv({ INGESTION_EARLY_EMBEDDING: 'off' })),
+      ).toThrow(/INGESTION_EARLY_EMBEDDING/);
+      for (const value of ['false', 'true', '']) {
+        expect(() =>
+          validateEnv(baseEnv({ INGESTION_EARLY_EMBEDDING: value })),
+        ).not.toThrow();
+      }
+    });
+
     it('accepts the OCR image text switch turned off, on, or left blank', () => {
       for (const value of ['false', 'true', '']) {
         expect(() =>

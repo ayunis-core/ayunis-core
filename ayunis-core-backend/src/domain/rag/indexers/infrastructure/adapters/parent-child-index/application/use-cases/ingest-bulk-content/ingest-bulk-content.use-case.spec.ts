@@ -1,8 +1,10 @@
+import { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { IngestBulkContentUseCase } from './ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
+import { ChildChunkEmbedder } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/services/child-chunk-embedder.service';
 import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
@@ -70,6 +72,7 @@ describe('IngestBulkContentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IngestBulkContentUseCase,
+        ChildChunkEmbedder,
         { provide: ParentChildIndexerRepositoryPort, useValue: mockRepo },
         { provide: SplitTextUseCase, useValue: mockSplitter },
         { provide: EmbedTextUseCase, useValue: mockEmbedder },
@@ -387,6 +390,36 @@ describe('IngestBulkContentUseCase', () => {
       expect(mockEmbedder.execute).toHaveBeenCalledTimes(40);
     });
 
+    it('reuses vectors that were computed before and only sends the remaining texts', async () => {
+      const { command, calls } = longDocument(3);
+      const known = new Map<string, number[]>();
+      for (let index = 0; index < 2 * BATCH; index++) {
+        known.set(`Absatz ${index}`, [index + 0.5]);
+      }
+
+      const ingestion = useCase.execute(
+        new IngestBulkContentCommand({
+          ...command,
+          precomputedEmbeddings: new PreparedContentEmbeddings(
+            EMBEDDING_MODEL,
+            known,
+          ),
+        }),
+      );
+      await settle();
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0].texts[0]).toBe(`Absatz ${2 * BATCH}`);
+      calls[0].resolve();
+      await ingestion;
+
+      const [saved] = mockRepo.saveMany.mock.calls[0][0];
+      expect(saved.children.map((child) => child.embedding[0])).toEqual([
+        ...Array.from({ length: 2 * BATCH }, (_, index) => index + 0.5),
+        ...Array.from({ length: BATCH }, (_, index) => 2 * BATCH + index),
+      ]);
+    });
+
     it('follows the configured embeddings limit (EMBEDDINGS_MAX_CONCURRENCY)', async () => {
       embeddingsMaxConcurrency = 4;
       const { command, calls } = longDocument(10);
@@ -444,6 +477,65 @@ describe('IngestBulkContentUseCase', () => {
       expect(mockRepo.saveMany).not.toHaveBeenCalled();
     });
   });
+
+  it.each([
+    { id: DOC_ID },
+    { name: 'mistral-embed-v2' },
+    { provider: ModelProvider.OPENAI },
+    { dimensions: EmbeddingDimensions.DIMENSION_1536 },
+  ])(
+    'recomputes prepared vectors when model configuration changes: %j',
+    async (change) => {
+      const updatedModel = new EmbeddingModel({
+        id: EMBEDDING_MODEL.id,
+        name: EMBEDDING_MODEL.name,
+        provider: EMBEDDING_MODEL.provider,
+        displayName: 'OpenAI Embed',
+        isArchived: false,
+        dimensions: EMBEDDING_MODEL.dimensions,
+        ...change,
+      });
+      mockGetModel.execute.mockResolvedValue(
+        new PermittedEmbeddingModel({
+          model: updatedModel,
+          orgId: ORG_ID,
+        }),
+      );
+      mockSplitter.execute.mockReturnValue(
+        new SplitResult([new TextChunk('Haushaltsplan', { index: 0 })], {}),
+      );
+      mockEmbedder.execute.mockResolvedValue([
+        new Embedding(
+          Array(updatedModel.dimensions).fill(0.2),
+          'Haushaltsplan',
+          updatedModel,
+        ),
+      ]);
+      await useCase.execute(
+        new IngestBulkContentCommand({
+          orgId: ORG_ID,
+          entries: [
+            {
+              indexEntry: new IndexEntry({
+                relatedDocumentId: DOC_ID,
+                relatedChunkId: CHUNK_ID_1,
+              }),
+              content: 'Haushaltsplan',
+            },
+          ],
+          precomputedEmbeddings: new PreparedContentEmbeddings(
+            EMBEDDING_MODEL,
+            new Map([['Haushaltsplan', Array(1024).fill(0.1)]]),
+          ),
+        }),
+      );
+      const [saved] = mockRepo.saveMany.mock.calls[0][0];
+      expect(saved.children[0].embedding).toHaveLength(updatedModel.dimensions);
+      expect(saved.children[0].embedding).toEqual(
+        Array(updatedModel.dimensions).fill(0.2),
+      );
+    },
+  );
 
   it('should do nothing when entries array is empty', async () => {
     const command = new IngestBulkContentCommand({

@@ -15,6 +15,8 @@ import { ParentChildIndexerRepositoryPort } from './application/ports/parent-chi
 
 // Use Cases
 import { IngestBulkContentUseCase } from './application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
+import { PrepareEmbeddingsUseCase } from './application/use-cases/prepare-embeddings/prepare-embeddings.use-case';
+import { ChildChunkEmbedder } from './application/services/child-chunk-embedder.service';
 import { SearchContentUseCase } from './application/use-cases/search-content/search-content.use-case';
 import { DeleteContentUseCase } from './application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentsUseCase } from './application/use-cases/delete-contents/delete-contents.use-case';
@@ -44,8 +46,11 @@ import { ModelsModule } from 'src/domain/models/models.module';
     // Mappers
     ParentChildIndexerMapper,
 
+    ChildChunkEmbedder,
+
     // Use Cases
     IngestBulkContentUseCase,
+    PrepareEmbeddingsUseCase,
     SearchContentUseCase,
     DeleteContentUseCase,
     DeleteContentsUseCase,

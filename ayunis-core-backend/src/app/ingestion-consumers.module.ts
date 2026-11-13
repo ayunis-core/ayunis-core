@@ -13,6 +13,7 @@ import { StoredSourceFileService } from 'src/domain/sources/application/services
 import { ProcessingCheckpointService } from 'src/domain/sources/application/services/processing-checkpoint.service';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
+import { EarlyEmbeddingService } from 'src/domain/sources/application/services/early-embedding.service';
 import { CrawledPdfSourcesService } from 'src/domain/sources/application/services/crawled-pdf-sources.service';
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queue/document-processing.module';
@@ -58,6 +59,7 @@ export const INGESTION_QUEUES = [
     ProcessingCheckpointService,
     SourceProcessingHeartbeatService,
     SourceProcessingHelper,
+    EarlyEmbeddingService,
     CrawledPdfSourcesService,
     MarkSourceFailedUseCase,
     DocumentProcessingConsumer,

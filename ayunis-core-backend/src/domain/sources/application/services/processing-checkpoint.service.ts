@@ -30,6 +30,7 @@ export class ProcessingCheckpointService {
     orgId: UUID,
     sourceId: UUID,
     progress: (completed: number) => Promise<void> = () => Promise.resolve(),
+    onPagesExtracted?: (texts: readonly string[]) => void,
   ): ProcessingContext {
     const context: ProcessingContext = {
       isActive: async () => {
@@ -48,6 +49,7 @@ export class ProcessingCheckpointService {
         await this.write(orgId, this.key(orgId, sourceId, key), value, context);
       },
       progress,
+      onPagesExtracted,
     };
     return context;
   }

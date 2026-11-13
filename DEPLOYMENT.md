@@ -392,6 +392,11 @@ At least one must be configured:
   pictures embedded in PDFs (default `true`). Use it when OCR is slow on picture
   pages; text inside pictures is then not searchable. The application refuses to
   start on any value other than `true` or `false`.
+- `INGESTION_EARLY_EMBEDDING`: Embeds the chunks of a long PDF that later pages
+  can no longer change while those pages are still in OCR (default `false`).
+  The stored chunks and vectors are the same either way. Set to `true` to opt in
+  after checking OCR and embedding capacity on the provider account. The
+  application refuses to start on any other value.
 
 ### Validation Checklist
 

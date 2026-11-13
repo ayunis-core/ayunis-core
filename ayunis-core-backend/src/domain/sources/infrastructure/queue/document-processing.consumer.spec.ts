@@ -1,3 +1,6 @@
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
+import { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
 import { StoredFileMismatchError } from 'src/domain/sources/application/sources.errors';
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
@@ -96,9 +99,27 @@ const storedFiles = {
 const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
 
 const checkpoints = {
-  create: () => undefined,
+  create: jest.fn<
+    undefined,
+    [unknown, unknown, unknown, (texts: string[]) => void]
+  >(() => undefined),
   cleanup: jest.fn().mockResolvedValue(undefined),
 };
+
+const EMBEDDED_EARLY = new PreparedContentEmbeddings(
+  {
+    id: ORG_ID,
+    name: 'mistral-embed',
+    provider: ModelProvider.MISTRAL,
+    dimensions: EmbeddingDimensions.DIMENSION_1024,
+  },
+  new Map([['hello world', [0.1, 0.2]]]),
+);
+const early = {
+  appendPages: jest.fn(),
+  finish: jest.fn().mockResolvedValue(EMBEDDED_EARLY),
+};
+const earlyEmbedding = { start: jest.fn(() => early) };
 
 const sourceRepository = {
   findById: jest.fn(),
@@ -159,6 +180,7 @@ describe('DocumentProcessingConsumer', () => {
       admitOrgProcessing as never,
       new SourceProcessingHeartbeatService(sourceRepository as never),
       checkpoints as never,
+      earlyEmbedding as never,
       { tempDirectory: undefined } as never,
     );
   });
@@ -502,6 +524,47 @@ describe('DocumentProcessingConsumer', () => {
     expect(indexedOrgId).toBe(ORG_ID);
     expect(indexedChunks).toHaveLength(1);
     expect(indexedChunks[0].content).toBe('hello world');
+  });
+
+  it('hands pages on while they are read and gives the vectors embedded meanwhile to indexing', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    sourceRepository.updateStatusConditionally.mockResolvedValue(true);
+
+    await consumer.process(makeJob());
+
+    expect(earlyEmbedding.start).toHaveBeenCalledWith(ORG_ID);
+    const onPagesExtracted = checkpoints.create.mock.calls[0][3];
+    onPagesExtracted(['Seite 1', 'Seite 2']);
+    expect(early.appendPages).toHaveBeenCalledWith(['Seite 1', 'Seite 2']);
+    expect(helper.index.mock.calls[0][3]).toBe(EMBEDDED_EARLY);
+  });
+
+  it('waits for the embedding it started before a failed extraction fails the job', async () => {
+    sourceRepository.findById.mockResolvedValue(
+      makeSource(SourceStatus.PROCESSING),
+    );
+    retrieveFileContentUseCase.execute.mockRejectedValueOnce(
+      new Error('provider timeout'),
+    );
+    let embeddingSettled = false;
+    early.finish.mockImplementationOnce(async () => {
+      await new Promise((resolve) => setImmediate(resolve));
+      embeddingSettled = true;
+      return EMBEDDED_EARLY;
+    });
+    helper.markFailed.mockImplementationOnce(() => {
+      expect(embeddingSettled).toBe(true);
+      return Promise.resolve();
+    });
+
+    await consumer
+      .process(makeJob({ attemptsMade: 2, opts: { attempts: 3 } } as never))
+      .catch(() => undefined);
+
+    expect(embeddingSettled).toBe(true);
+    expect(helper.index).not.toHaveBeenCalled();
   });
 
   it('saves a long-running email even when stale cleanup runs during extraction', async () => {
