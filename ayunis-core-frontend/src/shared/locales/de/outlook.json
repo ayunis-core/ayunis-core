@@ -17,5 +17,56 @@
   "dialog": {
     "connecting": "Verbindung mit Outlook wird hergestellt …",
     "outlookRequired": "Schließen Sie dieses Fenster und wählen Sie im Ayunis-Add-in in Outlook „Anmelden“, um die Anmeldung abzuschließen."
+  },
+  "chat": {
+    "intro": "Fragen Sie zur geöffneten E-Mail oder lassen Sie Ayunis mitschreiben.",
+    "placeholder": "Nachricht an Ayunis",
+    "send": "Senden",
+    "stop": "Stoppen",
+    "newChat": "Neuer Chat",
+    "history": "Letzte Chats",
+    "historyEmpty": "Noch keine Chats aus Outlook.",
+    "historyFailed": "Die letzten Chats konnten nicht geladen werden.",
+    "untitled": "Chat ohne Titel",
+    "thinking": "Ayunis arbeitet …",
+    "error": {
+      "runFailed": "Die Antwort konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "loadFailed": "Dieser Chat konnte nicht geöffnet werden."
+    },
+    "quickAction": {
+      "summarize": {
+        "label": "Diese E-Mail zusammenfassen",
+        "prompt": "Fasse diese E-Mail zusammen."
+      },
+      "draftReply": {
+        "label": "Antwort entwerfen",
+        "prompt": "Entwirf eine Antwort auf diese E-Mail."
+      },
+      "improveDraft": {
+        "label": "Meinen Entwurf verbessern",
+        "prompt": "Verbessere meinen Entwurf."
+      }
+    },
+    "tool": {
+      "outlook__read_email": "E-Mail lesen",
+      "outlook__read_attachment": "Anhang lesen",
+      "outlook__draft_email": "In Outlook entwerfen",
+      "outlook__move_email_to_composer": "Entwurf ersetzen",
+      "outlook__save_email_to_draft": "Als Entwurf speichern"
+    },
+    "toolStatus": {
+      "running": "Arbeitet in Outlook …",
+      "read": "Erledigt",
+      "readFailed": "Outlook konnte das nicht bereitstellen.",
+      "inserted": "In Ihren Entwurf eingefügt",
+      "replaced": "Ihr Entwurf wurde ersetzt",
+      "replyOpened": "Antwort geöffnet",
+      "saved": "Als Entwurf gespeichert",
+      "failed": {
+        "noItem": "Es ist keine E-Mail geöffnet.",
+        "nothingToSave": "Nur eine E-Mail, die Sie gerade schreiben, kann gespeichert werden.",
+        "officeFailed": "Outlook konnte das nicht ausführen."
+      }
+    }
   }
 }
