@@ -8,8 +8,10 @@ import {
 } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import {
   SpreadsheetParseTimeoutError,
+  SpreadsheetTooLargeError,
   UnprocessableSpreadsheetError,
 } from 'src/domain/sources/application/sources.errors';
+import { isWorkbookCellLimitError, MAX_WORKBOOK_CELLS } from './excel-parser';
 
 const MAX_WORKER_THREADS = 2;
 const WORKER_IDLE_TIMEOUT_MS = 30_000;
@@ -56,6 +58,9 @@ export class PiscinaSpreadsheetParserAdapter
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new SpreadsheetParseTimeoutError(PARSE_TIMEOUT_MS);
+      }
+      if (isWorkbookCellLimitError(error)) {
+        throw new SpreadsheetTooLargeError(MAX_WORKBOOK_CELLS);
       }
       const malformedWorkbook = classifyMalformedWorkbookError(error);
       if (malformedWorkbook) {
