@@ -164,6 +164,7 @@ describe('CompleteSourceUploadUseCase', () => {
       UPLOAD_SESSION_ID,
       SourceUploadSessionStatus.PENDING,
       SourceUploadSessionStatus.SOURCES_CREATED,
+      { targetId: UPLOAD_TARGET_ID },
     );
     expect(sessions.recordVerifiedSources).toHaveBeenCalledWith(
       UPLOAD_SESSION_ID,
@@ -173,6 +174,42 @@ describe('CompleteSourceUploadUseCase', () => {
     expect(queueing.tryQueue).toHaveBeenCalledTimes(1);
     expect(result.alreadyCompleted).toBe(false);
     expect(result.sources).toHaveLength(1);
+  });
+
+  it('binds an owned unbound thread upload when the first message is sent', async () => {
+    const pending = pendingThenCreated();
+    pending.targetId = null;
+
+    const result = await useCase.execute(command());
+
+    expect(result.sources).toHaveLength(1);
+    expect(sessions.transition).toHaveBeenCalledWith(
+      UPLOAD_SESSION_ID,
+      SourceUploadSessionStatus.PENDING,
+      SourceUploadSessionStatus.SOURCES_CREATED,
+      { targetId: UPLOAD_TARGET_ID },
+    );
+  });
+
+  it('rejects a concurrent claimant when another thread already bound the upload', async () => {
+    sessions.findById
+      .mockResolvedValueOnce(
+        buildUploadSession({
+          targetId: null,
+        }),
+      )
+      .mockResolvedValueOnce(
+        buildUploadSession({
+          targetId: '55555555-5555-5555-5555-555555555555',
+          status: SourceUploadSessionStatus.SOURCES_CREATED,
+        }),
+      );
+    sessions.transition.mockResolvedValueOnce(false);
+
+    await expect(useCase.execute(command())).rejects.toBeInstanceOf(
+      SourceUploadTargetMismatchError,
+    );
+    expect(queueing.tryQueue).not.toHaveBeenCalled();
   });
 
   it('attaches the created sources before queueing processing', async () => {

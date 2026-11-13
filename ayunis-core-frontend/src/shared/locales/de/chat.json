@@ -406,5 +406,24 @@
       "release_note_one": "{{count}} ungelesene Neuigkeit",
       "release_note_other": "{{count}} ungelesene Neuigkeiten"
     }
+  },
+  "attachments": {
+    "pages_one": "{{count}} Seite gelesen.",
+    "pages_other": "{{count}} Seiten gelesen.",
+    "parts_one": "{{count}} Abschnitt gelesen.",
+    "parts_other": "{{count}} Abschnitte gelesen.",
+    "remove": "{{name}} entfernen",
+    "timeline": {
+      "uploading": "{{name}} wird hochgeladen · {{percent}} %",
+      "queued": "Warten auf die Verarbeitung von {{name}}",
+      "preparing": "{{name}} wird vorbereitet",
+      "extracting": "{{name}} wird gelesen",
+      "transcribing": "{{name}} wird transkribiert",
+      "indexing": "{{name}} wird für die Suche vorbereitet",
+      "retrying": "{{name}} wird erneut verarbeitet",
+      "ready": "{{name}} verarbeitet",
+      "failed": "{{name}} konnte nicht verarbeitet werden",
+      "removing": "{{name}} wird entfernt"
+    }
   }
 }

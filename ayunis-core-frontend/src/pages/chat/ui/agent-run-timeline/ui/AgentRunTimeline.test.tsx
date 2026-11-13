@@ -396,3 +396,37 @@ describe('AgentRunTimeline', () => {
     expect(screen.queryByTestId('response-start-orb')).toBeNull();
   });
 });
+
+it('keeps a failed document visible when an answer follows', () => {
+  render(
+    <AgentRunTimeline
+      unit={{
+        kind: 'agent-run',
+        key: 'failed-file-run',
+        isStreaming: false,
+        blocks: [
+          {
+            kind: 'activity',
+            key: 'processing',
+            steps: [
+              {
+                kind: 'source_processing',
+                key: 'failed-source',
+                sourceName: 'budget.pdf',
+                isAudio: false,
+                stage: 'failed',
+                status: 'error',
+              },
+            ],
+          },
+          {
+            kind: 'text',
+            key: 'answer',
+            content: { type: 'text', text: 'Answer without the failed file' },
+          },
+        ],
+      }}
+    />,
+  );
+  expect(screen.getByTestId('step-failed-source')).toBeTruthy();
+});

@@ -30,15 +30,16 @@ export class CreateThreadSourceUploadUseCase {
       { threadId: command.threadId, fileName: command.fileName },
       'createThreadSourceUpload',
     );
-    const { thread } = await this.findThreadUseCase.execute(
-      new FindThreadQuery(command.threadId),
-    );
-    // Rejecting here is free; completion re-checks against a fresh thread.
-    assertThreadHasSourceCapacity(thread.sourceAssignments ?? []);
+    if (command.threadId) {
+      const { thread } = await this.findThreadUseCase.execute(
+        new FindThreadQuery(command.threadId),
+      );
+      assertThreadHasSourceCapacity(thread.sourceAssignments ?? []);
+    }
     return this.createSession.execute(
       new CreateSourceUploadSessionCommand({
         targetType: SourceUploadTargetType.THREAD,
-        targetId: thread.id,
+        targetId: command.threadId ?? null,
         fileName: command.fileName,
         mimeType: command.mimeType,
         fileSize: command.fileSize,

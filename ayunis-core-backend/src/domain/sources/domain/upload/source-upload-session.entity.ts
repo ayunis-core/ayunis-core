@@ -15,7 +15,7 @@ export class SourceUploadSession {
   orgId: UUID;
   userId: UUID | null;
   targetType: SourceUploadTargetType;
-  targetId: UUID;
+  targetId: UUID | null;
   fileName: string;
   /** Canonical MIME type resolved from the declared type and the file name. */
   fileType: string;
@@ -41,7 +41,7 @@ export class SourceUploadSession {
     orgId: UUID;
     userId: UUID | null;
     targetType: SourceUploadTargetType;
-    targetId: UUID;
+    targetId: UUID | null;
     fileName: string;
     fileType: string;
     fileSize: number;

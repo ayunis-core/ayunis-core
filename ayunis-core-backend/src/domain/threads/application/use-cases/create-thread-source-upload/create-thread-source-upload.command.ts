@@ -1,13 +1,13 @@
 import type { UUID } from 'crypto';
 
 export class CreateThreadSourceUploadCommand {
-  readonly threadId: UUID;
+  readonly threadId?: UUID;
   readonly fileName: string;
   readonly mimeType: string;
   readonly fileSize: number;
 
   constructor(params: {
-    threadId: UUID;
+    threadId?: UUID;
     fileName: string;
     mimeType: string;
     fileSize: number;

@@ -1,3 +1,5 @@
+import { GetThreadSourceProgressUseCase } from 'src/domain/threads/application/use-cases/get-thread-source-progress/get-thread-source-progress.use-case';
+import { SourceProcessingProgressDto } from './dto/source-processing-progress.dto';
 import {
   BadRequestException,
   Body,
@@ -64,7 +66,38 @@ export class ThreadSourcesController {
     private readonly createSourceUploadUseCase: CreateThreadSourceUploadUseCase,
     private readonly completeSourceUploadUseCase: CompleteThreadSourceUploadUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
+    private readonly getSourceProgress: GetThreadSourceProgressUseCase,
   ) {}
+
+  @Post('uploads')
+  @ApiOperation({ summary: 'Reserve a file upload before creating a chat' })
+  @ApiResponse({ status: 201, type: SourceUploadSessionResponseDto })
+  async createDraftUpload(
+    @Body() dto: CreateSourceUploadDto,
+  ): Promise<SourceUploadSessionResponseDto> {
+    return toSourceUploadSessionDto(
+      await this.createSourceUploadUseCase.execute(
+        new CreateThreadSourceUploadCommand(dto),
+      ),
+    );
+  }
+
+  @Get(':id/sources/progress')
+  @ApiOperation({
+    summary:
+      'Get actual processing stages and counts for the thread attachments',
+  })
+  @ApiThreadIdParam()
+  @ApiResponse({
+    status: 200,
+    type: SourceProcessingProgressDto,
+    isArray: true,
+  })
+  async getProcessingProgress(
+    @Param('id', ParseUUIDPipe) threadId: UUID,
+  ): Promise<SourceProcessingProgressDto[]> {
+    return this.getSourceProgress.execute(new FindThreadSourcesQuery(threadId));
+  }
 
   @Get(':id/sources')
   @ApiOperation({ summary: 'Get all sources for a thread' })

@@ -5727,6 +5727,70 @@
         "tags": ["threads"]
       }
     },
+    "/threads/uploads": {
+      "post": {
+        "operationId": "ThreadSourcesController_createDraftUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSourceUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceUploadSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reserve a file upload before creating a chat",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{id}/sources/progress": {
+      "get": {
+        "operationId": "ThreadSourcesController_getProcessingProgress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceProcessingProgressDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get actual processing stages and counts for the thread attachments",
+        "tags": ["threads"]
+      }
+    },
     "/threads/{id}/sources": {
       "get": {
         "operationId": "ThreadSourcesController_getThreadSources",
@@ -19483,6 +19547,44 @@
           }
         },
         "required": ["id", "multipart", "partSizeBytes", "expiresAt"]
+      },
+      "SourceProcessingStage": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "preparing",
+          "extracting",
+          "indexing",
+          "retrying",
+          "ready",
+          "failed"
+        ]
+      },
+      "SourceProcessingProgressDto": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingStage"
+              }
+            ]
+          },
+          "completed": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Completed extraction units, when reported by the worker"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["pages", "parts"]
+          }
+        },
+        "required": ["sourceId", "stage"]
       },
       "CreateKnowledgeBaseDto": {
         "type": "object",

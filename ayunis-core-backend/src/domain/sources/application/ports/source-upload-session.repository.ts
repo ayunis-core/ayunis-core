@@ -15,7 +15,7 @@ export abstract class SourceUploadSessionRepository {
     id: UUID,
     fromStatus: SourceUploadSessionStatus,
     toStatus: SourceUploadSessionStatus,
-    updates?: Partial<{ sources: UploadedSourceReference[] }>,
+    updates?: Partial<{ sources: UploadedSourceReference[]; targetId: UUID }>,
   ): Promise<boolean>;
   abstract recordVerifiedSources(
     id: UUID,

@@ -1,3 +1,4 @@
+import { GetThreadSourceProgressUseCase } from 'src/domain/threads/application/use-cases/get-thread-source-progress/get-thread-source-progress.use-case';
 import { forwardRef, Module } from '@nestjs/common';
 import { ThreadsController } from './presenters/http/threads.controller';
 import { ThreadSourcesController } from './presenters/http/thread-sources.controller';
@@ -93,6 +94,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     MessageImagesController,
   ],
   providers: [
+    GetThreadSourceProgressUseCase,
     {
       provide: ThreadsRepository,
       useExisting: LocalThreadsRepository,

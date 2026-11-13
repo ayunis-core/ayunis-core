@@ -2,21 +2,15 @@ import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { cn } from '@ayunis/ui/lib/cn';
-import {
-  useInitiateChat,
-  type SourceUploadStatus,
-} from '@/features/chat-initiation';
+import { useInitiateChat } from '@/features/chat-initiation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
-import { generateUUID } from '@/shared/lib/uuid';
-import {
-  SourceResponseDtoStatus,
-  SourceResponseDtoType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useChatAttachments } from '@/features/chat-attachments';
+
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { useSelectedModel } from '@/widgets/model-select-options';
@@ -80,7 +74,6 @@ export default function NewChatPage({
       chatInputRef.current?.setMessage(initialPrompt);
     }
   }, [initialPrompt]);
-  useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [previousDefaultModelId, setPreviousDefaultModelId] =
@@ -94,36 +87,12 @@ export default function NewChatPage({
   const [workspaceId, setWorkspaceId] = useState<string | null>(
     initialWorkspaceId ?? null,
   );
-  type LocalSource = {
-    id: string;
-    name: string;
-    type: SourceResponseDtoType;
-    file: File;
-    status?: SourceResponseDtoStatus;
-    processingError?: string;
-    uploadProgress?: number;
-  };
-  const [sources, setSources] = useState<LocalSource[]>([]);
-
-  function applySourceStatus(
-    source: LocalSource,
-    status: SourceUploadStatus,
-  ): LocalSource {
-    if (status.kind === 'failed') {
-      return {
-        ...source,
-        status: SourceResponseDtoStatus.failed,
-        processingError: status.message,
-        uploadProgress: undefined,
-      };
-    }
-    return {
-      ...source,
-      status: SourceResponseDtoStatus.processing,
-      processingError: undefined,
-      uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
-    };
-  }
+  const {
+    attachments: sources,
+    upload: handleFileUpload,
+    remove: handleRemoveSource,
+  } = useChatAttachments();
+  useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
@@ -152,22 +121,6 @@ export default function NewChatPage({
     !selectedMode && (selectedModel?.anonymousOnly ?? false);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
-  function handleFileUpload(files: File[]) {
-    const newSources: LocalSource[] = files.map((file) => ({
-      id: generateUUID(),
-      name: file.name,
-      type: file.name.endsWith('.csv')
-        ? SourceResponseDtoType.data
-        : SourceResponseDtoType.text,
-      file,
-    }));
-    setSources((prev) => [...prev, ...newSources]);
-  }
-
-  function handleRemoveSource(sourceId: string) {
-    setSources(sources.filter((source) => source.id !== sourceId));
-  }
-
   function handleModelChange(modelId: string) {
     setModelId(modelId);
   }
@@ -195,12 +148,6 @@ export default function NewChatPage({
     setWorkspaceId(id);
   }
 
-  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
-    );
-  }
-
   function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
@@ -225,20 +172,11 @@ export default function NewChatPage({
       workspaceId: workspaceId ?? undefined,
       skillId,
       voiceInput,
-      onSourceStatus: handleSourceStatus,
     });
   }
 
   function handleCancel() {
     cancel();
-    setSources((prev) =>
-      prev.map((s) => ({
-        ...s,
-        status: undefined,
-        processingError: undefined,
-        uploadProgress: undefined,
-      })),
-    );
   }
 
   if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {

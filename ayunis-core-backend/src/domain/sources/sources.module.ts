@@ -1,3 +1,6 @@
+import { GetSourceProcessingProgressUseCase } from 'src/domain/sources/application/use-cases/get-source-processing-progress/get-source-processing-progress.use-case';
+import { SourceProcessingProgressPort } from 'src/domain/sources/application/ports/source-processing-progress.port';
+import { SourceProcessingProgressAdapter } from 'src/domain/sources/infrastructure/queue/source-processing-progress.adapter';
 import { BullModule } from '@nestjs/bullmq';
 import { OrgProcessingDeletionListener } from 'src/domain/sources/infrastructure/queue/org-deletion-requested.listener';
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
@@ -93,6 +96,11 @@ const SOURCE_UPLOAD_USE_CASES = [
   ],
   controllers: [SourceUploadsController],
   providers: [
+    GetSourceProcessingProgressUseCase,
+    {
+      provide: SourceProcessingProgressPort,
+      useClass: SourceProcessingProgressAdapter,
+    },
     SourceUploadStorageCleanupService,
     SweepOrphanedSourcesUseCase,
     OrphanedSourcesSweepTask,
@@ -129,6 +137,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     EnqueueUrlCrawlUseCase,
   ],
   exports: [
+    GetSourceProcessingProgressUseCase,
     LocalSourceRepositoryModule,
     DocumentProcessingModule,
     DataSourceProcessingModule,

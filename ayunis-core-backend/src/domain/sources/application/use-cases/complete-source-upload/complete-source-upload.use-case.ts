@@ -30,6 +30,7 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadPipeline } from 'src/domain/sources/domain/upload/source-upload-pipeline.enum';
+import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
 import type { UploadedSourceReference } from 'src/domain/sources/domain/upload/uploaded-source-reference';
 import {
@@ -78,12 +79,7 @@ export class CompleteSourceUploadUseCase {
     command: CompleteSourceUploadCommand,
   ): Promise<CompletedSourceUpload> {
     const session = await this.access.requireOwned(command.uploadId);
-    if (
-      session.targetType !== command.targetType ||
-      session.targetId !== command.targetId
-    ) {
-      throw new SourceUploadTargetMismatchError(session.id);
-    }
+    this.assertTarget(session, command, true);
 
     let created = false;
     if (session.status === SourceUploadSessionStatus.PENDING) {
@@ -94,9 +90,11 @@ export class CompleteSourceUploadUseCase {
     const alreadyCompleted = !created;
 
     const current = await this.sessions.findById(session.id);
-    if (current?.status === SourceUploadSessionStatus.SOURCES_CREATED) {
+    if (!current) throw new SourceUploadExpiredError(session.id);
+    this.assertTarget(current, command);
+    if (current.status === SourceUploadSessionStatus.SOURCES_CREATED) {
       await this.queueing.tryQueue(current);
-    } else if (current?.status !== SourceUploadSessionStatus.COMPLETED) {
+    } else if (current.status !== SourceUploadSessionStatus.COMPLETED) {
       throw new SourceUploadExpiredError(session.id);
     }
 
@@ -104,6 +102,24 @@ export class CompleteSourceUploadUseCase {
       current.sources.map((target) => target.sourceId),
     );
     return { sources, alreadyCompleted };
+  }
+
+  private assertTarget(
+    session: SourceUploadSession,
+    command: CompleteSourceUploadCommand,
+    allowUnbound = false,
+  ): void {
+    const isUnboundThreadUpload =
+      allowUnbound &&
+      session.targetType === SourceUploadTargetType.THREAD &&
+      session.targetId === null &&
+      session.status === SourceUploadSessionStatus.PENDING;
+    if (
+      session.targetType !== command.targetType ||
+      (!isUnboundThreadUpload && session.targetId !== command.targetId)
+    ) {
+      throw new SourceUploadTargetMismatchError(session.id);
+    }
   }
 
   private async createSources(
@@ -257,6 +273,7 @@ export class CompleteSourceUploadUseCase {
       session.id,
       SourceUploadSessionStatus.PENDING,
       SourceUploadSessionStatus.SOURCES_CREATED,
+      { targetId: command.targetId },
     );
     if (!claimed) return false;
     const sources: Source[] = [];

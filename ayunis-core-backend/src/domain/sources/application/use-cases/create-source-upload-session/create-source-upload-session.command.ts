@@ -3,7 +3,7 @@ import type { SourceUploadTargetType } from 'src/domain/sources/domain/upload/so
 
 export class CreateSourceUploadSessionCommand {
   readonly targetType: SourceUploadTargetType;
-  readonly targetId: UUID;
+  readonly targetId: UUID | null;
   readonly fileName: string;
   /** MIME type as declared by the browser; may be empty or generic. */
   readonly mimeType: string;
@@ -12,7 +12,7 @@ export class CreateSourceUploadSessionCommand {
 
   constructor(params: {
     targetType: SourceUploadTargetType;
-    targetId: UUID;
+    targetId: UUID | null;
     fileName: string;
     mimeType: string;
     fileSize: number;

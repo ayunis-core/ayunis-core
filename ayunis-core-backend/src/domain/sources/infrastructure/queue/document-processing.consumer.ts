@@ -51,12 +51,7 @@ import { SourceProcessingHeartbeatService } from 'src/domain/sources/application
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import type { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
-
-interface ExtractedContent {
-  text: string;
-  chunks: TextSourceContentChunk[];
-  precomputedEmbeddings: PreparedContentEmbeddings | undefined;
-}
+import type { ExtractedContent } from './extracted-content';
 
 function isProcessedFromDisk(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || isOfficeDocumentFile(fileType);
@@ -113,7 +108,6 @@ export class DocumentProcessingConsumer extends WorkerHost {
     // only legacy staged files are the consumer's to remove.
     const cleanupPath = job.data.retainFile ? null : minioPath;
 
-    // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
       this.validateAndSetContext(orgId, userId);
       if (!(await this.isAdmitted(job))) return;
@@ -174,6 +168,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.cleanupCheckpoints(orgId, sourceId);
       return;
     }
+    await job.updateProgress({ stage: 'indexing' });
     await processingStage('document.indexing', () =>
       this.helper.index(sourceId, orgId, chunks, precomputedEmbeddings),
     );
@@ -253,11 +248,13 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
   ): Promise<ExtractedContent> {
     const { fileName, fileType } = job.data;
+    await job.updateProgress({ stage: 'preparing' });
     const early = this.earlyEmbedding.start(job.data.orgId);
     const context = this.checkpoints.create(
       job.data.orgId,
       job.data.sourceId,
-      (completed) => job.updateProgress({ stage: 'extraction', completed }),
+      (completed, unit) =>
+        job.updateProgress({ stage: 'extracting', completed, unit }),
       (texts) => early.appendPages(texts),
     );
     let text: string;
@@ -324,6 +321,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
         : this.storedFiles.read(minioPath, expectedSize, expectedETag),
     );
+    await job.updateProgress({ stage: 'extracting' });
     return processingStage('document.extraction', () =>
       this.extractText(fileBuffer, fileName, fileType, context),
     );
@@ -366,6 +364,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
               expectedETag,
             ),
       );
+      await job.updateProgress({ stage: 'extracting' });
       return processingStage('document.extraction', () =>
         use({ path, ...stored }),
       );

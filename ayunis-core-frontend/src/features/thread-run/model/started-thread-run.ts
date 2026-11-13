@@ -15,6 +15,7 @@ export interface StartedThreadRun {
 }
 
 export interface ThreadRunStart {
+  messageCountBeforeSend?: number;
   threadId: string;
   text: string;
   images: Array<{ file: File; altText?: string }>;
