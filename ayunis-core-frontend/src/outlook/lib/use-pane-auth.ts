@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   SessionExpiredError,
@@ -106,5 +106,12 @@ export function usePaneAuth(
     }
   }
 
-  return { state, signIn, signOut };
+  // The chat reports a session the backend no longer accepts; the stored
+  // tokens are already gone by then.
+  const expire = useCallback(
+    () => setState({ status: 'signedOut', error: 'sessionExpired' }),
+    [],
+  );
+
+  return { state, signIn, signOut, expire };
 }

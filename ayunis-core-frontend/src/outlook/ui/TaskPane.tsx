@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
+import { createPaneChatApi } from '@/outlook/api/pane-chat-api';
 import type { PaneSession } from '@/outlook/api/pane-session';
 import type { SignInOptions } from '@/outlook/lib/sign-in-dialog';
 import { usePaneAuth, type PaneError } from '@/outlook/lib/use-pane-auth';
+import { PaneChat } from '@/outlook/ui/PaneChat';
 
 export function TaskPane({
   session,
@@ -13,33 +16,28 @@ export function TaskPane({
   officeAvailable: () => Promise<boolean>;
 }>) {
   const { t } = useTranslation();
-  const { state, signIn, signOut } = usePaneAuth(session, officeAvailable);
+  const { state, signIn, signOut, expire } = usePaneAuth(
+    session,
+    officeAvailable,
+  );
+  const chatApi = useMemo(() => createPaneChatApi(session), [session]);
+
+  if (state.status === 'signedIn') {
+    return (
+      <PaneChat
+        api={chatApi}
+        user={state.user}
+        onSignOut={() => void signOut()}
+        onSessionExpired={expire}
+      />
+    );
+  }
 
   return (
     <main className="flex min-h-full flex-col items-center gap-6 px-6 py-10 text-center">
       <img src={brandFullLight} alt="Ayunis" className="h-9" />
       {state.status === 'loading' && (
         <p className="text-sm text-muted-foreground">{t('pane.loading')}</p>
-      )}
-      {state.status === 'signedIn' && (
-        <div
-          className="flex flex-col items-center gap-4"
-          data-testid="outlook-pane-signed-in"
-        >
-          <div className="flex flex-col gap-1">
-            <p className="font-medium" data-testid="outlook-pane-user-name">
-              {state.user.name}
-            </p>
-            <p className="text-sm text-muted-foreground">{state.user.email}</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => void signOut()}
-            data-testid="outlook-pane-sign-out"
-          >
-            {t('pane.signOut')}
-          </Button>
-        </div>
       )}
       {(state.status === 'signedOut' || state.status === 'signingIn') && (
         <SignedOut
