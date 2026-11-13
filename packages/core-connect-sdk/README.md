@@ -97,6 +97,9 @@ responses, removes the unused acknowledgement-only type and requires callers to 
 normalized state after a fresh preparation. Connect holds provider credentials; Core
 keeps its subscription rules, transaction, ownership and stale-update checks.
 
+Version 0.4 adds the optional, nullable `mode` (`auto` / `max`) to `usage.collected`.
+Strict 0.3 readers reject it, so Connect must run 0.4 before Core sends `mode`.
+
 Package checks install the candidate tarball and the exact baseline release from
 sdkCompatibility.baselineVersion. Both directions of producer fixtures and public
 client/envelope type assignability are checked with TypeScript 5.8.2. Incompatible

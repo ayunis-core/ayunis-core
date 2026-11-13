@@ -1,4 +1,5 @@
 import type { UsageCollectedPayload as UsageCollectedWebhookPayload } from '@ayunis-core/connect-sdk/contracts';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { Usage } from 'src/domain/usage/domain/usage.entity';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { WebhookEvent } from 'src/integrations/webhooks/domain/webhook-event.entity';
@@ -13,7 +14,12 @@ export class UsageCollectedWebhookEvent extends WebhookEvent<
   readonly data: UsageCollectedWebhookPayload;
   readonly timestamp: Date;
 
-  constructor(usage: Usage, modelName: string, user?: User | null) {
+  constructor(
+    usage: Usage,
+    modelName: string,
+    user?: User | null,
+    mode?: ModelMode | null,
+  ) {
     super();
     this.data = {
       id: usage.id,
@@ -28,6 +34,7 @@ export class UsageCollectedWebhookEvent extends WebhookEvent<
       totalTokens: usage.totalTokens,
       cost: usage.cost,
       creditsConsumed: usage.creditsConsumed,
+      ...(mode !== undefined ? { mode } : {}),
       requestId: usage.requestId,
       createdAt: usage.createdAt.toISOString(),
       userEmail: user?.email,
